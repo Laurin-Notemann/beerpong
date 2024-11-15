@@ -22,4 +22,4 @@ jobs:
       - name: Install dependencies
         run: cd mobile-app; npm install
       - name: Run format check
-        run: npm run ci:format
+        run: cd mobile-app; npm run ci:format
