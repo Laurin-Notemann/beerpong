@@ -53,6 +53,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.6.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -65,6 +70,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+        	<jvmArguments>-Dspring.application.admin.enabled=true</jvmArguments>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 					<annotationProcessorPaths>
@@ -84,6 +90,39 @@
 							<version>${mapstruct.version}</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+				<executions>
+					<execution>
+						<id>pre-integration-test</id>
+						<goals>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>post-integration-test</id>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-maven-plugin</artifactId>
+				<version>1.1</version>
+				<executions>
+					<execution>
+						<id>integration-test</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
+					<outputFileName>openapi.yaml</outputFileName>
+					<outputDir>../openapi</outputDir>
+					<skip>false</skip>
 				</configuration>
 			</plugin>
 		</plugins>

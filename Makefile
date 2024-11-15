@@ -1,4 +1,10 @@
 # OpenApi Gen
+.PHONY: gen-open-api
+gen-open-api:
+	export $(grep -v '^#' .env | xargs)
+	cd api && mvn verify && cd ..
+	sed -i '' "s/'\*\/\*'/application\/json/g" openapi/openapi.yaml
+	cd mobile-app && npm run gen-types
 
 # DOCKER SETUP
 .PHONY: docker-db-up

@@ -1,0 +1,69 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /groups:
+    post:
+      tags:
+      - group-controller
+      operationId: createGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Group"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+  /healthcheck:
+    get:
+      tags:
+      - healthcheck
+      operationId: getHealthcheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseEnvelopeString"
+components:
+  schemas:
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    ErrorDetails:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+    ResponseEnvelopeString:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - OK
+          - ERROR
+        httpCode:
+          type: integer
+          format: int32
+        data:
+          type: string
+        error:
+          $ref: "#/components/schemas/ErrorDetails"
