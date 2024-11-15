@@ -10,7 +10,6 @@ import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.mapping.GroupMapper;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
