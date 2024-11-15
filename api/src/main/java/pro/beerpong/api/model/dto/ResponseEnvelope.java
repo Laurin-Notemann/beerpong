@@ -30,14 +30,24 @@ public class ResponseEnvelope<T> {
         return new ResponseEntity<>(new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), data), HttpStatus.OK);
     }
 
+    public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, ErrorCodes codes) {
+        return notOk(status, codes.toDetails());
+    }
+
     public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, String code, String descr) {
-        return new ResponseEntity<>(new ResponseEnvelope<>(Status.ERROR, status.value(), new ErrorDetails(code, descr)), status);
+        return notOk(status, new ErrorDetails(code, descr));
+    }
+
+    public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, ErrorDetails details) {
+        return new ResponseEntity<>(new ResponseEnvelope<>(Status.ERROR, status.value(), details), status);
     }
 
     @Data
     public static class ErrorDetails {
         private String code;
         private String description;
+
+
 
         public ErrorDetails(String code, String description) {
             this.code = code;
