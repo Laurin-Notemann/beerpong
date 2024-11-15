@@ -4,6 +4,7 @@ import {
 } from "react-native";
 
 import { theme } from "@/theme";
+import { useRef } from "react";
 
 export interface TextInputProps extends ReactNativeTextInputProps {
   required?: boolean;
@@ -15,6 +16,8 @@ export default function TextInput({
   ...rest
 }: TextInputProps) {
   const color = "#fff";
+
+  const inputRef = useRef(null);
 
   return (
     <ReactNativeTextInput
