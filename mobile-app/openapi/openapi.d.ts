@@ -1,9 +1,9 @@
 import type {
-  OpenAPIClient,
-  Parameters,
-  UnknownParamsObject,
-  OperationResponse,
-  AxiosRequestConfig,
+    AxiosRequestConfig,
+    OpenAPIClient,
+    OperationResponse,
+    Parameters,
+    UnknownParamsObject,
 } from 'openapi-client-axios';
 
 declare namespace Components {
@@ -21,7 +21,7 @@ declare namespace Components {
             inviteCode?: string;
         }
         export interface ResponseEnvelopeString {
-            status?: "OK" | "ERROR";
+            status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: string;
             error?: ErrorDetails;
@@ -71,98 +71,98 @@ declare namespace Paths {
 }
 
 export interface OperationMethods {
-  /**
-   * getGroupById
-   */
-  'getGroupById'(
-    parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.GetGroupById.Responses.$200>
-  /**
-   * updateGroup
-   */
-  'updateGroup'(
-    parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
-    data?: Paths.UpdateGroup.RequestBody,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.UpdateGroup.Responses.$200>
-  /**
-   * getAllGroups
-   */
-  'getAllGroups'(
-    parameters?: Parameters<UnknownParamsObject> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.GetAllGroups.Responses.$200>
-  /**
-   * createGroup
-   */
-  'createGroup'(
-    parameters?: Parameters<UnknownParamsObject> | null,
-    data?: Paths.CreateGroup.RequestBody,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.CreateGroup.Responses.$200>
-  /**
-   * getHealthcheck
-   */
-  'getHealthcheck'(
-    parameters?: Parameters<UnknownParamsObject> | null,
-    data?: any,
-    config?: AxiosRequestConfig  
-  ): OperationResponse<Paths.GetHealthcheck.Responses.$200>
-}
-
-export interface PathsDictionary {
-  ['/groups/{id}']: {
     /**
      * getGroupById
      */
-    'get'(
-      parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.GetGroupById.Responses.$200>
+    'getGroupById'(
+        parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetGroupById.Responses.$200>;
     /**
      * updateGroup
      */
-    'put'(
-      parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
-      data?: Paths.UpdateGroup.RequestBody,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.UpdateGroup.Responses.$200>
-  }
-  ['/groups']: {
+    'updateGroup'(
+        parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
+        data?: Paths.UpdateGroup.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
     /**
      * getAllGroups
      */
-    'get'(
-      parameters?: Parameters<UnknownParamsObject> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.GetAllGroups.Responses.$200>
+    'getAllGroups'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetAllGroups.Responses.$200>;
     /**
      * createGroup
      */
-    'post'(
-      parameters?: Parameters<UnknownParamsObject> | null,
-      data?: Paths.CreateGroup.RequestBody,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.CreateGroup.Responses.$200>
-  }
-  ['/healthcheck']: {
+    'createGroup'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: Paths.CreateGroup.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CreateGroup.Responses.$200>;
     /**
      * getHealthcheck
      */
-    'get'(
-      parameters?: Parameters<UnknownParamsObject> | null,
-      data?: any,
-      config?: AxiosRequestConfig  
-    ): OperationResponse<Paths.GetHealthcheck.Responses.$200>
-  }
+    'getHealthcheck'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetHealthcheck.Responses.$200>;
 }
 
-export type Client = OpenAPIClient<OperationMethods, PathsDictionary>
+export interface PathsDictionary {
+    ['/groups/{id}']: {
+        /**
+         * getGroupById
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetGroupById.Responses.$200>;
+        /**
+         * updateGroup
+         */
+        'put'(
+            parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
+            data?: Paths.UpdateGroup.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
+    };
+    ['/groups']: {
+        /**
+         * getAllGroups
+         */
+        'get'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetAllGroups.Responses.$200>;
+        /**
+         * createGroup
+         */
+        'post'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: Paths.CreateGroup.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CreateGroup.Responses.$200>;
+    };
+    ['/healthcheck']: {
+        /**
+         * getHealthcheck
+         */
+        'get'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetHealthcheck.Responses.$200>;
+    };
+}
+
+export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
