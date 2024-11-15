@@ -27,11 +27,11 @@ public class ResponseEnvelope<T> {
     }
 
     public static <T> ResponseEntity<ResponseEnvelope<T>> ok(T data) {
-        return new ResponseEntity<>(new ResponseEnvelope<>(ResponseEnvelope.Status.OK, 200, data), HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), data), HttpStatus.OK);
     }
 
-    public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(int httpCode, String code, String descr) {
-        return new ResponseEntity<>(new ResponseEnvelope<>(Status.ERROR, httpCode, new ErrorDetails(code, descr)), HttpStatus.OK);
+    public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, String code, String descr) {
+        return new ResponseEntity<>(new ResponseEnvelope<>(Status.ERROR, status.value(), new ErrorDetails(code, descr)), status);
     }
 
     @Data
