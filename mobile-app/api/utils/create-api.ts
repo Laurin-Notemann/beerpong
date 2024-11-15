@@ -1,4 +1,4 @@
-import axios from "axios"
+import axios from 'axios';
 
 // Might make sense to make a hook for this if we implment tokens and add a interceptor
 
@@ -8,7 +8,7 @@ export const createApi = () => {
         headers: {
             'Content-Type': 'application/json',
         },
-    })
+    });
 
-    return api
-}
+    return api;
+};
