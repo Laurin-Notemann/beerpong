@@ -5,14 +5,14 @@ import {
     ThemeProvider,
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, useNavigation } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { QueryClientProvider } from 'react-query';
 
-import { createQueryClient } from '@/api/utils/query-client';
+import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { theme } from '@/theme';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 
 import { HeaderItem, navStyles } from './(tabs)/_layout';
 
@@ -42,7 +42,7 @@ export default function RootLayout() {
         <ThemeProvider
             value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-            <QueryClientProvider client={queryClient}>
+            <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
                 <Stack initialRouteName="onboarding">
                     <Stack.Screen
                         name="onboarding"
@@ -122,7 +122,7 @@ export default function RootLayout() {
                         }}
                     />
                 </Stack>
-            </QueryClientProvider>
+            </PersistQueryClientProvider>
         </ThemeProvider>
     );
 }
