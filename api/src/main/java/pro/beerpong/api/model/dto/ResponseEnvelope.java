@@ -1,4 +1,4 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

@@ -1,18 +1,18 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
 @Data
-public class Rule {
+public class GroupSettings {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String ruleDescription;
-
     @ManyToOne
-    @JoinColumn(name = "rulesetId")
-    private Ruleset ruleset;
+    @JoinColumn(name = "groupId")
+    private Group group;
+
+    private String settingValue;
 }

@@ -3,7 +3,7 @@ package pro.beerpong.api.control;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.Group;
+import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.service.GroupService;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package pro.beerpong.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.model.Group;
+import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.repository.GroupRepository;
 
 import java.util.List;

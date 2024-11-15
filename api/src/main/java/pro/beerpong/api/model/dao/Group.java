@@ -1,4 +1,4 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

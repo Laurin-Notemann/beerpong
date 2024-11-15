@@ -1,18 +1,18 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Data
-public class Match {
+public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private LocalDateTime date;
+    @ManyToOne
+    @JoinColumn(name = "profileId")
+    private Profile profile;
 
     @ManyToOne
     @JoinColumn(name = "seasonId")
