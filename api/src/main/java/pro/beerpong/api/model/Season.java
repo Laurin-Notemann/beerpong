@@ -1,17 +1,16 @@
-package pro.beerpong.model;
+package pro.beerpong.api.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
 @Data
-public class Profile {
+public class Season {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String name;
-    private String profilePicture;
+    private String seasonName;
 
     @ManyToOne
     @JoinColumn(name = "groupId")

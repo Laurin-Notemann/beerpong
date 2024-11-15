@@ -1,20 +1,19 @@
-package pro.beerpong.model;
+package pro.beerpong.api.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
 @Data
-public class RuleMove {
+public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String name;
-
-    private int multiplicator;
+    private String profilePicture;
 
     @ManyToOne
-    @JoinColumn(name = "rulesetId")
-    private Ruleset ruleset;
+    @JoinColumn(name = "groupId")
+    private Group group;
 }
