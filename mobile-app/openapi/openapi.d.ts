@@ -12,9 +12,13 @@ declare namespace Components {
             code?: string;
             description?: string;
         }
-        export interface Group {
+        export interface GroupCreateDto {
+            name?: string;
+        }
+        export interface GroupDto {
             id?: string;
             name?: string;
+            inviteCode?: string;
         }
         export interface ResponseEnvelopeString {
             status?: "OK" | "ERROR";
@@ -26,9 +30,25 @@ declare namespace Components {
 }
 declare namespace Paths {
     namespace CreateGroup {
-        export type RequestBody = Components.Schemas.Group;
+        export type RequestBody = Components.Schemas.GroupCreateDto;
         namespace Responses {
-            export type $200 = Components.Schemas.Group;
+            export type $200 = Components.Schemas.GroupDto;
+        }
+    }
+    namespace GetAllGroups {
+        namespace Responses {
+            export type $200 = Components.Schemas.GroupDto[];
+        }
+    }
+    namespace GetGroupById {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.GroupDto;
         }
     }
     namespace GetHealthcheck {
@@ -36,9 +56,45 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
+    namespace UpdateGroup {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.GroupCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.GroupDto;
+        }
+    }
 }
 
 export interface OperationMethods {
+  /**
+   * getGroupById
+   */
+  'getGroupById'(
+    parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.GetGroupById.Responses.$200>
+  /**
+   * updateGroup
+   */
+  'updateGroup'(
+    parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
+    data?: Paths.UpdateGroup.RequestBody,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.UpdateGroup.Responses.$200>
+  /**
+   * getAllGroups
+   */
+  'getAllGroups'(
+    parameters?: Parameters<UnknownParamsObject> | null,
+    data?: any,
+    config?: AxiosRequestConfig  
+  ): OperationResponse<Paths.GetAllGroups.Responses.$200>
   /**
    * createGroup
    */
@@ -58,7 +114,33 @@ export interface OperationMethods {
 }
 
 export interface PathsDictionary {
+  ['/groups/{id}']: {
+    /**
+     * getGroupById
+     */
+    'get'(
+      parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.GetGroupById.Responses.$200>
+    /**
+     * updateGroup
+     */
+    'put'(
+      parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
+      data?: Paths.UpdateGroup.RequestBody,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.UpdateGroup.Responses.$200>
+  }
   ['/groups']: {
+    /**
+     * getAllGroups
+     */
+    'get'(
+      parameters?: Parameters<UnknownParamsObject> | null,
+      data?: any,
+      config?: AxiosRequestConfig  
+    ): OperationResponse<Paths.GetAllGroups.Responses.$200>
     /**
      * createGroup
      */
@@ -83,5 +165,6 @@ export interface PathsDictionary {
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>
 
 export type ErrorDetails = Components.Schemas.ErrorDetails;
-export type Group = Components.Schemas.Group;
+export type GroupCreateDto = Components.Schemas.GroupCreateDto;
+export type GroupDto = Components.Schemas.GroupDto;
 export type ResponseEnvelopeString = Components.Schemas.ResponseEnvelopeString;
