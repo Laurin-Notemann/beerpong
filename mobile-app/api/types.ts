@@ -1,1 +1,1 @@
-export type ApiId = string
+export type ApiId = string;

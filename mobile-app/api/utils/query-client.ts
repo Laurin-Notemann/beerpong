@@ -1,10 +1,11 @@
-import { QueryClient } from 'react-query'
-import { minutes } from '@/utils/time'
+import { QueryClient } from 'react-query';
+
+import { minutes } from '@/utils/time';
 
 // --- QUERY CLIENT ---
 
 export const createQueryClient = () => {
-    const qc = new QueryClient()
+    const qc = new QueryClient();
 
     qc.setDefaultOptions({
         queries: {
@@ -14,7 +15,7 @@ export const createQueryClient = () => {
         mutations: {
             retry: false,
         },
-    })
+    });
 
-    return qc
-}
+    return qc;
+};
