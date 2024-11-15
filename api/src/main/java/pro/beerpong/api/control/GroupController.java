@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
@@ -40,7 +41,7 @@ public class GroupController {
         if (group != null) {
             return ResponseEnvelope.ok(group);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
@@ -51,7 +52,7 @@ public class GroupController {
         if (updatedGroup != null) {
             return ResponseEnvelope.ok(updatedGroup);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 }
