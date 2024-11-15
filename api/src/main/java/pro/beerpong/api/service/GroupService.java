@@ -19,9 +19,6 @@ public class GroupService {
     }
 
     public Group createGroup(Group group) {
-        if (group.getId() == null || group.getId().isEmpty()) {
-            group.setId(UUID.randomUUID().toString());
-        }
         return groupRepository.save(group);
     }
 

@@ -11,7 +11,6 @@ import lombok.Data;
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-
     private String id;
 
     private String name;
