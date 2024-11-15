@@ -3,15 +3,15 @@ import Text from "@/components/Text";
 import GroupSettingsScreen from "@/components/screens/GroupSettings";
 
 export default function Screen() {
-  const { groupPageProps, isLoading, error } = useGroupSettingsProps("123456");
+  const { props, isLoading, error } = useGroupSettingsProps("123456");
 
   if (isLoading) {
     return <Text color="primary">Loading...</Text>;
   }
 
-  if (error || !groupPageProps) {
+  if (error || !props) {
     return <Text color="negative">Error</Text>;
   }
 
-  return <GroupSettingsScreen {...groupPageProps} />;
+  return <GroupSettingsScreen {...props} />;
 }
