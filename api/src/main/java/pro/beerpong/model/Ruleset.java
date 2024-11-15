@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Ruleset {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     private String name;
 

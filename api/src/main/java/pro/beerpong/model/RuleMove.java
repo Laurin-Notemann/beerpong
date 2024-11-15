@@ -9,7 +9,7 @@ import java.util.UUID;
 public class RuleMove {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     private String name;
     private int multiplicator;

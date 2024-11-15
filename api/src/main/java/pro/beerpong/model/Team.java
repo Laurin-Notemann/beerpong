@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "matchId")

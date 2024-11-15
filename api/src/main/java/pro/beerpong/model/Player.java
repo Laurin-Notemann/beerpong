@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     @ManyToOne
     @JoinColumn(name = "profileId")

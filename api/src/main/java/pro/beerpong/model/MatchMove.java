@@ -9,7 +9,7 @@ import java.util.UUID;
 public class MatchMove {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     private int value;
 
