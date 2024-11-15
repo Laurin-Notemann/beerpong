@@ -1,0 +1,130 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /groups/{id}:
+    get:
+      tags:
+      - group-controller
+      operationId: getGroupById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupDto"
+    put:
+      tags:
+      - group-controller
+      operationId: updateGroup
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupDto"
+  /groups:
+    get:
+      tags:
+      - group-controller
+      operationId: getAllGroups
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupDto"
+    post:
+      tags:
+      - group-controller
+      operationId: createGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupDto"
+  /healthcheck:
+    get:
+      tags:
+      - healthcheck-controller
+      operationId: getHealthcheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseEnvelopeString"
+components:
+  schemas:
+    GroupCreateDto:
+      type: object
+      properties:
+        name:
+          type: string
+    GroupDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        inviteCode:
+          type: string
+    ErrorDetails:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+    ResponseEnvelopeString:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - OK
+          - ERROR
+        httpCode:
+          type: integer
+          format: int32
+        data:
+          type: string
+        error:
+          $ref: "#/components/schemas/ErrorDetails"

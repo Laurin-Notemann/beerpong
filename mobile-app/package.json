@@ -13,6 +13,7 @@
         "build:ios:local": "npx eas build --local --platform ios",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
+        "gen-types": "npx openapicmd typegen  ../openapi/openapi.yaml > openapi/openapi.d.ts",
         "ci:format": "npm run format:check"
     },
     "jest": {
@@ -37,6 +38,9 @@
         "expo-status-bar": "~1.12.1",
         "expo-system-ui": "~3.0.7",
         "expo-web-browser": "~13.0.3",
+        "openapi-client-axios": "^7.5.5",
+        "openapi-client-axios-typegen": "^7.7.0",
+        "openapicmd": "^2.6.1",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-native": "0.74.5",

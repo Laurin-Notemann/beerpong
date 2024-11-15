@@ -4,6 +4,7 @@ import {
     DefaultTheme,
     ThemeProvider,
 } from '@react-navigation/native';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -12,7 +13,6 @@ import 'react-native-reanimated';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { theme } from '@/theme';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 
 import { HeaderItem, navStyles } from './(tabs)/_layout';
 
@@ -42,7 +42,10 @@ export default function RootLayout() {
         <ThemeProvider
             value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-            <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+            <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={{ persister }}
+            >
                 <Stack initialRouteName="onboarding">
                     <Stack.Screen
                         name="onboarding"
