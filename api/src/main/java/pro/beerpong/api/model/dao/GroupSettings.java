@@ -10,8 +10,8 @@ public class GroupSettings {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "groupId")
+    @OneToOne
+    @JoinColumn(name = "group_id", referencedColumnName = "id")
     private Group group;
 
     private String settingValue;

@@ -3,6 +3,7 @@ package pro.beerpong.api.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
+import pro.beerpong.api.model.dao.GroupSettings;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.repository.GroupRepository;
@@ -28,10 +29,10 @@ public class GroupService {
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
-        group.setId(UUID.randomUUID().toString());
         group.setInviteCode(generateRandomString(9));
-        Group savedGroup = groupRepository.save(group);
-        return groupMapper.groupToGroupDto(savedGroup);
+        group.setGroupSettings(new GroupSettings());
+        group = groupRepository.save(group);
+        return groupMapper.groupToGroupDto(group);
     }
 
     public List<GroupDto> getAllGroups() {
