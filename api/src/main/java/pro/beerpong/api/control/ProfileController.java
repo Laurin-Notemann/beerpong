@@ -25,56 +25,39 @@ public class ProfileController {
     @PostMapping
     public ResponseEntity<ResponseEnvelope<ProfileDto>> createProfile(@RequestBody ProfileCreateDto profileCreateDto) {
         ProfileDto savedProfile = profileService.createProfile(profileCreateDto);
-        return ResponseEntity.ok(
-                new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), savedProfile, null)
-        );
+        return ResponseEnvelope.ok(savedProfile);
     }
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<ProfileDto>>> getAllProfiles() {
         List<ProfileDto> profiles = profileService.getAllProfiles();
-        return ResponseEntity.ok(
-                new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), profiles, null)
-        );
+        return ResponseEnvelope.ok(profiles);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<ProfileDto>> getProfileById(@PathVariable String id) {
         ProfileDto profile = profileService.getProfileById(id);
         if (profile != null) {
-            return ResponseEntity.ok(
-                    new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), profile, null)
-            );
+            return ResponseEnvelope.ok(profile);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseEnvelope<>(ResponseEnvelope.Status.ERROR, HttpStatus.NOT_FOUND.value(),
-                            new ResponseEnvelope.ErrorDetails("PROFILE_NOT_FOUND", "Profile not found"), null)
-            );
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "PROFILE_NOT_FOUND", "Profile not found");
         }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<ProfileDto>> updateProfile(
-            @PathVariable String id,
-            @RequestBody ProfileCreateDto profileCreateDto) {
+            @PathVariable String id, @RequestBody ProfileCreateDto profileCreateDto) {
         ProfileDto updatedProfile = profileService.updateProfile(id, profileCreateDto);
         if (updatedProfile != null) {
-            return ResponseEntity.ok(
-                    new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), updatedProfile, null)
-            );
+            return ResponseEnvelope.ok(updatedProfile);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseEnvelope<>(ResponseEnvelope.Status.ERROR, HttpStatus.NOT_FOUND.value(),
-                            new ResponseEnvelope.ErrorDetails("PROFILE_NOT_FOUND", "Profile not found"), null)
-            );
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "PROFILE_NOT_FOUND", "Profile not found");
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<Void>> deleteProfile(@PathVariable String id) {
         profileService.deleteProfile(id);
-        return ResponseEntity.ok(
-                new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), null, null)
-        );
+        return ResponseEnvelope.ok(null);
     }
 }
