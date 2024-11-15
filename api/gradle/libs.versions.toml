@@ -1,0 +1,13 @@
+[libraries]
+
+lombok = { group = "org.projectlombok", name = "lombok" }
+postgres = { group = "org.postgres", name = "postgres" }
+junit = { group = "org.junit.platform", name = "junit-platform-launcher" }
+
+spring-data = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa" }
+spring-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
+testing = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+
+[bundles]
+
+spring = [ "spring-data", "spring-web" ]
