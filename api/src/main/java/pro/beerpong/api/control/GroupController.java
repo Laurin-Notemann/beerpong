@@ -1,4 +1,4 @@
-package pro.beerpong.api.controll;
+package pro.beerpong.api.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
