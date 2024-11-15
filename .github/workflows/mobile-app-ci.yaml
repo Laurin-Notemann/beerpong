@@ -1,0 +1,29 @@
+name: Mobile App CI
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+defaults:
+  run:
+    working-directory: mobile-app
+
+jobs:
+  format:
+    name: Assert code formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - name: Install dependencies
+        run: npm install
+      - name: Run format check
+        run: npm run ci:format
