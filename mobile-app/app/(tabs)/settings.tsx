@@ -1,13 +1,17 @@
+import { useGroupSettingsProps } from "@/api/hooks/groupHooks";
+import Text from "@/components/Text";
 import GroupSettingsScreen from "@/components/screens/GroupSettings";
 
 export default function Screen() {
-  return (
-    <GroupSettingsScreen
-      groupName="Die Reise (beheizter Pool)"
-      hasPremium
-      pushNotificationsEnabled
-      pastSeasons={0}
-      groupCode="4LM LBI H9Z"
-    />
-  );
+  const { groupPageProps, isLoading, error } = useGroupSettingsProps("123456");
+
+  if (isLoading) {
+    return <Text color="primary">Loading...</Text>;
+  }
+
+  if (error || !groupPageProps) {
+    return <Text color="negative">Error</Text>;
+  }
+
+  return <GroupSettingsScreen {...groupPageProps} />;
 }
