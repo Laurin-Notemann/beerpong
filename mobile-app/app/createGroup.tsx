@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack } from "expo-router";
+import { Stack, useNavigation } from "expo-router";
 
 import CreateGroup from "@/components/screens/CreateGroup";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -12,10 +12,18 @@ export default function Page() {
     { name: "schokoauto" },
   ];
 
+  const nav = useNavigation();
+
   return (
     <GestureHandlerRootView>
       <Stack.Screen options={{ headerShown: false }} />
-      <CreateGroup members={members} onCreateMember={(memberName) => {}} />
+      <CreateGroup
+        members={members}
+        onCreateMember={(memberName) => {
+          // @ts-ignore
+          nav.navigate("createGroupSetName");
+        }}
+      />
     </GestureHandlerRootView>
   );
 }

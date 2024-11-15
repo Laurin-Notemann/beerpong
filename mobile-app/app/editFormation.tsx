@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import Modal from "react-native-modal";
-import {
-  SafeAreaView,
-  Switch,
-  Text,
-  TouchableHighlight,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { Formation } from "@/components/CupGrid/Formation";
