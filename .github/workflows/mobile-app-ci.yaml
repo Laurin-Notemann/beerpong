@@ -1,4 +1,4 @@
-name: CI
+name: Mobile App CI
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - "*"
+
+defaults:
+  run:
+    working-directory: mobile-app
 
 jobs:
   format:
@@ -20,6 +24,6 @@ jobs:
         with:
           node-version: 'lts/*'
       - name: Install dependencies
-        run: cd mobile-app; npm install
+        run: npm install
       - name: Run format check
-        run: cd mobile-app; npm run ci:format
+        run: npm run ci:format
