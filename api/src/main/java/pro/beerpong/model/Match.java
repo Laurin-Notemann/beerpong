@@ -2,8 +2,8 @@ package pro.beerpong.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Data
