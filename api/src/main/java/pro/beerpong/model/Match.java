@@ -10,7 +10,7 @@ import java.util.UUID;
 public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
     private LocalDateTime date;
 
