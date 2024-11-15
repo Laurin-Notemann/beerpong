@@ -1,204 +1,208 @@
-import { theme } from "@/theme";
-import React from "react";
-import { Text, TouchableHighlight, View } from "react-native";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import useBoolean from "../useBoolean";
-import ConfirmationModal from "../ConfirmationModal";
+import React from 'react';
+import { Text, TouchableHighlight, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import { theme } from '@/theme';
+
+import ConfirmationModal from '../ConfirmationModal';
+import useBoolean from '../useBoolean';
 
 export interface MenuItemProps {
-  title: string;
-  subtitle?: string;
-
-  type?: "default" | "danger";
-
-  headIcon?: string;
-  tailIconType?: "copy" | "next" | "checked" | "unchecked";
-  onPress?: () => void;
-
-  tailContent?: JSX.Element | string | number;
-
-  color?: "light" | "dark"; // | "transparent";
-
-  confirmationPrompt?: {
     title: string;
-    description: string;
+    subtitle?: string;
 
-    buttonText?: string;
+    type?: 'default' | 'danger';
 
-    type?: "confirmBlue" | "dangerRed";
-  };
+    headIcon?: string;
+    tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked';
+    onPress?: () => void;
+
+    tailContent?: JSX.Element | string | number;
+
+    color?: 'light' | 'dark'; // | "transparent";
+
+    confirmationPrompt?: {
+        title: string;
+        description: string;
+
+        buttonText?: string;
+
+        type?: 'confirmBlue' | 'dangerRed';
+    };
 }
 export default function MenuItem({
-  title,
-  subtitle,
-  headIcon,
-  tailIconType,
+    title,
+    subtitle,
+    headIcon,
+    tailIconType,
 
-  type = "default",
+    type = 'default',
 
-  onPress,
+    onPress,
 
-  tailContent,
+    tailContent,
 
-  color = "light",
+    color = 'light',
 
-  confirmationPrompt,
+    confirmationPrompt,
 }: MenuItemProps) {
-  const [isPromptShown, showPrompt, hidePrompt] = useBoolean(false);
+    const [isPromptShown, showPrompt, hidePrompt] = useBoolean(false);
 
-  return (
-    <>
-      {confirmationPrompt && isPromptShown && (
-        <ConfirmationModal
-          isVisible={isPromptShown}
-          onClose={hidePrompt}
-          title={confirmationPrompt.title}
-          description={confirmationPrompt.description}
-          actions={[
-            {
-              type: (
-                {
-                  dangerRed: "danger",
-                  confirmBlue: "confirm",
-                  default: "default",
-                } as const
-              )[confirmationPrompt.type ?? "dangerRed"],
-              title: confirmationPrompt.buttonText || "Delete",
-              onPress: () => {
-                onPress?.();
-                hidePrompt();
-              },
-            },
-            { title: "Cancel", onPress: hidePrompt },
-          ]}
-        />
-      )}
-
-      <TouchableHighlight
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-
-          height: subtitle ? 60 : 50,
-          paddingLeft: 16,
-          paddingRight: 9,
-
-          borderTopWidth: 0.5,
-          borderTopColor: theme.panel[color].dividers,
-        }}
-        underlayColor={theme.panel[color].active}
-        onPress={confirmationPrompt ? showPrompt : onPress}
-      >
+    return (
         <>
-          {headIcon && (
-            <Icon
-              color={
-                type === "danger" ? theme.color.delete : theme.icon.primary
-              }
-              size={24}
-              name={headIcon}
-              style={{
-                paddingRight: 16,
-              }}
-            />
-          )}
-          {subtitle ? (
-            <View
-              style={{
-                paddingRight: 16,
-                paddingVertical: 12,
+            {confirmationPrompt && isPromptShown && (
+                <ConfirmationModal
+                    isVisible={isPromptShown}
+                    onClose={hidePrompt}
+                    title={confirmationPrompt.title}
+                    description={confirmationPrompt.description}
+                    actions={[
+                        {
+                            type: (
+                                {
+                                    dangerRed: 'danger',
+                                    confirmBlue: 'confirm',
+                                    default: 'default',
+                                } as const
+                            )[confirmationPrompt.type ?? 'dangerRed'],
+                            title: confirmationPrompt.buttonText || 'Delete',
+                            onPress: () => {
+                                onPress?.();
+                                hidePrompt();
+                            },
+                        },
+                        { title: 'Cancel', onPress: hidePrompt },
+                    ]}
+                />
+            )}
 
-                marginRight: "auto",
-              }}
-            >
-              <Text
+            <TouchableHighlight
                 style={{
-                  fontSize: 17,
-                  lineHeight: 22,
-                  fontWeight: 400,
-                  color:
-                    type === "danger"
-                      ? theme.color.delete
-                      : theme.color.text.primary,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+
+                    height: subtitle ? 60 : 50,
+                    paddingLeft: 16,
+                    paddingRight: 9,
+
+                    borderTopWidth: 0.5,
+                    borderTopColor: theme.panel[color].dividers,
                 }}
-                numberOfLines={1}
-              >
-                {title}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 13,
-                  lineHeight: 16,
-                  fontWeight: 400,
-                  color: "#A6A6A6",
-
-                  flex: 1,
-                }}
-                numberOfLines={1}
-              >
-                {subtitle}
-              </Text>
-            </View>
-          ) : (
-            <Text
-              style={{
-                fontSize: 17,
-                lineHeight: 22,
-                fontWeight: 400,
-                color:
-                  type === "danger"
-                    ? theme.color.delete
-                    : theme.color.text.primary,
-
-                paddingRight: 16,
-                paddingVertical: 9,
-
-                marginRight: "auto",
-              }}
-              numberOfLines={2}
+                underlayColor={theme.panel[color].active}
+                onPress={confirmationPrompt ? showPrompt : onPress}
             >
-              {title}
-            </Text>
-          )}
-          {["number", "string"].includes(typeof tailContent) ? (
-            <Text
-              style={{
-                fontSize: 17,
-                lineHeight: 22,
-                fontWeight: 400,
-                color: theme.color.text.secondary,
+                <>
+                    {headIcon && (
+                        <Icon
+                            color={
+                                type === 'danger'
+                                    ? theme.color.delete
+                                    : theme.icon.primary
+                            }
+                            size={24}
+                            name={headIcon}
+                            style={{
+                                paddingRight: 16,
+                            }}
+                        />
+                    )}
+                    {subtitle ? (
+                        <View
+                            style={{
+                                paddingRight: 16,
+                                paddingVertical: 12,
 
-                flex: 1,
+                                marginRight: 'auto',
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 17,
+                                    lineHeight: 22,
+                                    fontWeight: 400,
+                                    color:
+                                        type === 'danger'
+                                            ? theme.color.delete
+                                            : theme.color.text.primary,
+                                }}
+                                numberOfLines={1}
+                            >
+                                {title}
+                            </Text>
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    lineHeight: 16,
+                                    fontWeight: 400,
+                                    color: '#A6A6A6',
 
-                textAlign: "right",
-              }}
-              numberOfLines={1}
-            >
-              {tailContent}
-            </Text>
-          ) : (
-            tailContent
-          )}
-          {tailIconType && (
-            <Icon
-              color={
-                ["checked"].includes(tailIconType)
-                  ? theme.icon.primary
-                  : theme.icon.secondary
-              }
-              size={24}
-              name={
-                {
-                  next: "chevron-right",
-                  copy: "content-copy",
-                  checked: "circle-slice-8", // "check",
-                  unchecked: "circle-outline",
-                }[tailIconType]
-              }
-            />
-          )}
+                                    flex: 1,
+                                }}
+                                numberOfLines={1}
+                            >
+                                {subtitle}
+                            </Text>
+                        </View>
+                    ) : (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                lineHeight: 22,
+                                fontWeight: 400,
+                                color:
+                                    type === 'danger'
+                                        ? theme.color.delete
+                                        : theme.color.text.primary,
+
+                                paddingRight: 16,
+                                paddingVertical: 9,
+
+                                marginRight: 'auto',
+                            }}
+                            numberOfLines={2}
+                        >
+                            {title}
+                        </Text>
+                    )}
+                    {['number', 'string'].includes(typeof tailContent) ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                lineHeight: 22,
+                                fontWeight: 400,
+                                color: theme.color.text.secondary,
+
+                                flex: 1,
+
+                                textAlign: 'right',
+                            }}
+                            numberOfLines={1}
+                        >
+                            {tailContent}
+                        </Text>
+                    ) : (
+                        tailContent
+                    )}
+                    {tailIconType && (
+                        <Icon
+                            color={
+                                ['checked'].includes(tailIconType)
+                                    ? theme.icon.primary
+                                    : theme.icon.secondary
+                            }
+                            size={24}
+                            name={
+                                {
+                                    next: 'chevron-right',
+                                    copy: 'content-copy',
+                                    checked: 'circle-slice-8', // "check",
+                                    unchecked: 'circle-outline',
+                                }[tailIconType]
+                            }
+                        />
+                    )}
+                </>
+            </TouchableHighlight>
         </>
-      </TouchableHighlight>
-    </>
-  );
+    );
 }

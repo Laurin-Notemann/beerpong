@@ -1,282 +1,287 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Text, StyleSheet, Pressable, Animated, View } from "react-native";
+import { Stack } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
-  NestableDraggableFlatList,
-  NestableScrollContainer,
-  RenderItemParams,
-} from "react-native-draggable-flatlist";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { Stack } from "expo-router";
+    NestableDraggableFlatList,
+    NestableScrollContainer,
+    RenderItemParams,
+} from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
+} from 'react-native-reanimated';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { theme } from "@/theme";
-import { HeaderItem } from "./_layout";
-import ConfirmationModal from "@/components/ConfirmationModal";
-import { mockRules } from "@/components/mockData/rules";
-import {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import IconHead from "@/components/IconHead";
+import ConfirmationModal from '@/components/ConfirmationModal';
+import IconHead from '@/components/IconHead';
+import { mockRules } from '@/components/mockData/rules';
+import { theme } from '@/theme';
+
+import { HeaderItem } from './_layout';
 
 type RuleRenderItem = {
-  key: string;
-  label: string;
-  body: string;
+    key: string;
+    label: string;
+    body: string;
 };
 
 const initialData: RuleRenderItem[] = mockRules.map((item, idx) => {
-  return {
-    key: `item-${idx}`,
-    body: item.body,
-    label: item.title,
-  };
+    return {
+        key: `item-${idx}`,
+        body: item.body,
+        label: item.title,
+    };
 });
 
 function Rule({
-  onLongPress,
-  active,
-  draggable,
-  title,
-  description,
-  drag,
+    onLongPress,
+    active,
+    draggable,
+    title,
+    description,
+    drag,
 }: {
-  onLongPress: () => void;
-  active: boolean;
-  draggable: boolean;
-  title: string;
-  description: string;
-  drag: () => void;
+    onLongPress: () => void;
+    active: boolean;
+    draggable: boolean;
+    title: string;
+    description: string;
+    drag: () => void;
 }) {
-  const animation = useRef(new Animated.Value(0)).current; // start with height 0
+    const animation = useRef(new Animated.Value(0)).current; // start with height 0
 
-  const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
-  const heightValue = useSharedValue(0);
-  // React.Ref<View | Animated.LegacyRef<View>>
-  const containerRef = useRef<any>(null);
+    const heightValue = useSharedValue(0);
+    // React.Ref<View | Animated.LegacyRef<View>>
+    const containerRef = useRef<any>(null);
 
-  useEffect(() => {
-    // Measure the container to get its auto height
-    if (containerRef.current) {
-      // containerRef.current.measure((x, y, width, height, pageX, pageY) => {
-      //   heightValue.value = height; // Set the initial height when expanded
-      // });
-      // heightValue.value = 80;
-    }
-  }, []);
+    useEffect(() => {
+        // Measure the container to get its auto height
+        if (containerRef.current) {
+            // containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+            //   heightValue.value = height; // Set the initial height when expanded
+            // });
+            // heightValue.value = 80;
+        }
+    }, []);
 
-  const toggleCollapse = () => {
-    // Animate the height when toggling
-    // Animated.timing(animation, {
-    //   toValue: isExpanded ? 0 : 1, // expand or collapse
-    //   duration: 300, // animation duration in ms
-    //   useNativeDriver: false, // we animate height, which cannot use native driver
-    // }).start();
+    const toggleCollapse = () => {
+        // Animate the height when toggling
+        // Animated.timing(animation, {
+        //   toValue: isExpanded ? 0 : 1, // expand or collapse
+        //   duration: 300, // animation duration in ms
+        //   useNativeDriver: false, // we animate height, which cannot use native driver
+        // }).start();
 
-    setIsExpanded(!isExpanded);
-  };
-
-  // Interpolate the animated value to control height
-  const contentHeight = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 44 * 8], // customize the height range based on your content
-  });
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      // height: withSpring(isExpanded ? heightValue.value : 0, { duration: 300 }),
+        setIsExpanded(!isExpanded);
     };
-  });
 
-  return (
-    <>
-      <Pressable
-        onPress={toggleCollapse}
-        onLongPress={onLongPress}
-        style={[
-          styles.rowItem,
-          {
-            backgroundColor: active ? theme.panel.dark.active : undefined,
-          },
-        ]}
-      >
-        <Icon
-          name="format-section"
-          size={24}
-          color={theme.color.text.primary}
-          style={{
-            marginRight: 8,
-          }}
-        />
-        <Text style={styles.text}>{title}</Text>
-        {draggable && (
-          <Pressable
-            onPressIn={drag}
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
+    // Interpolate the animated value to control height
+    const contentHeight = animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 44 * 8], // customize the height range based on your content
+    });
 
-              height: "100%",
-              aspectRatio: 1,
-              marginLeft: "auto",
-            }}
-          >
-            <Icon
-              name="drag-horizontal-variant"
-              size={24}
-              color={theme.color.text.primary}
-            />
-          </Pressable>
-        )}
-      </Pressable>
-      {isExpanded && (
-        <Animated.View
-          ref={containerRef}
-          style={[
-            animatedStyle,
-            {
-              overflow: "hidden",
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            // height: withSpring(isExpanded ? heightValue.value : 0, { duration: 300 }),
+        };
+    });
 
-              paddingLeft: 24,
-              paddingRight: 16,
-              paddingBottom: 8,
-            },
-          ]}
-        >
-          <Text
-            style={{
-              fontSize: 16,
-              lineHeight: 22,
+    return (
+        <>
+            <Pressable
+                onPress={toggleCollapse}
+                onLongPress={onLongPress}
+                style={[
+                    styles.rowItem,
+                    {
+                        backgroundColor: active
+                            ? theme.panel.dark.active
+                            : undefined,
+                    },
+                ]}
+            >
+                <Icon
+                    name="format-section"
+                    size={24}
+                    color={theme.color.text.primary}
+                    style={{
+                        marginRight: 8,
+                    }}
+                />
+                <Text style={styles.text}>{title}</Text>
+                {draggable && (
+                    <Pressable
+                        onPressIn={drag}
+                        style={{
+                            alignItems: 'center',
+                            justifyContent: 'center',
 
-              color: theme.color.text.secondary,
-              backgroundColor: active ? theme.panel.dark.active : undefined,
-            }}
-          >
-            {description}
-          </Text>
-        </Animated.View>
-      )}
-    </>
-  );
+                            height: '100%',
+                            aspectRatio: 1,
+                            marginLeft: 'auto',
+                        }}
+                    >
+                        <Icon
+                            name="drag-horizontal-variant"
+                            size={24}
+                            color={theme.color.text.primary}
+                        />
+                    </Pressable>
+                )}
+            </Pressable>
+            {isExpanded && (
+                <Animated.View
+                    ref={containerRef}
+                    style={[
+                        animatedStyle,
+                        {
+                            overflow: 'hidden',
+
+                            paddingLeft: 24,
+                            paddingRight: 16,
+                            paddingBottom: 8,
+                        },
+                    ]}
+                >
+                    <Text
+                        style={{
+                            fontSize: 16,
+                            lineHeight: 22,
+
+                            color: theme.color.text.secondary,
+                            backgroundColor: active
+                                ? theme.panel.dark.active
+                                : undefined,
+                        }}
+                    >
+                        {description}
+                    </Text>
+                </Animated.View>
+            )}
+        </>
+    );
 }
 
 export default function Page() {
-  const [data, setData] = useState(initialData);
+    const [data, setData] = useState(initialData);
 
-  const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
-  const [modalId, setModalId] = useState<string | null>(null);
+    const [modalId, setModalId] = useState<string | null>(null);
 
-  const modalItem = data.find((i) => i.key === modalId);
+    const modalItem = data.find((i) => i.key === modalId);
 
-  const renderItem = ({
-    item,
-    drag,
-    isActive,
-  }: RenderItemParams<RuleRenderItem>) => {
+    const renderItem = ({
+        item,
+        drag,
+        isActive,
+    }: RenderItemParams<RuleRenderItem>) => {
+        return (
+            <Rule
+                onLongPress={() => setModalId(item.key)}
+                active={isActive}
+                draggable={isEditing}
+                title={item.label}
+                description={item.body}
+                drag={drag}
+            />
+        );
+    };
+
     return (
-      <Rule
-        onLongPress={() => setModalId(item.key)}
-        active={isActive}
-        draggable={isEditing}
-        title={item.label}
-        description={item.body}
-        drag={drag}
-      />
-    );
-  };
+        <GestureHandlerRootView>
+            <Stack.Screen
+                options={{
+                    headerRight: () => (
+                        <HeaderItem
+                            onPress={() => {
+                                setIsEditing((prev) => !prev);
+                            }}
+                        >
+                            {isEditing ? 'Done' : 'Edit'}
+                        </HeaderItem>
+                    ),
+                }}
+            />
 
-  return (
-    <GestureHandlerRootView>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <HeaderItem
-              onPress={() => {
-                setIsEditing((prev) => !prev);
-              }}
+            <ConfirmationModal
+                onClose={() => setModalId(null)}
+                title={modalItem?.label!}
+                description={modalItem?.body!}
+                actions={[
+                    {
+                        title: 'Copy Rule',
+                        type: 'default',
+
+                        onPress: () => {},
+                    },
+                    {
+                        title: 'Edit Rule',
+                        type: 'default',
+
+                        onPress: () => {},
+                    },
+                    {
+                        title: 'Delete Rule',
+                        type: 'danger',
+
+                        onPress: () => {},
+                    },
+                ]}
+                isVisible={modalItem != null}
+            />
+
+            <NestableScrollContainer
+                style={{
+                    backgroundColor: theme.color.bg,
+                }}
             >
-              {isEditing ? "Done" : "Edit"}
-            </HeaderItem>
-          ),
-        }}
-      />
+                <Text
+                    style={{
+                        color: theme.color.text.primary,
+                        fontSize: 14,
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    Rules
+                </Text>
+                <NestableDraggableFlatList
+                    data={data}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.key}
+                    onDragEnd={({ data }) => setData(data)}
+                    ListEmptyComponent={
+                        <IconHead iconName="format-section" title="No Rules" />
+                    }
+                />
+                <Text
+                    style={{
+                        color: '#777',
+                        fontWeight: 700,
+                        fontSize: 14,
+                        paddingHorizontal: 8,
+                    }}
+                >
+                    Moves
+                </Text>
+                <NestableDraggableFlatList
+                    data={data}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.key}
+                    onDragEnd={({ data }) => setData(data)}
+                    ListEmptyComponent={
+                        <IconHead iconName="format-section" title="No Moves" />
+                    }
+                />
+            </NestableScrollContainer>
 
-      <ConfirmationModal
-        onClose={() => setModalId(null)}
-        title={modalItem?.label!}
-        description={modalItem?.body!}
-        actions={[
-          {
-            title: "Copy Rule",
-            type: "default",
-
-            onPress: () => {},
-          },
-          {
-            title: "Edit Rule",
-            type: "default",
-
-            onPress: () => {},
-          },
-          {
-            title: "Delete Rule",
-            type: "danger",
-
-            onPress: () => {},
-          },
-        ]}
-        isVisible={modalItem != null}
-      />
-
-      <NestableScrollContainer
-        style={{
-          backgroundColor: theme.color.bg,
-        }}
-      >
-        <Text
-          style={{
-            color: theme.color.text.primary,
-            fontSize: 14,
-            paddingHorizontal: 16,
-          }}
-        >
-          Rules
-        </Text>
-        <NestableDraggableFlatList
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.key}
-          onDragEnd={({ data }) => setData(data)}
-          ListEmptyComponent={
-            <IconHead iconName="format-section" title="No Rules" />
-          }
-        />
-        <Text
-          style={{
-            color: "#777",
-            fontWeight: 700,
-            fontSize: 14,
-            paddingHorizontal: 8,
-          }}
-        >
-          Moves
-        </Text>
-        <NestableDraggableFlatList
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.key}
-          onDragEnd={({ data }) => setData(data)}
-          ListEmptyComponent={
-            <IconHead iconName="format-section" title="No Moves" />
-          }
-        />
-      </NestableScrollContainer>
-
-      {/* <DraggableFlatList
+            {/* <DraggableFlatList
         style={{
           backgroundColor: theme.color.bg,
         }}
@@ -294,20 +299,20 @@ export default function Page() {
         keyExtractor={(item) => item.key}
         renderItem={renderItem}
       /> */}
-    </GestureHandlerRootView>
-  );
+        </GestureHandlerRootView>
+    );
 }
 
 const styles = StyleSheet.create({
-  rowItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    rowItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
 
-    height: 50,
-    paddingLeft: 16,
-  },
-  text: {
-    color: theme.color.text.primary,
-    fontSize: 16,
-  },
+        height: 50,
+        paddingLeft: 16,
+    },
+    text: {
+        color: theme.color.text.primary,
+        fontSize: 16,
+    },
 });
