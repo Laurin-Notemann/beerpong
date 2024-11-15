@@ -1,32 +1,43 @@
-package pro.beerpong.api.control;
+package pro.beerpong.api.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.Group;
-import pro.beerpong.api.repository.GroupRepository;
+import pro.beerpong.api.service.GroupService;
 
-import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
 
-    private final GroupRepository groupRepository;
+    private final GroupService groupService;
 
     @Autowired
-    public GroupController(GroupRepository groupRepository) {
-        this.groupRepository = groupRepository;
+    public GroupController(GroupService groupService) {
+        this.groupService = groupService;
     }
 
-    // Endpoint zum Erstellen einer neuen Gruppe
     @PostMapping
     public ResponseEntity<Group> createGroup(@RequestBody Group group) {
-        // UUID als String generieren, falls noch nicht gesetzt
-        if (group.getId() == null || group.getId().isEmpty()) {
-            group.setId(UUID.randomUUID().toString());
-        }
-        Group savedGroup = groupRepository.save(group);
+        Group savedGroup = groupService.createGroup(group);
         return ResponseEntity.ok(savedGroup);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Group>> getAllGroups() {
+        List<Group> groups = groupService.getAllGroups();
+        return ResponseEntity.ok(groups);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Group> getGroupById(@PathVariable String id) {
+        Group group = groupService.getGroupById(id);
+        if (group != null) {
+            return ResponseEntity.ok(group);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
