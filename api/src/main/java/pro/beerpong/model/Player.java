@@ -13,4 +13,8 @@ public class Player {
     @ManyToOne
     @JoinColumn(name = "profileId")
     private Profile profile;
+
+    @ManyToOne
+    @JoinColumn(name = "seasonId")
+    private Season season;
 }
