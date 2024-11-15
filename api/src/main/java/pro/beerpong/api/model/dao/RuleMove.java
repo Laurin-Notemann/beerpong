@@ -3,7 +3,7 @@ package pro.beerpong.api.model.dao;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
+@Entity(name = "rule_moves")
 @Data
 public class RuleMove {
     @Id

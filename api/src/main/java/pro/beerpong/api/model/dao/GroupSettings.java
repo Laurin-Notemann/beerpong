@@ -3,7 +3,7 @@ package pro.beerpong.api.model.dao;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
+@Entity(name = "group_settings")
 @Data
 public class GroupSettings {
     @Id

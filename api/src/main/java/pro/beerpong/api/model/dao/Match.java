@@ -5,7 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Entity
+@Entity(name = "matches")
 @Data
 public class Match {
     @Id

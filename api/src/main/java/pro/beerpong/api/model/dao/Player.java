@@ -3,7 +3,7 @@ package pro.beerpong.api.model.dao;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
+@Entity(name = "players")
 @Data
 public class Player {
     @Id
