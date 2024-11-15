@@ -14,4 +14,7 @@ public class Group {
     private String inviteCode;
     @OneToOne(mappedBy = "group", cascade = CascadeType.ALL)
     private GroupSettings groupSettings;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "activeSeasonId")
+    private Season activeSeason;
 }
