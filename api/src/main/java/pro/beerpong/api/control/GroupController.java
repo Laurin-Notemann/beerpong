@@ -21,8 +21,9 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<Group> createGroup(@RequestBody Group group) {
-        Group savedGroup = groupService.createGroup(group);
-        return ResponseEntity.ok(savedGroup);
+        group.setId(null);
+        group = groupService.createGroup(group);
+        return ResponseEntity.ok(group);
     }
 
     @GetMapping
