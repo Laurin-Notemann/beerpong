@@ -3,30 +3,44 @@ package pro.beerpong.api.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
+import pro.beerpong.api.model.dto.GroupCreateDto;
+import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.repository.GroupRepository;
+import pro.beerpong.api.mapping.GroupMapper;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupService {
 
     private final GroupRepository groupRepository;
+    private final GroupMapper groupMapper;
 
     @Autowired
-    public GroupService(GroupRepository groupRepository) {
+    public GroupService(GroupRepository groupRepository, GroupMapper groupMapper) {
         this.groupRepository = groupRepository;
+        this.groupMapper = groupMapper;
     }
 
-    public Group createGroup(Group group) {
-        return groupRepository.save(group);
+    public GroupDto createGroup(GroupCreateDto groupCreateDto) {
+        Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
+        group.setId(UUID.randomUUID().toString());
+        Group savedGroup = groupRepository.save(group);
+        return groupMapper.groupToGroupDto(savedGroup);
     }
 
-    public List<Group> getAllGroups() {
-        return groupRepository.findAll();
+    public List<GroupDto> getAllGroups() {
+        return groupRepository.findAll()
+                .stream()
+                .map(groupMapper::groupToGroupDto)
+                .collect(Collectors.toList());
     }
 
-    public Group getGroupById(String id) {
-        return groupRepository.findById(id).orElse(null);
+    public GroupDto getGroupById(String id) {
+        return groupRepository.findById(id)
+                .map(groupMapper::groupToGroupDto)
+                .orElse(null);
     }
 }
