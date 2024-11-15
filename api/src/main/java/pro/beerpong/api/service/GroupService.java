@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
+
 @Service
 public class GroupService {
 
@@ -27,6 +29,7 @@ public class GroupService {
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setId(UUID.randomUUID().toString());
+        group.setInviteCode(generateRandomString(9));
         Group savedGroup = groupRepository.save(group);
         return groupMapper.groupToGroupDto(savedGroup);
     }
@@ -41,6 +44,16 @@ public class GroupService {
     public GroupDto getGroupById(String id) {
         return groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
+                .orElse(null);
+    }
+
+    public GroupDto updateGroup(String id, GroupCreateDto groupCreateDto) {
+        return groupRepository.findById(id)
+                .map(existingGroup -> {
+                    existingGroup.setName(groupCreateDto.getName());
+                    Group updatedGroup = groupRepository.save(existingGroup);
+                    return groupMapper.groupToGroupDto(updatedGroup);
+                })
                 .orElse(null);
     }
 }

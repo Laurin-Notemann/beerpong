@@ -41,4 +41,16 @@ public class GroupController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<GroupDto> updateGroup(
+            @PathVariable String id,
+            @RequestBody GroupCreateDto groupCreateDto) {
+        GroupDto updatedGroup = groupService.updateGroup(id, groupCreateDto);
+        if (updatedGroup != null) {
+            return ResponseEntity.ok(updatedGroup);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
