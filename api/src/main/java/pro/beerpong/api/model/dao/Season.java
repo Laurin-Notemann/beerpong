@@ -21,4 +21,5 @@ public class Season {
     @ManyToOne
     @JoinColumn(name = "groupId")
     private Group group;
+
 }
