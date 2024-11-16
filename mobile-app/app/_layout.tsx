@@ -97,6 +97,18 @@ export default function RootLayout() {
                             }}
                         />
                         <Stack.Screen
+                            name="player"
+                            options={{
+                                ...navStyles,
+                                headerTitle: 'Player',
+                                headerRight: () => (
+                                    <HeaderItem>Edit</HeaderItem>
+                                ),
+                                headerTintColor: 'white',
+                                headerBackTitle: '',
+                            }}
+                        />
+                        <Stack.Screen
                             name="createNewPlayer"
                             options={{
                                 presentation: 'modal',

@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { mockMatches } from '@/components/mockData/matches';
+import { Feature } from '@/constants/Features';
 import { theme } from '@/theme';
 
 import { HeaderItem } from './(tabs)/_layout';
@@ -105,13 +106,15 @@ export default function Page() {
                     paddingBottom: 32,
                 }}
             >
-                <Button
-                    variant="default"
-                    title="Start Live Match"
-                    size="small"
-                    // @ts-ignore
-                    onPress={() => navigation.navigate('startLiveMatch')}
-                />
+                {Feature.LIVE_MATCHES.isEnabled && (
+                    <Button
+                        variant="default"
+                        title="Start Live Match"
+                        size="small"
+                        // @ts-ignore
+                        onPress={() => navigation.navigate('startLiveMatch')}
+                    />
+                )}
                 <MatchPlayers
                     editable
                     players={players}

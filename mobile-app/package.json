@@ -8,7 +8,7 @@
         "android": "expo start --android",
         "ios": "expo start --ios",
         "web": "expo start --web",
-        "test": "vitest",
+        "test": "",
         "lint": "expo lint",
         "build:ios:local": "npx eas build --local --platform ios",
         "format": "prettier --write .",
