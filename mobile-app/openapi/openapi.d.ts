@@ -21,7 +21,7 @@ declare namespace Components {
         }
         export interface GroupCreateDto {
             name?: string;
-            playerNames?: string[];
+            profileNames?: string[];
         }
         export interface GroupDto {
             id?: string;
@@ -269,7 +269,13 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
-    namespace GetAllGroups {
+    namespace FindGroupByInviteCode {
+        namespace Parameters {
+            export type InviteCode = string;
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+        }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListGroupDto;
         }
@@ -551,13 +557,13 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.StartNewSeason.Responses.$200>;
     /**
-     * getAllGroups
+     * findGroupByInviteCode
      */
-    'getAllGroups'(
-        parameters?: Parameters<UnknownParamsObject> | null,
+    'findGroupByInviteCode'(
+        parameters?: Parameters<Paths.FindGroupByInviteCode.QueryParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetAllGroups.Responses.$200>;
+    ): OperationResponse<Paths.FindGroupByInviteCode.Responses.$200>;
     /**
      * createGroup
      */
@@ -749,13 +755,13 @@ export interface PathsDictionary {
     };
     ['/groups']: {
         /**
-         * getAllGroups
+         * findGroupByInviteCode
          */
         'get'(
-            parameters?: Parameters<UnknownParamsObject> | null,
+            parameters?: Parameters<Paths.FindGroupByInviteCode.QueryParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetAllGroups.Responses.$200>;
+        ): OperationResponse<Paths.FindGroupByInviteCode.Responses.$200>;
         /**
          * createGroup
          */
