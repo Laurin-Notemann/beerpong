@@ -26,9 +26,9 @@ public class GroupServiceTest {
     @Transactional
     @SuppressWarnings("unchecked")
     public void whenPassingValidGroupToCreatingGroup_ThenIsSuccessful() {
-        var groupName = "junit";
         var createDto = new GroupCreateDto();
-        createDto.setName(groupName);
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
 
         var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 
@@ -45,7 +45,7 @@ public class GroupServiceTest {
 
         assertNotNull(group);
         assertNotNull(group.getName());
-        assertEquals(groupName, group.getName());
+        assertEquals(createDto.getName(), group.getName());
         assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
         assertNotNull(group.getGroupSettings());
@@ -60,6 +60,7 @@ public class GroupServiceTest {
     @SuppressWarnings("unchecked")
     public void whenPassingGroupInviteCodeToFindGroupByInviteCode_ThenIsSuccessful() {
         var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
 
         var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);

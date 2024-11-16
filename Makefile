@@ -1,4 +1,7 @@
 # OpenApi Gen
+.PHONY: gen-open-api
+gen-open-api:
+	./scripts/gen-api
 
 # DOCKER SETUP
 .PHONY: docker-db-up

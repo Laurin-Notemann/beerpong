@@ -5,18 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.MatchDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
-import pro.beerpong.api.model.dto.SeasonCreateDto;
-import pro.beerpong.api.model.dto.SeasonDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
 
@@ -30,11 +21,10 @@ public class MatchController {
         this.matchService = matchService;
     }
 
-    @PutMapping("/new-match")
-    public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId) {
-        var match = matchService.createNewMatch(seasonId);
-
-        //TODO teams, members and moves
+    @PostMapping("/match")
+    public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
+                                                                  @RequestBody MatchCreateDto matchCreateDt) {
+        var match = matchService.createNewMatch(seasonId, matchCreateDt);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
@@ -43,7 +33,7 @@ public class MatchController {
                 return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.MATCH_VALIDATION_FAILED);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
     }
 

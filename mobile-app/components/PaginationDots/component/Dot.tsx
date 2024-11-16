@@ -1,337 +1,328 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, View } from 'react-native';
 
-import EmptyDot from "./EmptyDot";
+import EmptyDot from './EmptyDot';
 
 function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
+    const ref = useRef<T>();
 
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
+    useEffect(() => {
+        ref.current = value;
+    }, [value]);
 
-  return ref.current;
+    return ref.current;
 }
 
 type IDotStyle = {
-  size: number;
-  opacity: number;
+    size: number;
+    opacity: number;
 };
 
 enum EnumDotType {
-  ACTIVE,
-  INACTIVE,
-  MEDIUM,
-  SMALL,
+    ACTIVE,
+    INACTIVE,
+    MEDIUM,
+    SMALL,
 }
 
 const DotStyle = {
-  [EnumDotType.INACTIVE]: {
-    size: 8,
-    opacity: 0.2,
-  },
-  [EnumDotType.ACTIVE]: {
-    size: 8,
-    opacity: 1.0,
-  },
-  [EnumDotType.MEDIUM]: {
-    size: 5,
-    opacity: 0.2,
-  },
-  [EnumDotType.SMALL]: {
-    size: 3,
-    opacity: 0.2,
-  },
+    [EnumDotType.INACTIVE]: {
+        size: 8,
+        opacity: 0.2,
+    },
+    [EnumDotType.ACTIVE]: {
+        size: 8,
+        opacity: 1.0,
+    },
+    [EnumDotType.MEDIUM]: {
+        size: 5,
+        opacity: 0.2,
+    },
+    [EnumDotType.SMALL]: {
+        size: 3,
+        opacity: 0.2,
+    },
 };
 
 type getDotStylePayload = {
-  idx: number;
-  curPage: number | Animated.Value | Animated.AnimatedInterpolation<number>;
-  maxPage: number;
+    idx: number;
+    curPage: number | Animated.Value | Animated.AnimatedInterpolation<number>;
+    maxPage: number;
 };
 
 const getDotStyle = ({
-  idx,
-  curPage,
-  maxPage,
+    idx,
+    curPage,
+    maxPage,
 }: getDotStylePayload): IDotStyle => {
-  let type = EnumDotType.SMALL;
-  let currentPage = typeof curPage === "number" ? curPage : 0; // Default to 0 if not a number
+    let type = EnumDotType.SMALL;
+    let currentPage = typeof curPage === 'number' ? curPage : 0; // Default to 0 if not a number
 
-  if (maxPage < 5) {
-    return DotStyle[
-      idx === currentPage ? EnumDotType.ACTIVE : EnumDotType.INACTIVE
-    ];
-  }
-
-  if (currentPage < 3) {
-    if (idx < 3) {
-      type = EnumDotType.INACTIVE;
-      if (currentPage === idx) {
-        type = EnumDotType.ACTIVE;
-      }
-    } else if (idx < 4) {
-      type = EnumDotType.MEDIUM;
-    } else {
-      type = EnumDotType.SMALL;
+    if (maxPage < 5) {
+        return DotStyle[
+            idx === currentPage ? EnumDotType.ACTIVE : EnumDotType.INACTIVE
+        ];
     }
-  } else if (currentPage === 3) {
-    if (idx < 4) {
-      if (idx === 0) {
-        type = EnumDotType.MEDIUM;
-      } else {
-        type = EnumDotType.INACTIVE;
 
-        if (currentPage === idx) {
-          type = EnumDotType.ACTIVE;
+    if (currentPage < 3) {
+        if (idx < 3) {
+            type = EnumDotType.INACTIVE;
+            if (currentPage === idx) {
+                type = EnumDotType.ACTIVE;
+            }
+        } else if (idx < 4) {
+            type = EnumDotType.MEDIUM;
+        } else {
+            type = EnumDotType.SMALL;
         }
-      }
-    } else if (currentPage + 1 === idx) {
-      type = EnumDotType.MEDIUM;
-    } else {
-      type = EnumDotType.SMALL;
-    }
-  } else {
-    if (idx > currentPage) {
-      if (idx === currentPage + 1) {
-        type = EnumDotType.MEDIUM;
-      }
-    } else if (idx < currentPage) {
-      if (idx >= currentPage - 2) {
-        type = EnumDotType.INACTIVE;
-      } else if (idx === currentPage - 3) {
-        type = EnumDotType.MEDIUM;
-      }
-    } else {
-      type = EnumDotType.ACTIVE;
-    }
-  }
+    } else if (currentPage === 3) {
+        if (idx < 4) {
+            if (idx === 0) {
+                type = EnumDotType.MEDIUM;
+            } else {
+                type = EnumDotType.INACTIVE;
 
-  return DotStyle[type];
+                if (currentPage === idx) {
+                    type = EnumDotType.ACTIVE;
+                }
+            }
+        } else if (currentPage + 1 === idx) {
+            type = EnumDotType.MEDIUM;
+        } else {
+            type = EnumDotType.SMALL;
+        }
+    } else {
+        if (idx > currentPage) {
+            if (idx === currentPage + 1) {
+                type = EnumDotType.MEDIUM;
+            }
+        } else if (idx < currentPage) {
+            if (idx >= currentPage - 2) {
+                type = EnumDotType.INACTIVE;
+            } else if (idx === currentPage - 3) {
+                type = EnumDotType.MEDIUM;
+            }
+        } else {
+            type = EnumDotType.ACTIVE;
+        }
+    }
+
+    return DotStyle[type];
 };
 
 const Dot: React.FC<{
-  idx: number;
-  curPage: number | Animated.Value | Animated.AnimatedInterpolation<number>;
-  maxPage: number;
-  activeColor: string;
-  inactiveColor?: string;
-  sizeRatio: number;
+    idx: number;
+    curPage: number | Animated.Value | Animated.AnimatedInterpolation<number>;
+    maxPage: number;
+    activeColor: string;
+    inactiveColor?: string;
+    sizeRatio: number;
 }> = (props) => {
-  const [animVal] = useState(new Animated.Value(0));
-  const [animate, setAnimate] = useState(false);
-  const [type, setType] = useState(() =>
-    getDotStyle({
-      idx: props.idx,
-      curPage: typeof props.curPage === "number" ? props.curPage : 0, // Default to 0 if not a number
-      maxPage: props.maxPage,
-    })
-  );
-
-  const [dotColor, setDotColor] = useState<string>(() => {
-    if (props.curPage === props.idx) {
-      //its current active page now
-      return props.activeColor;
-    }
-
-    return props.inactiveColor ?? props.activeColor;
-  });
-
-  const prevType = usePrevious(type);
-  const prevDotColor = usePrevious<string>(dotColor);
-
-  useEffect(() => {
-    const nextType = getDotStyle({
-      idx: props.idx,
-      curPage: props.curPage,
-      maxPage: props.maxPage,
-    });
-
-    const nextAnimate =
-      nextType.size !== (prevType?.size || 3) ||
-      nextType.opacity !== (prevType?.opacity || 0.2);
-    if (props.curPage === props.idx) {
-      setDotColor(props.activeColor);
-    } else {
-      setDotColor(props.inactiveColor ?? props.activeColor);
-    }
-
-    setType(nextType);
-    setAnimate(nextAnimate);
-  }, [
-    prevType?.opacity,
-    prevType?.size,
-    props.activeColor,
-    props.curPage,
-    props.idx,
-    props.inactiveColor,
-    props.maxPage,
-  ]);
-
-  useEffect(() => {
-    if (!animate) return;
-
-    animVal.setValue(0);
-
-    Animated.timing(animVal, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [animVal, animate, prevType, type]);
-
-  useEffect(() => {
-    (props.curPage as Animated.AnimatedInterpolation<number>).addListener(
-      (value) => {
-        console.log("props.curPage updated:", value);
-      }
+    const [animVal] = useState(new Animated.Value(0));
+    const [animate, setAnimate] = useState(false);
+    const [type, setType] = useState(() =>
+        getDotStyle({
+            idx: props.idx,
+            curPage: typeof props.curPage === 'number' ? props.curPage : 0, // Default to 0 if not a number
+            maxPage: props.maxPage,
+        })
     );
 
-    return () => {
-      (
-        props.curPage as Animated.AnimatedInterpolation<number>
-      ).removeAllListeners();
-    };
-  }, [props.curPage]);
+    const [dotColor, setDotColor] = useState<string>(() => {
+        if (props.curPage === props.idx) {
+            //its current active page now
+            return props.activeColor;
+        }
 
-  const dingsStyle = useMemo(() => {
-    const size = props.curPage.interpolate({
-      inputRange: [0, 1],
-      outputRange: [
-        (prevType?.size || 3) * props.sizeRatio,
-        type.size * props.sizeRatio,
-      ],
+        return props.inactiveColor ?? props.activeColor;
     });
 
-    const backgroundColor = props.curPage.interpolate({
-      inputRange: [0, 1],
-      outputRange: [prevDotColor ?? props.activeColor, dotColor],
-    });
+    const prevType = usePrevious(type);
+    const prevDotColor = usePrevious<string>(dotColor);
 
-    return {
-      width: size,
-      height: size,
-      backgroundColor,
-      borderRadius: props.curPage.interpolate({
-        inputRange: [0, 1],
-        outputRange: [
-          (prevType?.size || 3) * props.sizeRatio * 0.5,
-          type.size * props.sizeRatio * 0.5,
-        ],
-      }),
-      opacity: props.curPage.interpolate({
-        inputRange: [0, 1],
-        outputRange: [prevType?.opacity || 0.2, type.opacity],
-      }),
-    };
-  }, [
-    props.curPage,
-    dotColor,
-    prevDotColor,
-    prevType?.opacity,
-    prevType?.size,
-    props.activeColor,
-    props.sizeRatio,
-    type.opacity,
-    type.size,
-  ]);
+    useEffect(() => {
+        const nextType = getDotStyle({
+            idx: props.idx,
+            curPage: props.curPage,
+            maxPage: props.maxPage,
+        });
 
-  const animStyle = useMemo(() => {
-    const size = animVal.interpolate({
-      inputRange: [0, 1],
-      outputRange: [
-        (prevType?.size || 3) * props.sizeRatio,
-        type.size * props.sizeRatio,
-      ],
-    });
+        const nextAnimate =
+            nextType.size !== (prevType?.size || 3) ||
+            nextType.opacity !== (prevType?.opacity || 0.2);
+        if (props.curPage === props.idx) {
+            setDotColor(props.activeColor);
+        } else {
+            setDotColor(props.inactiveColor ?? props.activeColor);
+        }
 
-    const backgroundColor = animVal.interpolate({
-      inputRange: [0, 1],
-      outputRange: [prevDotColor ?? props.activeColor, dotColor],
-    });
+        setType(nextType);
+        setAnimate(nextAnimate);
+    }, [
+        prevType?.opacity,
+        prevType?.size,
+        props.activeColor,
+        props.curPage,
+        props.idx,
+        props.inactiveColor,
+        props.maxPage,
+    ]);
 
-    return {
-      width: size,
-      height: size,
-      backgroundColor,
-      borderRadius: animVal.interpolate({
-        inputRange: [0, 1],
-        outputRange: [
-          (prevType?.size || 3) * props.sizeRatio * 0.5,
-          type.size * props.sizeRatio * 0.5,
-        ],
-      }),
-      opacity: animVal.interpolate({
-        inputRange: [0, 1],
-        outputRange: [prevType?.opacity || 0.2, type.opacity],
-      }),
-    };
-  }, [
-    animVal,
-    dotColor,
-    prevDotColor,
-    prevType?.opacity,
-    prevType?.size,
-    props.activeColor,
-    props.sizeRatio,
-    type.opacity,
-    type.size,
-  ]);
+    useEffect(() => {
+        if (!animate) return;
 
-  let curPageNumber: number;
+        animVal.setValue(0);
 
-  if (typeof props.curPage === "number") {
-    curPageNumber = props.curPage;
-  } else if (props.curPage instanceof Animated.Value) {
-    curPageNumber = props.curPage.__getValue();
-  } else {
-    const inputRange = Array.from({ length: props.maxPage }, (_, i) => i);
-    const outputRange = inputRange;
+        Animated.timing(animVal, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: false,
+        }).start();
+    }, [animVal, animate, prevType, type]);
 
-    console.log(props.curPage.__getValue());
+    useEffect(() => {
+        return () => {
+            (
+                props.curPage as Animated.AnimatedInterpolation<number>
+            ).removeAllListeners();
+        };
+    }, [props.curPage]);
 
-    // Assuming you want to interpolate the current value
-    curPageNumber = props.curPage.interpolate({
-      inputRange,
-      outputRange,
-    }) as unknown as number; // NOTE: You'll need to ensure this is used correctly, as interpolation returns an Animated.AnimatedInterpolation
-  }
-  console.log("curPageNumber:", props.curPage.__getValue());
+    const dingsStyle = useMemo(() => {
+        const size = props.curPage.interpolate({
+            inputRange: [0, 1],
+            outputRange: [
+                (prevType?.size || 3) * props.sizeRatio,
+                type.size * props.sizeRatio,
+            ],
+        });
 
-  if (curPageNumber < 3) {
-    if (props.idx >= 5) return <EmptyDot sizeRatio={props.sizeRatio} />;
-  } else if (curPageNumber < 4) {
-    if (props.idx > 5) return <EmptyDot sizeRatio={props.sizeRatio} />;
-  }
+        const backgroundColor = props.curPage.interpolate({
+            inputRange: [0, 1],
+            outputRange: [prevDotColor ?? props.activeColor, dotColor],
+        });
 
-  return (
-    <Animated.View
-      style={[
-        {
-          margin: 3 * props.sizeRatio,
+        return {
+            width: size,
+            height: size,
+            backgroundColor,
+            borderRadius: props.curPage.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                    (prevType?.size || 3) * props.sizeRatio * 0.5,
+                    type.size * props.sizeRatio * 0.5,
+                ],
+            }),
+            opacity: props.curPage.interpolate({
+                inputRange: [0, 1],
+                outputRange: [prevType?.opacity || 0.2, type.opacity],
+            }),
+        };
+    }, [
+        props.curPage,
+        dotColor,
+        prevDotColor,
+        prevType?.opacity,
+        prevType?.size,
+        props.activeColor,
+        props.sizeRatio,
+        type.opacity,
+        type.size,
+    ]);
 
-          width: 12,
-          height: 12,
+    const animStyle = useMemo(() => {
+        const size = animVal.interpolate({
+            inputRange: [0, 1],
+            outputRange: [
+                (prevType?.size || 3) * props.sizeRatio,
+                type.size * props.sizeRatio,
+            ],
+        });
 
-          backgroundColor: "red",
+        const backgroundColor = animVal.interpolate({
+            inputRange: [0, 1],
+            outputRange: [prevDotColor ?? props.activeColor, dotColor],
+        });
 
-          borderRadius: 6,
-        },
-        // animStyle,
-      ]}
-    />
-  );
+        return {
+            width: size,
+            height: size,
+            backgroundColor,
+            borderRadius: animVal.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                    (prevType?.size || 3) * props.sizeRatio * 0.5,
+                    type.size * props.sizeRatio * 0.5,
+                ],
+            }),
+            opacity: animVal.interpolate({
+                inputRange: [0, 1],
+                outputRange: [prevType?.opacity || 0.2, type.opacity],
+            }),
+        };
+    }, [
+        animVal,
+        dotColor,
+        prevDotColor,
+        prevType?.opacity,
+        prevType?.size,
+        props.activeColor,
+        props.sizeRatio,
+        type.opacity,
+        type.size,
+    ]);
 
-  return (
-    <Animated.View
-      style={[
-        {
-          margin: 3 * props.sizeRatio,
-        },
-        animStyle,
-      ]}
-    />
-  );
+    let curPageNumber: number;
+
+    if (typeof props.curPage === 'number') {
+        curPageNumber = props.curPage;
+    } else if (props.curPage instanceof Animated.Value) {
+        curPageNumber = props.curPage.__getValue();
+    } else {
+        const inputRange = Array.from({ length: props.maxPage }, (_, i) => i);
+        const outputRange = inputRange;
+
+        // Assuming you want to interpolate the current value
+        curPageNumber = props.curPage.interpolate({
+            inputRange,
+            outputRange,
+        }) as unknown as number; // NOTE: You'll need to ensure this is used correctly, as interpolation returns an Animated.AnimatedInterpolation
+    }
+
+    if (curPageNumber < 3) {
+        if (props.idx >= 5) return <EmptyDot sizeRatio={props.sizeRatio} />;
+    } else if (curPageNumber < 4) {
+        if (props.idx > 5) return <EmptyDot sizeRatio={props.sizeRatio} />;
+    }
+
+    return (
+        <Animated.View
+            style={[
+                {
+                    margin: 3 * props.sizeRatio,
+
+                    width: 12,
+                    height: 12,
+
+                    backgroundColor: 'red',
+
+                    borderRadius: 6,
+                },
+                // animStyle,
+            ]}
+        />
+    );
+
+    return (
+        <Animated.View
+            style={[
+                {
+                    margin: 3 * props.sizeRatio,
+                },
+                animStyle,
+            ]}
+        />
+    );
 };
 
 export default Dot;

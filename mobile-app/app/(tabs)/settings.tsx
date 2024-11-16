@@ -1,13 +1,18 @@
-import GroupSettingsScreen from "@/components/screens/GroupSettings";
+import { useGroupSettingsProps } from '@/api/propHooks/groupPropHooks';
+import ErrorScreen from '@/components/ErrorScreen';
+import LoadingScreen from '@/components/LoadingScreen';
+import GroupSettingsScreen from '@/components/screens/GroupSettings';
 
 export default function Screen() {
-  return (
-    <GroupSettingsScreen
-      groupName="Die Reise (beheizter Pool)"
-      hasPremium
-      pushNotificationsEnabled
-      pastSeasons={0}
-      groupCode="4LM LBI H9Z"
-    />
-  );
+    const { props, isLoading, error } = useGroupSettingsProps('123456');
+
+    if (isLoading) {
+        return <LoadingScreen />;
+    }
+
+    if (error || !props) {
+        return <ErrorScreen message="dumm gelöppt 💀" />;
+    }
+
+    return <GroupSettingsScreen {...props} />;
 }
