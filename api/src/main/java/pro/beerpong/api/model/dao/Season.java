@@ -18,8 +18,5 @@ public class Season {
 
     private ZonedDateTime endDate;
 
-    @ManyToOne
-    @JoinColumn(name = "groupId")
-    private Group group;
-
+    private String groupId;
 }

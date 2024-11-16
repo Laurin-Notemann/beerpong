@@ -33,12 +33,12 @@ public class SeasonService {
         if (groupOptional.isEmpty()) {
             return null;
         }
-        
+
         var group = groupOptional.get();
         var season = new Season();
 
         season.setStartDate(ZonedDateTime.now());
-        season.setGroup(groupOptional.get());
+        season.setGroupId(groupOptional.get().getId());
 
         if (group.getActiveSeason() != null) {
             group.getActiveSeason().setName(dto.getOldSeasonName());

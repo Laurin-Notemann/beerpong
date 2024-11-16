@@ -10,5 +10,5 @@ public class SeasonDto {
     private String name;
     private ZonedDateTime startDate;
     private ZonedDateTime endDate;
-    private GroupDto group;
+    private String groupId;
 }
