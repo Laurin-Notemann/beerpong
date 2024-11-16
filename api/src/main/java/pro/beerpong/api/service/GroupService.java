@@ -9,7 +9,9 @@ import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.mapping.GroupMapper;
+import pro.beerpong.api.repository.SeasonRepository;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,11 +21,13 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 public class GroupService {
 
     private final GroupRepository groupRepository;
+    private final SeasonRepository seasonRepository;
     private final GroupMapper groupMapper;
 
     @Autowired
-    public GroupService(GroupRepository groupRepository, GroupMapper groupMapper) {
+    public GroupService(GroupRepository groupRepository, SeasonRepository seasonRepository, GroupMapper groupMapper) {
         this.groupRepository = groupRepository;
+        this.seasonRepository = seasonRepository;
         this.groupMapper = groupMapper;
     }
 
@@ -31,8 +35,16 @@ public class GroupService {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setInviteCode(generateRandomString(9));
         group.setGroupSettings(new GroupSettings());
-        group.setActiveSeason(new Season());
+
+        var season = new Season();
+        season.setStartDate(ZonedDateTime.now());
+
+        group.setActiveSeason(season);
         group = groupRepository.save(group);
+
+        season.setGroupId(group.getId());
+        seasonRepository.save(season);
+
         return groupMapper.groupToGroupDto(group);
     }
 

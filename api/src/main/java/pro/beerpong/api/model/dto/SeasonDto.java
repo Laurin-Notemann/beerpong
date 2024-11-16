@@ -1,22 +1,14 @@
-package pro.beerpong.api.model.dao;
+package pro.beerpong.api.model.dto;
 
-import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
 
-@Entity(name = "seasons")
 @Data
-public class Season {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class SeasonDto {
     private String id;
-
     private String name;
-
     private ZonedDateTime startDate;
-
     private ZonedDateTime endDate;
-
     private String groupId;
 }
