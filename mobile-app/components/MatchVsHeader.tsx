@@ -10,7 +10,7 @@ import { Match } from './MatchesList';
 const MAX_ITEMS = 4;
 
 export interface MatchVsHeaderProps {
-    match: Match;
+    match: Omit<Match, 'date'>;
 
     style?: any;
 
