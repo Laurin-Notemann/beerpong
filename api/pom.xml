@@ -126,10 +126,10 @@
 					</execution>
 				</executions>
 				<configuration>
-					<apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
-					<outputFileName>openapi.yaml</outputFileName>
-					<outputDir>../openapi</outputDir>
-					<skip>false</skip>
+					<apiDocsUrl>http://localhost:8080/v3/api-docs</apiDocsUrl>
+					<outputFileName>openapi.json</outputFileName>
+					<outputDir>../mobile-app/api/generated/</outputDir>
+					<skip>false </skip>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -57,3 +57,10 @@ git push origin branch-name
 5. Create PR 
 
 6. Wait for Approval
+
+# Setup of pre-commit
+
+1. 
+```sh
+ln ./scripts/pre-commit .git/hooks/pre-commit
+```
