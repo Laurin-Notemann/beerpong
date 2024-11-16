@@ -10,9 +10,11 @@ public class Rule {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String ruleDescription;
+    private String title;
+
+    private String description;
 
     @ManyToOne
-    @JoinColumn(name = "rulesetId")
-    private Ruleset ruleset;
+    @JoinColumn(name = "seasonId")
+    private Season season;
 }

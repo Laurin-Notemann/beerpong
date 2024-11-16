@@ -34,6 +34,7 @@ public class MatchService {
         }
 
         var season = seasonOptional.get();
+        //TODO use mapper
         var match = new Match();
 
         match.setDate(ZonedDateTime.now());

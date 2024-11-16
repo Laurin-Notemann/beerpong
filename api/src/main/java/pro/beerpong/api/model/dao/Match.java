@@ -15,8 +15,6 @@ public class Match {
 
     private ZonedDateTime date;
 
-    //TODO save end date or game duration?
-
     @ManyToOne
     @JoinColumn(name = "seasonId")
     private Season season;
