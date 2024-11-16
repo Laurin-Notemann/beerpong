@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.Player;
+import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.PlayerCreateDto;
@@ -14,6 +15,7 @@ import pro.beerpong.api.repository.SeasonRepository;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
@@ -97,6 +99,13 @@ public class PlayerService {
                     return playerMapper.playerToPlayerDto(playerRepository.save(player));
                 })
                 .toList();
+    }
+
+    public PlayerDto createPlayer(Season season, Profile profile) {
+        Player player = new Player();
+        player.setProfile(profile);
+        player.setSeason(season);
+        return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
 }

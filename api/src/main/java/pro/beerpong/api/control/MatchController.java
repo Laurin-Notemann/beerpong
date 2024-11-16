@@ -5,18 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.MatchDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
-import pro.beerpong.api.model.dto.SeasonCreateDto;
-import pro.beerpong.api.model.dto.SeasonDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
 
@@ -30,10 +21,10 @@ public class MatchController {
         this.matchService = matchService;
     }
 
-    //TODO put?
-    @PutMapping("/new-match")
-    public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId) {
-        var match = matchService.createNewMatch(seasonId);
+    @PostMapping("/match")
+    public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
+                                                                  @RequestBody MatchCreateDto matchCreateDt) {
+        var match = matchService.createNewMatch(seasonId, matchCreateDt);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
