@@ -129,7 +129,7 @@
 					<apiDocsUrl>http://localhost:8080/v3/api-docs.json</apiDocsUrl>
 					<outputFileName>openapi.json</outputFileName>
 					<outputDir>../mobile-app/api/generated/</outputDir>
-					<skip>false</skip>
+					<skip>false </skip>
 				</configuration>
 			</plugin>
 		</plugins>
