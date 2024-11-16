@@ -44,6 +44,8 @@ jobs:
           registry: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
+      - id: dongs
+        run: ls
       - id: 'build-and-push'
         name: 'Build and Push docker Image'
         uses: docker/build-push-action@v5
