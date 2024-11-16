@@ -27,15 +27,12 @@ public class TeamMemberService {
         this.matchMoveService = matchMoveService;
     }
 
-    public ErrorCodes createTeamMembersForTeam(Team team, List<TeamMemberCreateDto> teamMembers) {
-        AtomicReference<ErrorCodes> error = new AtomicReference<>();
+    public void createTeamMembersForTeam(Team team, List<TeamMemberCreateDto> teamMembers) {
         teamMembers.forEach(teamMemberCreateDto -> {
             TeamMember teamMember = new TeamMember();
             teamMember.setTeam(team);
             Player player = playerRepository.findById(teamMemberCreateDto.getPlayerId()).orElse(null);
-            if (player == null) {
-                error.set(ErrorCodes.PLAYER_NOT_FOUND);
-            } else {
+            if (player != null) {
                 teamMember.setPlayer(player);
                 TeamMember savedTeamMember = teamMemberRepository.save(teamMember);
 
@@ -45,6 +42,5 @@ public class TeamMemberService {
                 }
             }
         });
-        return error.get();
     }
 }
