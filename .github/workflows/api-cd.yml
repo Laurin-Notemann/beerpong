@@ -77,9 +77,8 @@ jobs:
           service: 'api-springboot'
           image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}'
           region: europe-west10
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg'
+          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg --no-cpu-throttling --min-instances 1 --max-instances 15'
           env_vars: |
-            POSTGRES_PORT=5432
             POSTGRES_USER=postgres
             POSTGRES_URL='jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory'
           secrets: |-
