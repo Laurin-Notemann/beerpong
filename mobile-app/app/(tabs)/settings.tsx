@@ -1,4 +1,4 @@
-import { useGroupSettingsProps } from '@/api/hooks/groupHooks';
+import { useGroupSettingsProps } from '@/api/propHooks/groupPropHooks';
 import GroupSettingsScreen from '@/components/screens/GroupSettings';
 import Text from '@/components/Text';
 

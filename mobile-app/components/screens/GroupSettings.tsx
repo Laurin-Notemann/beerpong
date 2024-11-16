@@ -76,7 +76,7 @@ export default function GroupSettingsScreen({
                             const result = await launchImageLibrary({
                                 mediaType: 'photo',
                             });
-
+                            // eslint-disable-next-line
                             console.log(result);
                         }}
                     />

@@ -1,18 +1,18 @@
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 
-import { useGroup } from '../calls/group/groupHooks';
+import { useGroupQuery } from '../calls/group/groupHooks';
 import { ApiId } from '../types';
 
 export const useGroupSettingsProps = (groupId: ApiId) => {
-    const { data, ...props } = useGroup(groupId);
+    const { data, ...props } = useGroupQuery(groupId);
 
     const groupPageProps: GroupSettingsProps | null = data
         ? {
-              groupName: data.name,
-              hasPremium: false,
-              pastSeasons: 0,
-              pushNotificationsEnabled: true,
-              groupCode: '123456',
+            groupCode: data.inviteCode ?? "NO CODE FOUND",
+            groupName: data.name ?? "NO NAME FOUND",
+            hasPremium: false,
+            pastSeasons: 0,
+            pushNotificationsEnabled: false,
           }
         : null;
 

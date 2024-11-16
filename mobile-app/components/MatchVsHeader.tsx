@@ -21,10 +21,6 @@ export default function MatchVsHeader({
     style,
     hasScore = true,
 }: MatchVsHeaderProps) {
-    console.log(
-        match.blueTeam.slice(0, MAX_ITEMS).length +
-            Math.max(MAX_ITEMS - match.blueTeam.length, 0)
-    );
     return (
         <View
             style={{

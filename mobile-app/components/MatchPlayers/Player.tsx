@@ -1,5 +1,5 @@
 import { useNavigation } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
     Animated,
     TouchableHighlight,
@@ -11,10 +11,17 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
-import { mockMoves } from '../mockData/moves';
 import Text from '../Text';
 
+export interface PerformedMove {
+    id: string;
+    title: string;
+    points: number;
+    count: number;
+}
+
 export default function Player({
+    id,
     team,
     name,
     points,
@@ -23,7 +30,12 @@ export default function Player({
     expanded,
     setIsExpanded,
     editable = false,
+
+    moves,
+
+    setMoveCount,
 }: {
+    id: string;
     team: 'red' | 'blue';
     name: string;
     points: number;
@@ -32,6 +44,10 @@ export default function Player({
     expanded: boolean;
     setIsExpanded: (value: boolean) => void;
     editable?: boolean;
+
+    moves: PerformedMove[];
+
+    setMoveCount: (playerId: string, moveId: string, count: number) => void;
 }) {
     const animation = useRef(new Animated.Value(0)).current; // start with height 0
 
@@ -54,9 +70,9 @@ export default function Player({
 
     const navigation = useNavigation();
 
-    const [moves, setMoves] = useState(
-        mockMoves.map((i) => ({ ...i, count: 0 }))
-    );
+    // const [moves, setMoves] = useState(
+    //     mockMoves.map((i) => ({ ...i, count: 0 }))
+    // );
 
     return (
         <>
@@ -71,10 +87,10 @@ export default function Player({
                     borderTopColor: theme.panel.light.active,
                 }}
                 onPress={
-                    // @ts-ignore
                     editable
                         ? toggleCollapse
-                        : () => navigation.navigate('player')
+                        : // @ts-ignore
+                          () => navigation.navigate('player')
                 }
                 underlayColor={theme.panel.light.active}
             >
@@ -100,7 +116,9 @@ export default function Player({
                                 </Text>
                             ) : (
                                 <Text variant="body2" color="tertiary">
-                                    5 normal, 2 bouncer, Save, Ring of Fire
+                                    {moves
+                                        .map((i) => i.count + ' ' + i.title)
+                                        .join(', ')}
                                 </Text>
                             )}
                             <Icon
@@ -182,21 +200,10 @@ export default function Player({
 
                                     opacity: i.count < 1 ? 0.2 : 1,
                                 }}
-                                onPress={() =>
-                                    setMoves((prev) => {
-                                        const newMoves = JSON.parse(
-                                            JSON.stringify(prev)
-                                        ) as typeof prev;
-
-                                        const old = newMoves.find(
-                                            (j) => j.title === i.title
-                                        )!;
-
-                                        if (old.count > 0) old.count -= 1;
-
-                                        return newMoves;
-                                    })
-                                }
+                                onPress={() => {
+                                    if (i.count > 0)
+                                        setMoveCount(id, i.id, i.count - 1);
+                                }}
                             >
                                 <Icon
                                     color={theme.color.text.secondary}
@@ -216,21 +223,10 @@ export default function Player({
                                     width: 44,
                                     height: 44,
                                 }}
-                                onPress={() =>
-                                    setMoves((prev) => {
-                                        const newMoves = JSON.parse(
-                                            JSON.stringify(prev)
-                                        ) as typeof prev;
-
-                                        const old = newMoves.find(
-                                            (j) => j.title === i.title
-                                        )!;
-
-                                        old.count += 1;
-
-                                        return newMoves;
-                                    })
-                                }
+                                onPress={() => {
+                                    if (i.count > 0)
+                                        setMoveCount(id, i.id, i.count - 1);
+                                }}
                             >
                                 <Icon
                                     color={theme.color.text.secondary}

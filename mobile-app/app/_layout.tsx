@@ -4,13 +4,14 @@ import {
     DefaultTheme,
     ThemeProvider,
 } from '@react-navigation/native';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
-import { Stack, useNavigation } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { QueryClientProvider } from 'react-query';
 
-import { createQueryClient } from '@/api/utils/query-client';
+import { ApiProvider } from '@/api/utils/create-api';
+import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { theme } from '@/theme';
 
@@ -42,87 +43,102 @@ export default function RootLayout() {
         <ThemeProvider
             value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
-            <QueryClientProvider client={queryClient}>
-                <Stack initialRouteName="onboarding">
-                    <Stack.Screen
-                        name="onboarding"
-                        options={{
-                            headerShown: false,
-                        }}
-                    />
-                    <Stack.Screen
-                        name="(tabs)"
-                        options={{ title: '', headerShown: false }}
-                    />
-                    <Stack.Screen name="+not-found" />
-                    <Stack.Screen
-                        name="formations"
-                        options={{
-                            ...navStyles,
-                            headerTitle: 'Formations',
-                            headerRight: () => <HeaderItem>Edit</HeaderItem>,
-                            headerTintColor: 'white',
-                            headerBackTitle: '',
-                        }}
-                    />
-                    <Stack.Screen
-                        name="editFormation"
-                        options={{
-                            ...navStyles,
-                            headerTitle: 'Edit Formation',
-                            headerRight: () => <HeaderItem>Done</HeaderItem>,
-                            headerTintColor: 'white',
-                            headerBackTitle: '',
-                        }}
-                    />
-                    <Stack.Screen
-                        name="pastSeasons"
-                        options={{
-                            ...navStyles,
-                            headerTitle: 'Past Seasons',
-                            headerRight: () => <HeaderItem>Done</HeaderItem>,
-                            headerTintColor: 'white',
-                            headerBackTitle: '',
-                        }}
-                    />
-                    <Stack.Screen
-                        name="createNewPlayer"
-                        options={{
-                            presentation: 'modal',
-                            ...navStyles,
-                            headerTitle: 'Create new Player',
-                            headerLeft: () => <HeaderItem>Cancel</HeaderItem>,
-                            headerRight: () => <HeaderItem>Create</HeaderItem>,
-                            headerTintColor: 'white',
-                            headerBackTitle: '',
-                        }}
-                    />
+            <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={{ persister }}
+            >
+                <ApiProvider>
+                    <Stack initialRouteName="onboarding">
+                        <Stack.Screen
+                            name="onboarding"
+                            options={{
+                                headerShown: false,
+                            }}
+                        />
+                        <Stack.Screen
+                            name="(tabs)"
+                            options={{ title: '', headerShown: false }}
+                        />
+                        <Stack.Screen name="+not-found" />
+                        <Stack.Screen
+                            name="formations"
+                            options={{
+                                ...navStyles,
+                                headerTitle: 'Formations',
+                                headerRight: () => (
+                                    <HeaderItem>Edit</HeaderItem>
+                                ),
+                                headerTintColor: 'white',
+                                headerBackTitle: '',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="editFormation"
+                            options={{
+                                ...navStyles,
+                                headerTitle: 'Edit Formation',
+                                headerRight: () => (
+                                    <HeaderItem>Done</HeaderItem>
+                                ),
+                                headerTintColor: 'white',
+                                headerBackTitle: '',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="pastSeasons"
+                            options={{
+                                ...navStyles,
+                                headerTitle: 'Past Seasons',
+                                headerRight: () => (
+                                    <HeaderItem>Done</HeaderItem>
+                                ),
+                                headerTintColor: 'white',
+                                headerBackTitle: '',
+                            }}
+                        />
+                        <Stack.Screen
+                            name="createNewPlayer"
+                            options={{
+                                presentation: 'modal',
+                                ...navStyles,
+                                headerTitle: 'Create new Player',
+                                headerLeft: () => (
+                                    <HeaderItem>Cancel</HeaderItem>
+                                ),
+                                headerRight: () => (
+                                    <HeaderItem>Create</HeaderItem>
+                                ),
+                                headerTintColor: 'white',
+                                headerBackTitle: '',
+                            }}
+                        />
 
-                    <Stack.Screen
-                        name="editRankPlayersBy"
-                        options={{
-                            presentation: 'modal',
+                        <Stack.Screen
+                            name="editRankPlayersBy"
+                            options={{
+                                presentation: 'modal',
 
-                            // headerLeft: () => <HeaderItem noMargin>Back</HeaderItem>,
-                            headerRight: () => (
-                                <HeaderItem noMargin>Done</HeaderItem>
-                            ),
+                                // headerLeft: () => <HeaderItem noMargin>Back</HeaderItem>,
+                                headerRight: () => (
+                                    <HeaderItem noMargin>Done</HeaderItem>
+                                ),
 
-                            headerTitle: 'Rank Players By',
-                            headerBackTitle: '',
-                            headerBackVisible: true,
-                            headerTintColor: 'white',
+                                headerTitle: 'Rank Players By',
+                                headerBackTitle: '',
+                                headerBackVisible: true,
+                                headerTintColor: 'white',
 
-                            headerStyle: {
-                                backgroundColor: '#1B1B1B',
-                            },
-                            headerTitleStyle: {
-                                color: theme.color.text.primary,
-                            },
-                        }}
-                    />
-                </Stack>
-            </QueryClientProvider>
+                                headerStyle: {
+                                    backgroundColor: '#1B1B1B',
+                                },
+                                headerTitleStyle: {
+                                    color: theme.color.text.primary,
+                                },
+                            }}
+                        />
+                    </Stack>
+                </ApiProvider>
+            </PersistQueryClientProvider>
         </ThemeProvider>
     );
 }
