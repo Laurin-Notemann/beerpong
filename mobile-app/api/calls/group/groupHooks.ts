@@ -4,6 +4,9 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { Paths } from '@/openapi/openapi';
 
+// Type definitions
+export type Group = NonNullable<Paths.GetGroupById.Responses.$200['data']>
+
 export const useGroupQuery = (id: ApiId) => {
     const { api } = useApi();
 

@@ -2,12 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const GROUP_ID_KEY = 'groupIds';
 
-export const storeGroupIds = async (value: string[]) => {
+export const saveGroupsToDevice = async (value: string[]) => {
     const jsonValue = JSON.stringify(value);
     await AsyncStorage.setItem(GROUP_ID_KEY, jsonValue);
 };
 
-export const getGroupIds = async () => {
+export const loadGroupsFromDevice = async () => {
     const jsonValue = await AsyncStorage.getItem(GROUP_ID_KEY);
     const parsed = jsonValue != null ? JSON.parse(jsonValue) : null;
 
