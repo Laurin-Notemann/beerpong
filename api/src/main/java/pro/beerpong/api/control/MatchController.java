@@ -34,6 +34,8 @@ public class MatchController {
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId) {
         var match = matchService.createNewMatch(seasonId);
 
+        //TODO teams, members and moves
+
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);

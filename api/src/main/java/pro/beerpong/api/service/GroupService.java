@@ -45,6 +45,9 @@ public class GroupService {
         season.setGroupId(group.getId());
         seasonRepository.save(season);
 
+        //TODO create ruleset
+        //TODO create default moves
+
         return groupMapper.groupToGroupDto(group);
     }
 
