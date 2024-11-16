@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity(name = "matches")
 @Data
@@ -12,7 +13,9 @@ public class Match {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private LocalDateTime date;
+    private ZonedDateTime date;
+
+    //TODO save end date or game duration?
 
     @ManyToOne
     @JoinColumn(name = "seasonId")
