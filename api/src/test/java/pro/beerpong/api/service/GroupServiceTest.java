@@ -5,11 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.ParameterizedTypeReference;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,17 +24,18 @@ public class GroupServiceTest {
 
     @Test
     @Transactional
-    public void test_createGroup() {
+    @SuppressWarnings("unchecked")
+    public void whenPassingValidGroupToCreatingGroup_ThenIsSuccessful() {
         var groupName = "junit";
         var createDto = new GroupCreateDto();
         createDto.setName(groupName);
 
-        var response = testUtils.performPost(port, "/groups", createDto, new ParameterizedTypeReference<ResponseEnvelope<GroupDto>>() {});
+        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
 
-        var envelope = response.getBody();
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
         assertNotNull(envelope);
         assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
         assertNull(envelope.getError());
@@ -44,6 +46,55 @@ public class GroupServiceTest {
         assertNotNull(group);
         assertNotNull(group.getName());
         assertEquals(groupName, group.getName());
+        assertNotNull(group.getId());
+        assertNotNull(group.getInviteCode());
+        assertNotNull(group.getGroupSettings());
+        assertNotNull(group.getGroupSettings().getId());
+        assertNotNull(group.getActiveSeason());
+        assertNotNull(group.getActiveSeason().getId());
+        assertEquals(group.getActiveSeason().getGroupId(), group.getId());
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void whenPassingGroupInviteCodeToFindGroupByInviteCode_ThenIsSuccessful() {
+        var createDto = new GroupCreateDto();
+        createDto.setName("test");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+
+        assertNotNull(prerequisiteResponse);
+        assertEquals(200, prerequisiteResponse.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> prerequisiteEnvelope = (ResponseEnvelope<GroupDto>) prerequisiteResponse.getBody();
+        assertNotNull(prerequisiteEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, prerequisiteEnvelope.getStatus());
+        assertNull(prerequisiteEnvelope.getError());
+        assertEquals(200, prerequisiteEnvelope.getHttpCode());
+
+        var prerequisiteGroup = prerequisiteEnvelope.getData();
+
+        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), List.class, GroupDto.class);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+
+        ResponseEnvelope<List<GroupDto>> envelope = (ResponseEnvelope<List<GroupDto>>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
+        assertNull(envelope.getError());
+        assertEquals(200, envelope.getHttpCode());
+
+        var groups = envelope.getData();
+
+        assertNotNull(groups);
+        assertEquals(1, groups.size());
+
+        var group = groups.getFirst();
+
+        assertNotNull(group.getName());
+        assertEquals(prerequisiteGroup, group);
         assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
         assertNotNull(group.getGroupSettings());
