@@ -13,7 +13,7 @@
         "build:ios:local": "npx eas build --local --platform ios",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "gen-types": "npx openapicmd typegen  ../openapi/openapi.yaml > openapi/openapi.d.ts; npm run format",
+        "gen-types": "npx openapicmd typegen  ./api/generated/openapi.json > openapi/openapi.d.ts; npm run format",
         "ci:format": "npm run format:check",
         "ci:lint": "npm run lint",
         "ci:test": "TEST_ENV=CI npm run test"

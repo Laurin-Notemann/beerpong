@@ -3,7 +3,7 @@
 gen-open-api:
 	export $(grep -v '^#' .env | xargs)
 	cd api && mvn verify -DskipTests && cd ..
-	sed -i '' "s/'\*\/\*'/application\/json/g" openapi/openapi.yaml
+	sed -i '' "s/'\*\/\*'/application\/json/g" ./mobile-app/api/generated/openapi.json
 	cd mobile-app && npm run gen-types
 
 # DOCKER SETUP
