@@ -3,6 +3,7 @@ package pro.beerpong.api.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
@@ -18,12 +19,15 @@ public class ProfileService {
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
     private final ProfileMapper profileMapper;
+    private final PlayerService playerService;
 
     @Autowired
-    public ProfileService(ProfileRepository profileRepository, GroupRepository groupRepository, ProfileMapper profileMapper) {
+    public ProfileService(ProfileRepository profileRepository, GroupRepository groupRepository, ProfileMapper profileMapper
+    , PlayerService playerService) {
         this.profileRepository = profileRepository;
         this.groupRepository = groupRepository;
         this.profileMapper = profileMapper;
+        this.playerService = playerService;
     }
 
     public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto) {
@@ -33,7 +37,17 @@ public class ProfileService {
         profile.setGroup(groupOptional.orElseThrow());
 
         var savedProfile = profileRepository.save(profile);
+
+        playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile);
+
         return profileMapper.profileToProfileDto(savedProfile);
+    }
+
+    public List<ProfileDto> listAllProfilesOfGroup(String groupId) {
+        return profileRepository.findAllByGroupId(groupId)
+                .stream()
+                .map(profileMapper::profileToProfileDto)
+                .collect(Collectors.toList());
     }
 
     public List<ProfileDto> listAllProfiles() {

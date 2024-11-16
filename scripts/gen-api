@@ -1,6 +1,8 @@
 #!/bin/bash
-export $(grep -v '^#' .env | xargs)
-	cd api && mvn verify -DskipTests && cd ..
+#export $(grep -v '^#' .env | xargs)
+#	cd api && mvn verify && cd ..
+docker compose --env-file .env -f docker/docker-compose-gen-api.yml up -d
+docker cp
 	ls
 	# Check if the OS is macOS or Linux
     if [[ "$OSTYPE" == "darwin"* ]]; then

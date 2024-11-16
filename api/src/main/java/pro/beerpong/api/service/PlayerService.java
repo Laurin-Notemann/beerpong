@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.Player;
+import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
@@ -11,7 +12,6 @@ import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,16 +43,22 @@ public class PlayerService {
         List<Player> newSeasonPlayers = oldSeasonPlayers.stream()
                 .map(oldPlayer -> {
                     Player newPlayer = new Player();
-                    newPlayer.setId(UUID.randomUUID().toString());
                     newPlayer.setProfile(oldPlayer.getProfile());
                     newPlayer.setSeason(newSeason);
                     return playerRepository.save(newPlayer);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         return newSeasonPlayers.stream()
                 .map(playerMapper::playerToPlayerDto)
                 .collect(Collectors.toList());
+    }
+
+    public PlayerDto createPlayer(Season season, Profile profile) {
+        Player player = new Player();
+        player.setProfile(profile);
+        player.setSeason(season);
+        return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
 }
