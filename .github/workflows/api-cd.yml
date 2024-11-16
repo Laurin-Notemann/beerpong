@@ -6,10 +6,6 @@ on:
       - "main"
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: api
-
 jobs:
   build-api:
     permissions:
@@ -44,15 +40,13 @@ jobs:
           registry: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
-      - id: dongs
-        run: ls
       - id: 'build-and-push'
         name: 'Build and Push docker Image'
         uses: docker/build-push-action@v5
         with:
           push: true
-          context: .
-          file: ./Dockerfile
+          context: api
+          file: ./api/Dockerfile
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong:${{ github.sha }}
 
