@@ -1,16 +1,17 @@
 import { useGroupSettingsProps } from '@/api/propHooks/groupPropHooks';
+import ErrorScreen from '@/components/ErrorScreen';
+import LoadingScreen from '@/components/LoadingScreen';
 import GroupSettingsScreen from '@/components/screens/GroupSettings';
-import Text from '@/components/Text';
 
 export default function Screen() {
     const { props, isLoading, error } = useGroupSettingsProps('123456');
 
     if (isLoading) {
-        return <Text color="primary">Loading...</Text>;
+        return <LoadingScreen />;
     }
 
     if (error || !props) {
-        return <Text color="negative">Error</Text>;
+        return <ErrorScreen message="dumm gelöppt 💀" />;
     }
 
     return <GroupSettingsScreen {...props} />;
