@@ -6,27 +6,26 @@ import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 
 export default function Page() {
-    const [value, setValue] = useState('');
+    const [name, setName] = useState('');
 
     return (
         <InputModal>
             <Avatar
-                name={value}
+                name={name}
                 size={96}
                 canUpload
                 onPress={async () => {
                     const result = await launchImageLibrary({
                         mediaType: 'photo',
                     });
-
+                    // eslint-disable-next-line
                     console.log(result);
                 }}
             />
             <TextInput
                 required
                 placeholder="Player Name"
-                value={value}
-                onChangeText={setValue}
+                onChangeText={setName}
                 autoFocus
                 style={{
                     alignSelf: 'stretch',

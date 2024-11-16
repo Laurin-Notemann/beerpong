@@ -181,12 +181,6 @@ const Dot: React.FC<{
     }, [animVal, animate, prevType, type]);
 
     useEffect(() => {
-        (props.curPage as Animated.AnimatedInterpolation<number>).addListener(
-            (value) => {
-                console.log('props.curPage updated:', value);
-            }
-        );
-
         return () => {
             (
                 props.curPage as Animated.AnimatedInterpolation<number>
@@ -288,15 +282,12 @@ const Dot: React.FC<{
         const inputRange = Array.from({ length: props.maxPage }, (_, i) => i);
         const outputRange = inputRange;
 
-        console.log(props.curPage.__getValue());
-
         // Assuming you want to interpolate the current value
         curPageNumber = props.curPage.interpolate({
             inputRange,
             outputRange,
         }) as unknown as number; // NOTE: You'll need to ensure this is used correctly, as interpolation returns an Animated.AnimatedInterpolation
     }
-    console.log('curPageNumber:', props.curPage.__getValue());
 
     if (curPageNumber < 3) {
         if (props.idx >= 5) return <EmptyDot sizeRatio={props.sizeRatio} />;

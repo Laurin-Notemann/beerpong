@@ -1,5 +1,4 @@
 import { Gesture } from 'react-native-gesture-handler';
-import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
 import { CupFormationProps } from '.';

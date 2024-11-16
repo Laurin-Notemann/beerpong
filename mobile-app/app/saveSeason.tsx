@@ -1,11 +1,9 @@
-import { useState } from 'react';
-
 import InputModal from '@/components/InputModal';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
 
 export default function Page() {
-    const [value, setValue] = useState('');
+    async function startNewSeason(oldSeasonName: string) {}
 
     return (
         <InputModal>
@@ -13,8 +11,9 @@ export default function Page() {
             <TextInput
                 required
                 placeholder="Season Name"
-                value={value}
-                onChangeText={setValue}
+                onSubmitEditing={(event) => {
+                    startNewSeason(event.nativeEvent.text);
+                }}
                 autoFocus
                 style={{
                     alignSelf: 'stretch',
