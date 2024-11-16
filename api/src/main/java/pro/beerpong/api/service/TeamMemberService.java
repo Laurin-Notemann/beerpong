@@ -16,21 +16,28 @@ public class TeamMemberService {
 
     private final TeamMemberRepository teamMemberRepository;
     private final PlayerRepository playerRepository;
+    private final MatchMoveService matchMoveService;
 
     @Autowired
-    public TeamMemberService(TeamMemberRepository teamMemberRepository, PlayerRepository playerRepository) {
+    public TeamMemberService(TeamMemberRepository teamMemberRepository, PlayerRepository playerRepository, MatchMoveService matchMoveService) {
         this.teamMemberRepository = teamMemberRepository;
         this.playerRepository = playerRepository;
+        this.matchMoveService = matchMoveService;
     }
 
     public void createTeamMembersForTeam(Team team, List<TeamMemberCreateDto> teamMembers) {
         teamMembers.forEach(teamMemberCreateDto -> {
             TeamMember teamMember = new TeamMember();
             teamMember.setTeam(team);
-
+          
             playerRepository.findById(teamMemberCreateDto.getPlayerId()).ifPresent(player -> {
                 teamMember.setPlayer(player);
-                teamMemberRepository.save(teamMember);
+                TeamMember savedTeamMember = teamMemberRepository.save(teamMember);
+  
+                  // Erstelle die MatchMoves für dieses Teammitglied
+                if (teamMemberCreateDto.getMoves() != null) {
+                    matchMoveService.createMatchMoves(savedTeamMember, teamMemberCreateDto.getMoves());
+                }
             });
         });
     }
