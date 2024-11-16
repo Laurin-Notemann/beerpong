@@ -30,6 +30,7 @@ public class MatchController {
         this.matchService = matchService;
     }
 
+    //TODO put?
     @PutMapping("/new-match")
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId) {
         var match = matchService.createNewMatch(seasonId);
