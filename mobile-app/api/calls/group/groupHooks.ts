@@ -1,18 +1,14 @@
 import { useQuery } from 'react-query';
 
 import { ApiId } from '@/api/types';
-import { createApi } from '@/api/utils/create-api';
-
-interface IGroup {
-    id: ApiId;
-    name: string;
-}
+import { useApi } from '@/api/utils/create-api';
+import { Paths } from '@/openapi/openapi';
 
 export const useGroup = (id: ApiId) => {
-    const api = createApi();
+    const { api } = useApi();
 
-    return useQuery<IGroup>(['group', id], async () => {
-        const { data } = await api.get(`/groups/${id}`);
-        return data;
+    return useQuery<Paths.GetGroupById.Responses.$200 | undefined>(['group', id], async () => {
+        const res = await api?.getGroupById(id);
+        return res?.data;
     });
 };
