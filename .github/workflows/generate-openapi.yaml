@@ -1,0 +1,21 @@
+name: Generate OpenApi
+
+on: 
+  pull_request:
+    paths:
+      - "api/src/main/java/pro/beerpong/api/**"
+      - ".github/workflows/generate-openapi.yaml"
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  generate-docs: 
+    name: Genereate Api docs
+    runs-on: ubuntu-20.04
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: checkout code
+        run: ls
+  

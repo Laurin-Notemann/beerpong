@@ -1,79 +1,78 @@
-import React, { useState } from "react";
-import { useNavigation } from "expo-router";
+import React, { useState } from 'react';
 
-import { theme } from "@/theme";
-import MenuSection from "../Menu/MenuSection";
-import Player from "./Player";
+import MenuSection from '../Menu/MenuSection';
+import { TeamId } from '../screens/NewMatchAssignTeams';
+import Player, { PerformedMove } from './Player';
+
+export interface TeamMember {
+    id: string;
+    team: TeamId;
+    name: string;
+    points: number;
+    change: number;
+
+    moves: PerformedMove[];
+}
 
 export interface MatchPlayersProps {
-  editable?: boolean;
+    editable?: boolean;
+    players: TeamMember[];
+    setMoveCount: (playerId: string, moveId: string, count: number) => void;
 }
-export default function MatchPlayers({ editable }: MatchPlayersProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+export default function MatchPlayers({
+    editable,
+    players,
+    setMoveCount,
+}: MatchPlayersProps) {
+    const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const navigation = useNavigation();
+    const redTeam = players.filter((i) => i.team === 'red');
+    const blueTeam = players.filter((i) => i.team === 'blue');
 
-  return (
-    <>
-      <MenuSection title="Red Team - 30 points">
-        <Player
-          team="red"
-          name="Bolls"
-          points={3}
-          change={0.12}
-          expanded={expandedId === "1"}
-          setIsExpanded={(value) => setExpandedId(value ? "1" : null)}
-          editable={editable}
-        />
-        <Player
-          team="red"
-          name="Institut"
-          points={3}
-          change={0.12}
-          expanded={expandedId === "2"}
-          setIsExpanded={(value) => setExpandedId(value ? "2" : null)}
-          editable={editable}
-        />
-        <Player
-          team="red"
-          name="Jonas"
-          points={3}
-          change={-0.12}
-          expanded={expandedId === "3"}
-          setIsExpanded={(value) => setExpandedId(value ? "3" : null)}
-          editable={editable}
-        />
-      </MenuSection>
+    const redTeamPoints = redTeam.reduce((sum, i) => sum + i.points, 0);
+    const blueTeamPoints = blueTeam.reduce((sum, i) => sum + i.points, 0);
 
-      <MenuSection title="Blue Team - 9 points">
-        <Player
-          team="blue"
-          name="Laurin"
-          points={3}
-          change={0.12}
-          expanded={expandedId === "4"}
-          setIsExpanded={(value) => setExpandedId(value ? "4" : null)}
-          editable={editable}
-        />
-        <Player
-          team="blue"
-          name="Ole"
-          points={3}
-          change={0.12}
-          expanded={expandedId === "5"}
-          setIsExpanded={(value) => setExpandedId(value ? "5" : null)}
-          editable={editable}
-        />
-        <Player
-          team="blue"
-          name="Robert"
-          points={3}
-          change={0.12}
-          expanded={expandedId === "6"}
-          setIsExpanded={(value) => setExpandedId(value ? "6" : null)}
-          editable={editable}
-        />
-      </MenuSection>
-    </>
-  );
+    return (
+        <>
+            <MenuSection title={`Red Team - ${redTeamPoints} points`}>
+                {redTeam.map((i, idx) => (
+                    <Player
+                        key={idx}
+                        id={i.id}
+                        team={i.team!}
+                        name={i.name}
+                        points={i.points}
+                        change={i.change}
+                        expanded={expandedId === idx}
+                        setIsExpanded={(value) =>
+                            setExpandedId(value ? idx : null)
+                        }
+                        editable={editable}
+                        setMoveCount={setMoveCount}
+                        moves={i.moves}
+                    />
+                ))}
+            </MenuSection>
+
+            <MenuSection title={`Blue Team - ${blueTeamPoints} points`}>
+                {blueTeam.map((i, idx) => (
+                    <Player
+                        key={idx}
+                        id={i.id}
+                        team={i.team!}
+                        name={i.name}
+                        points={i.points}
+                        change={i.change}
+                        expanded={expandedId === idx}
+                        setIsExpanded={(value) =>
+                            setExpandedId(value ? idx : null)
+                        }
+                        editable={editable}
+                        setMoveCount={setMoveCount}
+                        moves={i.moves}
+                    />
+                ))}
+            </MenuSection>
+        </>
+    );
 }

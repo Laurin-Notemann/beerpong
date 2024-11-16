@@ -24,13 +24,7 @@ public class ProfileController {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var profile = profileService.getProfileById(groupId);
-
-            if (profile != null) {
-                return ResponseEnvelope.ok(profileService.createProfile(groupId, profileCreateDto));
-            } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "PROFILE_NOT_FOUND", "Profile not found");
-            }
+            return ResponseEnvelope.ok(profileService.createProfile(groupId, profileCreateDto));
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
         }
