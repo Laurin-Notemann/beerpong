@@ -1,46 +1,49 @@
+import { useRef } from 'react';
 import {
-  TextInput as ReactNativeTextInput,
-  TextInputProps as ReactNativeTextInputProps,
-} from "react-native";
+    TextInput as ReactNativeTextInput,
+    TextInputProps as ReactNativeTextInputProps,
+} from 'react-native';
 
-import { theme } from "@/theme";
+import { theme } from '@/theme';
 
 export interface TextInputProps extends ReactNativeTextInputProps {
-  required?: boolean;
+    required?: boolean;
 }
 
 export default function TextInput({
-  required = false,
-  placeholder,
-  ...rest
+    required = false,
+    placeholder,
+    ...rest
 }: TextInputProps) {
-  const color = "#fff";
+    const color = '#fff';
 
-  return (
-    <ReactNativeTextInput
-      placeholder={
-        placeholder
-          ? placeholder + (required ? " (Required)" : " (Optional)")
-          : undefined
-      }
-      {...rest}
-      style={[
-        {
-          paddingHorizontal: 16,
-          paddingVertical: 13,
+    const inputRef = useRef(null);
 
-          borderRadius: 10,
+    return (
+        <ReactNativeTextInput
+            placeholder={
+                placeholder
+                    ? placeholder + (required ? ' (Required)' : ' (Optional)')
+                    : undefined
+            }
+            {...rest}
+            style={[
+                {
+                    paddingHorizontal: 16,
+                    paddingVertical: 13,
 
-          fontSize: 16,
-          lineHeight: 22,
+                    borderRadius: 10,
 
-          backgroundColor: theme.panel.light.bg,
-          color,
-        },
-        rest.style,
-      ]}
-      placeholderTextColor={theme.icon.secondary}
-      selectionColor={color}
-    />
-  );
+                    fontSize: 16,
+                    lineHeight: 22,
+
+                    backgroundColor: theme.panel.light.bg,
+                    color,
+                },
+                rest.style,
+            ]}
+            placeholderTextColor={theme.icon.secondary}
+            selectionColor={color}
+        />
+    );
 }
