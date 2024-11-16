@@ -29,6 +29,10 @@ jobs:
       - id: 'docker-buildx-setup'
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Debug
+        run: |
+           echo "GitHub Ref: ${{ github.ref }}"
+           echo "GitHub Repository: ${{ github.repository }}"
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
