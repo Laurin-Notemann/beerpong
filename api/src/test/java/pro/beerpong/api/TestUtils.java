@@ -43,15 +43,12 @@ public class TestUtils {
         JavaType valueType = null;
 
         int limit = classes.length + 1;
-        System.out.println("limit: " + limit);
 
         for (int i = limit - 1; i >= 0; i--) {
-            System.out.println(i);
 
             if (limit - 1 == 0) {
                 //list is empty
                 valueType = typeFactory.constructParametricType(ResponseEnvelope.class, firstClazz);
-                System.out.println("list is empty: " + valueType);
             } else {
                 //list isn't empty
 
@@ -67,7 +64,6 @@ public class TestUtils {
                     }
 
                     valueType = typeFactory.constructParametricType(ResponseEnvelope.class, valueType);
-                    System.out.println("valueType: " + valueType);
                 } else {
                     //over firstClass height, inside classes list
 
@@ -76,10 +72,8 @@ public class TestUtils {
 
                         if (valueType == null) {
                             valueType = typeFactory.constructParametricType(classes[i-1], classes[i]);
-                            System.out.println("valueType was null: " + valueType);
                         } else {
                             valueType = typeFactory.constructParametricType(classes[i-1], valueType);
-                            System.out.println("valueType wasn't null: " + valueType);
                         }
                     }
                 }
