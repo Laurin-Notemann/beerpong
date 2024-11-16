@@ -63,6 +63,18 @@ declare namespace Components {
             data?: ProfileDto[];
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeListRuleDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: RuleDto[];
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeListRuleMoveDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: RuleMoveDto[];
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeListSeasonDto {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
@@ -79,6 +91,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: ProfileDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeRuleMoveDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: RuleMoveDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeSeasonDto {
@@ -100,6 +118,30 @@ declare namespace Components {
                 [key: string]: any;
             };
             error?: ErrorDetails;
+        }
+        export interface RuleCreateDto {
+            title?: string;
+            description?: string;
+        }
+        export interface RuleDto {
+            id?: string;
+            title?: string;
+            description?: string;
+            season?: Season;
+        }
+        export interface RuleMoveCreateDto {
+            name?: string;
+            pointsForTeam?: number; // int32
+            pointsForScorer?: number; // int32
+            finishingMove?: boolean;
+        }
+        export interface RuleMoveDto {
+            id?: string;
+            name?: string;
+            pointsForTeam?: number; // int32
+            pointsForScorer?: number; // int32
+            finishingMove?: boolean;
+            season?: Season;
         }
         export interface Season {
             id?: string;
@@ -152,6 +194,20 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
+    namespace CreateRuleMove {
+        namespace Parameters {
+            export type GroupId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+        }
+        export type RequestBody = Components.Schemas.RuleMoveCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeRuleMoveDto;
+        }
+    }
     namespace DeleteProfile {
         namespace Parameters {
             export type GroupId = string;
@@ -163,6 +219,21 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeVoid;
+        }
+    }
+    namespace DeleteRuleMove {
+        namespace Parameters {
+            export type GroupId = string;
+            export type RuleMoveId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            ruleMoveId: Parameters.RuleMoveId;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
     namespace GetAllGroups {
@@ -181,6 +252,20 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListMatchDto;
+        }
+    }
+    namespace GetAllRuleMoves {
+        namespace Parameters {
+            export type GroupId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListRuleMoveDto;
         }
     }
     namespace GetAllSeasons {
@@ -236,6 +321,19 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
+        }
+    }
+    namespace GetRules {
+        namespace Parameters {
+            export type GroupId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeListRuleDto;
         }
     }
     namespace GetSeasonById {
@@ -301,6 +399,36 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
+    namespace UpdateRuleMove {
+        namespace Parameters {
+            export type GroupId = string;
+            export type RuleMoveId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            ruleMoveId: Parameters.RuleMoveId;
+        }
+        export type RequestBody = Components.Schemas.RuleMoveCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeRuleMoveDto;
+        }
+    }
+    namespace WriteRules {
+        namespace Parameters {
+            export type GroupId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+        }
+        export type RequestBody = Components.Schemas.RuleCreateDto[];
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeListRuleDto;
+        }
+    }
 }
 
 export interface OperationMethods {
@@ -320,6 +448,38 @@ export interface OperationMethods {
         data?: Paths.UpdateGroup.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
+    /**
+     * getRules
+     */
+    'getRules'(
+        parameters?: Parameters<Paths.GetRules.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetRules.Responses.$200>;
+    /**
+     * writeRules
+     */
+    'writeRules'(
+        parameters?: Parameters<Paths.WriteRules.PathParameters> | null,
+        data?: Paths.WriteRules.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.WriteRules.Responses.$200>;
+    /**
+     * updateRuleMove
+     */
+    'updateRuleMove'(
+        parameters?: Parameters<Paths.UpdateRuleMove.PathParameters> | null,
+        data?: Paths.UpdateRuleMove.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.UpdateRuleMove.Responses.$200>;
+    /**
+     * deleteRuleMove
+     */
+    'deleteRuleMove'(
+        parameters?: Parameters<Paths.DeleteRuleMove.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
     /**
      * createMatch
      */
@@ -376,6 +536,22 @@ export interface OperationMethods {
         data?: Paths.CreateGroup.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.CreateGroup.Responses.$200>;
+    /**
+     * getAllRuleMoves
+     */
+    'getAllRuleMoves'(
+        parameters?: Parameters<Paths.GetAllRuleMoves.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetAllRuleMoves.Responses.$200>;
+    /**
+     * createRuleMove
+     */
+    'createRuleMove'(
+        parameters?: Parameters<Paths.CreateRuleMove.PathParameters> | null,
+        data?: Paths.CreateRuleMove.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     /**
      * listAllProfiles
      */
@@ -453,6 +629,42 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
     };
+    ['/groups/{groupId}/seasons/{seasonId}/rules']: {
+        /**
+         * getRules
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetRules.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetRules.Responses.$200>;
+        /**
+         * writeRules
+         */
+        'put'(
+            parameters?: Parameters<Paths.WriteRules.PathParameters> | null,
+            data?: Paths.WriteRules.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.WriteRules.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/ruleMoves/{ruleMoveId}']: {
+        /**
+         * updateRuleMove
+         */
+        'put'(
+            parameters?: Parameters<Paths.UpdateRuleMove.PathParameters> | null,
+            data?: Paths.UpdateRuleMove.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.UpdateRuleMove.Responses.$200>;
+        /**
+         * deleteRuleMove
+         */
+        'delete'(
+            parameters?: Parameters<Paths.DeleteRuleMove.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
+    };
     ['/groups/{groupId}/seasons/{seasonId}/new-match']: {
         /**
          * createMatch
@@ -516,6 +728,24 @@ export interface PathsDictionary {
             data?: Paths.CreateGroup.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateGroup.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/ruleMoves']: {
+        /**
+         * getAllRuleMoves
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetAllRuleMoves.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetAllRuleMoves.Responses.$200>;
+        /**
+         * createRuleMove
+         */
+        'post'(
+            parameters?: Parameters<Paths.CreateRuleMove.PathParameters> | null,
+            data?: Paths.CreateRuleMove.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     };
     ['/groups/{groupId}/profiles']: {
         /**
@@ -604,16 +834,26 @@ export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListProfileDto =
     Components.Schemas.ResponseEnvelopeListProfileDto;
+export type ResponseEnvelopeListRuleDto =
+    Components.Schemas.ResponseEnvelopeListRuleDto;
+export type ResponseEnvelopeListRuleMoveDto =
+    Components.Schemas.ResponseEnvelopeListRuleMoveDto;
 export type ResponseEnvelopeListSeasonDto =
     Components.Schemas.ResponseEnvelopeListSeasonDto;
 export type ResponseEnvelopeMatchDto =
     Components.Schemas.ResponseEnvelopeMatchDto;
 export type ResponseEnvelopeProfileDto =
     Components.Schemas.ResponseEnvelopeProfileDto;
+export type ResponseEnvelopeRuleMoveDto =
+    Components.Schemas.ResponseEnvelopeRuleMoveDto;
 export type ResponseEnvelopeSeasonDto =
     Components.Schemas.ResponseEnvelopeSeasonDto;
 export type ResponseEnvelopeString = Components.Schemas.ResponseEnvelopeString;
 export type ResponseEnvelopeVoid = Components.Schemas.ResponseEnvelopeVoid;
+export type RuleCreateDto = Components.Schemas.RuleCreateDto;
+export type RuleDto = Components.Schemas.RuleDto;
+export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
+export type RuleMoveDto = Components.Schemas.RuleMoveDto;
 export type Season = Components.Schemas.Season;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;

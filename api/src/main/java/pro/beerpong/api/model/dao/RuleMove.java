@@ -12,9 +12,13 @@ public class RuleMove {
 
     private String name;
 
-    private int multiplicator;
+    private int pointsForTeam;
+
+    private int pointsForScorer;
+
+    private boolean finishingMove;
 
     @ManyToOne
-    @JoinColumn(name = "rulesetId")
-    private Ruleset ruleset;
+    @JoinColumn(name = "seasonId")
+    private Season season;
 }
