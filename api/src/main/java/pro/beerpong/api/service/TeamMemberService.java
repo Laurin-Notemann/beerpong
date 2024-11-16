@@ -18,27 +18,33 @@ public class TeamMemberService {
 
     private final TeamMemberRepository teamMemberRepository;
     private final PlayerRepository playerRepository;
+    private final MatchMoveService matchMoveService;
 
     @Autowired
-    public TeamMemberService(TeamMemberRepository teamMemberRepository, PlayerRepository playerRepository) {
+    public TeamMemberService(TeamMemberRepository teamMemberRepository, PlayerRepository playerRepository, MatchMoveService matchMoveService) {
         this.teamMemberRepository = teamMemberRepository;
         this.playerRepository = playerRepository;
+        this.matchMoveService = matchMoveService;
     }
 
     public ErrorCodes createTeamMembersForTeam(Team team, List<TeamMemberCreateDto> teamMembers) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
-        teamMembers.forEach(teamMemberCreateDto ->  {
+        teamMembers.forEach(teamMemberCreateDto -> {
             TeamMember teamMember = new TeamMember();
             teamMember.setTeam(team);
             Player player = playerRepository.findById(teamMemberCreateDto.getPlayerId()).orElse(null);
             if (player == null) {
                 error.set(ErrorCodes.PLAYER_NOT_FOUND);
-            }
-            else {
+            } else {
                 teamMember.setPlayer(player);
-                teamMemberRepository.save(teamMember);
+                TeamMember savedTeamMember = teamMemberRepository.save(teamMember);
+
+                // Erstelle die MatchMoves für dieses Teammitglied
+                if (teamMemberCreateDto.getMoves() != null) {
+                    matchMoveService.createMatchMoves(savedTeamMember, teamMemberCreateDto.getMoves());
+                }
             }
-           });
+        });
         return error.get();
     }
 }

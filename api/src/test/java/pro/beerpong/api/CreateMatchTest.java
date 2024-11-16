@@ -47,8 +47,8 @@ public class CreateMatchTest {
     @Autowired
     private SeasonRepository seasonRepository;
 
-    private String groupId = "test-group-id";
-    private String seasonId = "test-season-id";
+    private String groupId = "7967f6ca-1c40-444a-853f-5c226d961323";
+    private String seasonId = "ed600d6b-7c4a-476b-b280-6bd5d4981b75";
 
     @BeforeEach
     void setUp() {
@@ -67,16 +67,16 @@ public class CreateMatchTest {
         MatchCreateDto matchCreateDto = new MatchCreateDto();
         TeamCreateDto team1 = new TeamCreateDto();
         TeamMemberCreateDto member1 = new TeamMemberCreateDto();
-        member1.setPlayerId("player1-id");
+        member1.setPlayerId("92b71f08-da47-47d2-a8ca-90c76c5612e6");
 
         TeamMemberCreateDto member2 = new TeamMemberCreateDto();
-        member2.setPlayerId("player2-id");
+        member2.setPlayerId("72029175-4a56-4fd7-8a9d-6ddd4ff22d0b");
 
         TeamMemberCreateDto member3 = new TeamMemberCreateDto();
-        member3.setPlayerId("player3-id");
+        member3.setPlayerId("ed807176-7ff9-483d-97bb-b3c88335245f");
 
         TeamMemberCreateDto member4 = new TeamMemberCreateDto();
-        member4.setPlayerId("player4-id");
+        member4.setPlayerId("0271df55-5708-48c5-a590-f56afc50ac20");
         team1.setTeamMembers(List.of(
 
                 member1,
