@@ -3,6 +3,7 @@ package pro.beerpong.api.control;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +21,7 @@ import pro.beerpong.api.service.RuleService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/groups/{groupId}/seasons/{seasonId}")
+@RequestMapping("/groups/{groupId}/seasons/{seasonId}/rules")
 public class RuleController {
     private final RuleService ruleService;
 
@@ -29,8 +30,13 @@ public class RuleController {
         this.ruleService = ruleService;
     }
 
-    @PutMapping("/rules")
-    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> rules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
+    @GetMapping
+    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> getRules(@PathVariable String groupId, @PathVariable String seasonId) {
+        return ResponseEnvelope.ok(ruleService.getAllRules(seasonId));
+    }
+
+    @PutMapping
+    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> writeRules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
         var ruleDtos = ruleService.writeRules(seasonId, rules);
 
         if (ruleDtos != null) {

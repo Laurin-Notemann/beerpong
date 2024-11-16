@@ -50,13 +50,9 @@ public class RuleMoveController {
         var move = moveService.updateRuleMove(ruleMoveId, dto);
 
         if (move != null) {
-            if (move.getSeason().getId().equals(seasonId) && move.getSeason().getGroupId().equals(groupId)) {
-                return ResponseEnvelope.ok(move);
-            } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.RULE_MOVE_NOT_FOUND);
-            }
+            return ResponseEnvelope.ok(move);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.RULE_MOVE_NOT_FOUND);
         }
     }
 

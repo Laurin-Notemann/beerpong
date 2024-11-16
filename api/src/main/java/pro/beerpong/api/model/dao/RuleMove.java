@@ -16,7 +16,7 @@ public class RuleMove {
 
     private int pointsForScorer;
 
-    private boolean isFinish;
+    private boolean finishingMove;
 
     @ManyToOne
     @JoinColumn(name = "seasonId")

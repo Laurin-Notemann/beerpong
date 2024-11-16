@@ -52,7 +52,7 @@ public class RuleMoveService {
         move.setName(dto.getName());
         move.setPointsForTeam(dto.getPointsForTeam());
         move.setPointsForScorer(dto.getPointsForScorer());
-        move.setFinish(dto.isFinish());
+        move.setFinishingMove(dto.isFinishingMove());
 
         return moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(move));
     }
