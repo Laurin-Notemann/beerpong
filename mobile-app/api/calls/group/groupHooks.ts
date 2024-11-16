@@ -7,12 +7,17 @@ import { Paths } from '@/openapi/openapi';
 // Type definitions
 export type Group = NonNullable<Paths.GetGroupById.Responses.$200['data']>;
 
-export const useGroupQuery = (id: ApiId) => {
+export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetGroupById.Responses.$200 | undefined>(
         ['group', id],
         async () => {
+            if (!id) {
+                console.log('No group id provided');
+                return undefined
+            }
+            console.log('Fetching group with id', id);
             const res = await (await api).getGroupById(id);
             return res?.data;
         }

@@ -43,6 +43,7 @@ export const useGroupStore = create<GroupState>()(
             addGroup: (groupId) => {
                 set((state) => ({
                     groupIds: [...state.groupIds, groupId],
+                    selectedGroupId: groupId,
                     lastUpdated: Date.now(),
                     error: null,
                 }));

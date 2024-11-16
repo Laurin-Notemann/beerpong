@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { useCreateGroupMutation } from '@/api/calls/group/groupHooks';
 import ErrorScreen from '@/components/ErrorScreen';
@@ -18,19 +18,32 @@ export default function Page() {
     const { mutate, data, status } = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
 
-    if (status === 'success' && data?.data) {
-        if (!data.data.id) {
-            return <ErrorScreen message="Tja da geht wohl was nicht" />;
+    const [error, setError] = React.useState<string | null>(null);
+
+    useEffect(() => {
+        if (status === 'success' && data?.data) {
+            if (!data.data.id) {
+                setError('Tja da geht wohl was nicht');
+                return
+            }
+
+            addGroup(data.data.id);
+            router.push('/');
         }
-        addGroup(data.data.id);
-        router.push('/');
+    }, [status, data, addGroup, router]);
+
+    if (error) {
+        return <ErrorScreen message={error} />;
     }
 
     return (
         <CreateGroupSetName
             onSubmit={(group) => {
                 addName(group.name);
-                mutate({ name: group.name });
+                mutate({
+                    name: group.name,
+                    playerNames: members.map((m) => m.name),
+                });
             }}
         />
     );

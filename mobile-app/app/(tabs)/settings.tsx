@@ -1,12 +1,15 @@
 import { useNavigation } from 'expo-router';
 
 import { useGroupSettingsProps } from '@/api/propHooks/groupPropHooks';
-import ErrorScreen from '@/components/ErrorScreen';
+import Button from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
 import GroupSettingsScreen from '@/components/screens/GroupSettings';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Screen() {
-    const { props, isLoading, error } = useGroupSettingsProps('123456');
+    const { selectedGroupId } = useGroupStore();
+    const { props, isLoading, error, refetch } =
+        useGroupSettingsProps(selectedGroupId);
     const nav = useNavigation();
 
     if (isLoading) {
@@ -16,12 +19,21 @@ export default function Screen() {
     if (error || !props) {
         // @ts-ignore
         return (
-            <ErrorScreen
-                message="dumm gelöppt 💀"
-                onTouchStart={() => {
-                    nav.navigate('createGroup');
-                }}
-            />
+            <>
+                <Button
+                    title="dings"
+                    onPress={() => {
+                        refetch();
+                    }}
+                />
+                <Button
+                    title="anderes dings"
+                    onPress={() => {
+                        // @ts-ignore
+                        nav.navigate('createGroup');
+                    }}
+                />
+            </>
         );
     }
 
