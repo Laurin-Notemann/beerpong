@@ -36,7 +36,7 @@ jobs:
           project_id: 'beer-pong-441815'
             # create_credentials_file: true
             # token_format: access_token
-          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/github/providers/laurin-notemann/beerpong'
+          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/github/providers/my-repo'
             # service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
       - id: 'login-gar'
         name: "Login to GAR"
