@@ -1,4 +1,4 @@
-// apiContext.tsx
+import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 import React, {
     createContext,
     ReactNode,
@@ -8,33 +8,34 @@ import React, {
 } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
-import { getOpenAPiClient } from '@/openapi/client';
+import beerpongDefinition from '../../api/generated/openapi.json';
+import { Client as BeerPongClient } from '../../openapi/openapi';
 
-type Api = Awaited<ReturnType<typeof getOpenAPiClient>>;
-
-// Define the API context type
 type ApiContextType = {
-    getApi: () => Api;
+    api: Promise<BeerPongClient>;
     isLoading: boolean;
     error: Error | null;
 };
 
-// Create the context with initial undefined value
 const ApiContext = createContext<ApiContextType | undefined>(undefined);
 
-// Provider component
+const openApi = new OpenAPIClientAxios({
+    axiosConfigDefaults: {
+        baseURL: 'http://localhost:8080',
+    },
+    definition: beerpongDefinition as Document,
+});
+
 export function ApiProvider({ children }: { children: ReactNode }) {
-    const [api, setApi] = useState<Api | null>(null);
+    const api = openApi.getClient<BeerPongClient>();
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         const initializeApi = async () => {
             try {
-                const apiClient = await getOpenAPiClient(
-                    'http://localhost:8080'
-                );
-                setApi(apiClient);
+                await openApi.init();
             } catch (err) {
                 setError(
                     err instanceof Error
@@ -45,24 +46,11 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                 setIsLoading(false);
             }
         };
-
         initializeApi();
     }, []);
 
-    /**
-     * asserts that the api client is not null and returns it
-     */
-    const getApi = () => {
-        if (!api)
-            throw new Error(
-                'getApi: API not initialized. only call getApi as soon as you actually want to perform a query'
-            );
-
-        return api;
-    };
-
     const contextValue: ApiContextType = {
-        getApi,
+        api,
         isLoading,
         error,
     };
@@ -78,7 +66,6 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     );
 }
 
-// Custom hook to use the API context
 export function useApi(): ApiContextType {
     const context = useContext(ApiContext);
 
