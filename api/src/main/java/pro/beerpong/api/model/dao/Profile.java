@@ -1,9 +1,9 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
+@Entity(name = "profiles")
 @Data
 public class Profile {
     @Id
@@ -11,7 +11,7 @@ public class Profile {
     private String id;
 
     private String name;
-    private String profilePicture;
+    //private String profilePicture; TODO store asset
 
     @ManyToOne
     @JoinColumn(name = "groupId")

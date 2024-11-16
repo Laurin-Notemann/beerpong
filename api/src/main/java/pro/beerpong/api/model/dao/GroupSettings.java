@@ -1,16 +1,14 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
+@Entity(name = "group_settings")
 @Data
-public class Team {
+public class GroupSettings {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "matchId")
-    private Match match;
+    private String settingValue;
 }

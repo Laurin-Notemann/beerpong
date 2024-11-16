@@ -1,9 +1,9 @@
-package pro.beerpong.api.model;
+package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
+@Entity(name = "rules")
 @Data
 public class Rule {
     @Id
