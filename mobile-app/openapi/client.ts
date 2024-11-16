@@ -1,10 +1,14 @@
-import OpenAPIClientAxios from 'openapi-client-axios';
+import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 
+import beerpongDefinition from '../api/generated/openapi.json';
 import { Client as BeerPongClient } from './openapi';
 
-export const getOpenAPiClient = async () => {
+export const getOpenAPiClient = async (baseURL: string) => {
     const api = new OpenAPIClientAxios({
-        definition: '../../openapi/openapi.yaml',
+        axiosConfigDefaults: {
+            baseURL,
+        },
+        definition: beerpongDefinition as Document,
     });
     await api.init();
 

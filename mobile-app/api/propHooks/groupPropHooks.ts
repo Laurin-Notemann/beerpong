@@ -8,11 +8,11 @@ export const useGroupSettingsProps = (groupId: ApiId) => {
 
     const groupPageProps: GroupSettingsProps | null = data
         ? {
-            groupCode: data.inviteCode ?? "NO CODE FOUND",
-            groupName: data.name ?? "NO NAME FOUND",
-            hasPremium: false,
-            pastSeasons: 0,
-            pushNotificationsEnabled: false,
+              groupCode: data.data!.inviteCode ?? 'NO CODE FOUND',
+              groupName: data.data!.name ?? 'NO NAME FOUND',
+              hasPremium: false,
+              pastSeasons: 0,
+              pushNotificationsEnabled: false,
           }
         : null;
 
