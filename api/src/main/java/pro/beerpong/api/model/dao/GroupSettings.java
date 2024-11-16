@@ -10,9 +10,5 @@ public class GroupSettings {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @OneToOne
-    @JoinColumn(name = "groupId", referencedColumnName = "id")
-    private Group group;
-
     private String settingValue;
 }

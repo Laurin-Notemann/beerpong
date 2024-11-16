@@ -30,6 +30,10 @@ public class ResponseEnvelope<T> {
         return new ResponseEntity<>(new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.OK.value(), data), HttpStatus.OK);
     }
 
+    public static ResponseEntity<ResponseEnvelope<Void>> okNoContent() {
+        return new ResponseEntity<>(new ResponseEnvelope<>(ResponseEnvelope.Status.OK, HttpStatus.NO_CONTENT.value(), null), HttpStatus.NO_CONTENT);
+    }
+
     public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, ErrorCodes codes) {
         return notOk(status, codes.toDetails());
     }
