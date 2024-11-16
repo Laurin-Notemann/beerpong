@@ -23,6 +23,7 @@ export default function Page() {
                     // @ts-ignore
                     nav.navigate('createGroupSetName');
                 }}
+                onCreate={() => {}}
             />
         </GestureHandlerRootView>
     );

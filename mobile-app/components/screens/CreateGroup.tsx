@@ -16,10 +16,12 @@ export interface CreateGroupProps {
     members: GroupMember[];
 
     onCreateMember: (name: string) => void;
+    onCreate: () => void;
 }
 export default function CreateGroup({
     members,
     onCreateMember,
+    onCreate,
 }: CreateGroupProps) {
     return (
         <>
