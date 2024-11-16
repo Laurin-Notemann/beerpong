@@ -1,0 +1,15 @@
+#!/bin/bash
+#export $(grep -v '^#' .env | xargs)
+#	cd api && mvn verify && cd ..
+docker compose --env-file .env -f docker/docker-compose-gen-api.yml up -d
+docker cp
+	ls
+	# Check if the OS is macOS or Linux
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS: use -i with an empty string argument
+        sed -i '' 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
+    else
+        # Linux/Git Bash: use -i without an argument
+        sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
+    fi
+	cd mobile-app && npm run gen-types && npm run format

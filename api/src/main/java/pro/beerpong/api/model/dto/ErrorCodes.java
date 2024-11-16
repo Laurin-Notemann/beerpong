@@ -8,9 +8,15 @@ import lombok.RequiredArgsConstructor;
 public enum ErrorCodes {
     GROUP_NOT_FOUND("groupNotFound", "The requested group could not be found!"),
     SEASON_NOT_FOUND("seasonNotFound", "The requested season could not be found!"),
+    SEASON_ALREADY_ENDED("seasonAlreadyEnded", "Past seasons are immutable!"),
     SEASON_VALIDATION_FAILED("seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),
     MATCH_NOT_FOUND("matchNotFound", "The requested match could not be found!"),
-    MATCH_VALIDATION_FAILED("matchValidationFailed", "The validation of the created match has failed (invalid group or season id)");
+    MATCH_VALIDATION_FAILED("matchValidationFailed", "The validation of the created match has failed (invalid group or season id)"),
+    RULE_MOVE_NOT_FOUND("ruleMoveNotFound", "The requested ruleMove could not be found!"),
+    RULE_MOVE_VALIDATION_FAILED("ruleMoveValidationFailed", "The validation of the created rule move has failed (invalid group or season id)"),
+    RULE_VALIDATION_FAILED("ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
+    PLAYER_VALIDATION_FAILED("playerValidationFailed", "The validation of the player to delete has failed (invalid group or season id)"),
+    PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!");
 
     private final String code;
     private final String descr;

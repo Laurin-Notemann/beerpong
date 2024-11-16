@@ -1,9 +1,6 @@
 {
     "openapi": "3.0.1",
-    "info": {
-        "title": "OpenAPI definition",
-        "version": "v0"
-    },
+    "info": { "title": "OpenAPI definition", "version": "v0" },
     "servers": [
         {
             "url": "http://localhost:8080",
@@ -20,9 +17,7 @@
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -46,9 +41,7 @@
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "requestBody": {
@@ -75,6 +68,165 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/rules": {
+            "get": {
+                "tags": ["rule-controller"],
+                "operationId": "getRules",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListRuleDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": ["rule-controller"],
+                "operationId": "writeRules",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/RuleCreateDto"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListRuleDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/seasons/{seasonId}/ruleMoves/{ruleMoveId}": {
+            "put": {
+                "tags": ["rule-move-controller"],
+                "operationId": "updateRuleMove",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "ruleMoveId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RuleMoveCreateDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeRuleMoveDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["rule-move-controller"],
+                "operationId": "deleteRuleMove",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "ruleMoveId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{seasonId}/new-match": {
             "put": {
                 "tags": ["match-controller"],
@@ -84,17 +236,13 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "seasonId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -120,17 +268,13 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -154,17 +298,13 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "requestBody": {
@@ -198,17 +338,13 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -234,9 +370,7 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "requestBody": {
@@ -307,6 +441,78 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/ruleMoves": {
+            "get": {
+                "tags": ["rule-move-controller"],
+                "operationId": "getAllRuleMoves",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListRuleMoveDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["rule-move-controller"],
+                "operationId": "createRuleMove",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RuleMoveCreateDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeRuleMoveDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/profiles": {
             "get": {
                 "tags": ["profile-controller"],
@@ -316,9 +522,7 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -342,9 +546,7 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "requestBody": {
@@ -398,9 +600,7 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -417,6 +617,78 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/players": {
+            "get": {
+                "tags": ["player-controller"],
+                "operationId": "getPlayers",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListPlayerDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/seasons/{seasonId}/players/move": {
+            "get": {
+                "tags": ["player-controller"],
+                "operationId": "getPlayers_1",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "dto",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/PlayerMoveDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListPlayerDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{seasonId}/matches": {
             "get": {
                 "tags": ["match-controller"],
@@ -426,17 +698,13 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "seasonId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -462,25 +730,19 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "seasonId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -506,17 +768,13 @@
                         "name": "groupId",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     },
                     {
                         "name": "id",
                         "in": "path",
                         "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "schema": { "type": "string" }
                     }
                 ],
                 "responses": {
@@ -532,349 +790,335 @@
                     }
                 }
             }
+        },
+        "/groups/{groupId}/seasons/{seasonId}/players/{id}": {
+            "delete": {
+                "tags": ["player-controller"],
+                "operationId": "deletePlayer",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
             "GroupCreateDto": {
                 "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    }
-                }
+                "properties": { "name": { "type": "string" } }
             },
             "ErrorDetails": {
                 "type": "object",
                 "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    }
+                    "code": { "type": "string" },
+                    "description": { "type": "string" }
                 }
             },
             "GroupDto": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "inviteCode": {
-                        "type": "string"
-                    },
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "inviteCode": { "type": "string" },
                     "groupSettings": {
                         "$ref": "#/components/schemas/GroupSettings"
                     },
-                    "activeSeason": {
-                        "$ref": "#/components/schemas/Season"
-                    }
+                    "activeSeason": { "$ref": "#/components/schemas/Season" }
                 }
             },
             "GroupSettings": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "settingValue": {
-                        "type": "string"
-                    }
+                    "id": { "type": "string" },
+                    "settingValue": { "type": "string" }
                 }
             },
             "ResponseEnvelopeGroupDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "data": {
-                        "$ref": "#/components/schemas/GroupDto"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/GroupDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "Season": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "startDate": { "type": "string", "format": "date-time" },
+                    "endDate": { "type": "string", "format": "date-time" },
+                    "groupId": { "type": "string" }
+                }
+            },
+            "RuleCreateDto": {
+                "type": "object",
+                "properties": {
+                    "title": { "type": "string" },
+                    "description": { "type": "string" }
+                }
+            },
+            "ResponseEnvelopeListRuleDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/RuleDto" }
                     },
-                    "name": {
-                        "type": "string"
-                    },
-                    "startDate": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "endDate": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "groupId": {
-                        "type": "string"
-                    }
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "RuleDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "description": { "type": "string" },
+                    "season": { "$ref": "#/components/schemas/Season" }
+                }
+            },
+            "RuleMoveCreateDto": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "pointsForTeam": { "type": "integer", "format": "int32" },
+                    "pointsForScorer": { "type": "integer", "format": "int32" },
+                    "finishingMove": { "type": "boolean" }
+                }
+            },
+            "ResponseEnvelopeRuleMoveDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/RuleMoveDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "RuleMoveDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "pointsForTeam": { "type": "integer", "format": "int32" },
+                    "pointsForScorer": { "type": "integer", "format": "int32" },
+                    "finishingMove": { "type": "boolean" },
+                    "season": { "$ref": "#/components/schemas/Season" }
                 }
             },
             "MatchDto": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "date": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "season": {
-                        "$ref": "#/components/schemas/Season"
-                    }
+                    "id": { "type": "string" },
+                    "date": { "type": "string", "format": "date-time" },
+                    "season": { "$ref": "#/components/schemas/Season" }
                 }
             },
             "ResponseEnvelopeMatchDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "data": {
-                        "$ref": "#/components/schemas/MatchDto"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/MatchDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "ProfileCreateDto": {
                 "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    }
-                }
+                "properties": { "name": { "type": "string" } }
             },
             "ProfileDto": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "groupId": {
-                        "type": "string"
-                    }
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "groupId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeProfileDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "data": {
-                        "$ref": "#/components/schemas/ProfileDto"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/ProfileDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "SeasonCreateDto": {
                 "type": "object",
-                "properties": {
-                    "oldSeasonName": {
-                        "type": "string"
-                    }
-                }
+                "properties": { "oldSeasonName": { "type": "string" } }
             },
             "ResponseEnvelopeSeasonDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "data": {
-                        "$ref": "#/components/schemas/SeasonDto"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/SeasonDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "SeasonDto": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "startDate": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "endDate": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "groupId": {
-                        "type": "string"
-                    }
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "startDate": { "type": "string", "format": "date-time" },
+                    "endDate": { "type": "string", "format": "date-time" },
+                    "groupId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeString": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "data": {
-                        "type": "string"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "type": "string" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "ResponseEnvelopeListGroupDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
                     "data": {
                         "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/GroupDto"
-                        }
+                        "items": { "$ref": "#/components/schemas/GroupDto" }
                     },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "ResponseEnvelopeListSeasonDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
                     "data": {
                         "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/SeasonDto"
-                        }
+                        "items": { "$ref": "#/components/schemas/SeasonDto" }
                     },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
+            },
+            "ResponseEnvelopeListRuleMoveDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/RuleMoveDto" }
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "Group": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "inviteCode": { "type": "string" },
+                    "groupSettings": {
+                        "$ref": "#/components/schemas/GroupSettings"
+                    },
+                    "activeSeason": { "$ref": "#/components/schemas/Season" }
+                }
+            },
+            "PlayerDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "profile": { "$ref": "#/components/schemas/Profile" },
+                    "season": { "$ref": "#/components/schemas/Season" }
+                }
+            },
+            "Profile": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "group": { "$ref": "#/components/schemas/Group" }
+                }
+            },
+            "ResponseEnvelopeListPlayerDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/PlayerDto" }
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "PlayerMoveDto": {
+                "type": "object",
+                "properties": { "oldSeasonId": { "type": "string" } }
             },
             "ResponseEnvelopeListMatchDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
                     "data": {
                         "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/MatchDto"
-                        }
+                        "items": { "$ref": "#/components/schemas/MatchDto" }
                     },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "ResponseEnvelopeListProfileDto": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
                     "data": {
                         "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ProfileDto"
-                        }
+                        "items": { "$ref": "#/components/schemas/ProfileDto" }
                     },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "ResponseEnvelopeVoid": {
                 "type": "object",
                 "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["OK", "ERROR"]
-                    },
-                    "httpCode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "data": {
-                        "type": "object"
-                    },
-                    "error": {
-                        "$ref": "#/components/schemas/ErrorDetails"
-                    }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "type": "object" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             }
         }

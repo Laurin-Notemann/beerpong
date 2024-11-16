@@ -4,19 +4,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.Player;
+import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dto.ErrorCodes;
+import pro.beerpong.api.model.dto.PlayerCreateDto;
 import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
-
     private final PlayerRepository playerRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileRepository profileRepository;
@@ -31,28 +33,79 @@ public class PlayerService {
         this.playerMapper = playerMapper;
     }
 
-    public List<PlayerDto> copyPlayersFromOldSeason(String oldSeasonId, String newSeasonId) {
-        Season oldSeason = seasonRepository.findById(oldSeasonId)
-                .orElseThrow(() -> new IllegalArgumentException("Old season not found: " + oldSeasonId));
-
-        Season newSeason = seasonRepository.findById(newSeasonId)
-                .orElseThrow(() -> new IllegalArgumentException("New season not found: " + newSeasonId));
-
-        List<Player> oldSeasonPlayers = playerRepository.findAllBySeasonId(oldSeasonId);
-
-        List<Player> newSeasonPlayers = oldSeasonPlayers.stream()
-                .map(oldPlayer -> {
-                    Player newPlayer = new Player();
-                    newPlayer.setId(UUID.randomUUID().toString());
-                    newPlayer.setProfile(oldPlayer.getProfile());
-                    newPlayer.setSeason(newSeason);
-                    return playerRepository.save(newPlayer);
-                })
-                .collect(Collectors.toList());
-
-        return newSeasonPlayers.stream()
+    public List<PlayerDto> getBySeasonId(String seasonId) {
+        return playerRepository.findAllBySeasonId(seasonId)
+                .stream()
                 .map(playerMapper::playerToPlayerDto)
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    public PlayerDto createPlayer(String seasonId, String profileId, PlayerCreateDto dto) {
+        return seasonRepository.findById(seasonId)
+                .map(season -> this.createPlayer(season, profileId, dto))
+                .orElse(null);
+    }
+
+    public PlayerDto createPlayer(Season season, String profileId, PlayerCreateDto dto) {
+        var optional = profileRepository.findById(profileId);
+
+        if (optional.isEmpty()) {
+            return null;
+        }
+
+        var profile = optional.get();
+        var player = playerMapper.playerCreateDtoToPlayer(dto);
+
+        player.setSeason(season);
+        player.setProfile(profile);
+
+        return playerMapper.playerToPlayerDto(playerRepository.save(player));
+    }
+
+    public ErrorCodes deletePlayer(String id, String seasonId, String groupId) {
+        AtomicReference<ErrorCodes> error = new AtomicReference<>();
+
+        playerRepository.findById(id).ifPresentOrElse(player -> {
+            if (player.getSeason().getEndDate() == null) {
+                if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
+                    playerRepository.deleteById(id);
+                } else {
+                    error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
+                }
+            } else {
+                error.set(ErrorCodes.SEASON_ALREADY_ENDED);
+            }
+        }, () -> error.set(ErrorCodes.PLAYER_NOT_FOUND));
+
+        return error.get();
+    }
+
+    public List<PlayerDto> copyPlayersFromOldSeason(String oldSeasonId, String newSeasonId) {
+        var oldSeason = seasonRepository.findById(oldSeasonId).orElse(null);
+        var newSeason = seasonRepository.findById(newSeasonId).orElse(null);
+
+        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
+            return null;
+        }
+
+        var oldSeasonPlayers = getBySeasonId(oldSeasonId);
+
+        return oldSeasonPlayers.stream()
+                .map(oldPlayer -> {
+                    var player = new Player();
+                    player.setProfile(oldPlayer.getProfile());
+                    player.setSeason(newSeason);
+
+                    return playerMapper.playerToPlayerDto(playerRepository.save(player));
+                })
+                .toList();
+    }
+
+    public PlayerDto createPlayer(Season season, Profile profile) {
+        Player player = new Player();
+        player.setProfile(profile);
+        player.setSeason(season);
+        return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
 }

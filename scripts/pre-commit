@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Directory to monitor for changes
+DIRECTORY="./api"
+
+# Command to execute if changes are detected
+COMMAND_TO_RUN="make gen-open-api"
+
+# Check for changes in the specified directory
+if git diff --quiet HEAD -- "$DIRECTORY"; then
+    echo "No changes detected in $DIRECTORY."
+else
+    echo "Changes detected in $DIRECTORY. Executing the program..."
+    $COMMAND_TO_RUN
+fi
