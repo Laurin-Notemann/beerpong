@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - "*"
-  pull_request:
-    branches:
-      - "*"
+    paths:
+      - "./mobile-app/**"
 
 defaults:
   run:
