@@ -13,7 +13,8 @@
         "build:ios:local": "npx eas build --local --platform ios",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "ci:format": "npm run format:check"
+        "ci:format": "npm run format:check",
+        "ci:lint": "npm run lint"
     },
     "jest": {
         "preset": "jest-expo"
