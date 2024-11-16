@@ -63,8 +63,7 @@ export default function JoinGroup({ onSubmit }: JoinGroupProps) {
                                         width: isFocused ? 29 : 27,
                                         height: isFocused ? 40 : 38,
 
-                                        marginLeft: isFocused ? 0 : 1,
-                                        marginRight: isFocused ? 0 : 1,
+                                        margin: isFocused ? 0 : 1,
 
                                         textAlign: 'center',
 

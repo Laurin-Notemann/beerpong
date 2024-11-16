@@ -21,6 +21,7 @@
     "dependencies": {
         "@expo/vector-icons": "^14.0.2",
         "@react-native-async-storage/async-storage": "^2.1.0",
+        "@react-navigation/drawer": "^6.7.2",
         "@react-navigation/native": "^6.0.2",
         "@tanstack/query-async-storage-persister": "^5.60.5",
         "@tanstack/react-query-persist-client": "^5.60.5",

@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -19,6 +19,8 @@ export default function CreateGroupAddMembers({
     onSubmit,
 }: CreateGroupAddMembersProps) {
     const [members, setMembers] = useState<GroupMember[]>([]);
+
+    const inputRef = useRef(null);
 
     return (
         <GestureHandlerRootView>
@@ -53,13 +55,23 @@ export default function CreateGroupAddMembers({
                     }}
                 >
                     <TextInput
+                        ref={inputRef}
                         required
                         placeholder="Group member name"
                         returnKeyType="done"
                         onSubmitEditing={(event) => {
                             const name = event.nativeEvent.text;
 
-                            setMembers((prev) => [...prev, { name }]);
+                            if (name.trim()) {
+                                setMembers((prev) => [...prev, { name }]);
+                            }
+
+                            // @ts-ignore
+                            inputRef.current!.clear();
+
+                            // TODO: we don't want to unfocus the element on submit, but it's still happening :()
+                            event.preventDefault();
+                            event.stopPropagation();
                         }}
                     />
                     {members.map((i, idx) => (
