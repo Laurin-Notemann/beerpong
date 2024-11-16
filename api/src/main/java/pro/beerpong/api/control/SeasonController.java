@@ -33,7 +33,11 @@ public class SeasonController {
         var season = seasonService.startNewSeason(dto, groupId);
 
         if (season != null) {
-            return ResponseEnvelope.ok(season);
+            if (season.getGroupId().equals(groupId)) {
+                return ResponseEnvelope.ok(season);
+            } else {
+                return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_VALIDATION_FAILED);
+            }
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
