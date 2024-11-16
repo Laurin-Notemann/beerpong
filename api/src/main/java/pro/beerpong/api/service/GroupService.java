@@ -7,6 +7,7 @@ import pro.beerpong.api.model.dao.GroupSettings;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
+import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -22,12 +23,14 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
+    private final ProfileService profileService;
     private final GroupMapper groupMapper;
 
     @Autowired
-    public GroupService(GroupRepository groupRepository, SeasonRepository seasonRepository, GroupMapper groupMapper) {
+    public GroupService(GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
         this.groupRepository = groupRepository;
         this.seasonRepository = seasonRepository;
+        this.profileService = profileService;
         this.groupMapper = groupMapper;
     }
 
@@ -44,6 +47,13 @@ public class GroupService {
 
         season.setGroupId(group.getId());
         seasonRepository.save(season);
+
+        Group finalGroup = group;
+        groupCreateDto.getPlayerNames().forEach(s -> {
+            var profileDto = new ProfileCreateDto();
+            profileDto.setName(s);
+            profileService.createProfile(finalGroup.getId(), profileDto);
+        });
 
         return groupMapper.groupToGroupDto(group);
     }
