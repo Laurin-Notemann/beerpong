@@ -2,7 +2,7 @@
 .PHONY: gen-open-api
 gen-open-api:
 	export $(grep -v '^#' .env | xargs)
-	cd api && mvn verify && cd ..
+	cd api && mvn verify -DskipTests && cd ..
 	sed -i '' "s/'\*\/\*'/application\/json/g" openapi/openapi.yaml
 	cd mobile-app && npm run gen-types
 
