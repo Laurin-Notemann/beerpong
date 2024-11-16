@@ -81,6 +81,6 @@ jobs:
           env_vars: |
             POSTGRES_PORT=5432
             POSTGRES_USER=postgres
-            POSTGRES_URL=' jdbc:postgresql://localhost/beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory'
+            POSTGRES_URL='jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory'
           secrets: |-
             POSTGRES_PASSWORD=api-pg-password:latest
