@@ -46,17 +46,6 @@ public class PlayerController {
         }
     }
 
-    @GetMapping("/move")
-    public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody PlayerMoveDto dto) {
-        var players = playerService.copyPlayersFromOldSeason(dto.getOldSeasonId(), seasonId);
-
-        if (players != null) {
-            return ResponseEnvelope.ok(players);
-        } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<String>> deletePlayer(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
         var error = playerService.deletePlayer(id, seasonId, groupId);
