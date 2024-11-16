@@ -8,26 +8,36 @@ import org.springframework.stereotype.Service;
 
 import pro.beerpong.api.mapping.MatchMapper;
 import pro.beerpong.api.model.dao.Match;
+import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.repository.MatchRepository;
+import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 
 @Service
 public class MatchService {
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
+    private final PlayerRepository playerRepository;
 
     private final TeamService teamService;
 
     private final MatchMapper matchMapper;
 
     @Autowired
-    public MatchService(MatchRepository matchRepository, SeasonRepository seasonRepository, MatchMapper matchMapper, TeamService teamService) {
+    public MatchService(MatchRepository matchRepository, PlayerRepository playerRepository, SeasonRepository seasonRepository, MatchMapper matchMapper, TeamService teamService) {
         this.matchRepository = matchRepository;
+        this.playerRepository = playerRepository;
         this.seasonRepository = seasonRepository;
         this.matchMapper = matchMapper;
         this.teamService = teamService;
+    }
+
+    private boolean validateCreateDto(MatchCreateDto dto) {
+        return dto.getTeams().stream().allMatch(teamCreateDto ->
+                teamCreateDto.getTeamMembers().stream().allMatch(memberDto ->
+                        playerRepository.existsById(memberDto.getPlayerId())));
     }
 
     public MatchDto createNewMatch(String seasonId, MatchCreateDto matchCreateDto) {
@@ -38,7 +48,11 @@ public class MatchService {
         }
 
         var season = seasonOptional.get();
-        //TODO use mapper
+
+        if (!validateCreateDto(matchCreateDto)) {
+            return null;
+        }
+
         var match = new Match();
 
         match.setDate(ZonedDateTime.now());

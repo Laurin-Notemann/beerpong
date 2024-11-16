@@ -12,11 +12,13 @@ public enum ErrorCodes {
     SEASON_VALIDATION_FAILED("seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),
     MATCH_NOT_FOUND("matchNotFound", "The requested match could not be found!"),
     MATCH_VALIDATION_FAILED("matchValidationFailed", "The validation of the created match has failed (invalid group or season id)"),
+    MATCH_DTO_VALIDATION_FAILED("matchDtoValidationFailed", "The validation of the match create dto failed (invalid player or season id)"),
     RULE_MOVE_NOT_FOUND("ruleMoveNotFound", "The requested ruleMove could not be found!"),
     RULE_MOVE_VALIDATION_FAILED("ruleMoveValidationFailed", "The validation of the created rule move has failed (invalid group or season id)"),
     RULE_VALIDATION_FAILED("ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
     PLAYER_VALIDATION_FAILED("playerValidationFailed", "The validation of the player to delete has failed (invalid group or season id)"),
-    PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!");
+    PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!"),
+    PROFILE_NOT_FOUND("profileNotFound", "The requested profile could not be found!");
 
     private final String code;
     private final String descr;

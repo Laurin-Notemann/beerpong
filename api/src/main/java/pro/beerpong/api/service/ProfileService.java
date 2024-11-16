@@ -63,8 +63,12 @@ public class ProfileService {
                 .orElse(null);
     }
 
-    public void deleteProfile(String id) {
-        profileRepository.deleteById(id);
+    public boolean deleteProfile(String id) {
+        if (profileRepository.existsById(id)) {
+            profileRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     public ProfileDto updateProfile(String groupId, String id, ProfileCreateDto profileCreateDto) {

@@ -17,13 +17,15 @@ import pro.beerpong.api.repository.SeasonRepository;
 public class SeasonService {
     private final SeasonRepository seasonRepository;
     private final GroupRepository groupRepository;
+    private final PlayerService playerService;
 
     private final SeasonMapper seasonMapper;
 
     @Autowired
-    public SeasonService(SeasonRepository seasonRepository, GroupRepository groupRepository, SeasonMapper seasonMapper) {
+    public SeasonService(SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
+        this.playerService = playerService;
         this.seasonMapper = seasonMapper;
     }
 
@@ -39,17 +41,20 @@ public class SeasonService {
 
         season.setStartDate(ZonedDateTime.now());
         season.setGroupId(groupOptional.get().getId());
+        season = seasonRepository.save(season);
 
         if (group.getActiveSeason() != null) {
+            var oldSeasonId = group.getActiveSeason().getId();
             group.getActiveSeason().setName(dto.getOldSeasonName());
 
             seasonRepository.save(group.getActiveSeason());
+            playerService.copyPlayersFromOldSeason(oldSeasonId, season.getId());
         }
 
         group.setActiveSeason(season);
         groupRepository.save(group);
 
-        return seasonMapper.seasonToSeasonDto(seasonRepository.save(season));
+        return seasonMapper.seasonToSeasonDto(season);
     }
 
     public List<SeasonDto> getAllSeasons(String groupId) {
