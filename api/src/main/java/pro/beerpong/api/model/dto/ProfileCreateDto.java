@@ -5,6 +5,5 @@ import lombok.Data;
 @Data
 public class ProfileCreateDto {
     private String name;
-    private String profilePicture;
-    private String groupId;
+    //private String profilePicture; TODO store asset
 }

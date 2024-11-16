@@ -6,6 +6,6 @@ import lombok.Data;
 public class ProfileDto {
     private String id;
     private String name;
-    private String profilePicture;
+    //private String profilePicture; TODO store asset
     private String groupId;
 }
