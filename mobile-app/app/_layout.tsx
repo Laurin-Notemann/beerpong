@@ -1,4 +1,5 @@
 import * as SplashScreen from 'expo-splash-screen';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import {
     DarkTheme,
     DefaultTheme,
@@ -12,32 +13,21 @@ import 'react-native-reanimated';
 
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
+import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { theme } from '@/theme';
 
 import { HeaderItem, navStyles } from './(tabs)/_layout';
 
+const Drawer = createDrawerNavigator();
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function Everything() {
     const colorScheme = useColorScheme();
 
     const [queryClient] = useState(() => createQueryClient());
-
-    const [loaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    });
-
-    useEffect(() => {
-        if (loaded) {
-            SplashScreen.hideAsync();
-        }
-    }, [loaded]);
-
-    if (!loaded) {
-        return null;
-    }
 
     return (
         <ThemeProvider
@@ -48,7 +38,7 @@ export default function RootLayout() {
                 persistOptions={{ persister }}
             >
                 <ApiProvider>
-                    <Stack initialRouteName="onboarding">
+                    <Stack initialRouteName="(tabs)">
                         <Stack.Screen
                             name="onboarding"
                             options={{
@@ -57,7 +47,10 @@ export default function RootLayout() {
                         />
                         <Stack.Screen
                             name="(tabs)"
-                            options={{ title: '', headerShown: false }}
+                            options={{
+                                title: '',
+                                headerShown: false,
+                            }}
                         />
                         <Stack.Screen name="+not-found" />
                         <Stack.Screen
@@ -152,5 +145,71 @@ export default function RootLayout() {
                 </ApiProvider>
             </PersistQueryClientProvider>
         </ThemeProvider>
+    );
+}
+
+function DrawerContent() {
+    const groups = [
+        {
+            id: '#1',
+            name: 'Die Reise (beheizter Pool)',
+            playersCount: 14,
+            matchesCount: 76,
+            isActive: true,
+        },
+        {
+            id: '#2',
+            name: 'CODE',
+            playersCount: 10,
+            matchesCount: 12,
+            isActive: false,
+        },
+        {
+            id: '#3',
+            name: 'VDST Hamburg Straßburg Rostock',
+            playersCount: 34,
+            matchesCount: 140,
+        },
+    ];
+
+    const [groupId, setGroupId] = useState('#1');
+
+    return (
+        <Sidebar
+            groups={groups}
+            appVersion="0.1.0"
+            activeGroupId={groupId}
+            onOpenGroup={setGroupId}
+        />
+    );
+}
+
+export default function RootLayout() {
+    const [loaded] = useFonts({
+        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    });
+
+    useEffect(() => {
+        if (loaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [loaded]);
+
+    if (!loaded) {
+        return null;
+    }
+
+    return (
+        <Drawer.Navigator
+            screenOptions={{
+                drawerStyle: {
+                    width: 256,
+                },
+                headerShown: false,
+            }}
+            drawerContent={DrawerContent}
+        >
+            <Drawer.Screen name="aboutPremium" component={Everything} />
+        </Drawer.Navigator>
     );
 }

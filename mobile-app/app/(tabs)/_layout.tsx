@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useNavigation } from 'expo-router';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -81,13 +81,18 @@ export const navStyles = {
     },
 };
 
-const groupsButton = () => <HeaderItem>Groups</HeaderItem>;
+const GroupsButton = () => {
+    const nav = useNavigation();
+
+    // @ts-ignore
+    return <HeaderItem onPress={() => nav.openDrawer()}>Groups</HeaderItem>;
+};
 
 export const groupHeader = {
     ...navStyles,
     headerTitle: 'Die Reise (beheizter Pool)',
     headerShown: true,
-    headerLeft: groupsButton,
+    headerLeft: GroupsButton,
 };
 
 export default function TabLayout() {
