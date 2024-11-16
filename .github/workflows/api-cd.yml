@@ -6,10 +6,6 @@ on:
       - "main"
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: api
-
 jobs:
   build-api:
     permissions:
@@ -49,10 +45,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          context: .
-          file: ./Dockerfile
+          context: api
+          file: ./api/Dockerfile
           platforms: linux/amd64
-          tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong:${{ github.sha }}
+          tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}
 
   deploy-api:
     permissions:
@@ -79,9 +75,9 @@ jobs:
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
           service: 'backstage-deployment'
-          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong${{ github.sha }}'
-          region: europe-west1
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg'
+          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}'
+          region: europe-west10
+          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg --verbose'
           env_vars: |
             POSTGRES_PORT=5432
             POSTGRES_USER=postgres

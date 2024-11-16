@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
@@ -19,20 +20,13 @@ import java.util.stream.Collectors;
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
 @Service
+@RequiredArgsConstructor
 public class GroupService {
 
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileService profileService;
     private final GroupMapper groupMapper;
-
-    @Autowired
-    public GroupService(GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
-        this.groupRepository = groupRepository;
-        this.seasonRepository = seasonRepository;
-        this.profileService = profileService;
-        this.groupMapper = groupMapper;
-    }
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
@@ -49,13 +43,20 @@ public class GroupService {
         seasonRepository.save(season);
 
         Group finalGroup = group;
-        groupCreateDto.getPlayerNames().forEach(s -> {
+        groupCreateDto.getProfileNames().forEach(s -> {
             var profileDto = new ProfileCreateDto();
             profileDto.setName(s);
             profileService.createProfile(finalGroup.getId(), profileDto);
         });
 
         return groupMapper.groupToGroupDto(group);
+    }
+
+    public List<GroupDto> findGroupsByInviteCode(String inviteCode) {
+        return groupRepository.findByInviteCode(inviteCode)
+                .stream()
+                .map(groupMapper::groupToGroupDto)
+                .collect(Collectors.toList());
     }
 
     public List<GroupDto> getAllGroups() {

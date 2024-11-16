@@ -338,7 +338,15 @@
         "/groups": {
             "get": {
                 "tags": ["group-controller"],
-                "operationId": "getAllGroups",
+                "operationId": "findGroupByInviteCode",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -776,7 +784,7 @@
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
-                    "playerNames": {
+                    "profileNames": {
                         "type": "array",
                         "items": { "type": "string" }
                     }
