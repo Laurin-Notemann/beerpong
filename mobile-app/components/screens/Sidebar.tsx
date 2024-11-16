@@ -1,7 +1,55 @@
+import { useNavigation } from 'expo-router';
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useGroupQuery } from '@/api/calls/group/groupHooks';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
+
+import Button from '../Button';
 import Text from '../Text';
+
+export interface SidebarGroupItemProps {
+    id: string;
+    isActive: boolean;
+    onPress: (id: string) => void;
+}
+
+export function SidebarGroupItem({
+    id,
+    isActive,
+    onPress,
+}: SidebarGroupItemProps) {
+    const { data } = useGroupQuery(id);
+
+    return (
+        <Pressable
+            onPress={() => onPress(id)}
+            style={{
+                display: 'flex',
+                backgroundColor: isActive ? 'rgba(0, 0, 0, 0.3)' : undefined,
+                paddingHorizontal: 17,
+                paddingVertical: 12,
+            }}
+        >
+            <Text
+                color="primary"
+                style={{
+                    fontSize: 17,
+                }}
+            >
+                {data?.data?.name ?? 'Loading...'}
+            </Text>
+            <Text
+                color="secondary"
+                style={{
+                    fontSize: 12,
+                }}
+            >
+                {11} Players, {11} Matches
+            </Text>
+        </Pressable>
+    );
+}
 
 export interface SidebarGroup {
     id: string;
@@ -9,21 +57,19 @@ export interface SidebarGroup {
     playersCount: number;
     matchesCount: number;
 }
+
 export interface SidebarProps {
-    activeGroupId?: string | null;
-
-    groups: SidebarGroup[];
-
     appVersion: string;
-
-    onOpenGroup: (groupId: string) => void;
 }
-export function Sidebar({
-    groups,
-    appVersion,
-    activeGroupId,
-    onOpenGroup,
-}: SidebarProps) {
+
+export function Sidebar({ appVersion }: SidebarProps) {
+    const { groupIds, selectedGroupId, selectGroup, clearGroups } =
+        useGroupStore();
+
+    const nav = useNavigation();
+    console.log('groupIds', groupIds);
+    console.log('selectedGroupId', selectedGroupId);
+
     return (
         <SafeAreaView
             style={{
@@ -32,39 +78,28 @@ export function Sidebar({
                 paddingHorizontal: 16,
             }}
         >
-            {groups.map((i) => (
-                <Pressable
-                    onPress={() => onOpenGroup(i.id)}
-                    key={i.id}
-                    style={{
-                        display: 'flex',
-
-                        backgroundColor:
-                            i.id === activeGroupId
-                                ? 'rgba(0, 0, 0, 0.3)'
-                                : undefined,
-
-                        paddingHorizontal: 17,
-                        paddingVertical: 12,
-                    }}
-                >
-                    <Text
-                        color="primary"
-                        style={{
-                            fontSize: 17,
-                        }}
-                    >
-                        {i.name}
-                    </Text>
-                    <Text
-                        color="secondary"
-                        style={{
-                            fontSize: 12,
-                        }}
-                    >
-                        {i.playersCount} Players, {i.matchesCount} Matches
-                    </Text>
-                </Pressable>
+            <Button title="clear" onPress={clearGroups} />
+            <Button
+                title="create new group"
+                onPress={() => {
+                    // @ts-ignore
+                    nav.navigate('createGroup');
+                }}
+            />
+            <Button
+                title="join group"
+                onPress={() => {
+                    // @ts-ignore
+                    nav.navigate('joinGroup');
+                }}
+            />
+            {groupIds.map((id) => (
+                <SidebarGroupItem
+                    key={id}
+                    id={id}
+                    isActive={id === selectedGroupId}
+                    onPress={() => selectGroup(id)}
+                />
             ))}
         </SafeAreaView>
     );

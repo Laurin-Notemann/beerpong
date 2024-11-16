@@ -104,7 +104,7 @@ export const useGroupStore = create<GroupState>()(
             storage: createJSONStorage(() => AsyncStorage), // AsyncStorage for React Native
             partialize: (state) => ({
                 // Only persist these fields
-                groups: state.groupIds,
+                groupIds: state.groupIds,
                 selectedGroupId: state.selectedGroupId,
             }),
         }
