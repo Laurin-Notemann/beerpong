@@ -33,10 +33,11 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          create_credentials_file: true
-          token_format: access_token
-          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
-          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
+          project_id: 'beer-pong-441815'
+            # create_credentials_file: true
+            # token_format: access_token
+          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/github/providers/laurin-notemann/beerpong'
+            # service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
       - id: 'login-gar'
         name: "Login to GAR"
         uses: docker/login-action@v3
