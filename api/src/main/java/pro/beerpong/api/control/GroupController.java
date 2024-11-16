@@ -30,9 +30,12 @@ public class GroupController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<List<GroupDto>>> getAllGroups() {
-        List<GroupDto> groups = groupService.getAllGroups();
-        return ResponseEnvelope.ok(groups);
+    public ResponseEntity<ResponseEnvelope<List<GroupDto>>> findGroupByInviteCode(@RequestParam String inviteCode) {
+        if (inviteCode == null || inviteCode.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.GROUP_INVITE_CODE_NOT_PROVIDED);
+        }
+
+        return ResponseEnvelope.ok(groupService.findGroupsByInviteCode(inviteCode));
     }
 
     @GetMapping("/{id}")

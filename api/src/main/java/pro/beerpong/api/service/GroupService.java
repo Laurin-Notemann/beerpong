@@ -51,6 +51,13 @@ public class GroupService {
         return groupMapper.groupToGroupDto(group);
     }
 
+    public List<GroupDto> findGroupsByInviteCode(String inviteCode) {
+        return groupRepository.findByInviteCode(inviteCode)
+                .stream()
+                .map(groupMapper::groupToGroupDto)
+                .collect(Collectors.toList());
+    }
+
     public List<GroupDto> getAllGroups() {
         return groupRepository.findAll()
                 .stream()
