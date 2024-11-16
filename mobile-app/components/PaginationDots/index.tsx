@@ -40,12 +40,6 @@ const ONE_EMPTY_DOT_SIZE = defaultEmptyDotSize * defaultEmptyDotSize;
 
 const DotContainer: React.FC<IDotContainerProps> = (props) => {
     useEffect(() => {
-        (props.curPage as Animated.AnimatedInterpolation<number>).addListener(
-            ({ value }) => {
-                console.log('props.curPage updated:', value);
-            }
-        );
-
         return () => {
             (
                 props.curPage as Animated.AnimatedInterpolation<number>
