@@ -98,7 +98,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
                                             color: theme.color.text.tertiary,
                                         }}
                                     >
-                                        12:15
+                                        {dayjs().format('HH:mm')}
                                     </Text>
                                     <Text
                                         style={{
