@@ -11,6 +11,7 @@ import TextInput from '../TextInput';
 export interface CreateGroupSetNameProps {
     onSubmit: (group: { name: string }) => void;
 }
+
 export default function CreateGroupSetName({
     onSubmit,
 }: CreateGroupSetNameProps) {

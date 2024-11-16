@@ -10,10 +10,8 @@ import Avatar from '../Avatar';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
+import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
-export interface GroupMember {
-    name: string;
-}
 
 export interface CreateGroupAddMembersProps {
     onSubmit: (members: GroupMember[]) => void;
