@@ -1,6 +1,6 @@
-import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface GroupState {
     // State
@@ -41,20 +41,25 @@ export const useGroupStore = create<GroupState>()(
 
             // Add a new group
             addGroup: (groupId) => {
-                set(state => ({
+                set((state) => ({
                     groupIds: [...state.groupIds, groupId],
                     lastUpdated: Date.now(),
-                    error: null
+                    error: null,
                 }));
             },
 
             // Remove a group
             removeGroup: (groupId) => {
-                set(state => ({
-                    groupIds: state.groupIds.filter(group => group !== groupId),
-                    selectedGroupId: state.selectedGroupId === groupId ? null : state.selectedGroupId,
+                set((state) => ({
+                    groupIds: state.groupIds.filter(
+                        (group) => group !== groupId
+                    ),
+                    selectedGroupId:
+                        state.selectedGroupId === groupId
+                            ? null
+                            : state.selectedGroupId,
                     lastUpdated: Date.now(),
-                    error: null
+                    error: null,
                 }));
             },
 
@@ -64,13 +69,16 @@ export const useGroupStore = create<GroupState>()(
                     groupIds: [],
                     selectedGroupId: null,
                     lastUpdated: Date.now(),
-                    error: null
+                    error: null,
                 });
             },
 
             // Select a group
             selectGroup: (groupId) => {
-                if (groupId === null || get().groupIds.some(g => g === groupId)) {
+                if (
+                    groupId === null ||
+                    get().groupIds.some((g) => g === groupId)
+                ) {
                     set({ selectedGroupId: groupId, error: null });
                 } else {
                     set({ error: 'Invalid group selection' });
@@ -80,7 +88,10 @@ export const useGroupStore = create<GroupState>()(
             // Get selected group
             getSelectedGroupId: () => {
                 const state = get();
-                return state.groupIds.find(g => g === state.selectedGroupId) || null;
+                return (
+                    state.groupIds.find((g) => g === state.selectedGroupId) ||
+                    null
+                );
             },
 
             // Utility functions
@@ -97,4 +108,4 @@ export const useGroupStore = create<GroupState>()(
             }),
         }
     )
-)
+);

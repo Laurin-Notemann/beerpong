@@ -5,13 +5,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
 import { theme } from '@/theme';
+import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
 import Avatar from '../Avatar';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
-import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
-
 
 export interface CreateGroupAddMembersProps {
     onSubmit: (members: GroupMember[]) => void;

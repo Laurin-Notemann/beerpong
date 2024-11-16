@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StateStorage } from 'zustand/middleware'
+import { StateStorage } from 'zustand/middleware';
 
 export const storage: StateStorage = {
     getItem: async (name: string): Promise<string | null> => {

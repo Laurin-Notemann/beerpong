@@ -21,6 +21,7 @@ declare namespace Components {
         }
         export interface GroupCreateDto {
             name?: string;
+            playerNames?: string[];
         }
         export interface GroupDto {
             id?: string;
@@ -33,18 +34,22 @@ declare namespace Components {
             id?: string;
             settingValue?: string;
         }
+        export interface MatchCreateDto {
+            teams?: TeamCreateDto[];
+        }
         export interface MatchDto {
             id?: string;
             date?: string; // date-time
             season?: Season;
         }
+        export interface MatchMoveDto {
+            moveId?: string;
+            count?: number; // int32
+        }
         export interface PlayerDto {
             id?: string;
             profile?: Profile;
             season?: Season;
-        }
-        export interface PlayerMoveDto {
-            oldSeasonId?: string;
         }
         export interface Profile {
             id?: string;
@@ -137,14 +142,6 @@ declare namespace Components {
             data?: string;
             error?: ErrorDetails;
         }
-        export interface ResponseEnvelopeVoid {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: {
-                [key: string]: any;
-            };
-            error?: ErrorDetails;
-        }
         export interface RuleCreateDto {
             title?: string;
             description?: string;
@@ -186,6 +183,13 @@ declare namespace Components {
             endDate?: string; // date-time
             groupId?: string;
         }
+        export interface TeamCreateDto {
+            teamMembers?: TeamMemberCreateDto[];
+        }
+        export interface TeamMemberCreateDto {
+            playerId?: string;
+            moves?: MatchMoveDto[];
+        }
     }
 }
 declare namespace Paths {
@@ -204,6 +208,7 @@ declare namespace Paths {
             groupId: Parameters.GroupId;
             seasonId: Parameters.SeasonId;
         }
+        export type RequestBody = Components.Schemas.MatchCreateDto;
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeMatchDto;
         }
@@ -247,19 +252,6 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
-        }
-    }
-    namespace DeleteProfile {
-        namespace Parameters {
-            export type GroupId = string;
-            export type Id = string;
-        }
-        export interface PathParameters {
-            groupId: Parameters.GroupId;
-            id: Parameters.Id;
-        }
-        namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeVoid;
         }
     }
     namespace DeleteRuleMove {
@@ -359,23 +351,6 @@ declare namespace Paths {
         export interface PathParameters {
             groupId: Parameters.GroupId;
             seasonId: Parameters.SeasonId;
-        }
-        namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeListPlayerDto;
-        }
-    }
-    namespace GetPlayers1 {
-        namespace Parameters {
-            export type Dto = Components.Schemas.PlayerMoveDto;
-            export type GroupId = string;
-            export type SeasonId = string;
-        }
-        export interface PathParameters {
-            groupId: Parameters.GroupId;
-            seasonId: Parameters.SeasonId;
-        }
-        export interface QueryParameters {
-            dto: Parameters.Dto;
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListPlayerDto;
@@ -552,14 +527,6 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
     /**
-     * createMatch
-     */
-    'createMatch'(
-        parameters?: Parameters<Paths.CreateMatch.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.CreateMatch.Responses.$200>;
-    /**
      * getProfileById
      */
     'getProfileById'(
@@ -575,14 +542,6 @@ export interface OperationMethods {
         data?: Paths.UpdateProfile.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateProfile.Responses.$200>;
-    /**
-     * deleteProfile
-     */
-    'deleteProfile'(
-        parameters?: Parameters<Paths.DeleteProfile.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.DeleteProfile.Responses.$200>;
     /**
      * startNewSeason
      */
@@ -624,6 +583,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     /**
+     * createMatch
+     */
+    'createMatch'(
+        parameters?: Parameters<Paths.CreateMatch.PathParameters> | null,
+        data?: Paths.CreateMatch.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CreateMatch.Responses.$200>;
+    /**
      * listAllProfiles
      */
     'listAllProfiles'(
@@ -663,16 +630,6 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetPlayers.Responses.$200>;
-    /**
-     * getPlayers_1
-     */
-    'getPlayers_1'(
-        parameters?: Parameters<
-            Paths.GetPlayers1.QueryParameters & Paths.GetPlayers1.PathParameters
-        > | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetPlayers1.Responses.$200>;
     /**
      * getAllMatches
      */
@@ -762,16 +719,6 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/new-match']: {
-        /**
-         * createMatch
-         */
-        'put'(
-            parameters?: Parameters<Paths.CreateMatch.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.CreateMatch.Responses.$200>;
-    };
     ['/groups/{groupId}/profiles/{id}']: {
         /**
          * getProfileById
@@ -789,14 +736,6 @@ export interface PathsDictionary {
             data?: Paths.UpdateProfile.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateProfile.Responses.$200>;
-        /**
-         * deleteProfile
-         */
-        'delete'(
-            parameters?: Parameters<Paths.DeleteProfile.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.DeleteProfile.Responses.$200>;
     };
     ['/groups/{groupId}/active-season']: {
         /**
@@ -843,6 +782,16 @@ export interface PathsDictionary {
             data?: Paths.CreateRuleMove.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/match']: {
+        /**
+         * createMatch
+         */
+        'post'(
+            parameters?: Parameters<Paths.CreateMatch.PathParameters> | null,
+            data?: Paths.CreateMatch.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CreateMatch.Responses.$200>;
     };
     ['/groups/{groupId}/profiles']: {
         /**
@@ -891,19 +840,6 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetPlayers.Responses.$200>;
-    };
-    ['/groups/{groupId}/seasons/{seasonId}/players/move']: {
-        /**
-         * getPlayers_1
-         */
-        'get'(
-            parameters?: Parameters<
-                Paths.GetPlayers1.QueryParameters &
-                    Paths.GetPlayers1.PathParameters
-            > | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetPlayers1.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/matches']: {
         /**
@@ -954,9 +890,10 @@ export type Group = Components.Schemas.Group;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupSettings = Components.Schemas.GroupSettings;
+export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
+export type MatchMoveDto = Components.Schemas.MatchMoveDto;
 export type PlayerDto = Components.Schemas.PlayerDto;
-export type PlayerMoveDto = Components.Schemas.PlayerMoveDto;
 export type Profile = Components.Schemas.Profile;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
@@ -985,7 +922,6 @@ export type ResponseEnvelopeRuleMoveDto =
 export type ResponseEnvelopeSeasonDto =
     Components.Schemas.ResponseEnvelopeSeasonDto;
 export type ResponseEnvelopeString = Components.Schemas.ResponseEnvelopeString;
-export type ResponseEnvelopeVoid = Components.Schemas.ResponseEnvelopeVoid;
 export type RuleCreateDto = Components.Schemas.RuleCreateDto;
 export type RuleDto = Components.Schemas.RuleDto;
 export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
@@ -993,3 +929,5 @@ export type RuleMoveDto = Components.Schemas.RuleMoveDto;
 export type Season = Components.Schemas.Season;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
+export type TeamCreateDto = Components.Schemas.TeamCreateDto;
+export type TeamMemberCreateDto = Components.Schemas.TeamMemberCreateDto;

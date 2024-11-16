@@ -4,8 +4,8 @@ import React from 'react';
 import { useCreateGroupMutation } from '@/api/calls/group/groupHooks';
 import ErrorScreen from '@/components/ErrorScreen';
 import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 // Route params must be string types since they come from URL
 export interface CreateGroupSetNameParams {
