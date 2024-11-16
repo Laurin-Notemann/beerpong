@@ -33,14 +33,21 @@ public class SeasonService {
         if (groupOptional.isEmpty()) {
             return null;
         }
-
-        //TODO set name of current season
-        //TODO set active season of group
-
+        
+        var group = groupOptional.get();
         var season = new Season();
 
         season.setStartDate(ZonedDateTime.now());
         season.setGroup(groupOptional.get());
+
+        if (group.getActiveSeason() != null) {
+            group.getActiveSeason().setName(dto.getOldSeasonName());
+
+            seasonRepository.save(group.getActiveSeason());
+        }
+
+        group.setActiveSeason(season);
+        groupRepository.save(group);
 
         return seasonMapper.seasonToSeasonDto(seasonRepository.save(season));
     }
