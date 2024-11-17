@@ -1,26 +1,43 @@
 //TODO remove
+let stompClient = null;
 
-const stompClient = new StompJs.Client({
-    brokerURL: 'ws://localhost:8080/update-socket'
-});
+function connect() {
+    const socket = new SockJS('http://localhost:8080/update-socket');
 
-stompClient.onConnect = (frame) => {
-    setConnected(true);
-    console.log('Connected: ' + frame);
+    socket.onopen = function() {
+        console.log('Connected to server!');
 
-    stompClient.subscribe('/events', (event) => {
-        showEvent(JSON.parse(event.body));
-    });
-};
+        setConnected(true);
+    };
 
-stompClient.onWebSocketError = (error) => {
-    console.error('Error with websocket', error);
-};
+    socket.onmessage = function(event) {
+        console.log('Received from server: ' + event.data);
+    };
 
-stompClient.onStompError = (frame) => {
-    console.error('Broker reported error: ' + frame.headers['message']);
-    console.error('Additional details: ' + frame.body);
-};
+    socket.onerror = function(error) {
+        console.log("Error occurred: " + error);
+    };
+
+    socket.onclose = function(event) {
+        console.log("WebSocket connection closed!");
+
+        setConnected(false);
+    };
+
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({
+            'groupIds': '5f1a1f36-bbff-4aa3-ba3f-143680df5ffb'
+        },
+        function (frame) {}
+    );
+}
+
+function disconnect() {
+    if (stompClient !== null) {
+        stompClient.disconnect();
+    }
+}
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
@@ -32,24 +49,6 @@ function setConnected(connected) {
         $("#conversation").hide();
     }
     $("#greetings").html("");
-}
-
-function connect() {
-    stompClient.activate();
-}
-
-function disconnect() {
-    stompClient.deactivate();
-    setConnected(false);
-    console.log("Disconnected");
-}
-
-function showEvent(event) {
-    $("#greetings")
-        .append("<tr><td>" + event.groupId + "</td></tr>")
-        .append("<tr><td>" + event.eventType + "</td></tr>")
-        .append("<tr><td>" + event.scope + "</td></tr>")
-    ;
 }
 
 $(function () {

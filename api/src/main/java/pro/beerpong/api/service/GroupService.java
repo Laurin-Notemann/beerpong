@@ -1,6 +1,5 @@
 package pro.beerpong.api.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
@@ -12,9 +11,9 @@ import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -24,7 +23,7 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
 @Service
 public class GroupService {
-    private final EventService eventService;
+    private final SubscriptionHandler subscriptionHandler ;
 
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
@@ -32,8 +31,8 @@ public class GroupService {
     private final GroupMapper groupMapper;
 
     @Autowired
-    public GroupService(EventService eventService, GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
-        this.eventService = eventService;
+    public GroupService(SubscriptionHandler subscriptionHandler , GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
+        this.subscriptionHandler = subscriptionHandler;
         this.groupRepository = groupRepository;
         this.seasonRepository = seasonRepository;
         this.profileService = profileService;
@@ -63,7 +62,7 @@ public class GroupService {
 
         var dto = groupMapper.groupToGroupDto(group);
 
-        eventService.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
 
         return dto;
     }
@@ -93,7 +92,7 @@ public class GroupService {
                     existingGroup.setName(groupCreateDto.getName());
                     var dto = groupMapper.groupToGroupDto(groupRepository.save(existingGroup));
 
-                    eventService.callEvent(new SocketEvent<>(SocketEventData.GROUP_UPDATE, dto.getId(), dto));
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_UPDATE, dto.getId(), dto));
 
                     return dto;
                 })

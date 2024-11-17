@@ -12,26 +12,25 @@ import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
-    private final EventService eventService;
+    private final SubscriptionHandler subscriptionHandler ;
     private final PlayerRepository playerRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
 
     @Autowired
-    public PlayerService(EventService eventService, PlayerRepository playerRepository, SeasonRepository seasonRepository,
+    public PlayerService(SubscriptionHandler subscriptionHandler , PlayerRepository playerRepository, SeasonRepository seasonRepository,
                          ProfileRepository profileRepository, PlayerMapper playerMapper) {
-        this.eventService = eventService;
+        this.subscriptionHandler = subscriptionHandler;
         this.playerRepository = playerRepository;
         this.seasonRepository = seasonRepository;
         this.profileRepository = profileRepository;
@@ -75,7 +74,7 @@ public class PlayerService {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
                     playerRepository.deleteById(id);
 
-                    eventService.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, playerMapper.playerToPlayerDto(player)));
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, playerMapper.playerToPlayerDto(player)));
                 } else {
                     error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
                 }

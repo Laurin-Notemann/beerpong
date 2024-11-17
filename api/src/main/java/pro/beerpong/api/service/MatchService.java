@@ -14,13 +14,13 @@ import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.RuleMoveRepository;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 @Service
 public class MatchService {
-    private final EventService eventService;
+    private final SubscriptionHandler subscriptionHandler ;
 
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
@@ -32,9 +32,9 @@ public class MatchService {
     private final MatchMapper matchMapper;
 
     @Autowired
-    public MatchService(EventService eventService, MatchRepository matchRepository, RuleMoveRepository ruleMoveService, PlayerRepository playerRepository,
+    public MatchService(SubscriptionHandler subscriptionHandler , MatchRepository matchRepository, RuleMoveRepository ruleMoveService, PlayerRepository playerRepository,
                         SeasonRepository seasonRepository, MatchMapper matchMapper, TeamService teamService) {
-        this.eventService = eventService;
+        this.subscriptionHandler = subscriptionHandler;
         this.matchRepository = matchRepository;
         this.playerRepository = playerRepository;
         this.seasonRepository = seasonRepository;
@@ -76,7 +76,7 @@ public class MatchService {
         var dto = matchMapper.matchToMatchDto(match);
 
         if (dto.getSeason().getGroupId().equals(groupId)) {
-            eventService.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
         }
 
         return dto;

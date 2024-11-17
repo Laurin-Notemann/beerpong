@@ -11,21 +11,21 @@ import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
 import pro.beerpong.api.repository.RuleRepository;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 @Service
 public class RuleService {
-    private final EventService eventService;
+    private final SubscriptionHandler subscriptionHandler ;
     private final RuleRepository ruleRepository;
     private final SeasonRepository seasonRepository;
 
     private final RuleMapper ruleMapper;
 
     @Autowired
-    public RuleService(EventService eventService, RuleRepository matchRepository, SeasonRepository seasonRepository, RuleMapper ruleMapper) {
-        this.eventService = eventService;
+    public RuleService(SubscriptionHandler subscriptionHandler , RuleRepository matchRepository, SeasonRepository seasonRepository, RuleMapper ruleMapper) {
+        this.subscriptionHandler = subscriptionHandler;
         this.ruleRepository = matchRepository;
         this.seasonRepository = seasonRepository;
         this.ruleMapper = ruleMapper;
@@ -54,7 +54,7 @@ public class RuleService {
                 .map(rule -> ruleMapper.ruleToRuleDto(ruleRepository.save(rule)))
                 .toList();
 
-        eventService.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
 
         return dtos;
     }
