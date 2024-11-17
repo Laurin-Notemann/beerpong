@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EventService {
-    private final SimpMessagingTemplate messagingTemplate;
+/*    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     public EventService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
-    }
+    }*/
 
     public void callEvent(SocketEvent<?> event) {
-        messagingTemplate.convertAndSend("/events", event);
+        //messagingTemplate.convertAndSend("/events", event);
     }
 }
