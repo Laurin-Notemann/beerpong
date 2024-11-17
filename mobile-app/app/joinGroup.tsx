@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import React, { useEffect } from 'react';
 
 import { useFindGroupByInviteCode } from '@/api/calls/group/groupHooks';
@@ -7,34 +8,36 @@ import JoinGroup from '@/components/screens/JoinGroup';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
-    const nav = useNavigation();
     const [inviteCode, setInviteCode] = React.useState<string | null>(null);
-    const [error, setError] = React.useState('');
 
-    const { data, isSuccess } = useFindGroupByInviteCode(inviteCode);
+    const nav = useNavigation();
+
+    const { data, isLoading, error } = useFindGroupByInviteCode(inviteCode);
 
     const { addGroup } = useGroupStore();
 
     useEffect(() => {
-        setError('');
-        if (data?.data && isSuccess) {
-            if (!data?.data?.id) {
-                setError('Group not found');
-                return;
-            }
-
+        if (data?.data?.id) {
             addGroup(data.data.id);
 
             nav.navigate('index');
         }
-    }, [setError, data, addGroup, nav, isSuccess]);
+    }, [data, addGroup, nav]);
 
-    if (error) {
-        return <ErrorScreen message={error} />;
+    const isNotFound = (error as AxiosError | undefined)?.status === 404;
+
+    if (error && !isNotFound) {
+        return (
+            <ErrorScreen
+                message={(error as Error).message || 'Unknown error'}
+            />
+        );
     }
 
     return (
         <JoinGroup
+            isNotFound={isNotFound}
+            isLoading={isLoading}
             onSubmit={(code) => {
                 setInviteCode(code);
             }}

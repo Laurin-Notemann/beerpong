@@ -1,33 +1,68 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, SafeAreaView, Text } from 'react-native';
 import {
     CodeField,
     useBlurOnFulfill,
     useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
 
+import { env } from '@/api/env';
 import { theme } from '@/theme';
 
 import Button from '../Button';
 
-const CODE_LENGTH = 9;
-
 export interface JoinGroupProps {
+    isLoading?: boolean;
+    isNotFound?: boolean;
+
     onSubmit: (code: string) => void;
 }
-export default function JoinGroup({ onSubmit }: JoinGroupProps) {
+export default function JoinGroup({
+    onSubmit,
+    isLoading = false,
+    isNotFound = false,
+}: JoinGroupProps) {
     const [code, setCode] = useState('');
 
-    const ref = useBlurOnFulfill({ value: code, cellCount: CODE_LENGTH });
+    const ref = useBlurOnFulfill({
+        value: code,
+        cellCount: env.groupCode.length,
+    });
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value: code,
         setValue: (value) => setCode(value.toUpperCase()),
     });
 
+    useEffect(() => {
+        ref.current!.focus();
+    }, []);
+
+    useEffect(() => {
+        // auto submit when the user has entered the full code
+        if (code.length === env.groupCode.length) {
+            onSubmit(code);
+        }
+    }, [code]);
+
     return (
         <>
-            <Stack.Screen options={{ headerShown: false }} />
+            <Stack.Screen
+                options={{
+                    headerTitle: '',
+                    headerBackTitle: '',
+                    headerBackVisible: true,
+                    headerTintColor: '#fff',
+
+                    headerStyle: {
+                        backgroundColor: '#000',
+                    },
+                    headerTitleStyle: {
+                        color: theme.color.text.primary,
+                    },
+                    headerShown: true,
+                }}
+            />
             <SafeAreaView
                 style={{
                     alignItems: 'center',
@@ -43,7 +78,7 @@ export default function JoinGroup({ onSubmit }: JoinGroupProps) {
                     {...props}
                     value={code}
                     onChangeText={setCode}
-                    cellCount={CODE_LENGTH}
+                    cellCount={env.groupCode.length}
                     textContentType="oneTimeCode"
                     rootStyle={{
                         paddingTop: 128 * 2,
@@ -84,7 +119,7 @@ export default function JoinGroup({ onSubmit }: JoinGroupProps) {
                             >
                                 {symbol}
                             </Text>
-                            {(index === 2 || index === 5) && (
+                            {env.groupCode.seperatorIndices.includes(index) && (
                                 <Text
                                     key={`seperator-${index}`}
                                     style={{
@@ -101,10 +136,20 @@ export default function JoinGroup({ onSubmit }: JoinGroupProps) {
                         </>
                     )}
                 />
+                {isNotFound && (
+                    <Text
+                        style={{
+                            color: theme.color.text.negative,
+                        }}
+                    >
+                        Group not found
+                    </Text>
+                )}
                 <Button
+                    disabled={isLoading}
                     variant="primary"
                     size="large"
-                    title="Join"
+                    title={isLoading ? <ActivityIndicator /> : 'Join'}
                     onPress={() => onSubmit(code)}
                 />
             </SafeAreaView>
