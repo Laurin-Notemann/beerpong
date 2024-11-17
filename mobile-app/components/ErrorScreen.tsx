@@ -1,15 +1,16 @@
-import { View } from 'react-native';
+import { View, ViewProps } from 'react-native';
 
 import { theme } from '@/theme';
 
 import Text from './Text';
 
-export interface ErrorScreenProps {
-    message?: string;
+export interface ErrorScreenProps extends ViewProps {
+    message?: string | JSX.Element;
 }
-export default function ErrorScreen({ message }: ErrorScreenProps) {
+export default function ErrorScreen({ message, ...rest }: ErrorScreenProps) {
     return (
         <View
+            {...rest}
             style={{
                 flex: 1,
                 alignItems: 'center',

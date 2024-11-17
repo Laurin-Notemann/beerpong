@@ -1,11 +1,13 @@
-import { useNavigation } from 'expo-router';
-import { TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native';
+import { Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { HeaderItem } from '@/app/(tabs)/_layout';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { HighestChip, LowestChip } from '@/components/Chip';
 import MatchesList, { Match } from '@/components/MatchesList';
@@ -13,7 +15,9 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
-function Stat({
+import PlayerStats from '../PlayerStats';
+
+export function Stat({
     value,
     title,
     isHighest = false,
@@ -65,6 +69,8 @@ export interface PlayerScreenProps {
     hasPremium?: boolean;
 
     pastSeasons: number;
+
+    onDelete?: () => void;
 }
 export default function PlayerScreen({
     placement,
@@ -74,18 +80,33 @@ export default function PlayerScreen({
     matchesWon,
     points,
     elo,
-    hasPremium = false,
     pastSeasons,
+    hasPremium = false,
+
+    onDelete,
 }: PlayerScreenProps) {
     const nav = useNavigation();
 
-    const averagePointsPerMatch = (points / matches.length).toFixed(1);
-    const matchesWonPercentage = Math.round(
-        (matchesWon / matches.length) * 100
-    );
+    const averagePointsPerMatch = points / matches.length;
+
+    const hasMatches = matches.length > 0;
+
+    const [editable, setEditable] = useState(false);
 
     return (
         <GestureHandlerRootView>
+            <Stack.Screen
+                options={{
+                    headerTitle: 'Player',
+                    headerRight: () => (
+                        <HeaderItem
+                            onPress={() => setEditable((prev) => !prev)}
+                        >
+                            {editable ? 'Done' : 'Edit'}
+                        </HeaderItem>
+                    ),
+                }}
+            />
             <ScrollView
                 style={{
                     flex: 1,
@@ -111,7 +132,7 @@ export default function PlayerScreen({
                         color: theme.color.text.secondary,
                     }}
                 >
-                    {matches.length ? averagePointsPerMatch : '--'}
+                    {hasMatches ? averagePointsPerMatch?.toFixed(1) : '--'}
                 </Text>
                 <Text
                     style={{
@@ -124,47 +145,54 @@ export default function PlayerScreen({
                     {name}
                 </Text>
 
-                <TouchableOpacity
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'flex-end',
-
-                        marginBottom: 32,
-                        gap: 8,
-                    }}
-                >
-                    <Stat
-                        title="Average points"
-                        value={matches.length ? averagePointsPerMatch : '--'}
-                        isLowest
-                    />
-                    <Stat title="Total points" value={points} />
-                    <Stat
-                        title="Matches won"
-                        value={
-                            matches.length
-                                ? `${matchesWon} of ${matches.length} (${matchesWonPercentage}%)`
-                                : '--'
-                        }
-                        isHighest
-                    />
-                    <Stat title="Elo" value={elo} />
-                </TouchableOpacity>
-                <MenuSection
-                    style={{
-                        alignSelf: 'stretch',
-                    }}
-                >
-                    <MenuItem
-                        title="Past Seasons"
-                        headIcon="pencil-outline"
-                        tailContent={pastSeasons}
-                        tailIconType="next"
-                        // @ts-ignore
-                        onPress={() => nav.navigate('pastSeasons')}
-                    />
-                </MenuSection>
-                <MatchesList matches={matches} />
+                <PlayerStats
+                    totalPoints={points}
+                    matchesWonCount={matchesWon}
+                    matchesPlayedCount={matches.length}
+                    elo={elo}
+                />
+                {editable ? (
+                    <MenuSection
+                        style={{
+                            width: '100%',
+                        }}
+                    >
+                        <MenuItem
+                            title={name}
+                            headIcon="pencil-outline"
+                            onPress={() => nav.navigate('editPlayerName')}
+                            tailIconType="next"
+                        />
+                        <MenuItem
+                            title="Delete Player"
+                            headIcon="delete-outline"
+                            onPress={onDelete}
+                            type="danger"
+                            confirmationPrompt={{
+                                title: 'Delete Player',
+                                description:
+                                    'Are you sure you want to delete this player?',
+                            }}
+                        />
+                    </MenuSection>
+                ) : (
+                    <>
+                        <MenuSection
+                            style={{
+                                alignSelf: 'stretch',
+                            }}
+                        >
+                            <MenuItem
+                                title="Past Seasons"
+                                headIcon="pencil-outline"
+                                tailContent={pastSeasons}
+                                tailIconType="next"
+                                onPress={() => nav.navigate('pastSeasons')}
+                            />
+                        </MenuSection>
+                        <MatchesList matches={matches} />
+                    </>
+                )}
             </ScrollView>
         </GestureHandlerRootView>
     );

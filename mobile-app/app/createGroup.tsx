@@ -1,29 +1,20 @@
-import { Stack, useNavigation } from 'expo-router';
 import React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import CreateGroup from '@/components/screens/CreateGroup';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import CreateGroupAddMembers from '@/components/screens/CreateGroupAddMembers';
+import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 
 export default function Page() {
-    const members = [
-        { name: 'Laurin' },
-        { name: 'foo' },
-        { name: 'bar' },
-        { name: 'schokoauto' },
-    ];
-
     const nav = useNavigation();
 
+    const { addMembers } = useCreateGroupStore();
+
     return (
-        <GestureHandlerRootView>
-            <Stack.Screen options={{ headerShown: false }} />
-            <CreateGroup
-                members={members}
-                onCreateMember={(memberName) => {
-                    // @ts-ignore
-                    nav.navigate('createGroupSetName');
-                }}
-            />
-        </GestureHandlerRootView>
+        <CreateGroupAddMembers
+            onSubmit={(members) => {
+                addMembers(members);
+                nav.navigate('createGroupSetName');
+            }}
+        />
     );
 }

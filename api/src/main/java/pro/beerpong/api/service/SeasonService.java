@@ -18,15 +18,18 @@ import java.util.List;
 
 @Service
 public class SeasonService {
-    private final SubscriptionHandler subscriptionHandler ;
+    private final SubscriptionHandler subscriptionHandler;
     private final SeasonRepository seasonRepository;
     private final GroupRepository groupRepository;
     private final PlayerService playerService;
-
     private final SeasonMapper seasonMapper;
 
     @Autowired
-    public SeasonService(SubscriptionHandler subscriptionHandler , SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
+    public SeasonService(SubscriptionHandler subscriptionHandler, 
+                         SeasonRepository seasonRepository, 
+                         GroupRepository groupRepository, 
+                         PlayerService playerService, 
+                         SeasonMapper seasonMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
@@ -53,6 +56,7 @@ public class SeasonService {
         if (oldSeason != null) {
             var oldSeasonId = oldSeason.getId();
             oldSeason.setName(dto.getOldSeasonName());
+            oldSeason.setEndDate(ZonedDateTime.now());
 
             seasonRepository.save(oldSeason);
             playerService.copyPlayersFromOldSeason(oldSeasonId, season.getId());

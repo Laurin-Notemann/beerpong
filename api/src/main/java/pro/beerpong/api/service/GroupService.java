@@ -10,6 +10,7 @@ import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.mapping.GroupMapper;
+import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -23,20 +24,23 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
 @Service
 public class GroupService {
-    private final SubscriptionHandler subscriptionHandler ;
-
+    private final SubscriptionHandler subscriptionHandler;
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileService profileService;
     private final GroupMapper groupMapper;
+    private final MatchRepository matchRepository;
+    private final PlayerService playerRepository;
 
     @Autowired
-    public GroupService(SubscriptionHandler subscriptionHandler , GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
+    public GroupService(SubscriptionHandler subscriptionHandler, GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.groupRepository = groupRepository;
         this.seasonRepository = seasonRepository;
         this.profileService = profileService;
         this.groupMapper = groupMapper;
+        this.matchRepository = matchRepository;
+        this.playerRepository = playerRepository;
     }
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
@@ -81,9 +85,15 @@ public class GroupService {
     }
 
     public GroupDto getGroupById(String id) {
-        return groupRepository.findById(id)
+
+        var groupDto = groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
                 .orElse(null);
+        assert groupDto != null;
+        groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
+        groupDto.setNumberOfPlayers(playerRepository.getBySeasonId(groupDto.getActiveSeason().getId()).size());
+        groupDto.setNumberOfSeasons(seasonRepository.findByGroupId(groupDto.getId()).size());
+        return groupDto;
     }
 
     public GroupDto updateGroup(String id, GroupCreateDto groupCreateDto) {

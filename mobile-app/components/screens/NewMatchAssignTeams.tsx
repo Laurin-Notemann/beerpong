@@ -1,38 +1,38 @@
-import { useNavigation } from 'expo-router';
-import React, { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import React from 'react';
 import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
+import { TeamMember } from '../MatchPlayers';
 import MatchVsHeader from '../MatchVsHeader';
 
 export type TeamId = 'red' | 'blue' | null;
 
 function PlayerItem({
     player,
-    team,
     onSelectTeam,
 }: {
-    player: { name: string };
-    team?: TeamId;
+    player: Player;
     isRedTeam?: boolean;
     isBlueTeam?: boolean;
-    onSelectTeam: (team: 'blue' | 'red' | null) => void;
+    onSelectTeam: (team: TeamId) => void;
 }) {
-    const isRedTeam = team === 'red';
-    const isBlueTeam = team === 'blue';
+    const isRedTeam = player.team === 'red';
+    const isBlueTeam = player.team === 'blue';
 
     return (
         <TouchableHighlight
             onPress={() => {
-                if (team === null) onSelectTeam('blue');
-                if (team === 'blue') onSelectTeam('red');
-                if (team === 'red') onSelectTeam(null);
+                if (player.team === null) onSelectTeam('blue');
+                if (player.team === 'blue') onSelectTeam('red');
+                if (player.team === 'red') onSelectTeam(null);
             }}
             underlayColor={theme.panel.light.active}
             style={{
@@ -97,64 +97,24 @@ function PlayerItem({
     );
 }
 
-interface Player {
-    id: string;
-    name: string;
-    team: TeamId;
-}
+export type Player = Pick<TeamMember, 'id' | 'name' | 'team'>;
 
 export interface NewMatchAssignTeamsProps {
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
+    onSubmit: () => void;
 }
 export default function NewMatchAssignTeams({
     players,
     setTeam,
+    onSubmit,
 }: NewMatchAssignTeamsProps) {
     const nav = useNavigation();
 
-    useEffect(() => {
-        function updateHeader() {
-            const blueTeam = players.filter((i) => i.team === 'blue');
-            const redTeam = players.filter((i) => i.team === 'red');
+    const blueTeam = players.filter((i) => i.team === 'blue');
+    const redTeam = players.filter((i) => i.team === 'red');
 
-            const canCreateMatch = blueTeam.length > 0 && redTeam.length > 0;
-
-            nav.setOptions({
-                headerRight: () => (
-                    <HeaderItem
-                        disabled={!canCreateMatch}
-                        onPress={() =>
-                            // @ts-ignore
-                            nav.navigate('newMatchPoints')
-                        }
-                    >
-                        Next
-                    </HeaderItem>
-                ),
-
-                headerTitle:
-                    blueTeam.length > 0 || redTeam.length > 0
-                        ? () => (
-                              <MatchVsHeader
-                                  match={{
-                                      blueTeam,
-                                      redTeam,
-                                      blueCups: 0,
-                                      redCups: 0,
-                                      date: new Date(),
-                                  }}
-                                  hasScore={false}
-                                  style={{
-                                      bottom: 4,
-                                  }}
-                              />
-                          )
-                        : 'New Match',
-            });
-        }
-        updateHeader();
-    }, [players]);
+    const canCreateMatch = blueTeam.length > 0 && redTeam.length > 0;
 
     return (
         <ScrollView
@@ -166,12 +126,51 @@ export default function NewMatchAssignTeams({
                 paddingHorizontal: 16,
             }}
         >
+            <Stack.Screen
+                options={{
+                    headerRight: () => (
+                        <HeaderItem
+                            disabled={!canCreateMatch}
+                            onPress={() => onSubmit()}
+                        >
+                            Next
+                        </HeaderItem>
+                    ),
+
+                    headerTitle:
+                        blueTeam.length > 0 || redTeam.length > 0
+                            ? () => (
+                                  <MatchVsHeader
+                                      match={{
+                                          blueTeam,
+                                          redTeam,
+                                          blueCups: 0,
+                                          redCups: 0,
+                                      }}
+                                      hasScore={false}
+                                      style={{
+                                          bottom: 4,
+                                      }}
+                                  />
+                              )
+                            : 'New Match',
+                    headerBackTitle: '',
+                    headerBackVisible: true,
+                    headerTintColor: '#fff',
+
+                    headerStyle: {
+                        backgroundColor: '#000',
+                    },
+                    headerTitleStyle: {
+                        color: theme.color.text.primary,
+                    },
+                }}
+            />
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
                     headIcon="account-plus-outline"
                     title="Create new Player"
                     tailIconType="next"
-                    // @ts-ignore
                     onPress={() => nav.navigate('createNewPlayer')}
                 />
             </MenuSection>
@@ -180,7 +179,6 @@ export default function NewMatchAssignTeams({
                     <PlayerItem
                         key={idx}
                         player={i}
-                        team={i.team}
                         onSelectTeam={(team) => setTeam(i.id, team)}
                     />
                 ))}

@@ -11,6 +11,7 @@ import pro.beerpong.api.repository.RuleMoveRepository;
 import pro.beerpong.api.repository.TeamMemberRepository;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class MatchMoveService {
@@ -32,7 +33,9 @@ public class MatchMoveService {
         for (MatchMoveDto moveDto : moves) {
             RuleMove ruleMove = ruleMoveRepository.findById(moveDto.getMoveId())
                     .orElseThrow(() -> new IllegalArgumentException("RuleMove not found: " + moveDto.getMoveId()));
-
+            if (!Objects.equals(ruleMove.getSeason().getId(), teamMember.getTeam().getMatch().getSeason().getId())) {
+                throw new IllegalArgumentException("RuleMove not found: " + moveDto.getMoveId());
+            }
             MatchMove matchMove = new MatchMove();
             matchMove.setTeamMember(teamMember);
             matchMove.setMove(ruleMove);

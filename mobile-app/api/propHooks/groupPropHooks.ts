@@ -1,9 +1,9 @@
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 
-import { useGroupQuery } from '../calls/group/groupHooks';
+import { useGroupQuery } from '../calls/groupHooks';
 import { ApiId } from '../types';
 
-export const useGroupSettingsProps = (groupId: ApiId) => {
+export const useGroupSettingsProps = (groupId: ApiId | null) => {
     const { data, ...props } = useGroupQuery(groupId);
 
     const groupPageProps: GroupSettingsProps | null = data
