@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 
 import beerpongDefinition from '../../api/generated/openapi.json';
 import { Client as BeerPongClient } from '../../openapi/openapi';
+import { env } from '../env';
 
 type ApiContextType = {
     api: Promise<BeerPongClient>;
@@ -21,7 +22,7 @@ const ApiContext = createContext<ApiContextType | undefined>(undefined);
 
 const openApi = new OpenAPIClientAxios({
     axiosConfigDefaults: {
-        baseURL: 'http://localhost:8080',
+        baseURL: env.apiBaseUrl,
     },
     definition: beerpongDefinition as Document,
 });
