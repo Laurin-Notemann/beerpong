@@ -1,11 +1,11 @@
 package pro.beerpong.api.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.GroupSettings;
 import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
@@ -22,7 +22,7 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 @Service
 @RequiredArgsConstructor
 public class GroupService {
-
+    private final AssetService assetService;
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileService profileService;
@@ -80,5 +80,25 @@ public class GroupService {
                     return groupMapper.groupToGroupDto(updatedGroup);
                 })
                 .orElse(null);
+    }
+
+    public AssetMetadataDto storeGroupWallpaper(GroupDto groupDto, byte[] content, String contentType) {
+        String oldWallpaperAssetId = null;
+
+        if (groupDto.getWallpaperAsset() != null) {
+            oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
+        }
+
+        var assetMetadataDto = assetService.storeAsset(content, contentType);
+
+        groupDto.setWallpaperAsset(assetMetadataDto);
+
+        groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
+
+        if (oldWallpaperAssetId != null) {
+            assetService.deleteAsset(oldWallpaperAssetId);
+        }
+
+        return assetMetadataDto;
     }
 }
