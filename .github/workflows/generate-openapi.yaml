@@ -5,6 +5,8 @@ on:
     paths:
       - "api/src/main/java/pro/beerpong/api/**"
       - ".github/workflows/generate-openapi.yaml"
+      - "mobile-app/api/generated/openapi.json"
+      - "mobile-app/openapi/openapi.d.ts"
     branches: 
       - main
   workflow_dispatch:
@@ -54,5 +56,5 @@ jobs:
         with:
           commit-message: chore - update openapi-types
           title: OpenAPI Types Update
+          base: main
           branch: update-openapi-types
-
