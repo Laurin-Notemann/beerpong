@@ -13,7 +13,6 @@ jobs:
   generate-docs: 
     name: Genereate Api docs
     runs-on: ubuntu-20.04
-    container: node:20-bookworm-slim
     services:
       postgres:
         image: postgres
