@@ -44,6 +44,7 @@ jobs:
         id: check_author
         run: |
           COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
+          echo COMMIT_AUTHOR
           if echo "$COMMIT_AUTHOR" | grep -q "github-actions"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
             echo "Latest commit was authored by a GitHub bot. Stopping the workflow."
