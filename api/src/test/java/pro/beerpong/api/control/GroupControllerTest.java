@@ -1,4 +1,4 @@
-package pro.beerpong.api.service;
+package pro.beerpong.api.control;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class GroupServiceTest {
+public class GroupControllerTest {
     @LocalServerPort
     private int port;
 
