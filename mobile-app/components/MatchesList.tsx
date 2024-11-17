@@ -8,14 +8,8 @@ import { theme } from '@/theme';
 
 import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
+import { Match } from '@/api/propHooks/matchlistPropHooks';
 
-export interface Match {
-    date: Date;
-    blueTeam: { name: string }[];
-    redTeam: { name: string }[];
-    blueCups: number;
-    redCups: number;
-}
 
 const getDayName = (date: Dayjs) => {
     const today = dayjs();

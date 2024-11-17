@@ -11,7 +11,7 @@ export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetGroupById.Responses.$200 | undefined>({
-        queryKey: ['group', 'id', id],
+        queryKey: ['group', id],
         queryFn: async () => {
             if (!id) {
                 return undefined;
@@ -26,7 +26,7 @@ export const useFindGroupByInviteCode = (inviteCode: string | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.FindGroupByInviteCode.Responses.$200 | undefined>({
-        queryKey: ['group', 'inviteCode', inviteCode],
+        queryKey: ['groupCode', inviteCode],
         queryFn: async () => {
             if (!inviteCode || inviteCode.length !== 9) {
                 return undefined;
