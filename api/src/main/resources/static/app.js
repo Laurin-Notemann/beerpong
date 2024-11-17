@@ -43,10 +43,9 @@ function closeSocket() {
     }
 }
 
-function sendMessage(message) {
+function sendMessage(groupIds) {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({groupIds: ['group1', 'group2']}));
-        console.log('Sent message:', message);
+        socket.send(JSON.stringify({groupIds: groupIds}));
     } else {
         console.log('WebSocket is not open, cannot send message.');
     }
@@ -68,5 +67,5 @@ $(function () {
     $("form").on('submit', (e) => e.preventDefault());
     $("#connect").click(() => openSocket());
     $("#disconnect").click(() => closeSocket());
-    $("#sendd").click(() => sendMessage("test123123"));
+    $("#sendd").click(() => sendMessage(['5f1a1f36-bbff-4aa3-ba3f-143680df5ffb', 'q2das']));
 });

@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 @Component
 public class SubscriptionHandler extends TextWebSocketHandler {
@@ -34,29 +36,21 @@ public class SubscriptionHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         //TODO maybe validate connection, ...
         System.out.println("connected: " + session.getId());
-
-
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        var asString = new String(message.asBytes());
-        var groupIds = extractGroupIds(asString);
+        System.out.println("received message: " + new String(message.asBytes()));
 
-        System.out.println("received message: " + asString);
+        var groupIds = extractGroupIds(GSON.fromJson(new String(message.asBytes()), JsonObject.class));
 
-        this.sendMessage(session, GSON.toJson("success"));
-
-        if (groupIds != null && !groupIds.trim().isEmpty()) {
-            Set<String> subscribedTo = Arrays.stream(groupIds.split(","))
-                    .filter(s -> UUID_PATTERN.matcher(s).matches())
-                    .limit(MAX_GROUP_SUBSCRIPTIONS)
-                    .collect(Collectors.toSet());
-
-            System.out.println(session.getId() + " subscribed to: " + subscribedTo);
-
-            saveGroupIds(session, subscribedTo);
+        if (groupIds == null || groupIds.isEmpty()) {
+            return;
         }
+
+        System.out.println(session.getId() + " subscribed to: " + groupIds);
+
+        saveGroupIds(session, groupIds);
     }
 
     @Override
@@ -126,13 +120,15 @@ public class SubscriptionHandler extends TextWebSocketHandler {
         session.sendMessage(new TextMessage(message));
     }
 
-    private String extractGroupIds(String input) {
-        var matcher = GROUP_IDS_PATTERN.matcher(input);
-
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
+    private Set<String> extractGroupIds(JsonObject jsonObject) {
+        if (jsonObject == null || !jsonObject.has("groupIds") || !jsonObject.get("groupIds").isJsonArray()) {
             return null;
         }
+
+        return Sets.newHashSet(jsonObject.get("groupIds").getAsJsonArray().iterator()).stream()
+                .map(JsonElement::getAsString)
+                .filter(s -> UUID_PATTERN.matcher(s).matches())
+                .limit(MAX_GROUP_SUBSCRIPTIONS)
+                .collect(Collectors.toSet());
     }
 }
