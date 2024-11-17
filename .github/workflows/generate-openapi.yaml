@@ -43,6 +43,7 @@ jobs:
       - name: Check latest commit author
         id: check_author
         run: |
+          git log -4
           COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
           echo $COMMIT_AUTHOR
           if echo "$COMMIT_AUTHOR" | grep -q "github-actions"; then
