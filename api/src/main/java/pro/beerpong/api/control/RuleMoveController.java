@@ -32,14 +32,10 @@ public class RuleMoveController {
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<RuleMoveDto>> createRuleMove(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody RuleMoveCreateDto dto) {
-        var move = moveService.createRuleMove(seasonId, dto);
+        var move = moveService.createRuleMove(groupId, seasonId, dto);
 
         if (move != null) {
-            if (move.getSeason().getId().equals(seasonId) && move.getSeason().getGroupId().equals(groupId)) {
-                return ResponseEnvelope.ok(move);
-            } else {
-                return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
-            }
+            return ResponseEnvelope.ok(move);
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
         }
@@ -47,7 +43,7 @@ public class RuleMoveController {
 
     @PutMapping("/{ruleMoveId}")
     public ResponseEntity<ResponseEnvelope<RuleMoveDto>> updateRuleMove(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String ruleMoveId, @RequestBody RuleMoveCreateDto dto) {
-        var move = moveService.updateRuleMove(ruleMoveId, dto);
+        var move = moveService.updateRuleMove(groupId, ruleMoveId, dto);
 
         if (move != null) {
             return ResponseEnvelope.ok(move);
@@ -58,7 +54,7 @@ public class RuleMoveController {
 
     @DeleteMapping("/{ruleMoveId}")
     public ResponseEntity<ResponseEnvelope<String>> deleteRuleMove(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String ruleMoveId) {
-        if (moveService.deleteById(ruleMoveId)) {
+        if (moveService.deleteById(groupId, ruleMoveId)) {
             return ResponseEnvelope.ok("OK");
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.RULE_MOVE_NOT_FOUND);
