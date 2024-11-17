@@ -59,3 +59,5 @@ jobs:
           commit-message: chore - update openapi-types
           title: OpenAPI Types Update
           branch: update-openapi-types
+          token: ${{ secrets.GITHUB_TOKEN }}
+
