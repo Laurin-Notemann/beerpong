@@ -8,7 +8,7 @@ import lombok.Data;
 
 import java.time.ZonedDateTime;
 
-@Entity
+@Entity(name = "assets")
 @Data
 public class Asset {
     @Id
