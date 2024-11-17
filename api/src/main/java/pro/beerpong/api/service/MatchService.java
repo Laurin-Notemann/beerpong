@@ -2,6 +2,8 @@ package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMapper;
 import pro.beerpong.api.model.dao.Match;
@@ -44,7 +46,7 @@ public class MatchService {
                         TeamRepository teamRepository,
                         TeamMemberRepository teamMemberRepository,
                         MatchMoveRepository matchMoveRepository,
-                        RuleMoveRepository ruleMoveRepository, 
+                        RuleMoveRepository ruleMoveRepository,
                         TeamService teamService,
                         MatchMapper matchMapper) {
         this.subscriptionHandler = subscriptionHandler;
@@ -54,7 +56,7 @@ public class MatchService {
         this.playerRepository = playerRepository;
         this.groupRepository = groupRepository;
         this.teamRepository = teamRepository;
-        this.teamMemberRepository = teamMemberRepository;
+        this.matchMoveRepository = matchMoveRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.ruleMoveRepository = ruleMoveRepository;
       
@@ -67,7 +69,7 @@ public class MatchService {
                 teamCreateDto.getTeamMembers().stream().allMatch(memberDto ->
                         playerRepository.existsById(memberDto.getPlayerId()) &&
                                 memberDto.getMoves().stream().allMatch(matchMoveDto ->
-                                        ruleMoveService.existsById(matchMoveDto.getMoveId()))));
+                                        ruleMoveRepository.existsById(matchMoveDto.getMoveId()))));
     }
 
     @Transactional
@@ -158,7 +160,7 @@ public class MatchService {
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
 
         if (updatedDto.getSeason().getGroupId().equals(groupId)) {
-            eventService.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, updatedDto));
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, updatedDto));
         }
 
         return updatedDto;

@@ -30,17 +30,23 @@ public class GroupService {
     private final ProfileService profileService;
     private final GroupMapper groupMapper;
     private final MatchRepository matchRepository;
-    private final PlayerService playerRepository;
+    private final PlayerService playerService;
 
     @Autowired
-    public GroupService(SubscriptionHandler subscriptionHandler, GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
+    public GroupService(SubscriptionHandler subscriptionHandler,
+                        GroupRepository groupRepository,
+                        SeasonRepository seasonRepository,
+                        ProfileService profileService,
+                        GroupMapper groupMapper,
+                        MatchRepository matchRepository,
+                        PlayerService playerService) {
         this.subscriptionHandler = subscriptionHandler;
         this.groupRepository = groupRepository;
         this.seasonRepository = seasonRepository;
         this.profileService = profileService;
         this.groupMapper = groupMapper;
         this.matchRepository = matchRepository;
-        this.playerRepository = playerRepository;
+        this.playerService = playerService;
     }
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
@@ -91,7 +97,7 @@ public class GroupService {
                 .orElse(null);
         assert groupDto != null;
         groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
-        groupDto.setNumberOfPlayers(playerRepository.getBySeasonId(groupDto.getActiveSeason().getId()).size());
+        groupDto.setNumberOfPlayers(playerService.getBySeasonId(groupDto.getActiveSeason().getId()).size());
         groupDto.setNumberOfSeasons(seasonRepository.findByGroupId(groupDto.getId()).size());
         return groupDto;
     }
