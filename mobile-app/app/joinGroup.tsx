@@ -18,12 +18,11 @@ export default function Page() {
     useEffect(() => {
         setError('');
         if (data?.data && isSuccess) {
-            if (!data.data) {
+            if (!data?.data?.id) {
                 setError('Group not found');
                 return;
             }
 
-            // @ts-ignore
             addGroup(data.data.id);
 
             // @ts-ignore
