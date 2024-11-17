@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
+import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { Sidebar } from '@/components/screens/Sidebar';
@@ -128,7 +129,7 @@ function Everything() {
 }
 
 function DrawerContent() {
-    return <Sidebar appVersion="0.1.0" />;
+    return <Sidebar appVersion={env.appVersion} />;
 }
 
 export default function RootLayout() {

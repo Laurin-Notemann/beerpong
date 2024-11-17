@@ -89,7 +89,13 @@ export function Sidebar({ appVersion }: SidebarProps) {
                     key={id}
                     id={id}
                     isActive={id === selectedGroupId}
-                    onPress={() => selectGroup(id)}
+                    onPress={() => {
+                        selectGroup(id);
+
+                        console.log(Object.keys(nav));
+                        // @ts-ignore
+                        // nav.closeDrawer();
+                    }}
                 />
             ))}
             {groupIds.length < 1 && (

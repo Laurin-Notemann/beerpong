@@ -7,4 +7,5 @@ export const env = {
         seperatorIndices: [2, 5],
         length: 9,
     },
+    appVersion: '0.1.0',
 };
