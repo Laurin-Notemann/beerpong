@@ -19,7 +19,8 @@ public enum ErrorCodes {
     RULE_VALIDATION_FAILED("ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
     PLAYER_VALIDATION_FAILED("playerValidationFailed", "The validation of the player to delete has failed (invalid group or season id)"),
     PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!"),
-    PROFILE_NOT_FOUND("profileNotFound", "The requested profile could not be found!");
+    PROFILE_NOT_FOUND("profileNotFound", "The requested profile could not be found!"),
+    ASSET_NOT_FOUND("assetNotFound", "The requested asset could not be found!");
 
     private final String code;
     private final String description;
