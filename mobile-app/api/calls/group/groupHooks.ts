@@ -11,11 +11,11 @@ export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetGroupById.Responses.$200 | undefined>(
-        ['group', id],
+        ['group', 'id', id],
         async () => {
             if (!id) {
                 console.log('No group id provided');
-                return undefined
+                return undefined;
             }
             console.log('Fetching group with id', id);
             const res = await (await api).getGroupById(id);
@@ -24,17 +24,27 @@ export const useGroupQuery = (id: ApiId | null) => {
     );
 };
 
-export const useGroupsQuery = () => {
+export const useFindGroupByInviteCode = (inviteCode: string | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetAllGroups.Responses.$200 | undefined>(
-        'groups',
+    return useQuery<Paths.FindGroupByInviteCode.Responses.$200 | undefined>(
+        ['group', 'inviteCode', inviteCode],
         async () => {
-            const res = await (await api).getAllGroups();
+            if (!inviteCode || inviteCode.length !== 9) {
+                console.log('No invite code provided or invalid');
+                return undefined;
+            }
+
+            console.log('Fetching group with invite code', inviteCode);
+            const res = await (
+                await api
+            ).findGroupByInviteCode({ inviteCode });
+            console.log('Response:', res?.data);
             return res?.data;
         }
     );
 };
+//B0W2QU4E7
 
 export const useCreateGroupMutation = () => {
     const { api } = useApi();
