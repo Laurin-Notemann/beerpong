@@ -11,8 +11,8 @@ public interface PlayerRepository extends JpaRepository<Player, String> {
     List<Player> findAllBySeasonId(String seasonId);
 
     @Query("SELECT new pro.beerpong.api.model.dao.PlayerStatistics(" +
-            "SUM(mm.value * rm.pointsForScorer), " +
-            "COUNT(m)) " +
+            "COALESCE(SUM(mm.value * rm.pointsForScorer), 0), " +
+            "COALESCE(COUNT(m), 0)) " +
             "FROM players p " +
             "LEFT JOIN team_members tm ON p.id = tm.player.id " +
             "LEFT JOIN teams t ON tm.team.id = t.id " +
