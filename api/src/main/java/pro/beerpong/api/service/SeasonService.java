@@ -27,14 +27,6 @@ public class SeasonService {
 
     private final SeasonMapper seasonMapper;
 
-    public SeasonService(EventService eventService, SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
-        this.eventService = eventService;
-        this.seasonRepository = seasonRepository;
-        this.groupRepository = groupRepository;
-        this.playerService = playerService;
-        this.seasonMapper = seasonMapper;
-    }
-
     public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
         var groupOptional = groupRepository.findById(groupId);
 
