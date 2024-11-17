@@ -1,7 +1,9 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useApi } from "../utils/create-api";
-import { Paths } from "@/openapi/openapi";
-import { ApiId } from "../types";
+import { useMutation, useQuery } from '@tanstack/react-query';
+
+import { Paths } from '@/openapi/openapi';
+
+import { ApiId } from '../types';
+import { useApi } from '../utils/create-api';
 
 export const useSeasonQuery = (seasonId: ApiId | null) => {
     const { api } = useApi();
@@ -17,7 +19,7 @@ export const useSeasonQuery = (seasonId: ApiId | null) => {
             return res?.data;
         },
     });
-}
+};
 
 export const useAllSeasonQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
@@ -33,7 +35,7 @@ export const useAllSeasonQuery = (groupId: ApiId | null) => {
             return res?.data;
         },
     });
-}
+};
 
 export const useStartNewSeasonMutation = () => {
     const { api } = useApi();
@@ -47,4 +49,4 @@ export const useStartNewSeasonMutation = () => {
             return res?.data;
         },
     });
-}
+};

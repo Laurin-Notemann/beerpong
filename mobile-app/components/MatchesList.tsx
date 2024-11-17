@@ -2,14 +2,13 @@ import dayjs, { Dayjs } from 'dayjs';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
+import { Match } from '@/api/propHooks/matchlistPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
-import { Match } from '@/api/propHooks/matchlistPropHooks';
-
 
 const getDayName = (date: Dayjs) => {
     const today = dayjs();

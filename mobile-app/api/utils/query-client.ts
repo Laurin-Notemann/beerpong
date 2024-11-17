@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
+
 import { hours, minutes } from '@/utils/time';
 
 /**
@@ -8,12 +9,12 @@ import { hours, minutes } from '@/utils/time';
  */
 const defaultQueryOptions = {
     queries: {
-        staleTime: minutes(2),    // Data becomes stale after 2 minutes
-        retry: false,             // Don't retry failed queries
-        gcTime: hours(24),        // Keep unused data in garbage collection for 24 hours
+        staleTime: minutes(2), // Data becomes stale after 2 minutes
+        retry: false, // Don't retry failed queries
+        gcTime: hours(24), // Keep unused data in garbage collection for 24 hours
     },
     mutations: {
-        retry: false,             // Don't retry failed mutations
+        retry: false, // Don't retry failed mutations
     },
 } as const;
 
@@ -24,7 +25,7 @@ export const createQueryClient = () => {
     const queryClient = new QueryClient({
         defaultOptions: defaultQueryOptions,
     });
-    
+
     return queryClient;
 };
 
@@ -34,8 +35,8 @@ export const createQueryClient = () => {
  */
 export const persister = createAsyncStoragePersister({
     storage: AsyncStorage,
-    key: 'QUERY_CACHE_KEY',      // Key used in AsyncStorage
-    throttleTime: 1000,          // Minimum time (in ms) between storage operations
+    key: 'QUERY_CACHE_KEY', // Key used in AsyncStorage
+    throttleTime: 1000, // Minimum time (in ms) between storage operations
     serialize: JSON.stringify,
     deserialize: JSON.parse,
 });
