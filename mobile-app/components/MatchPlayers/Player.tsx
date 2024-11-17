@@ -1,4 +1,3 @@
-import { useNavigation } from 'expo-router';
 import React, { useRef } from 'react';
 import {
     Animated,
@@ -8,6 +7,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
@@ -89,8 +89,7 @@ export default function Player({
                 onPress={
                     editable
                         ? toggleCollapse
-                        : // @ts-ignore
-                          () => navigation.navigate('player')
+                        : () => navigation.navigate('player')
                 }
                 underlayColor={theme.panel.light.active}
             >

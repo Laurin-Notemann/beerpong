@@ -1,4 +1,4 @@
-import { Stack, useNavigation } from 'expo-router';
+import { Stack } from 'expo-router';
 import React, { useLayoutEffect, useState } from 'react';
 
 import InputModal from '@/components/InputModal';
@@ -9,8 +9,6 @@ import { HeaderItem } from './(tabs)/_layout';
 
 export default function Page() {
     const [value, setValue] = useState('');
-
-    const navigation = useNavigation();
 
     // useLayoutEffect(() => {
     //   navigation.setOptions({

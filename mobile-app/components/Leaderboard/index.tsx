@@ -1,21 +1,28 @@
+import { Link } from '@react-navigation/native';
 import React from 'react';
 
-import Podium, { Player } from '../Podium';
+import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { theme } from '@/theme';
+
+import Podium from '../Podium';
+import Text from '../Text';
 import { ThemedView } from '../ThemedView';
 import LeaderboardPlayerItem from './LeaderboardPlayerItem';
 
 export interface LeaderboardProps {
     players: Player[];
 }
+
 export default function Leaderboard({ players }: LeaderboardProps) {
-    const nonPodiumPlayers = players.slice(3);
+    const sortedPlayers = players.sort((a, b) => b.points - a.points);
+    const nonPodiumPlayers = sortedPlayers.slice(3);
 
     return (
         <>
             <Podium
-                firstPlace={players[0]}
-                secondPlace={players[1]}
-                thirdPlace={players[2]}
+                firstPlace={sortedPlayers[0]}
+                secondPlace={sortedPlayers[1]}
+                thirdPlace={sortedPlayers[2]}
             />
             <ThemedView
                 style={{
@@ -35,6 +42,27 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                         matchesWon={i.matchesWon}
                     />
                 ))}
+                {players.length < 1 && (
+                    <Text
+                        color="secondary"
+                        style={{
+                            textAlign: 'center',
+                            paddingTop: 64,
+                            lineHeight: 32,
+                        }}
+                    >
+                        No matches played yet. {'\n'}
+                        <Link
+                            to="newMatch"
+                            style={{
+                                color: theme.color.text.primary,
+                                fontWeight: 500,
+                            }}
+                        >
+                            Create match
+                        </Link>{' '}
+                    </Text>
+                )}
             </ThemedView>
         </>
     );

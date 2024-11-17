@@ -1,140 +1,46 @@
-import { Stack, useNavigation } from 'expo-router';
-import React, { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
-// @ts-ignore
-import SmoothPinCodeInput from 'react-native-smooth-pincode-input';
+import { AxiosError } from 'axios';
+import React, { useEffect } from 'react';
 
-import Button from '@/components/Button';
-import { theme } from '@/theme';
+import { useFindGroupByInviteCode } from '@/api/calls/groupHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import ErrorScreen from '@/components/ErrorScreen';
+import JoinGroup from '@/components/screens/JoinGroup';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
-    const [code, setCode] = useState('');
+    const [inviteCode, setInviteCode] = React.useState<string | null>(null);
 
-    const [values, setValues] = useState([
-        ['', '', ''],
-        ['', '', ''],
-        ['', '', ''],
-    ]);
+    const nav = useNavigation();
 
-    const navigation = useNavigation();
+    const { data, isLoading, error } = useFindGroupByInviteCode(inviteCode);
+
+    const { addGroup } = useGroupStore();
+
+    useEffect(() => {
+        if (data?.data?.id) {
+            addGroup(data.data.id);
+
+            nav.navigate('index');
+        }
+    }, [data, addGroup, nav]);
+
+    const isNotFound = (error as AxiosError | undefined)?.status === 404;
+
+    if (error && !isNotFound) {
+        return (
+            <ErrorScreen
+                message={(error as Error).message || 'Unknown error'}
+            />
+        );
+    }
 
     return (
-        <>
-            <Stack.Screen options={{ headerShown: false }} />
-
-            <View
-                style={{
-                    alignItems: 'center',
-
-                    flex: 1,
-                    paddingHorizontal: 16,
-                    paddingTop: 128,
-
-                    backgroundColor: theme.color.bg,
-                }}
-            >
-                <View
-                    style={{
-                        flexDirection: 'row',
-
-                        gap: 8,
-                    }}
-                >
-                    {values.map((group, groupIdx) => {
-                        return (
-                            <>
-                                {groupIdx > 0 && (
-                                    <Text
-                                        key={groupIdx}
-                                        style={{
-                                            lineHeight: 38,
-
-                                            fontSize: 22,
-
-                                            color: theme.color.text.tertiary,
-                                        }}
-                                    >
-                                        -
-                                    </Text>
-                                )}
-                                {group.map((value, idx) => {
-                                    return (
-                                        <TextInput
-                                            selectTextOnFocus
-                                            key={idx}
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor:
-                                                    theme.color.text.secondary,
-                                                borderRadius: 2,
-
-                                                width: 27,
-                                                height: 38,
-
-                                                textAlign: 'center',
-
-                                                color: theme.color.text.primary,
-
-                                                fontWeight: 700,
-                                            }}
-                                            maxLength={1}
-                                            value={value}
-                                            cursorColor={
-                                                theme.color.text.primary
-                                            }
-                                            onChange={(e) => {}}
-                                            // onKeyPress={(e) => {}}
-                                            onChangeText={(text) =>
-                                                setValues((prev) => {
-                                                    const newPrev = JSON.parse(
-                                                        JSON.stringify(prev)
-                                                    );
-
-                                                    newPrev[groupIdx][idx] =
-                                                        text;
-
-                                                    return newPrev;
-                                                })
-                                            }
-                                        />
-                                    );
-                                })}
-                            </>
-                        );
-                    })}
-                </View>
-                <Button
-                    variant="primary"
-                    size="large"
-                    title="Join"
-                    // @ts-ignore
-                    onPress={() => navigation.navigate('index')}
-                />
-            </View>
-            {/* <SmoothPinCodeInput
-        cellStyle={{
-          borderWidth: 2,
-          borderRadius: 24,
-          borderColor: "mediumturquoise",
-          backgroundColor: "azure",
-        }}
-        cellStyleFocused={{
-          borderColor: "lightseagreen",
-          backgroundColor: "lightcyan",
-        }}
-        textStyle={{
-          fontSize: 24,
-          color: "salmon",
-        }}
-        textStyleFocused={{
-          color: "crimson",
-        }}
-        value={code}
-        onTextChange={setCode}
-        //   onFulfill={this._checkCode}
-        //   onBackspace={this._focusePrevInput}
-        codeLength={9}
-      /> */}
-        </>
+        <JoinGroup
+            isNotFound={isNotFound}
+            isLoading={isLoading}
+            onSubmit={(code) => {
+                setInviteCode(code);
+            }}
+        />
     );
 }

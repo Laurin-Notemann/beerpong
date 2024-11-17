@@ -1,9 +1,9 @@
-import { useNavigation } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -124,10 +124,7 @@ export default function NewMatchAssignTeams({
                 headerRight: () => (
                     <HeaderItem
                         disabled={!canCreateMatch}
-                        onPress={() =>
-                            // @ts-ignore
-                            nav.navigate('newMatchPoints')
-                        }
+                        onPress={() => nav.navigate('newMatchPoints')}
                     >
                         Next
                     </HeaderItem>
@@ -142,7 +139,6 @@ export default function NewMatchAssignTeams({
                                       redTeam,
                                       blueCups: 0,
                                       redCups: 0,
-                                      date: new Date(),
                                   }}
                                   hasScore={false}
                                   style={{
@@ -171,7 +167,6 @@ export default function NewMatchAssignTeams({
                     headIcon="account-plus-outline"
                     title="Create new Player"
                     tailIconType="next"
-                    // @ts-ignore
                     onPress={() => nav.navigate('createNewPlayer')}
                 />
             </MenuSection>

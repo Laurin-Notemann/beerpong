@@ -3,10 +3,13 @@ import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useGroupQuery } from '@/api/calls/groupHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { theme } from '@/theme';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export function HeaderItem({
     children,
@@ -81,17 +84,26 @@ export const navStyles = {
     },
 };
 
-const groupsButton = () => <HeaderItem>Groups</HeaderItem>;
+const GroupsButton = () => {
+    const nav = useNavigation();
 
-export const groupHeader = {
-    ...navStyles,
-    headerTitle: 'Die Reise (beheizter Pool)',
-    headerShown: true,
-    headerLeft: groupsButton,
+    // @ts-ignore
+    return <HeaderItem onPress={() => nav.openDrawer()}>Groups</HeaderItem>;
 };
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
+
+    const { selectedGroupId } = useGroupStore();
+
+    const ding = useGroupQuery(selectedGroupId);
+
+    const groupHeader = {
+        ...navStyles,
+        headerTitle: ding.data?.data?.name ?? 'Loading',
+        headerShown: true,
+        headerLeft: GroupsButton,
+    };
 
     return (
         <Tabs

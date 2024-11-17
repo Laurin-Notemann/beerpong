@@ -1,21 +1,15 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { useNavigation } from 'expo-router';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
+import { Match } from '@/api/propHooks/matchlistPropHooks';
 
-export interface Match {
-    date: Date;
-    blueTeam: { name: string }[];
-    redTeam: { name: string }[];
-    blueCups: number;
-    redCups: number;
-}
 
 const getDayName = (date: Dayjs) => {
     const today = dayjs();
@@ -86,7 +80,6 @@ export default function MatchesList({ matches }: MatchesListProps) {
                                 borderTopColor: theme.panel.light.active,
                                 borderTopWidth: 0.5,
                             }}
-                            // @ts-ignore
                             onPress={() => nav.navigate('match')}
                         >
                             <>
