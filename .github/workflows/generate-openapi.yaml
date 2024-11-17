@@ -57,7 +57,7 @@ jobs:
           if echo "$COMMIT_AUTHORS" | grep -q "github-actions"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
             echo "A recent commit was authored by a GitHub bot. Stopping the workflow."
-            exit 78  # This will stop the workflow without failing it
+            exit 0  # This will stop the workflow without failing it
           else
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
             echo "No recent commits by GitHub bot found. Continuing the workflow."
