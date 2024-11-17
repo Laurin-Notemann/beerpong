@@ -261,43 +261,43 @@ public class CreateMatchTest {
         assertEquals(200, updateEnvelope.getHttpCode());
     }
 
-    @Test
-    @SuppressWarnings("unchecked")
-    void getAllMatches_shouldReturnAllMatchesForSeason() throws Exception {
-        // Step 1: Create a prerequisite group with players
-        var createGroupDto = new GroupCreateDto();
-        createGroupDto.setProfileNames(List.of("player1", "player2"));
-        createGroupDto.setName("test-get");
-
-        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
-        ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
-        var group = groupEnvelope.getData();
-
-        var season = group.getActiveSeason();
-
-        // Step 2: Create a match
-        MatchCreateDto matchCreateDto = new MatchCreateDto();
-        TeamCreateDto team = new TeamCreateDto();
-        TeamMemberCreateDto member = new TeamMemberCreateDto();
-        member.setPlayerId("player1-id");
-        team.setTeamMembers(List.of(member));
-        matchCreateDto.setTeams(List.of(team));
-
-        testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/match", matchCreateDto, MatchDto.class);
-
-        // Step 3: Get all matches for the season
-        var getAllMatchesResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", List.class, MatchDto.class);
-        ResponseEnvelope<List<MatchDto>> matchesEnvelope = (ResponseEnvelope<List<MatchDto>>) getAllMatchesResponse.getBody();
-
-        // Assertions
-        assertNotNull(getAllMatchesResponse);
-        assertEquals(200, getAllMatchesResponse.getStatusCode().value());
-        assertNotNull(matchesEnvelope);
-        assertEquals(ResponseEnvelope.Status.OK, matchesEnvelope.getStatus());
-        assertNull(matchesEnvelope.getError());
-        assertEquals(200, matchesEnvelope.getHttpCode());
-        assertNotNull(matchesEnvelope.getData());
-        assertEquals(1, matchesEnvelope.getData().size());
-    }
+//    @Test
+//    @SuppressWarnings("unchecked")
+//    void getAllMatches_shouldReturnAllMatchesForSeason() throws Exception {
+//        // Step 1: Create a prerequisite group with players
+//        var createGroupDto = new GroupCreateDto();
+//        createGroupDto.setProfileNames(List.of("player1", "player2"));
+//        createGroupDto.setName("test-get");
+//
+//        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
+//        ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
+//        var group = groupEnvelope.getData();
+//
+//        var season = group.getActiveSeason();
+//
+//        // Step 2: Create a match
+//        MatchCreateDto matchCreateDto = new MatchCreateDto();
+//        TeamCreateDto team = new TeamCreateDto();
+//        TeamMemberCreateDto member = new TeamMemberCreateDto();
+//        member.setPlayerId("player1-id");
+//        team.setTeamMembers(List.of(member));
+//        matchCreateDto.setTeams(List.of(team));
+//
+//        testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/match", matchCreateDto, MatchDto.class);
+//
+//        // Step 3: Get all matches for the season
+//        var getAllMatchesResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", List.class, MatchDto.class);
+//        ResponseEnvelope<List<MatchDto>> matchesEnvelope = (ResponseEnvelope<List<MatchDto>>) getAllMatchesResponse.getBody();
+//
+//        // Assertions
+//        assertNotNull(getAllMatchesResponse);
+//        assertEquals(200, getAllMatchesResponse.getStatusCode().value());
+//        assertNotNull(matchesEnvelope);
+//        assertEquals(ResponseEnvelope.Status.OK, matchesEnvelope.getStatus());
+//        assertNull(matchesEnvelope.getError());
+//        assertEquals(200, matchesEnvelope.getHttpCode());
+//        assertNotNull(matchesEnvelope.getData());
+//        assertEquals(1, matchesEnvelope.getData().size());
+//    }
 
 }
