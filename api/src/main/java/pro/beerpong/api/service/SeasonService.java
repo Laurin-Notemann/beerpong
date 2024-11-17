@@ -7,14 +7,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import pro.beerpong.api.mapping.SeasonMapper;
+import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.SeasonCreateDto;
 import pro.beerpong.api.model.dto.SeasonDto;
+import pro.beerpong.api.model.dto.SeasonStartDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.EventService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
 
 @Service
 public class SeasonService {
+    private final EventService eventService;
     private final SeasonRepository seasonRepository;
     private final GroupRepository groupRepository;
     private final PlayerService playerService;
@@ -22,7 +28,8 @@ public class SeasonService {
     private final SeasonMapper seasonMapper;
 
     @Autowired
-    public SeasonService(SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
+    public SeasonService(EventService eventService, SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
+        this.eventService = eventService;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
         this.playerService = playerService;
@@ -43,18 +50,27 @@ public class SeasonService {
         season.setGroupId(groupOptional.get().getId());
         season = seasonRepository.save(season);
 
-        if (group.getActiveSeason() != null) {
-            var oldSeasonId = group.getActiveSeason().getId();
-            group.getActiveSeason().setName(dto.getOldSeasonName());
+        var oldSeason = group.getActiveSeason();
 
-            seasonRepository.save(group.getActiveSeason());
+        if (oldSeason != null) {
+            var oldSeasonId = oldSeason.getId();
+            oldSeason.setName(dto.getOldSeasonName());
+
+            seasonRepository.save(oldSeason);
             playerService.copyPlayersFromOldSeason(oldSeasonId, season.getId());
         }
 
         group.setActiveSeason(season);
         groupRepository.save(group);
 
-        return seasonMapper.seasonToSeasonDto(season);
+        var newDto = seasonMapper.seasonToSeasonDto(season);
+        var eventDto = new SeasonStartDto();
+        eventDto.setOldSeason(seasonMapper.seasonToSeasonDto(oldSeason));
+        eventDto.setNewSeason(newDto);
+
+        eventService.callEvent(new SocketEvent<>(SocketEventData.SEASON_START, groupId, eventDto));
+
+        return newDto;
     }
 
     public List<SeasonDto> getAllSeasons(String groupId) {
