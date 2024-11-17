@@ -4,5 +4,6 @@ public enum SocketEventType {
     MATCHES,
     PLAYERS,
     SEASONS,
-    GROUPS
+    GROUPS,
+    RULES
 }

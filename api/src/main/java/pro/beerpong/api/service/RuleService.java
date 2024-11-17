@@ -11,23 +11,28 @@ import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
 import pro.beerpong.api.repository.RuleRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.EventService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
 
 @Service
 public class RuleService {
+    private final EventService eventService;
     private final RuleRepository ruleRepository;
     private final SeasonRepository seasonRepository;
 
     private final RuleMapper ruleMapper;
 
     @Autowired
-    public RuleService(RuleRepository matchRepository, SeasonRepository seasonRepository, RuleMapper ruleMapper) {
+    public RuleService(EventService eventService, RuleRepository matchRepository, SeasonRepository seasonRepository, RuleMapper ruleMapper) {
+        this.eventService = eventService;
         this.ruleRepository = matchRepository;
         this.seasonRepository = seasonRepository;
         this.ruleMapper = ruleMapper;
     }
 
     @Transactional
-    public List<RuleDto> writeRules(String seasonId, List<RuleCreateDto> rules) {
+    public List<RuleDto> writeRules(String groupId, String seasonId, List<RuleCreateDto> rules) {
         var seasonOptional = seasonRepository.findById(seasonId);
 
         if (seasonOptional.isEmpty()) {
@@ -38,14 +43,20 @@ public class RuleService {
 
         ruleRepository.deleteBySeasonId(seasonId);
 
-        return rules.stream()
+        var dtos = rules.stream()
                 .map(dto -> {
                     var rule = ruleMapper.ruleCreateDtoToRule(dto);
                     rule.setSeason(season);
                     return rule;
                 })
+                .filter(dto -> dto.getSeason().getId().equals(seasonId) &&
+                        dto.getSeason().getGroupId().equals(groupId))
                 .map(rule -> ruleMapper.ruleToRuleDto(ruleRepository.save(rule)))
                 .toList();
+
+        eventService.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
+
+        return dtos;
     }
 
     public List<RuleDto> getAllRules(String seasonId) {
