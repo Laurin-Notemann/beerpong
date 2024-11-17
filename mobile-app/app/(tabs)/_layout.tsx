@@ -3,7 +3,7 @@ import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { useGroupQuery } from '@/api/calls/group/groupHooks';
+import { useGroupQuery } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
