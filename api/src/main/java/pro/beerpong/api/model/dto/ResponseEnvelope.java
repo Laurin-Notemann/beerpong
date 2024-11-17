@@ -26,7 +26,7 @@ public class ResponseEnvelope<T> {
         var envelope = new ResponseEnvelope<T>();
         envelope.setStatus(Status.OK);
         envelope.setHttpCode(HttpStatus.NO_CONTENT.value());
-        return new ResponseEntity<>(envelope, HttpStatus.OK);
+        return new ResponseEntity<>(envelope, HttpStatus.NO_CONTENT);
     }
 
     public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, ErrorCodes code) {
