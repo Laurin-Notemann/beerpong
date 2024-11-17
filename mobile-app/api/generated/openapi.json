@@ -1069,32 +1069,22 @@
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
-            "Group": {
-                "type": "object",
-                "properties": {
-                    "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "inviteCode": { "type": "string" },
-                    "groupSettings": {
-                        "$ref": "#/components/schemas/GroupSettings"
-                    },
-                    "activeSeason": { "$ref": "#/components/schemas/Season" }
-                }
-            },
             "PlayerDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "profile": { "$ref": "#/components/schemas/Profile" },
-                    "season": { "$ref": "#/components/schemas/Season" }
+                    "profile": { "$ref": "#/components/schemas/ProfileDto" },
+                    "season": { "$ref": "#/components/schemas/SeasonDto" },
+                    "statistics": {
+                        "$ref": "#/components/schemas/PlayerStatisticsDto"
+                    }
                 }
             },
-            "Profile": {
+            "PlayerStatisticsDto": {
                 "type": "object",
                 "properties": {
-                    "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "group": { "$ref": "#/components/schemas/Group" }
+                    "points": { "type": "integer", "format": "int64" },
+                    "matches": { "type": "integer", "format": "int64" }
                 }
             },
             "ResponseEnvelopeListPlayerDto": {

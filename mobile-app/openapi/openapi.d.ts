@@ -12,13 +12,6 @@ declare namespace Components {
             code?: string;
             description?: string;
         }
-        export interface Group {
-            id?: string;
-            name?: string;
-            inviteCode?: string;
-            groupSettings?: GroupSettings;
-            activeSeason?: Season;
-        }
         export interface GroupCreateDto {
             name?: string;
             profileNames?: string[];
@@ -48,13 +41,13 @@ declare namespace Components {
         }
         export interface PlayerDto {
             id?: string;
-            profile?: Profile;
-            season?: Season;
+            profile?: ProfileDto;
+            season?: SeasonDto;
+            statistics?: PlayerStatisticsDto;
         }
-        export interface Profile {
-            id?: string;
-            name?: string;
-            group?: Group;
+        export interface PlayerStatisticsDto {
+            points?: number; // int64
+            matches?: number; // int64
         }
         export interface ProfileCreateDto {
             name?: string;
@@ -916,7 +909,6 @@ export interface PathsDictionary {
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
 export type ErrorDetails = Components.Schemas.ErrorDetails;
-export type Group = Components.Schemas.Group;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupSettings = Components.Schemas.GroupSettings;
@@ -924,7 +916,7 @@ export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
 export type PlayerDto = Components.Schemas.PlayerDto;
-export type Profile = Components.Schemas.Profile;
+export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeGroupDto =
