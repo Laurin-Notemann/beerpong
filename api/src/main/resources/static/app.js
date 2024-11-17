@@ -1,3 +1,5 @@
+//TODO remove
+
 const stompClient = new StompJs.Client({
     brokerURL: 'ws://localhost:8080/update-socket'
 });
@@ -47,9 +49,6 @@ function showEvent(event) {
         .append("<tr><td>" + event.groupId + "</td></tr>")
         .append("<tr><td>" + event.eventType + "</td></tr>")
         .append("<tr><td>" + event.scope + "</td></tr>")
-        .append("<tr><td>" + event.body.id + "</td></tr>")
-        .append("<tr><td>" + event.body.name + "</td></tr>")
-        .append("<tr><td>" + event.body.inviteCode + "</td></tr>")
     ;
 }
 
