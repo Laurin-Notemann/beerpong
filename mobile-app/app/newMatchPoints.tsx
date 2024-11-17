@@ -1,6 +1,6 @@
-import { useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { TeamMember } from '@/components/MatchPlayers';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 
@@ -53,10 +53,7 @@ export default function Page() {
     return (
         <CreateMatchAssignPoints
             players={players}
-            onCreate={() => {
-                // @ts-ignore
-                navigation.navigate('index');
-            }}
+            onCreate={() => navigation.navigate('index')}
             setMoveCount={setMoveCount}
         />
     );

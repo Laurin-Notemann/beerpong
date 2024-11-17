@@ -24,7 +24,7 @@ export default function Page() {
         if (status === 'success' && data?.data) {
             if (!data.data.id) {
                 setError('Tja da geht wohl was nicht');
-                return
+                return;
             }
 
             addGroup(data.data.id);

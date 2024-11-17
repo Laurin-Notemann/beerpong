@@ -1,8 +1,8 @@
-import { useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
 import { Formation } from '@/components/CupGrid/Formation';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -61,7 +61,6 @@ export default function EditFormation() {
                     <MenuItem
                         title="Ring of Water"
                         headIcon="pencil-outline"
-                        // @ts-ignore
                         onPress={() => nav.navigate('editFormationName')}
                         tailIconType="next"
                     />

@@ -1,4 +1,4 @@
-import { Stack, useNavigation } from 'expo-router';
+import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import {
@@ -7,6 +7,7 @@ import {
 } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { HighestChip, LowestChip } from '@/components/Chip';
 import MatchesList, { Match } from '@/components/MatchesList';
@@ -98,11 +99,10 @@ export default function PlayerScreen({
                 options={{
                     headerTitle: 'Player',
                     headerRight: () => (
-                        // @ts-ignore
                         <HeaderItem
                             onPress={() => setEditable((prev) => !prev)}
                         >
-                            <Text>{editable ? 'Done' : 'Edit'}</Text>
+                            {editable ? 'Done' : 'Edit'}
                         </HeaderItem>
                     ),
                 }}
@@ -160,7 +160,6 @@ export default function PlayerScreen({
                         <MenuItem
                             title={name}
                             headIcon="pencil-outline"
-                            // @ts-ignore
                             onPress={() => nav.navigate('editPlayerName')}
                             tailIconType="next"
                         />
@@ -188,7 +187,6 @@ export default function PlayerScreen({
                                 headIcon="pencil-outline"
                                 tailContent={pastSeasons}
                                 tailIconType="next"
-                                // @ts-ignore
                                 onPress={() => nav.navigate('pastSeasons')}
                             />
                         </MenuSection>

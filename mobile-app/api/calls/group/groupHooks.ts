@@ -32,9 +32,7 @@ export const useFindGroupByInviteCode = (inviteCode: string | null) => {
                 return undefined;
             }
 
-            const res = await (
-                await api
-            ).findGroupByInviteCode({ inviteCode });
+            const res = await (await api).findGroupByInviteCode({ inviteCode });
             return res?.data;
         }
     );

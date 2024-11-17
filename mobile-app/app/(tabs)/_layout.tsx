@@ -1,8 +1,9 @@
-import { Tabs, useNavigation } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';

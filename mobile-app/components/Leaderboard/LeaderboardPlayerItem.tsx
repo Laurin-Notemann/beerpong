@@ -1,6 +1,6 @@
-import { useNavigation } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
@@ -48,7 +48,6 @@ export default function LeaderboardPlayerItem({
                 height: 60.5,
                 paddingHorizontal: 20,
             }}
-            // @ts-ignore
             onPress={() => nav.navigate('player')}
         >
             <ThemedText

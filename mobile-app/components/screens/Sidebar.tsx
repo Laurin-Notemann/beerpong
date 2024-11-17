@@ -1,8 +1,8 @@
-import { useNavigation } from 'expo-router';
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useGroupQuery } from '@/api/calls/group/groupHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import Button from '../Button';
@@ -80,14 +80,12 @@ export function Sidebar({ appVersion }: SidebarProps) {
             <Button
                 title="create new group"
                 onPress={() => {
-                    // @ts-ignore
                     nav.navigate('createGroup');
                 }}
             />
             <Button
                 title="join group"
                 onPress={() => {
-                    // @ts-ignore
                     nav.navigate('joinGroup');
                 }}
             />

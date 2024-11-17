@@ -1,6 +1,7 @@
-import { useNavigation } from 'expo-router';
+import React from 'react';
 
 import { useGroupSettingsProps } from '@/api/propHooks/groupPropHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import LoadingScreen from '@/components/LoadingScreen';
 import GroupSettingsScreen from '@/components/screens/GroupSettings';
@@ -17,7 +18,6 @@ export default function Screen() {
     }
 
     if (error || !props) {
-        // @ts-ignore
         return (
             <>
                 <Button
@@ -28,10 +28,7 @@ export default function Screen() {
                 />
                 <Button
                     title="anderes dings"
-                    onPress={() => {
-                        // @ts-ignore
-                        nav.navigate('createGroup');
-                    }}
+                    onPress={() => nav.navigate('createGroup')}
                 />
             </>
         );

@@ -1,8 +1,9 @@
-import { Stack, useNavigation } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -85,7 +86,6 @@ export default function CreateMatchAssignPoints({
                         variant="default"
                         title="Start Live Match"
                         size="small"
-                        // @ts-ignore
                         onPress={() => navigation.navigate('startLiveMatch')}
                     />
                 )}

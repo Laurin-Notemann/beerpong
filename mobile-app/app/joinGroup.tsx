@@ -1,7 +1,7 @@
-import { useNavigation } from 'expo-router';
 import React, { useEffect } from 'react';
 
 import { useFindGroupByInviteCode } from '@/api/calls/group/groupHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import JoinGroup from '@/components/screens/JoinGroup';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -25,7 +25,6 @@ export default function Page() {
 
             addGroup(data.data.id);
 
-            // @ts-ignore
             nav.navigate('index');
         }
     }, [setError, data, addGroup, nav, isSuccess]);

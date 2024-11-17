@@ -1,8 +1,8 @@
 import dayjs, { Dayjs } from 'dayjs';
-import { useNavigation } from 'expo-router';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
@@ -86,7 +86,6 @@ export default function MatchesList({ matches }: MatchesListProps) {
                                 borderTopColor: theme.panel.light.active,
                                 borderTopWidth: 0.5,
                             }}
-                            // @ts-ignore
                             onPress={() => nav.navigate('match')}
                         >
                             <>
