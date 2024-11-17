@@ -1,27 +1,24 @@
 package pro.beerpong.api.control;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.dto.ErrorCodes;
+import pro.beerpong.api.model.dto.MatchCreateDto;
+import pro.beerpong.api.model.dto.MatchDto;
+import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.MatchService;
-import pro.beerpong.api.service.SeasonService;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/groups/{groupId}/seasons/{seasonId}")
+@RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
+@RequiredArgsConstructor
 public class MatchController {
     private final MatchService matchService;
 
-    @Autowired
-    public MatchController(MatchService matchService) {
-        this.matchService = matchService;
-    }
-
-    @PostMapping("/match")
+    @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
                                                                   @RequestBody MatchCreateDto matchCreateDt) {
         var match = matchService.createNewMatch(groupId, seasonId, matchCreateDt);
@@ -37,12 +34,12 @@ public class MatchController {
         }
     }
 
-    @GetMapping("/matches")
-    public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getAllMatches(@PathVariable String groupId, @PathVariable String seasonId) {
+    @GetMapping
+    public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getAllMatches(@PathVariable String seasonId) {
         return ResponseEnvelope.ok(matchService.getAllMatches(seasonId));
     }
 
-    @GetMapping("/matches/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<MatchDto>> getMatchById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
         var match = matchService.getMatchById(id);
 
