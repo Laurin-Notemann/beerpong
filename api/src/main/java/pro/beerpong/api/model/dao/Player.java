@@ -17,4 +17,7 @@ public class Player {
     @ManyToOne
     @JoinColumn(name = "seasonId")
     private Season season;
+
+    @Transient
+    private PlayerStatistics statistics;
 }

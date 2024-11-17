@@ -1,7 +1,6 @@
 package pro.beerpong.api.mapping;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dto.PlayerCreateDto;
 import pro.beerpong.api.model.dto.PlayerDto;
@@ -11,4 +10,5 @@ public interface PlayerMapper {
     PlayerDto playerToPlayerDto(Player player);
 
     Player playerCreateDtoToPlayer(PlayerCreateDto dto);
+    Player playerDtoToPlayer(PlayerDto dto);
 }
