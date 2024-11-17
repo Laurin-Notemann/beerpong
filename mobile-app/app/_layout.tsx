@@ -5,12 +5,12 @@ import {
     DefaultTheme,
     ThemeProvider,
 } from '@react-navigation/native';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { QueryClientProvider } from '@tanstack/react-query';
 
 import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';

@@ -4,16 +4,19 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { useGroupQuery } from '@/api/calls/groupHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import Leaderboard from '@/components/Leaderboard';
 import { theme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-import { useGroupQuery } from '@/api/calls/groupHooks';
 
 export default function Page() {
     const { selectedGroupId } = useGroupStore();
     const { data } = useGroupQuery(selectedGroupId);
-    const { players } = useLeaderboardProps(selectedGroupId, data?.data?.activeSeason?.id ?? null);
+    const { players } = useLeaderboardProps(
+        selectedGroupId,
+        data?.data?.activeSeason?.id ?? null
+    );
 
     return (
         <GestureHandlerRootView>

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 import React, {
     createContext,
@@ -6,7 +7,6 @@ import React, {
     useEffect,
     useState,
 } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import beerpongDefinition from '../../api/generated/openapi.json';
 import { Client as BeerPongClient } from '../../openapi/openapi';
