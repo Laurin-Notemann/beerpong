@@ -1,24 +1,18 @@
 package pro.beerpong.api.sockets;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 
-@RequiredArgsConstructor
+@Getter
 public class SocketEvent<T> {
     private final String groupId;
     private final SocketEventType eventType;
-
+    private final String scope;
     private final T body;
-    /*
-    {
-    groupId: "",
-    scope: "matches" | "users" | "seasons" | "groups",
-    eventType: "matchCreated",
-    body: {
-        id: string // match id
-        date: date
-        redTeam...
-        blueTeam...
-    },
-}
-     */
+
+    public SocketEvent(SocketEventData<T> data, String groupId, T body) {
+        this.groupId = groupId;
+        this.eventType = data.getEventType();
+        this.scope = data.getScope();
+        this.body = body;
+    }
 }
