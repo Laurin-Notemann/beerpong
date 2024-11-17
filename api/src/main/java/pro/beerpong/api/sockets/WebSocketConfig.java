@@ -22,5 +22,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(subscriptionHandler, "/update-socket")
                 .setAllowedOrigins("*");
+        //TODO limit message size a client can send to prevent spam
     }
 }

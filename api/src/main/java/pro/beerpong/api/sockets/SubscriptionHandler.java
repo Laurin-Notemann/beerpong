@@ -1,6 +1,7 @@
 package pro.beerpong.api.sockets;
 
 import lombok.SneakyThrows;
+import pro.beerpong.api.sockets.types.ZonedDateTimeAdapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.web.socket.TextMessage;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,8 +31,13 @@ public class SubscriptionHandler extends TextWebSocketHandler {
     private static final Pattern GROUP_IDS_PATTERN = Pattern.compile("groupIds:([^\n]+)");
     // Source: https://www.baeldung.com/java-validate-uuid-string
     private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+
     private static final int MAX_GROUP_SUBSCRIPTIONS = 100;
-    private static final Gson GSON = new GsonBuilder().serializeNulls().create();
+
+    private static final Gson GSON = new GsonBuilder()
+            .serializeNulls()
+            .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter())
+            .create();
 
     private final Map<String, Set<String>> userGroups = new ConcurrentHashMap<>();
     private final Map<String, Set<WebSocketSession>> groupSessions = new ConcurrentHashMap<>();
