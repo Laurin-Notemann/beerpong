@@ -12,18 +12,20 @@ export const useMatchQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetMatchById.Responses.$200 | undefined>({
+    return useQuery<Paths.GetMatchById.Responses.$200 | null>({
         queryKey: ['group', groupId, 'season', seasonId, 'match', matchId],
         queryFn: async () => {
             if (!groupId || !seasonId || !matchId) {
-                return undefined;
+                return null;
             }
-            const res = await (await api).getMatchById({ groupId, seasonId, id: matchId });
+            const res = await (
+                await api
+            ).getMatchById({ groupId, seasonId, id: matchId });
 
             return res?.data;
         },
     });
-}
+};
 
 export const useMatchesQuery = (
     groupId: ApiId | null,
@@ -31,11 +33,11 @@ export const useMatchesQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetAllMatches.Responses.$200 | undefined>({
+    return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
         queryKey: ['group', groupId, 'season', seasonId],
         queryFn: async () => {
             if (!groupId || !seasonId) {
-                return undefined;
+                return null;
             }
             const res = await (await api).getAllMatches({ groupId, seasonId });
 

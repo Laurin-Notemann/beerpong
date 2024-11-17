@@ -8,11 +8,11 @@ import { useApi } from '../utils/create-api';
 export const useProfileQuery = (profileId: ApiId | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetProfileById.Responses.$200 | undefined>({
+    return useQuery<Paths.GetProfileById.Responses.$200 | null>({
         queryKey: ['profile', profileId],
         queryFn: async () => {
             if (!profileId) {
-                return undefined;
+                return null;
             }
             const res = await (await api).getProfileById(profileId);
 
@@ -24,11 +24,11 @@ export const useProfileQuery = (profileId: ApiId | null) => {
 export const useListAllProfilesQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.ListAllProfiles.Responses.$200 | undefined>({
+    return useQuery<Paths.ListAllProfiles.Responses.$200 | null>({
         queryKey: ['group', groupId, 'profiles'],
         queryFn: async () => {
             if (!groupId) {
-                return undefined;
+                return null;
             }
             const res = await (await api).listAllProfiles({ groupId });
 

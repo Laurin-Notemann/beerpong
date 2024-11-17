@@ -11,7 +11,7 @@ export const usePlayersQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetPlayers.Responses.$200 | undefined>({
+    return useQuery<Paths.GetPlayers.Responses.$200 | null>({
         queryKey: [
             'group',
             groupId ?? 'NULL',
@@ -21,7 +21,7 @@ export const usePlayersQuery = (
         ],
         queryFn: async () => {
             if (!groupId || !seasonId) {
-                return undefined;
+                return null;
             }
             const res = await (await api).getPlayers({ groupId, seasonId });
 

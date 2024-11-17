@@ -4,17 +4,19 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { Paths } from '@/openapi/openapi';
 
+import { env } from '../env';
+
 // Type definitions
 export type Group = NonNullable<Paths.GetGroupById.Responses.$200['data']>;
 
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetGroupById.Responses.$200 | undefined>({
+    return useQuery<Paths.GetGroupById.Responses.$200 | null>({
         queryKey: ['group', id],
         queryFn: async () => {
             if (!id) {
-                return undefined;
+                return null;
             }
             const res = await (await api).getGroupById(id);
             return res?.data;
@@ -25,11 +27,11 @@ export const useGroupQuery = (id: ApiId | null) => {
 export const useFindGroupByInviteCode = (inviteCode: string | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.FindGroupByInviteCode.Responses.$200 | undefined>({
+    return useQuery<Paths.FindGroupByInviteCode.Responses.$200 | null>({
         queryKey: ['groupCode', inviteCode],
         queryFn: async () => {
-            if (!inviteCode || inviteCode.length !== 9) {
-                return undefined;
+            if (!inviteCode || inviteCode.length < env.groupCode.length) {
+                return null;
             }
 
             const res = await (await api).findGroupByInviteCode({ inviteCode });
@@ -41,7 +43,7 @@ export const useFindGroupByInviteCode = (inviteCode: string | null) => {
 export const useCreateGroupMutation = () => {
     const { api } = useApi();
     return useMutation<
-        Paths.CreateGroup.Responses.$200 | undefined,
+        Paths.CreateGroup.Responses.$200 | null,
         Error,
         Paths.CreateGroup.RequestBody
     >({
@@ -55,7 +57,7 @@ export const useCreateGroupMutation = () => {
 export const useUpdateGroupMutation = () => {
     const { api } = useApi();
     return useMutation<
-        Paths.UpdateGroup.Responses.$200 | undefined,
+        Paths.UpdateGroup.Responses.$200 | null,
         Error,
         Paths.UpdateGroup.RequestBody
     >({
