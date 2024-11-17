@@ -24,7 +24,7 @@ public class MatchController {
     @PostMapping("/match")
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
                                                                   @RequestBody MatchCreateDto matchCreateDt) {
-        var match = matchService.createNewMatch(seasonId, matchCreateDt);
+        var match = matchService.createNewMatch(groupId, seasonId, matchCreateDt);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
