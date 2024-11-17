@@ -36,6 +36,8 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up JDK 21 corretto
         uses: actions/setup-java@v4
         with:
@@ -57,4 +59,5 @@ jobs:
           commit-message: chore - update openapi-types
           title: OpenAPI Types Update
           base: main
+          delete-branch: true
           branch: update-openapi-types
