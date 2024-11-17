@@ -42,7 +42,7 @@ export default function Page() {
                 addName(group.name);
                 mutate({
                     name: group.name,
-                    playerNames: members.map((m) => m.name),
+                    profileNames: members.map((m) => m.name),
                 });
             }}
         />
