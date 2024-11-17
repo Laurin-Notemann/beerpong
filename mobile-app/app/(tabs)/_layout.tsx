@@ -92,15 +92,27 @@ const GroupsButton = () => {
 };
 
 export default function TabLayout() {
+    const nav = useNavigation();
+
     const colorScheme = useColorScheme();
 
     const { selectedGroupId } = useGroupStore();
 
-    const ding = useGroupQuery(selectedGroupId);
+    const selectedGroup = useGroupQuery(selectedGroupId);
+
+    const headerTitleIfGroupIsLoading = '';
+    const headerTitleIfGroupCantBeFound = '';
+
+    if (!selectedGroupId) {
+        nav.navigate('onboarding');
+        return;
+    }
 
     const groupHeader = {
         ...navStyles,
-        headerTitle: ding.data?.data?.name ?? 'Loading',
+        headerTitle: selectedGroup.isLoading
+            ? headerTitleIfGroupIsLoading
+            : (selectedGroup.data?.data?.name ?? headerTitleIfGroupCantBeFound),
         headerShown: true,
         headerLeft: GroupsButton,
     };
