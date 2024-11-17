@@ -1,6 +1,8 @@
 package pro.beerpong.api.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
@@ -12,12 +14,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ProfileService {
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
+
+    @Autowired
+    public ProfileService(ProfileRepository profileRepository, GroupRepository groupRepository, ProfileMapper profileMapper,
+                          PlayerService playerService) {
+        this.profileRepository = profileRepository;
+        this.groupRepository = groupRepository;
+        this.profileMapper = profileMapper;
+        this.playerService = playerService;
+    }
 
     public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto) {
         var groupOptional = groupRepository.findById(groupId);

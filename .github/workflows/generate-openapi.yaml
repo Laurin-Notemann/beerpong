@@ -3,19 +3,87 @@ name: Generate OpenApi
 on: 
   pull_request:
     paths:
-      - "api/src/main/java/pro/beerpong/api/**"
+      - "api/src/main/**"
       - ".github/workflows/generate-openapi.yaml"
+      - "mobile-app/api/generated/openapi.json"
+      - "mobile-app/openapi/openapi.d.ts"
     branches: 
       - main
   workflow_dispatch:
 
 jobs:
   generate-docs: 
+    permissions:
+      contents: write
+      pull-requests: write
     name: Genereate Api docs
     runs-on: ubuntu-20.04
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: user
+          POSTGRES_DB: beerpong
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: checkout code
         uses: actions/checkout@v4
-      - name: checkout code
-        run: ls
-  
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 21 corretto
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - run: mvn verify
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: user
+          POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
+        working-directory: api
+      - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
+
+      - name: Cache npm packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'mobile-app/package-lock.json'
+
+      - run: npm ci && npm run gen-types && npm run format
+        working-directory: mobile-app
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: chore - update openapi-types
+          title: OpenAPI Types Update
+          branch: update-openapi-types
+          base: ${{ github.head_ref }}
+          delete-branch: true
+          token: ${{ secrets.GITHUB_TOKEN }}
