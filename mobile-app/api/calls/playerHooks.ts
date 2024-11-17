@@ -12,7 +12,13 @@ export const usePlayersQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetPlayers.Responses.$200 | undefined>({
-        queryKey: ['group', groupId, 'season', seasonId],
+        queryKey: [
+            'group',
+            groupId ?? 'NULL',
+            'season',
+            seasonId ?? 'NULL',
+            'players',
+        ],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return undefined;
