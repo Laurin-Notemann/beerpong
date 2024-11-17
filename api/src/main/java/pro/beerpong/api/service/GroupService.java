@@ -12,6 +12,9 @@ import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.EventService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -22,11 +25,21 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 @Service
 @RequiredArgsConstructor
 public class GroupService {
+    private final EventService eventService;
 
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileService profileService;
     private final GroupMapper groupMapper;
+
+    @Autowired
+    public GroupService(EventService eventService, GroupRepository groupRepository, ProfileService profileService, SeasonRepository seasonRepository, GroupMapper groupMapper) {
+        this.eventService = eventService;
+        this.groupRepository = groupRepository;
+        this.seasonRepository = seasonRepository;
+        this.profileService = profileService;
+        this.groupMapper = groupMapper;
+    }
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
@@ -49,7 +62,11 @@ public class GroupService {
             profileService.createProfile(finalGroup.getId(), profileDto);
         });
 
-        return groupMapper.groupToGroupDto(group);
+        var dto = groupMapper.groupToGroupDto(group);
+
+        eventService.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
+
+        return dto;
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
@@ -75,8 +92,11 @@ public class GroupService {
         return groupRepository.findById(id)
                 .map(existingGroup -> {
                     existingGroup.setName(groupCreateDto.getName());
-                    Group updatedGroup = groupRepository.save(existingGroup);
-                    return groupMapper.groupToGroupDto(updatedGroup);
+                    var dto = groupMapper.groupToGroupDto(groupRepository.save(existingGroup));
+
+                    eventService.callEvent(new SocketEvent<>(SocketEventData.GROUP_UPDATE, dto.getId(), dto));
+
+                    return dto;
                 })
                 .orElse(null);
     }

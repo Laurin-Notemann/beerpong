@@ -37,14 +37,10 @@ public class RuleController {
 
     @PutMapping
     public ResponseEntity<ResponseEnvelope<List<RuleDto>>> writeRules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
-        var ruleDtos = ruleService.writeRules(seasonId, rules);
+        var ruleDtos = ruleService.writeRules(groupId, seasonId, rules);
 
         if (ruleDtos != null) {
-            if (ruleDtos.stream().allMatch(ruleDto -> ruleDto.getSeason().getId().equals(seasonId) && ruleDto.getSeason().getGroupId().equals(groupId))) {
-                return ResponseEnvelope.ok(ruleDtos);
-            } else {
-                return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.RULE_VALIDATION_FAILED);
-            }
+            return ResponseEnvelope.ok(ruleDtos);
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
         }

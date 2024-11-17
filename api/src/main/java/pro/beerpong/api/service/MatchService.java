@@ -14,9 +14,14 @@ import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.RuleMoveRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.EventService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
 
 @Service
 public class MatchService {
+    private final EventService eventService;
+
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
     private final PlayerRepository playerRepository;
@@ -27,8 +32,9 @@ public class MatchService {
     private final MatchMapper matchMapper;
 
     @Autowired
-    public MatchService(MatchRepository matchRepository, RuleMoveRepository ruleMoveService, PlayerRepository playerRepository,
+    public MatchService(EventService eventService, MatchRepository matchRepository, RuleMoveRepository ruleMoveService, PlayerRepository playerRepository,
                         SeasonRepository seasonRepository, MatchMapper matchMapper, TeamService teamService) {
+        this.eventService = eventService;
         this.matchRepository = matchRepository;
         this.playerRepository = playerRepository;
         this.seasonRepository = seasonRepository;
@@ -45,7 +51,7 @@ public class MatchService {
                                         ruleMoveService.existsById(matchMoveDto.getMoveId()))));
     }
 
-    public MatchDto createNewMatch(String seasonId, MatchCreateDto matchCreateDto) {
+    public MatchDto createNewMatch(String groupId, String seasonId, MatchCreateDto matchCreateDto) {
         var seasonOptional = seasonRepository.findById(seasonId);
 
         if (seasonOptional.isEmpty()) {
@@ -67,7 +73,13 @@ public class MatchService {
 
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
 
-        return matchMapper.matchToMatchDto(match);
+        var dto = matchMapper.matchToMatchDto(match);
+
+        if (dto.getSeason().getGroupId().equals(groupId)) {
+            eventService.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
+        }
+
+        return dto;
     }
 
     public List<MatchDto> getAllMatches(String seasonId) {
