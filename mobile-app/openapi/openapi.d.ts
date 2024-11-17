@@ -29,6 +29,9 @@ declare namespace Components {
             inviteCode?: string;
             groupSettings?: GroupSettings;
             activeSeason?: Season;
+            numberOfPlayers?: number; // int32
+            numberOfMatches?: number; // int32
+            numberOfSeasons?: number; // int32
         }
         export interface GroupSettings {
             id?: string;
