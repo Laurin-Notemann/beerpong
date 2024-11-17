@@ -30,12 +30,18 @@ public class GroupController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<List<GroupDto>>> findGroupByInviteCode(@RequestParam String inviteCode) {
+    public ResponseEntity<ResponseEnvelope<GroupDto>> findGroupByInviteCode(@RequestParam String inviteCode) {
         if (inviteCode == null || inviteCode.trim().isEmpty()) {
             return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.GROUP_INVITE_CODE_NOT_PROVIDED);
         }
 
-        return ResponseEnvelope.ok(groupService.findGroupsByInviteCode(inviteCode));
+        var group = groupService.findGroupsByInviteCode(inviteCode);
+
+        if (group != null) {
+            return ResponseEnvelope.ok(group);
+        } else {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_INVITE_NOT_FOUND);
+        }
     }
 
     @GetMapping("/{id}")
