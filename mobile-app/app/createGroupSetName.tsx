@@ -7,13 +7,16 @@ import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
+import { useNavigation } from './navigation/useNavigation';
+
 // Route params must be string types since they come from URL
 export interface CreateGroupSetNameParams {
     members: string; // This will be JSON string of GroupMember[]
 }
 
 export default function Page() {
-    const router = useRouter();
+    const nav = useNavigation();
+
     const { members, addName } = useCreateGroupStore();
     const { mutate, data, status } = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
@@ -28,9 +31,10 @@ export default function Page() {
             }
 
             addGroup(data.data.id);
-            router.push('/');
+
+            nav.navigate('index');
         }
-    }, [status, data, addGroup, router]);
+    }, [status, data, addGroup]);
 
     if (error) {
         return <ErrorScreen message={error} />;
