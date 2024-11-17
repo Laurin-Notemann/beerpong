@@ -1,41 +1,54 @@
-//TODO remove
-let stompClient = null;
+let socket = null;
 
-function connect() {
-    const socket = new SockJS('http://localhost:8080/update-socket');
+function openSocket() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        console.log("WebSocket is already open.");
+        return;
+    }
 
-    socket.onopen = function() {
-        console.log('Connected to server!');
+    socket = new WebSocket('ws://localhost:8080/update-socket');
+
+    socket.addEventListener('open', function (event) {
+        console.log('Connected to the WebSocket server.');
 
         setConnected(true);
-    };
+    });
 
-    socket.onmessage = function(event) {
-        console.log('Received from server: ' + event.data);
-    };
-
-    socket.onerror = function(error) {
-        console.log("Error occurred: " + error);
-    };
-
-    socket.onclose = function(event) {
-        console.log("WebSocket connection closed!");
+    socket.addEventListener('close', function (event) {
+        console.log('Disconnected from the WebSocket server.');
 
         setConnected(false);
-    };
+    });
 
-    stompClient = Stomp.over(socket);
+    socket.addEventListener('message', function (event) {
+        const serverMessage = JSON.parse(event.data);
+        console.log('Received message from server:', serverMessage);
 
-    stompClient.connect({
-            'groupIds': '5f1a1f36-bbff-4aa3-ba3f-143680df5ffb'
-        },
-        function (frame) {}
-    );
+        if (serverMessage.type === 'response') {
+            console.log('Server responded:', serverMessage.message);
+        }
+    });
+
+    socket.addEventListener('error', function (event) {
+        console.error('WebSocket error:', event);
+    });
 }
 
-function disconnect() {
-    if (stompClient !== null) {
-        stompClient.disconnect();
+function closeSocket() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+        console.log('Closing WebSocket connection...');
+    } else {
+        console.log('WebSocket is not open.');
+    }
+}
+
+function sendMessage(message) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({groupIds: ['group1', 'group2']}));
+        console.log('Sent message:', message);
+    } else {
+        console.log('WebSocket is not open, cannot send message.');
     }
 }
 
@@ -53,6 +66,7 @@ function setConnected(connected) {
 
 $(function () {
     $("form").on('submit', (e) => e.preventDefault());
-    $( "#connect" ).click(() => connect());
-    $( "#disconnect" ).click(() => disconnect());
+    $("#connect").click(() => openSocket());
+    $("#disconnect").click(() => closeSocket());
+    $("#sendd").click(() => sendMessage("test123123"));
 });

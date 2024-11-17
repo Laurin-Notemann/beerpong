@@ -43,6 +43,10 @@ public class SubscriptionHandler extends TextWebSocketHandler {
         var asString = new String(message.asBytes());
         var groupIds = extractGroupIds(asString);
 
+        System.out.println("received message: " + asString);
+
+        this.sendMessage(session, GSON.toJson("success"));
+
         if (groupIds != null && !groupIds.trim().isEmpty()) {
             Set<String> subscribedTo = Arrays.stream(groupIds.split(","))
                     .filter(s -> UUID_PATTERN.matcher(s).matches())
