@@ -1,5 +1,5 @@
 import { Link } from '@react-navigation/native';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -23,7 +23,7 @@ export function SidebarGroupItem({
     isActive,
     onPress,
 }: SidebarGroupItemProps) {
-    const { data } = useGroupQuery(id);
+    const { data, isLoading } = useGroupQuery(id);
 
     return (
         <Pressable
@@ -41,7 +41,7 @@ export function SidebarGroupItem({
                     fontSize: 17,
                 }}
             >
-                {data?.data?.name ?? 'Loading...'}
+                {isLoading ? 'Loading...' : (data?.data?.name ?? 'Unknown')}
             </Text>
             <Text
                 color="secondary"
@@ -49,7 +49,14 @@ export function SidebarGroupItem({
                     fontSize: 12,
                 }}
             >
-                {11} Players, {11} Matches
+                {isLoading ? (
+                    ''
+                ) : (
+                    <>
+                        {data?.data?.numberOfPlayers} Players,{' '}
+                        {data?.data?.numberOfMatches} Matches
+                    </>
+                )}
             </Text>
         </Pressable>
     );
@@ -112,7 +119,7 @@ export function Sidebar({ appVersion }: SidebarProps) {
                 >
                     No groups to display. {'\n'}
                     <Link
-                        to="joinGroup"
+                        to="/joinGroup"
                         style={{
                             color: theme.color.text.primary,
                             fontWeight: 500,
@@ -122,7 +129,7 @@ export function Sidebar({ appVersion }: SidebarProps) {
                     </Link>{' '}
                     or{' '}
                     <Link
-                        to="createGroup"
+                        to="/createGroup"
                         style={{
                             color: theme.color.text.primary,
                             fontWeight: 500,

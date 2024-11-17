@@ -23,15 +23,19 @@ export function useRealtimeConnection() {
                 qc.invalidateQueries({ queryKey: ['groups'] });
                 break;
             case 'MATCHES':
+                // eslint-disable-next-line
                 console.log('MATCHES', event);
                 break;
             case 'SEASONS':
+                // eslint-disable-next-line
                 console.log('SEASONS', event);
                 break;
             case 'PLAYERS':
+                // eslint-disable-next-line
                 console.log('PLAYERS', event);
                 break;
             case 'RULES':
+                // eslint-disable-next-line
                 console.log('RULES', event);
                 break;
         }

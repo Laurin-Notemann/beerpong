@@ -8,11 +8,11 @@ import { useApi } from '../utils/create-api';
 export const useSeasonQuery = (seasonId: ApiId | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetSeasonById.Responses.$200 | undefined>({
+    return useQuery<Paths.GetSeasonById.Responses.$200 | null>({
         queryKey: ['season', seasonId],
         queryFn: async () => {
             if (!seasonId) {
-                return undefined;
+                return null;
             }
             const res = await (await api).getSeasonById(seasonId);
 
@@ -24,11 +24,11 @@ export const useSeasonQuery = (seasonId: ApiId | null) => {
 export const useAllSeasonQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetAllSeasons.Responses.$200 | undefined>({
+    return useQuery<Paths.GetAllSeasons.Responses.$200 | null>({
         queryKey: ['group', groupId, 'seasons'],
         queryFn: async () => {
             if (!groupId) {
-                return undefined;
+                return null;
             }
             const res = await (await api).getAllSeasons(groupId);
 
@@ -40,7 +40,7 @@ export const useAllSeasonQuery = (groupId: ApiId | null) => {
 export const useStartNewSeasonMutation = () => {
     const { api } = useApi();
     return useMutation<
-        Paths.StartNewSeason.Responses.$200 | undefined,
+        Paths.StartNewSeason.Responses.$200 | null,
         Error,
         Paths.StartNewSeason.RequestBody
     >({

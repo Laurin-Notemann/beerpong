@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 import React, {
     createContext,

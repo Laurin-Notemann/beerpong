@@ -2,7 +2,6 @@ import { View } from 'react-native';
 
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import MatchesList from '@/components/MatchesList';
-import { mockMatches } from '@/components/mockData/matches';
 import { theme } from '@/theme';
 
 export default function Screen() {
@@ -14,6 +13,8 @@ export default function Screen() {
                 paddingHorizontal: 16,
 
                 backgroundColor: theme.color.bg,
+
+                flex: 1,
             }}
         >
             <MatchesList matches={matches} />
