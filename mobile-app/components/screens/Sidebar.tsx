@@ -106,24 +106,39 @@ export function Sidebar({ appVersion }: SidebarProps) {
                 title=""
                 description=""
                 actions={[
-                    {
-                        title: 'Create Group',
-                        type: 'default',
+                    ...[
+                        {
+                            title: 'Create Group',
+                            type: 'default' as const,
 
-                        onPress: () => {
-                            nav.navigate('createGroup');
-                            setShowAddGroupModal(false);
+                            onPress: () => {
+                                nav.navigate('createGroup');
+                                setShowAddGroupModal(false);
+                            },
                         },
-                    },
-                    {
-                        title: 'Join Group',
-                        type: 'default',
+                        {
+                            title: 'Join Group',
+                            type: 'default' as const,
 
-                        onPress: () => {
-                            nav.navigate('joinGroup');
-                            setShowAddGroupModal(false);
+                            onPress: () => {
+                                nav.navigate('joinGroup');
+                                setShowAddGroupModal(false);
+                            },
                         },
-                    },
+                    ],
+                    ...(__DEV__
+                        ? [
+                              {
+                                  title: '[DEV] Clear Storage',
+                                  type: 'default' as const,
+
+                                  onPress: () => {
+                                      clearGroups();
+                                      setShowAddGroupModal(false);
+                                  },
+                              },
+                          ]
+                        : []),
                 ]}
                 isVisible={showAddGroupModal}
             />
