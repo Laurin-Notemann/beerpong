@@ -9,7 +9,6 @@
     ],
     "paths": {
         "/groups/{id}": {
-
             "get": {
                 "tags": ["group-controller"],
                 "operationId": "getGroupById",
