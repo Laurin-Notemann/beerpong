@@ -432,6 +432,22 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
+    namespace UpdateMatch {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.MatchCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeMatchDto;
+        }
+    }
     namespace UpdateProfile {
         namespace Parameters {
             export type GroupId = string;
@@ -528,6 +544,22 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
     /**
+     * getMatchById
+     */
+    'getMatchById'(
+        parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetMatchById.Responses.$200>;
+    /**
+     * updateMatch
+     */
+    'updateMatch'(
+        parameters?: Parameters<Paths.UpdateMatch.PathParameters> | null,
+        data?: Paths.UpdateMatch.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+    /**
      * getProfileById
      */
     'getProfileById'(
@@ -584,6 +616,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     /**
+     * getAllMatches
+     */
+    'getAllMatches'(
+        parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
+    /**
      * createMatch
      */
     'createMatch'(
@@ -631,22 +671,6 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetPlayers.Responses.$200>;
-    /**
-     * getAllMatches
-     */
-    'getAllMatches'(
-        parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
-    /**
-     * getMatchById
-     */
-    'getMatchById'(
-        parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetMatchById.Responses.$200>;
     /**
      * getSeasonById
      */
@@ -702,7 +726,7 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.WriteRules.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/ruleMoves/{ruleMoveId}']: {
+    ['/groups/{groupId}/seasons/{seasonId}/rule-moves/{ruleMoveId}']: {
         /**
          * updateRuleMove
          */
@@ -719,6 +743,24 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/matches/{id}']: {
+        /**
+         * getMatchById
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetMatchById.Responses.$200>;
+        /**
+         * updateMatch
+         */
+        'put'(
+            parameters?: Parameters<Paths.UpdateMatch.PathParameters> | null,
+            data?: Paths.UpdateMatch.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
     };
     ['/groups/{groupId}/profiles/{id}']: {
         /**
@@ -766,7 +808,7 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateGroup.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/ruleMoves']: {
+    ['/groups/{groupId}/seasons/{seasonId}/rule-moves']: {
         /**
          * getAllRuleMoves
          */
@@ -784,7 +826,15 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/match']: {
+    ['/groups/{groupId}/seasons/{seasonId}/matches']: {
+        /**
+         * getAllMatches
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
         /**
          * createMatch
          */
@@ -841,26 +891,6 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetPlayers.Responses.$200>;
-    };
-    ['/groups/{groupId}/seasons/{seasonId}/matches']: {
-        /**
-         * getAllMatches
-         */
-        'get'(
-            parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
-    };
-    ['/groups/{groupId}/seasons/{seasonId}/matches/{id}']: {
-        /**
-         * getMatchById
-         */
-        'get'(
-            parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetMatchById.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{id}']: {
         /**
