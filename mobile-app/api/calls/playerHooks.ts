@@ -7,7 +7,7 @@ import { useApi } from '../utils/create-api';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
-    seasonId: ApiId | null
+    seasonId: ApiId | null | undefined
 ) => {
     const { api } = useApi();
 

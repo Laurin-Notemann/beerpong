@@ -1,45 +1,50 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useGroupQuery } from '@/api/calls/groupHooks';
+import { usePlayersQuery } from '@/api/calls/playerHooks';
 import NewMatchAssignTeams, {
-    TeamId,
+    Player,
 } from '@/components/screens/NewMatchAssignTeams';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
-const initialPlayers = [
-    'Adriana',
-    'Bolls',
-    'Elina',
-    'Institut',
-    'Joel',
-    'Jonas',
-    'Josi',
-    'Laurin',
-    'Moritz',
-    'Ole',
-    'Robert',
-    'Schicke',
-    'Thies',
-    'Timon',
-];
+import { useNavigation } from '../navigation/useNavigation';
 
 export default function Screen() {
-    const [players, setPlayers] = useState<any[]>(
-        initialPlayers.map((name) => ({ id: name, name, team: null }))
-    );
+    const nav = useNavigation();
 
-    function setTeam(playerId: string, team: TeamId) {
-        setPlayers((prev) => {
-            const newPlayers = JSON.parse(JSON.stringify(prev)) as typeof prev;
+    const { selectedGroupId } = useGroupStore();
 
-            newPlayers.find((j) => j.id === playerId)!.team = team;
+    const { data: groupQueryData } = useGroupQuery(selectedGroupId);
 
-            return newPlayers;
-        });
+    const activeSeasonId = groupQueryData?.data?.activeSeason?.id;
+
+    const playersQuery = usePlayersQuery(selectedGroupId, activeSeasonId);
+
+    const matchDraft = useMatchDraftStore();
+
+    const players: Player[] = (playersQuery.data?.data ?? []).map((i) => ({
+        id: i.id!,
+        name: i.profile?.name || 'Unknown',
+        team: matchDraft.blueTeam.players.includes(i.id!)
+            ? 'blue'
+            : matchDraft.redTeam.players.includes(i.id!)
+              ? 'red'
+              : null,
+    }));
+
+    async function onSubmit() {
+        nav.navigate('newMatchPoints');
     }
 
     return (
         <GestureHandlerRootView>
-            <NewMatchAssignTeams players={players} setTeam={setTeam} />
+            <NewMatchAssignTeams
+                players={players}
+                setTeam={matchDraft.actions.setPlayerTeam}
+                onSubmit={onSubmit}
+            />
         </GestureHandlerRootView>
     );
 }

@@ -14,12 +14,12 @@ export interface CreateMatchAssignPointsProps {
     players: TeamMember[];
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
-    onCreate: () => void;
+    onSubmit: () => void;
 }
 export default function CreateMatchAssignPoints({
     players,
     setMoveCount,
-    onCreate,
+    onSubmit,
 }: CreateMatchAssignPointsProps) {
     const navigation = useNavigation();
     return (
@@ -40,7 +40,7 @@ export default function CreateMatchAssignPoints({
                         fontWeight: 'bold',
                     },
                     headerRight: () => (
-                        <HeaderItem onPress={onCreate}>Create</HeaderItem>
+                        <HeaderItem onPress={onSubmit}>Create</HeaderItem>
                     ),
                     headerTitle: () => (
                         <MatchVsHeader
