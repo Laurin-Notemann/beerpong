@@ -40,19 +40,29 @@ jobs:
           fetch-depth: 2
 
             
-      - name: Check latest commit author
-        id: check_author
+      - name: Check recent commit authors
+        id: check_authors
         run: |
-          git log -4
-          COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
-          echo $COMMIT_AUTHOR
-          if echo "$COMMIT_AUTHOR" | grep -q "github-actions"; then
+          # Fetch the PR base branch
+          git fetch origin ${{ github.base_ref }}
+          
+          # Get the merge base between the PR head and base
+          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+          
+          # Check the commits between the merge base and HEAD
+          COMMIT_AUTHORS=$(git log $MERGE_BASE..HEAD --format='%an <%ae>')
+          echo "Commit authors since merge base:"
+          echo "$COMMIT_AUTHORS"
+          
+          if echo "$COMMIT_AUTHORS" | grep -q "github-actions"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
-            echo "Latest commit was authored by a GitHub bot. Stopping the workflow."
+            echo "A recent commit was authored by a GitHub bot. Stopping the workflow."
             exit 78  # This will stop the workflow without failing it
           else
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
+            echo "No recent commits by GitHub bot found. Continuing the workflow."
           fi
+        shell: bash
 
       - name: Set up JDK 21 corretto
         if: steps.check_author.outputs.has_bot_author != 'true'
