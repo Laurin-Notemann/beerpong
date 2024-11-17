@@ -1,11 +1,8 @@
 package pro.beerpong.api.service;
 
-import java.time.ZonedDateTime;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import pro.beerpong.api.mapping.MatchMapper;
 import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dto.MatchCreateDto;
@@ -18,30 +15,19 @@ import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class MatchService {
     private final EventService eventService;
-
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
     private final PlayerRepository playerRepository;
     private final RuleMoveRepository ruleMoveService;
-
     private final TeamService teamService;
-
     private final MatchMapper matchMapper;
-
-    @Autowired
-    public MatchService(EventService eventService, MatchRepository matchRepository, RuleMoveRepository ruleMoveService, PlayerRepository playerRepository,
-                        SeasonRepository seasonRepository, MatchMapper matchMapper, TeamService teamService) {
-        this.eventService = eventService;
-        this.matchRepository = matchRepository;
-        this.playerRepository = playerRepository;
-        this.seasonRepository = seasonRepository;
-        this.ruleMoveService = ruleMoveService;
-        this.matchMapper = matchMapper;
-        this.teamService = teamService;
-    }
 
     private boolean validateCreateDto(MatchCreateDto dto) {
         return dto.getTeams().stream().allMatch(teamCreateDto ->
@@ -51,6 +37,7 @@ public class MatchService {
                                         ruleMoveService.existsById(matchMoveDto.getMoveId()))));
     }
 
+    @Transactional
     public MatchDto createNewMatch(String groupId, String seasonId, MatchCreateDto matchCreateDto) {
         var seasonOptional = seasonRepository.findById(seasonId);
 
