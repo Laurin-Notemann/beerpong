@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 @Data
 public class AssetMetadataDto {
     private String id;
+    private String url;
     private String mediaType;
     private ZonedDateTime uploadedAt;
 }
