@@ -1,11 +1,7 @@
 package pro.beerpong.api.service;
 
-import java.time.ZonedDateTime;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Season;
@@ -18,7 +14,11 @@ import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class SeasonService {
     private final EventService eventService;
     private final SeasonRepository seasonRepository;
@@ -27,7 +27,6 @@ public class SeasonService {
 
     private final SeasonMapper seasonMapper;
 
-    @Autowired
     public SeasonService(EventService eventService, SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
         this.eventService = eventService;
         this.seasonRepository = seasonRepository;

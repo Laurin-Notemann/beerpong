@@ -21,7 +21,7 @@ declare namespace Components {
         }
         export interface GroupCreateDto {
             name?: string;
-            playerNames?: string[];
+            profileNames?: string[];
         }
         export interface GroupDto {
             id?: string;
@@ -68,12 +68,6 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: GroupDto;
-            error?: ErrorDetails;
-        }
-        export interface ResponseEnvelopeListGroupDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: GroupDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchDto {
@@ -269,9 +263,15 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
-    namespace GetAllGroups {
+    namespace FindGroupByInviteCode {
+        namespace Parameters {
+            export type InviteCode = string;
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+        }
         namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeListGroupDto;
+            export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
     namespace GetAllMatches {
@@ -551,13 +551,13 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.StartNewSeason.Responses.$200>;
     /**
-     * getAllGroups
+     * findGroupByInviteCode
      */
-    'getAllGroups'(
-        parameters?: Parameters<UnknownParamsObject> | null,
+    'findGroupByInviteCode'(
+        parameters?: Parameters<Paths.FindGroupByInviteCode.QueryParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetAllGroups.Responses.$200>;
+    ): OperationResponse<Paths.FindGroupByInviteCode.Responses.$200>;
     /**
      * createGroup
      */
@@ -749,13 +749,13 @@ export interface PathsDictionary {
     };
     ['/groups']: {
         /**
-         * getAllGroups
+         * findGroupByInviteCode
          */
         'get'(
-            parameters?: Parameters<UnknownParamsObject> | null,
+            parameters?: Parameters<Paths.FindGroupByInviteCode.QueryParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetAllGroups.Responses.$200>;
+        ): OperationResponse<Paths.FindGroupByInviteCode.Responses.$200>;
         /**
          * createGroup
          */
@@ -899,8 +899,6 @@ export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
-export type ResponseEnvelopeListGroupDto =
-    Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListPlayerDto =

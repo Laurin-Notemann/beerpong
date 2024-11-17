@@ -74,13 +74,12 @@ jobs:
       - id: 'deploy'
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          service: 'backstage-deployment'
+          service: 'api-springboot'
           image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}'
-          region: europe-west1
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg'
+          region: europe-west10
+          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg --no-cpu-throttling --min-instances 1 --max-instances 15'
           env_vars: |
-            POSTGRES_PORT=5432
             POSTGRES_USER=postgres
-            POSTGRES_URL='jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory'
+            POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory
           secrets: |-
             POSTGRES_PASSWORD=api-pg-password:latest

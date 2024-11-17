@@ -7,5 +7,5 @@ import java.util.List;
 @Data
 public class GroupCreateDto {
     private String name;
-    private List<String> playerNames;
+    private List<String> profileNames;
 }

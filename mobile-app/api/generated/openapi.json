@@ -338,14 +338,22 @@
         "/groups": {
             "get": {
                 "tags": ["group-controller"],
-                "operationId": "getAllGroups",
+                "operationId": "findGroupByInviteCode",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeListGroupDto"
+                                    "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
                             }
                         }
@@ -776,7 +784,7 @@
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
-                    "playerNames": {
+                    "profileNames": {
                         "type": "array",
                         "items": { "type": "string" }
                     }
@@ -990,18 +998,6 @@
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "type": "string" },
-                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
-            },
-            "ResponseEnvelopeListGroupDto": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
-                    "httpCode": { "type": "integer", "format": "int32" },
-                    "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/GroupDto" }
-                    },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },

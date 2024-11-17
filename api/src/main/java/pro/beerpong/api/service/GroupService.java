@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
 @Service
+@RequiredArgsConstructor
 public class GroupService {
     private final EventService eventService;
 
@@ -54,7 +56,7 @@ public class GroupService {
         seasonRepository.save(season);
 
         Group finalGroup = group;
-        groupCreateDto.getPlayerNames().forEach(s -> {
+        groupCreateDto.getProfileNames().forEach(s -> {
             var profileDto = new ProfileCreateDto();
             profileDto.setName(s);
             profileService.createProfile(finalGroup.getId(), profileDto);
@@ -65,6 +67,12 @@ public class GroupService {
         eventService.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
 
         return dto;
+    }
+
+    public GroupDto findGroupsByInviteCode(String inviteCode) {
+        return groupRepository.findByInviteCode(inviteCode)
+                .map(groupMapper::groupToGroupDto)
+                .orElse(null);
     }
 
     public List<GroupDto> getAllGroups() {
