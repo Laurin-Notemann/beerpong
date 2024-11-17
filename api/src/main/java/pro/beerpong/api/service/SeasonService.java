@@ -1,6 +1,6 @@
 package pro.beerpong.api.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Season;
@@ -9,22 +9,33 @@ import pro.beerpong.api.model.dto.SeasonDto;
 import pro.beerpong.api.model.dto.SeasonStartDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class SeasonService {
-    private final EventService eventService;
+    private final SubscriptionHandler subscriptionHandler;
     private final SeasonRepository seasonRepository;
     private final GroupRepository groupRepository;
     private final PlayerService playerService;
-
     private final SeasonMapper seasonMapper;
+
+    @Autowired
+    public SeasonService(SubscriptionHandler subscriptionHandler, 
+                         SeasonRepository seasonRepository, 
+                         GroupRepository groupRepository, 
+                         PlayerService playerService, 
+                         SeasonMapper seasonMapper) {
+        this.subscriptionHandler = subscriptionHandler;
+        this.seasonRepository = seasonRepository;
+        this.groupRepository = groupRepository;
+        this.playerService = playerService;
+        this.seasonMapper = seasonMapper;
+    }
 
     public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
         var groupOptional = groupRepository.findById(groupId);
@@ -59,7 +70,7 @@ public class SeasonService {
         eventDto.setOldSeason(seasonMapper.seasonToSeasonDto(oldSeason));
         eventDto.setNewSeason(newDto);
 
-        eventService.callEvent(new SocketEvent<>(SocketEventData.SEASON_START, groupId, eventDto));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.SEASON_START, groupId, eventDto));
 
         return newDto;
     }

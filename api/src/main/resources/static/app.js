@@ -1,26 +1,55 @@
-//TODO remove
+let socket = null;
 
-const stompClient = new StompJs.Client({
-    brokerURL: 'ws://localhost:8080/update-socket'
-});
+function openSocket() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        console.log("WebSocket is already open.");
+        return;
+    }
 
-stompClient.onConnect = (frame) => {
-    setConnected(true);
-    console.log('Connected: ' + frame);
+    socket = new WebSocket('ws://localhost:8080/update-socket');
 
-    stompClient.subscribe('/events', (event) => {
-        showEvent(JSON.parse(event.body));
+    socket.addEventListener('open', function (event) {
+        console.log('Connected to the WebSocket server.');
+
+        setConnected(true);
     });
-};
 
-stompClient.onWebSocketError = (error) => {
-    console.error('Error with websocket', error);
-};
+    socket.addEventListener('close', function (event) {
+        console.log('Disconnected from the WebSocket server.');
 
-stompClient.onStompError = (frame) => {
-    console.error('Broker reported error: ' + frame.headers['message']);
-    console.error('Additional details: ' + frame.body);
-};
+        setConnected(false);
+    });
+
+    socket.addEventListener('message', function (event) {
+        const serverMessage = JSON.parse(event.data);
+        console.log('Received message from server:', serverMessage);
+
+        if (serverMessage.type === 'response') {
+            console.log('Server responded:', serverMessage.message);
+        }
+    });
+
+    socket.addEventListener('error', function (event) {
+        console.error('WebSocket error:', event);
+    });
+}
+
+function closeSocket() {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+        console.log('Closing WebSocket connection...');
+    } else {
+        console.log('WebSocket is not open.');
+    }
+}
+
+function sendMessage(groupIds) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({groupIds: groupIds}));
+    } else {
+        console.log('WebSocket is not open, cannot send message.');
+    }
+}
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
@@ -34,26 +63,9 @@ function setConnected(connected) {
     $("#greetings").html("");
 }
 
-function connect() {
-    stompClient.activate();
-}
-
-function disconnect() {
-    stompClient.deactivate();
-    setConnected(false);
-    console.log("Disconnected");
-}
-
-function showEvent(event) {
-    $("#greetings")
-        .append("<tr><td>" + event.groupId + "</td></tr>")
-        .append("<tr><td>" + event.eventType + "</td></tr>")
-        .append("<tr><td>" + event.scope + "</td></tr>")
-    ;
-}
-
 $(function () {
     $("form").on('submit', (e) => e.preventDefault());
-    $( "#connect" ).click(() => connect());
-    $( "#disconnect" ).click(() => disconnect());
+    $("#connect").click(() => openSocket());
+    $("#disconnect").click(() => closeSocket());
+    $("#sendd").click(() => sendMessage(['5f1a1f36-bbff-4aa3-ba3f-143680df5ffb', 'q2das']));
 });

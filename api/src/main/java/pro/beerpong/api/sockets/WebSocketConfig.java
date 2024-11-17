@@ -1,29 +1,27 @@
 package pro.beerpong.api.sockets;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 @Configuration
-@EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
+    private final SubscriptionHandler subscriptionHandler;
 
-    // TODO clients send the groups they want to listen to in the params of the
-    // conncet url
-
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/events");
-        config.setApplicationDestinationPrefixes("/app");
+    @Autowired
+    public WebSocketConfig(SubscriptionHandler subscriptionHandler) {
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // .withSockJS()
-        registry.addEndpoint("/update-socket").setAllowedOriginPatterns("*");
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        registry.addHandler(subscriptionHandler, "/update-socket")
+                .setAllowedOrigins("*");
+        //TODO limit message size a client can send to prevent spam
     }
-
 }

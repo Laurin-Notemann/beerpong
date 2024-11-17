@@ -1,6 +1,8 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,15 +10,20 @@ import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.MatchService;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
-@RequiredArgsConstructor
 public class MatchController {
     private final MatchService matchService;
+
+    @Autowired
+    public MatchController(MatchService matchService) {
+        this.matchService = matchService;
+    }
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,

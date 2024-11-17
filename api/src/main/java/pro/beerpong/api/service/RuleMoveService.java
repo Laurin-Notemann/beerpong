@@ -8,24 +8,24 @@ import pro.beerpong.api.model.dto.RuleMoveCreateDto;
 import pro.beerpong.api.model.dto.RuleMoveDto;
 import pro.beerpong.api.repository.RuleMoveRepository;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 
 @Service
 public class RuleMoveService {
-    private final EventService eventService;
+    private final SubscriptionHandler subscriptionHandler ;
     private final RuleMoveRepository moveRepository;
     private final SeasonRepository seasonRepository;
 
     private final RuleMoveMapper moveMapper;
 
     @Autowired
-    public RuleMoveService(EventService eventService, RuleMoveRepository moveRepository, SeasonRepository seasonRepository,
+    public RuleMoveService(SubscriptionHandler subscriptionHandler , RuleMoveRepository moveRepository, SeasonRepository seasonRepository,
                            RuleMoveMapper moveMapper) {
-        this.eventService = eventService;
+        this.subscriptionHandler = subscriptionHandler;
         this.moveRepository = moveRepository;
         this.seasonRepository = seasonRepository;
         this.moveMapper = moveMapper;
@@ -49,7 +49,7 @@ public class RuleMoveService {
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(rule));
 
-        eventService.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_CREATE, groupId, dto));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_CREATE, groupId, dto));
 
         return dto;
     }
@@ -70,7 +70,7 @@ public class RuleMoveService {
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(move));
 
-        eventService.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_UPDATE, groupId, dto));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_UPDATE, groupId, dto));
 
         return dto;
     }
@@ -80,7 +80,7 @@ public class RuleMoveService {
                 .map(ruleMove -> {
                     moveRepository.deleteById(ruleMoveId);
 
-                    eventService.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_DELETE, groupId, moveMapper.ruleMoveToRuleMoveDto(ruleMove)));
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_DELETE, groupId, moveMapper.ruleMoveToRuleMoveDto(ruleMove)));
 
                     return true;
                 })
