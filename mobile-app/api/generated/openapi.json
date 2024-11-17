@@ -850,7 +850,10 @@
                     "groupSettings": {
                         "$ref": "#/components/schemas/GroupSettings"
                     },
-                    "activeSeason": { "$ref": "#/components/schemas/Season" }
+                    "activeSeason": { "$ref": "#/components/schemas/Season" },
+                    "numberOfPlayers": { "type": "integer", "format": "int32" },
+                    "numberOfMatches": { "type": "integer", "format": "int32" },
+                    "numberOfSeasons": { "type": "integer", "format": "int32" }
                 }
             },
             "GroupSettings": {
