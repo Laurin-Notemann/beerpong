@@ -43,3 +43,4 @@ jobs:
           POSTGRES_PASSWORD: user
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
         working-directory: api
+      - run: git status
