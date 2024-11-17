@@ -1,14 +1,23 @@
-export type RealtimeEventScope =
-    | 'seasons'
-    | 'matches'
-    | 'players'
-    | 'groups'
-    | 'rules'
-    | 'ruleMoves';
+import { Client, IMessage } from '@stomp/stompjs';
+import { TextEncoder } from 'text-encoding';
+
+/**
+ * stompjs is an abstraction layer on top of websocket that uses the global TextEncoder class.
+ *
+ * for react-native, it needs a polyfill: https://github.com/stomp-js/stompjs/issues/565#issuecomment-2197853028
+ */
+function mountPolyfillForStompJs() {
+    global.TextEncoder = TextEncoder;
+}
+mountPolyfillForStompJs();
+
+export type RealtimeEventScope = 'GROUPS';
 
 export interface RealtimeEvent<T = RealtimeEventScope> {
     groupId: string;
-    scope: T;
+    scope: string;
+    eventType: T;
+    body?: unknown;
 }
 
 export type RealtimeEventHandler = <T = RealtimeEventScope>(
@@ -16,26 +25,46 @@ export type RealtimeEventHandler = <T = RealtimeEventScope>(
 ) => void;
 
 export class RealtimeClient {
-    private ws!: WebSocket;
+    // private ws!: WebSocket;
+
+    private client!: Client;
 
     // @ts-ignore
     private handlers: Record<RealtimeEventScope | '*', RealtimeEventHandler[]> =
         {};
 
     private get url() {
-        return this.host + '/update-socket?groups=' + this.groupIds.join(',');
+        const fragment =
+            this.groupIds.length > 0
+                ? '?groups=' + this.groupIds.join(',')
+                : '';
+
+        return this.host + '/update-socket' + fragment;
     }
 
     private connect() {
-        this.ws = new WebSocket(this.url);
-
-        this.ws.onopen = this.onOpen;
-        this.ws.onmessage = this.onEvent;
-        this.ws.onerror = this.onError;
-        this.ws.onclose = this.onClose;
+        const stompClient = new Client({
+            webSocketFactory: () => new WebSocket(this.url),
+            onConnect: () => {
+                stompClient.subscribe('/events', (message) => {
+                    this.onMessage(message);
+                });
+            },
+            onStompError: (err) => {
+                // eslint-disable-next-line
+                console.error('[realtime] stomp error:', err);
+            },
+            onWebSocketError: (err) => {
+                // eslint-disable-next-line
+                console.error('[realtime] websocket error:', err);
+            },
+            onDisconnect: () => {},
+            onWebSocketClose: () => {},
+        });
+        stompClient.activate();
     }
     private disconnect() {
-        this.ws.close();
+        this.client.deactivate();
     }
     private reconnect() {
         this.disconnect();
@@ -62,7 +91,7 @@ export class RealtimeClient {
     private fireHandlers(event: RealtimeEvent) {
         for (const [_, handlers] of Object.entries(this.handlers).filter(
             ([handlerScope]) =>
-                handlerScope === event.scope || handlerScope === '*'
+                handlerScope === event.eventType || handlerScope === '*'
         )) {
             for (const handler of handlers) {
                 try {
@@ -72,9 +101,9 @@ export class RealtimeClient {
         }
     }
 
-    private onEvent(e: MessageEvent<any>) {
+    private onMessage(message: IMessage) {
         try {
-            const data: RealtimeEvent = JSON.parse(e.data);
+            const data: RealtimeEvent = JSON.parse(message.body);
 
             this.fireHandlers(data);
         } catch (err) {
@@ -82,12 +111,6 @@ export class RealtimeClient {
             console.error('[realtime] error json parsing message:', err);
         }
     }
-    private onOpen(e: Event) {}
-    private onError(e: Event) {
-        // eslint-disable-next-line
-        console.error('[realtime] socket error:', e);
-    }
-    private onClose(e: Event) {}
 
     private registerHandler(
         scope: RealtimeEventScope | '*',
@@ -100,16 +123,6 @@ export class RealtimeClient {
     public on = {
         event: (handler: RealtimeEventHandler) => {
             this.registerHandler('*', handler);
-        },
-        matches: {
-            event: (handler: RealtimeEventHandler) => {
-                this.registerHandler('matches', handler);
-            },
-        },
-        players: {
-            event: (handler: RealtimeEventHandler) => {
-                this.registerHandler('players', handler);
-            },
         },
     };
 }
