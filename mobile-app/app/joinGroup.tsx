@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
 import React, { useEffect } from 'react';
 
-import { useFindGroupByInviteCode } from '@/api/calls/group/groupHooks';
+import { useFindGroupByInviteCode } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import JoinGroup from '@/components/screens/JoinGroup';

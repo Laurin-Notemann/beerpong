@@ -10,6 +10,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
@@ -150,23 +151,28 @@ export default function RootLayout() {
     }
 
     return (
-        <PersistQueryClientProvider
-            client={queryClient}
-            persistOptions={{ persister }}
-        >
-            <ApiProvider>
-                <Drawer.Navigator
-                    screenOptions={{
-                        drawerStyle: {
-                            width: 256,
-                        },
-                        headerShown: false,
-                    }}
-                    drawerContent={DrawerContent}
-                >
-                    <Drawer.Screen name="aboutPremium" component={Everything} />
-                </Drawer.Navigator>
-            </ApiProvider>
-        </PersistQueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+            <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={{ persister }}
+            >
+                <ApiProvider>
+                    <Drawer.Navigator
+                        screenOptions={{
+                            drawerStyle: {
+                                width: 256,
+                            },
+                            headerShown: false,
+                        }}
+                        drawerContent={DrawerContent}
+                    >
+                        <Drawer.Screen
+                            name="aboutPremium"
+                            component={Everything}
+                        />
+                    </Drawer.Navigator>
+                </ApiProvider>
+            </PersistQueryClientProvider>
+        </QueryClientProvider>
     );
 }

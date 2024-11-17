@@ -11,7 +11,7 @@ function mountPolyfillForStompJs() {
 }
 mountPolyfillForStompJs();
 
-export type RealtimeEventScope = 'GROUPS';
+export type RealtimeEventScope = 'GROUPS' | 'MATCHES' | 'SEASONS' | 'PLAYERS' | 'RULES';
 
 export interface RealtimeEvent<T = RealtimeEventScope> {
     groupId: string;
@@ -64,11 +64,12 @@ export class RealtimeClient {
         stompClient.activate();
     }
     private disconnect() {
-        this.client.deactivate();
+        this.client?.deactivate();
     }
+
     private reconnect() {
         this.disconnect();
-        this.reconnect();
+        this.connect();
     }
 
     /**

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 
-import { useCreateGroupMutation } from '@/api/calls/group/groupHooks';
+import { useCreateGroupMutation } from '@/api/calls/groupHooks';
 import ErrorScreen from '@/components/ErrorScreen';
 import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';

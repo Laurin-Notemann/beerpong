@@ -3,7 +3,7 @@ import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { useGroupQuery } from '@/api/calls/group/groupHooks';
+import { useGroupQuery } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 

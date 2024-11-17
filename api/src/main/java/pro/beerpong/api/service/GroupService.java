@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
 @Service
-@RequiredArgsConstructor
 public class GroupService {
     private final EventService eventService;
 
