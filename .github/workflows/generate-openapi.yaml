@@ -39,16 +39,17 @@ jobs:
         with:
           fetch-depth: 0
 
+            
       - name: Check latest commit author
         id: check_author
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          if echo "$COMMIT_MSG" | grep -q "Co-authored-by:.*github-actions"; then
-            echo "has_bot_coauthor=true" >> $GITHUB_OUTPUT
-            echo "Latest commit was co-authored by a GitHub bot. Stopping the workflow."
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an <%ae>')
+          if echo "$COMMIT_AUTHOR" | grep -q "github-actions"; then
+            echo "has_bot_author=true" >> $GITHUB_OUTPUT
+            echo "Latest commit was authored by a GitHub bot. Stopping the workflow."
             exit 78  # This will stop the workflow without failing it
           else
-            echo "has_bot_coauthor=false" >> $GITHUB_OUTPUT
+            echo "has_bot_author=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up JDK 21 corretto
