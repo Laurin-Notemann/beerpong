@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ErrorCodes {
     GROUP_NOT_FOUND("groupNotFound", "The requested group could not be found!"),
+    GROUP_INVITE_NOT_FOUND("groupInviteNotFound", "No group with the provided invite code could be found!"),
     GROUP_INVITE_CODE_NOT_PROVIDED("groupInviteCodeNotProvided", "The invite code needs to be provided!"),
     SEASON_NOT_FOUND("seasonNotFound", "The requested season could not be found!"),
     SEASON_ALREADY_ENDED("seasonAlreadyEnded", "Past seasons are immutable!"),
