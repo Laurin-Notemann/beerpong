@@ -70,12 +70,6 @@ declare namespace Components {
             data?: GroupDto;
             error?: ErrorDetails;
         }
-        export interface ResponseEnvelopeListGroupDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: GroupDto[];
-            error?: ErrorDetails;
-        }
         export interface ResponseEnvelopeListMatchDto {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
@@ -277,7 +271,7 @@ declare namespace Paths {
             inviteCode: Parameters.InviteCode;
         }
         namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeListGroupDto;
+            export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
     namespace GetAllMatches {
@@ -905,8 +899,6 @@ export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
-export type ResponseEnvelopeListGroupDto =
-    Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListPlayerDto =

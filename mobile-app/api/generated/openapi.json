@@ -353,7 +353,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeListGroupDto"
+                                    "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
                             }
                         }
@@ -998,18 +998,6 @@
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "type": "string" },
-                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
-            },
-            "ResponseEnvelopeListGroupDto": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
-                    "httpCode": { "type": "integer", "format": "int32" },
-                    "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/GroupDto" }
-                    },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
