@@ -66,6 +66,10 @@ public class MatchService {
 
     public MatchDto createNewMatch(String groupId, String seasonId, MatchCreateDto matchCreateDto) {
         var seasonOptional = seasonRepository.findById(seasonId);
+        var groupOptional = groupRepository.findById(groupId);
+
+        if (groupOptional.isEmpty()) {return null;}
+        if (!groupOptional.get().getActiveSeason().getId().equals(seasonId)) {return null;}
 
         if (seasonOptional.isEmpty()) {
             return null;
@@ -76,6 +80,8 @@ public class MatchService {
         if (!season.getGroupId().equals(groupId)) {
             return null;
         }
+
+
 
         if (!validateCreateDto(matchCreateDto)) {
             return null;
