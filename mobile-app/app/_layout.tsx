@@ -43,6 +43,8 @@ function Everything() {
                     options={{
                         title: '',
                         headerShown: false,
+
+                        headerTitle: '',
                     }}
                 />
                 <Stack.Screen name="+not-found" />
