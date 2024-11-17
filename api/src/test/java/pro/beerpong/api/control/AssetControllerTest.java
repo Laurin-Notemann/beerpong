@@ -1,11 +1,14 @@
 package pro.beerpong.api.control;
 
-import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
@@ -16,6 +19,7 @@ import java.time.ZonedDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class AssetControllerTest {
     @LocalServerPort
     private int port;
@@ -26,8 +30,15 @@ public class AssetControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @BeforeEach
+    public void createTransaction() {
+        transactionManager.getTransaction(new DefaultTransactionDefinition()).setRollbackOnly();
+    }
+
     @Test
-    @Transactional
     @SuppressWarnings("unchecked")
     public void whenUploadingAsset_ThenIsSuccessful() {
         var response = testUtils.performPost(port, "/assets", new byte[] {-128, 0, 127, 0}, AssetMetadataDto.class);
@@ -52,7 +63,6 @@ public class AssetControllerTest {
     }
 
     @Test
-    @Transactional
     @SuppressWarnings("unchecked")
     public void whenGettingAsset_ThenIsSuccessful() {
         var prerequisiteResponse = testUtils.performPost(port, "/assets", new byte[] {-128, 0, 127, 0}, AssetMetadataDto.class);
@@ -96,7 +106,6 @@ public class AssetControllerTest {
     }
 
     @Test
-    @Transactional
     @SuppressWarnings("unchecked")
     public void whenFetchingAssetData_ThenIsSuccessful() {
         byte[] assetToBeStored = {-128, 0, 127, 0};
@@ -132,7 +141,6 @@ public class AssetControllerTest {
     }
 
     @Test
-    @Transactional
     @SuppressWarnings("unchecked")
     public void whenDeletingAsset_ThenIsSuccessful() {
         var prerequisiteResponse = testUtils.performPost(port, "/assets", new byte[] {-128, 0, 127, 0}, AssetMetadataDto.class);
