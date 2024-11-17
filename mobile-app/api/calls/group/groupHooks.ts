@@ -14,10 +14,8 @@ export const useGroupQuery = (id: ApiId | null) => {
         ['group', 'id', id],
         async () => {
             if (!id) {
-                console.log('No group id provided');
                 return undefined;
             }
-            console.log('Fetching group with id', id);
             const res = await (await api).getGroupById(id);
             return res?.data;
         }
@@ -31,20 +29,16 @@ export const useFindGroupByInviteCode = (inviteCode: string | null) => {
         ['group', 'inviteCode', inviteCode],
         async () => {
             if (!inviteCode || inviteCode.length !== 9) {
-                console.log('No invite code provided or invalid');
                 return undefined;
             }
 
-            console.log('Fetching group with invite code', inviteCode);
             const res = await (
                 await api
             ).findGroupByInviteCode({ inviteCode });
-            console.log('Response:', res?.data);
             return res?.data;
         }
     );
 };
-//B0W2QU4E7
 
 export const useCreateGroupMutation = () => {
     const { api } = useApi();

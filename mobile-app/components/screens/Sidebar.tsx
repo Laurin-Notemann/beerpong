@@ -67,8 +67,6 @@ export function Sidebar({ appVersion }: SidebarProps) {
         useGroupStore();
 
     const nav = useNavigation();
-    console.log('groupIds', groupIds);
-    console.log('selectedGroupId', selectedGroupId);
 
     return (
         <SafeAreaView
