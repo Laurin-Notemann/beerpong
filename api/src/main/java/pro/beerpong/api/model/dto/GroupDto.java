@@ -11,4 +11,7 @@ public class GroupDto {
     private String inviteCode;
     private GroupSettings groupSettings;
     private Season activeSeason;
+    private int numberOfPlayers;
+    private int numberOfMatches;
+    private int numberOfSeasons;
 }
