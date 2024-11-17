@@ -12,6 +12,7 @@ export default function Page() {
             hasPremium={false}
             pastSeasons={1}
             matches={mockMatches}
+            onDelete={() => {}}
         />
     );
 }
