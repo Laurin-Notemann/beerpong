@@ -1,3 +1,4 @@
+import { Link } from '@react-navigation/native';
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -5,6 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { theme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import ConfirmationModal from '../ConfirmationModal';
@@ -92,6 +94,7 @@ export function Sidebar({ appVersion }: SidebarProps) {
                     onPress={() => {
                         selectGroup(id);
 
+                        // eslint-disable-next-line
                         console.log(Object.keys(nav));
                         // @ts-ignore
                         // nav.closeDrawer();
@@ -101,9 +104,33 @@ export function Sidebar({ appVersion }: SidebarProps) {
             {groupIds.length < 1 && (
                 <Text
                     color="secondary"
-                    style={{ textAlign: 'center', paddingTop: 64 }}
+                    style={{
+                        textAlign: 'center',
+                        paddingTop: 64,
+                        lineHeight: 26,
+                    }}
                 >
-                    No groups to display
+                    No groups to display. {'\n'}
+                    <Link
+                        to="joinGroup"
+                        style={{
+                            color: theme.color.text.primary,
+                            fontWeight: 500,
+                        }}
+                    >
+                        Join
+                    </Link>{' '}
+                    or{' '}
+                    <Link
+                        to="createGroup"
+                        style={{
+                            color: theme.color.text.primary,
+                            fontWeight: 500,
+                        }}
+                    >
+                        Create
+                    </Link>{' '}
+                    one.
                 </Text>
             )}
 
