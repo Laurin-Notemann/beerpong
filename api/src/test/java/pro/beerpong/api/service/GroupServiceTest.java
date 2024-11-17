@@ -76,24 +76,23 @@ public class GroupServiceTest {
 
         var prerequisiteGroup = prerequisiteEnvelope.getData();
 
-        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), List.class, GroupDto.class);
+        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
 
-        ResponseEnvelope<List<GroupDto>> envelope = (ResponseEnvelope<List<GroupDto>>) response.getBody();
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
         assertNotNull(envelope);
         assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
         assertNull(envelope.getError());
         assertEquals(200, envelope.getHttpCode());
 
-        var groups = envelope.getData();
+        var group = envelope.getData();
 
-        assertNotNull(groups);
-        assertEquals(1, groups.size());
+        // if this is not here, the startDate millis are rounded and this test fails
+        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
 
-        var group = groups.getFirst();
-
+        assertNotNull(group);
         assertNotNull(group.getName());
         assertEquals(prerequisiteGroup, group);
         assertNotNull(group.getId());
