@@ -6,6 +6,7 @@ import pro.beerpong.api.model.dao.Team;
 import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.TeamCreateDto;
+import pro.beerpong.api.model.dto.TeamDto;
 import pro.beerpong.api.repository.TeamRepository;
 
 import java.util.List;

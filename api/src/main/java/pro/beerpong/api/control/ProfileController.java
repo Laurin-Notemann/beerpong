@@ -39,7 +39,7 @@ public class ProfileController {
         }
     }
 
-    @GetMapping
+    @   GetMapping
     public ResponseEntity<ResponseEnvelope<List<ProfileDto>>> listAllProfiles(@PathVariable String groupId) {
         var group = groupService.getGroupById(groupId);
 

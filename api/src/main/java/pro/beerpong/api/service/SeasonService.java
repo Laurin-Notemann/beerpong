@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Season;
@@ -16,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SeasonService {
     private final EventService eventService;
     private final SeasonRepository seasonRepository;
@@ -23,14 +25,6 @@ public class SeasonService {
     private final PlayerService playerService;
 
     private final SeasonMapper seasonMapper;
-
-    public SeasonService(EventService eventService, SeasonRepository seasonRepository, GroupRepository groupRepository, PlayerService playerService, SeasonMapper seasonMapper) {
-        this.eventService = eventService;
-        this.seasonRepository = seasonRepository;
-        this.groupRepository = groupRepository;
-        this.playerService = playerService;
-        this.seasonMapper = seasonMapper;
-    }
 
     public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
         var groupOptional = groupRepository.findById(groupId);
@@ -51,6 +45,7 @@ public class SeasonService {
         if (oldSeason != null) {
             var oldSeasonId = oldSeason.getId();
             oldSeason.setName(dto.getOldSeasonName());
+            oldSeason.setEndDate(ZonedDateTime.now());
 
             seasonRepository.save(oldSeason);
             playerService.copyPlayersFromOldSeason(oldSeasonId, season.getId());

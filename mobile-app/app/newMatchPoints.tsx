@@ -1,15 +1,8 @@
-import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
 
-import Button from '@/components/Button';
-import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
-import MatchVsHeader from '@/components/MatchVsHeader';
-import { mockMatches } from '@/components/mockData/matches';
-import { Feature } from '@/constants/Features';
-import { theme } from '@/theme';
-
-import { HeaderItem } from './(tabs)/_layout';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import { TeamMember } from '@/components/MatchPlayers';
+import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 
 export default function Page() {
     const navigation = useNavigation();
@@ -58,69 +51,10 @@ export default function Page() {
     }
 
     return (
-        <>
-            <Stack.Screen
-                options={{
-                    title: 'Match',
-                    headerStyle: {
-                        backgroundColor: theme.color.topNav,
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
-                    headerRight: () => (
-                        <HeaderItem
-                            onPress={() => {
-                                // @ts-ignore
-                                navigation.navigate('matches');
-                            }}
-                        >
-                            Create
-                        </HeaderItem>
-                    ),
-                    headerTitle: () => (
-                        <MatchVsHeader
-                            match={mockMatches[0]}
-                            style={{
-                                bottom: 4,
-                            }}
-                        />
-                    ),
-                }}
-            />
-            <ScrollView
-                style={{
-                    flex: 1,
-
-                    backgroundColor: theme.color.bg,
-                }}
-                contentContainerStyle={{
-                    paddingHorizontal: 16,
-                    paddingTop: 32,
-                    paddingBottom: 32,
-                }}
-            >
-                {Feature.LIVE_MATCHES.isEnabled && (
-                    <Button
-                        variant="default"
-                        title="Start Live Match"
-                        size="small"
-                        // @ts-ignore
-                        onPress={() => navigation.navigate('startLiveMatch')}
-                    />
-                )}
-                <MatchPlayers
-                    editable
-                    players={players}
-                    setMoveCount={setMoveCount}
-                />
-            </ScrollView>
-        </>
+        <CreateMatchAssignPoints
+            players={players}
+            onCreate={() => navigation.navigate('index')}
+            setMoveCount={setMoveCount}
+        />
     );
 }

@@ -35,7 +35,7 @@ public class MatchController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getAllMatches(@PathVariable String seasonId) {
+    public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getAllMatches(@PathVariable String groupId, @PathVariable String seasonId) {
         return ResponseEnvelope.ok(matchService.getAllMatches(seasonId));
     }
 
@@ -47,6 +47,22 @@ public class MatchController {
             return ResponseEnvelope.ok(match);
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.MATCH_NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseEnvelope<MatchDto>> updateMatch(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id,
+                                                                  @RequestBody MatchCreateDto matchCreateDto) {
+        var match = matchService.updateMatch(groupId, id, matchCreateDto);
+
+        if (match != null) {
+            if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+                return ResponseEnvelope.ok(match);
+            } else {
+                return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.MATCH_VALIDATION_FAILED);
+            }
+        } else {
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
     }
 }

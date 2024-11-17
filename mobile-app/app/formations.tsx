@@ -1,8 +1,8 @@
-import { Link, useNavigation } from 'expo-router';
 import React from 'react';
 import { Dimensions, Text, TouchableHighlight, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -39,7 +39,6 @@ function Item({}: {}) {
                 borderColor: '#444444',
             }}
             underlayColor="#3B3B3B" // Lighter color on touch
-            // @ts-ignore
             onPress={() => nav.navigate('editFormation')}
         >
             {/* <View

@@ -1,11 +1,9 @@
 package pro.beerpong.api.service;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import pro.beerpong.api.mapping.RuleMoveMapper;
+import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dto.RuleMoveCreateDto;
 import pro.beerpong.api.model.dto.RuleMoveDto;
 import pro.beerpong.api.repository.RuleMoveRepository;
@@ -13,6 +11,8 @@ import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.EventService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
+
+import java.util.List;
 
 @Service
 public class RuleMoveService {
@@ -98,6 +98,30 @@ public class RuleMoveService {
         return moveRepository.findBySeasonId(seasonId)
                 .stream()
                 .map(moveMapper::ruleMoveToRuleMoveDto)
+                .toList();
+    }
+
+    public List<RuleMoveDto> copyRuleMovesFromOldSeason(String oldSeasonId, String newSeasonId) {
+        var oldSeason = seasonRepository.findById(oldSeasonId).orElse(null);
+        var newSeason = seasonRepository.findById(newSeasonId).orElse(null);
+
+        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
+            return null;
+        }
+
+        var oldSeasonRuleMoves = moveRepository.findBySeasonId(oldSeasonId);
+
+        return oldSeasonRuleMoves.stream()
+                .map(oldRuleMove -> {
+                    var ruleMove = new RuleMove();
+                    ruleMove.setName(oldRuleMove.getName());
+                    ruleMove.setPointsForTeam(oldRuleMove.getPointsForTeam());
+                    ruleMove.setPointsForScorer(oldRuleMove.getPointsForScorer());
+                    ruleMove.setFinishingMove(oldRuleMove.isFinishingMove());
+                    ruleMove.setSeason(newSeason);
+
+                    return moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(ruleMove));
+                })
                 .toList();
     }
 }
