@@ -48,6 +48,7 @@ jobs:
       - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
       - run: npm i && npm run gen-types && npm run format
         working-directory: mobile-app
+      - run: git status
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
