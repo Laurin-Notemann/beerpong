@@ -21,7 +21,7 @@ import pro.beerpong.api.service.RuleMoveService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/groups/{groupId}/seasons/{seasonId}/ruleMoves")
+@RequestMapping("/groups/{groupId}/seasons/{seasonId}/rule-moves")
 public class RuleMoveController {
     private final RuleMoveService moveService;
 
