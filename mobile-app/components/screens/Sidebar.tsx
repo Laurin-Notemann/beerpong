@@ -112,7 +112,7 @@ export function Sidebar({ appVersion }: SidebarProps) {
                 >
                     No groups to display. {'\n'}
                     <Link
-                        to="joinGroup"
+                        to="/joinGroup"
                         style={{
                             color: theme.color.text.primary,
                             fontWeight: 500,
@@ -122,7 +122,7 @@ export function Sidebar({ appVersion }: SidebarProps) {
                     </Link>{' '}
                     or{' '}
                     <Link
-                        to="createGroup"
+                        to="/createGroup"
                         style={{
                             color: theme.color.text.primary,
                             fontWeight: 500,

@@ -5,8 +5,8 @@ import { theme } from '@/theme';
 
 export interface IconHeadProps {
     iconName: string;
-    title: string;
-    description?: string;
+    title: JSX.Element | string;
+    description?: JSX.Element | string;
 }
 export default function IconHead({
     iconName,

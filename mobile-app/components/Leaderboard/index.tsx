@@ -53,14 +53,14 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                     >
                         No matches played yet. {'\n'}
                         <Link
-                            to="newMatch"
+                            to="/newMatch"
                             style={{
                                 color: theme.color.text.primary,
                                 fontWeight: 500,
                             }}
                         >
                             Create match
-                        </Link>{' '}
+                        </Link>
                     </Text>
                 )}
             </ThemedView>

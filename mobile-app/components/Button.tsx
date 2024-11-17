@@ -53,7 +53,7 @@ export default function Button({
                     height: size === 'large' ? 52 : 42,
 
                     borderRadius: size === 'large' ? 5 : 10,
-                    backgroundColor: style.backgroundColor,
+                    backgroundColor: disabled ? '#666' : style.backgroundColor,
 
                     alignSelf: 'stretch',
                 },
@@ -66,7 +66,9 @@ export default function Button({
                         fontSize: 17,
                         fontWeight: 600,
 
-                        color: style.color,
+                        color: disabled
+                            ? theme.color.text.secondary
+                            : style.color,
                     }}
                 >
                     {title}

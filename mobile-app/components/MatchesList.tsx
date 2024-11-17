@@ -2,14 +2,14 @@ import dayjs, { Dayjs } from 'dayjs';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
+import { Match } from '@/api/propHooks/matchlistPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
+import Button from './Button';
 import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
-import { Match } from '@/api/propHooks/matchlistPropHooks';
-
 
 const getDayName = (date: Dayjs) => {
     const today = dayjs();
@@ -118,7 +118,22 @@ export default function MatchesList({ matches }: MatchesListProps) {
                     <IconHead
                         iconName="format-list-bulleted"
                         title="No Matches Played"
-                        // description="Tap 'New Match' to create a match"
+                        description={
+                            <Button
+                                onPress={() => {}}
+                                title="Create match"
+                                variant="secondary"
+                            />
+                            // <Link
+                            //     to="/joinGroup"
+                            //     style={{
+                            //         color: theme.color.text.primary,
+                            //         fontWeight: 500,
+                            //     }}
+                            // >
+                            //     foo
+                            // </Link>
+                        }
                     />
                 </View>
             }
