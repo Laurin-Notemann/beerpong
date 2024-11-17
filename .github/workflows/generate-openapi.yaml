@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       postgres:
-        image: postgres
+        image: postgres:15
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
@@ -41,5 +41,5 @@ jobs:
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
-          POSTGRES_URL: jdbc:postgresql://postgres:5432/beerpong
+          POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
         working-directory: api
