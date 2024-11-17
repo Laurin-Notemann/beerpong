@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/group/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-import Button from '../Button';
+import ConfirmationModal from '../ConfirmationModal';
 import Text from '../Text';
 
 export interface SidebarGroupItemProps {
@@ -68,6 +70,8 @@ export function Sidebar({ appVersion }: SidebarProps) {
 
     const nav = useNavigation();
 
+    const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+
     return (
         <SafeAreaView
             style={{
@@ -76,19 +80,10 @@ export function Sidebar({ appVersion }: SidebarProps) {
                 paddingHorizontal: 16,
             }}
         >
-            <Button title="clear" onPress={clearGroups} />
-            <Button
-                title="create new group"
-                onPress={() => {
-                    nav.navigate('createGroup');
-                }}
-            />
-            <Button
-                title="join group"
-                onPress={() => {
-                    nav.navigate('joinGroup');
-                }}
-            />
+            <Pressable onPress={() => setShowAddGroupModal(true)}>
+                <Icon name="plus" size={24} color="#fff" />
+            </Pressable>
+
             {groupIds.map((id) => (
                 <SidebarGroupItem
                     key={id}
@@ -97,6 +92,41 @@ export function Sidebar({ appVersion }: SidebarProps) {
                     onPress={() => selectGroup(id)}
                 />
             ))}
+            {groupIds.length < 1 && (
+                <Text
+                    color="secondary"
+                    style={{ textAlign: 'center', paddingTop: 64 }}
+                >
+                    No groups to display
+                </Text>
+            )}
+
+            <ConfirmationModal
+                onClose={() => setShowAddGroupModal(false)}
+                title=""
+                description=""
+                actions={[
+                    {
+                        title: 'Create Group',
+                        type: 'default',
+
+                        onPress: () => {
+                            nav.navigate('createGroup');
+                            setShowAddGroupModal(false);
+                        },
+                    },
+                    {
+                        title: 'Join Group',
+                        type: 'default',
+
+                        onPress: () => {
+                            nav.navigate('joinGroup');
+                            setShowAddGroupModal(false);
+                        },
+                    },
+                ]}
+                isVisible={showAddGroupModal}
+            />
         </SafeAreaView>
     );
 }

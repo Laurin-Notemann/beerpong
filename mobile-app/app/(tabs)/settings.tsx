@@ -3,6 +3,7 @@ import React from 'react';
 import { useGroupSettingsProps } from '@/api/propHooks/groupPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
+import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import GroupSettingsScreen from '@/components/screens/GroupSettings';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -19,18 +20,22 @@ export default function Screen() {
 
     if (error || !props) {
         return (
-            <>
-                <Button
-                    title="dings"
-                    onPress={() => {
-                        refetch();
-                    }}
-                />
-                <Button
-                    title="anderes dings"
-                    onPress={() => nav.navigate('createGroup')}
-                />
-            </>
+            <ErrorScreen
+                message={
+                    <>
+                        <Button
+                            title="refetch"
+                            onPress={() => {
+                                refetch();
+                            }}
+                        />
+                        <Button
+                            title="createGroup"
+                            onPress={() => nav.navigate('createGroup')}
+                        />
+                    </>
+                }
+            />
         );
     }
 
