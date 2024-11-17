@@ -27,11 +27,9 @@ export default function Screen() {
     const players: Player[] = (playersQuery.data?.data ?? []).map((i) => ({
         id: i.id!,
         name: i.profile?.name || 'Unknown',
-        team: matchDraft.blueTeam.players.includes(i.id!)
-            ? 'blue'
-            : matchDraft.redTeam.players.includes(i.id!)
-              ? 'red'
-              : null,
+        team:
+            matchDraft.actions.getPlayers().find((j) => i.id === j.id)?.team ??
+            null,
     }));
 
     async function onSubmit() {
