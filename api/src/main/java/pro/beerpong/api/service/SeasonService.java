@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Season;
@@ -16,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class SeasonService {
     private final EventService eventService;
     private final SeasonRepository seasonRepository;
