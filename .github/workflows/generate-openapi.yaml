@@ -58,6 +58,4 @@ jobs:
         with:
           commit-message: chore - update openapi-types
           title: OpenAPI Types Update
-          base: main
-          delete-branch: true
           branch: update-openapi-types
