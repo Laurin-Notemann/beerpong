@@ -7,6 +7,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
+import { formatGroupCode } from '@/utils/groupCode';
 
 import copyToClipboard from '../copyToClipboard';
 
@@ -152,7 +153,7 @@ export default function GroupSettingsScreen({
                         title="Code"
                         headIcon="share-outline"
                         tailIconType="next"
-                        tailContent={groupCode}
+                        tailContent={formatGroupCode(groupCode)}
                         onPress={() => copyToClipboard(groupCode)}
                     />
                 </MenuSection>
