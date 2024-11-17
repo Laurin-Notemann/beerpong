@@ -1,6 +1,6 @@
 package pro.beerpong.api.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.Player;
@@ -18,9 +18,9 @@ import pro.beerpong.api.sockets.SocketEventData;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class PlayerService {
     private final EventService eventService;
     private final PlayerRepository playerRepository;
@@ -28,20 +28,10 @@ public class PlayerService {
     private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
 
-    @Autowired
-    public PlayerService(EventService eventService, PlayerRepository playerRepository, SeasonRepository seasonRepository,
-                         ProfileRepository profileRepository, PlayerMapper playerMapper) {
-        this.eventService = eventService;
-        this.playerRepository = playerRepository;
-        this.seasonRepository = seasonRepository;
-        this.profileRepository = profileRepository;
-        this.playerMapper = playerMapper;
-    }
-
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
-                .map(playerMapper::playerToPlayerDto)
+                .map(this::createStatisticsEnrichedDto)
                 .toList();
     }
 
@@ -64,7 +54,7 @@ public class PlayerService {
         player.setSeason(season);
         player.setProfile(profile);
 
-        return playerMapper.playerToPlayerDto(playerRepository.save(player));
+        return createStatisticsEnrichedDto(playerRepository.save(player));
     }
 
     public ErrorCodes deletePlayer(String id, String seasonId, String groupId) {
@@ -75,7 +65,7 @@ public class PlayerService {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
                     playerRepository.deleteById(id);
 
-                    eventService.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, playerMapper.playerToPlayerDto(player)));
+                    eventService.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));
                 } else {
                     error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
                 }
@@ -98,9 +88,9 @@ public class PlayerService {
         var oldSeasonPlayers = getBySeasonId(oldSeasonId);
 
         return oldSeasonPlayers.stream()
-                .map(oldPlayer -> {
-                    var player = new Player();
-                    player.setProfile(oldPlayer.getProfile());
+                .map(oldPlayerDto -> {
+                    var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
+                    player.setId(null);
                     player.setSeason(newSeason);
 
                     return playerMapper.playerToPlayerDto(playerRepository.save(player));
@@ -115,4 +105,8 @@ public class PlayerService {
         return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
+    private PlayerDto createStatisticsEnrichedDto(Player player) {
+        player.setStatistics(playerRepository.getStatisticsForPlayer(player.getId()));
+        return playerMapper.playerToPlayerDto(player);
+    }
 }
