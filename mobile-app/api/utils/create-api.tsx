@@ -6,11 +6,13 @@ import React, {
     useEffect,
     useState,
 } from 'react';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import beerpongDefinition from '../../api/generated/openapi.json';
 import { Client as BeerPongClient } from '../../openapi/openapi';
 import { env } from '../env';
+import { useRealtimeConnection } from '../realtime/provider';
+import { createQueryClient } from './query-client';
 
 type ApiContextType = {
     api: Promise<BeerPongClient>;
@@ -29,6 +31,8 @@ const openApi = new OpenAPIClientAxios({
 
 export function ApiProvider({ children }: { children: ReactNode }) {
     const api = openApi.getClient<BeerPongClient>();
+
+    useRealtimeConnection();
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -56,7 +60,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
         error,
     };
 
-    const queryClient = new QueryClient();
+    const queryClient = createQueryClient();
 
     return (
         <QueryClientProvider client={queryClient}>
