@@ -18,12 +18,14 @@ export const useMatchQuery = (
             if (!groupId || !seasonId || !matchId) {
                 return undefined;
             }
-            const res = await (await api).getMatchById({ groupId, seasonId, id: matchId });
+            const res = await (
+                await api
+            ).getMatchById({ groupId, seasonId, id: matchId });
 
             return res?.data;
         },
     });
-}
+};
 
 export const useMatchesQuery = (
     groupId: ApiId | null,

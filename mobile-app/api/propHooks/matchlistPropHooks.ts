@@ -25,7 +25,7 @@ export const useMatchlistProps = () => {
     }
 
     const out: { matches: Match[] } = {
-        matches: mockMatches
+        matches: mockMatches,
         /*
             data?.data?.map((match) => {
                 return {

@@ -11,7 +11,12 @@ function mountPolyfillForStompJs() {
 }
 mountPolyfillForStompJs();
 
-export type RealtimeEventScope = 'GROUPS' | 'MATCHES' | 'SEASONS' | 'PLAYERS' | 'RULES';
+export type RealtimeEventScope =
+    | 'GROUPS'
+    | 'MATCHES'
+    | 'SEASONS'
+    | 'PLAYERS'
+    | 'RULES';
 
 export interface RealtimeEvent<T = RealtimeEventScope> {
     groupId: string;
