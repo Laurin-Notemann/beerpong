@@ -93,10 +93,6 @@ function Everything() {
                             name="player"
                             options={{
                                 ...navStyles,
-                                headerTitle: 'Player',
-                                headerRight: () => (
-                                    <HeaderItem>Edit</HeaderItem>
-                                ),
                                 headerTintColor: 'white',
                                 headerBackTitle: '',
                             }}
