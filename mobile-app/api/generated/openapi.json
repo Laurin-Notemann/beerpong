@@ -33,6 +33,7 @@
                     }
                 }
             },
+
             "put": {
                 "tags": ["group-controller"],
                 "operationId": "updateGroup",
