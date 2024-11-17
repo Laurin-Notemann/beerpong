@@ -45,6 +45,7 @@ public class SeasonService {
         if (oldSeason != null) {
             var oldSeasonId = oldSeason.getId();
             oldSeason.setName(dto.getOldSeasonName());
+            oldSeason.setEndDate(ZonedDateTime.now());
 
             seasonRepository.save(oldSeason);
             playerService.copyPlayersFromOldSeason(oldSeasonId, season.getId());
