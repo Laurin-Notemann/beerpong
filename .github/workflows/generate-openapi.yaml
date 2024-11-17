@@ -84,6 +84,6 @@ jobs:
           commit-message: chore - update openapi-types
           title: OpenAPI Types Update
           branch: update-openapi-types
-          base: main
+          base: ${{ github.head_ref }}
           delete-branch: true
           token: ${{ secrets.GITHUB_TOKEN }}
