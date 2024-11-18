@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import ErrorScreen from '@/components/ErrorScreen';
+import LoadingScreen from '@/components/LoadingScreen';
 import { mockMatches } from '@/components/mockData/matches';
 import PlayerScreen from '@/components/screens/Player';
 
@@ -16,6 +17,11 @@ export default function Page() {
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
     const player = (playersQuery.data?.data ?? []).find((i) => i.id === id);
+
+    if (playersQuery.isLoading) return <LoadingScreen />;
+
+    if (!playersQuery.data?.data)
+        return <ErrorScreen error={playersQuery.error} />;
 
     return (
         <PlayerScreen

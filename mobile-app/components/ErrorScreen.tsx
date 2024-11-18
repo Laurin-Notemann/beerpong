@@ -6,8 +6,13 @@ import Text from './Text';
 
 export interface ErrorScreenProps extends ViewProps {
     message?: string | JSX.Element;
+    error?: unknown;
 }
-export default function ErrorScreen({ message, ...rest }: ErrorScreenProps) {
+export default function ErrorScreen({
+    error,
+    message = error ? (error as Error).message || 'Unknown error' : undefined,
+    ...rest
+}: ErrorScreenProps) {
     return (
         <View
             {...rest}

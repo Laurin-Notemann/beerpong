@@ -2,7 +2,6 @@ import dayjs, { Dayjs } from 'dayjs';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
-import { Match } from '@/api/propHooks/matchlistPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -25,6 +24,12 @@ const getDayName = (date: Dayjs) => {
     } else {
         return date.format('DD.MM.YYYY'); // Full date format, e.g., "10.10.2024"
     }
+};
+
+type Match = {
+    date: Date;
+    redTeam: { name: string }[];
+    blueTeam: { name: string }[];
 };
 
 const groupIntoDays = (matches: Match[]) => {

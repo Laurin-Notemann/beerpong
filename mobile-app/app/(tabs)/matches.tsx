@@ -1,11 +1,17 @@
 import { View } from 'react-native';
 
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
+import ErrorScreen from '@/components/ErrorScreen';
+import LoadingScreen from '@/components/LoadingScreen';
 import MatchesList from '@/components/MatchesList';
 import { theme } from '@/theme';
 
 export default function Screen() {
-    const { matches } = useMatchlistProps();
+    const { props, isLoading, error } = useMatchlistProps();
+
+    if (isLoading) return <LoadingScreen />;
+
+    if (!props) return <ErrorScreen error={error} />;
 
     return (
         <View
@@ -17,7 +23,7 @@ export default function Screen() {
                 flex: 1,
             }}
         >
-            <MatchesList matches={matches} />
+            <MatchesList {...props} />
         </View>
     );
 }
