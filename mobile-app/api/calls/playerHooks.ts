@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { Paths } from '@/openapi/openapi';
 
@@ -25,6 +25,55 @@ export const usePlayersQuery = (
             }
             const res = await (await api).getPlayers({ groupId, seasonId });
 
+            return res?.data;
+        },
+    });
+};
+
+export const useCreatePlayerMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.CreateProfile.Responses.$200 | null,
+        Error,
+        Paths.CreateProfile.RequestBody & { groupId: ApiId; seasonId: ApiId }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).createProfile(body, body);
+            return res?.data;
+        },
+    });
+};
+
+export const useUpdatePlayerMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.UpdateProfile.Responses.$200 | null,
+        Error,
+        Paths.UpdateProfile.RequestBody & {
+            groupId: ApiId;
+            seasonId: ApiId;
+            id: ApiId;
+        }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).updateProfile(body, body);
+            return res?.data;
+        },
+    });
+};
+
+export const useDeletePlayerMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.DeletePlayer.Responses.$200 | null,
+        Error,
+        { groupId: ApiId; seasonId: ApiId; id: ApiId }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).deletePlayer(body);
             return res?.data;
         },
     });

@@ -57,8 +57,12 @@ export default function Page() {
     });
 
     async function onSubmit() {
+        if (!groupId || !seasonId) return;
+
         try {
             await mutateAsync({
+                groupId,
+                seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
             nav.navigate('index');

@@ -51,10 +51,10 @@ export const useCreateMatchMutation = () => {
     return useMutation<
         Paths.CreateMatch.Responses.$200 | null,
         Error,
-        Paths.CreateMatch.RequestBody
+        Paths.CreateMatch.RequestBody & { groupId: ApiId; seasonId: ApiId }
     >({
         mutationFn: async (body) => {
-            const res = await (await api).createMatch(null, body);
+            const res = await (await api).createMatch(body, body);
             return res?.data;
         },
     });
