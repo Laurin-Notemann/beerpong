@@ -8,5 +8,6 @@ import pro.beerpong.api.model.dto.GroupDto;
 @Mapper(componentModel = "spring")
 public interface GroupMapper {
     Group groupCreateDtoToGroup(GroupCreateDto groupDto);
+    Group groupDtoToGroup(GroupDto groupDto);
     GroupDto groupToGroupDto(Group groupDto);
 }
