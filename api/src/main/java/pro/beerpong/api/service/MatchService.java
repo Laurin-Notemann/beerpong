@@ -96,28 +96,19 @@ public class MatchService {
         var dto = matchMapper.matchToMatchDto(match);
 
         if (dto.getSeason().getGroupId().equals(group.getId())) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, group.getId(), dto));
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, group.getId(), dto));
         }
 
         return dto;
     }
 
-    public MatchDto updateMatch(String groupId, String matchId, MatchCreateDto matchCreateDto) {
-        Optional<Match> matchOptional = matchRepository.findById(matchId);
-
-        if (matchOptional.isEmpty()) {
-            return null;
-        }
-
-        Match match = matchOptional.get();
-
-        var groupOptional = groupRepository.findById(groupId);
-        if (groupOptional.isEmpty() || !match.getSeason().equals(groupOptional.get().getActiveSeason())) {
+    public MatchDto updateMatch(Group group, Match match, MatchCreateDto matchCreateDto) {
+        if (match == null || matchCreateDto == null || group == null) {
             return null;
         }
 
         // Step 1: Find all teams associated with the match
-        List<Team> teams = teamRepository.findAllByMatchId(matchId);
+        List<Team> teams = teamRepository.findAllByMatchId(match.getId());
 
         // Step 2: Loop through each team
         for (Team team : teams) {
@@ -149,9 +140,7 @@ public class MatchService {
 
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
 
-        if (updatedDto.getSeason().getGroupId().equals(groupId)) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, updatedDto));
-        }
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, group.getId(), updatedDto));
 
         return updatedDto;
 
@@ -168,5 +157,9 @@ public class MatchService {
         return matchRepository.findById(id)
                 .map(matchMapper::matchToMatchDto)
                 .orElse(null);
+    }
+
+    public Match getRawMatchById(String id) {
+        return matchRepository.findById(id).orElse(null);
     }
 }

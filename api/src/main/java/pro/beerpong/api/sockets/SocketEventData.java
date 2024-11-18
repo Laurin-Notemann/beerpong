@@ -20,7 +20,8 @@ public class SocketEventData<T> {
     // but the client needs to subscribe to events for this group id to receive a create event
     public static final SocketEventData<GroupDto> GROUP_UPDATE = new SocketEventData<>(GroupDto.class, SocketEventType.GROUPS, "groupUpdate");
 
-    public static final SocketEventData<MatchDto> MATCH_UPDATE = new SocketEventData<>(MatchDto.class, SocketEventType.MATCHES, "matchCreate");
+    public static final SocketEventData<MatchDto> MATCH_CREATE = new SocketEventData<>(MatchDto.class, SocketEventType.MATCHES, "matchCreate");
+    public static final SocketEventData<MatchDto> MATCH_UPDATE = new SocketEventData<>(MatchDto.class, SocketEventType.MATCHES, "matchUpdate");
 
     public static final SocketEventData<PlayerDto> PLAYER_CREATE = new SocketEventData<>(PlayerDto.class, SocketEventType.PLAYERS, "playerCreate");
     public static final SocketEventData<PlayerDto> PLAYER_DELETE = new SocketEventData<>(PlayerDto.class, SocketEventType.PLAYERS, "playerDelete");
