@@ -983,7 +983,32 @@
                 "properties": {
                     "id": { "type": "string" },
                     "date": { "type": "string", "format": "date-time" },
-                    "season": { "$ref": "#/components/schemas/Season" }
+                    "season": { "$ref": "#/components/schemas/Season" },
+                    "teams": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/TeamDto" }
+                    },
+                    "teamMembers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TeamMemberDto"
+                        }
+                    },
+                    "matchMoves": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MatchMoveDtoComplete"
+                        }
+                    }
+                }
+            },
+            "MatchMoveDtoComplete": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "value": { "type": "integer", "format": "int32" },
+                    "teamMemberId": { "type": "string" },
+                    "moveId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeMatchDto": {
@@ -993,6 +1018,21 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/MatchDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "TeamDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "matchId": { "type": "string" }
+                }
+            },
+            "TeamMemberDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "teamId": { "type": "string" },
+                    "playerId": { "type": "string" }
                 }
             },
             "ProfileCreateDto": {
