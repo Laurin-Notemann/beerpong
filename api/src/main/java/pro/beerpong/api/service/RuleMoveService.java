@@ -17,6 +17,16 @@ import java.util.List;
 
 @Service
 public class RuleMoveService {
+    private static final List<RuleMove> DEFAULT_RULE_MOVES = List.of(
+            buildRuleMove("Normal", 1, 0, false),
+            buildRuleMove("Bomb", 1, 0, false),
+            buildRuleMove("Bouncer", 1, 0, false),
+            buildRuleMove("Trickshot", 1, 0, false),
+            buildRuleMove("Save", 1, 0, false),
+            buildRuleMove("Finish - Normal", 0, 3, true),
+            buildRuleMove("Finish - Ring of fire", 0, 10, true)
+    );
+
     private final SubscriptionHandler subscriptionHandler;
     private final RuleMoveRepository moveRepository;
     private final SeasonRepository seasonRepository;
@@ -120,5 +130,26 @@ public class RuleMoveService {
 
             moveRepository.save(ruleMove);
         });
+    }
+
+    public void createDefaultRuleMoves(Season season) {
+        DEFAULT_RULE_MOVES.stream()
+                .map(ruleMove -> {
+                    var move = ruleMove.clone();
+                    move.setSeason(season);
+                    return move;
+                })
+                .forEach(moveRepository::save);
+    }
+
+    private static RuleMove buildRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {
+        var ruleMove = new RuleMove();
+
+        ruleMove.setName(name);
+        ruleMove.setPointsForScorer(pointsForScorer);
+        ruleMove.setPointsForTeam(pointsForTeam);
+        ruleMove.setFinishingMove(finish);
+
+        return ruleMove;
     }
 }

@@ -31,6 +31,7 @@ public class GroupService {
     private final GroupMapper groupMapper;
     private final MatchRepository matchRepository;
     private final PlayerService playerService;
+    private final RuleMoveService ruleMoveService;
 
     @Autowired
     public GroupService(SubscriptionHandler subscriptionHandler,
@@ -39,7 +40,8 @@ public class GroupService {
                         ProfileService profileService,
                         GroupMapper groupMapper,
                         MatchRepository matchRepository,
-                        PlayerService playerService) {
+                        PlayerService playerService,
+                        RuleMoveService ruleMoveService) {
         this.subscriptionHandler = subscriptionHandler;
         this.groupRepository = groupRepository;
         this.seasonRepository = seasonRepository;
@@ -47,6 +49,7 @@ public class GroupService {
         this.groupMapper = groupMapper;
         this.matchRepository = matchRepository;
         this.playerService = playerService;
+        this.ruleMoveService = ruleMoveService;
     }
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
@@ -69,6 +72,8 @@ public class GroupService {
             profileDto.setName(s);
             profileService.createProfile(finalGroup.getId(), profileDto);
         });
+
+        ruleMoveService.createDefaultRuleMoves(season);
 
         var dto = groupMapper.groupToGroupDto(group);
 
