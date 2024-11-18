@@ -71,7 +71,7 @@ public class ProfileController {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var updatedProfile = profileService.updateProfile(groupId, id, profileCreateDto);
+            var updatedProfile = profileService.updateProfile(id, profileCreateDto);
 
             if (updatedProfile != null) {
                 return ResponseEnvelope.ok(updatedProfile);
