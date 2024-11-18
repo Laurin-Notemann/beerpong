@@ -25,6 +25,7 @@ public class SeasonService {
     private final GroupRepository groupRepository;
     private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
+    private final RuleService ruleService;
     private final SeasonMapper seasonMapper;
 
     @Autowired
@@ -33,12 +34,14 @@ public class SeasonService {
                          GroupRepository groupRepository,
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
+                         RuleService ruleService,
                          SeasonMapper seasonMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
         this.playerService = playerService;
         this.ruleMoveService = ruleMoveService;
+        this.ruleService = ruleService;
         this.seasonMapper = seasonMapper;
     }
 
@@ -65,6 +68,7 @@ public class SeasonService {
             oldSeason = seasonRepository.save(oldSeason);
 
             playerService.copyPlayersFromOldSeason(oldSeason, season);
+            ruleService.copyRulesFromOldSeason(oldSeason, season);
             ruleMoveService.copyRuleMovesFromOldSeason(oldSeason, season);
         }
 

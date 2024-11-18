@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.RuleMapper;
+import pro.beerpong.api.model.dao.Rule;
+import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
@@ -46,6 +48,22 @@ public class RuleService {
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
 
         return dtos;
+    }
+
+    public void copyRulesFromOldSeason(Season oldSeason, Season newSeason) {
+        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
+            return;
+        }
+
+        ruleRepository.findBySeasonId(oldSeason.getId()).forEach(oldRule -> {
+            var ruleMove = new Rule();
+
+            ruleMove.setTitle(oldRule.getTitle());
+            ruleMove.setDescription(oldRule.getDescription());
+            ruleMove.setSeason(newSeason);
+
+            ruleRepository.save(ruleMove);
+        });
     }
 
     public List<RuleDto> getAllRules(String seasonId) {
