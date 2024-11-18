@@ -1,7 +1,5 @@
 package pro.beerpong.api.control;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +8,6 @@ import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
-import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.MatchService;
 
 import java.util.List;
@@ -28,8 +25,19 @@ public class MatchController {
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
                                                                   @RequestBody MatchCreateDto matchCreateDt) {
-        //TODO maybe provide better error when season has already ended
-        var match = matchService.createNewMatch(groupId, seasonId, matchCreateDt);
+        var pair = matchService.getSeasonAndGroup(groupId, seasonId);
+
+        if (pair.getFirst() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+        } else if (pair.getSecond() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
+        } else if (pair.getSecond().getEndDate() != null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_ALREADY_ENDED);
+        }
+
+        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDt);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {

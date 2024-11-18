@@ -1,21 +1,19 @@
 package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMapper;
-import pro.beerpong.api.model.dao.Match;
-import pro.beerpong.api.model.dao.MatchMove;
-import pro.beerpong.api.model.dao.Team;
-import pro.beerpong.api.model.dao.TeamMember;
+import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
+import pro.beerpong.api.util.NullablePair;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -24,7 +22,7 @@ import java.util.Optional;
 @Service
 public class MatchService {
     private final SubscriptionHandler subscriptionHandler;
-  
+
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
     private final PlayerRepository playerRepository;
@@ -33,13 +31,13 @@ public class MatchService {
     private final TeamMemberRepository teamMemberRepository;
     private final MatchMoveRepository matchMoveRepository;
     private final RuleMoveRepository ruleMoveRepository;
-  
+
     private final TeamService teamService;
     private final MatchMapper matchMapper;
 
     @Autowired
-    public MatchService(SubscriptionHandler subscriptionHandler, 
-                        MatchRepository matchRepository, 
+    public MatchService(SubscriptionHandler subscriptionHandler,
+                        MatchRepository matchRepository,
                         SeasonRepository seasonRepository,
                         PlayerRepository playerRepository,
                         GroupRepository groupRepository,
@@ -50,7 +48,7 @@ public class MatchService {
                         TeamService teamService,
                         MatchMapper matchMapper) {
         this.subscriptionHandler = subscriptionHandler;
-      
+
         this.matchRepository = matchRepository;
         this.seasonRepository = seasonRepository;
         this.playerRepository = playerRepository;
@@ -59,7 +57,7 @@ public class MatchService {
         this.matchMoveRepository = matchMoveRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.ruleMoveRepository = ruleMoveRepository;
-      
+
         this.teamService = teamService;
         this.matchMapper = matchMapper;
     }
@@ -72,25 +70,14 @@ public class MatchService {
                                         ruleMoveRepository.existsById(matchMoveDto.getMoveId()))));
     }
 
+    public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId) {
+        return NullablePair.of(groupRepository.findById(groupId).orElse(null), seasonRepository.findById(seasonId).orElse(null));
+    }
+
     @Transactional
-    public MatchDto createNewMatch(String groupId, String seasonId, MatchCreateDto matchCreateDto) {
-        var seasonOptional = seasonRepository.findById(seasonId);
-        var groupOptional = groupRepository.findById(groupId);
-
-        if (groupOptional.isEmpty()) {return null;}
-        if (!groupOptional.get().getActiveSeason().getId().equals(seasonId)) {return null;}
-
-        if (seasonOptional.isEmpty()) {
-            return null;
-        }
-
-        var season = seasonOptional.get();
-
-        if (!season.getGroupId().equals(groupId)) {
-            return null;
-        }
-
-        if (!validateCreateDto(matchCreateDto)) {
+    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto) {
+        if (!group.getActiveSeason().getId().equals(season.getId()) ||
+                !validateCreateDto(matchCreateDto)) {
             return null;
         }
 
@@ -105,8 +92,8 @@ public class MatchService {
 
         var dto = matchMapper.matchToMatchDto(match);
 
-        if (dto.getSeason().getGroupId().equals(groupId)) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
+        if (dto.getSeason().getGroupId().equals(group.getId())) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, group.getId(), dto));
         }
 
         return dto;
