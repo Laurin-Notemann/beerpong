@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Group;
@@ -82,7 +83,8 @@ public class GroupService {
                 .orElse(null);
     }
 
-    public AssetMetadataDto storeGroupWallpaper(GroupDto groupDto, byte[] content, String contentType) {
+    @Transactional
+    public AssetMetadataDto storeWallpaper(GroupDto groupDto, byte[] content, String contentType) {
         String oldWallpaperAssetId = null;
 
         if (groupDto.getWallpaperAsset() != null) {

@@ -1,7 +1,6 @@
 package pro.beerpong.api.control;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,6 @@ public class GroupAssetController {
     private final GroupService groupService;
 
     @PutMapping("/wallpaper")
-    @Transactional
     public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String groupId, HttpServletRequest request, @RequestBody byte[] content) {
         var group = groupService.getGroupById(groupId);
 
@@ -26,6 +24,6 @@ public class GroupAssetController {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
 
-        return ResponseEnvelope.ok(groupService.storeGroupWallpaper(group, content, request.getContentType()));
+        return ResponseEnvelope.ok(groupService.storeWallpaper(group, content, request.getContentType()));
     }
 }
