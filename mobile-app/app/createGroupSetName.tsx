@@ -1,8 +1,8 @@
 import React from 'react';
-import Toast from 'react-native-root-toast';
 
 import { useCreateGroupMutation } from '@/api/calls/groupHooks';
 import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
+import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -32,10 +32,7 @@ export default function Page() {
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to create group:', err);
-            Toast.show('Failed to create group.', {
-                duration: 1500,
-                position: 1,
-            });
+            showErrorToast('Failed to create group.');
         }
     }
     return <CreateGroupSetName onSubmit={onSubmit} />;

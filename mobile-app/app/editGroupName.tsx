@@ -1,11 +1,11 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import Toast from 'react-native-root-toast';
 
 import { useGroupQuery, useUpdateGroupMutation } from '@/api/calls/groupHooks';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
+import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 import { HeaderItem } from './(tabs)/_layout';
@@ -31,10 +31,7 @@ export default function Page() {
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to update group:', err);
-            Toast.show('Failed to update group.', {
-                duration: 1500,
-                position: 1,
-            });
+            showErrorToast('Failed to update group.');
         }
     }
 

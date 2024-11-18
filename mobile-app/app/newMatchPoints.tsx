@@ -8,6 +8,7 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { TeamMember } from '@/components/MatchPlayers';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
+import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
@@ -68,10 +69,7 @@ export default function Page() {
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
-            Toast.show('Failed to create match.', {
-                duration: 1500,
-                position: 1,
-            });
+            showErrorToast('Failed to create match.');
         }
     }
 

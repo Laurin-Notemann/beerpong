@@ -10,6 +10,7 @@ import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import { mockMatches } from '@/components/mockData/matches';
 import PlayerScreen from '@/components/screens/Player';
+import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 import { useNavigation } from './navigation/useNavigation';
@@ -39,10 +40,7 @@ export default function Page() {
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to delete player:', err);
-            Toast.show('Failed to delete player.', {
-                duration: 1500,
-                position: 1,
-            });
+            showErrorToast('Failed to delete player.');
         }
     }
 

@@ -6,9 +6,6 @@ import { Paths } from '@/openapi/openapi';
 
 import { env } from '../env';
 
-// Type definitions
-export type Group = NonNullable<Paths.GetGroupById.Responses.$200['data']>;
-
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 

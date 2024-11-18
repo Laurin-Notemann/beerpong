@@ -10,6 +10,7 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
+import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 import { HeaderItem } from './(tabs)/_layout';
@@ -43,10 +44,7 @@ export default function Page() {
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to update player:', err);
-            Toast.show('Failed to update player.', {
-                duration: 1500,
-                position: 1,
-            });
+            showErrorToast('Failed to update player.');
         }
     }
 
