@@ -9,6 +9,7 @@ import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.MatchService;
+import pro.beerpong.api.service.SeasonService;
 
 import java.util.List;
 
@@ -16,25 +17,22 @@ import java.util.List;
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
 public class MatchController {
     private final MatchService matchService;
+    private final SeasonService seasonService;
 
     @Autowired
-    public MatchController(MatchService matchService) {
+    public MatchController(MatchService matchService, SeasonService seasonService) {
         this.matchService = matchService;
+        this.seasonService = seasonService;
     }
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
                                                                   @RequestBody MatchCreateDto matchCreateDt) {
-        var pair = matchService.getSeasonAndGroup(groupId, seasonId);
+        var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
+        var error = seasonService.validateActiveSeason(MatchDto.class, pair);
 
-        if (pair.getFirst() == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
-        } else if (pair.getSecond() == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
-        } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
-        } else if (pair.getSecond().getEndDate() != null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_ALREADY_ENDED);
+        if (error != null || pair.getFirst() == null || pair.getSecond() == null) {
+            return error;
         }
 
         var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDt);

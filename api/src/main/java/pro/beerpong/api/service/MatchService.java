@@ -4,11 +4,15 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMapper;
 import pro.beerpong.api.model.dao.*;
+import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
+import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -68,10 +72,6 @@ public class MatchService {
                         playerRepository.existsById(memberDto.getPlayerId()) &&
                                 memberDto.getMoves().stream().allMatch(matchMoveDto ->
                                         ruleMoveRepository.existsById(matchMoveDto.getMoveId()))));
-    }
-
-    public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId) {
-        return NullablePair.of(groupRepository.findById(groupId).orElse(null), seasonRepository.findById(seasonId).orElse(null));
     }
 
     @Transactional
