@@ -6,9 +6,9 @@ import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
 
 export const useMatchQuery = (
-    groupId: ApiId | null,
-    seasonId: ApiId | null,
-    matchId: ApiId | null
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined,
+    matchId: ApiId | null | undefined
 ) => {
     const { api } = useApi();
 
@@ -28,8 +28,8 @@ export const useMatchQuery = (
 };
 
 export const useMatchesQuery = (
-    groupId: ApiId | null,
-    seasonId: ApiId | null
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined
 ) => {
     const { api } = useApi();
 
