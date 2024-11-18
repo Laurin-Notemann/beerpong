@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { Paths } from '@/openapi/openapi';
 
@@ -41,6 +41,20 @@ export const useMatchesQuery = (
             }
             const res = await (await api).getAllMatches({ groupId, seasonId });
 
+            return res?.data;
+        },
+    });
+};
+
+export const useCreateMatchMutation = () => {
+    const { api } = useApi();
+    return useMutation<
+        Paths.CreateMatch.Responses.$200 | null,
+        Error,
+        Paths.CreateMatch.RequestBody
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).createMatch(null, body);
             return res?.data;
         },
     });

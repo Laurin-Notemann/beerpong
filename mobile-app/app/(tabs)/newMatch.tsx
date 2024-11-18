@@ -28,8 +28,8 @@ export default function Screen() {
         id: i.id!,
         name: i.profile?.name || 'Unknown',
         team:
-            matchDraft.actions.getPlayers().find((j) => i.id === j.id)?.team ??
-            null,
+            matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
+                ?.team ?? null,
     }));
 
     async function onSubmit() {

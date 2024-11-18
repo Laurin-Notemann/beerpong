@@ -1,5 +1,4 @@
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { useCreateGroupMutation } from '@/api/calls/groupHooks';
 import ErrorScreen from '@/components/ErrorScreen';
@@ -18,37 +17,30 @@ export default function Page() {
     const nav = useNavigation();
 
     const { members, addName } = useCreateGroupStore();
-    const { mutate, data, status } = useCreateGroupMutation();
+    const { mutateAsync } = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
 
     const [error, setError] = React.useState<string | null>(null);
 
-    useEffect(() => {
-        if (status === 'success' && data?.data) {
-            if (!data.data.id) {
-                setError('Tja da geht wohl was nicht');
-                return;
-            }
+    async function onSubmit(group: { name: string }) {
+        addName(group.name);
 
-            addGroup(data.data.id);
+        const data = await mutateAsync({
+            name: group.name,
+            profileNames: members.map((m) => m.name),
+        });
+        if (!data?.data?.id) {
+            setError('failed to create group');
 
-            nav.navigate('index');
+            return;
         }
-    }, [status, data, addGroup]);
+        addGroup(data.data.id);
+
+        nav.navigate('index');
+    }
 
     if (error) {
         return <ErrorScreen message={error} />;
     }
-
-    return (
-        <CreateGroupSetName
-            onSubmit={(group) => {
-                addName(group.name);
-                mutate({
-                    name: group.name,
-                    profileNames: members.map((m) => m.name),
-                });
-            }}
-        />
-    );
+    return <CreateGroupSetName onSubmit={onSubmit} />;
 }
