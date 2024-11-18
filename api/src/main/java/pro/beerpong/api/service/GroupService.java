@@ -35,6 +35,7 @@ public class GroupService {
     private final GroupMapper groupMapper;
     private final MatchRepository matchRepository;
     private final PlayerService playerService;
+    private final RuleMoveService ruleMoveService;
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
@@ -57,11 +58,9 @@ public class GroupService {
             profileService.createProfile(finalGroup.getId(), profileDto);
         });
 
-        var dto = groupMapper.groupToGroupDto(group);
+        ruleMoveService.createDefaultRuleMoves(season);
 
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
-
-        return dto;
+        return groupMapper.groupToGroupDto(group);
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
@@ -84,6 +83,8 @@ public class GroupService {
 
         if (groupDto == null) {
             return null;
+        } else if (groupDto.getActiveSeason() == null) {
+            return groupDto;
         }
 
         groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
@@ -97,6 +98,16 @@ public class GroupService {
                 .map(existingGroup -> {
                     existingGroup.setName(groupCreateDto.getName());
                     var dto = groupMapper.groupToGroupDto(groupRepository.save(existingGroup));
+
+                    if (dto == null) {
+                        return null;
+                    }
+
+                    if (dto.getActiveSeason() != null) {
+                        dto.setNumberOfMatches(matchRepository.findBySeasonId(dto.getActiveSeason().getId()).size());
+                        dto.setNumberOfPlayers(playerService.getBySeasonId(dto.getActiveSeason().getId()).size());
+                        dto.setNumberOfSeasons(seasonRepository.findByGroupId(dto.getId()).size());
+                    }
 
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_UPDATE, dto.getId(), dto));
 

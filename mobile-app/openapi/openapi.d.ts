@@ -37,10 +37,19 @@ declare namespace Components {
             id?: string;
             date?: string; // date-time
             season?: Season;
+            teams?: TeamDto[];
+            teamMembers?: TeamMemberDto[];
+            matchMoves?: MatchMoveDtoComplete[];
         }
         export interface MatchMoveDto {
             moveId?: string;
             count?: number; // int32
+        }
+        export interface MatchMoveDtoComplete {
+            id?: string;
+            value?: number; // int32
+            teamMemberId?: string;
+            moveId?: string;
         }
         export interface PlayerDto {
             id?: string;
@@ -176,9 +185,18 @@ declare namespace Components {
         export interface TeamCreateDto {
             teamMembers?: TeamMemberCreateDto[];
         }
+        export interface TeamDto {
+            id?: string;
+            matchId?: string;
+        }
         export interface TeamMemberCreateDto {
             playerId?: string;
             moves?: MatchMoveDto[];
+        }
+        export interface TeamMemberDto {
+            id?: string;
+            teamId?: string;
+            playerId?: string;
         }
     }
 }
@@ -918,6 +936,7 @@ export type GroupSettings = Components.Schemas.GroupSettings;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
+export type MatchMoveDtoComplete = Components.Schemas.MatchMoveDtoComplete;
 export type PlayerDto = Components.Schemas.PlayerDto;
 export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
@@ -953,4 +972,6 @@ export type Season = Components.Schemas.Season;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
 export type TeamCreateDto = Components.Schemas.TeamCreateDto;
+export type TeamDto = Components.Schemas.TeamDto;
 export type TeamMemberCreateDto = Components.Schemas.TeamMemberCreateDto;
+export type TeamMemberDto = Components.Schemas.TeamMemberDto;

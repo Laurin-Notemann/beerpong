@@ -2,10 +2,10 @@ package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
@@ -21,6 +21,7 @@ public class ProfileService {
     private final AssetService assetService;
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
+    private final GroupMapper groupMapper;
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
 
@@ -57,6 +58,10 @@ public class ProfileService {
                 .orElse(null);
     }
 
+    public Profile getRawProfileById(String id) {
+        return profileRepository.findById(id).orElse(null);
+    }
+
     public boolean deleteProfile(String id) {
         if (profileRepository.existsById(id)) {
             profileRepository.deleteById(id);
@@ -65,10 +70,15 @@ public class ProfileService {
         return false;
     }
 
-    public ProfileDto updateProfile(String groupId, String id, ProfileCreateDto profileCreateDto) {
-        var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
-        profile.setGroup(groupRepository.findById(groupId).orElseThrow());
-        profile.setId(id);
+    public ProfileDto updateProfile(String id, ProfileCreateDto profileCreateDto) {
+        var profile = getRawProfileById(id);
+
+        if (profile == null) {
+            return null;
+        }
+
+        profile.setName(profileCreateDto.getName());
+
         return profileMapper.profileToProfileDto(profileRepository.save(profile));
     }
 

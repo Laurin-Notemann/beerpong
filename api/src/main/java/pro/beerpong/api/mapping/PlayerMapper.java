@@ -10,5 +10,6 @@ public interface PlayerMapper {
     PlayerDto playerToPlayerDto(Player player);
 
     Player playerCreateDtoToPlayer(PlayerCreateDto dto);
+
     Player playerDtoToPlayer(PlayerDto dto);
 }

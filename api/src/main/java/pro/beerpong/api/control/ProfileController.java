@@ -1,12 +1,9 @@
 package pro.beerpong.api.control;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
@@ -35,18 +32,18 @@ public class ProfileController {
         if (group != null) {
             return ResponseEnvelope.ok(profileService.createProfile(groupId, profileCreateDto));
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
-    @   GetMapping
+    @GetMapping
     public ResponseEntity<ResponseEnvelope<List<ProfileDto>>> listAllProfiles(@PathVariable String groupId) {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-                return ResponseEnvelope.ok(profileService.listAllProfilesOfGroup(groupId));
+            return ResponseEnvelope.ok(profileService.listAllProfilesOfGroup(groupId));
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
@@ -60,28 +57,27 @@ public class ProfileController {
             if (profile != null) {
                 return ResponseEnvelope.ok(profile);
             } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "PROFILE_NOT_FOUND", "Profile not found");
+                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseEnvelope<ProfileDto>> updateProfile(
-            @PathVariable String groupId, @PathVariable String id, @RequestBody ProfileCreateDto profileCreateDto) {
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> updateProfile(@PathVariable String groupId, @PathVariable String id, @RequestBody ProfileCreateDto profileCreateDto) {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var updatedProfile = profileService.updateProfile(groupId, id, profileCreateDto);
+            var updatedProfile = profileService.updateProfile(id, profileCreateDto);
 
             if (updatedProfile != null) {
                 return ResponseEnvelope.ok(updatedProfile);
             } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "PROFILE_NOT_FOUND", "Profile not found");
+                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, "GROUP_NOT_FOUND", "Group not found");
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 

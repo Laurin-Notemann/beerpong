@@ -11,6 +11,7 @@ public interface ProfileMapper {
     @Mapping(source = "groupId", target = "group.id")
     Profile profileDtoToProfile(ProfileDto profileDto);
     Profile profileCreateDtoToProfile(ProfileCreateDto profileCreateDto);
+
     @Mapping(source = "group.id", target = "groupId")
     ProfileDto profileToProfileDto(Profile profile);
 }
