@@ -11,6 +11,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     const props: GroupSettingsProps | null = data?.data
         ? {
+              id: data.data.id!,
               groupCode: data.data.inviteCode!,
               groupName: data.data.name || 'Unknown',
               hasPremium: false,

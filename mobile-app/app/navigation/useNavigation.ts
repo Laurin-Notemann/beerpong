@@ -10,6 +10,7 @@ export type RootStackParamList = {
     joinGroup: undefined;
     pastSeasons: undefined;
     editPlayerName: { id: string };
+    editGroupName: { id: string };
     newMatchPoints: undefined;
     createNewPlayer: undefined;
     aboutPremium: undefined;
