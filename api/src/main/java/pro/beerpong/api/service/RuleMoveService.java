@@ -20,14 +20,14 @@ import java.util.Optional;
 
 @Service
 public class RuleMoveService {
-    private final SubscriptionHandler subscriptionHandler ;
+    private final SubscriptionHandler subscriptionHandler;
     private final RuleMoveRepository moveRepository;
     private final SeasonRepository seasonRepository;
 
     private final RuleMoveMapper moveMapper;
 
     @Autowired
-    public RuleMoveService(SubscriptionHandler subscriptionHandler , RuleMoveRepository moveRepository, SeasonRepository seasonRepository,
+    public RuleMoveService(SubscriptionHandler subscriptionHandler, RuleMoveRepository moveRepository, SeasonRepository seasonRepository,
                            RuleMoveMapper moveMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.moveRepository = moveRepository;
@@ -93,27 +93,23 @@ public class RuleMoveService {
                 .toList();
     }
 
-    public List<RuleMoveDto> copyRuleMovesFromOldSeason(String oldSeasonId, String newSeasonId) {
-        var oldSeason = seasonRepository.findById(oldSeasonId).orElse(null);
-        var newSeason = seasonRepository.findById(newSeasonId).orElse(null);
-
+    public void copyRuleMovesFromOldSeason(Season oldSeason, Season newSeason) {
         if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
-            return null;
+            return;
         }
 
-        var oldSeasonRuleMoves = moveRepository.findBySeasonId(oldSeasonId);
+        var oldSeasonRuleMoves = moveRepository.findBySeasonId(oldSeason.getId());
 
-        return oldSeasonRuleMoves.stream()
-                .map(oldRuleMove -> {
-                    var ruleMove = new RuleMove();
-                    ruleMove.setName(oldRuleMove.getName());
-                    ruleMove.setPointsForTeam(oldRuleMove.getPointsForTeam());
-                    ruleMove.setPointsForScorer(oldRuleMove.getPointsForScorer());
-                    ruleMove.setFinishingMove(oldRuleMove.isFinishingMove());
-                    ruleMove.setSeason(newSeason);
+        oldSeasonRuleMoves.forEach(oldRuleMove -> {
+            var ruleMove = new RuleMove();
 
-                    return moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(ruleMove));
-                })
-                .toList();
+            ruleMove.setName(oldRuleMove.getName());
+            ruleMove.setPointsForTeam(oldRuleMove.getPointsForTeam());
+            ruleMove.setPointsForScorer(oldRuleMove.getPointsForScorer());
+            ruleMove.setFinishingMove(oldRuleMove.isFinishingMove());
+            ruleMove.setSeason(newSeason);
+
+            moveRepository.save(ruleMove);
+        });
     }
 }

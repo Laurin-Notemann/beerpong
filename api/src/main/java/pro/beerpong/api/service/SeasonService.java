@@ -24,18 +24,21 @@ public class SeasonService {
     private final SeasonRepository seasonRepository;
     private final GroupRepository groupRepository;
     private final PlayerService playerService;
+    private final RuleMoveService ruleMoveService;
     private final SeasonMapper seasonMapper;
 
     @Autowired
     public SeasonService(SubscriptionHandler subscriptionHandler, 
                          SeasonRepository seasonRepository, 
                          GroupRepository groupRepository, 
-                         PlayerService playerService, 
+                         PlayerService playerService,
+                         RuleMoveService ruleMoveService,
                          SeasonMapper seasonMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
         this.playerService = playerService;
+        this.ruleMoveService = ruleMoveService;
         this.seasonMapper = seasonMapper;
     }
 
@@ -56,12 +59,13 @@ public class SeasonService {
         var oldSeason = group.getActiveSeason();
 
         if (oldSeason != null) {
-            var oldSeasonId = oldSeason.getId();
             oldSeason.setName(dto.getOldSeasonName());
             oldSeason.setEndDate(ZonedDateTime.now());
 
-            seasonRepository.save(oldSeason);
-            playerService.copyPlayersFromOldSeason(oldSeasonId, season.getId());
+            oldSeason = seasonRepository.save(oldSeason);
+
+            playerService.copyPlayersFromOldSeason(oldSeason, season);
+            ruleMoveService.copyRuleMovesFromOldSeason(oldSeason, season);
         }
 
         group.setActiveSeason(season);

@@ -1,6 +1,5 @@
 package pro.beerpong.api.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.Player;
@@ -27,10 +26,10 @@ public class PlayerService {
     private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
 
-    public PlayerService(SubscriptionHandler subscriptionHandler, 
-                         PlayerRepository playerRepository, 
+    public PlayerService(SubscriptionHandler subscriptionHandler,
+                         PlayerRepository playerRepository,
                          SeasonRepository seasonRepository,
-                         ProfileRepository profileRepository, 
+                         ProfileRepository profileRepository,
                          PlayerMapper playerMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.playerRepository = playerRepository;
@@ -38,7 +37,7 @@ public class PlayerService {
         this.profileRepository = profileRepository;
         this.playerMapper = playerMapper;
     }
-  
+
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
@@ -99,25 +98,20 @@ public class PlayerService {
         return error.get();
     }
 
-    public List<PlayerDto> copyPlayersFromOldSeason(String oldSeasonId, String newSeasonId) {
-        var oldSeason = seasonRepository.findById(oldSeasonId).orElse(null);
-        var newSeason = seasonRepository.findById(newSeasonId).orElse(null);
-
+    public void copyPlayersFromOldSeason(Season oldSeason, Season newSeason) {
         if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
-            return null;
+            return;
         }
 
-        var oldSeasonPlayers = getBySeasonId(oldSeasonId);
+        var oldSeasonPlayers = getBySeasonId(oldSeason.getId());
 
-        return oldSeasonPlayers.stream()
-                .map(oldPlayerDto -> {
-                    var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
-                    player.setId(null);
-                    player.setSeason(newSeason);
+        oldSeasonPlayers.forEach(oldPlayerDto -> {
+            var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
+            player.setId(null);
+            player.setSeason(newSeason);
 
-                    return playerMapper.playerToPlayerDto(playerRepository.save(player));
-                })
-                .toList();
+            playerRepository.save(player);
+        });
     }
 
     public PlayerDto createPlayer(Season season, Profile profile) {
