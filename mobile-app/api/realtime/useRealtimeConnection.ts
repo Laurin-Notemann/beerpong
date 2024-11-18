@@ -14,29 +14,39 @@ export function useRealtimeConnection() {
     const client = useRef(new RealtimeClient(env.realtimeBaseUrl, groupIds));
 
     useEffect(() => {
-        client.current.setGroupIds(groupIds);
+        client.current.subscribeToGroups(groupIds);
     }, [groupIds]);
 
-    client.current.on.event((event) => {
-        switch (event.eventType) {
+    client.current.on.event((e) => {
+        switch (e.eventType) {
             case 'GROUPS':
-                qc.invalidateQueries({ queryKey: ['groups'] });
+                qc.invalidateQueries({ queryKey: ['group', e.groupId] });
                 break;
             case 'MATCHES':
-                // eslint-disable-next-line
-                console.log('MATCHES', event);
+                qc.invalidateQueries({
+                    queryKey: ['group', e.groupId, 'matches'],
+                    exact: false,
+                });
                 break;
             case 'SEASONS':
                 // eslint-disable-next-line
-                console.log('SEASONS', event);
+                console.log('SEASONS', e);
                 break;
             case 'PLAYERS':
-                // eslint-disable-next-line
-                console.log('PLAYERS', event);
+                qc.invalidateQueries({
+                    queryKey: ['group', e.groupId, 'seasons'],
+                    exact: false,
+                });
                 break;
             case 'RULES':
                 // eslint-disable-next-line
-                console.log('RULES', event);
+                console.log('RULES', e);
+                break;
+            case 'RULE_MOVES':
+                qc.invalidateQueries({
+                    queryKey: ['group', e.groupId, 'ruleMoves'],
+                    exact: false,
+                });
                 break;
         }
     });

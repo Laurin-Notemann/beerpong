@@ -11,10 +11,12 @@ import React, {
 import beerpongDefinition from '../../api/generated/openapi.json';
 import { Client as BeerPongClient } from '../../openapi/openapi';
 import { env } from '../env';
-import { useRealtimeConnection } from '../realtime/provider';
+import { RealtimeClient } from '../realtime';
+import { useRealtimeConnection } from '../realtime/useRealtimeConnection';
 import { createQueryClient } from './query-client';
 
 type ApiContextType = {
+    realtime: RealtimeClient;
     api: Promise<BeerPongClient>;
     isLoading: boolean;
     error: Error | null;
@@ -32,7 +34,7 @@ const openApi = new OpenAPIClientAxios({
 export function ApiProvider({ children }: { children: ReactNode }) {
     const api = openApi.getClient<BeerPongClient>();
 
-    useRealtimeConnection();
+    const realtime = useRealtimeConnection();
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -55,6 +57,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const contextValue: ApiContextType = {
+        realtime,
         api,
         isLoading,
         error,

@@ -1,4 +1,3 @@
-import { IMessage } from '@stomp/stompjs';
 import { TextEncoder } from 'text-encoding';
 
 import { Logger, ScopedLogger } from '@/utils/logging';
@@ -13,21 +12,22 @@ function mountPolyfillForStompJs() {
 }
 mountPolyfillForStompJs();
 
-export type RealtimeEventScope =
+export type RealtimeAffectedEntity =
     | 'GROUPS'
     | 'MATCHES'
     | 'SEASONS'
     | 'PLAYERS'
-    | 'RULES';
+    | 'RULES'
+    | 'RULE_MOVES';
 
-export interface RealtimeEvent<T = RealtimeEventScope> {
+export interface RealtimeEvent<T = RealtimeAffectedEntity> {
     groupId: string;
     scope: string;
     eventType: T;
     body?: unknown;
 }
 
-export type RealtimeEventHandler = <T = RealtimeEventScope>(
+export type RealtimeEventHandler = <T = RealtimeAffectedEntity>(
     event: RealtimeEvent<T>
 ) => void;
 
@@ -37,8 +37,10 @@ export class RealtimeClient {
     private logger: Logger;
 
     // @ts-ignore
-    private handlers: Record<RealtimeEventScope | '*', RealtimeEventHandler[]> =
-        {};
+    private handlers: Record<
+        RealtimeAffectedEntity | '*',
+        RealtimeEventHandler[]
+    > = {};
 
     private get url() {
         return this.host + '/update-socket';
@@ -49,7 +51,7 @@ export class RealtimeClient {
             this.ws.send(JSON.stringify(message));
         }
     }
-    private subscribeToGroups() {
+    private _subscribeToGroups() {
         this.sendMessage({ groupIds: this.groupIds });
         this.logger.info('subscribed to groups:', this.groupIds);
     }
@@ -59,7 +61,7 @@ export class RealtimeClient {
 
         this.ws.addEventListener('open', () => {
             this.logger.info('connection opened');
-            this.subscribeToGroups();
+            this._subscribeToGroups();
         });
 
         this.ws.addEventListener('close', () => {
@@ -70,10 +72,7 @@ export class RealtimeClient {
             this.logger.error('error:', e);
         });
 
-        this.ws.addEventListener('message', (e) => {
-            const data = JSON.parse(e.data);
-            this.logger.info('message:', data);
-        });
+        this.ws.addEventListener('message', (e) => this.onMessage(e));
     }
 
     /**
@@ -89,10 +88,13 @@ export class RealtimeClient {
         this.logger = new ScopedLogger('realtime');
     }
 
-    public setGroupIds(groupIds: string[]) {
+    /**
+     * update the connection so we receive events for the new group ids
+     */
+    public subscribeToGroups(groupIds: string[]) {
         this.groupIds = groupIds;
 
-        this.subscribeToGroups();
+        this._subscribeToGroups();
     }
 
     private fireHandlers(event: RealtimeEvent) {
@@ -110,19 +112,21 @@ export class RealtimeClient {
         }
     }
 
-    private onMessage(message: IMessage) {
+    private onMessage(e: MessageEvent<any>) {
         try {
-            const data: RealtimeEvent = JSON.parse(message.body);
+            const data: RealtimeEvent = JSON.parse(e.data);
+
+            this.logger.info('message:', data);
 
             this.fireHandlers(data);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_) {
-            this.logger.error('error json parsing message:', message);
+            this.logger.error('error json parsing message:', e.data);
         }
     }
 
     private registerHandler(
-        scope: RealtimeEventScope | '*',
+        scope: RealtimeAffectedEntity | '*',
         handler: RealtimeEventHandler
     ) {
         if (!this.handlers[scope]) this.handlers[scope] = [];

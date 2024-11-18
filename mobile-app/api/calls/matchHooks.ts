@@ -34,7 +34,7 @@ export const useMatchesQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'season', seasonId],
+        queryKey: ['group', groupId, 'season', seasonId, 'matches'],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
