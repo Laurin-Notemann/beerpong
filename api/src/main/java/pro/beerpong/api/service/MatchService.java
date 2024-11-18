@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.mapping.MatchMapper;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
@@ -15,49 +14,45 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MatchService {
     private final SubscriptionHandler subscriptionHandler;
 
     private final MatchRepository matchRepository;
-    private final SeasonRepository seasonRepository;
+    private final TeamMemberService teamMemberService;
     private final PlayerRepository playerRepository;
-    private final GroupRepository groupRepository; // new field
+    private final MatchMoveService matchMoveService; // new field
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final MatchMoveRepository matchMoveRepository;
     private final RuleMoveRepository ruleMoveRepository;
 
     private final TeamService teamService;
-    private final MatchMapper matchMapper;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
                         MatchRepository matchRepository,
-                        SeasonRepository seasonRepository,
+                        TeamMemberService teamMemberService,
                         PlayerRepository playerRepository,
-                        GroupRepository groupRepository,
+                        MatchMoveService matchMoveService,
                         TeamRepository teamRepository,
                         TeamMemberRepository teamMemberRepository,
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
-                        TeamService teamService,
-                        MatchMapper matchMapper) {
+                        TeamService teamService) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
-        this.seasonRepository = seasonRepository;
+        this.teamMemberService = teamMemberService;
         this.playerRepository = playerRepository;
-        this.groupRepository = groupRepository;
+        this.matchMoveService = matchMoveService;
         this.teamRepository = teamRepository;
         this.matchMoveRepository = matchMoveRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.ruleMoveRepository = ruleMoveRepository;
 
         this.teamService = teamService;
-        this.matchMapper = matchMapper;
     }
 
     private boolean validateCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -93,7 +88,7 @@ public class MatchService {
 
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
 
-        var dto = matchMapper.matchToMatchDto(match);
+        var dto = matchToMatchDto(match);
 
         if (dto.getSeason().getGroupId().equals(group.getId())) {
             subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, group.getId(), dto));
@@ -136,9 +131,11 @@ public class MatchService {
         // Step 8: Delete all teams
         teamRepository.deleteAll(teams);
 
-        MatchDto updatedDto = matchMapper.matchToMatchDto(match);
+        MatchDto updatedDto = matchToEmptyMatchDto(match);
 
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
+
+        loadMatchInfo(match, updatedDto);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, group.getId(), updatedDto));
 
@@ -149,17 +146,49 @@ public class MatchService {
     public List<MatchDto> getAllMatches(String seasonId) {
         return matchRepository.findBySeasonId(seasonId)
                 .stream()
-                .map(matchMapper::matchToMatchDto)
+                .map(this::matchToMatchDto)
                 .toList();
     }
 
     public MatchDto getMatchById(String id) {
         return matchRepository.findById(id)
-                .map(matchMapper::matchToMatchDto)
+                .map(this::matchToMatchDto)
                 .orElse(null);
     }
 
     public Match getRawMatchById(String id) {
         return matchRepository.findById(id).orElse(null);
+    }
+
+    private MatchDto matchToEmptyMatchDto(Match match) {
+        var dto = new MatchDto();
+
+        dto.setId(match.getId());
+        dto.setDate(match.getDate());
+        dto.setSeason(match.getSeason());
+
+        return dto;
+    }
+
+    private MatchDto matchToMatchDto(Match match) {
+        var dto = new MatchDto();
+
+        dto.setId(match.getId());
+        dto.setDate(match.getDate());
+        dto.setSeason(match.getSeason());
+
+        loadMatchInfo(match, dto);
+
+        return dto;
+    }
+
+    private void loadMatchInfo(Match match, MatchDto dto) {
+        var teams = teamService.buildTeamDtos(match);
+        dto.setTeams(teams);
+
+        var teamMembers = teamMemberService.buildTeamMemberDtos(teams);
+        dto.setTeamMembers(teamMembers);
+
+        dto.setMatchMoves(matchMoveService.buildMatchMoveDtos(teamMembers));
     }
 }
