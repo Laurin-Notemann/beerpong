@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import pro.beerpong.api.mapping.RuleMapper;
+import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
 import pro.beerpong.api.repository.RuleRepository;
@@ -19,29 +20,19 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 public class RuleService {
     private final SubscriptionHandler subscriptionHandler ;
     private final RuleRepository ruleRepository;
-    private final SeasonRepository seasonRepository;
 
     private final RuleMapper ruleMapper;
 
     @Autowired
-    public RuleService(SubscriptionHandler subscriptionHandler , RuleRepository matchRepository, SeasonRepository seasonRepository, RuleMapper ruleMapper) {
+    public RuleService(SubscriptionHandler subscriptionHandler , RuleRepository matchRepository, RuleMapper ruleMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.ruleRepository = matchRepository;
-        this.seasonRepository = seasonRepository;
         this.ruleMapper = ruleMapper;
     }
 
     @Transactional
-    public List<RuleDto> writeRules(String groupId, String seasonId, List<RuleCreateDto> rules) {
-        var seasonOptional = seasonRepository.findById(seasonId);
-
-        if (seasonOptional.isEmpty()) {
-            return null;
-        }
-
-        var season = seasonOptional.get();
-
-        ruleRepository.deleteBySeasonId(seasonId);
+    public RuleDto[] writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
+        ruleRepository.deleteBySeasonId(season.getId());
 
         var dtos = rules.stream()
                 .map(dto -> {
@@ -49,12 +40,13 @@ public class RuleService {
                     rule.setSeason(season);
                     return rule;
                 })
-                .filter(dto -> dto.getSeason().getId().equals(seasonId) &&
+                .filter(dto -> dto.getSeason().getId().equals(season.getId()) &&
                         dto.getSeason().getGroupId().equals(groupId))
                 .map(rule -> ruleMapper.ruleToRuleDto(ruleRepository.save(rule)))
-                .toList();
+                .toList()
+                .toArray(new RuleDto[0]);
 
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos));
 
         return dtos;
     }
