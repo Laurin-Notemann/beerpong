@@ -76,11 +76,18 @@ public class PlayerService {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
         playerRepository.findById(id).ifPresentOrElse(player -> {
-            if (player.getSeason().getEndDate() == null) {
-                if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
-                    playerRepository.deleteById(id);
+            var season = seasonRepository.findById(seasonId).orElse(null);
 
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, playerMapper.playerToPlayerDto(player)));
+            if (season == null) {
+                error.set(ErrorCodes.SEASON_NOT_FOUND);
+                return;
+            }
+
+            if (season.getEndDate() == null) {
+                if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));
+
+                    playerRepository.deleteById(id);
                 } else {
                     error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
                 }

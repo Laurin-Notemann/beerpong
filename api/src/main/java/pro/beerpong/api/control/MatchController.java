@@ -28,6 +28,7 @@ public class MatchController {
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
                                                                   @RequestBody MatchCreateDto matchCreateDt) {
+        //TODO maybe provide better error when season has already ended
         var match = matchService.createNewMatch(groupId, seasonId, matchCreateDt);
 
         if (match != null) {
