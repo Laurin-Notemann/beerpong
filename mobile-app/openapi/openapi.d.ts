@@ -6,7 +6,6 @@ import type {
     UnknownParamsObject,
 } from 'openapi-client-axios';
 
-
 declare namespace Components {
     namespace Schemas {
         export interface AssetMetadataDto {
