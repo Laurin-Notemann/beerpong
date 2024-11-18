@@ -31,7 +31,7 @@ public class RuleService {
     }
 
     @Transactional
-    public RuleDto[] writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
+    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
         ruleRepository.deleteBySeasonId(season.getId());
 
         var dtos = rules.stream()
@@ -43,10 +43,9 @@ public class RuleService {
                 .filter(dto -> dto.getSeason().getId().equals(season.getId()) &&
                         dto.getSeason().getGroupId().equals(groupId))
                 .map(rule -> ruleMapper.ruleToRuleDto(ruleRepository.save(rule)))
-                .toList()
-                .toArray(new RuleDto[0]);
+                .toList();
 
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
 
         return dtos;
     }

@@ -34,24 +34,32 @@ public class RuleController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<RuleDto[]>> getRules(@PathVariable String groupId, @PathVariable String seasonId) {
+    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> getRules(@PathVariable String groupId, @PathVariable String seasonId) {
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
-        var error = seasonService.validateSeason(RuleDto[].class, pair);
 
-        if (error != null || pair.getFirst() == null || pair.getSecond() == null) {
-            return error;
+        if (pair.getFirst() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+        } else if (pair.getSecond() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        return ResponseEnvelope.ok(ruleService.getAllRules(seasonId).toArray(new RuleDto[0]));
+        return ResponseEnvelope.ok(ruleService.getAllRules(seasonId));
     }
 
     @PutMapping
-    public ResponseEntity<ResponseEnvelope<RuleDto[]>> writeRules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
+    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> writeRules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
-        var error = seasonService.validateActiveSeason(RuleDto[].class, pair);
 
-        if (error != null || pair.getFirst() == null || pair.getSecond() == null) {
-            return error;
+        if (pair.getFirst() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+        } else if (pair.getSecond() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+        } else if (pair.getSecond().getEndDate() != null) {
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
         var ruleDtos = ruleService.writeRules(groupId, pair.getSecond(), rules);
