@@ -1,4 +1,4 @@
-import { forwardRef, useRef } from 'react';
+import { forwardRef } from 'react';
 import {
     TextInput as ReactNativeTextInput,
     TextInputProps as ReactNativeTextInputProps,

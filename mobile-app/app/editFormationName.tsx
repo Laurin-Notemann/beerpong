@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';

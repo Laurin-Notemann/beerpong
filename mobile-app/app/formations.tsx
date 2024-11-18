@@ -7,7 +7,9 @@ import CupGrid from '@/components/CupGrid';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-function Item({}: {}) {
+interface ItemProps {}
+// eslint-disable-next-line no-empty-pattern
+function Item({}: ItemProps) {
     const size = Math.floor((SCREEN_WIDTH - 32 - 16) / 3);
 
     const nav = useNavigation();

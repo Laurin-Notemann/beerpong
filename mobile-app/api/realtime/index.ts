@@ -96,6 +96,7 @@ export class RealtimeClient {
     }
 
     private fireHandlers(event: RealtimeEvent) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for (const [_, handlers] of Object.entries(this.handlers).filter(
             ([handlerScope]) =>
                 handlerScope === event.eventType || handlerScope === '*'
@@ -103,7 +104,8 @@ export class RealtimeClient {
             for (const handler of handlers) {
                 try {
                     handler(event);
-                } catch (err) {}
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                } catch (_) {}
             }
         }
     }
@@ -113,7 +115,8 @@ export class RealtimeClient {
             const data: RealtimeEvent = JSON.parse(message.body);
 
             this.fireHandlers(data);
-        } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_) {
             this.logger.error('error json parsing message:', message);
         }
     }

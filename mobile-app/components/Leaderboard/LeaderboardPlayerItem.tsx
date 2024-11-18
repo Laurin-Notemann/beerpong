@@ -7,7 +7,7 @@ import Avatar from '../Avatar';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 
-export interface LeaderboardPlayerItem {
+export interface LeaderboardPlayerItemProps {
     placement: number;
 
     name: string;
@@ -26,7 +26,7 @@ export default function LeaderboardPlayerItem({
     matchesWon,
     points,
     elo,
-}: LeaderboardPlayerItem) {
+}: LeaderboardPlayerItemProps) {
     const averagePointsPerMatch = (points / matches).toFixed(1);
 
     const nav = useNavigation();
