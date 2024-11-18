@@ -100,6 +100,7 @@ A list of all event types with their corresponding dto and all available scopes:
 
 #### Players (body: PlayerDto)
 
+* **playerCreate:** When a player is created
 * **playerDelete:** When a player is deleted
 
 #### Rules (body: RuleDto[])

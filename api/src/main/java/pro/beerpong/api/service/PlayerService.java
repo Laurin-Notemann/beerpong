@@ -65,7 +65,11 @@ public class PlayerService {
         player.setSeason(season);
         player.setProfile(profile);
 
-        return createStatisticsEnrichedDto(playerRepository.save(player));
+        var enrichedDto = createStatisticsEnrichedDto(playerRepository.save(player));
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_CREATE, season.getGroupId(), enrichedDto));
+
+        return enrichedDto;
     }
 
     public ErrorCodes deletePlayer(String id, String seasonId, String groupId) {
