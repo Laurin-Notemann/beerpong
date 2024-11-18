@@ -116,8 +116,8 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: chore - update openapi-types
-          title: OpenAPI Types Update
-          branch: update-openapi-types
+          title: OpenAPI Types Update ${{ github.head_ref }}
+          branch: update-openapi-types-${{ github.head_ref }}
           base: ${{ github.head_ref }}
           delete-branch: true
           token: ${{ secrets.GITHUB_TOKEN }}
