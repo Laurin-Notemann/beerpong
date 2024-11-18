@@ -1,5 +1,6 @@
-import { useNavigation } from 'expo-router';
 import { Image, View } from 'react-native';
+
+import { useNavigation } from '@/app/navigation/useNavigation';
 
 import Button from './Button';
 import Text from './Text';
@@ -70,13 +71,11 @@ export default function OnboardingModal({}: {}) {
                 <Button
                     variant="primary"
                     title="Join a Friend Group"
-                    // @ts-ignore
                     onPress={() => navigation.navigate('joinGroup')}
                 />
                 <Button
                     variant="secondary"
                     title="Create a Friend Group"
-                    // @ts-ignore
                     onPress={() => navigation.navigate('createGroup')}
                 />
             </View>

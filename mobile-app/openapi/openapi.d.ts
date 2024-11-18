@@ -12,13 +12,6 @@ declare namespace Components {
             code?: string;
             description?: string;
         }
-        export interface Group {
-            id?: string;
-            name?: string;
-            inviteCode?: string;
-            groupSettings?: GroupSettings;
-            activeSeason?: Season;
-        }
         export interface GroupCreateDto {
             name?: string;
             profileNames?: string[];
@@ -29,6 +22,9 @@ declare namespace Components {
             inviteCode?: string;
             groupSettings?: GroupSettings;
             activeSeason?: Season;
+            numberOfPlayers?: number; // int32
+            numberOfMatches?: number; // int32
+            numberOfSeasons?: number; // int32
         }
         export interface GroupSettings {
             id?: string;
@@ -48,13 +44,13 @@ declare namespace Components {
         }
         export interface PlayerDto {
             id?: string;
-            profile?: Profile;
-            season?: Season;
+            profile?: ProfileDto;
+            season?: SeasonDto;
+            statistics?: PlayerStatisticsDto;
         }
-        export interface Profile {
-            id?: string;
-            name?: string;
-            group?: Group;
+        export interface PlayerStatisticsDto {
+            points?: number; // int64
+            matches?: number; // int64
         }
         export interface ProfileCreateDto {
             name?: string;
@@ -68,12 +64,6 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: GroupDto;
-            error?: ErrorDetails;
-        }
-        export interface ResponseEnvelopeListGroupDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: GroupDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchDto {
@@ -277,7 +267,7 @@ declare namespace Paths {
             inviteCode: Parameters.InviteCode;
         }
         namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeListGroupDto;
+            export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
     namespace GetAllMatches {
@@ -437,6 +427,22 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
+    namespace UpdateMatch {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.MatchCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeMatchDto;
+        }
+    }
     namespace UpdateProfile {
         namespace Parameters {
             export type GroupId = string;
@@ -533,6 +539,22 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
     /**
+     * getMatchById
+     */
+    'getMatchById'(
+        parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetMatchById.Responses.$200>;
+    /**
+     * updateMatch
+     */
+    'updateMatch'(
+        parameters?: Parameters<Paths.UpdateMatch.PathParameters> | null,
+        data?: Paths.UpdateMatch.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+    /**
      * getProfileById
      */
     'getProfileById'(
@@ -589,6 +611,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     /**
+     * getAllMatches
+     */
+    'getAllMatches'(
+        parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
+    /**
      * createMatch
      */
     'createMatch'(
@@ -636,22 +666,6 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetPlayers.Responses.$200>;
-    /**
-     * getAllMatches
-     */
-    'getAllMatches'(
-        parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
-    /**
-     * getMatchById
-     */
-    'getMatchById'(
-        parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetMatchById.Responses.$200>;
     /**
      * getSeasonById
      */
@@ -707,7 +721,7 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.WriteRules.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/ruleMoves/{ruleMoveId}']: {
+    ['/groups/{groupId}/seasons/{seasonId}/rule-moves/{ruleMoveId}']: {
         /**
          * updateRuleMove
          */
@@ -724,6 +738,24 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/matches/{id}']: {
+        /**
+         * getMatchById
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetMatchById.Responses.$200>;
+        /**
+         * updateMatch
+         */
+        'put'(
+            parameters?: Parameters<Paths.UpdateMatch.PathParameters> | null,
+            data?: Paths.UpdateMatch.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
     };
     ['/groups/{groupId}/profiles/{id}']: {
         /**
@@ -771,7 +803,7 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateGroup.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/ruleMoves']: {
+    ['/groups/{groupId}/seasons/{seasonId}/rule-moves']: {
         /**
          * getAllRuleMoves
          */
@@ -789,7 +821,15 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateRuleMove.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/match']: {
+    ['/groups/{groupId}/seasons/{seasonId}/matches']: {
+        /**
+         * getAllMatches
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
         /**
          * createMatch
          */
@@ -847,26 +887,6 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetPlayers.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{seasonId}/matches']: {
-        /**
-         * getAllMatches
-         */
-        'get'(
-            parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetAllMatches.Responses.$200>;
-    };
-    ['/groups/{groupId}/seasons/{seasonId}/matches/{id}']: {
-        /**
-         * getMatchById
-         */
-        'get'(
-            parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetMatchById.Responses.$200>;
-    };
     ['/groups/{groupId}/seasons/{id}']: {
         /**
          * getSeasonById
@@ -892,7 +912,6 @@ export interface PathsDictionary {
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
 export type ErrorDetails = Components.Schemas.ErrorDetails;
-export type Group = Components.Schemas.Group;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupSettings = Components.Schemas.GroupSettings;
@@ -900,13 +919,11 @@ export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
 export type PlayerDto = Components.Schemas.PlayerDto;
-export type Profile = Components.Schemas.Profile;
+export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
-export type ResponseEnvelopeListGroupDto =
-    Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListPlayerDto =

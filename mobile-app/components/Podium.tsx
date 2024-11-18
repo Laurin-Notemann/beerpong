@@ -1,18 +1,11 @@
 import React from 'react';
 
+import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { theme } from '@/theme';
 
 import Avatar from './Avatar';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-
-export interface Player {
-    name: string;
-    points: number;
-    matches: number;
-    matchesWon: number;
-    elo: number;
-}
 
 export interface PodiumProps {
     detailed?: boolean;

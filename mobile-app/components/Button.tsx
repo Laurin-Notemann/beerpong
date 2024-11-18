@@ -3,12 +3,14 @@ import { Text, TouchableHighlight } from 'react-native';
 import { theme } from '@/theme';
 
 export interface ButtonProps {
-    title: string;
+    title: JSX.Element | string;
 
     variant?: 'default' | 'primary' | 'secondary';
     size?: 'small' | 'large';
 
     onPress: () => void;
+
+    disabled?: boolean;
 }
 export default function Button({
     title,
@@ -16,6 +18,8 @@ export default function Button({
     size = 'small',
 
     onPress,
+
+    disabled = false,
 }: ButtonProps) {
     const style = (
         {
@@ -39,6 +43,7 @@ export default function Button({
 
     return (
         <TouchableHighlight
+            disabled={disabled}
             onPress={onPress}
             style={[
                 {
@@ -48,23 +53,29 @@ export default function Button({
                     height: size === 'large' ? 52 : 42,
 
                     borderRadius: size === 'large' ? 5 : 10,
-                    backgroundColor: style.backgroundColor,
+                    backgroundColor: disabled ? '#666' : style.backgroundColor,
 
                     alignSelf: 'stretch',
                 },
             ]}
             underlayColor={style.active}
         >
-            <Text
-                style={{
-                    fontSize: 17,
-                    fontWeight: 600,
+            {typeof title === 'string' ? (
+                <Text
+                    style={{
+                        fontSize: 17,
+                        fontWeight: 600,
 
-                    color: style.color,
-                }}
-            >
-                {title}
-            </Text>
+                        color: disabled
+                            ? theme.color.text.secondary
+                            : style.color,
+                    }}
+                >
+                    {title}
+                </Text>
+            ) : (
+                title
+            )}
         </TouchableHighlight>
     );
 }

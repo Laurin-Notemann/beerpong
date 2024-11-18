@@ -7,4 +7,5 @@ public class PlayerDto {
     private String id;
     private ProfileDto profile;
     private SeasonDto season;
+    private PlayerStatisticsDto statistics;
 }

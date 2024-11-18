@@ -1,126 +1,69 @@
-import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
 
-import Button from '@/components/Button';
-import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
-import MatchVsHeader from '@/components/MatchVsHeader';
-import { mockMatches } from '@/components/mockData/matches';
-import { Feature } from '@/constants/Features';
-import { theme } from '@/theme';
-
-import { HeaderItem } from './(tabs)/_layout';
+import { useGroupQuery } from '@/api/calls/groupHooks';
+import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import { TeamMember } from '@/components/MatchPlayers';
+import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
-    const navigation = useNavigation();
+    const nav = useNavigation();
 
-    const [players, setPlayers] = useState<TeamMember[]>([
-        {
-            id: '#1',
-            team: 'blue',
-            name: 'Bolls',
+    const { selectedGroupId } = useGroupStore();
+
+    const { data: groupQueryData } = useGroupQuery(selectedGroupId);
+
+    const activeSeasonId = groupQueryData?.data?.activeSeason?.id;
+
+    const playersQuery = usePlayersQuery(selectedGroupId, activeSeasonId);
+
+    const movesQuery = useMoves(selectedGroupId, activeSeasonId);
+
+    const allowedMoves = movesQuery.data?.data ?? [];
+
+    // TODO: associate move with playerId and count
+
+    const matchDraft = useMatchDraftStore();
+
+    const newPlayers = matchDraft.actions.getPlayers();
+
+    const profiles = playersQuery.data?.data ?? [];
+
+    // TODO: isFinish, pointsForTeam, stuff like that
+
+    const teamMembers = newPlayers.map<TeamMember>((i) => {
+        const profile = profiles.find((j) => i.id! === j.id!);
+
+        if (!profile?.profile?.name) {
+            throw new Error('failed to get profile for team member');
+        }
+
+        return {
+            ...i,
+            name: profile.profile.name,
             points: 1,
             change: 0.12,
-            moves: [
-                { id: '#1', count: 1, points: 1, title: 'Normal' },
-                { id: '#2', count: 0, points: 2, title: 'Bomb' },
-            ],
-        },
-        {
-            id: '#2',
-            team: 'red',
-            name: 'Schügge',
-            points: 0,
-            change: -0.2,
-            moves: [
-                { id: '#1', count: 0, points: 1, title: 'Normal' },
-                { id: '#2', count: 0, points: 2, title: 'Bomb' },
-            ],
-        },
-    ]);
+            moves: allowedMoves.map((j) => ({
+                id: j.id!,
+                count: i.moves.find((k) => k.id === j.id)?.count ?? 0,
+                title: j.name!,
+                points: j.pointsForScorer!,
+            })),
+        };
+    });
 
-    function setMoveCount(userId: string, moveId: string, count: number) {
-        setPlayers((prev) => {
-            const copy: typeof prev = JSON.parse(JSON.stringify(prev));
-
-            const player = copy.find((i) => i.id === userId);
-
-            if (!player) return prev;
-
-            const move = player?.moves.find((i) => i.id === moveId);
-
-            if (!move) return prev;
-
-            move.count = count;
-
-            return copy;
-        });
+    async function onSubmit() {
+        nav.navigate('index');
     }
 
     return (
-        <>
-            <Stack.Screen
-                options={{
-                    title: 'Match',
-                    headerStyle: {
-                        backgroundColor: theme.color.topNav,
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
-                    headerRight: () => (
-                        <HeaderItem
-                            onPress={() => {
-                                // @ts-ignore
-                                navigation.navigate('matches');
-                            }}
-                        >
-                            Create
-                        </HeaderItem>
-                    ),
-                    headerTitle: () => (
-                        <MatchVsHeader
-                            match={mockMatches[0]}
-                            style={{
-                                bottom: 4,
-                            }}
-                        />
-                    ),
-                }}
-            />
-            <ScrollView
-                style={{
-                    flex: 1,
-
-                    backgroundColor: theme.color.bg,
-                }}
-                contentContainerStyle={{
-                    paddingHorizontal: 16,
-                    paddingTop: 32,
-                    paddingBottom: 32,
-                }}
-            >
-                {Feature.LIVE_MATCHES.isEnabled && (
-                    <Button
-                        variant="default"
-                        title="Start Live Match"
-                        size="small"
-                        // @ts-ignore
-                        onPress={() => navigation.navigate('startLiveMatch')}
-                    />
-                )}
-                <MatchPlayers
-                    editable
-                    players={players}
-                    setMoveCount={setMoveCount}
-                />
-            </ScrollView>
-        </>
+        <CreateMatchAssignPoints
+            players={teamMembers}
+            setMoveCount={matchDraft.actions.setMoveCount}
+            onSubmit={onSubmit}
+        />
     );
 }

@@ -1,8 +1,8 @@
-import { useNavigation } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableHighlight, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
 
 const styles = StyleSheet.create({
@@ -59,7 +59,6 @@ export default function LiveMatchCupControls({
             <TouchableHighlight
                 style={styles.button}
                 underlayColor={theme.panel.light.active}
-                // @ts-ignore
                 onPress={() => nav.navigate('formations')}
             >
                 <>
@@ -90,7 +89,6 @@ export default function LiveMatchCupControls({
             <TouchableHighlight
                 style={styles.button}
                 underlayColor={theme.panel.light.active}
-                // @ts-ignore
                 onPress={() => nav.navigate('formations')}
             >
                 <>

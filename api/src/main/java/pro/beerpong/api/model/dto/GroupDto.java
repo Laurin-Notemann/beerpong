@@ -14,4 +14,7 @@ public class GroupDto {
     private Season activeSeason;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AssetMetadataDto wallpaperAsset;
+    private int numberOfPlayers;
+    private int numberOfMatches;
+    private int numberOfSeasons;
 }

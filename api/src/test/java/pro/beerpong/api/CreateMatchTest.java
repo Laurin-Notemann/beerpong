@@ -1,66 +1,25 @@
 package pro.beerpong.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.GsonBuilder;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import jakarta.transaction.Transactional;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import pro.beerpong.api.model.dto.MatchCreateDto;
-import pro.beerpong.api.model.dto.TeamCreateDto;
-import pro.beerpong.api.model.dto.TeamMemberCreateDto;
-import pro.beerpong.api.model.dto.MatchMoveDto;
-import pro.beerpong.api.repository.MatchMoveRepository;
-import pro.beerpong.api.repository.MatchRepository;
-import pro.beerpong.api.repository.TeamMemberRepository;
-import pro.beerpong.api.repository.TeamRepository;
-import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.model.dto.*;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class CreateMatchTest {
+    @LocalServerPort
+    private int port;
 
-//    @Autowired
-//    private MockMvc mockMvc;
-//
-//    @Autowired
-//    private ObjectMapper objectMapper;
-//
-//    @Autowired
-//    private MatchRepository matchRepository;
-//
-//    @Autowired
-//    private TeamRepository teamRepository;
-//
-//    @Autowired
-//    private TeamMemberRepository teamMemberRepository;
-//
-//    @Autowired
-//    private MatchMoveRepository matchMoveRepository;
-//
-//    @Autowired
-//    private SeasonRepository seasonRepository;
-//
-//    private String groupId = "7967f6ca-1c40-444a-853f-5c226d961323";
-//    private String seasonId = "ed600d6b-7c4a-476b-b280-6bd5d4981b75";
-//
+    @Autowired
+    private TestUtils testUtils;
+
 //    @BeforeEach
 //    void setUp() {
 //        if (seasonRepository.findById(seasonId).isEmpty()) {
@@ -70,105 +29,266 @@ public class CreateMatchTest {
 //            seasonRepository.save(season);
 //        }
 //    }
-//
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void createMatch_withTeamsMembersAndMoves_shouldCreateMatchTeamsAndMoves() throws Exception {
+        var createGroupDto = new GroupCreateDto();
+        createGroupDto.setProfileNames(List.of("player1", "player2", "player3", "player4"));
+        createGroupDto.setName("test");
+
+        var prerequisiteGroupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
+
+        assertNotNull(prerequisiteGroupResponse);
+        assertEquals(200, prerequisiteGroupResponse.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> prerequisiteEnvelope = (ResponseEnvelope<GroupDto>) prerequisiteGroupResponse.getBody();
+        assertNotNull(prerequisiteEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, prerequisiteEnvelope.getStatus());
+        assertNull(prerequisiteEnvelope.getError());
+        assertEquals(200, prerequisiteEnvelope.getHttpCode());
+
+        var prerequisiteGroup = prerequisiteEnvelope.getData();
+
+        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
+        assertNull(envelope.getError());
+        assertEquals(200, envelope.getHttpCode());
+
+        var group = envelope.getData();
+
+        // if this is not here, the startDate millis are rounded and this test fails
+        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
+
+        assertNotNull(group);
+        assertNotNull(group.getName());
+        assertEquals(prerequisiteGroup, group);
+        assertNotNull(group.getId());
+        assertNotNull(group.getInviteCode());
+        assertNotNull(group.getGroupSettings());
+        assertNotNull(group.getGroupSettings().getId());
+        assertNotNull(group.getActiveSeason());
+        assertNotNull(group.getActiveSeason().getId());
+        assertEquals(group.getActiveSeason().getGroupId(), group.getId());
+
+        var season = group.getActiveSeason();
+
+        var playersResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
+
+        assertNotNull(playersResponse);
+        assertEquals(200, playersResponse.getStatusCode().value());
+
+        ResponseEnvelope<List<PlayerDto>> playersEnvelope = (ResponseEnvelope<List<PlayerDto>>) playersResponse.getBody();
+        assertNotNull(playersEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, playersEnvelope.getStatus());
+        assertNull(playersEnvelope.getError());
+        assertEquals(200, playersEnvelope.getHttpCode());
+
+        var players = playersEnvelope.getData();
+
+        var createRulemMoveDto = new RuleMoveCreateDto();
+        createRulemMoveDto.setName("RuleMove1");
+        createRulemMoveDto.setFinishingMove(false);
+        createRulemMoveDto.setPointsForTeam(0);
+        createRulemMoveDto.setPointsForScorer(1);
+
+        var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto, RuleMoveDto.class);
+
+        assertNotNull(ruleMoveResponse);
+        assertEquals(200, ruleMoveResponse.getStatusCode().value());
+
+        ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse.getBody();
+        assertNotNull(ruleMoveEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, ruleMoveEnvelope.getStatus());
+        assertNull(ruleMoveEnvelope.getError());
+        assertEquals(200, ruleMoveEnvelope.getHttpCode());
+
+        var ruleMove = ruleMoveEnvelope.getData();
+
+        // Arrange: Erstelle ein MatchCreateDto mit Teams, TeamMembers und Moves
+        MatchCreateDto matchCreateDto = new MatchCreateDto();
+
+        // Team 1 mit zwei Spielern und ihren Moves
+        TeamCreateDto team1 = new TeamCreateDto();
+        TeamMemberCreateDto member1 = new TeamMemberCreateDto();
+        member1.setPlayerId(players.get(0).getId());
+
+        MatchMoveDto move1 = new MatchMoveDto();
+        move1.setMoveId(ruleMove.getId());
+        move1.setCount(3);
+
+        MatchMoveDto move2 = new MatchMoveDto();
+        move2.setMoveId(ruleMove.getId());
+        move2.setCount(5);
+
+        member1.setMoves(List.of(move1, move2));
+
+        TeamMemberCreateDto member2 = new TeamMemberCreateDto();
+        member2.setPlayerId(players.get(1).getId());
+
+        MatchMoveDto move3 = new MatchMoveDto();
+        move3.setMoveId(ruleMove.getId());
+        move3.setCount(2);
+
+        member2.setMoves(List.of(move3));
+
+        team1.setTeamMembers(List.of(member1, member2));
+
+        // Team 2 mit zwei Spielern und ihren Moves
+        TeamCreateDto team2 = new TeamCreateDto();
+        TeamMemberCreateDto member3 = new TeamMemberCreateDto();
+        member3.setPlayerId(players.get(2).getId());
+
+        MatchMoveDto move4 = new MatchMoveDto();
+        move4.setMoveId(ruleMove.getId());
+        move4.setCount(4);
+
+        member3.setMoves(List.of(move4));
+
+        TeamMemberCreateDto member4 = new TeamMemberCreateDto();
+        member4.setPlayerId(players.get(3).getId());
+
+        MatchMoveDto move5 = new MatchMoveDto();
+        move5.setMoveId(ruleMove.getId());
+        move5.setCount(1);
+
+        MatchMoveDto move6 = new MatchMoveDto();
+        move6.setMoveId(ruleMove.getId());
+        move6.setCount(6);
+
+        member4.setMoves(List.of(move5, move6));
+
+        team2.setTeamMembers(List.of(member3, member4));
+
+        matchCreateDto.setTeams(List.of(team1, team2));
+
+        var createMatchResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", matchCreateDto, MatchDto.class);
+
+        assertNotNull(createMatchResponse);
+        assertEquals(200, createMatchResponse.getStatusCode().value());
+
+        ResponseEnvelope<MatchDto> matchEnvelope = (ResponseEnvelope<MatchDto>) createMatchResponse.getBody();
+        assertNotNull(matchEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, matchEnvelope.getStatus());
+        assertNull(matchEnvelope.getError());
+        assertEquals(200, matchEnvelope.getHttpCode());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void updateMatch_withTeamsMembersAndMoves_shouldUpdateMatchTeamsAndMoves() throws Exception {
+        // Step 1: Create a prerequisite group with players
+        var createGroupDto = new GroupCreateDto();
+        createGroupDto.setProfileNames(List.of("player1", "player2", "player3", "player4"));
+        createGroupDto.setName("test-update");
+
+        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
+        ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
+        var group = groupEnvelope.getData();
+
+        var season = group.getActiveSeason();
+
+        var playersResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
+        ResponseEnvelope<List<PlayerDto>> playersEnvelope = (ResponseEnvelope<List<PlayerDto>>) playersResponse.getBody();
+        var players = playersEnvelope.getData();
+
+        // Step 2: Create a rule move
+        var createRuleMoveDto = new RuleMoveDto();
+        createRuleMoveDto.setName("UpdateRuleMove");
+
+        var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto, RuleMoveDto.class);
+        ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse.getBody();
+        var ruleMove = ruleMoveEnvelope.getData();
+
+        // Step 3: Create a match with teams and members
+        MatchCreateDto matchCreateDto = new MatchCreateDto();
+
+        // Team 1
+        TeamCreateDto team1 = new TeamCreateDto();
+        TeamMemberCreateDto member1 = new TeamMemberCreateDto();
+        member1.setPlayerId(players.get(0).getId());
+        MatchMoveDto move1 = new MatchMoveDto();
+        move1.setMoveId(ruleMove.getId());
+        move1.setCount(3);
+        member1.setMoves(List.of(move1));
+        team1.setTeamMembers(List.of(member1));
+
+        // Team 2
+        TeamCreateDto team2 = new TeamCreateDto();
+        TeamMemberCreateDto member2 = new TeamMemberCreateDto();
+        member2.setPlayerId(players.get(1).getId());
+        MatchMoveDto move2 = new MatchMoveDto();
+        move2.setMoveId(ruleMove.getId());
+        move2.setCount(5);
+        member2.setMoves(List.of(move2));
+        team2.setTeamMembers(List.of(member2));
+
+        matchCreateDto.setTeams(List.of(team1, team2));
+
+        // Step 4: Create the match
+        var createMatchResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", matchCreateDto, MatchDto.class);
+        ResponseEnvelope<MatchDto> matchEnvelope = (ResponseEnvelope<MatchDto>) createMatchResponse.getBody();
+        assert matchEnvelope != null;
+        var match = matchEnvelope.getData();
+
+        team1.getTeamMembers().get(0).getMoves().get(0).setCount(1);
+        matchCreateDto.setTeams(List.of(team1, team2));
+
+        // Step 5: Update the match
+        var updateResponse = testUtils.performPut(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches/" + match.getId(), matchCreateDto, MatchDto.class);
+        ResponseEnvelope<MatchDto> updateEnvelope = (ResponseEnvelope<MatchDto>) updateResponse.getBody();
+
+        // Assertions
+        assertNotNull(updateResponse);
+        assertEquals(200, updateResponse.getStatusCode().value());
+        assertNotNull(updateEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, updateEnvelope.getStatus());
+        assertNull(updateEnvelope.getError());
+        assertEquals(200, updateEnvelope.getHttpCode());
+    }
+
 //    @Test
-//    void createMatch_withTeamsMembersAndMoves_shouldCreateMatchTeamsAndMoves() throws Exception {
-//        // Arrange: Erstelle ein MatchCreateDto mit Teams, TeamMembers und Moves
-//        MatchCreateDto matchCreateDto = new MatchCreateDto();
-//
-//        // Team 1 mit zwei Spielern und ihren Moves
-//        TeamCreateDto team1 = new TeamCreateDto();
-//        TeamMemberCreateDto member1 = new TeamMemberCreateDto();
-//        member1.setPlayerId("92b71f08-da47-47d2-a8ca-90c76c5612e6");
-//
-//        MatchMoveDto move1 = new MatchMoveDto();
-//        move1.setMoveId("move-id-1");
-//        move1.setCount(3);
-//
-//        MatchMoveDto move2 = new MatchMoveDto();
-//        move2.setMoveId("move-id-2");
-//        move2.setCount(5);
-//
-//        member1.setMoves(List.of(move1, move2));
-//
-//        TeamMemberCreateDto member2 = new TeamMemberCreateDto();
-//        member2.setPlayerId("72029175-4a56-4fd7-8a9d-6ddd4ff22d0b");
-//
-//        MatchMoveDto move3 = new MatchMoveDto();
-//        move3.setMoveId("move-id-3");
-//        move3.setCount(2);
-//
-//        member2.setMoves(List.of(move3));
-//
-//        team1.setTeamMembers(List.of(member1, member2));
-//
-//        // Team 2 mit zwei Spielern und ihren Moves
-//        TeamCreateDto team2 = new TeamCreateDto();
-//        TeamMemberCreateDto member3 = new TeamMemberCreateDto();
-//        member3.setPlayerId("ed807176-7ff9-483d-97bb-b3c88335245f");
-//
-//        MatchMoveDto move4 = new MatchMoveDto();
-//        move4.setMoveId("move-id-4");
-//        move4.setCount(4);
-//
-//        member3.setMoves(List.of(move4));
-//
-//        TeamMemberCreateDto member4 = new TeamMemberCreateDto();
-//        member4.setPlayerId("0271df55-5708-48c5-a590-f56afc50ac20");
-//
-//        MatchMoveDto move5 = new MatchMoveDto();
-//        move5.setMoveId("move-id-5");
-//        move5.setCount(1);
-//
-//        MatchMoveDto move6 = new MatchMoveDto();
-//        move6.setMoveId("move-id-6");
-//        move6.setCount(6);
-//
-//        member4.setMoves(List.of(move5, move6));
-//
-//        team2.setTeamMembers(List.of(member3, member4));
-//
-//        matchCreateDto.setTeams(List.of(team1, team2));
-//
-//        // Act: Sende eine POST-Anfrage zum Erstellen des Matches
-//        ResultActions resultActions = mockMvc.perform(post("/groups/{groupId}/seasons/{seasonId}/match", groupId, seasonId)
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(objectMapper.writeValueAsString(matchCreateDto)));
-//
-//        // Assert: Überprüfe die Antwort und die Datenbankeinträge
-//        resultActions.andExpect(status().isOk())
-//                .andExpect(jsonPath("$.status").value("OK"));
-//
-//        // Überprüfe, ob das Match, die Teams, die TeamMembers und die MatchMoves in der Datenbank erstellt wurden
-//        assertThat(matchRepository.findAll()).hasSize(1);
-//        assertThat(teamRepository.findAll()).hasSize(2);
-//        assertThat(teamMemberRepository.findAll()).hasSize(4);
-//        assertThat(matchMoveRepository.findAll()).hasSize(7);
-//    }
-//
-//    @Test
+//    @SuppressWarnings("unchecked")
 //    void getAllMatches_shouldReturnAllMatchesForSeason() throws Exception {
-//        // Arrange: Erstelle ein Match in der Datenbank
+//        // Step 1: Create a prerequisite group with players
+//        var createGroupDto = new GroupCreateDto();
+//        createGroupDto.setProfileNames(List.of("player1", "player2"));
+//        createGroupDto.setName("test-get");
+//
+//        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
+//        ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
+//        var group = groupEnvelope.getData();
+//
+//        var season = group.getActiveSeason();
+//
+//        // Step 2: Create a match
 //        MatchCreateDto matchCreateDto = new MatchCreateDto();
-//        TeamCreateDto team1 = new TeamCreateDto();
-//        TeamMemberCreateDto member1 = new TeamMemberCreateDto();
-//        member1.setPlayerId("player1-id");
-//        team1.setTeamMembers(List.of(member1));
-//        matchCreateDto.setTeams(List.of(team1));
+//        TeamCreateDto team = new TeamCreateDto();
+//        TeamMemberCreateDto member = new TeamMemberCreateDto();
+//        member.setPlayerId("player1-id");
+//        team.setTeamMembers(List.of(member));
+//        matchCreateDto.setTeams(List.of(team));
 //
-//        mockMvc.perform(post("/groups/{groupId}/seasons/{seasonId}/match", groupId, seasonId)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(matchCreateDto)))
-//                .andExpect(status().isOk());
+//        testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/match", matchCreateDto, MatchDto.class);
 //
-//        // Act: Sende eine GET-Anfrage, um alle Matches abzurufen
-//        ResultActions resultActions = mockMvc.perform(get("/groups/{groupId}/seasons/{seasonId}/matches", groupId, seasonId)
-//                .contentType(MediaType.APPLICATION_JSON));
+//        // Step 3: Get all matches for the season
+//        var getAllMatchesResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", List.class, MatchDto.class);
+//        ResponseEnvelope<List<MatchDto>> matchesEnvelope = (ResponseEnvelope<List<MatchDto>>) getAllMatchesResponse.getBody();
 //
-//        // Assert: Überprüfe die Antwort
-//        resultActions.andExpect(status().isOk())
-//                .andExpect(jsonPath("$.status").value("OK"))
-//                .andExpect(jsonPath("$.data").isArray())
-//                .andExpect(jsonPath("$.data.length()").value(1));
+//        // Assertions
+//        assertNotNull(getAllMatchesResponse);
+//        assertEquals(200, getAllMatchesResponse.getStatusCode().value());
+//        assertNotNull(matchesEnvelope);
+//        assertEquals(ResponseEnvelope.Status.OK, matchesEnvelope.getStatus());
+//        assertNull(matchesEnvelope.getError());
+//        assertEquals(200, matchesEnvelope.getHttpCode());
+//        assertNotNull(matchesEnvelope.getData());
+//        assertEquals(1, matchesEnvelope.getData().size());
 //    }
 }
