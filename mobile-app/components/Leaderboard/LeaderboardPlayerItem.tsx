@@ -48,7 +48,7 @@ export default function LeaderboardPlayerItem({
                 height: 60.5,
                 paddingHorizontal: 20,
             }}
-            onPress={() => nav.navigate('player')}
+            onPress={() => nav.navigate('player', { playerId: 'foo' })}
         >
             <ThemedText
                 style={{

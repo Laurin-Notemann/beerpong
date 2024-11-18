@@ -1,28 +1,27 @@
 import { NavigationProp } from '@react-navigation/native';
 import { useNavigation as useRawNavigation } from 'expo-router';
 
-export type ScreenName =
-    | 'index'
-    | 'formations'
-    | 'createGroupSetName'
-    | 'editFormation'
-    | 'editFormation'
-    | 'createGroup'
-    | 'joinGroup'
-    | 'pastSeasons'
-    | 'editPlayerName'
-    | 'newMatchPoints'
-    | 'createNewPlayer'
-    | 'aboutPremium'
-    | 'onboarding'
-    | 'editRankPlayersBy'
-    | 'saveSeason'
-    | 'startLiveMatch'
-    | 'player'
-    | 'match'
-    | 'matches'
-    | 'editFormationName';
-export type RootStackParamList = Record<ScreenName, undefined>;
+export type RootStackParamList = {
+    index: undefined;
+    formations: undefined;
+    createGroupSetName: undefined;
+    editFormation: undefined;
+    createGroup: undefined;
+    joinGroup: undefined;
+    pastSeasons: undefined;
+    editPlayerName: undefined;
+    newMatchPoints: undefined;
+    createNewPlayer: undefined;
+    aboutPremium: undefined;
+    onboarding: undefined;
+    editRankPlayersBy: undefined;
+    saveSeason: undefined;
+    startLiveMatch: undefined;
+    player: { id: string };
+    match: undefined;
+    matches: undefined;
+    editFormationName: undefined;
+};
 export type StackNavigation = NavigationProp<RootStackParamList>;
 
 /**

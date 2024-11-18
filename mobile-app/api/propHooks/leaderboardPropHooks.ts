@@ -6,6 +6,7 @@ export interface LeaderboardProps {
 }
 
 export interface Player {
+    id: string;
     name: string;
     points: number;
     matches: number;
@@ -25,6 +26,7 @@ export const useLeaderboardProps = (
 
     const players: Player[] = data.data.map((player) => {
         return {
+            id: player.id!,
             name: player.profile?.name ?? 'NO NAME FOUND',
             points: 11,
             matches: 12,
