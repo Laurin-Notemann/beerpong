@@ -1,11 +1,13 @@
 package pro.beerpong.api.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.GroupSettings;
 import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
@@ -23,7 +25,9 @@ import java.util.stream.Collectors;
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
 @Service
+@RequiredArgsConstructor
 public class GroupService {
+    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
@@ -32,25 +36,6 @@ public class GroupService {
     private final MatchRepository matchRepository;
     private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
-
-    @Autowired
-    public GroupService(SubscriptionHandler subscriptionHandler,
-                        GroupRepository groupRepository,
-                        SeasonRepository seasonRepository,
-                        ProfileService profileService,
-                        GroupMapper groupMapper,
-                        MatchRepository matchRepository,
-                        PlayerService playerService,
-                        RuleMoveService ruleMoveService) {
-        this.subscriptionHandler = subscriptionHandler;
-        this.groupRepository = groupRepository;
-        this.seasonRepository = seasonRepository;
-        this.profileService = profileService;
-        this.groupMapper = groupMapper;
-        this.matchRepository = matchRepository;
-        this.playerService = playerService;
-        this.ruleMoveService = ruleMoveService;
-    }
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
@@ -129,5 +114,26 @@ public class GroupService {
                     return dto;
                 })
                 .orElse(null);
+    }
+
+    @Transactional
+    public AssetMetadataDto storeWallpaper(GroupDto groupDto, byte[] content, String contentType) {
+        String oldWallpaperAssetId = null;
+
+        if (groupDto.getWallpaperAsset() != null) {
+            oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
+        }
+
+        var assetMetadataDto = assetService.storeAsset(content, contentType);
+
+        groupDto.setWallpaperAsset(assetMetadataDto);
+
+        groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
+
+        if (oldWallpaperAssetId != null) {
+            assetService.deleteAsset(oldWallpaperAssetId);
+        }
+
+        return assetMetadataDto;
     }
 }

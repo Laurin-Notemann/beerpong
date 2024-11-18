@@ -1,10 +1,11 @@
-package pro.beerpong.api.service;
+package pro.beerpong.api.control;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
@@ -15,7 +16,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class GroupServiceTest {
+@ActiveProfiles("test")
+public class GroupControllerTest {
     @LocalServerPort
     private int port;
 

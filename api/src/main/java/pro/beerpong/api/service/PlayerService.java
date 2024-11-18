@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.Player;
@@ -19,24 +20,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
+@RequiredArgsConstructor
 public class PlayerService {
     private final SubscriptionHandler subscriptionHandler;
     private final PlayerRepository playerRepository;
     private final SeasonRepository seasonRepository;
     private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
-
-    public PlayerService(SubscriptionHandler subscriptionHandler,
-                         PlayerRepository playerRepository,
-                         SeasonRepository seasonRepository,
-                         ProfileRepository profileRepository,
-                         PlayerMapper playerMapper) {
-        this.subscriptionHandler = subscriptionHandler;
-        this.playerRepository = playerRepository;
-        this.seasonRepository = seasonRepository;
-        this.profileRepository = profileRepository;
-        this.playerMapper = playerMapper;
-    }
 
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return playerRepository.findAllBySeasonId(seasonId)
