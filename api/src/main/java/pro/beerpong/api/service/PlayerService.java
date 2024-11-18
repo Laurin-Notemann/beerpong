@@ -93,9 +93,7 @@ public class PlayerService {
             return;
         }
 
-        var oldSeasonPlayers = getBySeasonId(oldSeason.getId());
-
-        oldSeasonPlayers.forEach(oldPlayerDto -> {
+        getBySeasonId(oldSeason.getId()).forEach(oldPlayerDto -> {
             var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
             player.setId(null);
             player.setSeason(newSeason);
