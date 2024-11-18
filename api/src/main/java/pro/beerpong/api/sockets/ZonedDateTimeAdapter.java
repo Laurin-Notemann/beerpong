@@ -1,4 +1,4 @@
-package pro.beerpong.api.sockets.types;
+package pro.beerpong.api.sockets;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
