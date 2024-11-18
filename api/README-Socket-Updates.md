@@ -91,15 +91,16 @@ A list of all event types with their corresponding dto and all available scopes:
 
 #### Group (body: GroupDtp)
 
-* **groupCreate:** When a group is created
 * **groupUpdate:** When a group is update
 
 #### Matches (body: MatchDto)
 
 * **matchCreate:** When a match is created
+* **matchUpdate:** When a match is updated
 
 #### Players (body: PlayerDto)
 
+* **playerCreate:** When a player is created
 * **playerDelete:** When a player is deleted
 
 #### Rules (body: RuleDto[])

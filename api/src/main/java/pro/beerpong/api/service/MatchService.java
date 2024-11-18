@@ -1,15 +1,11 @@
 package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMapper;
-import pro.beerpong.api.model.dao.Match;
-import pro.beerpong.api.model.dao.MatchMove;
-import pro.beerpong.api.model.dao.Team;
-import pro.beerpong.api.model.dao.TeamMember;
+import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.repository.*;
@@ -24,7 +20,7 @@ import java.util.Optional;
 @Service
 public class MatchService {
     private final SubscriptionHandler subscriptionHandler;
-  
+
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
     private final PlayerRepository playerRepository;
@@ -33,13 +29,13 @@ public class MatchService {
     private final TeamMemberRepository teamMemberRepository;
     private final MatchMoveRepository matchMoveRepository;
     private final RuleMoveRepository ruleMoveRepository;
-  
+
     private final TeamService teamService;
     private final MatchMapper matchMapper;
 
     @Autowired
-    public MatchService(SubscriptionHandler subscriptionHandler, 
-                        MatchRepository matchRepository, 
+    public MatchService(SubscriptionHandler subscriptionHandler,
+                        MatchRepository matchRepository,
                         SeasonRepository seasonRepository,
                         PlayerRepository playerRepository,
                         GroupRepository groupRepository,
@@ -50,7 +46,7 @@ public class MatchService {
                         TeamService teamService,
                         MatchMapper matchMapper) {
         this.subscriptionHandler = subscriptionHandler;
-      
+
         this.matchRepository = matchRepository;
         this.seasonRepository = seasonRepository;
         this.playerRepository = playerRepository;
@@ -59,38 +55,32 @@ public class MatchService {
         this.matchMoveRepository = matchMoveRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.ruleMoveRepository = ruleMoveRepository;
-      
+
         this.teamService = teamService;
         this.matchMapper = matchMapper;
     }
 
-    private boolean validateCreateDto(MatchCreateDto dto) {
+    private boolean validateCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
         return dto.getTeams().stream().allMatch(teamCreateDto ->
-                teamCreateDto.getTeamMembers().stream().allMatch(memberDto ->
-                        playerRepository.existsById(memberDto.getPlayerId()) &&
-                                memberDto.getMoves().stream().allMatch(matchMoveDto ->
-                                        ruleMoveRepository.existsById(matchMoveDto.getMoveId()))));
+                teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
+                    var player = playerRepository.findById(memberDto.getPlayerId());
+
+                    if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
+                        return false;
+                    }
+
+                    return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
+                        var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
+
+                        return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
+                    });
+                }));
     }
 
     @Transactional
-    public MatchDto createNewMatch(String groupId, String seasonId, MatchCreateDto matchCreateDto) {
-        var seasonOptional = seasonRepository.findById(seasonId);
-        var groupOptional = groupRepository.findById(groupId);
-
-        if (groupOptional.isEmpty()) {return null;}
-        if (!groupOptional.get().getActiveSeason().getId().equals(seasonId)) {return null;}
-
-        if (seasonOptional.isEmpty()) {
-            return null;
-        }
-
-        var season = seasonOptional.get();
-
-        if (!season.getGroupId().equals(groupId)) {
-            return null;
-        }
-
-        if (!validateCreateDto(matchCreateDto)) {
+    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto) {
+        if (!group.getActiveSeason().getId().equals(season.getId()) ||
+                !validateCreateDto(group.getId(), season.getId(), matchCreateDto)) {
             return null;
         }
 
@@ -105,29 +95,20 @@ public class MatchService {
 
         var dto = matchMapper.matchToMatchDto(match);
 
-        if (dto.getSeason().getGroupId().equals(groupId)) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
+        if (dto.getSeason().getGroupId().equals(group.getId())) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, group.getId(), dto));
         }
 
         return dto;
     }
 
-    public MatchDto updateMatch(String groupId, String matchId, MatchCreateDto matchCreateDto) {
-        Optional<Match> matchOptional = matchRepository.findById(matchId);
-
-        if (matchOptional.isEmpty()) {
-            return null;
-        }
-
-        Match match = matchOptional.get();
-
-        var groupOptional = groupRepository.findById(groupId);
-        if (groupOptional.isEmpty() || !match.getSeason().equals(groupOptional.get().getActiveSeason())) {
+    public MatchDto updateMatch(Group group, Match match, MatchCreateDto matchCreateDto) {
+        if (match == null || matchCreateDto == null || group == null) {
             return null;
         }
 
         // Step 1: Find all teams associated with the match
-        List<Team> teams = teamRepository.findAllByMatchId(matchId);
+        List<Team> teams = teamRepository.findAllByMatchId(match.getId());
 
         // Step 2: Loop through each team
         for (Team team : teams) {
@@ -159,9 +140,7 @@ public class MatchService {
 
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
 
-        if (updatedDto.getSeason().getGroupId().equals(groupId)) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, updatedDto));
-        }
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, group.getId(), updatedDto));
 
         return updatedDto;
 
@@ -178,5 +157,9 @@ public class MatchService {
         return matchRepository.findById(id)
                 .map(matchMapper::matchToMatchDto)
                 .orElse(null);
+    }
+
+    public Match getRawMatchById(String id) {
+        return matchRepository.findById(id).orElse(null);
     }
 }

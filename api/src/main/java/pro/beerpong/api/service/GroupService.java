@@ -75,11 +75,7 @@ public class GroupService {
 
         ruleMoveService.createDefaultRuleMoves(season);
 
-        var dto = groupMapper.groupToGroupDto(group);
-
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
-
-        return dto;
+        return groupMapper.groupToGroupDto(group);
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
@@ -96,11 +92,16 @@ public class GroupService {
     }
 
     public GroupDto getGroupById(String id) {
-
         var groupDto = groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
                 .orElse(null);
-        assert groupDto != null;
+
+        if (groupDto == null) {
+            return null;
+        } else if (groupDto.getActiveSeason() == null) {
+            return groupDto;
+        }
+
         groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
         groupDto.setNumberOfPlayers(playerService.getBySeasonId(groupDto.getActiveSeason().getId()).size());
         groupDto.setNumberOfSeasons(seasonRepository.findByGroupId(groupDto.getId()).size());
@@ -112,6 +113,16 @@ public class GroupService {
                 .map(existingGroup -> {
                     existingGroup.setName(groupCreateDto.getName());
                     var dto = groupMapper.groupToGroupDto(groupRepository.save(existingGroup));
+
+                    if (dto == null) {
+                        return null;
+                    }
+
+                    if (dto.getActiveSeason() != null) {
+                        dto.setNumberOfMatches(matchRepository.findBySeasonId(dto.getActiveSeason().getId()).size());
+                        dto.setNumberOfPlayers(playerService.getBySeasonId(dto.getActiveSeason().getId()).size());
+                        dto.setNumberOfSeasons(seasonRepository.findByGroupId(dto.getId()).size());
+                    }
 
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_UPDATE, dto.getId(), dto));
 

@@ -4,7 +4,11 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.dao.Group;
+import pro.beerpong.api.model.dao.Profile;
+import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;
@@ -17,14 +21,16 @@ import java.util.stream.Collectors;
 public class ProfileService {
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
+    private final GroupMapper groupMapper;
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
 
     @Autowired
-    public ProfileService(ProfileRepository profileRepository, GroupRepository groupRepository, ProfileMapper profileMapper,
+    public ProfileService(ProfileRepository profileRepository, GroupRepository groupRepository, GroupMapper groupMapper, ProfileMapper profileMapper,
                           PlayerService playerService) {
         this.profileRepository = profileRepository;
         this.groupRepository = groupRepository;
+        this.groupMapper = groupMapper;
         this.profileMapper = profileMapper;
         this.playerService = playerService;
     }
@@ -62,6 +68,10 @@ public class ProfileService {
                 .orElse(null);
     }
 
+    public Profile getRawProfileById(String id) {
+        return profileRepository.findById(id).orElse(null);
+    }
+
     public boolean deleteProfile(String id) {
         if (profileRepository.existsById(id)) {
             profileRepository.deleteById(id);
@@ -70,10 +80,16 @@ public class ProfileService {
         return false;
     }
 
-    public ProfileDto updateProfile(String groupId, String id, ProfileCreateDto profileCreateDto) {
-        var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
-        profile.setGroup(groupRepository.findById(groupId).orElseThrow());
-        profile.setId(id);
+    public ProfileDto updateProfile(String id, ProfileCreateDto profileCreateDto) {
+        var profile = getRawProfileById(id);
+
+        if (profile == null) {
+            return null;
+        }
+
+        profile.setName(profileCreateDto.getName());
+        //TODO update asset
+
         return profileMapper.profileToProfileDto(profileRepository.save(profile));
     }
 }

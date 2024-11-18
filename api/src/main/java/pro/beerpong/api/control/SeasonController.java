@@ -46,7 +46,7 @@ public class SeasonController {
 
     @GetMapping("/seasons/{id}")
     public ResponseEntity<ResponseEnvelope<SeasonDto>> getSeasonById(@PathVariable String groupId, @PathVariable String id) {
-        var season = seasonService.getSeasonById(groupId, id);
+        var season = seasonService.getSeasonById(id);
 
         if (season != null && season.getGroupId().equals(groupId)) {
             return ResponseEnvelope.ok(season);

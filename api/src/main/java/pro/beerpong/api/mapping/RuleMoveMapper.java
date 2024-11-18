@@ -12,5 +12,6 @@ import pro.beerpong.api.model.dto.RuleMoveDto;
 @Mapper(componentModel = "spring")
 public interface RuleMoveMapper {
     RuleMove ruleMoveCreateDtoToRuleMove(RuleMoveCreateDto dto);
+    RuleMove ruleMoveDtoToRuleMove(RuleMoveDto dto);
     RuleMoveDto ruleMoveToRuleMoveDto(RuleMove move);
 }
