@@ -111,14 +111,6 @@ jobs:
       - run: npm ci && npm run gen-types && npm run format
         if: steps.check_authors.outputs.has_bot_author != 'true'
         working-directory: mobile-app
-
-      - name: Create Pull Request
-        if: steps.check_authors.outputs.has_bot_author != 'true'
-        uses: peter-evans/create-pull-request@v7
+      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit-message: chore - update openapi-types
-          title: OpenAPI Types Update ${{ github.head_ref }}
-          branch: update-openapi-types-${{ github.head_ref }}
-          base: ${{ github.head_ref }}
-          delete-branch: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: 'chore: update openapi types'
