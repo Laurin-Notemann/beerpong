@@ -1,8 +1,10 @@
 package pro.beerpong.api.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
+    private final AssetService assetService;
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
     private final ProfileMapper profileMapper;
@@ -65,5 +68,26 @@ public class ProfileService {
         profile.setGroup(groupRepository.findById(groupId).orElseThrow());
         profile.setId(id);
         return profileMapper.profileToProfileDto(profileRepository.save(profile));
+    }
+
+    @Transactional
+    public AssetMetadataDto storeProfilePicture(ProfileDto profileDto, byte[] content, String contentType) {
+        String oldProfilePictureAssetId = null;
+
+        if (profileDto.getAvatarAsset() != null) {
+            oldProfilePictureAssetId = profileDto.getAvatarAsset().getId();
+        }
+
+        var assetMetadataDto = assetService.storeAsset(content, contentType);
+
+        profileDto.setAvatarAsset(assetMetadataDto);
+
+        profileRepository.save(profileMapper.profileDtoToProfile(profileDto));
+
+        if (oldProfilePictureAssetId != null) {
+            assetService.deleteAsset(oldProfilePictureAssetId);
+        }
+
+        return assetMetadataDto;
     }
 }

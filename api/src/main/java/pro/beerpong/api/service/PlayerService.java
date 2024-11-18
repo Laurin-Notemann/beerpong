@@ -15,7 +15,6 @@ import pro.beerpong.api.repository.SeasonRepository;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
@@ -93,7 +92,9 @@ public class PlayerService {
         return oldSeasonPlayers.stream()
                 .map(oldPlayer -> {
                     var player = new Player();
-                    player.setProfile(oldPlayer.getProfile());
+                    var profile = new Profile();
+                    profile.setId(oldPlayer.getProfile().getId());
+                    player.setProfile(profile);
                     player.setSeason(newSeason);
 
                     return playerMapper.playerToPlayerDto(playerRepository.save(player));
