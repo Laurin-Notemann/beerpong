@@ -1,5 +1,7 @@
-import { Client, IMessage } from '@stomp/stompjs';
+import { IMessage } from '@stomp/stompjs';
 import { TextEncoder } from 'text-encoding';
+
+import { Logger, ScopedLogger } from '@/utils/logging';
 
 /**
  * stompjs is an abstraction layer on top of websocket that uses the global TextEncoder class.
@@ -30,51 +32,48 @@ export type RealtimeEventHandler = <T = RealtimeEventScope>(
 ) => void;
 
 export class RealtimeClient {
-    // private ws!: WebSocket;
+    private ws!: WebSocket;
 
-    private client!: Client;
+    private logger: Logger;
 
     // @ts-ignore
     private handlers: Record<RealtimeEventScope | '*', RealtimeEventHandler[]> =
         {};
 
     private get url() {
-        const fragment =
-            this.groupIds.length > 0
-                ? '?groups=' + this.groupIds.join(',')
-                : '';
+        return this.host + '/update-socket';
+    }
 
-        return this.host + '/update-socket' + fragment;
+    private sendMessage(message: unknown) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(message));
+        }
+    }
+    private subscribeToGroups() {
+        this.sendMessage({ groupIds: this.groupIds });
+        this.logger.info('subscribed to groups:', this.groupIds);
     }
 
     private connect() {
-        const stompClient = new Client({
-            webSocketFactory: () => new WebSocket(this.url),
-            onConnect: () => {
-                stompClient.subscribe('/events', (message) => {
-                    this.onMessage(message);
-                });
-            },
-            onStompError: (err) => {
-                // eslint-disable-next-line
-                console.error('[realtime] stomp error:', err);
-            },
-            onWebSocketError: (err) => {
-                // eslint-disable-next-line
-                console.error('[realtime] websocket error:', err);
-            },
-            onDisconnect: () => {},
-            onWebSocketClose: () => {},
-        });
-        stompClient.activate();
-    }
-    private disconnect() {
-        this.client?.deactivate();
-    }
+        this.ws = new WebSocket(this.url);
 
-    private reconnect() {
-        this.disconnect();
-        this.connect();
+        this.ws.addEventListener('open', () => {
+            this.logger.info('connection opened');
+            this.subscribeToGroups();
+        });
+
+        this.ws.addEventListener('close', () => {
+            this.logger.info('connection closed');
+        });
+
+        this.ws.addEventListener('error', (e) => {
+            this.logger.error('error:', e);
+        });
+
+        this.ws.addEventListener('message', (e) => {
+            const data = JSON.parse(e.data);
+            this.logger.info('message:', data);
+        });
     }
 
     /**
@@ -86,12 +85,14 @@ export class RealtimeClient {
         private groupIds: string[]
     ) {
         this.connect();
+
+        this.logger = new ScopedLogger('realtime');
     }
 
     public setGroupIds(groupIds: string[]) {
         this.groupIds = groupIds;
 
-        this.reconnect();
+        this.subscribeToGroups();
     }
 
     private fireHandlers(event: RealtimeEvent) {
@@ -113,8 +114,7 @@ export class RealtimeClient {
 
             this.fireHandlers(data);
         } catch (err) {
-            // eslint-disable-next-line
-            console.error('[realtime] error json parsing message:', err);
+            this.logger.error('error json parsing message:', message);
         }
     }
 
