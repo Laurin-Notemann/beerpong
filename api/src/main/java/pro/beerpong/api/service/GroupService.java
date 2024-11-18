@@ -2,6 +2,7 @@ package pro.beerpong.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.GroupSettings;
 import pro.beerpong.api.model.dao.Season;
@@ -9,7 +10,6 @@ import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.repository.GroupRepository;
-import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;

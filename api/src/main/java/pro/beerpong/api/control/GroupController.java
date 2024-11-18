@@ -10,8 +10,6 @@ import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.GroupService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/groups")
 public class GroupController {

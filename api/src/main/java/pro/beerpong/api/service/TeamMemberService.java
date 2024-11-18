@@ -3,7 +3,6 @@ package pro.beerpong.api.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.TeamMemberMapper;
-import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dao.Team;
 import pro.beerpong.api.model.dao.TeamMember;
 import pro.beerpong.api.model.dto.TeamDto;
