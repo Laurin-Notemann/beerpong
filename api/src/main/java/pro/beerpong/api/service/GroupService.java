@@ -70,11 +70,7 @@ public class GroupService {
             profileService.createProfile(finalGroup.getId(), profileDto);
         });
 
-        var dto = groupMapper.groupToGroupDto(group);
-
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_CREATE, group.getId(), dto));
-
-        return dto;
+        return groupMapper.groupToGroupDto(group);
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {

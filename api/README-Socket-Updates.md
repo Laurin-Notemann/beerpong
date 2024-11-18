@@ -91,7 +91,6 @@ A list of all event types with their corresponding dto and all available scopes:
 
 #### Group (body: GroupDtp)
 
-* **groupCreate:** When a group is created
 * **groupUpdate:** When a group is update
 
 #### Matches (body: MatchDto)
