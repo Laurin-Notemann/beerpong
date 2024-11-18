@@ -68,6 +68,40 @@
                 }
             }
         },
+        "/groups/{groupId}/wallpaper": {
+            "put": {
+                "tags": ["group-asset-controller"],
+                "operationId": "setWallpaper",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": { "type": "string", "format": "byte" }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{seasonId}/rules": {
             "get": {
                 "tags": ["rule-controller"],
@@ -304,6 +338,46 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{profileId}/avatar": {
+            "put": {
+                "tags": ["profile-asset-controller"],
+                "operationId": "setWallpaper_1",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "profileId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": { "type": "string", "format": "byte" }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
                                 }
                             }
                         }
@@ -783,6 +857,56 @@
                 }
             }
         },
+        "/assets/{id}": {
+            "get": {
+                "tags": ["asset-controller"],
+                "operationId": "getAsset",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/{id}/data": {
+            "get": {
+                "tags": ["asset-controller"],
+                "operationId": "fetchData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": { "type": "object" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{seasonId}/players/{id}": {
             "delete": {
                 "tags": ["player-controller"],
@@ -834,6 +958,15 @@
                     }
                 }
             },
+            "AssetMetadataDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "url": { "type": "string" },
+                    "mediaType": { "type": "string" },
+                    "uploadedAt": { "type": "string", "format": "date-time" }
+                }
+            },
             "ErrorDetails": {
                 "type": "object",
                 "properties": {
@@ -851,6 +984,9 @@
                         "$ref": "#/components/schemas/GroupSettings"
                     },
                     "activeSeason": { "$ref": "#/components/schemas/Season" },
+                    "wallpaperAsset": {
+                        "$ref": "#/components/schemas/AssetMetadataDto"
+                    },
                     "numberOfPlayers": { "type": "integer", "format": "int32" },
                     "numberOfMatches": { "type": "integer", "format": "int32" },
                     "numberOfSeasons": { "type": "integer", "format": "int32" }
@@ -880,6 +1016,15 @@
                     "startDate": { "type": "string", "format": "date-time" },
                     "endDate": { "type": "string", "format": "date-time" },
                     "groupId": { "type": "string" }
+                }
+            },
+            "ResponseEnvelopeAssetMetadataDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/AssetMetadataDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "RuleCreateDto": {
@@ -1044,6 +1189,9 @@
                 "properties": {
                     "id": { "type": "string" },
                     "name": { "type": "string" },
+                    "avatarAsset": {
+                        "$ref": "#/components/schemas/AssetMetadataDto"
+                    },
                     "groupId": { "type": "string" }
                 }
             },
