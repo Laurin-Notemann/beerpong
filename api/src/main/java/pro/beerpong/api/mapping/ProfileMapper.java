@@ -9,6 +9,7 @@ import pro.beerpong.api.model.dto.ProfileDto;
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
     Profile profileCreateDtoToProfile(ProfileCreateDto profileCreateDto);
+
     @Mapping(source = "group.id", target = "groupId")
     ProfileDto profileToProfileDto(Profile profile);
 }

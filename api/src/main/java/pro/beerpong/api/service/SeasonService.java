@@ -28,9 +28,9 @@ public class SeasonService {
     private final SeasonMapper seasonMapper;
 
     @Autowired
-    public SeasonService(SubscriptionHandler subscriptionHandler, 
-                         SeasonRepository seasonRepository, 
-                         GroupRepository groupRepository, 
+    public SeasonService(SubscriptionHandler subscriptionHandler,
+                         SeasonRepository seasonRepository,
+                         GroupRepository groupRepository,
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
                          SeasonMapper seasonMapper) {

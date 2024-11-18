@@ -2,15 +2,7 @@ package pro.beerpong.api.sockets;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.MatchDto;
-import pro.beerpong.api.model.dto.PlayerDto;
-import pro.beerpong.api.model.dto.RuleDto;
-import pro.beerpong.api.model.dto.RuleMoveDto;
-import pro.beerpong.api.model.dto.SeasonDto;
-import pro.beerpong.api.model.dto.SeasonStartDto;
-
-import java.util.List;
+import pro.beerpong.api.model.dto.*;
 
 @Getter
 @RequiredArgsConstructor
