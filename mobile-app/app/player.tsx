@@ -55,6 +55,7 @@ export default function Page() {
 
     return (
         <PlayerScreen
+            id={id}
             placement={6}
             name={player?.profile?.name || 'Unknown'}
             elo={216}

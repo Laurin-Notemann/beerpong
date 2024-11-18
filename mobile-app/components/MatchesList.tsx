@@ -26,7 +26,7 @@ const getDayName = (date: Dayjs) => {
     }
 };
 
-type Match = {
+export type Match = {
     date: Date;
     redTeam: { name: string }[];
     blueTeam: { name: string }[];

@@ -10,19 +10,10 @@ import { HeaderItem } from './(tabs)/_layout';
 export default function Page() {
     const [value, setValue] = useState('');
 
-    // useLayoutEffect(() => {
-    //   navigation.setOptions({
-    //     presentation: "modal",
-    //   });
-    // }, [navigation]);
-
     return (
         <>
             <Stack.Screen
                 options={{
-                    // presentation: "modal",
-
-                    // headerLeft: () => <HeaderItem noMargin>Back</HeaderItem>,
                     headerRight: () => <HeaderItem noMargin>Done</HeaderItem>,
 
                     headerTitle: 'Formation Name',
@@ -42,8 +33,8 @@ export default function Page() {
                 <TextInput
                     required
                     placeholder="Formation Name"
-                    value={value}
-                    onChangeText={setValue}
+                    defaultValue={value}
+                    onChangeText={(text) => setValue(text.trim())}
                     autoFocus
                     style={{
                         alignSelf: 'stretch',
@@ -53,9 +44,3 @@ export default function Page() {
         </>
     );
 }
-
-Page.options = {
-    presentation: 'modal',
-
-    headerRight: () => <HeaderItem noMargin>Dan</HeaderItem>,
-};
