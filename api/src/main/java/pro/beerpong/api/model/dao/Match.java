@@ -3,7 +3,6 @@ package pro.beerpong.api.model.dao;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Entity(name = "matches")

@@ -1,14 +1,10 @@
 package pro.beerpong.api.service;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
-import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Profile;
-import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;
