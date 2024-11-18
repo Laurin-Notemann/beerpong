@@ -114,7 +114,7 @@ public class SeasonService {
                 .toList();
     }
 
-    public SeasonDto getSeasonById(String groupId, String id) {
+    public SeasonDto getSeasonById(String id) {
         return seasonRepository.findById(id)
                 .map(seasonMapper::seasonToSeasonDto)
                 .orElse(null);

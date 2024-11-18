@@ -3,21 +3,15 @@ package pro.beerpong.api.service;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMapper;
 import pro.beerpong.api.model.dao.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
-import pro.beerpong.api.util.NullablePair;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -66,18 +60,27 @@ public class MatchService {
         this.matchMapper = matchMapper;
     }
 
-    private boolean validateCreateDto(MatchCreateDto dto) {
+    private boolean validateCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
         return dto.getTeams().stream().allMatch(teamCreateDto ->
-                teamCreateDto.getTeamMembers().stream().allMatch(memberDto ->
-                        playerRepository.existsById(memberDto.getPlayerId()) &&
-                                memberDto.getMoves().stream().allMatch(matchMoveDto ->
-                                        ruleMoveRepository.existsById(matchMoveDto.getMoveId()))));
+                teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
+                    var player = playerRepository.findById(memberDto.getPlayerId());
+
+                    if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
+                        return false;
+                    }
+
+                    return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
+                        var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
+
+                        return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
+                    });
+                }));
     }
 
     @Transactional
     public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto) {
         if (!group.getActiveSeason().getId().equals(season.getId()) ||
-                !validateCreateDto(matchCreateDto)) {
+                !validateCreateDto(group.getId(), season.getId(), matchCreateDto)) {
             return null;
         }
 
