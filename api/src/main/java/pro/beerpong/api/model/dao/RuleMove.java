@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.SneakyThrows;
 
+import java.util.List;
+
 @Entity(name = "rule_moves")
 @Data
-public class RuleMove {
+public class RuleMove implements Cloneable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -20,21 +22,15 @@ public class RuleMove {
     private boolean finishingMove;
 
     @ManyToOne
-    @JoinColumn(name = "seasonId")
+    @JoinColumn(name = "season_id")
     private Season season;
 
-    @SneakyThrows
+    @OneToMany(mappedBy = "move")
+    private List<MatchMove> matchMoves;
+
     @Override
+    @SneakyThrows
     public RuleMove clone() {
-        var ruleMove = new RuleMove();
-
-        ruleMove.setId(id);
-        ruleMove.setName(name);
-        ruleMove.setPointsForTeam(pointsForTeam);
-        ruleMove.setPointsForScorer(pointsForScorer);
-        ruleMove.setFinishingMove(finishingMove);
-        ruleMove.setSeason(season);
-
-        return ruleMove;
+        return (RuleMove) super.clone();
     }
 }
