@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.MatchCreateDto;
-import pro.beerpong.api.model.dto.MatchDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
 
@@ -64,6 +61,34 @@ public class MatchController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<MatchDto>> getMatchById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
         var match = matchService.getMatchById(id);
+
+        if (match != null) {
+            if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+                return ResponseEnvelope.ok(match);
+            } else {
+                return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+            }
+        } else {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.MATCH_NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/overview")
+    public ResponseEntity<ResponseEnvelope<List<MatchOverviewDto>>> getAllMatchOverviews(@PathVariable String groupId, @PathVariable String seasonId) {
+        var season = seasonService.getSeasonById(seasonId);
+
+        if (season == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (!season.getId().equals(seasonId) || !season.getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        return ResponseEnvelope.ok(matchService.getAllMatchOverviews(seasonId));
+    }
+
+    @GetMapping("/{id}/overview")
+    public ResponseEntity<ResponseEnvelope<MatchOverviewDto>> getMatchOverviewById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        var match = matchService.getMatchOverviewById(id);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {

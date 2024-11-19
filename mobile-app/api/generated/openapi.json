@@ -377,7 +377,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileAssetMetadataDto"
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
                                 }
                             }
                         }
@@ -825,6 +825,76 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/matches/{id}/overview": {
+            "get": {
+                "tags": ["match-controller"],
+                "operationId": "getMatchOverviewById",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeMatchOverviewDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/seasons/{seasonId}/matches/overview": {
+            "get": {
+                "tags": ["match-controller"],
+                "operationId": "getAllMatchOverviews",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListMatchOverviewDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{id}": {
             "get": {
                 "tags": ["season-controller"],
@@ -1180,31 +1250,6 @@
                     "playerId": { "type": "string" }
                 }
             },
-            "ProfileAssetMetadataDto": {
-                "type": "object",
-                "properties": {
-                    "profileId": { "type": "string" },
-                    "id": { "type": "string" },
-                    "url": { "type": "string" },
-                    "mediaType": { "type": "string" },
-                    "uploadedAt": { "type": "string", "format": "date-time" }
-                }
-            },
-            "ResponseEnvelopeProfileAssetMetadataDto": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
-                    "httpCode": { "type": "integer", "format": "int32" },
-                    "data": {
-                        "$ref": "#/components/schemas/ProfileAssetMetadataDto"
-                    },
-                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
-            },
-            "ProfileCreateDto": {
-                "type": "object",
-                "properties": { "name": { "type": "string" } }
-            },
             "ProfileDto": {
                 "type": "object",
                 "properties": {
@@ -1224,6 +1269,10 @@
                     "data": { "$ref": "#/components/schemas/ProfileDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
+            },
+            "ProfileCreateDto": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } }
             },
             "SeasonCreateDto": {
                 "type": "object",
@@ -1319,6 +1368,66 @@
                     "data": {
                         "type": "array",
                         "items": { "$ref": "#/components/schemas/MatchDto" }
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "MatchOverviewDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "date": { "type": "string", "format": "date-time" },
+                    "season": { "$ref": "#/components/schemas/Season" },
+                    "blueTeam": {
+                        "$ref": "#/components/schemas/MatchOverviewTeamDto"
+                    },
+                    "redTeam": {
+                        "$ref": "#/components/schemas/MatchOverviewTeamDto"
+                    }
+                }
+            },
+            "MatchOverviewTeamDto": {
+                "type": "object",
+                "properties": {
+                    "points": { "type": "integer", "format": "int32" },
+                    "members": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MatchOverviewTeamMemberDto"
+                        }
+                    }
+                }
+            },
+            "MatchOverviewTeamMemberDto": {
+                "type": "object",
+                "properties": {
+                    "playerId": { "type": "string" },
+                    "points": { "type": "integer", "format": "int32" },
+                    "moves": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/MatchMoveDto" }
+                    }
+                }
+            },
+            "ResponseEnvelopeMatchOverviewDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/MatchOverviewDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "ResponseEnvelopeListMatchOverviewDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MatchOverviewDto"
+                        }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
