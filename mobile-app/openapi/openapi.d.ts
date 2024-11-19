@@ -420,19 +420,6 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
-    namespace GetRules {
-        namespace Parameters {
-            export type GroupId = string;
-            export type SeasonId = string;
-        }
-        export interface PathParameters {
-            groupId: Parameters.GroupId;
-            seasonId: Parameters.SeasonId;
-        }
-        namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeListRuleDto;
-        }
-    }
     namespace GetSeasonById {
         namespace Parameters {
             export type GroupId = string;
@@ -597,14 +584,6 @@ export interface OperationMethods {
         data?: Paths.SetWallpaper.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
-    /**
-     * getRules
-     */
-    'getRules'(
-        parameters?: Parameters<Paths.GetRules.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetRules.Responses.$200>;
     /**
      * writeRules
      */
@@ -829,14 +808,6 @@ export interface PathsDictionary {
         ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/rules']: {
-        /**
-         * getRules
-         */
-        'get'(
-            parameters?: Parameters<Paths.GetRules.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetRules.Responses.$200>;
         /**
          * writeRules
          */
