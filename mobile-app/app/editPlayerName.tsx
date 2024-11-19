@@ -27,18 +27,20 @@ export default function Page() {
 
     const player = playersQuery.data?.data?.find((i) => i.id === id);
 
+    const profileId = player?.profile?.id;
+
     const [value, setValue] = useState(player?.profile?.name || '');
 
     const { mutateAsync } = useUpdatePlayerMutation();
 
     async function onSubmit() {
-        if (!groupId || !seasonId) return;
+        if (!groupId || !seasonId || !profileId) return;
 
         try {
             await mutateAsync({
                 groupId,
                 seasonId,
-                id,
+                id: profileId,
                 name: value,
             });
             nav.navigate('index');
