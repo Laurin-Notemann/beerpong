@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "main"
+    paths:
+      - "./api/**"
+      - "./.github/workflows/api-cd.yml"
   workflow_dispatch:
 
 jobs:
