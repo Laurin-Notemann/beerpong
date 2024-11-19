@@ -1,4 +1,4 @@
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 

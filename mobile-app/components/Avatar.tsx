@@ -100,6 +100,9 @@ export default function Avatar({
                             width: size,
                             height: size,
                             borderRadius: 99,
+
+                            borderWidth: borderColor ? 2 : undefined,
+                            borderColor,
                         }}
                         resizeMode="cover"
                     />
