@@ -3,6 +3,38 @@ import { Text, View } from 'react-native';
 
 import { theme } from '@/theme';
 
+export function Heading({
+    title,
+    titleHeadIcon,
+}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon'>) {
+    return (
+        <View
+            style={{
+                height: 64,
+                paddingHorizontal: 8,
+                paddingBottom: 12,
+
+                justifyContent: 'flex-end',
+            }}
+        >
+            {titleHeadIcon}
+            <Text
+                style={{
+                    fontSize: 17,
+                    lineHeight: 22,
+                    fontWeight: 500,
+                    color: '#e9e9e9',
+
+                    marginLeft: titleHeadIcon ? 8 : 0,
+                    marginRight: 'auto',
+                }}
+            >
+                {title}
+            </Text>
+        </View>
+    );
+}
+
 export interface MenuSectionProps extends PropsWithChildren {
     title?: string;
     titleHeadIcon?: JSX.Element;
@@ -31,32 +63,7 @@ export default function MenuSection({
 }: MenuSectionProps) {
     return (
         <>
-            {title && (
-                <View
-                    style={{
-                        height: 64,
-                        paddingHorizontal: 8,
-                        paddingBottom: 12,
-
-                        justifyContent: 'flex-end',
-                    }}
-                >
-                    {titleHeadIcon}
-                    <Text
-                        style={{
-                            fontSize: 17,
-                            lineHeight: 22,
-                            fontWeight: 500,
-                            color: '#e9e9e9',
-
-                            marginLeft: titleHeadIcon ? 8 : 0,
-                            marginRight: 'auto',
-                        }}
-                    >
-                        {title}
-                    </Text>
-                </View>
-            )}
+            {title && <Heading title={title} titleHeadIcon={titleHeadIcon} />}
             <View
                 style={{
                     overflow: 'hidden',

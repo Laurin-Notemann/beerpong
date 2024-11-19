@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HeaderItem } from '@/app/(tabs)/_layout';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
-import MenuSection from '@/components/Menu/MenuSection';
+import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
@@ -161,12 +161,18 @@ export default function NewMatchAssignTeams({
 
                     headerStyle: {
                         backgroundColor: '#000',
+
+                        // @ts-ignore
+                        elevation: 0, // For Android
+                        shadowOpacity: 0, // For iOS
+                        borderBottomWidth: 0, // Removes the border for both platforms
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,
                     },
                 }}
             />
+            <Heading />
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
                     headIcon="account-plus-outline"
