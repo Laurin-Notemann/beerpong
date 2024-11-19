@@ -34,7 +34,7 @@ function connect() {
         // deserialize the event
         // format:
         //  groupId: string,
-        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS
+        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES
         //  scope: string
         //  body: a dto matching the eventType (MatchDto, PlayerDto, ...)
         const socketEvent = JSON.parse(event.data);
