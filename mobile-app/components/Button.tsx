@@ -1,8 +1,12 @@
-import { Text, TouchableHighlight } from 'react-native';
+import {
+    Text,
+    TouchableHighlight,
+    TouchableHighlightProps,
+} from 'react-native';
 
 import { theme } from '@/theme';
 
-export interface ButtonProps {
+export interface ButtonProps extends TouchableHighlightProps {
     title: JSX.Element | string;
 
     variant?: 'default' | 'primary' | 'secondary';
@@ -20,6 +24,8 @@ export default function Button({
     onPress,
 
     disabled = false,
+
+    ...rest
 }: ButtonProps) {
     const style = (
         {
@@ -43,9 +49,11 @@ export default function Button({
 
     return (
         <TouchableHighlight
+            {...rest}
             disabled={disabled}
             onPress={onPress}
             style={[
+                rest.style,
                 {
                     alignItems: 'center',
                     justifyContent: 'center',

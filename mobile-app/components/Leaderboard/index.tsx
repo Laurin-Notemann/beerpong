@@ -1,9 +1,8 @@
-import { Link } from '@react-navigation/native';
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
-import { theme } from '@/theme';
+import { useNavigation } from '@/app/navigation/useNavigation';
 
 import Podium from '../Podium';
 import Text from '../Text';
@@ -15,6 +14,8 @@ export interface LeaderboardProps {
 }
 
 export default function Leaderboard({ players }: LeaderboardProps) {
+    const nav = useNavigation();
+
     const minMatchesRequiredToBeRanked = 1;
 
     const sortedPlayers = players.sort(
@@ -107,25 +108,26 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                     />
                 ))}
                 {players.length < 1 && (
-                    <Text
-                        color="secondary"
-                        style={{
-                            textAlign: 'center',
-                            paddingTop: 64,
-                            lineHeight: 32,
-                        }}
-                    >
-                        No matches played yet. {'\n'}
-                        <Link
-                            to="/newMatch"
+                    <Pressable onPress={() => nav.navigate('newMatch')}>
+                        <Text
+                            color="secondary"
                             style={{
-                                color: theme.color.text.primary,
-                                fontWeight: 500,
+                                textAlign: 'center',
+                                paddingTop: 64,
+                                lineHeight: 32,
                             }}
                         >
-                            Create match
-                        </Link>
-                    </Text>
+                            No matches played yet. {'\n'}
+                            <Text
+                                color="primary"
+                                style={{
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Create match
+                            </Text>
+                        </Text>
+                    </Pressable>
                 )}
             </ThemedView>
         </>

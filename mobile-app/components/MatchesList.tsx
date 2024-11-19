@@ -113,13 +113,17 @@ export default function MatchesList({ matches }: MatchesListProps) {
             ListEmptyComponent={
                 <View style={{ paddingTop: 64 }}>
                     <IconHead
+                        onTouchStart={() => nav.navigate('newMatch')}
                         iconName="format-list-bulleted"
                         title="No Matches Played"
                         description={
                             <Button
+                                style={{
+                                    marginTop: 24,
+                                }}
                                 onPress={() => {}}
                                 title="Create match"
-                                variant="secondary"
+                                variant="primary"
                             />
                             // <Link
                             //     to="/joinGroup"

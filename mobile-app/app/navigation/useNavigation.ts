@@ -22,6 +22,7 @@ export type RootStackParamList = {
     match: { id: string };
     matches: undefined;
     editFormationName: undefined;
+    newMatch: undefined;
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 
