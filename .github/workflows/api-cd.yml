@@ -5,8 +5,8 @@ on:
     branches:
       - "main"
     paths:
-      - "./api/**"
-      - "./.github/workflows/api-cd.yml"
+      - "api/**"
+      - ".github/workflows/api-cd.yml"
   workflow_dispatch:
 
 jobs:
