@@ -4,10 +4,9 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.model.dao.*;
-import pro.beerpong.api.model.dto.MatchCreateDto;
-import pro.beerpong.api.model.dto.MatchDto;
-import pro.beerpong.api.model.dto.MatchOverviewDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -15,6 +14,8 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 @Service
 public class MatchService {
@@ -28,6 +29,7 @@ public class MatchService {
     private final TeamMemberRepository teamMemberRepository;
     private final MatchMoveRepository matchMoveRepository;
     private final RuleMoveRepository ruleMoveRepository;
+    private final MatchMoveMapper matchMoveMapper;
 
     private final TeamService teamService;
 
@@ -41,6 +43,7 @@ public class MatchService {
                         TeamMemberRepository teamMemberRepository,
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
+                        MatchMoveMapper matchMoveMapper,
                         TeamService teamService) {
         this.subscriptionHandler = subscriptionHandler;
 
@@ -52,6 +55,7 @@ public class MatchService {
         this.matchMoveRepository = matchMoveRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.ruleMoveRepository = ruleMoveRepository;
+        this.matchMoveMapper = matchMoveMapper;
 
         this.teamService = teamService;
     }
@@ -178,21 +182,11 @@ public class MatchService {
             return null;
         }
 
-        var blueTeam = match.getTeams().getFirst();
-        var redTeam = match.getTeams().get(1);
-
         var bluePlayers = match.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeam.getId()))
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(match.getTeams().getFirst().getId()))
                 .toList();
         var redPlayers = match.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeam.getId()))
-                .toList();
-
-        var blueMoves = match.getMatchMoves().stream()
-                .filter(matchMoveDto -> bluePlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
-                .toList();
-        var redMoves = match.getMatchMoves().stream()
-                .filter(matchMoveDto -> redPlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(match.getTeams().get(1).getId()))
                 .toList();
 
         var dto = new MatchOverviewDto();
@@ -201,14 +195,19 @@ public class MatchService {
         dto.setDate(match.getDate());
         dto.setSeason(match.getSeason());
 
-        dto.setBlueTeam(blueTeam);
-        dto.setRedTeam(redTeam);
+        dto.setBlueTeam(buildOverviewTeam(
+                bluePlayers,
+                match.getMatchMoves().stream()
+                        .filter(matchMoveDto -> bluePlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                        .toList()
+        ));
 
-        dto.setBlueTeamMembers(bluePlayers);
-        dto.setRedTeamMembers(redPlayers);
-
-        dto.setBlueMoves(blueMoves);
-        dto.setRedMoves(redMoves);
+        dto.setRedTeam(buildOverviewTeam(
+                redPlayers,
+                match.getMatchMoves().stream()
+                        .filter(matchMoveDto -> redPlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                        .toList()
+        ));
 
         return dto;
     }
@@ -247,5 +246,49 @@ public class MatchService {
         dto.setTeamMembers(teamMembers);
 
         dto.setMatchMoves(matchMoveService.buildMatchMoveDtos(teamMembers));
+    }
+
+    private MatchOverviewTeamDto buildOverviewTeam(List<TeamMemberDto> members, List<MatchMoveDtoComplete> moves) {
+        var team = new MatchOverviewTeamDto();
+
+        team.setPoints(countPoints(moves.stream()
+                .map(matchMoveMapper::matchMoveDtoCompleteToMatchMoveDto)
+                .toList(), members.size()));
+
+        team.setMembers(members.stream()
+                .map(teamMemberDto -> {
+                    var teamDto = new MatchOverviewTeamMemberDto();
+
+                    teamDto.setPlayerId(teamMemberDto.getPlayerId());
+                    teamDto.setMoves(moves.stream()
+                            .filter(moveDto -> moveDto.getTeamMemberId().equals(teamMemberDto.getId()))
+                            .map(matchMoveMapper::matchMoveDtoCompleteToMatchMoveDto)
+                            .toList());
+                    teamDto.setPoints(countPoints(teamDto.getMoves(), 1));
+
+                    return teamDto;
+                })
+                .toList());
+
+        return team;
+    }
+
+    private int countPoints(List<MatchMoveDto> moves, int multiplier) {
+        return moves.stream()
+                .flatMap(moveDto -> {
+                    var ruleMove = ruleMoveRepository.findById(moveDto.getMoveId()).orElse(null);
+
+                    if (ruleMove != null) {
+                        return IntStream.range(0, moveDto.getCount())
+                                .mapToObj(i -> ruleMove);
+                    } else {
+                        return IntStream.empty().mapToObj(i -> null);
+                    }
+                })
+                .filter(Objects::nonNull)
+                //TODO should the pointsForTeam count only once?
+                .map(ruleMove -> ruleMove.getPointsForScorer() + (multiplier * ruleMove.getPointsForTeam()))
+                .reduce(Integer::sum)
+                .orElse(0);
     }
 }

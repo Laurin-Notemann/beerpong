@@ -12,12 +12,6 @@ public class MatchOverviewDto {
     private ZonedDateTime date;
     private Season season;
 
-    private List<MatchMoveDtoComplete> blueMoves;
-    private List<MatchMoveDtoComplete> redMoves;
-
-    private TeamDto blueTeam;
-    private TeamDto redTeam;
-
-    private List<TeamMemberDto> blueTeamMembers;
-    private List<TeamMemberDto> redTeamMembers;
+    private MatchOverviewTeamDto blueTeam;
+    private MatchOverviewTeamDto redTeam;
 }
