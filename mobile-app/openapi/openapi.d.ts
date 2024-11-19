@@ -68,6 +68,13 @@ declare namespace Components {
             points?: number; // int64
             matches?: number; // int64
         }
+        export interface ProfileAssetMetadataDto {
+            profileId?: string;
+            id?: string;
+            url?: string;
+            mediaType?: string;
+            uploadedAt?: string; // date-time
+        }
         export interface ProfileCreateDto {
             name?: string;
         }
@@ -129,6 +136,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: MatchDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeProfileAssetMetadataDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: ProfileAssetMetadataDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeProfileDto {
@@ -470,7 +483,7 @@ declare namespace Paths {
         export type RequestBody = string; // byte
         namespace Responses {
             export type $200 =
-                Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+                Components.Schemas.ResponseEnvelopeProfileAssetMetadataDto;
         }
     }
     namespace SetWallpaper {
@@ -1077,6 +1090,8 @@ export type MatchMoveDto = Components.Schemas.MatchMoveDto;
 export type MatchMoveDtoComplete = Components.Schemas.MatchMoveDtoComplete;
 export type PlayerDto = Components.Schemas.PlayerDto;
 export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
+export type ProfileAssetMetadataDto =
+    Components.Schemas.ProfileAssetMetadataDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeAssetMetadataDto =
@@ -1097,6 +1112,8 @@ export type ResponseEnvelopeListSeasonDto =
     Components.Schemas.ResponseEnvelopeListSeasonDto;
 export type ResponseEnvelopeMatchDto =
     Components.Schemas.ResponseEnvelopeMatchDto;
+export type ResponseEnvelopeProfileAssetMetadataDto =
+    Components.Schemas.ResponseEnvelopeProfileAssetMetadataDto;
 export type ResponseEnvelopeProfileDto =
     Components.Schemas.ResponseEnvelopeProfileDto;
 export type ResponseEnvelopeRuleMoveDto =

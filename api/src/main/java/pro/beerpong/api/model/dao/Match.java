@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Entity(name = "matches")
 @Data
@@ -15,6 +16,9 @@ public class Match {
     private ZonedDateTime date;
 
     @ManyToOne
-    @JoinColumn(name = "seasonId")
+    @JoinColumn(name = "season_id")
     private Season season;
+
+    @OneToMany(mappedBy = "match")
+    private List<Team> teams;
 }

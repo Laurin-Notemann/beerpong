@@ -34,7 +34,7 @@ function connect() {
         // deserialize the event
         // format:
         //  groupId: string,
-        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES
+        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES
         //  scope: string
         //  body: a dto matching the eventType (MatchDto, PlayerDto, ...)
         const socketEvent = JSON.parse(event.data);
@@ -116,6 +116,16 @@ A list of all event types with their corresponding dto and all available scopes:
 #### Seasons (body: SeasonDto)
 
 * **seasonStart:** When a new season is started
+
+#### Assets (body: AssetMetadataDto | ProfileAssetMetadataDto)
+
+* **groupWallpaperSet:** When a groups wallpaper is updated
+* **profileAvatarSet:** When a profiles avatar is updated
+*
+#### Profiles (body: ProfileDto)
+
+* **profileCreate:** When a profile is created
+* **profileUpdate:** When a profile is updated
 
 ### TODO
 

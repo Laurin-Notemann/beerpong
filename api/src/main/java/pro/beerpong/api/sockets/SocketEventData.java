@@ -26,6 +26,12 @@ public class SocketEventData<T> {
 
     public static final SocketEventData<SeasonStartDto> SEASON_START = new SocketEventData<>(SeasonStartDto.class, SocketEventType.SEASONS, "seasonStart");
 
+    public static final SocketEventData<ProfileAssetMetadataDto> PROFILE_AVATAR_SET = new SocketEventData<>(ProfileAssetMetadataDto.class, SocketEventType.ASSETS, "profileAvatarSet");
+    public static final SocketEventData<AssetMetadataDto> GROUP_WALLPAPER_SET = new SocketEventData<>(AssetMetadataDto.class, SocketEventType.ASSETS, "groupWallpaperSet");
+
+    public static final SocketEventData<ProfileDto> PROFILE_CREATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileCreate");
+    public static final SocketEventData<ProfileDto> PROFILE_UPDATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileUpdate");
+
     private final Class<T> bodyClass;
     private final SocketEventType eventType;
     private final String scope;
