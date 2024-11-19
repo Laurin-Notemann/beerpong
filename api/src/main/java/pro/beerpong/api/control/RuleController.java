@@ -25,6 +25,21 @@ public class RuleController {
         this.seasonService = seasonService;
     }
 
+    @GetMapping
+    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> getRules(@PathVariable String groupId, @PathVariable String seasonId) {
+        var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
+
+        if (pair.getFirst() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+        } else if (pair.getSecond() == null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        return ResponseEnvelope.ok(ruleService.getAllRules(seasonId));
+    }
+
     @PutMapping
     public ResponseEntity<ResponseEnvelope<List<RuleDto>>> writeRules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
