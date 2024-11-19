@@ -93,9 +93,6 @@ function Everything() {
                     options={{
                         presentation: 'modal',
                         ...navStyles,
-                        headerTitle: 'Create new Player',
-                        headerLeft: () => <HeaderItem>Cancel</HeaderItem>,
-                        headerRight: () => <HeaderItem>Create</HeaderItem>,
                         headerTintColor: 'white',
                         headerBackTitle: '',
                     }}

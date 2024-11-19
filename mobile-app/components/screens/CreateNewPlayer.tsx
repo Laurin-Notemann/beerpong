@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
@@ -11,6 +11,8 @@ export interface CreateNewPlayerProps {
     onCreate: (player: { name: string }) => void;
 }
 export default function CreateNewPlayer({ onCreate }: CreateNewPlayerProps) {
+    const nav = useNavigation();
+
     const [name, setName] = useState('');
 
     return (
@@ -30,6 +32,11 @@ export default function CreateNewPlayer({ onCreate }: CreateNewPlayerProps) {
                     headerTitleStyle: {
                         fontWeight: 'bold',
                     },
+                    headerLeft: () => (
+                        <HeaderItem onPress={() => nav.goBack()}>
+                            Cancel
+                        </HeaderItem>
+                    ),
                     headerRight: () => (
                         <HeaderItem
                             disabled={name.length < 1}
