@@ -117,7 +117,7 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **seasonStart:** When a new season is started
 
-#### Assets (body: AssetMetadataDto | ProfileAssetMetadataDto)
+#### Assets (body: AssetMetadataDto | ProfileDto)
 
 * **groupWallpaperSet:** When a groups wallpaper is updated
 * **profileAvatarSet:** When a profiles avatar is updated

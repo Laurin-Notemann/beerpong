@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.MatchCreateDto;
 import pro.beerpong.api.model.dto.MatchDto;
+import pro.beerpong.api.model.dto.MatchOverviewDto;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -154,6 +155,62 @@ public class MatchService {
         return matchRepository.findById(id)
                 .map(this::matchToMatchDto)
                 .orElse(null);
+    }
+
+    public List<MatchOverviewDto> getAllMatchOverviews(String seasonId) {
+        return getAllMatches(seasonId).stream()
+                .map(this::getMatchOverviewByMatch)
+                .toList();
+    }
+
+    public MatchOverviewDto getMatchOverviewById(String id) {
+        var match = getMatchById(id);
+
+        if (match == null || match.getTeams().size() < 2) {
+            return null;
+        }
+
+        return getMatchOverviewByMatch(match);
+    }
+
+    public MatchOverviewDto getMatchOverviewByMatch(MatchDto match) {
+        if (match == null || match.getTeams().size() < 2) {
+            return null;
+        }
+
+        var blueTeam = match.getTeams().getFirst();
+        var redTeam = match.getTeams().get(1);
+
+        var bluePlayers = match.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeam.getId()))
+                .toList();
+        var redPlayers = match.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeam.getId()))
+                .toList();
+
+        var blueMoves = match.getMatchMoves().stream()
+                .filter(matchMoveDto -> bluePlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                .toList();
+        var redMoves = match.getMatchMoves().stream()
+                .filter(matchMoveDto -> redPlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                .toList();
+
+        var dto = new MatchOverviewDto();
+
+        dto.setId(match.getId());
+        dto.setDate(match.getDate());
+        dto.setSeason(match.getSeason());
+
+        dto.setBlueTeam(blueTeam);
+        dto.setRedTeam(redTeam);
+
+        dto.setBlueTeamMembers(bluePlayers);
+        dto.setRedTeamMembers(redPlayers);
+
+        dto.setBlueMoves(blueMoves);
+        dto.setRedMoves(redMoves);
+
+        return dto;
     }
 
     public Match getRawMatchById(String id) {
