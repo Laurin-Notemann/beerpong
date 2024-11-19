@@ -1,26 +1,11 @@
-import { Query, QueryKey, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient } from '.';
 import { env } from '../env';
-
-const areArraysIdentical = <T>(arr1: T[], arr2: T[]): boolean => {
-    if (arr1.length !== arr2.length) {
-        return false;
-    }
-    return arr1.every((value, index) => value === arr2[index]);
-};
-
-const ignoreSeason =
-    (queryKey: string[]) =>
-    (query: Query<unknown, Error, unknown, QueryKey>) => {
-        const ding = (query.queryKey as string[]).filter(
-            (i, idx, arr) => i === 'seasons' || arr[idx - 1] === 'seasons'
-        );
-        return areArraysIdentical(ding, queryKey);
-    };
+import { ignoreSeason } from '../utils/reactQuery';
 
 export function useRealtimeConnection() {
     const { groupIds } = useGroupStore();
@@ -37,6 +22,7 @@ export function useRealtimeConnection() {
         switch (e.eventType) {
             case 'GROUPS':
                 client.current.logger.info('refetching groups');
+
                 qc.invalidateQueries({
                     queryKey: ['group', e.groupId],
                     exact: true,
@@ -57,6 +43,12 @@ export function useRealtimeConnection() {
                 break;
             case 'PLAYERS':
                 client.current.logger.info('refetching players');
+                qc.invalidateQueries({
+                    predicate: ignoreSeason(['group', e.groupId, 'players']),
+                });
+                break;
+            case 'PROFILES':
+                client.current.logger.info('refetching profiles');
                 qc.invalidateQueries({
                     predicate: ignoreSeason(['group', e.groupId, 'players']),
                 });

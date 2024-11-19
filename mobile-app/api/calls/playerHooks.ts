@@ -4,6 +4,7 @@ import { Paths } from '@/openapi/openapi';
 
 import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
+import { QK } from '../utils/reactQuery';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
@@ -13,16 +14,17 @@ export const usePlayersQuery = (
 
     return useQuery<Paths.GetPlayers.Responses.$200 | null>({
         queryKey: [
-            'group',
+            QK.group,
             groupId ?? 'NULL',
-            'season',
+            QK.season,
             seasonId ?? 'NULL',
-            'players',
+            QK.players,
         ],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
             }
+
             const res = await (await api).getPlayers({ groupId, seasonId });
 
             return res?.data;
