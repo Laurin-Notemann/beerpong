@@ -29,7 +29,10 @@ export default function LeaderboardPlayerItem({
     points,
     elo,
 }: LeaderboardPlayerItemProps) {
-    const averagePointsPerMatch = (points / matches).toFixed(1);
+    // account for division by zero
+    const averagePointsPerMatch = matches
+        ? (points / matches).toFixed(1)
+        : '--';
 
     const nav = useNavigation();
 
@@ -62,7 +65,7 @@ export default function LeaderboardPlayerItem({
             >
                 {placement}
             </ThemedText>
-            <Avatar name={name} size={36} />
+            <Avatar url={avatarUrl} name={name} size={36} />
             <ThemedView
                 style={{
                     marginLeft: 12,

@@ -41,6 +41,7 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                         matches={i.matches}
                         elo={i.elo}
                         matchesWon={i.matchesWon}
+                        avatarUrl={i.avatarUrl}
                     />
                 ))}
                 {players.length < 1 && (

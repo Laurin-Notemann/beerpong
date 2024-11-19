@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -38,6 +38,7 @@ function Badge({ children }: PropsWithChildren) {
 }
 
 export interface AvatarProps {
+    url?: string | null;
     name?: string;
     content?: string;
     size?: 128 | 96 | 40 | 36;
@@ -52,6 +53,7 @@ export interface AvatarProps {
     onPress?: () => void;
 }
 export default function Avatar({
+    url,
     name,
     content,
     size = 36,
@@ -90,26 +92,38 @@ export default function Avatar({
                     borderColor,
                 }}
             >
-                <ThemedText
-                    style={{
-                        lineHeight: size,
-                        fontSize: size / 2.7,
+                {url ? (
+                    <Image
+                        source={{ uri: url }}
+                        style={{
+                            width: size,
+                            height: size,
+                            borderRadius: 99,
+                        }}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <ThemedText
+                        style={{
+                            lineHeight: size,
+                            fontSize: size / 2.7,
 
-                        fontWeight: 500,
+                            fontWeight: 500,
 
-                        color: theme.avatar.text,
+                            color: theme.avatar.text,
 
-                        bottom: borderColor ? 2 : 0,
-                    }}
-                >
-                    {content || name?.[0] || (
-                        <Icon
-                            color={theme.avatar.text}
-                            size={size / 1.6}
-                            name="account-outline"
-                        />
-                    )}
-                </ThemedText>
+                            bottom: borderColor ? 2 : 0,
+                        }}
+                    >
+                        {content || name?.[0] || (
+                            <Icon
+                                color={theme.avatar.text}
+                                size={size / 1.6}
+                                name="account-outline"
+                            />
+                        )}
+                    </ThemedText>
+                )}
             </View>
             {canUpload && (
                 <Badge>

@@ -64,6 +64,40 @@ export const useUpdatePlayerMutation = () => {
     });
 };
 
+export const useUpdatePlayerAvatarMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.UpdateProfile.Responses.$200 | null,
+        Error,
+        {
+            byteArray: Uint8Array<ArrayBuffer>;
+            mimeType: string;
+
+            groupId: ApiId;
+            seasonId: ApiId;
+            profileId: ApiId;
+        }
+    >({
+        mutationFn: async (body) => {
+            const { byteArray, mimeType, ...rest } = body;
+
+            (await api).fetchData({ id: '' });
+
+            const res = await (
+                await api
+            )
+                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
+                .setWallpaper_1(rest, byteArray as any, {
+                    headers: {
+                        'Content-Type': mimeType,
+                    },
+                });
+            return res?.data;
+        },
+    });
+};
+
 export const useDeletePlayerMutation = () => {
     const { api } = useApi();
 

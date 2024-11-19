@@ -55,7 +55,10 @@ export default function PlayerStats({
     matchesPlayedCount,
     elo,
 }: PlayerStatsProps) {
-    const averagePointsPerMatch = totalPoints / matchesPlayedCount;
+    // account for division by zero
+    const averagePointsPerMatch = matchesPlayedCount
+        ? (totalPoints / matchesPlayedCount).toFixed(1)
+        : '--';
 
     const matchesWonPercentage = Math.round(
         (matchesWonCount / matchesPlayedCount) * 100
@@ -73,7 +76,7 @@ export default function PlayerStats({
         >
             <Stat
                 title="Average points"
-                value={averagePointsPerMatch?.toFixed(1) ?? '--'}
+                value={averagePointsPerMatch}
                 isLowest
             />
             <Stat title="Total points" value={totalPoints} />

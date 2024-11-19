@@ -47,7 +47,11 @@ export default function Podium({
                 >
                     2
                 </ThemedText>
-                <Avatar name={secondPlace?.name} size={96} />
+                <Avatar
+                    url={secondPlace?.avatarUrl}
+                    name={secondPlace?.name}
+                    size={96}
+                />
                 {detailed && (
                     <>
                         <ThemedText
@@ -122,7 +126,11 @@ export default function Podium({
                 >
                     1
                 </ThemedText>
-                <Avatar name={firstPlace?.name} size={128} />
+                <Avatar
+                    url={firstPlace?.avatarUrl}
+                    name={firstPlace?.name}
+                    size={128}
+                />
                 {detailed && (
                     <>
                         <ThemedText
@@ -180,7 +188,11 @@ export default function Podium({
                 >
                     3
                 </ThemedText>
-                <Avatar name={thirdPlace?.name} size={96} />
+                <Avatar
+                    url={thirdPlace?.avatarUrl}
+                    name={thirdPlace?.name}
+                    size={96}
+                />
                 {detailed && (
                     <>
                         <ThemedText

@@ -34,7 +34,7 @@ export type RealtimeEventHandler = <T = RealtimeAffectedEntity>(
 export class RealtimeClient {
     private ws!: WebSocket;
 
-    private logger: Logger;
+    public logger: Logger;
 
     // @ts-ignore
     private handlers: Record<
