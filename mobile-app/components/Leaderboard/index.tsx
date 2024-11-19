@@ -17,8 +17,11 @@ export interface LeaderboardProps {
 export default function Leaderboard({ players }: LeaderboardProps) {
     const minMatchesRequiredToBeRanked = 1;
 
-    // TODO: filter by average instead
-    const sortedPlayers = players.sort((a, b) => b.points - a.points);
+    const sortedPlayers = players.sort(
+        (a, b) =>
+            (b.matches ? b.points / b.matches : 0) -
+            (a.matches ? a.points / a.matches : 0)
+    );
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked
