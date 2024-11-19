@@ -10,16 +10,36 @@ import java.util.List;
 public interface PlayerRepository extends JpaRepository<Player, String> {
     List<Player> findAllBySeasonId(String seasonId);
 
-    @Query("SELECT new pro.beerpong.api.model.dao.PlayerStatistics(" +
-            "COALESCE(SUM(mm.value * rm.pointsForScorer), 0), " +
-            "COALESCE(COUNT(m), 0)) " +
-            "FROM players p " +
-            "LEFT JOIN team_members tm ON p.id = tm.player.id " +
-            "LEFT JOIN teams t ON tm.team.id = t.id " +
-            "LEFT JOIN matches m ON t.match.id = m.id " +
-            "LEFT JOIN match_moves mm ON mm.teamMember.id = tm.id " +
-            "LEFT JOIN rule_moves rm ON mm.move.id = rm.id " +
-            "WHERE p.id = :playerId " +
-            "GROUP BY p.id")
+    @Query("""
+           WITH matchCounts AS (
+                SELECT COUNT(*) AS count, tm.player.id AS playerId
+                FROM matches m
+                JOIN m.teams t
+                JOIN t.teamMembers tm
+                GROUP BY tm.player
+           ), scorerPointsSum AS (
+                SELECT SUM(mm.value * rm.pointsForScorer) AS points,
+                           tm.player.id AS playerId
+                FROM match_moves mm
+                JOIN mm.move rm
+                JOIN mm.teamMember tm
+                GROUP BY tm.player
+           ), teamPointsSum AS (
+                SELECT SUM(mm.value * rm.pointsForTeam) AS points,
+                           tmt.player.id AS playerId
+                FROM match_moves mm
+                JOIN mm.move rm
+                JOIN mm.teamMember tmm
+                JOIN tmm.team.teamMembers tmt
+                GROUP BY tmt.player
+           )
+           SELECT new pro.beerpong.api.model.dao.PlayerStatistics(COALESCE(mc.count, 0),
+                      COALESCE(sps.points, 0) + COALESCE(tps.points, 0))
+           FROM players p
+           LEFT JOIN (SELECT mc.count AS count FROM matchCounts mc WHERE mc.playerId = :playerId) AS mc
+           LEFT JOIN (SELECT sps.points AS points FROM scorerPointsSum sps WHERE sps.playerId = :playerId) AS sps
+           LEFT JOIN (SELECT tps.points AS points FROM teamPointsSum tps WHERE tps.playerId = :playerId) AS tps
+           WHERE p.id = :playerId
+           """)
     PlayerStatistics getStatisticsForPlayer(String playerId);
 }

@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PlayerStatistics {
-    private long points;
     private long matches;
+    private long points;
 }
