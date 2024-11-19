@@ -6,5 +6,6 @@ public enum SocketEventType {
     SEASONS,
     GROUPS,
     RULES,
-    RULE_MOVES
+    RULE_MOVES,
+    ASSETS
 }
