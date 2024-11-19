@@ -4,6 +4,7 @@ import { Paths } from '@/openapi/openapi';
 
 import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
+import { QK } from '../utils/reactQuery';
 
 export const useMoves = (
     groupId: ApiId | null,
@@ -13,11 +14,11 @@ export const useMoves = (
 
     return useQuery<Paths.GetAllRuleMoves.Responses.$200 | null>({
         queryKey: [
-            'group',
+            QK.group,
             groupId ?? 'NULL',
-            'season',
+            QK.season,
             seasonId ?? 'NULL',
-            'ruleMoves',
+            QK.ruleMoves,
         ],
         queryFn: async () => {
             if (!groupId || !seasonId) {
@@ -40,11 +41,11 @@ export const useRules = (
 
     return useQuery<Paths.GetRules.Responses.$200 | null>({
         queryKey: [
-            'group',
+            QK.group,
             groupId ?? 'NULL',
-            'season',
+            QK.season,
             seasonId ?? 'NULL',
-            'rules',
+            QK.rules,
         ],
         queryFn: async () => {
             if (!groupId || !seasonId) {

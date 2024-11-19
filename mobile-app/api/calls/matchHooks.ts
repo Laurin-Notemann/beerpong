@@ -4,6 +4,7 @@ import { Paths } from '@/openapi/openapi';
 
 import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
+import { QK } from '../utils/reactQuery';
 
 export const useMatchQuery = (
     groupId: ApiId | null | undefined,
@@ -13,7 +14,7 @@ export const useMatchQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetMatchById.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'season', seasonId, 'match', matchId],
+        queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches, matchId],
         queryFn: async () => {
             if (!groupId || !seasonId || !matchId) {
                 return null;
@@ -34,7 +35,7 @@ export const useMatchesQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'season', seasonId, 'matches'],
+        queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;

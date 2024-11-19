@@ -5,7 +5,7 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient } from '.';
 import { env } from '../env';
-import { ignoreSeason } from '../utils/reactQuery';
+import { ignoreSeason, QK } from '../utils/reactQuery';
 
 export function useRealtimeConnection() {
     const { groupIds } = useGroupStore();
@@ -24,44 +24,51 @@ export function useRealtimeConnection() {
                 client.current.logger.info('refetching groups');
 
                 qc.invalidateQueries({
-                    queryKey: ['group', e.groupId],
+                    queryKey: [QK.group, e.groupId],
                     exact: true,
                 });
                 break;
             case 'MATCHES':
                 client.current.logger.info('refetching matches');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason(['group', e.groupId, 'matches']),
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
                 });
                 break;
             case 'SEASONS':
                 client.current.logger.info('refetching seasons');
                 qc.invalidateQueries({
-                    queryKey: ['group', e.groupId, 'seasons'],
+                    queryKey: [QK.group, e.groupId, QK.seasons],
                 });
                 break;
             case 'PLAYERS':
                 client.current.logger.info('refetching players');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason(['group', e.groupId, 'players']),
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
                 break;
             case 'PROFILES':
-                client.current.logger.info('refetching profiles');
+                client.current.logger.info('refetching players');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason(['group', e.groupId, 'players']),
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
+                });
+                qc.invalidateQueries({
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
                 break;
             case 'RULES':
                 client.current.logger.info('refetching rules');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason(['group', e.groupId, 'rules']),
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.rules]),
                 });
                 break;
             case 'RULE_MOVES':
                 client.current.logger.info('refetching ruleMoves');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason(['group', e.groupId, 'ruleMoves']),
+                    predicate: ignoreSeason([
+                        QK.group,
+                        e.groupId,
+                        QK.ruleMoves,
+                    ]),
                 });
                 break;
         }

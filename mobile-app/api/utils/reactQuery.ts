@@ -4,6 +4,12 @@ export const QK = {
     group: 'group',
     season: 'season',
     players: 'players',
+    matches: 'matches',
+    seasons: 'seasons',
+    rules: 'rules',
+    ruleMoves: 'ruleMoves',
+
+    groupCode: 'groupCode',
 };
 
 const areArraysIdentical = <T>(arr1: T[], arr2: T[]): boolean => {

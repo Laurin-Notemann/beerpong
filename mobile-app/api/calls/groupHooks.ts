@@ -5,12 +5,13 @@ import { useApi } from '@/api/utils/create-api';
 import { Paths } from '@/openapi/openapi';
 
 import { env } from '../env';
+import { QK } from '../utils/reactQuery';
 
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetGroupById.Responses.$200 | null>({
-        queryKey: ['group', id],
+        queryKey: [QK.group, id],
         queryFn: async () => {
             if (!id) {
                 return null;
@@ -25,7 +26,7 @@ export const useFindGroupByInviteCode = (inviteCode: string | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.FindGroupByInviteCode.Responses.$200 | null>({
-        queryKey: ['groupCode', inviteCode],
+        queryKey: [QK.groupCode, inviteCode],
         queryFn: async () => {
             if (!inviteCode || inviteCode.length < env.groupCode.length) {
                 return null;

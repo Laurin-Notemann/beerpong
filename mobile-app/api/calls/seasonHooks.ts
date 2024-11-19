@@ -5,13 +5,15 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
+import { QK } from '../utils/reactQuery';
 import { useGroupQuery } from './groupHooks';
 
 export const useSeasonQuery = (seasonId: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetSeasonById.Responses.$200 | null>({
-        queryKey: ['season', seasonId],
+        // TODO: this won't get refetched by the realtime event because we don't have access to the group id here
+        queryKey: [QK.seasons, seasonId],
         queryFn: async () => {
             if (!seasonId) {
                 return null;
@@ -27,7 +29,7 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetAllSeasons.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'seasons'],
+        queryKey: [QK.group, groupId, QK.seasons],
         queryFn: async () => {
             if (!groupId) {
                 return null;
