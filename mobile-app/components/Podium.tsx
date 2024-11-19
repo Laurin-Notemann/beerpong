@@ -24,6 +24,18 @@ export default function Podium({
 }: PodiumProps) {
     const nav = useNavigation();
 
+    const firstPlaceAveragePointsPerMatch = firstPlace?.matches
+        ? (firstPlace?.points / firstPlace?.matches).toFixed(1)
+        : '--';
+
+    const secondPlaceAveragePointsPerMatch = secondPlace?.matches
+        ? (secondPlace?.points / secondPlace?.matches).toFixed(1)
+        : '--';
+
+    const thirdPlaceAveragePointsPerMatch = thirdPlace?.matches
+        ? (thirdPlace?.points / thirdPlace?.matches).toFixed(1)
+        : '--';
+
     return (
         <ThemedView
             style={{
@@ -72,7 +84,7 @@ export default function Podium({
                                         color: theme.color.text.primary,
                                     }}
                                 >
-                                    6.7
+                                    {secondPlaceAveragePointsPerMatch}
                                 </ThemedText>
                                 <ThemedText
                                     style={{
@@ -150,7 +162,7 @@ export default function Podium({
                                         color: theme.color.text.primary,
                                     }}
                                 >
-                                    7.0
+                                    {firstPlaceAveragePointsPerMatch}
                                 </ThemedText>
                                 <ThemedText
                                     style={{
@@ -212,7 +224,7 @@ export default function Podium({
                                         color: theme.color.text.primary,
                                     }}
                                 >
-                                    6.6
+                                    {thirdPlaceAveragePointsPerMatch}
                                 </ThemedText>
                                 <ThemedText
                                     style={{
