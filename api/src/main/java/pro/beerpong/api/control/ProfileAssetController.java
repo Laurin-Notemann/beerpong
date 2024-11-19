@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ProfileAssetMetadataDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.ProfileService;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -24,7 +21,7 @@ public class ProfileAssetController {
     private final SubscriptionHandler subscriptionHandler;
 
     @PutMapping("/avatar")
-    public ResponseEntity<ResponseEnvelope<ProfileAssetMetadataDto>> setAvatar(@PathVariable String groupId, @PathVariable String profileId, HttpServletRequest request, @RequestBody byte[] content) {
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId, @PathVariable String profileId, HttpServletRequest request, @RequestBody byte[] content) {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {
@@ -37,7 +34,7 @@ public class ProfileAssetController {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
         }
 
-        var dto = new ProfileAssetMetadataDto(profileService.storeProfilePicture(profile, content, request.getContentType()), profileId);
+        var dto = profileService.storeProfilePicture(profile, content, request.getContentType());
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
 
