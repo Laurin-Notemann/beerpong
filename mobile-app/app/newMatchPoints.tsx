@@ -1,5 +1,4 @@
 import React from 'react';
-import Toast from 'react-native-root-toast';
 
 import { useCreateMatchMutation } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';

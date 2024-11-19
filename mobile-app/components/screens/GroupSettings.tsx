@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Switch } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -75,13 +74,7 @@ export default function GroupSettingsScreen({
                         title="Set Wallpaper"
                         headIcon="image-multiple"
                         tailIconType="next"
-                        onPress={async () => {
-                            const result = await launchImageLibrary({
-                                mediaType: 'photo',
-                            });
-                            // eslint-disable-next-line
-                            console.log(result);
-                        }}
+                        onPress={async () => {}}
                     />
                     <MenuItem
                         title="Push Notifications"

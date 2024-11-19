@@ -1,6 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import Toast from 'react-native-root-toast';
 
 import {
     usePlayersQuery,

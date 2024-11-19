@@ -88,7 +88,7 @@ export const useUpdatePlayerAvatarMutation = () => {
                 await api
             )
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setWallpaper_1(rest, byteArray as any, {
+                .setAvatar(rest, byteArray as any, {
                     headers: {
                         'Content-Type': mimeType,
                     },

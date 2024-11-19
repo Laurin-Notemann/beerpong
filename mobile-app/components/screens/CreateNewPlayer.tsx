@@ -1,6 +1,5 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { launchImageLibrary } from 'react-native-image-picker';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
 import Avatar from '@/components/Avatar';
@@ -46,13 +45,7 @@ export default function CreateNewPlayer({ onCreate }: CreateNewPlayerProps) {
                     name={name}
                     size={96}
                     canUpload
-                    onPress={async () => {
-                        const result = await launchImageLibrary({
-                            mediaType: 'photo',
-                        });
-                        // eslint-disable-next-line
-                        console.log(result);
-                    }}
+                    onPress={async () => {}}
                 />
                 <TextInput
                     required
