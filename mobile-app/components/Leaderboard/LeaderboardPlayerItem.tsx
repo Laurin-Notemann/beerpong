@@ -2,6 +2,7 @@ import { TouchableOpacity } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
+import { formatPlacement } from '@/utils/format';
 
 import Avatar from '../Avatar';
 import { ThemedText } from '../ThemedText';
@@ -63,7 +64,7 @@ export default function LeaderboardPlayerItem({
                     color: theme.color.text.secondary,
                 }}
             >
-                {placement}
+                {formatPlacement(placement)}
             </ThemedText>
             <Avatar url={avatarUrl} name={name} size={36} />
             <ThemedView

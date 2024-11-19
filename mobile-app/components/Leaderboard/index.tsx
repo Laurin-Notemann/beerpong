@@ -36,7 +36,7 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                         key={idx}
                         name={i.name}
                         id={i.id}
-                        placement={idx + 3}
+                        placement={idx + 4}
                         points={i.points}
                         matches={i.matches}
                         elo={i.elo}

@@ -83,10 +83,15 @@ export default function Page() {
         }
     }
 
+    const sortedPlayers = (playersQuery.data?.data ?? []).sort(
+        (a, b) => b.statistics?.points! - a.statistics?.points!
+    );
+    const placement = sortedPlayers.findIndex((i) => i.id === id);
+
     return (
         <PlayerScreen
             id={id}
-            placement={6}
+            placement={placement + 1}
             name={player?.profile?.name || 'Unknown'}
             elo={216}
             matchesWon={player?.statistics?.matches ?? 0}

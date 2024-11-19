@@ -4,6 +4,7 @@ import { Pressable } from 'react-native';
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
+import { formatPlacement } from '@/utils/format';
 
 import Avatar from './Avatar';
 import { ThemedText } from './ThemedText';
@@ -57,7 +58,7 @@ export default function Podium({
                         marginBottom: 16,
                     }}
                 >
-                    2
+                    {formatPlacement(2)}
                 </ThemedText>
                 <Avatar
                     url={secondPlace?.avatarUrl}
@@ -136,7 +137,7 @@ export default function Podium({
                         marginBottom: 16,
                     }}
                 >
-                    1
+                    {formatPlacement(1)}
                 </ThemedText>
                 <Avatar
                     url={firstPlace?.avatarUrl}
@@ -198,7 +199,7 @@ export default function Podium({
                         marginBottom: 16,
                     }}
                 >
-                    3
+                    {formatPlacement(3)}
                 </ThemedText>
                 <Avatar
                     url={thirdPlace?.avatarUrl}

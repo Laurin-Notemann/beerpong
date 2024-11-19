@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ThemedText } from '@/components/ThemedText';
 import { theme } from '@/theme';
+import { formatPlacement } from '@/utils/format';
 
 function Badge({ children }: PropsWithChildren) {
     return (
@@ -144,7 +145,7 @@ export default function Avatar({
                             fontWeight: 600,
                         }}
                     >
-                        {placement}
+                        {formatPlacement(placement)}
                     </Text>
                 </Badge>
             )}
