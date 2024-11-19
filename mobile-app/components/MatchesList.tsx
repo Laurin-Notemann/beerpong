@@ -13,6 +13,8 @@ import MatchVsHeader from './MatchVsHeader';
 
 export type Match = {
     date: Date;
+    redCups: number;
+    blueCups: number;
     redTeam: { name: string; avatarUrl?: string | null }[];
     blueTeam: { name: string; avatarUrl?: string | null }[];
 };

@@ -1,36 +1,45 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, ViewProps } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
 import { Match } from './MatchesList';
+import { TeamId } from './screens/NewMatchAssignTeams';
 
 const MAX_ITEMS = 4;
 
-export interface MatchVsHeaderProps {
+export interface MatchVsHeaderProps extends ViewProps {
     match: Omit<Match, 'date'>;
-
-    style?: any;
 
     hasScore?: boolean;
 }
 export default function MatchVsHeader({
     match,
-    style,
     hasScore = true,
+    ...rest
 }: MatchVsHeaderProps) {
+    const redWon = match.redCups > match.blueCups;
+
+    const winner: TeamId =
+        match.redCups > match.blueCups
+            ? 'red'
+            : match.redCups < match.blueCups
+              ? 'blue'
+              : null;
+
     return (
         <View
-            style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 16,
-
-                ...(style ?? {}),
-            }}
+            style={[
+                {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 16,
+                },
+                rest.style,
+            ]}
         >
             <View style={{ flexDirection: 'row' }}>
                 {Array(Math.max(MAX_ITEMS - match.blueTeam.length, 0))
@@ -62,15 +71,13 @@ export default function MatchVsHeader({
                     gap: 2,
                 }}
             >
-                <Icon
-                    name="crown-outline"
-                    size={24}
-                    color={
-                        Math.round(Math.random()) === 1
-                            ? theme.color.team.red
-                            : theme.color.team.blue
-                    }
-                />
+                {winner && (
+                    <Icon
+                        name="crown-outline"
+                        size={24}
+                        color={theme.color.team[winner]}
+                    />
+                )}
                 <Text
                     style={{
                         color: '#fff',
