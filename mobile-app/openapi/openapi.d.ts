@@ -458,20 +458,7 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeListProfileDto;
         }
     }
-    namespace SetWallpaper {
-        namespace Parameters {
-            export type GroupId = string;
-        }
-        export interface PathParameters {
-            groupId: Parameters.GroupId;
-        }
-        export type RequestBody = string; // byte
-        namespace Responses {
-            export type $200 =
-                Components.Schemas.ResponseEnvelopeAssetMetadataDto;
-        }
-    }
-    namespace SetWallpaper1 {
+    namespace SetAvatar {
         namespace Parameters {
             export type GroupId = string;
             export type ProfileId = string;
@@ -479,6 +466,19 @@ declare namespace Paths {
         export interface PathParameters {
             groupId: Parameters.GroupId;
             profileId: Parameters.ProfileId;
+        }
+        export type RequestBody = string; // byte
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+        }
+    }
+    namespace SetWallpaper {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
         }
         export type RequestBody = string; // byte
         namespace Responses {
@@ -646,13 +646,13 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
     /**
-     * setWallpaper_1
+     * setAvatar
      */
-    'setWallpaper_1'(
-        parameters?: Parameters<Paths.SetWallpaper1.PathParameters> | null,
-        data?: Paths.SetWallpaper1.RequestBody,
+    'setAvatar'(
+        parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
+        data?: Paths.SetAvatar.RequestBody,
         config?: AxiosRequestConfig
-    ): OperationResponse<Paths.SetWallpaper1.Responses.$200>;
+    ): OperationResponse<Paths.SetAvatar.Responses.$200>;
     /**
      * getProfileById
      */
@@ -884,13 +884,13 @@ export interface PathsDictionary {
     };
     ['/groups/{groupId}/profiles/{profileId}/avatar']: {
         /**
-         * setWallpaper_1
+         * setAvatar
          */
         'put'(
-            parameters?: Parameters<Paths.SetWallpaper1.PathParameters> | null,
-            data?: Paths.SetWallpaper1.RequestBody,
+            parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
+            data?: Paths.SetAvatar.RequestBody,
             config?: AxiosRequestConfig
-        ): OperationResponse<Paths.SetWallpaper1.Responses.$200>;
+        ): OperationResponse<Paths.SetAvatar.Responses.$200>;
     };
     ['/groups/{groupId}/profiles/{id}']: {
         /**
