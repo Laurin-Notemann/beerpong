@@ -41,12 +41,7 @@ export default function CreateNewPlayer({ onCreate }: CreateNewPlayerProps) {
                 }}
             />
             <InputModal>
-                <Avatar
-                    name={name}
-                    size={96}
-                    canUpload
-                    onPress={async () => {}}
-                />
+                <Avatar name={name} size={96} />
                 <TextInput
                     required
                     placeholder="Player Name"

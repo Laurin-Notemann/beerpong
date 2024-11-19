@@ -44,7 +44,7 @@ function PlayerItem({
             }}
         >
             <>
-                <Avatar size={36} name={player.name} />
+                <Avatar url={player.avatarUrl} size={36} name={player.name} />
                 <Text
                     style={{
                         fontSize: 17,
@@ -97,7 +97,7 @@ function PlayerItem({
     );
 }
 
-export type Player = Pick<TeamMember, 'id' | 'name' | 'team'>;
+export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 
 export interface NewMatchAssignTeamsProps {
     players: Player[];

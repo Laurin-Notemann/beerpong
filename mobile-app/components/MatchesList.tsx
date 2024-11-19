@@ -28,8 +28,8 @@ const getDayName = (date: Dayjs) => {
 
 export type Match = {
     date: Date;
-    redTeam: { name: string }[];
-    blueTeam: { name: string }[];
+    redTeam: { name: string; avatarUrl?: string | null }[];
+    blueTeam: { name: string; avatarUrl?: string | null }[];
 };
 
 const groupIntoDays = (matches: Match[]) => {

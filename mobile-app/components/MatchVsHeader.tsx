@@ -41,6 +41,7 @@ export default function MatchVsHeader({
                 {match.blueTeam.slice(0, MAX_ITEMS).map((i, index) => (
                     <Avatar
                         key={index}
+                        url={i.avatarUrl}
                         content={
                             index === MAX_ITEMS - 1 &&
                             match.blueTeam.length > MAX_ITEMS
@@ -93,6 +94,7 @@ export default function MatchVsHeader({
                 {match.redTeam.slice(0, MAX_ITEMS).map((i, index) => (
                     <Avatar
                         key={index}
+                        url={i.avatarUrl}
                         content={
                             index === MAX_ITEMS - 1 &&
                             match.redTeam.length > MAX_ITEMS

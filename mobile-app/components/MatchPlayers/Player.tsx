@@ -22,6 +22,7 @@ export interface PerformedMove {
 
 export default function Player({
     id,
+    avatarUrl,
     team,
     name,
     points,
@@ -36,6 +37,7 @@ export default function Player({
     setMoveCount,
 }: {
     id: string;
+    avatarUrl?: string | null;
     team: 'red' | 'blue';
     name: string;
     points: number;
@@ -95,6 +97,7 @@ export default function Player({
             >
                 <>
                     <Avatar
+                        url={avatarUrl}
                         size={40}
                         name={name}
                         borderColor={theme.color.team[team]}

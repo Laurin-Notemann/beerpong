@@ -7,6 +7,7 @@ import Player, { PerformedMove } from './Player';
 export interface TeamMember {
     id: string;
     team: TeamId;
+    avatarUrl?: string | null;
     name: string;
     points: number;
     change: number;
@@ -39,6 +40,7 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         id={i.id}
+                        avatarUrl={i.avatarUrl!}
                         team={i.team!}
                         name={i.name}
                         points={i.points}
@@ -59,6 +61,7 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         id={i.id}
+                        avatarUrl={i.avatarUrl!}
                         team={i.team!}
                         name={i.name}
                         points={i.points}

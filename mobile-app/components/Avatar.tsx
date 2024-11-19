@@ -134,7 +134,7 @@ export default function Avatar({
                     />
                 </Badge>
             )}
-            {placement && (
+            {!canUpload && placement && (
                 <Badge>
                     <Text
                         style={{

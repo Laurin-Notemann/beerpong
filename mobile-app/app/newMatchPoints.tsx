@@ -42,6 +42,7 @@ export default function Page() {
         return {
             id: i.playerId,
             team: i.team,
+            avatarUrl: profile.profile.avatarAsset?.url,
             name: profile.profile.name || 'Unknown',
             points: 1,
             change: 0.12,
