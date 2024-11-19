@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, ViewProps } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -10,7 +10,7 @@ import Avatar from './Avatar';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 
-export interface PodiumProps {
+export interface PodiumProps extends ViewProps {
     detailed?: boolean;
 
     firstPlace?: Player;
@@ -22,6 +22,7 @@ export default function Podium({
     firstPlace,
     secondPlace,
     thirdPlace,
+    ...rest
 }: PodiumProps) {
     const nav = useNavigation();
 
@@ -39,11 +40,15 @@ export default function Podium({
 
     return (
         <ThemedView
-            style={{
-                flexDirection: 'row',
+            {...rest}
+            style={[
+                {
+                    flexDirection: 'row',
 
-                marginTop: -2,
-            }}
+                    marginTop: 24,
+                },
+                rest.style,
+            ]}
         >
             <Pressable
                 style={{ alignItems: 'center', marginTop: 48 }}

@@ -19,6 +19,17 @@ export const matchDtoToMatch =
                 ...(players.find((j) => j.id === i.playerId!)?.profile ?? {}),
             }));
 
+        const matchMovesByTeamMember = i.matchMoves!.reduce<
+            Record<string, any[]>
+        >((obj, i) => {
+            if (!obj[i.teamMemberId!]) {
+                obj[i.teamMemberId!] = [];
+            }
+            obj[i.teamMemberId!].push();
+
+            return obj;
+        }, {});
+
         const blueCups = i
             .matchMoves!.filter((j) => {
                 const player = i.teamMembers!.find(
