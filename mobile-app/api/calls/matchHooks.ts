@@ -77,3 +77,37 @@ export const useCreateMatchMutation = () => {
         },
     });
 };
+
+// export const useDeleteMatchMutation = () => {
+//     const { api } = useApi();
+
+//     return useMutation<
+//         Paths.DeleteMatch.Responses.$200 | null,
+//         Error,
+//         { groupId: ApiId; seasonId: ApiId; id: ApiId }
+//     >({
+//         mutationFn: async (body) => {
+//             const res = await (await api).deleteMatch(body);
+//             return res?.data;
+//         },
+//     });
+// };
+
+export const useUpdateMatchMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.UpdateMatch.Responses.$200 | null,
+        Error,
+        Paths.UpdateMatch.RequestBody & {
+            groupId: ApiId;
+            seasonId: ApiId;
+            id: ApiId;
+        }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).updateMatch(body, body);
+            return res?.data;
+        },
+    });
+};

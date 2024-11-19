@@ -8,7 +8,8 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
-import { mockMatches } from '@/components/mockData/matches';
+import MenuItem from '@/components/Menu/MenuItem';
+import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import { HeaderItem } from './(tabs)/_layout';
@@ -29,6 +30,8 @@ export default function Page() {
     const match = matchQuery.data?.data
         ? matchDtoToMatch(players)(matchQuery.data.data)
         : null;
+
+    async function onDelete() {}
 
     function setMoveCount(userId: string, moveId: string, count: number) {
         // setPlayers((prev) => {
@@ -103,7 +106,7 @@ export default function Page() {
                             team: 'red' as const,
                         })) ?? []),
                     ].map((i) => ({
-                        id: '#',
+                        id: i.id!,
                         change: 0,
                         moves: [],
                         name: i.name,
@@ -113,6 +116,27 @@ export default function Page() {
                     }))}
                     setMoveCount={setMoveCount}
                 />
+                {isEditing && (
+                    <MenuSection
+                        style={{
+                            width: '100%',
+
+                            marginTop: 24,
+                        }}
+                    >
+                        <MenuItem
+                            title="Delete Match"
+                            headIcon="delete-outline"
+                            onPress={onDelete}
+                            type="danger"
+                            confirmationPrompt={{
+                                title: 'Delete Match',
+                                description:
+                                    'Are you sure you want to delete this match?',
+                            }}
+                        />
+                    </MenuSection>
+                )}
             </ScrollView>
         </>
     );
