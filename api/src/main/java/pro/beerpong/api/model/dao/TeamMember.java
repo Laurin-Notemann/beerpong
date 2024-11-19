@@ -11,10 +11,10 @@ public class TeamMember {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "teamId")
+    @JoinColumn(name = "team_id")
     private Team team;
 
     @ManyToOne
-    @JoinColumn(name = "playerId")
+    @JoinColumn(name = "player_id")
     private Player player;
 }

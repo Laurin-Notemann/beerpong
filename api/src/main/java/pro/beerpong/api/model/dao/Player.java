@@ -3,6 +3,8 @@ package pro.beerpong.api.model.dao;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity(name = "players")
 @Data
 public class Player {
@@ -11,13 +13,16 @@ public class Player {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "profileId")
+    @JoinColumn(name = "profile_id")
     private Profile profile;
 
     @ManyToOne
-    @JoinColumn(name = "seasonId")
+    @JoinColumn(name = "season_id")
     private Season season;
 
     @Transient
     private PlayerStatistics statistics;
+
+    @OneToMany(mappedBy = "player")
+    private List<TeamMember> teamMembers;
 }
