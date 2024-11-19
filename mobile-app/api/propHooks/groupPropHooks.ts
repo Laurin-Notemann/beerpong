@@ -8,13 +8,13 @@ import {
     useGroupQuery,
     useUpdateGroupWallpaperMutation,
 } from '../calls/groupHooks';
-import { useAllSeasonQuery, useGroup } from '../calls/seasonHooks';
+import { useAllSeasonsQuery, useGroup } from '../calls/seasonHooks';
 import { ScreenState } from '../types';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const { groupId } = useGroup();
 
-    const seasonsQuery = useAllSeasonQuery(groupId);
+    const seasonsQuery = useAllSeasonsQuery(groupId);
 
     const nav = useNavigation();
 

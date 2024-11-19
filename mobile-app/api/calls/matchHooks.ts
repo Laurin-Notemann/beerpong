@@ -46,6 +46,23 @@ export const useMatchesQuery = (
     });
 };
 
+export const useMatchesByPlayerQuery = (
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined,
+    playerId: ApiId | null | undefined
+) => {
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    if (!matchesQuery.data?.data) return matchesQuery;
+
+    const matches = matchesQuery.data.data;
+
+    matchesQuery.data.data = matches.filter((i) =>
+        i.teamMembers?.find((j) => j.playerId === playerId)
+    );
+    return matchesQuery;
+};
+
 export const useCreateMatchMutation = () => {
     const { api } = useApi();
     return useMutation<

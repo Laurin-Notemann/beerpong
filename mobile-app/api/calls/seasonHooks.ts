@@ -23,7 +23,7 @@ export const useSeasonQuery = (seasonId: ApiId | null) => {
     });
 };
 
-export const useAllSeasonQuery = (groupId: ApiId | null) => {
+export const useAllSeasonsQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetAllSeasons.Responses.$200 | null>({
