@@ -1,5 +1,3 @@
-import * as FileSystem from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
 
 import {
@@ -13,21 +11,10 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { mockMatches } from '@/components/mockData/matches';
 import PlayerScreen from '@/components/screens/Player';
 import { showErrorToast } from '@/toast';
+import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 
 import { useNavigation } from './navigation/useNavigation';
-
-const base64ToByteArray = (base64: string): Uint8Array<ArrayBuffer> => {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    return bytes;
-};
 
 export default function Page() {
     const nav = useNavigation();
@@ -72,20 +59,14 @@ export default function Page() {
     async function onUploadAvatarPress() {
         if (!groupId || !seasonId || !profileId) return;
 
-        const result = await ImagePicker.launchImageLibraryAsync({
+        const [result] = await launchImageLibrary({
             // mediaTypes: ['images'],
             selectionLimit: 1,
         });
-        const avatarUri = result.assets?.[0]?.uri;
-        const mimeType = result.assets?.[0].mimeType;
+        const mimeType = result?.mimeType;
+        const byteArray = result?.byteArray;
 
-        if (!avatarUri || !mimeType) return;
-
-        const base64Uri = await FileSystem.readAsStringAsync(avatarUri, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
-
-        const byteArray = base64ToByteArray(base64Uri);
+        if (!mimeType || !byteArray) return;
 
         try {
             await uploadAvatarAsync({

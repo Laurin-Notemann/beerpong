@@ -20,6 +20,7 @@ export interface GroupSettingsProps {
     pastSeasons: number;
 
     groupCode: string;
+    onUploadWallpaperPress: () => void;
 }
 export default function GroupSettingsScreen({
     id,
@@ -28,6 +29,7 @@ export default function GroupSettingsScreen({
     pushNotificationsEnabled,
     pastSeasons,
     groupCode,
+    onUploadWallpaperPress,
 }: GroupSettingsProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -74,7 +76,7 @@ export default function GroupSettingsScreen({
                         title="Set Wallpaper"
                         headIcon="image-multiple"
                         tailIconType="next"
-                        onPress={async () => {}}
+                        onPress={onUploadWallpaperPress}
                     />
                     <MenuItem
                         title="Push Notifications"
