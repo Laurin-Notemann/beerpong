@@ -1,11 +1,15 @@
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 
 import { useGroupQuery } from '../calls/groupHooks';
-import { useGroup } from '../calls/seasonHooks';
+import { useAllSeasonQuery, useGroup } from '../calls/seasonHooks';
 import { ScreenState } from '../types';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const { groupId } = useGroup();
+
+    const seasonsQuery = useAllSeasonQuery(groupId);
+
+    const pastSeasons = (seasonsQuery.data?.data?.length ?? 1) - 1;
 
     const { data, ...screenState } = useGroupQuery(groupId);
 
@@ -15,7 +19,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               groupCode: data.data.inviteCode!,
               groupName: data.data.name || 'Unknown',
               hasPremium: false,
-              pastSeasons: 0,
+              pastSeasons,
               pushNotificationsEnabled: false,
           }
         : null;
