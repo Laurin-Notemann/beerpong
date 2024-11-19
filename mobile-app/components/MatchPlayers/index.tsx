@@ -35,8 +35,8 @@ export default function MatchPlayers({
 
     return (
         <>
-            <MenuSection title={`Red Team - ${redTeamPoints} points`}>
-                {redTeam.map((i, idx) => (
+            <MenuSection title={`Blue Team - ${blueTeamPoints} points`}>
+                {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
                         id={i.id}
@@ -56,8 +56,8 @@ export default function MatchPlayers({
                 ))}
             </MenuSection>
 
-            <MenuSection title={`Blue Team - ${blueTeamPoints} points`}>
-                {blueTeam.map((i, idx) => (
+            <MenuSection title={`Red Team - ${redTeamPoints} points`}>
+                {redTeam.map((i, idx) => (
                     <Player
                         key={idx}
                         id={i.id}

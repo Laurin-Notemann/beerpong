@@ -12,11 +12,12 @@ import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
 
 export type Match = {
+    id: string;
     date: Date;
     redCups: number;
     blueCups: number;
-    redTeam: { name: string; avatarUrl?: string | null }[];
-    blueTeam: { name: string; avatarUrl?: string | null }[];
+    redTeam: { id: string; name: string; avatarUrl?: string | null }[];
+    blueTeam: { id: string; name: string; avatarUrl?: string | null }[];
 };
 
 const groupIntoDays = (matches: Match[]) => {
@@ -72,7 +73,9 @@ export default function MatchesList({ matches }: MatchesListProps) {
                                 borderTopColor: theme.panel.light.active,
                                 borderTopWidth: 0.5,
                             }}
-                            onPress={() => nav.navigate('match')}
+                            onPress={() =>
+                                nav.navigate('match', { id: item.id })
+                            }
                         >
                             <>
                                 <MatchVsHeader match={item} />

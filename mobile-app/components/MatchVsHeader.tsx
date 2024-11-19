@@ -93,7 +93,7 @@ export default function MatchVsHeader({
                         //     : theme.color.team.blue,
                     }}
                 >
-                    {hasScore ? match.redCups + ':' + match.blueCups : 'vs'}
+                    {hasScore ? match.blueCups + ':' + match.redCups : 'vs'}
                 </Text>
             </View>
 

@@ -40,14 +40,17 @@ export const matchDtoToMatch =
             .reduce((sum, j) => sum + j.value!, 0);
 
         return {
+            id: i.id!,
             blueCups,
             redCups,
             date: new Date(i.date!),
             redTeam: redPlayers.map((i) => ({
+                id: i.id!,
                 name: i.name!,
                 avatarUrl: i.avatarAsset?.url,
             })),
             blueTeam: bluePlayers.map((i) => ({
+                id: i.id!,
                 name: i.name!,
                 avatarUrl: i.avatarAsset?.url,
             })),
