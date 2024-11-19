@@ -81,5 +81,6 @@ jobs:
           env_vars: |
             POSTGRES_USER=postgres
             POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+            API_BASE_URL=https://api-springboot-5685154754.europe-west10.run.app
           secrets: |-
             POSTGRES_PASSWORD=api-pg-password:latest

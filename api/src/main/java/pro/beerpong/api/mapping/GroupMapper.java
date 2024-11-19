@@ -5,11 +5,9 @@ import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = AssetMapper.class)
 public interface GroupMapper {
-    Group groupCreateDtoToGroup(GroupCreateDto groupDto);
-
     Group groupDtoToGroup(GroupDto groupDto);
-
+    Group groupCreateDtoToGroup(GroupCreateDto groupDto);
     GroupDto groupToGroupDto(Group groupDto);
 }

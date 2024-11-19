@@ -8,6 +8,12 @@ import type {
 
 declare namespace Components {
     namespace Schemas {
+        export interface AssetMetadataDto {
+            id?: string;
+            url?: string;
+            mediaType?: string;
+            uploadedAt?: string; // date-time
+        }
         export interface ErrorDetails {
             code?: string;
             description?: string;
@@ -22,6 +28,7 @@ declare namespace Components {
             inviteCode?: string;
             groupSettings?: GroupSettings;
             activeSeason?: Season;
+            wallpaperAsset?: AssetMetadataDto;
             numberOfPlayers?: number; // int32
             numberOfMatches?: number; // int32
             numberOfSeasons?: number; // int32
@@ -67,7 +74,14 @@ declare namespace Components {
         export interface ProfileDto {
             id?: string;
             name?: string;
+            avatarAsset?: AssetMetadataDto;
             groupId?: string;
+        }
+        export interface ResponseEnvelopeAssetMetadataDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: AssetMetadataDto;
+            error?: ErrorDetails;
         }
         export interface ResponseEnvelopeGroupDto {
             status?: 'OK' | 'ERROR';
@@ -277,6 +291,17 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
+    namespace FetchData {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export interface $200 {}
+        }
+    }
     namespace FindGroupByInviteCode {
         namespace Parameters {
             export type InviteCode = string;
@@ -324,6 +349,18 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListSeasonDto;
+        }
+    }
+    namespace GetAsset {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeAssetMetadataDto;
         }
     }
     namespace GetGroupById {
@@ -419,6 +456,34 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeListProfileDto;
+        }
+    }
+    namespace SetWallpaper {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        export type RequestBody = string; // byte
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+        }
+    }
+    namespace SetWallpaper1 {
+        namespace Parameters {
+            export type GroupId = string;
+            export type ProfileId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            profileId: Parameters.ProfileId;
+        }
+        export type RequestBody = string; // byte
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeAssetMetadataDto;
         }
     }
     namespace StartNewSeason {
@@ -525,6 +590,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
     /**
+     * setWallpaper
+     */
+    'setWallpaper'(
+        parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
+        data?: Paths.SetWallpaper.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
+    /**
      * getRules
      */
     'getRules'(
@@ -572,6 +645,14 @@ export interface OperationMethods {
         data?: Paths.UpdateMatch.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+    /**
+     * setWallpaper_1
+     */
+    'setWallpaper_1'(
+        parameters?: Parameters<Paths.SetWallpaper1.PathParameters> | null,
+        data?: Paths.SetWallpaper1.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetWallpaper1.Responses.$200>;
     /**
      * getProfileById
      */
@@ -693,6 +774,22 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetSeasonById.Responses.$200>;
     /**
+     * getAsset
+     */
+    'getAsset'(
+        parameters?: Parameters<Paths.GetAsset.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetAsset.Responses.$200>;
+    /**
+     * fetchData
+     */
+    'fetchData'(
+        parameters?: Parameters<Paths.FetchData.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.FetchData.Responses.$200>;
+    /**
      * deletePlayer
      */
     'deletePlayer'(
@@ -720,6 +817,16 @@ export interface PathsDictionary {
             data?: Paths.UpdateGroup.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
+    };
+    ['/groups/{groupId}/wallpaper']: {
+        /**
+         * setWallpaper
+         */
+        'put'(
+            parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
+            data?: Paths.SetWallpaper.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/rules']: {
         /**
@@ -774,6 +881,16 @@ export interface PathsDictionary {
             data?: Paths.UpdateMatch.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+    };
+    ['/groups/{groupId}/profiles/{profileId}/avatar']: {
+        /**
+         * setWallpaper_1
+         */
+        'put'(
+            parameters?: Parameters<Paths.SetWallpaper1.PathParameters> | null,
+            data?: Paths.SetWallpaper1.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetWallpaper1.Responses.$200>;
     };
     ['/groups/{groupId}/profiles/{id}']: {
         /**
@@ -915,6 +1032,26 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetSeasonById.Responses.$200>;
     };
+    ['/assets/{id}']: {
+        /**
+         * getAsset
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetAsset.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetAsset.Responses.$200>;
+    };
+    ['/assets/{id}/data']: {
+        /**
+         * fetchData
+         */
+        'get'(
+            parameters?: Parameters<Paths.FetchData.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.FetchData.Responses.$200>;
+    };
     ['/groups/{groupId}/seasons/{seasonId}/players/{id}']: {
         /**
          * deletePlayer
@@ -929,6 +1066,7 @@ export interface PathsDictionary {
 
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
+export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
@@ -941,6 +1079,8 @@ export type PlayerDto = Components.Schemas.PlayerDto;
 export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
+export type ResponseEnvelopeAssetMetadataDto =
+    Components.Schemas.ResponseEnvelopeAssetMetadataDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
 export type ResponseEnvelopeListMatchDto =

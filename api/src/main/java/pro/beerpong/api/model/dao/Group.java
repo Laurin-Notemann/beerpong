@@ -18,4 +18,7 @@ public class Group {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn
     private Season activeSeason;
+    @OneToOne
+    @JoinColumn(name = "assetIdWallpaper")
+    private Asset wallpaperAsset;
 }

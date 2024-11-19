@@ -1,10 +1,12 @@
 package pro.beerpong.api.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.dao.Profile;
+import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;
@@ -14,22 +16,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ProfileService {
+    private final AssetService assetService;
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
-
-    @Autowired
-    public ProfileService(ProfileRepository profileRepository, GroupRepository groupRepository, GroupMapper groupMapper, ProfileMapper profileMapper,
-                          PlayerService playerService) {
-        this.profileRepository = profileRepository;
-        this.groupRepository = groupRepository;
-        this.groupMapper = groupMapper;
-        this.profileMapper = profileMapper;
-        this.playerService = playerService;
-    }
 
     public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto) {
         var groupOptional = groupRepository.findById(groupId);
@@ -84,8 +78,28 @@ public class ProfileService {
         }
 
         profile.setName(profileCreateDto.getName());
-        //TODO update asset
 
         return profileMapper.profileToProfileDto(profileRepository.save(profile));
+    }
+
+    @Transactional
+    public AssetMetadataDto storeProfilePicture(ProfileDto profileDto, byte[] content, String contentType) {
+        String oldProfilePictureAssetId = null;
+
+        if (profileDto.getAvatarAsset() != null) {
+            oldProfilePictureAssetId = profileDto.getAvatarAsset().getId();
+        }
+
+        var assetMetadataDto = assetService.storeAsset(content, contentType);
+
+        profileDto.setAvatarAsset(assetMetadataDto);
+
+        profileRepository.save(profileMapper.profileDtoToProfile(profileDto));
+
+        if (oldProfilePictureAssetId != null) {
+            assetService.deleteAsset(oldProfilePictureAssetId);
+        }
+
+        return assetMetadataDto;
     }
 }

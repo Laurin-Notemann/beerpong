@@ -38,12 +38,12 @@ public class SubscriptionHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        LOGGER.info("SOCKETS: Client connected with id {}", session.getId());
+        LOGGER.debug("SOCKETS: Client connected with id {}", session.getId());
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        LOGGER.info("SOCKETS: Received message from {}: {}", session.getId(), new String(message.asBytes()));
+        LOGGER.debug("SOCKETS: Received message from {}: {}", session.getId(), new String(message.asBytes()));
 
         var groupIds = extractGroupIds(GSON.fromJson(new String(message.asBytes()), JsonObject.class));
 
@@ -51,7 +51,7 @@ public class SubscriptionHandler extends TextWebSocketHandler {
             return;
         }
 
-        LOGGER.info("SOCKETS: {} subscribed to: {}", session.getId(), groupIds);
+        LOGGER.debug("SOCKETS: {} subscribed to: {}", session.getId(), groupIds);
 
         saveGroupIds(session, groupIds);
     }
@@ -72,7 +72,7 @@ public class SubscriptionHandler extends TextWebSocketHandler {
 
         userGroups.remove(userId);
 
-        LOGGER.info("SOCKETS: Client with id {} disconnected", session.getId());
+        LOGGER.debug("SOCKETS: Client with id {} disconnected", session.getId());
     }
 
     public void broadcastMessage(String message) {
@@ -83,7 +83,7 @@ public class SubscriptionHandler extends TextWebSocketHandler {
 
     public void callEvent(SocketEvent<?> event) {
         //TODO remove event body
-        LOGGER.info("SOCKETS: Calling {} event for group {}: {}", event.getScope(), event.getGroupId(), GSON.toJson(event.getBody()));
+        LOGGER.debug("SOCKETS: Calling {} event for group {}: {}", event.getScope(), event.getGroupId(), GSON.toJson(event.getBody()));
 
         if (!groupSessions.containsKey(event.getGroupId())) {
             return;
@@ -104,12 +104,12 @@ public class SubscriptionHandler extends TextWebSocketHandler {
         if (groupSessions.containsKey(groupId)) {
             groupSessions.get(groupId).remove(session);
 
-            LOGGER.info("SOCKETS: Client with id {} unsubscribed from {}", session.getId(), groupId);
+            LOGGER.debug("SOCKETS: Client with id {} unsubscribed from {}", session.getId(), groupId);
 
             if (groupSessions.get(groupId).isEmpty()) {
                 groupSessions.remove(groupId);
 
-                LOGGER.info("SOCKETS: Group {} has no remaining subscriptions. Removing!", groupId);
+                LOGGER.debug("SOCKETS: Group {} has no remaining subscriptions. Removing!", groupId);
             }
         }
     }

@@ -107,9 +107,7 @@ public class RuleMoveService {
             return;
         }
 
-        var oldSeasonRuleMoves = moveRepository.findBySeasonId(oldSeason.getId());
-
-        oldSeasonRuleMoves.forEach(oldRuleMove -> {
+        moveRepository.findBySeasonId(oldSeason.getId()).forEach(oldRuleMove -> {
             var ruleMove = new RuleMove();
 
             ruleMove.setName(oldRuleMove.getName());

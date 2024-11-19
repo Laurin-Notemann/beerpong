@@ -11,7 +11,9 @@ public class Profile {
     private String id;
 
     private String name;
-    //private String profilePicture; TODO store asset
+    @OneToOne
+    @JoinColumn(name = "assetIdAvatar")
+    private Asset avatarAsset;
 
     @ManyToOne
     @JoinColumn(name = "groupId")

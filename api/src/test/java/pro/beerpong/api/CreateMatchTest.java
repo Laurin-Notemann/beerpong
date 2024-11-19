@@ -1,32 +1,24 @@
 package pro.beerpong.api;
 
-import com.google.gson.GsonBuilder;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.model.dto.*;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class CreateMatchTest {
     @LocalServerPort
     private int port;
 
     @Autowired
     private TestUtils testUtils;
-
-    private String seasonId = "ed600d6b-7c4a-476b-b280-6bd5d4981b75";
 
 //    @BeforeEach
 //    void setUp() {
@@ -84,7 +76,7 @@ public class CreateMatchTest {
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
-        
+
         var season = group.getActiveSeason();
 
         var playersResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
@@ -99,13 +91,13 @@ public class CreateMatchTest {
         assertEquals(200, playersEnvelope.getHttpCode());
 
         var players = playersEnvelope.getData();
-        
+
         var createRulemMoveDto = new RuleMoveCreateDto();
         createRulemMoveDto.setName("RuleMove1");
         createRulemMoveDto.setFinishingMove(false);
         createRulemMoveDto.setPointsForTeam(0);
         createRulemMoveDto.setPointsForScorer(1);
-        
+
         var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto, RuleMoveDto.class);
 
         assertNotNull(ruleMoveResponse);
@@ -116,7 +108,7 @@ public class CreateMatchTest {
         assertEquals(ResponseEnvelope.Status.OK, ruleMoveEnvelope.getStatus());
         assertNull(ruleMoveEnvelope.getError());
         assertEquals(200, ruleMoveEnvelope.getHttpCode());
-        
+
         var ruleMove = ruleMoveEnvelope.getData();
 
         // Arrange: Erstelle ein MatchCreateDto mit Teams, TeamMembers und Moves
@@ -244,7 +236,7 @@ public class CreateMatchTest {
         ResponseEnvelope<MatchDto> matchEnvelope = (ResponseEnvelope<MatchDto>) createMatchResponse.getBody();
         assert matchEnvelope != null;
         var match = matchEnvelope.getData();
-        
+
         team1.getTeamMembers().get(0).getMoves().get(0).setCount(1);
         matchCreateDto.setTeams(List.of(team1, team2));
 
@@ -299,5 +291,4 @@ public class CreateMatchTest {
 //        assertNotNull(matchesEnvelope.getData());
 //        assertEquals(1, matchesEnvelope.getData().size());
 //    }
-
 }
