@@ -6,6 +6,7 @@ import {
 } from 'react-native-gesture-handler';
 
 import { useGroup } from '@/api/calls/seasonHooks';
+import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import Leaderboard from '@/components/Leaderboard';
 import { theme } from '@/theme';
@@ -34,7 +35,9 @@ export default function Page() {
                     }}
                 >
                     {group.data?.activeSeason?.startDate
-                        ? `Started ${dayjs(group.data?.activeSeason.startDate).format('DD.MM.YYYY')}`
+                        ? `Started ${env.format.date.seasonStartAndEnd(
+                              dayjs(group.data.activeSeason.startDate)
+                          )}`
                         : null}
                 </Text>
                 <Text

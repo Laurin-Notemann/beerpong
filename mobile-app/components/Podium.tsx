@@ -91,7 +91,7 @@ export default function Podium({
                                         marginTop: -8,
                                     }}
                                 >
-                                    56 matches
+                                    {secondPlace.matches} matches
                                 </ThemedText>
                             </>
                         )}
@@ -168,7 +168,7 @@ export default function Podium({
                                         marginTop: -8,
                                     }}
                                 >
-                                    14 matches
+                                    {firstPlace.matches} matches
                                 </ThemedText>
                             </>
                         )}
@@ -230,7 +230,7 @@ export default function Podium({
                                         marginTop: -8,
                                     }}
                                 >
-                                    56 matches
+                                    {thirdPlace.matches} matches
                                 </ThemedText>
                             </>
                         )}
