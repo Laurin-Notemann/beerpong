@@ -1,10 +1,26 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { Query, QueryKey, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient } from '.';
 import { env } from '../env';
+
+const areArraysIdentical = <T>(arr1: T[], arr2: T[]): boolean => {
+    if (arr1.length !== arr2.length) {
+        return false;
+    }
+    return arr1.every((value, index) => value === arr2[index]);
+};
+
+const ignoreSeason =
+    (queryKey: string[]) =>
+    (query: Query<unknown, Error, unknown, QueryKey>) => {
+        const ding = (query.queryKey as string[]).filter(
+            (i, idx, arr) => i === 'seasons' || arr[idx - 1] === 'seasons'
+        );
+        return areArraysIdentical(ding, queryKey);
+    };
 
 export function useRealtimeConnection() {
     const { groupIds } = useGroupStore();
@@ -20,32 +36,41 @@ export function useRealtimeConnection() {
     client.current.on.event((e) => {
         switch (e.eventType) {
             case 'GROUPS':
-                qc.invalidateQueries({ queryKey: ['group', e.groupId] });
+                client.current.logger.info('refetching groups');
+                qc.invalidateQueries({
+                    queryKey: ['group', e.groupId],
+                    exact: true,
+                });
                 break;
             case 'MATCHES':
+                client.current.logger.info('refetching matches');
                 qc.invalidateQueries({
+                    predicate: ignoreSeason(['group', e.groupId, 'matches']),
                     queryKey: ['group', e.groupId, 'matches'],
-                    exact: false,
                 });
                 break;
             case 'SEASONS':
-                // eslint-disable-next-line
-                console.log('SEASONS', e);
-                break;
-            case 'PLAYERS':
+                client.current.logger.info('refetching seasons');
                 qc.invalidateQueries({
                     queryKey: ['group', e.groupId, 'seasons'],
-                    exact: false,
+                });
+                break;
+            case 'PLAYERS':
+                client.current.logger.info('refetching players');
+                qc.invalidateQueries({
+                    predicate: ignoreSeason(['group', e.groupId, 'players']),
                 });
                 break;
             case 'RULES':
-                // eslint-disable-next-line
-                console.log('RULES', e);
+                client.current.logger.info('refetching rules');
+                qc.invalidateQueries({
+                    predicate: ignoreSeason(['group', e.groupId, 'rules']),
+                });
                 break;
             case 'RULE_MOVES':
+                client.current.logger.info('refetching ruleMoves');
                 qc.invalidateQueries({
-                    queryKey: ['group', e.groupId, 'ruleMoves'],
-                    exact: false,
+                    predicate: ignoreSeason(['group', e.groupId, 'ruleMoves']),
                 });
                 break;
         }

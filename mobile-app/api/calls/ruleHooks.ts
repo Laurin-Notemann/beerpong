@@ -31,3 +31,28 @@ export const useMoves = (
         },
     });
 };
+
+export const useRules = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null | undefined
+) => {
+    const { api } = useApi();
+
+    return useQuery<Paths.GetRules.Responses.$200 | null>({
+        queryKey: [
+            'group',
+            groupId ?? 'NULL',
+            'season',
+            seasonId ?? 'NULL',
+            'rules',
+        ],
+        queryFn: async () => {
+            if (!groupId || !seasonId) {
+                return null;
+            }
+            const res = await (await api).getRules({ groupId, seasonId });
+
+            return res?.data;
+        },
+    });
+};
