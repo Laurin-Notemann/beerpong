@@ -142,6 +142,7 @@ export default function NewMatchAssignTeams({
                             ? () => (
                                   <MatchVsHeader
                                       match={{
+                                          id: '#',
                                           blueTeam,
                                           redTeam,
                                           blueCups: 0,
