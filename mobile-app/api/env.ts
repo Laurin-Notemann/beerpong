@@ -9,6 +9,8 @@ const groupCodeSeperatorIndices = groupCodeFormat.slice(1).map((_, idx) => {
     return groupCodeFormat.slice(0, idx + 1).reduce((sum, i) => sum + i, 0) - 1;
 });
 
+const useAmericanFormats = false;
+
 const getDayName = (date: Dayjs) => {
     const today = dayjs();
 
@@ -21,7 +23,7 @@ const getDayName = (date: Dayjs) => {
     } else if (diffDays < 7) {
         return date.format('dddd'); // Day of the week, e.g., "Wednesday"
     } else {
-        return date.format('DD.MM.YYYY'); // Full date format, e.g., "10.10.2024"
+        return date.format(useAmericanFormats ? 'MM/DD/YYYY' : 'DD.MM.YYYY'); // Full date format, e.g., "10.10.2024"
     }
 };
 
@@ -38,9 +40,11 @@ export const env = {
 
     format: {
         date: {
-            seasonStartAndEnd: (date: Dayjs) => date.format('DD.MM.YYYY'),
+            seasonStartAndEnd: (date: Dayjs) =>
+                date.format(useAmericanFormats ? 'MM/DD/YYYY' : 'DD.MM.YYYY'),
             matchesSeperatorDay: getDayName,
-            matchHour: (date: Dayjs) => date.format('hh:mm'),
+            matchHour: (date: Dayjs) =>
+                date.format(useAmericanFormats ? 'hh:mm A' : 'HH:mm'),
         },
     },
 };
