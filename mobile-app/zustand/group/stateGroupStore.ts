@@ -57,7 +57,8 @@ export const useGroupStore = create<GroupState>()(
                     ),
                     selectedGroupId:
                         state.selectedGroupId === groupId
-                            ? null
+                            ? (state.groupIds.find((i) => i !== groupId) ??
+                              null)
                             : state.selectedGroupId,
                     lastUpdated: Date.now(),
                     error: null,
