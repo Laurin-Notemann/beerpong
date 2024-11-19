@@ -19,7 +19,7 @@ public class ProfileAssetController {
     private final ProfileService profileService;
 
     @PutMapping("/avatar")
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String groupId, @PathVariable String profileId, HttpServletRequest request, @RequestBody byte[] content) {
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setAvatar(@PathVariable String groupId, @PathVariable String profileId, HttpServletRequest request, @RequestBody byte[] content) {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {

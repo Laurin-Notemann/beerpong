@@ -348,7 +348,7 @@
         "/groups/{groupId}/profiles/{profileId}/avatar": {
             "put": {
                 "tags": ["profile-asset-controller"],
-                "operationId": "setWallpaper_1",
+                "operationId": "setAvatar",
                 "parameters": [
                     {
                         "name": "groupId",
