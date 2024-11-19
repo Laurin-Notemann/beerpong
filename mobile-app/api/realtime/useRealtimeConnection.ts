@@ -32,7 +32,6 @@ export function useRealtimeConnection() {
                 client.current.logger.info('refetching matches');
                 qc.invalidateQueries({
                     predicate: ignoreSeason(['group', e.groupId, 'matches']),
-                    queryKey: ['group', e.groupId, 'matches'],
                 });
                 break;
             case 'SEASONS':
