@@ -7,6 +7,7 @@ import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
+import pro.beerpong.api.model.dto.ProfileAssetMetadataDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;

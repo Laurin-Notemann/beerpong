@@ -377,7 +377,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileAssetMetadataDto"
                                 }
                             }
                         }
@@ -1178,6 +1178,27 @@
                     "id": { "type": "string" },
                     "teamId": { "type": "string" },
                     "playerId": { "type": "string" }
+                }
+            },
+            "ProfileAssetMetadataDto": {
+                "type": "object",
+                "properties": {
+                    "profileId": { "type": "string" },
+                    "id": { "type": "string" },
+                    "url": { "type": "string" },
+                    "mediaType": { "type": "string" },
+                    "uploadedAt": { "type": "string", "format": "date-time" }
+                }
+            },
+            "ResponseEnvelopeProfileAssetMetadataDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "$ref": "#/components/schemas/ProfileAssetMetadataDto"
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "ProfileCreateDto": {
