@@ -19,6 +19,7 @@ export interface LeaderboardPlayerItemProps {
     matchesWon: number;
     points: number;
     elo: number;
+    unranked?: boolean;
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -29,6 +30,7 @@ export default function LeaderboardPlayerItem({
     matchesWon,
     points,
     elo,
+    unranked = false,
 }: LeaderboardPlayerItemProps) {
     // account for division by zero
     const averagePointsPerMatch = matches
@@ -53,6 +55,8 @@ export default function LeaderboardPlayerItem({
 
                 height: 60.5,
                 paddingHorizontal: 20,
+
+                opacity: unranked ? 0.5 : undefined,
             }}
             onPress={() => nav.navigate('player', { id })}
         >
