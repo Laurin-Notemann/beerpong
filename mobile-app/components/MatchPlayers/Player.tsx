@@ -226,8 +226,7 @@ export default function Player({
                                     height: 44,
                                 }}
                                 onPress={() => {
-                                    if (i.count > 0)
-                                        setMoveCount(id, i.id, i.count - 1);
+                                    setMoveCount(id, i.id, i.count + 1);
                                 }}
                             >
                                 <Icon
