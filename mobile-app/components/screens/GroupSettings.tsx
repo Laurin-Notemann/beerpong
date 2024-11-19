@@ -21,6 +21,7 @@ export interface GroupSettingsProps {
 
     groupCode: string;
     onUploadWallpaperPress: () => void;
+    onLeaveGroup: () => void;
 }
 export default function GroupSettingsScreen({
     id,
@@ -30,6 +31,7 @@ export default function GroupSettingsScreen({
     pastSeasons,
     groupCode,
     onUploadWallpaperPress,
+    onLeaveGroup,
 }: GroupSettingsProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -153,6 +155,25 @@ export default function GroupSettingsScreen({
                         tailIconType="next"
                         tailContent={formatGroupCode(groupCode)}
                         onPress={() => copyToClipboard(groupCode)}
+                    />
+                </MenuSection>
+                <MenuSection
+                    style={{
+                        width: '100%',
+
+                        marginTop: 24,
+                    }}
+                >
+                    <MenuItem
+                        title="Leave Group"
+                        headIcon="exit-to-app"
+                        onPress={onLeaveGroup}
+                        type="danger"
+                        confirmationPrompt={{
+                            title: 'Leave Group',
+                            description:
+                                'Are you sure you want to leave this group?',
+                        }}
                     />
                 </MenuSection>
                 {__DEV__ && (

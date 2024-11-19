@@ -3,6 +3,7 @@ import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import { showErrorToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import {
     useGroupQuery,
@@ -13,6 +14,8 @@ import { ScreenState } from '../types';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const { groupId } = useGroup();
+
+    const { removeGroup } = useGroupStore();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -47,6 +50,14 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
         }
     }
 
+    function onLeaveGroup() {
+        if (!groupId) return;
+
+        removeGroup(groupId);
+
+        nav.navigate('index');
+    }
+
     const props: GroupSettingsProps | null = data?.data
         ? {
               id: data.data.id!,
@@ -56,6 +67,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               pastSeasons,
               pushNotificationsEnabled: false,
               onUploadWallpaperPress,
+              onLeaveGroup,
           }
         : null;
 

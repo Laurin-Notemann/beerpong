@@ -74,7 +74,7 @@ export default function Podium({
                                 marginTop: 12,
                             }}
                         >
-                            {secondPlace?.name || '-'}
+                            {secondPlace?.name}
                         </ThemedText>
 
                         {secondPlace && (
@@ -153,7 +153,7 @@ export default function Podium({
                                 marginTop: 12,
                             }}
                         >
-                            {firstPlace?.name || '-'}
+                            {firstPlace?.name}
                         </ThemedText>
                         {firstPlace && (
                             <>
@@ -215,7 +215,7 @@ export default function Podium({
                                 marginTop: 12,
                             }}
                         >
-                            {thirdPlace?.name || '-'}
+                            {thirdPlace?.name}
                         </ThemedText>
                         {thirdPlace && (
                             <>

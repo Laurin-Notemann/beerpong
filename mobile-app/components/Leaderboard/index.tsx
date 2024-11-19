@@ -35,9 +35,9 @@ export default function Leaderboard({ players }: LeaderboardProps) {
     return (
         <>
             <Podium
-                firstPlace={sortedPlayers[0]}
-                secondPlace={sortedPlayers[1]}
-                thirdPlace={sortedPlayers[2]}
+                firstPlace={rankedPlayers[0]}
+                secondPlace={rankedPlayers[1]}
+                thirdPlace={rankedPlayers[2]}
             />
             <ThemedView
                 style={{
