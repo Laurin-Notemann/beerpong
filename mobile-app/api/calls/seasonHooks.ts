@@ -44,10 +44,10 @@ export const useStartNewSeasonMutation = () => {
     return useMutation<
         Paths.StartNewSeason.Responses.$200 | null,
         Error,
-        Paths.StartNewSeason.RequestBody
+        Paths.StartNewSeason.RequestBody & { groupId: string }
     >({
         mutationFn: async (body) => {
-            const res = await (await api).startNewSeason(null, body);
+            const res = await (await api).startNewSeason(body, body);
             return res?.data;
         },
     });
