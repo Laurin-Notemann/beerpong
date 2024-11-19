@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, View } from 'react-native';
+import { Animated } from 'react-native';
 
 import EmptyDot from './EmptyDot';
 
@@ -188,7 +188,7 @@ const Dot: React.FC<{
         };
     }, [props.curPage]);
 
-    const dingsStyle = useMemo(() => {
+    const style = useMemo(() => {
         const size = props.curPage.interpolate({
             inputRange: [0, 1],
             outputRange: [

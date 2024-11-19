@@ -35,6 +35,7 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                     <LeaderboardPlayerItem
                         key={idx}
                         name={i.name}
+                        id={i.id}
                         placement={idx + 3}
                         points={i.points}
                         matches={i.matches}

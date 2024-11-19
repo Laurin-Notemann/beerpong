@@ -1,5 +1,6 @@
-import { Client, IMessage } from '@stomp/stompjs';
 import { TextEncoder } from 'text-encoding';
+
+import { Logger, ScopedLogger } from '@/utils/logging';
 
 /**
  * stompjs is an abstraction layer on top of websocket that uses the global TextEncoder class.
@@ -11,70 +12,67 @@ function mountPolyfillForStompJs() {
 }
 mountPolyfillForStompJs();
 
-export type RealtimeEventScope =
+export type RealtimeAffectedEntity =
     | 'GROUPS'
     | 'MATCHES'
     | 'SEASONS'
     | 'PLAYERS'
-    | 'RULES';
+    | 'RULES'
+    | 'RULE_MOVES';
 
-export interface RealtimeEvent<T = RealtimeEventScope> {
+export interface RealtimeEvent<T = RealtimeAffectedEntity> {
     groupId: string;
     scope: string;
     eventType: T;
     body?: unknown;
 }
 
-export type RealtimeEventHandler = <T = RealtimeEventScope>(
+export type RealtimeEventHandler = <T = RealtimeAffectedEntity>(
     event: RealtimeEvent<T>
 ) => void;
 
 export class RealtimeClient {
-    // private ws!: WebSocket;
+    private ws!: WebSocket;
 
-    private client!: Client;
+    private logger: Logger;
 
     // @ts-ignore
-    private handlers: Record<RealtimeEventScope | '*', RealtimeEventHandler[]> =
-        {};
+    private handlers: Record<
+        RealtimeAffectedEntity | '*',
+        RealtimeEventHandler[]
+    > = {};
 
     private get url() {
-        const fragment =
-            this.groupIds.length > 0
-                ? '?groups=' + this.groupIds.join(',')
-                : '';
+        return this.host + '/update-socket';
+    }
 
-        return this.host + '/update-socket' + fragment;
+    private sendMessage(message: unknown) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(message));
+        }
+    }
+    private _subscribeToGroups() {
+        this.sendMessage({ groupIds: this.groupIds });
+        this.logger.info('subscribed to groups:', this.groupIds);
     }
 
     private connect() {
-        const stompClient = new Client({
-            webSocketFactory: () => new WebSocket(this.url),
-            onConnect: () => {
-                stompClient.subscribe('/events', (message) => {
-                    this.onMessage(message);
-                });
-            },
-            onStompError: (err) => {
-                // eslint-disable-next-line
-                console.error('[realtime] stomp error:', err);
-            },
-            onWebSocketError: (err) => {
-                // eslint-disable-next-line
-                console.error('[realtime] websocket error:', err);
-            },
-            onDisconnect: () => {},
-            onWebSocketClose: () => {},
-        });
-        stompClient.activate();
-    }
-    private disconnect() {
-        this.client?.deactivate();
-    }
+        this.ws = new WebSocket(this.url);
 
-    private reconnect() {
-        this.disconnect();
-        this.connect();
+        this.ws.addEventListener('open', () => {
+            this.logger.info('connection opened');
+            this._subscribeToGroups();
+        });
+
+        this.ws.addEventListener('close', () => {
+            this.logger.info('connection closed');
+        });
+
+        this.ws.addEventListener('error', (e) => {
+            this.logger.error('error:', e);
+        });
+
+        this.ws.addEventListener('message', (e) => this.onMessage(e));
     }
 
     /**
@@ -86,15 +84,21 @@ export class RealtimeClient {
         private groupIds: string[]
     ) {
         this.connect();
+
+        this.logger = new ScopedLogger('realtime');
     }
 
-    public setGroupIds(groupIds: string[]) {
+    /**
+     * update the connection so we receive events for the new group ids
+     */
+    public subscribeToGroups(groupIds: string[]) {
         this.groupIds = groupIds;
 
-        this.reconnect();
+        this._subscribeToGroups();
     }
 
     private fireHandlers(event: RealtimeEvent) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for (const [_, handlers] of Object.entries(this.handlers).filter(
             ([handlerScope]) =>
                 handlerScope === event.eventType || handlerScope === '*'
@@ -102,24 +106,27 @@ export class RealtimeClient {
             for (const handler of handlers) {
                 try {
                     handler(event);
-                } catch (err) {}
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                } catch (_) {}
             }
         }
     }
 
-    private onMessage(message: IMessage) {
+    private onMessage(e: MessageEvent<any>) {
         try {
-            const data: RealtimeEvent = JSON.parse(message.body);
+            const data: RealtimeEvent = JSON.parse(e.data);
+
+            this.logger.info('message:', data);
 
             this.fireHandlers(data);
-        } catch (err) {
-            // eslint-disable-next-line
-            console.error('[realtime] error json parsing message:', err);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_) {
+            this.logger.error('error json parsing message:', e.data);
         }
     }
 
     private registerHandler(
-        scope: RealtimeEventScope | '*',
+        scope: RealtimeAffectedEntity | '*',
         handler: RealtimeEventHandler
     ) {
         if (!this.handlers[scope]) this.handlers[scope] = [];

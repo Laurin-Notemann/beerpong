@@ -11,6 +11,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
@@ -157,20 +158,22 @@ export default function RootLayout() {
                 persistOptions={{ persister }}
             >
                 <ApiProvider>
-                    <Drawer.Navigator
-                        screenOptions={{
-                            drawerStyle: {
-                                width: 256,
-                            },
-                            headerShown: false,
-                        }}
-                        drawerContent={DrawerContent}
-                    >
-                        <Drawer.Screen
-                            name="aboutPremium"
-                            component={Everything}
-                        />
-                    </Drawer.Navigator>
+                    <RootSiblingParent>
+                        <Drawer.Navigator
+                            screenOptions={{
+                                drawerStyle: {
+                                    width: 256,
+                                },
+                                headerShown: false,
+                            }}
+                            drawerContent={DrawerContent}
+                        >
+                            <Drawer.Screen
+                                name="aboutPremium"
+                                component={Everything}
+                            />
+                        </Drawer.Navigator>
+                    </RootSiblingParent>
                 </ApiProvider>
             </PersistQueryClientProvider>
         </QueryClientProvider>

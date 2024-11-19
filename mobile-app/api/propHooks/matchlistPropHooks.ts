@@ -1,43 +1,29 @@
-import { mockMatches } from '@/components/mockData/matches';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { MatchesListProps } from '@/components/MatchesList';
 
-import { useGroupQuery } from '../calls/groupHooks';
 import { useMatchesQuery } from '../calls/matchHooks';
+import { useGroup } from '../calls/seasonHooks';
+import { ScreenState } from '../types';
 
-export interface Match {
-    date: Date;
-    blueTeam: { name: string }[];
-    redTeam: { name: string }[];
-    blueCups: number;
-    redCups: number;
-}
+export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
+    const { groupId, seasonId } = useGroup();
 
-export const useMatchlistProps = () => {
-    const { selectedGroupId } = useGroupStore();
-    const { data: groupQueryData } = useGroupQuery(selectedGroupId);
-    const { data } = useMatchesQuery(
-        selectedGroupId,
-        groupQueryData?.data?.activeSeason?.id ?? null
-    );
+    const { data, ...screenState } = useMatchesQuery(groupId, seasonId);
 
-    if (!data?.data) {
-        return { matches: [] };
-    }
+    const props: MatchesListProps | null = data?.data
+        ? {
+              matches:
+                  data.data.map((i) => ({
+                      blueCups: 0,
+                      redCups: 0,
+                      date: new Date(i.date!),
+                      redTeam: [{ name: 'Unknown' }, { name: 'Unknown' }],
+                      blueTeam: [{ name: 'Unknown' }, { name: 'Unknown' }],
+                  })) ?? [],
+          }
+        : null;
 
-    const out: { matches: Match[] } = {
-        matches: mockMatches,
-        /*
-            data?.data?.map((match) => {
-                return {
-                    date: new Date(match.date ?? ''),
-                    blueTeam: [{ name: 'NO NAME FOUND' }],
-                    redTeam: [{ name: 'NO NAME FOUND' }],
-                    blueCups: 0,
-                    redCups: 0,
-                };
-            }) ?? [],
-        */
+    return {
+        props,
+        ...screenState,
     };
-
-    return out;
 };

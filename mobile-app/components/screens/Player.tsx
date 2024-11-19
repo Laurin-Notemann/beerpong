@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -9,7 +9,6 @@ import {
 import { HeaderItem } from '@/app/(tabs)/_layout';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
-import { HighestChip, LowestChip } from '@/components/Chip';
 import MatchesList, { Match } from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -17,46 +16,8 @@ import { theme } from '@/theme';
 
 import PlayerStats from '../PlayerStats';
 
-export function Stat({
-    value,
-    title,
-    isHighest = false,
-    isLowest = false,
-}: {
-    value: string | number;
-    title: string;
-    isHighest?: boolean;
-    isLowest?: boolean;
-}) {
-    return (
-        <View style={{ alignItems: 'center' }}>
-            {isHighest && <HighestChip />}
-            {isLowest && <LowestChip />}
-            <Text
-                style={{
-                    fontSize: 17,
-                    color: theme.color.text.primary,
-
-                    fontWeight: 600,
-                }}
-            >
-                {value}
-            </Text>
-            <Text
-                style={{
-                    fontSize: 12,
-                    color: theme.color.text.secondary,
-
-                    fontWeight: 500,
-                }}
-            >
-                {title}
-            </Text>
-        </View>
-    );
-}
-
 export interface PlayerScreenProps {
+    id: string;
     placement: number;
 
     name: string;
@@ -73,6 +34,7 @@ export interface PlayerScreenProps {
     onDelete?: () => void;
 }
 export default function PlayerScreen({
+    id,
     placement,
     name,
     avatarUrl,
@@ -160,7 +122,9 @@ export default function PlayerScreen({
                         <MenuItem
                             title={name}
                             headIcon="pencil-outline"
-                            onPress={() => nav.navigate('editPlayerName')}
+                            onPress={() =>
+                                nav.navigate('editPlayerName', { id })
+                            }
                             tailIconType="next"
                         />
                         <MenuItem

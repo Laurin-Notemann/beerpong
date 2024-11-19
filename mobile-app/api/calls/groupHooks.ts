@@ -6,9 +6,6 @@ import { Paths } from '@/openapi/openapi';
 
 import { env } from '../env';
 
-// Type definitions
-export type Group = NonNullable<Paths.GetGroupById.Responses.$200['data']>;
-
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
@@ -59,10 +56,10 @@ export const useUpdateGroupMutation = () => {
     return useMutation<
         Paths.UpdateGroup.Responses.$200 | null,
         Error,
-        Paths.UpdateGroup.RequestBody
+        Paths.UpdateGroup.RequestBody & { id: ApiId }
     >({
         mutationFn: async (body) => {
-            const res = await (await api).updateGroup(null, body);
+            const res = await (await api).updateGroup(body, body);
             return res?.data;
         },
     });

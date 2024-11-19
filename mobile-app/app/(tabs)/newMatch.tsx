@@ -1,12 +1,11 @@
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { useGroupQuery } from '@/api/calls/groupHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 import { useNavigation } from '../navigation/useNavigation';
@@ -14,22 +13,18 @@ import { useNavigation } from '../navigation/useNavigation';
 export default function Screen() {
     const nav = useNavigation();
 
-    const { selectedGroupId } = useGroupStore();
+    const { groupId, seasonId } = useGroup();
 
-    const { data: groupQueryData } = useGroupQuery(selectedGroupId);
-
-    const activeSeasonId = groupQueryData?.data?.activeSeason?.id;
-
-    const playersQuery = usePlayersQuery(selectedGroupId, activeSeasonId);
+    const playersQuery = usePlayersQuery(groupId, seasonId);
 
     const matchDraft = useMatchDraftStore();
 
-    const players: Player[] = (playersQuery.data?.data ?? []).map((i) => ({
+    const players = (playersQuery.data?.data ?? []).map<Player>((i) => ({
         id: i.id!,
         name: i.profile?.name || 'Unknown',
         team:
-            matchDraft.actions.getPlayers().find((j) => i.id === j.id)?.team ??
-            null,
+            matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
+                ?.team ?? null,
     }));
 
     async function onSubmit() {

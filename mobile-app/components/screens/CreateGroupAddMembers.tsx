@@ -60,9 +60,9 @@ export default function CreateGroupAddMembers({
                         placeholder="Group member name"
                         returnKeyType="done"
                         onSubmitEditing={(event) => {
-                            const name = event.nativeEvent.text;
+                            const name = event.nativeEvent.text.trim();
 
-                            if (name.trim()) {
+                            if (name.length) {
                                 setMembers((prev) => [...prev, { name }]);
                             }
 

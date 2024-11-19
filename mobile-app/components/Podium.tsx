@@ -1,6 +1,8 @@
 import React from 'react';
+import { Pressable } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
 
 import Avatar from './Avatar';
@@ -20,6 +22,8 @@ export default function Podium({
     secondPlace,
     thirdPlace,
 }: PodiumProps) {
+    const nav = useNavigation();
+
     return (
         <ThemedView
             style={{
@@ -28,7 +32,12 @@ export default function Podium({
                 marginTop: -2,
             }}
         >
-            <ThemedView style={{ alignItems: 'center', marginTop: 48 }}>
+            <Pressable
+                style={{ alignItems: 'center', marginTop: 48 }}
+                onPress={() =>
+                    secondPlace && nav.navigate('player', secondPlace)
+                }
+            >
                 <ThemedText
                     style={{
                         fontSize: 22,
@@ -84,8 +93,9 @@ export default function Podium({
                         )}
                     </>
                 )}
-            </ThemedView>
-            <ThemedView
+            </Pressable>
+            <Pressable
+                onPress={() => firstPlace && nav.navigate('player', firstPlace)}
                 style={{
                     alignItems: 'center',
 
@@ -156,8 +166,11 @@ export default function Podium({
                         )}
                     </>
                 )}
-            </ThemedView>
-            <ThemedView style={{ alignItems: 'center', marginTop: 48 }}>
+            </Pressable>
+            <Pressable
+                style={{ alignItems: 'center', marginTop: 48 }}
+                onPress={() => thirdPlace && nav.navigate('player', thirdPlace)}
+            >
                 <ThemedText
                     style={{
                         fontSize: 22,
@@ -211,7 +224,7 @@ export default function Podium({
                         )}
                     </>
                 )}
-            </ThemedView>
+            </Pressable>
         </ThemedView>
     );
 }

@@ -53,7 +53,7 @@ export default function CreateGroupSetName({
                         required
                         placeholder="Group name"
                         returnKeyType="done"
-                        onChangeText={setName}
+                        onChangeText={(text) => setName(text.trim())}
                     />
                 </View>
             </>

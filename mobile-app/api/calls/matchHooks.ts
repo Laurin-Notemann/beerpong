@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { Paths } from '@/openapi/openapi';
 
@@ -6,9 +6,9 @@ import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
 
 export const useMatchQuery = (
-    groupId: ApiId | null,
-    seasonId: ApiId | null,
-    matchId: ApiId | null
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined,
+    matchId: ApiId | null | undefined
 ) => {
     const { api } = useApi();
 
@@ -28,19 +28,33 @@ export const useMatchQuery = (
 };
 
 export const useMatchesQuery = (
-    groupId: ApiId | null,
-    seasonId: ApiId | null
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined
 ) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'season', seasonId],
+        queryKey: ['group', groupId, 'season', seasonId, 'matches'],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
             }
             const res = await (await api).getAllMatches({ groupId, seasonId });
 
+            return res?.data;
+        },
+    });
+};
+
+export const useCreateMatchMutation = () => {
+    const { api } = useApi();
+    return useMutation<
+        Paths.CreateMatch.Responses.$200 | null,
+        Error,
+        Paths.CreateMatch.RequestBody & { groupId: ApiId; seasonId: ApiId }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).createMatch(body, body);
             return res?.data;
         },
     });

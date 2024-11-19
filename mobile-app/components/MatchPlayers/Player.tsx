@@ -89,7 +89,7 @@ export default function Player({
                 onPress={
                     editable
                         ? toggleCollapse
-                        : () => navigation.navigate('player')
+                        : () => navigation.navigate('player', { id })
                 }
                 underlayColor={theme.panel.light.active}
             >

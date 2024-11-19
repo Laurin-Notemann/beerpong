@@ -12,6 +12,7 @@ import { formatGroupCode } from '@/utils/groupCode';
 import copyToClipboard from '../copyToClipboard';
 
 export interface GroupSettingsProps {
+    id: string;
     hasPremium: boolean;
 
     groupName: string;
@@ -22,6 +23,7 @@ export interface GroupSettingsProps {
     groupCode: string;
 }
 export default function GroupSettingsScreen({
+    id,
     hasPremium,
     groupName,
     pushNotificationsEnabled,
@@ -67,6 +69,7 @@ export default function GroupSettingsScreen({
                         title={groupName}
                         headIcon="pencil-outline"
                         tailIconType="next"
+                        onPress={() => nav.navigate('editGroupName', { id })}
                     />
                     <MenuItem
                         title="Set Wallpaper"

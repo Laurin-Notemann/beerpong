@@ -7,7 +7,8 @@ import Avatar from '../Avatar';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
 
-export interface LeaderboardPlayerItem {
+export interface LeaderboardPlayerItemProps {
+    id: string;
     placement: number;
 
     name: string;
@@ -19,6 +20,7 @@ export interface LeaderboardPlayerItem {
     elo: number;
 }
 export default function LeaderboardPlayerItem({
+    id,
     placement,
     name,
     avatarUrl,
@@ -26,7 +28,7 @@ export default function LeaderboardPlayerItem({
     matchesWon,
     points,
     elo,
-}: LeaderboardPlayerItem) {
+}: LeaderboardPlayerItemProps) {
     const averagePointsPerMatch = (points / matches).toFixed(1);
 
     const nav = useNavigation();
@@ -48,7 +50,7 @@ export default function LeaderboardPlayerItem({
                 height: 60.5,
                 paddingHorizontal: 20,
             }}
-            onPress={() => nav.navigate('player')}
+            onPress={() => nav.navigate('player', { id })}
         >
             <ThemedText
                 style={{

@@ -1,23 +1,31 @@
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 
 import { useGroupQuery } from '../calls/groupHooks';
-import { ApiId } from '../types';
+import { useAllSeasonQuery, useGroup } from '../calls/seasonHooks';
+import { ScreenState } from '../types';
 
-export const useGroupSettingsProps = (groupId: ApiId | null) => {
-    const { data, ...props } = useGroupQuery(groupId);
+export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
+    const { groupId } = useGroup();
 
-    const groupPageProps: GroupSettingsProps | null = data
+    const seasonsQuery = useAllSeasonQuery(groupId);
+
+    const pastSeasons = (seasonsQuery.data?.data?.length ?? 1) - 1;
+
+    const { data, ...screenState } = useGroupQuery(groupId);
+
+    const props: GroupSettingsProps | null = data?.data
         ? {
-              groupCode: data.data!.inviteCode ?? 'NO CODE FOUND',
-              groupName: data.data!.name ?? 'NO NAME FOUND',
+              id: data.data.id!,
+              groupCode: data.data.inviteCode!,
+              groupName: data.data.name || 'Unknown',
               hasPremium: false,
-              pastSeasons: 0,
+              pastSeasons,
               pushNotificationsEnabled: false,
           }
         : null;
 
     return {
-        props: groupPageProps,
-        ...props,
+        props,
+        ...screenState,
     };
 };

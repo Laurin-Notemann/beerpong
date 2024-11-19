@@ -13,8 +13,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 
-const EXPERIMENTAL_CAROUSEL = true;
-
 const { width } = Dimensions.get('window');
 
 function Card() {
