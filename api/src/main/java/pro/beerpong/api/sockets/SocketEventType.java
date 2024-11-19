@@ -7,5 +7,6 @@ public enum SocketEventType {
     GROUPS,
     RULES,
     RULE_MOVES,
-    ASSETS
+    ASSETS,
+    PROFILES
 }

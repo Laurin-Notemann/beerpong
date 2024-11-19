@@ -121,6 +121,11 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **groupWallpaperSet:** When a groups wallpaper is updated
 * **profileAvatarSet:** When a profiles avatar is updated
+*
+#### Profiles (body: ProfileDto)
+
+* **profileCreate:** When a profile is created
+* **profileUpdate:** When a profile is updated
 
 ### TODO
 
