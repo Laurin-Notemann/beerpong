@@ -67,6 +67,8 @@ public class SeasonService {
             season.getSeasonSettings().setMinTeamSize(oldSeason.getSeasonSettings().getMinTeamSize());
             season.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
             season.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
+            season.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
+            season.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
         }
 
         season = seasonRepository.save(season);

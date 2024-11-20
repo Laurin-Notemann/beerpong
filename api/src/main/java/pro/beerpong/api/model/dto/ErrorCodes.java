@@ -11,6 +11,8 @@ public enum ErrorCodes {
     GROUP_INVITE_CODE_NOT_PROVIDED("groupInviteCodeNotProvided", "The invite code needs to be provided!"),
     SEASON_NOT_FOUND("seasonNotFound", "The requested season could not be found!"),
     SEASON_ALREADY_ENDED("seasonAlreadyEnded", "Past seasons are immutable!"),
+    SEASON_WRONG_TIME_FORMAT("seasonWrongTimeFormat", "The wake time hour has to be between 0 and 23!"),
+    SEASON_WRONG_TEAM_SIZES("seasonWrongTeamSizes", "The min team size has to be less then or equal to the max team size!"),
     SEASON_NOT_OF_GROUP("seasonHasDifferentGroup", "The season does not match the provided group id!"),
     SEASON_VALIDATION_FAILED("seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),
     MATCH_NOT_FOUND("matchNotFound", "The requested match could not be found!"),

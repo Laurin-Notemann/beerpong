@@ -30,25 +30,48 @@ public class LeaderboardService {
 
     public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
         Stream<MatchDto> matches;
+        Stream<PlayerDto> players;
 
         switch (scope) {
-            case "all-time" -> matches = matchService.streamAllMatches(group);
+            case "all-time" -> {
+                matches = matchService.streamAllMatches(group);
+                players = matchService.streamAllPlayers(group);
+            }
             case "season" -> {
                 if (seasonId == null) {
                     return null;
                 }
 
                 matches = matchService.streamAllMatchesInSeason(seasonId);
+                players = matchService.streamAllPlayersInSeason(seasonId);
             }
             //TODO use season setting
-            case "today" -> matches = matchService.streamAllMatchesToday(group);
-            default -> matches = Stream.of();
+            case "today" -> {
+                var season = group.getActiveSeason();
+
+                if (season == null) {
+                    return null;
+                }
+
+                matches = matchService.streamAllMatchesToday(group, season);
+                players = matchService.streamAllPlayersInSeason(season.getId());
+            }
+            default -> {
+                matches = Stream.of();
+                players = Stream.of();
+            }
         }
 
         Map<String, LeaderboardEntryDto> entries = Maps.newHashMap();
         Map<String, String> memberToPlayer = Maps.newHashMap();
 
-        //TODO create entries for all player in current season, provided season or all time
+        players.forEach(playerDto -> {
+            var dto = new LeaderboardEntryDto();
+
+            dto.setPlayerId(playerDto.getId());
+
+            entries.put(playerDto.getId(), dto);
+        });
 
         // go through all matches sorted by date, starting with the earliest
         matches.sorted(Comparator.comparing(MatchDto::getDate)).forEach(matchDto -> {

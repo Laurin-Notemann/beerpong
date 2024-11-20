@@ -5,17 +5,21 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMoveMapper;
+import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
+import pro.beerpong.api.util.DailyLeaderboard;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -36,6 +40,7 @@ public class MatchService {
     private final TeamService teamService;
     private final SeasonRepository seasonRepository;
     private final RuleMoveService ruleMoveService;
+    private final PlayerMapper playerMapper;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -48,7 +53,7 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService) {
+                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -64,6 +69,7 @@ public class MatchService {
         this.teamService = teamService;
         this.seasonRepository = seasonRepository;
         this.ruleMoveService = ruleMoveService;
+        this.playerMapper = playerMapper;
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -165,18 +171,45 @@ public class MatchService {
                 .map(this::matchToMatchDto);
     }
 
+    public Stream<PlayerDto> streamAllPlayers(GroupDto group) {
+        return seasonRepository.findByGroupId(group.getId()).stream()
+                .flatMap(season -> playerRepository.findAllBySeasonId(season.getId()).stream())
+                .map(playerMapper::playerToPlayerDto);
+    }
+
     public Stream<MatchDto> streamAllMatchesInSeason(String seasonId) {
         return matchRepository.findBySeasonId(seasonId).stream()
                 .map(this::matchToMatchDto);
     }
 
-    public Stream<MatchDto> streamAllMatchesToday(GroupDto group) {
-        var now = ZonedDateTime.now().toLocalDate();
+    public Stream<PlayerDto> streamAllPlayersInSeason(String seasonId) {
+        return playerRepository.findAllBySeasonId(seasonId).stream()
+                .map(playerMapper::playerToPlayerDto);
+    }
+
+    public Stream<MatchDto> streamAllMatchesToday(GroupDto group, Season season) {
+        var now = ZonedDateTime.now();
+
+        Predicate<Match> predicate = switch (season.getSeasonSettings().getDailyLeaderboard()) {
+            case WAKE_TIME -> match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTimeHour()));
+            case LAST_24_HOURS -> (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toHours() < 24;
+            case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
+        };
 
         return matchRepository.findBySeasonId(group.getActiveSeason().getId())
                 .stream()
-                .filter(match -> match.getDate().toLocalDate().equals(now))
+                .filter(predicate)
                 .map(this::matchToMatchDto);
+    }
+
+    private ZonedDateTime getWakeTime(ZonedDateTime now, int wakeTimeHour) {
+        var wakeTimeToday = now.withHour(wakeTimeHour).withMinute(0).withSecond(0).withNano(0);
+
+        if (now.isBefore(wakeTimeToday)) {
+            wakeTimeToday = wakeTimeToday.minusDays(1);
+        }
+
+        return wakeTimeToday;
     }
 
     public MatchDto getMatchById(String id) {
