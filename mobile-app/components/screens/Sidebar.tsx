@@ -185,12 +185,14 @@ export function Sidebar({}: SidebarProps) {
                 }}
                 color="dark"
             >
-                <MenuItem
-                    title="Settings"
-                    headIcon="cog-outline"
-                    onPress={() => nav.navigate('localSettings')}
-                    tailIconType="next"
-                />
+                {env.isDev && (
+                    <MenuItem
+                        title="Settings"
+                        headIcon="cog-outline"
+                        onPress={() => nav.navigate('localSettings')}
+                        tailIconType="next"
+                    />
+                )}
                 <MenuItem
                     title="Privacy Policy"
                     headIcon="shield-lock"

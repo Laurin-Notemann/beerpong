@@ -47,4 +47,5 @@ export const env = {
                 date.format(useAmericanFormats ? 'hh:mm A' : 'HH:mm'),
         },
     },
+    isDev: __DEV__,
 };

@@ -6,6 +6,7 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { env } from '@/api/env';
 import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -63,6 +64,9 @@ export default function PlayerScreen({
             <Stack.Screen
                 options={{
                     ...navStyles,
+
+                    headerBackTitleVisible: false,
+                    title: '',
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
@@ -150,24 +154,28 @@ export default function PlayerScreen({
                             />
                         </MenuSection>
                     ) : (
-                        <>
-                            <MenuSection
-                                style={
-                                    {
-                                        // width: '100%',
+                        env.isDev && (
+                            <>
+                                <MenuSection
+                                    style={
+                                        {
+                                            // width: '100%',
+                                        }
                                     }
-                                }
-                            >
-                                <MenuItem
-                                    title="Past Seasons"
-                                    headIcon="pencil-outline"
-                                    tailContent={pastSeasons}
-                                    tailIconType="next"
-                                    onPress={() => nav.navigate('pastSeasons')}
-                                />
-                            </MenuSection>
-                            <MatchesList matches={matches} />
-                        </>
+                                >
+                                    <MenuItem
+                                        title="Past Seasons"
+                                        headIcon="pencil-outline"
+                                        tailContent={pastSeasons}
+                                        tailIconType="next"
+                                        onPress={() =>
+                                            nav.navigate('pastSeasons')
+                                        }
+                                    />
+                                </MenuSection>
+                                <MatchesList matches={matches} />
+                            </>
+                        )
                     )}
                 </View>
             </ScrollView>

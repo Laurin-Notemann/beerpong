@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Switch } from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
+import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -71,12 +72,14 @@ export default function GroupSettingsScreen({
                 }
             >
                 <MenuSection title="Settings">
-                    <MenuItem
-                        title="Premium Version"
-                        headIcon="check-decagram"
-                        tailIconType="next"
-                        onPress={() => nav.navigate('static/aboutPremium')}
-                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Premium Version"
+                            headIcon="check-decagram"
+                            tailIconType="next"
+                            onPress={() => nav.navigate('static/aboutPremium')}
+                        />
+                    )}
                     <MenuItem
                         title={groupName}
                         headIcon="pencil-outline"
@@ -120,75 +123,89 @@ export default function GroupSettingsScreen({
                         }
                         isVisible={showChangeWallpaperModal}
                     />
-                    <MenuItem
-                        title="Push Notifications"
-                        headIcon="bell-outline"
-                        tailContent={
-                            <Switch value={pushNotificationsEnabled} />
-                        }
-                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Push Notifications"
+                            headIcon="bell-outline"
+                            tailContent={
+                                <Switch value={pushNotificationsEnabled} />
+                            }
+                        />
+                    )}
                 </MenuSection>
                 <MenuSection title="Management">
-                    <MenuItem
-                        title="Past Seasons"
-                        headIcon="pencil-outline"
-                        tailIconType="next"
-                        tailContent={pastSeasons}
-                        onPress={() => nav.navigate('pastSeasons')}
-                    />
-                    <MenuItem
-                        title="Start new Season"
-                        headIcon="cached"
-                        tailIconType="next"
-                        onPress={() => nav.navigate('saveSeason')}
-                        confirmationPrompt={{
-                            title: 'Start new Season',
-                            description:
-                                'This will reset the leaderboard. All matches and the leaderboard can still be viewed in "Past Seasons".',
-                            buttonText: 'Start new Season',
-                            type: 'confirmBlue',
-                        }}
-                    />
-                    <MenuItem
-                        title="View Statistics"
-                        headIcon="equalizer"
-                        tailIconType="next"
-                    />
+                    {env.isDev && (
+                        <>
+                            <MenuItem
+                                title="Past Seasons"
+                                headIcon="pencil-outline"
+                                tailIconType="next"
+                                tailContent={pastSeasons}
+                                onPress={() => nav.navigate('pastSeasons')}
+                            />
+                            <MenuItem
+                                title="Start new Season"
+                                headIcon="cached"
+                                tailIconType="next"
+                                onPress={() => nav.navigate('saveSeason')}
+                                confirmationPrompt={{
+                                    title: 'Start new Season',
+                                    description:
+                                        'This will reset the leaderboard. All matches and the leaderboard can still be viewed in "Past Seasons".',
+                                    buttonText: 'Start new Season',
+                                    type: 'confirmBlue',
+                                }}
+                            />
+                        </>
+                    )}
+                    {env.isDev && (
+                        <MenuItem
+                            title="View Statistics"
+                            headIcon="equalizer"
+                            tailIconType="next"
+                        />
+                    )}
                     <MenuItem
                         title="Create new Player"
                         headIcon="account-plus-outline"
                         tailIconType="next"
                         onPress={() => nav.navigate('createNewPlayer')}
                     />
-                    <MenuItem
-                        title="Rank Players by"
-                        headIcon="division"
-                        tailIconType="next"
-                        tailContent="Average Points Scored"
-                        onPress={() => nav.navigate('editRankPlayersBy')}
-                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Rank Players by"
+                            headIcon="division"
+                            tailIconType="next"
+                            tailContent="Average Points Scored"
+                            onPress={() => nav.navigate('editRankPlayersBy')}
+                        />
+                    )}
                 </MenuSection>
                 <MenuSection title="Access">
-                    <MenuItem
-                        title="Group Link"
-                        headIcon="link-variant"
-                        tailIconType="copy"
-                    />
-                    <MenuItem
-                        title="Send Invitation"
-                        headIcon="share-outline"
-                        tailIconType="next"
-                    />
-                    <MenuItem
-                        title="Show QR Code"
-                        headIcon="qrcode"
-                        tailIconType="next"
-                    />
-                    <MenuItem
-                        title="Screencast Leaderboard"
-                        headIcon="television"
-                        tailIconType="next"
-                    />
+                    {env.isDev && (
+                        <>
+                            <MenuItem
+                                title="Group Link"
+                                headIcon="link-variant"
+                                tailIconType="copy"
+                            />
+                            <MenuItem
+                                title="Send Invitation"
+                                headIcon="share-outline"
+                                tailIconType="next"
+                            />
+                            <MenuItem
+                                title="Show QR Code"
+                                headIcon="qrcode"
+                                tailIconType="next"
+                            />
+                            <MenuItem
+                                title="Screencast Leaderboard"
+                                headIcon="television"
+                                tailIconType="next"
+                            />
+                        </>
+                    )}
                     <MenuItem
                         title="Code"
                         headIcon="share-outline"
@@ -217,7 +234,7 @@ export default function GroupSettingsScreen({
                         }}
                     />
                 </MenuSection>
-                {__DEV__ && (
+                {env.isDev && (
                     <MenuSection title="Development">
                         <MenuItem
                             title="Go to Onboarding"
