@@ -13,6 +13,7 @@ import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
@@ -49,6 +50,7 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
+                    ...navStyles,
                     headerRight: () => (
                         <HeaderItem
                             onPress={() => {

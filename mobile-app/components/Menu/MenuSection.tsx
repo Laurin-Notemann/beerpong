@@ -66,6 +66,7 @@ export default function MenuSection({
             {title && <Heading title={title} titleHeadIcon={titleHeadIcon} />}
             <View
                 style={{
+                    alignItems: 'stretch',
                     overflow: 'hidden',
                     borderRadius: 10,
 

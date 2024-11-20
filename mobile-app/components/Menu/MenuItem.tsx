@@ -113,6 +113,8 @@ export default function MenuItem({
                                 paddingVertical: 12,
 
                                 marginRight: 'auto',
+
+                                flex: 1,
                             }}
                         >
                             <Text

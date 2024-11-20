@@ -87,7 +87,10 @@ export default function ConfirmationModal({
                             paddingRight: 9,
 
                             borderTopWidth: 0.5,
-                            borderTopColor: theme.panel.light.active,
+                            borderBottomWidth:
+                                idx === actions.length - 1 ? 0.5 : 0,
+
+                            borderColor: '#4A4A4A',
                         }}
                         underlayColor="#4A4A4A"
                         onPress={i.onPress}

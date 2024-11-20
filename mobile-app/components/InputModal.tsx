@@ -6,7 +6,7 @@ export default function InputModal({ children }: InputModalProps) {
     return (
         <View
             style={{
-                alignItems: 'center',
+                alignItems: 'stretch',
                 gap: 32,
 
                 flex: 1,

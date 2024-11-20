@@ -59,7 +59,7 @@ export default function Page() {
                 }}
             />
             <InputModal>
-                <Podium detailed={false} />
+                <Podium detailed={false} style={{ marginHorizontal: 'auto' }} />
                 <TextInput
                     required
                     placeholder="Season Name"
