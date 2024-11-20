@@ -33,7 +33,7 @@ export default function CreateGroupAddMembers({
                     ),
 
                     headerTitle: 'Add Players',
-                    headerBackTitle: '',
+                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
 

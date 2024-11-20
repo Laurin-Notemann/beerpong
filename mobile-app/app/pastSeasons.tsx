@@ -69,6 +69,7 @@ export default function Screen() {
             <Stack.Screen
                 options={{
                     ...navStyles,
+                    headerBackTitleVisible: false,
                     headerTitle: 'Past Seasons',
                     headerRight: () => <HeaderItem>Done</HeaderItem>,
                 }}

@@ -49,7 +49,7 @@ export default function Page() {
                     ),
 
                     headerTitle: 'Player Name',
-                    headerBackTitle: '',
+                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
 

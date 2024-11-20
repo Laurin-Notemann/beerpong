@@ -29,7 +29,7 @@ export default function CreateGroupSetName({
                         ),
 
                         headerTitle: 'Create Group',
-                        headerBackTitle: '',
+                        headerBackTitleVisible: false,
                         headerBackVisible: true,
                         headerTintColor: '#fff',
 

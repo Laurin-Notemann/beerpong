@@ -66,7 +66,7 @@ export default function JoinGroup({
             <Stack.Screen
                 options={{
                     headerTitle: '',
-                    headerBackTitle: '',
+                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
 
