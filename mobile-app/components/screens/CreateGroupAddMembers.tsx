@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import { TextInput as B, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 

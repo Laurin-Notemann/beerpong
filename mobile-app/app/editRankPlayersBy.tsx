@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
 
-import { HeaderItem } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {

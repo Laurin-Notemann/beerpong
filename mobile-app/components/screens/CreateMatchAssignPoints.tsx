@@ -2,7 +2,8 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
-import { HeaderItem, navStyles } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';

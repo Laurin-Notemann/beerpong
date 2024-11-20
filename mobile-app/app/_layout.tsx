@@ -18,7 +18,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-import { modalStyle } from './navigation/navStyles';
+import { modalStyles } from './navigation/modalStyles';
 
 const Drawer = createDrawerNavigator();
 
@@ -38,9 +38,9 @@ function Everything() {
             />
             <Stack.Screen name="+not-found" />
 
-            <Stack.Screen name="createNewPlayer" options={modalStyle} />
+            <Stack.Screen name="createNewPlayer" options={modalStyles} />
 
-            <Stack.Screen name="editRankPlayersBy" options={modalStyle} />
+            <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
         </Stack>
     );
 }

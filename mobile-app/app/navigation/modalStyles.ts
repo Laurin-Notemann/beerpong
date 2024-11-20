@@ -1,6 +1,6 @@
 import { theme } from '@/theme';
 
-export const modalStyle: any = {
+export const modalStyles: any = {
     presentation: 'modal',
 
     headerStyle: {

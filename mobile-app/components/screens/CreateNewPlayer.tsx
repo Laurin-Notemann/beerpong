@@ -1,7 +1,7 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import Avatar from '@/components/Avatar';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';

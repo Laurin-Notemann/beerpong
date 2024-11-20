@@ -9,7 +9,8 @@ import { flipFormation, Formation } from '@/components/CupGrid/Formation';
 import LiveMatchCupControls from '@/components/LiveMatchCupControls';
 import { theme } from '@/theme';
 
-import { HeaderItem, navStyles } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Screen() {

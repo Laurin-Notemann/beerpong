@@ -14,7 +14,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 
-import { HeaderItem, navStyles } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 
 const { width } = Dimensions.get('window');
 

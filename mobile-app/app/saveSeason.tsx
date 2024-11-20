@@ -9,7 +9,8 @@ import TextInput from '@/components/TextInput';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-import { HeaderItem, navStyles } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {

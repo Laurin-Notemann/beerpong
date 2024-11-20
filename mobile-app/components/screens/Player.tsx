@@ -6,7 +6,8 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { HeaderItem, navStyles } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import MatchesList, { Match } from '@/components/MatchesList';

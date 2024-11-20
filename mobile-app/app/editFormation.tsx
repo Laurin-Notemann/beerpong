@@ -10,7 +10,8 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
-import { HeaderItem, navStyles } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 
 export default function EditFormation() {
     const [cups, setCups] = useState(Formation.Pyramid_10);
