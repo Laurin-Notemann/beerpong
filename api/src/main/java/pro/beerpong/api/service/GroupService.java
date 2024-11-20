@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
@@ -42,6 +43,7 @@ public class GroupService {
 
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
+        season.setSeasonSettings(new SeasonSettings());
 
         group.setActiveSeason(season);
         group = groupRepository.save(group);

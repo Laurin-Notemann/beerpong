@@ -66,7 +66,7 @@ public class SeasonController {
 
         dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 0), 1000));
         dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMinTeamSize(), 1), 10));
-        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 1), 10));
+        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMaxTeamSize(), 1), 10));
 
         SeasonDto updatedSeason = seasonService.updateSeason(season.get(), dto);
         if (updatedSeason != null) {
