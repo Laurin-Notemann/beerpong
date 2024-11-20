@@ -22,10 +22,10 @@ import java.util.Optional;
 public class RuleMoveService {
     private static final List<RuleMove> DEFAULT_RULE_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
-            buildRuleMove("Bomb", 1, 0, false),
-            buildRuleMove("Bouncer", 1, 0, false),
-            buildRuleMove("Trickshot", 1, 0, false),
-            buildRuleMove("Save", 1, 0, false),
+            buildRuleMove("Bomb", 2, 0, false),
+            buildRuleMove("Bouncer", 2, 0, false),
+            buildRuleMove("Trickshot", 2, 0, false),
+            buildRuleMove("Save", 2, 0, false),
             buildRuleMove("Finish - Normal", 0, 3, true),
             buildRuleMove("Finish - Ring of fire", 0, 10, true)
     );
