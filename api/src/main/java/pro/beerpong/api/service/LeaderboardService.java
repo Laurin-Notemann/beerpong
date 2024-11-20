@@ -5,14 +5,9 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.LeaderboardDto;
-import pro.beerpong.api.model.dto.LeaderboardEntryDto;
-import pro.beerpong.api.model.dto.MatchDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.util.RankingAlgorithm;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -22,6 +17,12 @@ import java.util.stream.Stream;
 public class LeaderboardService {
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
+
+    private static final double CONTRIBUTION_WEIGHT = 5.0D;
+    private static final double TEAM_IMPACT_WEIGHT = 0.3D;
+    private static final double PLAYER_IMPACT_WEIGHT = 0.3D;
+    private static final double EFFICIENCY_WEIGHT = 0.3D;
+    private static final double TEAM_SIZE_WEIGHT = 0.2D;
 
     @Autowired
     public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService) {
@@ -128,17 +129,41 @@ public class LeaderboardService {
                     return;
                 }
 
+                var entry = entries.get(teamMemberDto.getPlayerId());
+
                 // get points the player made and points the team made
                 var playerPoints = pointsPerPlayer.getOrDefault(teamMemberDto.getId(), 0);
                 var teamSize = teamMembers.size();
 
-                // calculate the activity of the player based on the ratio of player points to team points
-                double activityWeight = (double) playerPoints / teamPoints.get();
-                // normalize the amount of points the player made
-                double normalizedScore = (playerPoints / (double) teamSize) * activityWeight;
+                // how many of the teams points the player made
+                double contributionRatio  = (double) playerPoints / teamPoints.get();
+
+                // how many points the player made per move
+                double pointsPerMove = (double) playerPoints / matchDto.getMatchMoves().stream()
+                        .filter(dtoComplete -> dtoComplete.getTeamMemberId().equals(teamMemberDto.getId()))
+                        .map(MatchMoveDtoComplete::getValue)
+                        .reduce(Integer::sum)
+                        .orElse(playerPoints);
+
+                // reward larger teams
+                double teamSizeFactor = 1.0 / teamSize;
+
+                // reward higher amounts of team points
+                double impactOfTeam = Math.log(teamPoints.get() + 1);
+
+                // reward higher amounts of player points
+                double impactOnTeam = Math.log(playerPoints + 1);
+
+                // calculate weighted elo
+                double elo = (CONTRIBUTION_WEIGHT * contributionRatio) +
+                        (EFFICIENCY_WEIGHT * pointsPerMove) +
+                        (TEAM_SIZE_WEIGHT * teamSizeFactor) +
+                        (TEAM_IMPACT_WEIGHT * impactOfTeam) //+
+                        //(PLAYER_IMPACT_WEIGHT * impactOnTeam)
+                        ;
 
                 // add normalized score to players score
-                entries.get(teamMemberDto.getPlayerId()).addElo(normalizedScore);
+                entry.addElo(elo);
             });
 
             // clear team member cache

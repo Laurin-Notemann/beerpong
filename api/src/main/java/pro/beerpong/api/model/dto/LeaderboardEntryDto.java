@@ -15,6 +15,7 @@ public class LeaderboardEntryDto {
     private int totalMoves = 0;
     private int totalTeamSize = 0;
     private double averagePointsPerMatch = 0.0D;
+    private double averageEloPerMatch = 0.0D;
     private double averageTeamSize = 0.0D;
     private double elo = 0;
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
@@ -45,6 +46,7 @@ public class LeaderboardEntryDto {
 
     public void calculate() {
         this.averagePointsPerMatch = (double) totalPoints / (double) totalGames;
+        this.averageEloPerMatch = elo / (double) totalGames;
         this.averageTeamSize = (double) totalTeamSize / (double) totalGames;
     }
 }
