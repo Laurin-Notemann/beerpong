@@ -5,8 +5,7 @@ on:
     paths:
       - "api/src/main/**"
       - ".github/workflows/generate-openapi.yaml"
-      - "mobile-app/api/generated/openapi.json"
-      - "mobile-app/openapi/openapi.d.ts"
+      - "mobile-app/**"
     branches: 
       - main
   workflow_dispatch:
