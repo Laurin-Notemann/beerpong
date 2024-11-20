@@ -35,7 +35,7 @@ public class LeaderboardEntryDto {
     }
 
     public void calculate() {
-        this.averagePointsPerMatch = (double) totalPoints / (double) totalGames;
-        this.averageTeamSize = (double) totalTeamSize / (double) totalGames;
+        this.averagePointsPerMatch = totalGames > 0 ? (double) totalPoints / (double) totalGames : 0;
+        this.averageTeamSize = totalGames > 0 ? (double) totalTeamSize / (double) totalGames : 0;
     }
 }
