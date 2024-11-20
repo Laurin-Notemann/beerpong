@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Switch } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -21,6 +20,8 @@ export interface GroupSettingsProps {
     pastSeasons: number;
 
     groupCode: string;
+    onUploadWallpaperPress: () => void;
+    onLeaveGroup: () => void;
 }
 export default function GroupSettingsScreen({
     id,
@@ -29,6 +30,8 @@ export default function GroupSettingsScreen({
     pushNotificationsEnabled,
     pastSeasons,
     groupCode,
+    onUploadWallpaperPress,
+    onLeaveGroup,
 }: GroupSettingsProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -58,7 +61,7 @@ export default function GroupSettingsScreen({
                     />
                 }
             >
-                <MenuSection title="Settings" color="dark">
+                <MenuSection title="Settings">
                     <MenuItem
                         title="Premium Version"
                         headIcon="check-decagram"
@@ -75,13 +78,7 @@ export default function GroupSettingsScreen({
                         title="Set Wallpaper"
                         headIcon="image-multiple"
                         tailIconType="next"
-                        onPress={async () => {
-                            const result = await launchImageLibrary({
-                                mediaType: 'photo',
-                            });
-                            // eslint-disable-next-line
-                            console.log(result);
-                        }}
+                        onPress={onUploadWallpaperPress}
                     />
                     <MenuItem
                         title="Push Notifications"
@@ -158,6 +155,25 @@ export default function GroupSettingsScreen({
                         tailIconType="next"
                         tailContent={formatGroupCode(groupCode)}
                         onPress={() => copyToClipboard(groupCode)}
+                    />
+                </MenuSection>
+                <MenuSection
+                    style={{
+                        width: '100%',
+
+                        marginTop: 24,
+                    }}
+                >
+                    <MenuItem
+                        title="Leave Group"
+                        headIcon="exit-to-app"
+                        onPress={onLeaveGroup}
+                        type="danger"
+                        confirmationPrompt={{
+                            title: 'Leave Group',
+                            description:
+                                'Are you sure you want to leave this group?',
+                        }}
                     />
                 </MenuSection>
                 {__DEV__ && (

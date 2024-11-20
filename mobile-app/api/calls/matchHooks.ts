@@ -4,6 +4,7 @@ import { Paths } from '@/openapi/openapi';
 
 import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
+import { QK } from '../utils/reactQuery';
 
 export const useMatchQuery = (
     groupId: ApiId | null | undefined,
@@ -13,7 +14,7 @@ export const useMatchQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetMatchById.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'season', seasonId, 'match', matchId],
+        queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches, matchId],
         queryFn: async () => {
             if (!groupId || !seasonId || !matchId) {
                 return null;
@@ -34,7 +35,7 @@ export const useMatchesQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
-        queryKey: ['group', groupId, 'season', seasonId, 'matches'],
+        queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
@@ -46,6 +47,23 @@ export const useMatchesQuery = (
     });
 };
 
+export const useMatchesByPlayerQuery = (
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined,
+    playerId: ApiId | null | undefined
+) => {
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    if (!matchesQuery.data?.data) return matchesQuery;
+
+    const matches = matchesQuery.data.data;
+
+    matchesQuery.data.data = matches.filter((i) =>
+        i.teamMembers?.find((j) => j.playerId === playerId)
+    );
+    return matchesQuery;
+};
+
 export const useCreateMatchMutation = () => {
     const { api } = useApi();
     return useMutation<
@@ -55,6 +73,40 @@ export const useCreateMatchMutation = () => {
     >({
         mutationFn: async (body) => {
             const res = await (await api).createMatch(body, body);
+            return res?.data;
+        },
+    });
+};
+
+// export const useDeleteMatchMutation = () => {
+//     const { api } = useApi();
+
+//     return useMutation<
+//         Paths.DeleteMatch.Responses.$200 | null,
+//         Error,
+//         { groupId: ApiId; seasonId: ApiId; id: ApiId }
+//     >({
+//         mutationFn: async (body) => {
+//             const res = await (await api).deleteMatch(body);
+//             return res?.data;
+//         },
+//     });
+// };
+
+export const useUpdateMatchMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.UpdateMatch.Responses.$200 | null,
+        Error,
+        Paths.UpdateMatch.RequestBody & {
+            groupId: ApiId;
+            seasonId: ApiId;
+            id: ApiId;
+        }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).updateMatch(body, body);
             return res?.data;
         },
     });

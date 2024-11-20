@@ -13,3 +13,10 @@ export function showCopiedToClipboardToast() {
         position: 1,
     });
 }
+
+export function showYouLeftGroupToast(groupName: string) {
+    return Toast.show(`You left "${groupName}".`, {
+        duration: 1500,
+        position: 1,
+    });
+}

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { Stack } from 'expo-router';
+import React, { useState } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
@@ -12,6 +13,9 @@ import SwiperHeader from '@/components/SwiperHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
+
+import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 
 const { width } = Dimensions.get('window');
 
@@ -62,25 +66,35 @@ export default function Screen() {
 
     // if (EXPERIMENTAL_CAROUSEL) {
     return (
-        <Carousel
-            mode="parallax"
-            modeConfig={{
-                parallaxScrollingScale: 0.9,
-                parallaxScrollingOffset: 50,
-            }}
-            style={{
-                // width: width * 0.86,
+        <>
+            <Stack.Screen
+                options={{
+                    ...navStyles,
+                    headerTitle: 'Past Seasons',
+                    headerRight: () => <HeaderItem>Done</HeaderItem>,
+                }}
+            />
 
-                backgroundColor: theme.color.bg,
-            }}
-            loop={false}
-            width={width}
-            height={1000}
-            data={[0, 0, 0, 0, 0]}
-            renderItem={(item) => <Card />}
-            // sliderWidth={Dimensions.get("screen").width}
-            // itemWidth={Dimensions.get("screen").width - 32}
-        />
+            <Carousel
+                mode="parallax"
+                modeConfig={{
+                    parallaxScrollingScale: 0.9,
+                    parallaxScrollingOffset: 50,
+                }}
+                style={{
+                    // width: width * 0.86,
+
+                    backgroundColor: theme.color.bg,
+                }}
+                loop={false}
+                width={width}
+                height={1000}
+                data={[0, 0, 0, 0, 0]}
+                renderItem={(item) => <Card />}
+                // sliderWidth={Dimensions.get("screen").width}
+                // itemWidth={Dimensions.get("screen").width - 32}
+            />
+        </>
     );
     // }
 

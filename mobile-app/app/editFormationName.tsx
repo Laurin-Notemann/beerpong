@@ -5,7 +5,7 @@ import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
 
-import { HeaderItem } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
 
 export default function Page() {
     const [value, setValue] = useState('');

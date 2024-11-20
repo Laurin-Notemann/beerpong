@@ -12,6 +12,7 @@ export interface Player {
     matches: number;
     matchesWon: number;
     elo: number;
+    avatarUrl?: string | null;
 }
 
 export const useLeaderboardProps = (
@@ -28,10 +29,11 @@ export const useLeaderboardProps = (
         return {
             id: player.id!,
             name: player.profile?.name ?? 'NO NAME FOUND',
-            points: 11,
-            matches: 12,
-            matchesWon: 13,
+            points: player.statistics?.points ?? 0,
+            matches: player.statistics?.matches ?? 0,
+            matchesWon: player.statistics?.matches ?? 0,
             elo: 14,
+            avatarUrl: player.profile?.avatarAsset?.url,
         };
     });
 

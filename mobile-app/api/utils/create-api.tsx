@@ -1,4 +1,3 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 import React, {
     createContext,
@@ -13,7 +12,6 @@ import { Client as BeerPongClient } from '../../openapi/openapi';
 import { env } from '../env';
 import { RealtimeClient } from '../realtime';
 import { useRealtimeConnection } from '../realtime/useRealtimeConnection';
-import { createQueryClient } from './query-client';
 
 type ApiContextType = {
     realtime: RealtimeClient;
@@ -63,14 +61,10 @@ export function ApiProvider({ children }: { children: ReactNode }) {
         error,
     };
 
-    const queryClient = createQueryClient();
-
     return (
-        <QueryClientProvider client={queryClient}>
-            <ApiContext.Provider value={contextValue}>
-                {children}
-            </ApiContext.Provider>
-        </QueryClientProvider>
+        <ApiContext.Provider value={contextValue}>
+            {children}
+        </ApiContext.Provider>
     );
 }
 

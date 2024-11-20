@@ -1,22 +1,20 @@
+import dayjs from 'dayjs';
 import { Text } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { useGroupQuery } from '@/api/calls/groupHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
+import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import Leaderboard from '@/components/Leaderboard';
 import { theme } from '@/theme';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
-    const { selectedGroupId } = useGroupStore();
-    const { data } = useGroupQuery(selectedGroupId);
-    const { players } = useLeaderboardProps(
-        selectedGroupId,
-        data?.data?.activeSeason?.id ?? null
-    );
+    const { groupId, seasonId, group } = useGroup();
+
+    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
 
     return (
         <GestureHandlerRootView>
@@ -36,7 +34,11 @@ export default function Page() {
                         marginTop: 3,
                     }}
                 >
-                    Started 9.9.2024
+                    {group.data?.activeSeason?.startDate
+                        ? `Started ${env.format.date.seasonStartAndEnd(
+                              dayjs(group.data.activeSeason.startDate)
+                          )}`
+                        : null}
                 </Text>
                 <Text
                     style={{
@@ -45,7 +47,8 @@ export default function Page() {
                         marginTop: 32 - 6,
                     }}
                 >
-                    14 players · 78 matches
+                    {group.data?.numberOfPlayers ?? 0} players ·{' '}
+                    {group.data?.numberOfMatches ?? 0} matches
                 </Text>
                 <Leaderboard players={players} />
             </ScrollView>

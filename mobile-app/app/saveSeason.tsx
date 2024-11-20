@@ -6,11 +6,11 @@ import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import InputModal from '@/components/InputModal';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-import { HeaderItem } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
+import { navStyles } from './navigation/navStyles';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
@@ -46,19 +46,8 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    title: 'Save old Season',
-                    headerStyle: {
-                        backgroundColor: theme.color.topNav,
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
+                    ...navStyles,
+                    headerTitle: 'Save old Season',
                     headerRight: () => (
                         <HeaderItem
                             disabled={value.length < 1}

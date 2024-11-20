@@ -10,7 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import IconHead from '@/components/IconHead';
 import { theme } from '@/theme';

@@ -1,77 +1,54 @@
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
 
-import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
+import { useMatchQuery } from '@/api/calls/matchHooks';
+import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
+import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
-import { mockMatches } from '@/components/mockData/matches';
+import MenuItem from '@/components/Menu/MenuItem';
+import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
-import { HeaderItem } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
 
-    const [players, setPlayers] = useState<TeamMember[]>([
-        {
-            id: '#1',
-            team: 'blue',
-            name: 'Bolls',
-            points: 1,
-            change: 0.12,
-            moves: [
-                { id: '#1', count: 1, points: 1, title: 'Normal' },
-                { id: '#2', count: 0, points: 2, title: 'Bomb' },
-            ],
-        },
-        {
-            id: '#2',
-            team: 'red',
-            name: 'Schügge',
-            points: 0,
-            change: -0.2,
-            moves: [
-                { id: '#1', count: 0, points: 1, title: 'Normal' },
-                { id: '#2', count: 0, points: 2, title: 'Bomb' },
-            ],
-        },
-    ]);
+    const { groupId, seasonId } = useGroup();
+
+    const playersQuery = usePlayersQuery(groupId, seasonId);
+
+    const players = playersQuery.data?.data ?? [];
+
+    const { id } = useLocalSearchParams<{ id: string }>();
+
+    const matchQuery = useMatchQuery(groupId, seasonId, id);
+
+    const match = matchQuery.data?.data
+        ? matchDtoToMatch(players)(matchQuery.data.data)
+        : null;
+
+    async function onDelete() {}
 
     function setMoveCount(userId: string, moveId: string, count: number) {
-        setPlayers((prev) => {
-            const copy: typeof prev = JSON.parse(JSON.stringify(prev));
-
-            const player = copy.find((i) => i.id === userId);
-
-            if (!player) return prev;
-
-            const move = player?.moves.find((i) => i.id === moveId);
-
-            if (!move) return prev;
-
-            move.count = count;
-
-            return copy;
-        });
+        // setPlayers((prev) => {
+        //     const copy: typeof prev = JSON.parse(JSON.stringify(prev));
+        //     const player = copy.find((i) => i.id === userId);
+        //     if (!player) return prev;
+        //     const move = player?.moves.find((i) => i.id === moveId);
+        //     if (!move) return prev;
+        //     move.count = count;
+        //     return copy;
+        // });
     }
 
     return (
         <>
             <Stack.Screen
                 options={{
-                    title: 'Match',
-                    headerStyle: {
-                        backgroundColor: theme.color.topNav,
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
                     headerRight: () => (
                         <HeaderItem
                             onPress={() => {
@@ -81,14 +58,15 @@ export default function Page() {
                             {isEditing ? 'Done' : 'Edit'}
                         </HeaderItem>
                     ),
-                    headerTitle: () => (
-                        <MatchVsHeader
-                            match={mockMatches[0]}
-                            style={{
-                                bottom: 4,
-                            }}
-                        />
-                    ),
+                    headerTitle: () =>
+                        match ? (
+                            <MatchVsHeader
+                                match={match}
+                                style={{
+                                    bottom: 4,
+                                }}
+                            />
+                        ) : null,
                 }}
             />
             <ScrollView
@@ -105,9 +83,47 @@ export default function Page() {
             >
                 <MatchPlayers
                     editable={isEditing}
-                    players={players}
+                    players={[
+                        ...(match?.blueTeam?.map((i) => ({
+                            ...i,
+                            team: 'blue' as const,
+                        })) ?? []),
+                        ...(match?.redTeam?.map((i) => ({
+                            ...i,
+                            team: 'red' as const,
+                        })) ?? []),
+                    ].map((i) => ({
+                        id: i.id!,
+                        change: 0,
+                        moves: [],
+                        name: i.name,
+                        avatarUrl: i.avatarUrl,
+                        points: 2,
+                        team: i.team,
+                    }))}
                     setMoveCount={setMoveCount}
                 />
+                {isEditing && (
+                    <MenuSection
+                        style={{
+                            width: '100%',
+
+                            marginTop: 24,
+                        }}
+                    >
+                        <MenuItem
+                            title="Delete Match"
+                            headIcon="delete-outline"
+                            onPress={onDelete}
+                            type="danger"
+                            confirmationPrompt={{
+                                title: 'Delete Match',
+                                description:
+                                    'Are you sure you want to delete this match?',
+                            }}
+                        />
+                    </MenuSection>
+                )}
             </ScrollView>
         </>
     );

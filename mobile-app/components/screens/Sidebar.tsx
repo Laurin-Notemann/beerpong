@@ -69,13 +69,11 @@ export interface SidebarGroup {
     matchesCount: number;
 }
 
-export interface SidebarProps {
-    appVersion: string;
-}
+export interface SidebarProps {}
 
-export function Sidebar({ appVersion }: SidebarProps) {
-    const { groupIds, selectedGroupId, selectGroup, clearGroups } =
-        useGroupStore();
+// eslint-disable-next-line no-empty-pattern
+export function Sidebar({}: SidebarProps) {
+    const { groupIds, selectedGroupId, selectGroup } = useGroupStore();
 
     const nav = useNavigation();
 
@@ -103,7 +101,6 @@ export function Sidebar({ appVersion }: SidebarProps) {
 
                         // eslint-disable-next-line
                         console.log(Object.keys(nav));
-                        // @ts-ignore
                         // nav.closeDrawer();
                     }}
                 />
@@ -146,39 +143,24 @@ export function Sidebar({ appVersion }: SidebarProps) {
                 title=""
                 description=""
                 actions={[
-                    ...[
-                        {
-                            title: 'Create Group',
-                            type: 'default' as const,
+                    {
+                        title: 'Create Group',
+                        type: 'default' as const,
 
-                            onPress: () => {
-                                nav.navigate('createGroup');
-                                setShowAddGroupModal(false);
-                            },
+                        onPress: () => {
+                            nav.navigate('createGroup');
+                            setShowAddGroupModal(false);
                         },
-                        {
-                            title: 'Join Group',
-                            type: 'default' as const,
+                    },
+                    {
+                        title: 'Join Group',
+                        type: 'default' as const,
 
-                            onPress: () => {
-                                nav.navigate('joinGroup');
-                                setShowAddGroupModal(false);
-                            },
+                        onPress: () => {
+                            nav.navigate('joinGroup');
+                            setShowAddGroupModal(false);
                         },
-                    ],
-                    ...(__DEV__
-                        ? [
-                              {
-                                  title: '[DEV] Clear Storage',
-                                  type: 'default' as const,
-
-                                  onPress: () => {
-                                      clearGroups();
-                                      setShowAddGroupModal(false);
-                                  },
-                              },
-                          ]
-                        : []),
+                    },
                 ]}
                 isVisible={showAddGroupModal}
             />

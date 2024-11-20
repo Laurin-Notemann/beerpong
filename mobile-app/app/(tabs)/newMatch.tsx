@@ -25,6 +25,8 @@ export default function Screen() {
         team:
             matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
                 ?.team ?? null,
+
+        avatarUrl: i.profile?.avatarAsset?.url,
     }));
 
     async function onSubmit() {

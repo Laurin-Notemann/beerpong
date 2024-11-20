@@ -84,19 +84,25 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
         },
         setMoveCount: (userId, moveId, count) => {
             set((state) => {
-                const updateTeam = (team: typeof state.redTeam) => ({
-                    teamMembers: team.teamMembers.map((player) =>
-                        player.playerId === userId
-                            ? {
-                                  ...player,
-                                  moves: player.moves.map((move) =>
-                                      move.moveId === moveId
-                                          ? { ...move, count: count }
-                                          : move
-                                  ),
-                              }
-                            : player
-                    ),
+                const updateTeam = (team: TeamDraft) => ({
+                    teamMembers: team.teamMembers.map((player) => {
+                        if (player.playerId !== userId) return player;
+
+                        if (
+                            !player.moves.find((move) => move.moveId === moveId)
+                        ) {
+                            player.moves.push({ moveId, count });
+                        }
+
+                        const moves = player.moves.map((move) =>
+                            move.moveId === moveId ? { ...move, count } : move
+                        );
+
+                        return {
+                            ...player,
+                            moves,
+                        };
+                    }),
                 });
 
                 return {

@@ -3,10 +3,11 @@ import React from 'react';
 import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
-import MenuSection from '@/components/Menu/MenuSection';
+import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
@@ -44,7 +45,7 @@ function PlayerItem({
             }}
         >
             <>
-                <Avatar size={36} name={player.name} />
+                <Avatar url={player.avatarUrl} size={36} name={player.name} />
                 <Text
                     style={{
                         fontSize: 17,
@@ -97,7 +98,7 @@ function PlayerItem({
     );
 }
 
-export type Player = Pick<TeamMember, 'id' | 'name' | 'team'>;
+export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 
 export interface NewMatchAssignTeamsProps {
     players: Player[];
@@ -128,6 +129,7 @@ export default function NewMatchAssignTeams({
         >
             <Stack.Screen
                 options={{
+                    ...navStyles,
                     headerRight: () => (
                         <HeaderItem
                             disabled={!canCreateMatch}
@@ -142,6 +144,7 @@ export default function NewMatchAssignTeams({
                             ? () => (
                                   <MatchVsHeader
                                       match={{
+                                          id: '#',
                                           blueTeam,
                                           redTeam,
                                           blueCups: 0,
@@ -154,18 +157,9 @@ export default function NewMatchAssignTeams({
                                   />
                               )
                             : 'New Match',
-                    headerBackTitle: '',
-                    headerBackVisible: true,
-                    headerTintColor: '#fff',
-
-                    headerStyle: {
-                        backgroundColor: '#000',
-                    },
-                    headerTitleStyle: {
-                        color: theme.color.text.primary,
-                    },
                 }}
             />
+            <Heading />
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
                     headIcon="account-plus-outline"

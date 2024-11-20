@@ -1,7 +1,8 @@
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
+import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -10,26 +11,13 @@ import Button from './Button';
 import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
 
-const getDayName = (date: Dayjs) => {
-    const today = dayjs();
-
-    const diffDays = today.diff(date, 'day');
-
-    if (diffDays === 0) {
-        return 'Today';
-    } else if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 7) {
-        return date.format('dddd'); // Day of the week, e.g., "Wednesday"
-    } else {
-        return date.format('DD.MM.YYYY'); // Full date format, e.g., "10.10.2024"
-    }
-};
-
 export type Match = {
+    id: string;
     date: Date;
-    redTeam: { name: string }[];
-    blueTeam: { name: string }[];
+    redCups: number;
+    blueCups: number;
+    redTeam: { id: string; name: string; avatarUrl?: string | null }[];
+    blueTeam: { id: string; name: string; avatarUrl?: string | null }[];
 };
 
 const groupIntoDays = (matches: Match[]) => {
@@ -43,7 +31,7 @@ const groupIntoDays = (matches: Match[]) => {
             if (!acc[dayKey]) {
                 acc[dayKey] = {
                     matches: [],
-                    title: getDayName(dayjs(obj.date)),
+                    title: env.format.date.matchesSeperatorDay(dayjs(obj.date)),
                 };
             }
             acc[dayKey].matches.push(obj);
@@ -85,7 +73,9 @@ export default function MatchesList({ matches }: MatchesListProps) {
                                 borderTopColor: theme.panel.light.active,
                                 borderTopWidth: 0.5,
                             }}
-                            onPress={() => nav.navigate('match')}
+                            onPress={() =>
+                                nav.navigate('match', { id: item.id })
+                            }
                         >
                             <>
                                 <MatchVsHeader match={item} />
@@ -96,7 +86,9 @@ export default function MatchesList({ matches }: MatchesListProps) {
                                             color: theme.color.text.tertiary,
                                         }}
                                     >
-                                        {dayjs().format('HH:mm')}
+                                        {env.format.date.matchHour(
+                                            dayjs(item.date)
+                                        )}
                                     </Text>
                                     <Text
                                         style={{
@@ -121,13 +113,17 @@ export default function MatchesList({ matches }: MatchesListProps) {
             ListEmptyComponent={
                 <View style={{ paddingTop: 64 }}>
                     <IconHead
+                        onTouchStart={() => nav.navigate('newMatch')}
                         iconName="format-list-bulleted"
                         title="No Matches Played"
                         description={
                             <Button
+                                style={{
+                                    marginTop: 24,
+                                }}
                                 onPress={() => {}}
                                 title="Create match"
-                                variant="secondary"
+                                variant="primary"
                             />
                             // <Link
                             //     to="/joinGroup"

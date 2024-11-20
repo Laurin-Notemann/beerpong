@@ -1,15 +1,16 @@
 import React from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, ViewProps } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
+import { formatPlacement } from '@/utils/format';
 
 import Avatar from './Avatar';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 
-export interface PodiumProps {
+export interface PodiumProps extends ViewProps {
     detailed?: boolean;
 
     firstPlace?: Player;
@@ -21,16 +22,33 @@ export default function Podium({
     firstPlace,
     secondPlace,
     thirdPlace,
+    ...rest
 }: PodiumProps) {
     const nav = useNavigation();
 
+    const firstPlaceAveragePointsPerMatch = firstPlace?.matches
+        ? (firstPlace?.points / firstPlace?.matches).toFixed(1)
+        : '--';
+
+    const secondPlaceAveragePointsPerMatch = secondPlace?.matches
+        ? (secondPlace?.points / secondPlace?.matches).toFixed(1)
+        : '--';
+
+    const thirdPlaceAveragePointsPerMatch = thirdPlace?.matches
+        ? (thirdPlace?.points / thirdPlace?.matches).toFixed(1)
+        : '--';
+
     return (
         <ThemedView
-            style={{
-                flexDirection: 'row',
+            {...rest}
+            style={[
+                {
+                    flexDirection: 'row',
 
-                marginTop: -2,
-            }}
+                    marginTop: 24,
+                },
+                rest.style,
+            ]}
         >
             <Pressable
                 style={{ alignItems: 'center', marginTop: 48 }}
@@ -45,9 +63,13 @@ export default function Podium({
                         marginBottom: 16,
                     }}
                 >
-                    2
+                    {formatPlacement(2)}
                 </ThemedText>
-                <Avatar name={secondPlace?.name} size={96} />
+                <Avatar
+                    url={secondPlace?.avatarUrl}
+                    name={secondPlace?.name}
+                    size={96}
+                />
                 {detailed && (
                     <>
                         <ThemedText
@@ -57,7 +79,7 @@ export default function Podium({
                                 marginTop: 12,
                             }}
                         >
-                            {secondPlace?.name || '-'}
+                            {secondPlace?.name}
                         </ThemedText>
 
                         {secondPlace && (
@@ -68,7 +90,7 @@ export default function Podium({
                                         color: theme.color.text.primary,
                                     }}
                                 >
-                                    6.7
+                                    {secondPlaceAveragePointsPerMatch}
                                 </ThemedText>
                                 <ThemedText
                                     style={{
@@ -87,7 +109,7 @@ export default function Podium({
                                         marginTop: -8,
                                     }}
                                 >
-                                    56 matches
+                                    {secondPlace.matches} matches
                                 </ThemedText>
                             </>
                         )}
@@ -120,9 +142,13 @@ export default function Podium({
                         marginBottom: 16,
                     }}
                 >
-                    1
+                    {formatPlacement(1)}
                 </ThemedText>
-                <Avatar name={firstPlace?.name} size={128} />
+                <Avatar
+                    url={firstPlace?.avatarUrl}
+                    name={firstPlace?.name}
+                    size={128}
+                />
                 {detailed && (
                     <>
                         <ThemedText
@@ -132,7 +158,7 @@ export default function Podium({
                                 marginTop: 12,
                             }}
                         >
-                            {firstPlace?.name || '-'}
+                            {firstPlace?.name}
                         </ThemedText>
                         {firstPlace && (
                             <>
@@ -142,7 +168,7 @@ export default function Podium({
                                         color: theme.color.text.primary,
                                     }}
                                 >
-                                    7.0
+                                    {firstPlaceAveragePointsPerMatch}
                                 </ThemedText>
                                 <ThemedText
                                     style={{
@@ -160,7 +186,7 @@ export default function Podium({
                                         marginTop: -8,
                                     }}
                                 >
-                                    14 matches
+                                    {firstPlace.matches} matches
                                 </ThemedText>
                             </>
                         )}
@@ -178,9 +204,13 @@ export default function Podium({
                         marginBottom: 16,
                     }}
                 >
-                    3
+                    {formatPlacement(3)}
                 </ThemedText>
-                <Avatar name={thirdPlace?.name} size={96} />
+                <Avatar
+                    url={thirdPlace?.avatarUrl}
+                    name={thirdPlace?.name}
+                    size={96}
+                />
                 {detailed && (
                     <>
                         <ThemedText
@@ -190,7 +220,7 @@ export default function Podium({
                                 marginTop: 12,
                             }}
                         >
-                            {thirdPlace?.name || '-'}
+                            {thirdPlace?.name}
                         </ThemedText>
                         {thirdPlace && (
                             <>
@@ -200,7 +230,7 @@ export default function Podium({
                                         color: theme.color.text.primary,
                                     }}
                                 >
-                                    6.6
+                                    {thirdPlaceAveragePointsPerMatch}
                                 </ThemedText>
                                 <ThemedText
                                     style={{
@@ -218,7 +248,7 @@ export default function Podium({
                                         marginTop: -8,
                                     }}
                                 >
-                                    56 matches
+                                    {thirdPlace.matches} matches
                                 </ThemedText>
                             </>
                         )}

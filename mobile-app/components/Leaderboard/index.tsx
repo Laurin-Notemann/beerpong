@@ -1,8 +1,8 @@
-import { Link } from '@react-navigation/native';
 import React from 'react';
+import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
-import { theme } from '@/theme';
+import { useNavigation } from '@/app/navigation/useNavigation';
 
 import Podium from '../Podium';
 import Text from '../Text';
@@ -14,15 +14,31 @@ export interface LeaderboardProps {
 }
 
 export default function Leaderboard({ players }: LeaderboardProps) {
-    const sortedPlayers = players.sort((a, b) => b.points - a.points);
-    const nonPodiumPlayers = sortedPlayers.slice(3);
+    const nav = useNavigation();
+
+    const minMatchesRequiredToBeRanked = 1;
+
+    const sortedPlayers = players.sort(
+        (a, b) =>
+            (b.matches ? b.points / b.matches : 0) -
+            (a.matches ? a.points / a.matches : 0)
+    );
+
+    const rankedPlayers = sortedPlayers.filter(
+        (i) => i.matches >= minMatchesRequiredToBeRanked
+    );
+    const nonPodiumPlayers = rankedPlayers.slice(3);
+
+    const unrankedPlayers = sortedPlayers.filter(
+        (i) => i.matches < minMatchesRequiredToBeRanked
+    );
 
     return (
         <>
             <Podium
-                firstPlace={sortedPlayers[0]}
-                secondPlace={sortedPlayers[1]}
-                thirdPlace={sortedPlayers[2]}
+                firstPlace={rankedPlayers[0]}
+                secondPlace={rankedPlayers[1]}
+                thirdPlace={rankedPlayers[2]}
             />
             <ThemedView
                 style={{
@@ -36,33 +52,82 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                         key={idx}
                         name={i.name}
                         id={i.id}
-                        placement={idx + 3}
+                        placement={idx + 4}
                         points={i.points}
                         matches={i.matches}
                         elo={i.elo}
                         matchesWon={i.matchesWon}
+                        avatarUrl={i.avatarUrl}
+                    />
+                ))}
+                {unrankedPlayers.length ? (
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 8,
+                            height: 64,
+                            paddingHorizontal: 8,
+                            paddingVertical: 12,
+                        }}
+                    >
+                        <Text
+                            color="primary"
+                            style={{
+                                fontSize: 17,
+                            }}
+                        >
+                            Unranked
+                        </Text>
+                        <Text
+                            color="secondary"
+                            style={{
+                                fontSize: 12,
+                            }}
+                        >
+                            {minMatchesRequiredToBeRanked > 1
+                                ? `${minMatchesRequiredToBeRanked} matches required to qualify`
+                                : `${minMatchesRequiredToBeRanked} match required to qualify`}
+                        </Text>
+                    </View>
+                ) : null}
+                {unrankedPlayers.map((i, idx) => (
+                    <LeaderboardPlayerItem
+                        key={idx}
+                        name={i.name}
+                        id={i.id}
+                        placement={
+                            sortedPlayers.findIndex((j) => j.id === i.id) + 1
+                        }
+                        points={i.points}
+                        matches={i.matches}
+                        elo={i.elo}
+                        matchesWon={i.matchesWon}
+                        avatarUrl={i.avatarUrl}
+                        unranked
                     />
                 ))}
                 {players.length < 1 && (
-                    <Text
-                        color="secondary"
-                        style={{
-                            textAlign: 'center',
-                            paddingTop: 64,
-                            lineHeight: 32,
-                        }}
-                    >
-                        No matches played yet. {'\n'}
-                        <Link
-                            to="/newMatch"
+                    <Pressable onPress={() => nav.navigate('newMatch')}>
+                        <Text
+                            color="secondary"
                             style={{
-                                color: theme.color.text.primary,
-                                fontWeight: 500,
+                                textAlign: 'center',
+                                paddingTop: 64,
+                                lineHeight: 32,
                             }}
                         >
-                            Create match
-                        </Link>
-                    </Text>
+                            No matches played yet. {'\n'}
+                            <Text
+                                color="primary"
+                                style={{
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Create match
+                            </Text>
+                        </Text>
+                    </Pressable>
                 )}
             </ThemedView>
         </>

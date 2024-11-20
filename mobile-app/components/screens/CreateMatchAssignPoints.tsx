@@ -2,7 +2,8 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
@@ -26,19 +27,7 @@ export default function CreateMatchAssignPoints({
         <>
             <Stack.Screen
                 options={{
-                    title: 'Match',
-                    headerStyle: {
-                        backgroundColor: theme.color.topNav,
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
+                    ...navStyles,
                     headerRight: () => (
                         <HeaderItem onPress={onSubmit}>Create</HeaderItem>
                     ),

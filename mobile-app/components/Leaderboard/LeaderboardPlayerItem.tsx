@@ -2,6 +2,7 @@ import { TouchableOpacity } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
+import { formatPlacement } from '@/utils/format';
 
 import Avatar from '../Avatar';
 import { ThemedText } from '../ThemedText';
@@ -18,6 +19,7 @@ export interface LeaderboardPlayerItemProps {
     matchesWon: number;
     points: number;
     elo: number;
+    unranked?: boolean;
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -28,8 +30,10 @@ export default function LeaderboardPlayerItem({
     matchesWon,
     points,
     elo,
+    unranked = false,
 }: LeaderboardPlayerItemProps) {
-    const averagePointsPerMatch = (points / matches).toFixed(1);
+    // account for division by zero
+    const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
 
     const nav = useNavigation();
 
@@ -49,6 +53,8 @@ export default function LeaderboardPlayerItem({
 
                 height: 60.5,
                 paddingHorizontal: 20,
+
+                opacity: unranked ? 0.5 : undefined,
             }}
             onPress={() => nav.navigate('player', { id })}
         >
@@ -60,9 +66,9 @@ export default function LeaderboardPlayerItem({
                     color: theme.color.text.secondary,
                 }}
             >
-                {placement}
+                {formatPlacement(placement)}
             </ThemedText>
-            <Avatar name={name} size={36} />
+            <Avatar url={avatarUrl} name={name} size={36} />
             <ThemedView
                 style={{
                     marginLeft: 12,

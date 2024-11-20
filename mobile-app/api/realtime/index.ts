@@ -18,7 +18,8 @@ export type RealtimeAffectedEntity =
     | 'SEASONS'
     | 'PLAYERS'
     | 'RULES'
-    | 'RULE_MOVES';
+    | 'RULE_MOVES'
+    | 'PROFILES';
 
 export interface RealtimeEvent<T = RealtimeAffectedEntity> {
     groupId: string;
@@ -31,16 +32,14 @@ export type RealtimeEventHandler = <T = RealtimeAffectedEntity>(
     event: RealtimeEvent<T>
 ) => void;
 
+type Handlers = Record<RealtimeAffectedEntity | '*', RealtimeEventHandler[]>;
+
 export class RealtimeClient {
     private ws!: WebSocket;
 
-    private logger: Logger;
+    public logger: Logger;
 
-    // @ts-ignore
-    private handlers: Record<
-        RealtimeAffectedEntity | '*',
-        RealtimeEventHandler[]
-    > = {};
+    private handlers: Handlers = {} as Handlers;
 
     private get url() {
         return this.host + '/update-socket';
@@ -57,6 +56,22 @@ export class RealtimeClient {
     }
 
     private connect() {
+        this.ws = new WebSocket(this.url);
+
+        this.ws.addEventListener('open', () => {
+            this.logger.info('connection opened');
+            this._subscribeToGroups();
+        });
+
+        this.ws.addEventListener('close', () => {
+            this.logger.info('connection closed');
+        });
+
+        this.ws.addEventListener('error', (e) => {
+            this.logger.error('error:', e);
+        });
+
+        this.ws.addEventListener('message', (e) => this.onMessage(e));
         this.ws = new WebSocket(this.url);
 
         this.ws.addEventListener('open', () => {

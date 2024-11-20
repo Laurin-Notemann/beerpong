@@ -7,6 +7,7 @@ import Player, { PerformedMove } from './Player';
 export interface TeamMember {
     id: string;
     team: TeamId;
+    avatarUrl?: string | null;
     name: string;
     points: number;
     change: number;
@@ -34,11 +35,12 @@ export default function MatchPlayers({
 
     return (
         <>
-            <MenuSection title={`Red Team - ${redTeamPoints} points`}>
-                {redTeam.map((i, idx) => (
+            <MenuSection title={`Blue Team - ${blueTeamPoints} points`}>
+                {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
                         id={i.id}
+                        avatarUrl={i.avatarUrl!}
                         team={i.team!}
                         name={i.name}
                         points={i.points}
@@ -54,11 +56,12 @@ export default function MatchPlayers({
                 ))}
             </MenuSection>
 
-            <MenuSection title={`Blue Team - ${blueTeamPoints} points`}>
-                {blueTeam.map((i, idx) => (
+            <MenuSection title={`Red Team - ${redTeamPoints} points`}>
+                {redTeam.map((i, idx) => (
                     <Player
                         key={idx}
                         id={i.id}
+                        avatarUrl={i.avatarUrl!}
                         team={i.team!}
                         name={i.name}
                         points={i.points}

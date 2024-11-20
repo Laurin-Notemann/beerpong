@@ -37,3 +37,7 @@ docker-backend-start:
 .PHONY: docker-backend-down
 docker-backend-down: 
 	docker compose --env-file .env -f docker/docker-compose-dev.yml down
+
+.PHONY: docker-backend-rebuild
+docker-backend-rebuild: 
+	make docker-backend-down; make docker-backend-up

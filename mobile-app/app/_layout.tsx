@@ -5,7 +5,6 @@ import {
     DefaultTheme,
     ThemeProvider,
 } from '@react-navigation/native';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -13,14 +12,13 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
-import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
+import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { theme } from '@/theme';
 
-import { HeaderItem, navStyles } from './(tabs)/_layout';
+import { modalStyles } from './navigation/modalStyles';
 
 const Drawer = createDrawerNavigator();
 
@@ -28,136 +26,48 @@ const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
 
 function Everything() {
-    const colorScheme = useColorScheme();
-
     return (
-        <ThemeProvider
-            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-        >
-            <Stack initialRouteName="(tabs)">
-                <Stack.Screen
-                    name="onboarding"
-                    options={{
-                        headerShown: false,
-                    }}
-                />
-                <Stack.Screen
-                    name="(tabs)"
-                    options={{
-                        title: '',
-                        headerShown: false,
+        <Stack initialRouteName="(tabs)">
+            <Stack.Screen
+                name="onboarding"
+                options={{ title: '', headerShown: false }}
+            />
+            <Stack.Screen
+                name="(tabs)"
+                options={{ title: '', headerShown: false }}
+            />
+            <Stack.Screen name="+not-found" />
 
-                        headerTitle: '',
-                    }}
-                />
-                <Stack.Screen name="+not-found" />
-                <Stack.Screen
-                    name="formations"
-                    options={{
-                        ...navStyles,
-                        headerTitle: 'Formations',
-                        headerRight: () => <HeaderItem>Edit</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="editFormation"
-                    options={{
-                        ...navStyles,
-                        headerTitle: 'Edit Formation',
-                        headerRight: () => <HeaderItem>Done</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="pastSeasons"
-                    options={{
-                        ...navStyles,
-                        headerTitle: 'Past Seasons',
-                        headerRight: () => <HeaderItem>Done</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="player"
-                    options={{
-                        ...navStyles,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="createNewPlayer"
-                    options={{
-                        presentation: 'modal',
-                        ...navStyles,
-                        headerTitle: 'Create new Player',
-                        headerLeft: () => <HeaderItem>Cancel</HeaderItem>,
-                        headerRight: () => <HeaderItem>Create</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
+            <Stack.Screen name="createNewPlayer" options={modalStyles} />
 
-                <Stack.Screen
-                    name="editRankPlayersBy"
-                    options={{
-                        presentation: 'modal',
-
-                        // headerLeft: () => <HeaderItem noMargin>Back</HeaderItem>,
-                        headerRight: () => (
-                            <HeaderItem noMargin>Done</HeaderItem>
-                        ),
-
-                        headerTitle: 'Rank Players By',
-                        headerBackTitle: '',
-                        headerBackVisible: true,
-                        headerTintColor: 'white',
-
-                        headerStyle: {
-                            backgroundColor: '#1B1B1B',
-                        },
-                        headerTitleStyle: {
-                            color: theme.color.text.primary,
-                        },
-                    }}
-                />
-            </Stack>
-        </ThemeProvider>
+            <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
+        </Stack>
     );
 }
 
-function DrawerContent() {
-    return <Sidebar appVersion={env.appVersion} />;
-}
-
 export default function RootLayout() {
-    const [loaded] = useFonts({
+    const appTheme = useColorScheme() === 'dark' ? DarkTheme : DefaultTheme;
+
+    const [fontLoaded] = useFonts({
         SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     });
+    const loaded = fontLoaded;
 
     const [queryClient] = useState(() => createQueryClient());
 
     useEffect(() => {
-        if (loaded) {
-            SplashScreen.hideAsync();
-        }
+        if (loaded) SplashScreen.hideAsync();
     }, [loaded]);
 
-    if (!loaded) {
-        return null;
-    }
+    if (!loaded) return <LoadingScreen />;
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <PersistQueryClientProvider
-                client={queryClient}
-                persistOptions={{ persister }}
-            >
-                <ApiProvider>
+        <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{ persister }}
+        >
+            <ApiProvider>
+                <ThemeProvider value={appTheme}>
                     <RootSiblingParent>
                         <Drawer.Navigator
                             screenOptions={{
@@ -166,7 +76,7 @@ export default function RootLayout() {
                                 },
                                 headerShown: false,
                             }}
-                            drawerContent={DrawerContent}
+                            drawerContent={Sidebar}
                         >
                             <Drawer.Screen
                                 name="aboutPremium"
@@ -174,8 +84,8 @@ export default function RootLayout() {
                             />
                         </Drawer.Navigator>
                     </RootSiblingParent>
-                </ApiProvider>
-            </PersistQueryClientProvider>
-        </QueryClientProvider>
+                </ThemeProvider>
+            </ApiProvider>
+        </PersistQueryClientProvider>
     );
 }

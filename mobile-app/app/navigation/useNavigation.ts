@@ -19,9 +19,10 @@ export type RootStackParamList = {
     saveSeason: undefined;
     startLiveMatch: undefined;
     player: { id: string };
-    match: undefined;
+    match: { id: string };
     matches: undefined;
     editFormationName: undefined;
+    newMatch: undefined;
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 

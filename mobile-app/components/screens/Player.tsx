@@ -6,7 +6,8 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import MatchesList, { Match } from '@/components/MatchesList';
@@ -32,6 +33,7 @@ export interface PlayerScreenProps {
     pastSeasons: number;
 
     onDelete?: () => void;
+    onUploadAvatarPress: () => void;
 }
 export default function PlayerScreen({
     id,
@@ -46,12 +48,13 @@ export default function PlayerScreen({
     hasPremium = false,
 
     onDelete,
+    onUploadAvatarPress,
 }: PlayerScreenProps) {
     const nav = useNavigation();
 
-    const averagePointsPerMatch = points / matches.length;
-
-    const hasMatches = matches.length > 0;
+    // account for division by zero
+    const averagePointsPerMatch =
+        matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
 
     const [editable, setEditable] = useState(false);
 
@@ -59,6 +62,7 @@ export default function PlayerScreen({
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
+                    ...navStyles,
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
@@ -83,10 +87,13 @@ export default function PlayerScreen({
                 }}
             >
                 <Avatar
+                    url={avatarUrl}
                     size={96}
                     style={{ marginTop: 32, marginBottom: 8 }}
                     placement={placement}
                     name={name}
+                    canUpload={editable}
+                    onPress={onUploadAvatarPress}
                 />
                 <Text
                     style={{
@@ -94,7 +101,7 @@ export default function PlayerScreen({
                         color: theme.color.text.secondary,
                     }}
                 >
-                    {hasMatches ? averagePointsPerMatch?.toFixed(1) : '--'}
+                    {averagePointsPerMatch}
                 </Text>
                 <Text
                     style={{

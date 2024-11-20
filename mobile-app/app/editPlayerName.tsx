@@ -1,6 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import Toast from 'react-native-root-toast';
 
 import {
     usePlayersQuery,
@@ -13,7 +12,7 @@ import { theme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-import { HeaderItem } from './(tabs)/_layout';
+import { HeaderItem } from './(tabs)/HeaderItem';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {

@@ -97,4 +97,4 @@ export const mockPlayers = [
         matchesWon: 2,
         elo: 200,
     },
-];
+].map((i, idx) => ({ ...i, id: idx.toString() }));
