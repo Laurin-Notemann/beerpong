@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
-import pro.beerpong.api.model.dto.SeasonCreateDto;
-import pro.beerpong.api.model.dto.SeasonDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.SeasonService;
 
 import java.util.List;
@@ -44,6 +41,26 @@ public class SeasonController {
 
         if (season != null && season.getGroupId().equals(groupId)) {
             return ResponseEnvelope.ok(season);
+        } else {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/seasons/{id}")
+    public ResponseEntity<ResponseEnvelope<SeasonDto>> updateSeasonById(@PathVariable String groupId, @PathVariable String id, @RequestBody SeasonUpdateDto dto) {
+        var season = seasonService.getRawSeasonById(id);
+
+        if (season.isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (!season.get().getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
+        } else if (season.get().getEndDate() != null) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_ALREADY_ENDED);
+        }
+
+        SeasonDto updatedSeason = seasonService.updateSeason(season.get(), dto);
+        if (updatedSeason != null) {
+            return ResponseEnvelope.ok(updatedSeason);
         } else {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
         }

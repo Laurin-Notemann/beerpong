@@ -18,6 +18,7 @@ import pro.beerpong.api.util.NullablePair;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SeasonService {
@@ -94,6 +95,28 @@ public class SeasonService {
         return newDto;
     }
 
+    public SeasonDto updateSeason(Season season, SeasonUpdateDto dto) {
+        return Optional.ofNullable(season)
+                .map(existingSeason -> {
+                    if (existingSeason.getSeasonSettings() == null) {
+                        dto.getSeasonSettings().setId(null);
+                        existingSeason.setSeasonSettings(dto.getSeasonSettings());
+                    } else {
+                        existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
+                        existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
+                        existingSeason.getSeasonSettings().setMinMatchesToQualify(dto.getSeasonSettings().getMinMatchesToQualify());
+                        existingSeason.getSeasonSettings().setRankingAlgorithm(dto.getSeasonSettings().getRankingAlgorithm());
+                    }
+
+                    var seasonDto = seasonMapper.seasonToSeasonDto(seasonRepository.save(existingSeason));
+
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.SEASON_UPDATE, seasonDto.getGroupId(), seasonDto));
+
+                    return seasonDto;
+                })
+                .orElse(null);
+    }
+
     public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId) {
         return NullablePair.of(groupRepository.findById(groupId).orElse(null), seasonRepository.findById(seasonId).orElse(null));
     }
@@ -132,8 +155,12 @@ public class SeasonService {
     }
 
     public SeasonDto getSeasonById(String id) {
-        return seasonRepository.findById(id)
+        return getRawSeasonById(id)
                 .map(seasonMapper::seasonToSeasonDto)
                 .orElse(null);
+    }
+
+    public Optional<Season> getRawSeasonById(String id) {
+        return seasonRepository.findById(id);
     }
 }
