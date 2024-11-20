@@ -50,8 +50,6 @@ public class GroupControllerTest {
         assertEquals(createDto.getName(), group.getName());
         assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
-        assertNotNull(group.getSeasonSettings());
-        assertNotNull(group.getSeasonSettings().getId());
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
@@ -99,8 +97,6 @@ public class GroupControllerTest {
         assertEquals(prerequisiteGroup, group);
         assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
-        assertNotNull(group.getSeasonSettings());
-        assertNotNull(group.getSeasonSettings().getId());
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());

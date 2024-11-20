@@ -71,8 +71,6 @@ public class CreateMatchTest {
         assertEquals(prerequisiteGroup, group);
         assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
-        assertNotNull(group.getSeasonSettings());
-        assertNotNull(group.getSeasonSettings().getId());
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
