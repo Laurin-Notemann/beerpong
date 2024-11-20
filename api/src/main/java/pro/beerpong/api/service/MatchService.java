@@ -12,7 +12,6 @@ import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
-import pro.beerpong.api.util.DailyLeaderboard;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -36,9 +36,9 @@ public class MatchService {
     private final MatchMoveRepository matchMoveRepository;
     private final RuleMoveRepository ruleMoveRepository;
     private final MatchMoveMapper matchMoveMapper;
+    private final SeasonRepository seasonRepository;
 
     private final TeamService teamService;
-    private final SeasonRepository seasonRepository;
     private final RuleMoveService ruleMoveService;
     private final PlayerMapper playerMapper;
 
@@ -65,9 +65,9 @@ public class MatchService {
         this.teamMemberRepository = teamMemberRepository;
         this.ruleMoveRepository = ruleMoveRepository;
         this.matchMoveMapper = matchMoveMapper;
+        this.seasonRepository = seasonRepository;
 
         this.teamService = teamService;
-        this.seasonRepository = seasonRepository;
         this.ruleMoveService = ruleMoveService;
         this.playerMapper = playerMapper;
     }
@@ -279,6 +279,38 @@ public class MatchService {
 
     public Match getRawMatchById(String id) {
         return matchRepository.findById(id).orElse(null);
+    }
+
+    public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
+        AtomicReference<ErrorCodes> error = new AtomicReference<>();
+
+        matchRepository.findById(id).ifPresentOrElse(match -> {
+            var season = seasonRepository.findById(seasonId).orElse(null);
+
+            if (season == null) {
+                error.set(ErrorCodes.SEASON_NOT_FOUND);
+                return;
+            }
+
+            if (!season.getGroupId().equals(groupId)) {
+                error.set(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return;
+            }
+
+            if (season.getEndDate() == null) {
+                if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, matchToMatchDto(match)));
+
+                    matchRepository.deleteById(id);
+                } else {
+                    error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
+                }
+            } else {
+                error.set(ErrorCodes.SEASON_ALREADY_ENDED);
+            }
+        }, () -> error.set(ErrorCodes.PLAYER_NOT_FOUND));
+
+        return error.get();
     }
 
     private MatchDto matchToEmptyMatchDto(Match match) {

@@ -14,6 +14,7 @@ public class SocketEventData<T> {
 
     public static final SocketEventData<MatchDto> MATCH_CREATE = new SocketEventData<>(MatchDto.class, SocketEventType.MATCHES, "matchCreate");
     public static final SocketEventData<MatchDto> MATCH_UPDATE = new SocketEventData<>(MatchDto.class, SocketEventType.MATCHES, "matchUpdate");
+    public static final SocketEventData<MatchDto> MATCH_DELETE = new SocketEventData<>(MatchDto.class, SocketEventType.MATCHES, "matchDelete");
 
     public static final SocketEventData<PlayerDto> PLAYER_CREATE = new SocketEventData<>(PlayerDto.class, SocketEventType.PLAYERS, "playerCreate");
     public static final SocketEventData<PlayerDto> PLAYER_DELETE = new SocketEventData<>(PlayerDto.class, SocketEventType.PLAYERS, "playerDelete");
