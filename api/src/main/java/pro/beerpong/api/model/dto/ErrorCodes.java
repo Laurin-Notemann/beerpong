@@ -23,7 +23,9 @@ public enum ErrorCodes {
     PLAYER_VALIDATION_FAILED("playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!"),
     PROFILE_NOT_FOUND("profileNotFound", "The requested profile could not be found!"),
-    ASSET_NOT_FOUND("assetNotFound", "The requested asset could not be found!");
+    ASSET_NOT_FOUND("assetNotFound", "The requested asset could not be found!"),
+    LEADERBOARD_SCOPE_NOT_FOUND("leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"),
+    LEADERBOARD_SEASON_NOT_FOUND("leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!");
 
     private final String code;
     private final String description;
