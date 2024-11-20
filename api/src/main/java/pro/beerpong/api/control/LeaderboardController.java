@@ -36,6 +36,12 @@ public class LeaderboardController {
             return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.LEADERBOARD_SEASON_NOT_FOUND);
         }
 
-        //TODO
+        var leaderboard = leaderboardService.generateLeaderboard(group, scope, seasonId);
+
+        if (leaderboard == null) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.LEADERBOARD_SEASON_NOT_FOUND);
+        }
+
+        return ResponseEnvelope.ok(leaderboard);
     }
 }

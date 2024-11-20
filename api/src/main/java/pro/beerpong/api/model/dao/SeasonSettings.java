@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 @Entity(name = "season_settings")
@@ -18,4 +19,5 @@ public class SeasonSettings {
     private int minTeamSize = 1;
     private int maxTeamSize = 10;
     private RankingAlgorithm rankingAlgorithm = RankingAlgorithm.AVERAGE;
+    private DailyLeaderboard dailyLeaderboard = DailyLeaderboard.RESET_AT_MIDNIGHT;
 }

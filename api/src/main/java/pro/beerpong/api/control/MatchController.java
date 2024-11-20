@@ -59,7 +59,7 @@ public class MatchController {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        return ResponseEnvelope.ok(matchService.getAllMatches(seasonId));
+        return ResponseEnvelope.ok(matchService.streamAllMatchesInSeason(seasonId).toList());
     }
 
     @GetMapping("/{id}")

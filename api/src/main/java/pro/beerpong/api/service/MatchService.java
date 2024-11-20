@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 public class MatchService {
@@ -33,6 +34,7 @@ public class MatchService {
     private final MatchMoveMapper matchMoveMapper;
 
     private final TeamService teamService;
+    private final SeasonRepository seasonRepository;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -45,7 +47,7 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService) {
+                        TeamService teamService, SeasonRepository seasonRepository) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -59,6 +61,7 @@ public class MatchService {
         this.matchMoveMapper = matchMoveMapper;
 
         this.teamService = teamService;
+        this.seasonRepository = seasonRepository;
     }
 
     private boolean validateCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -149,11 +152,24 @@ public class MatchService {
 
     }
 
-    public List<MatchDto> getAllMatches(String seasonId) {
-        return matchRepository.findBySeasonId(seasonId)
+    public Stream<MatchDto> streamAllMatches(GroupDto group) {
+        return seasonRepository.findByGroupId(group.getId()).stream()
+                .flatMap(season -> matchRepository.findBySeasonId(season.getId()).stream())
+                .map(this::matchToMatchDto);
+    }
+
+    public Stream<MatchDto> streamAllMatchesInSeason(String seasonId) {
+        return matchRepository.findBySeasonId(seasonId).stream()
+                .map(this::matchToMatchDto);
+    }
+
+    public Stream<MatchDto> streamAllMatchesToday(GroupDto group) {
+        var now = ZonedDateTime.now().toLocalDate();
+
+        return matchRepository.findBySeasonId(group.getActiveSeason().getId())
                 .stream()
-                .map(this::matchToMatchDto)
-                .toList();
+                .filter(match -> match.getDate().toLocalDate().equals(now))
+                .map(this::matchToMatchDto);
     }
 
     public MatchDto getMatchById(String id) {
@@ -163,7 +179,7 @@ public class MatchService {
     }
 
     public List<MatchOverviewDto> getAllMatchOverviews(String seasonId) {
-        return getAllMatches(seasonId).stream()
+        return streamAllMatchesInSeason(seasonId)
                 .map(this::getMatchOverviewByMatch)
                 .toList();
     }
