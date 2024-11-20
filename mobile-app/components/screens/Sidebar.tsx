@@ -69,13 +69,11 @@ export interface SidebarGroup {
     matchesCount: number;
 }
 
-export interface SidebarProps {
-    appVersion: string;
-}
+export interface SidebarProps {}
 
-export function Sidebar({ appVersion }: SidebarProps) {
-    const { groupIds, selectedGroupId, selectGroup, clearGroups } =
-        useGroupStore();
+// eslint-disable-next-line no-empty-pattern
+export function Sidebar({}: SidebarProps) {
+    const { groupIds, selectedGroupId, selectGroup } = useGroupStore();
 
     const nav = useNavigation();
 
@@ -103,7 +101,6 @@ export function Sidebar({ appVersion }: SidebarProps) {
 
                         // eslint-disable-next-line
                         console.log(Object.keys(nav));
-                        // @ts-ignore
                         // nav.closeDrawer();
                     }}
                 />

@@ -88,7 +88,7 @@ export const navStyles = {
 const GroupsButton = () => {
     const nav = useNavigation();
 
-    // @ts-ignore
+    // @ts-expect-error nav.openDrawer exists
     return <HeaderItem onPress={() => nav.openDrawer()}>Groups</HeaderItem>;
 };
 

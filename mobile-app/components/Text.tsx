@@ -39,8 +39,7 @@ export default function Text({
                 color: theme.color.text[color],
                 fontWeight: bold ? 'bold' : undefined,
 
-                // @ts-ignore
-                ...(rest.style ?? {}),
+                ...((rest.style as Record<string, string>) ?? {}),
             }}
         >
             {children}

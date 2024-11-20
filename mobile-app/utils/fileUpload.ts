@@ -15,7 +15,6 @@ export const base64ToByteArray = (base64: string): ByteArray => {
     for (let i = 0; i < len; i++) {
         bytes[i] = binaryString.charCodeAt(i);
     }
-
     return bytes;
 };
 
@@ -34,14 +33,17 @@ export async function launchImageLibrary(
     const result = await ImagePicker.launchImageLibraryAsync(options);
 
     const assets = await Promise.all<ByteArrayImagePickerAsset>(
-        result.assets?.map<Promise<ByteArrayImagePickerAsset>>(async (i) => {
-            const byteArray = await readAsByteArray(i.uri!);
+        result.assets?.map<Promise<ByteArrayImagePickerAsset>>(
+            async (asset) => {
+                const byteArray = await readAsByteArray(asset.uri);
 
-            // @ts-expect-error this property exists now
-            i.byteArray = byteArray;
+                const newAsset = asset as ByteArrayImagePickerAsset;
 
-            return i as ByteArrayImagePickerAsset;
-        }) ?? []
+                newAsset.byteArray = byteArray;
+
+                return newAsset;
+            }
+        ) ?? []
     );
     return assets;
 }

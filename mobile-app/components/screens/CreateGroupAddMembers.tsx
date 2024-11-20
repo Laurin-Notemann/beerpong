@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { View } from 'react-native';
+import { TextInput as B, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/app/(tabs)/_layout';
@@ -20,7 +20,7 @@ export default function CreateGroupAddMembers({
 }: CreateGroupAddMembersProps) {
     const [members, setMembers] = useState<GroupMember[]>([]);
 
-    const inputRef = useRef(null);
+    const inputRef = useRef<B>(null);
 
     return (
         <GestureHandlerRootView>
@@ -66,8 +66,7 @@ export default function CreateGroupAddMembers({
                                 setMembers((prev) => [...prev, { name }]);
                             }
 
-                            // @ts-ignore
-                            inputRef.current!.clear();
+                            inputRef.current?.clear();
 
                             // TODO: we don't want to unfocus the element on submit, but it's still happening :()
                             event.preventDefault();
