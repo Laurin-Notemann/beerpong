@@ -1,9 +1,12 @@
+import { Stack } from 'expo-router';
 import React from 'react';
 import { Dimensions, Text, TouchableHighlight, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
+
+import { HeaderItem, navStyles } from './(tabs)/_layout';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -15,13 +18,6 @@ function Item({}: ItemProps) {
     const nav = useNavigation();
 
     return (
-        // <Link
-        //   href="/editFormation"
-        //   style={{
-        //     width: size,
-        //     height: size,
-        //   }}
-        // >
         <TouchableHighlight
             style={{
                 alignItems: 'center',
@@ -40,28 +36,9 @@ function Item({}: ItemProps) {
 
                 borderColor: '#444444',
             }}
-            underlayColor="#3B3B3B" // Lighter color on touch
+            underlayColor="#3B3B3B"
             onPress={() => nav.navigate('editFormation')}
         >
-            {/* <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-
-            gap: 8,
-
-            width: size,
-            height: size,
-
-            borderRadius: 10,
-
-            backgroundColor: "#2E2E2E",
-
-            borderWidth: 1,
-
-            borderColor: "#444444",
-          }}
-        > */}
             <>
                 <CupGrid width={60} showGrid={false} />
 
@@ -74,37 +51,44 @@ function Item({}: ItemProps) {
                     10x Pyramid
                 </Text>
             </>
-            {/* </View> */}
         </TouchableHighlight>
-        // </Link>
     );
 }
 
 export default function Formations() {
     return (
-        <GestureHandlerRootView
-            style={{
-                flex: 1,
-                backgroundColor: '#000',
-            }}
-        >
-            <View
+        <>
+            <Stack.Screen
+                options={{
+                    ...navStyles,
+                    headerTitle: 'Formations',
+                    headerRight: () => <HeaderItem>Edit</HeaderItem>,
+                }}
+            />
+            <GestureHandlerRootView
                 style={{
-                    flexDirection: 'row',
-                    flexWrap: 'wrap',
-
-                    paddingHorizontal: 16,
-                    gap: 8,
-
-                    paddingTop: 48,
+                    flex: 1,
+                    backgroundColor: '#000',
                 }}
             >
-                <Item />
-                <Item />
-                <Item />
-                <Item />
-                <Item />
-            </View>
-        </GestureHandlerRootView>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+
+                        paddingHorizontal: 16,
+                        gap: 8,
+
+                        paddingTop: 48,
+                    }}
+                >
+                    <Item />
+                    <Item />
+                    <Item />
+                    <Item />
+                    <Item />
+                </View>
+            </GestureHandlerRootView>
+        </>
     );
 }

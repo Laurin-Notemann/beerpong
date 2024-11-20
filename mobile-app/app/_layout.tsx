@@ -17,9 +17,8 @@ import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { theme } from '@/theme';
 
-import { HeaderItem, navStyles } from './(tabs)/_layout';
+import { modalStyle } from './navigation/navStyles';
 
 const Drawer = createDrawerNavigator();
 
@@ -37,6 +36,7 @@ function Everything() {
                 <Stack.Screen
                     name="onboarding"
                     options={{
+                        title: '',
                         headerShown: false,
                     }}
                 />
@@ -45,82 +45,13 @@ function Everything() {
                     options={{
                         title: '',
                         headerShown: false,
-
-                        headerTitle: '',
                     }}
                 />
                 <Stack.Screen name="+not-found" />
-                <Stack.Screen
-                    name="formations"
-                    options={{
-                        ...navStyles,
-                        headerTitle: 'Formations',
-                        headerRight: () => <HeaderItem>Edit</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="editFormation"
-                    options={{
-                        ...navStyles,
-                        headerTitle: 'Edit Formation',
-                        headerRight: () => <HeaderItem>Done</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="pastSeasons"
-                    options={{
-                        ...navStyles,
-                        headerTitle: 'Past Seasons',
-                        headerRight: () => <HeaderItem>Done</HeaderItem>,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="player"
-                    options={{
-                        ...navStyles,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
-                <Stack.Screen
-                    name="createNewPlayer"
-                    options={{
-                        presentation: 'modal',
-                        ...navStyles,
-                        headerTintColor: 'white',
-                        headerBackTitle: '',
-                    }}
-                />
 
-                <Stack.Screen
-                    name="editRankPlayersBy"
-                    options={{
-                        presentation: 'modal',
+                <Stack.Screen name="createNewPlayer" options={modalStyle} />
 
-                        // headerLeft: () => <HeaderItem noMargin>Back</HeaderItem>,
-                        headerRight: () => (
-                            <HeaderItem noMargin>Done</HeaderItem>
-                        ),
-
-                        headerTitle: 'Rank Players By',
-                        headerBackTitle: '',
-                        headerBackVisible: true,
-                        headerTintColor: 'white',
-
-                        headerStyle: {
-                            backgroundColor: '#1B1B1B',
-                        },
-                        headerTitleStyle: {
-                            color: theme.color.text.primary,
-                        },
-                    }}
-                />
+                <Stack.Screen name="editRankPlayersBy" options={modalStyle} />
             </Stack>
         </ThemeProvider>
     );

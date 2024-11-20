@@ -82,6 +82,7 @@ export const navStyles = {
 
         borderTopWidth: 0,
     },
+    headerTintColor: 'white',
 };
 
 const GroupsButton = () => {

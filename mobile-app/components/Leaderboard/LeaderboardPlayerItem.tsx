@@ -33,9 +33,7 @@ export default function LeaderboardPlayerItem({
     unranked = false,
 }: LeaderboardPlayerItemProps) {
     // account for division by zero
-    const averagePointsPerMatch = matches
-        ? (points / matches).toFixed(1)
-        : '--';
+    const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
 
     const nav = useNavigation();
 

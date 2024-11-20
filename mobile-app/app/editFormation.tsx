@@ -1,3 +1,4 @@
+import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -9,74 +10,85 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
+import { HeaderItem, navStyles } from './(tabs)/_layout';
+
 export default function EditFormation() {
     const [cups, setCups] = useState(Formation.Pyramid_10);
 
     const nav = useNavigation();
 
     return (
-        <View
-            style={{
-                backgroundColor: theme.color.bg,
-
-                flex: 1,
-                alignItems: 'center',
-
-                width: '100%',
-            }}
-        >
-            <GestureHandlerRootView
+        <>
+            <Stack.Screen
+                options={{
+                    ...navStyles,
+                    headerTitle: 'Edit Formation',
+                    headerRight: () => <HeaderItem>Done</HeaderItem>,
+                }}
+            />
+            <View
                 style={{
                     backgroundColor: theme.color.bg,
 
                     flex: 1,
                     alignItems: 'center',
+
+                    width: '100%',
                 }}
             >
-                <Text
+                <GestureHandlerRootView
                     style={{
-                        color: theme.color.text.secondary,
-                        fontSize: 13,
-                        textAlign: 'center',
+                        backgroundColor: theme.color.bg,
 
-                        marginTop: 16,
-                        marginBottom: 32,
+                        flex: 1,
+                        alignItems: 'center',
                     }}
                 >
-                    Tap to add or remove cups, or move them by dragging
-                </Text>
-                <CupGrid
-                    width={300}
-                    canEdit
-                    formation={cups}
-                    onChange={setCups}
-                />
-                <MenuSection
-                    style={{
-                        marginTop: 48,
+                    <Text
+                        style={{
+                            color: theme.color.text.secondary,
+                            fontSize: 13,
+                            textAlign: 'center',
 
-                        alignSelf: 'stretch',
-                    }}
-                >
-                    <MenuItem
-                        title="Ring of Water"
-                        headIcon="pencil-outline"
-                        onPress={() => nav.navigate('editFormationName')}
-                        tailIconType="next"
-                    />
-                    <MenuItem
-                        title="Delete Formation"
-                        headIcon="delete-outline"
-                        onPress={() => alert('deleting')}
-                        type="danger"
-                        confirmationPrompt={{
-                            title: 'Delete Formation',
-                            description:
-                                'Are you sure you want to delete this formation?',
+                            marginTop: 16,
+                            marginBottom: 32,
                         }}
+                    >
+                        Tap to add or remove cups, or move them by dragging
+                    </Text>
+                    <CupGrid
+                        width={300}
+                        canEdit
+                        formation={cups}
+                        onChange={setCups}
                     />
-                </MenuSection>
-            </GestureHandlerRootView>
-        </View>
+                    <MenuSection
+                        style={{
+                            marginTop: 48,
+
+                            alignSelf: 'stretch',
+                        }}
+                    >
+                        <MenuItem
+                            title="Ring of Water"
+                            headIcon="pencil-outline"
+                            onPress={() => nav.navigate('editFormationName')}
+                            tailIconType="next"
+                        />
+                        <MenuItem
+                            title="Delete Formation"
+                            headIcon="delete-outline"
+                            onPress={() => alert('deleting')}
+                            type="danger"
+                            confirmationPrompt={{
+                                title: 'Delete Formation',
+                                description:
+                                    'Are you sure you want to delete this formation?',
+                            }}
+                        />
+                    </MenuSection>
+                </GestureHandlerRootView>
+            </View>
+        </>
     );
 }

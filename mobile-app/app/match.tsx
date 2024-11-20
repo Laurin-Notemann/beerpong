@@ -49,19 +49,6 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    title: 'Match',
-                    headerStyle: {
-                        backgroundColor: theme.color.topNav,
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTintColor: '#fff',
-                    headerTitleStyle: {
-                        fontWeight: 'bold',
-                    },
                     headerRight: () => (
                         <HeaderItem
                             onPress={() => {

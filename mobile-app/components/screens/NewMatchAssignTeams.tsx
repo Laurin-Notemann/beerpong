@@ -3,7 +3,7 @@ import React from 'react';
 import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem, navStyles } from '@/app/(tabs)/_layout';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
@@ -128,6 +128,7 @@ export default function NewMatchAssignTeams({
         >
             <Stack.Screen
                 options={{
+                    ...navStyles,
                     headerRight: () => (
                         <HeaderItem
                             disabled={!canCreateMatch}
@@ -155,21 +156,6 @@ export default function NewMatchAssignTeams({
                                   />
                               )
                             : 'New Match',
-                    headerBackTitle: '',
-                    headerBackVisible: true,
-                    headerTintColor: '#fff',
-
-                    headerStyle: {
-                        backgroundColor: '#000',
-
-                        // @ts-ignore
-                        elevation: 0, // For Android
-                        shadowOpacity: 0, // For iOS
-                        borderBottomWidth: 0, // Removes the border for both platforms
-                    },
-                    headerTitleStyle: {
-                        color: theme.color.text.primary,
-                    },
                 }}
             />
             <Heading />

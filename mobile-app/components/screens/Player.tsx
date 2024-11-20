@@ -6,7 +6,7 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { HeaderItem } from '@/app/(tabs)/_layout';
+import { HeaderItem, navStyles } from '@/app/(tabs)/_layout';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import MatchesList, { Match } from '@/components/MatchesList';
@@ -61,6 +61,7 @@ export default function PlayerScreen({
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
+                    ...navStyles,
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem

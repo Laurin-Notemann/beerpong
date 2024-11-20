@@ -61,7 +61,7 @@ export default function GroupSettingsScreen({
                     />
                 }
             >
-                <MenuSection title="Settings" color="dark">
+                <MenuSection title="Settings">
                     <MenuItem
                         title="Premium Version"
                         headIcon="check-decagram"
