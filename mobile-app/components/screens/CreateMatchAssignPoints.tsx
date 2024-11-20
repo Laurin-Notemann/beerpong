@@ -34,6 +34,7 @@ export default function CreateMatchAssignPoints({
                     headerTitle: () => (
                         <MatchVsHeader
                             match={{
+                                id: '#',
                                 blueCups: players
                                     .filter((i) => i.team === 'blue')
                                     .map((i) => i.moves)

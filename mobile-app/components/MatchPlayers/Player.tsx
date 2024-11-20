@@ -119,6 +119,7 @@ export default function Player({
                             ) : (
                                 <Text variant="body2" color="tertiary">
                                     {moves
+                                        .filter((i) => i.count > 0)
                                         .map((i) => i.count + ' ' + i.title)
                                         .join(', ')}
                                 </Text>

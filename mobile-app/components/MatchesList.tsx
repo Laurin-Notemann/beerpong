@@ -9,6 +9,7 @@ import { theme } from '@/theme';
 
 import Button from './Button';
 import IconHead from './IconHead';
+import { TeamMember } from './MatchPlayers';
 import MatchVsHeader from './MatchVsHeader';
 
 export type Match = {
@@ -16,8 +17,8 @@ export type Match = {
     date: Date;
     redCups: number;
     blueCups: number;
-    redTeam: { id: string; name: string; avatarUrl?: string | null }[];
-    blueTeam: { id: string; name: string; avatarUrl?: string | null }[];
+    redTeam: TeamMember[];
+    blueTeam: TeamMember[];
 };
 
 const groupIntoDays = (matches: Match[]) => {

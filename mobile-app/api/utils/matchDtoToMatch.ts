@@ -2,33 +2,43 @@ import { Match } from '@/components/MatchesList';
 import { Components } from '@/openapi/openapi';
 
 export const matchDtoToMatch =
-    (players: Components.Schemas.PlayerDto[] = []) =>
+    (
+        players: Components.Schemas.PlayerDto[] = [],
+        allowedMoves: Components.Schemas.RuleMoveDto[] = []
+    ) =>
     (i: Components.Schemas.MatchDto): Match => {
         const [blueTeam, redTeam] = i.teams ?? [];
 
-        const bluePlayers = i
-            .teamMembers!.filter((i) => i.teamId === blueTeam.id)
-            .map((i) => ({
-                ...i,
-                ...(players.find((j) => j.id === i.playerId!)?.profile ?? {}),
-            }));
-        const redPlayers = i
-            .teamMembers!.filter((i) => i.teamId === redTeam.id)
-            .map((i) => ({
-                ...i,
-                ...(players.find((j) => j.id === i.playerId!)?.profile ?? {}),
-            }));
+        // TODO: respect pointsForTeam
 
-        const matchMovesByTeamMember = i.matchMoves!.reduce<
-            Record<string, any[]>
-        >((obj, i) => {
-            if (!obj[i.teamMemberId!]) {
-                obj[i.teamMemberId!] = [];
-            }
-            obj[i.teamMemberId!].push();
+        const bluePlayers =
+            i.teamMembers
+                ?.filter((i) => i.teamId === blueTeam.id)
+                .map((i) => ({
+                    ...(players.find((j) => j.id === i.playerId!)?.profile ??
+                        {}),
+                    ...i,
+                    id: players.find((j) => j.id === i.playerId!)?.id!,
+                })) ?? [];
+        const redPlayers =
+            i.teamMembers
+                ?.filter((i) => i.teamId === redTeam.id)
+                .map((i) => ({
+                    ...(players.find((j) => j.id === i.playerId!)?.profile ??
+                        {}),
+                    ...i,
+                    id: players.find((j) => j.id === i.playerId!)?.id!,
+                })) ?? [];
 
-            return obj;
-        }, {});
+        const matchMovesByTeamMember =
+            i.matchMoves?.reduce<Record<string, any[]>>((obj, i) => {
+                if (!obj[i.teamMemberId!]) {
+                    obj[i.teamMemberId!] = [];
+                }
+                obj[i.teamMemberId!].push(i);
+
+                return obj;
+            }, {}) ?? {};
 
         const blueCups = i
             .matchMoves!.filter((j) => {
@@ -43,7 +53,7 @@ export const matchDtoToMatch =
         const redCups = i
             .matchMoves!.filter((j) => {
                 const player = i.teamMembers!.find(
-                    (k) => j.teamMemberId === k.id
+                    (k) => j.teamMemberId === k.id!
                 );
                 return player?.teamId === redTeam.id;
             })
@@ -55,15 +65,65 @@ export const matchDtoToMatch =
             blueCups,
             redCups,
             date: new Date(i.date!),
-            redTeam: redPlayers.map((i) => ({
-                id: i.id!,
-                name: i.name!,
-                avatarUrl: i.avatarAsset?.url,
-            })),
-            blueTeam: bluePlayers.map((i) => ({
-                id: i.id!,
-                name: i.name!,
-                avatarUrl: i.avatarAsset?.url,
-            })),
+            redTeam: redPlayers.map((j) => {
+                const teamMember = i.teamMembers?.find(
+                    (k) => k.playerId === j.id
+                )!;
+
+                const moves = allowedMoves.map((k) => {
+                    return {
+                        id: k.id!,
+                        count:
+                            matchMovesByTeamMember[teamMember.id!]?.find(
+                                (l) => l.moveId === k.id
+                            )?.value ?? 0,
+                        title: k.name || 'Unknown',
+                        points: k.pointsForScorer!,
+                    };
+                });
+
+                return {
+                    id: j.id!,
+                    name: j.name!,
+                    avatarUrl: j.avatarAsset?.url,
+                    moves,
+                    points: moves.reduce(
+                        (sum, k) => sum + k.points * k.count,
+                        0
+                    ),
+                    change: 0.1,
+                    team: 'red' as const,
+                };
+            }),
+            blueTeam: bluePlayers.map((j) => {
+                const teamMember = i.teamMembers?.find(
+                    (k) => k.playerId === j.id
+                )!;
+
+                const moves = allowedMoves.map((k) => {
+                    return {
+                        id: k.id!,
+                        count:
+                            matchMovesByTeamMember[teamMember.id!]?.find(
+                                (l) => l.moveId === k.id
+                            )?.value ?? 0,
+                        title: k.name || 'Unknown',
+                        points: k.pointsForScorer!,
+                    };
+                });
+
+                return {
+                    id: j.id!,
+                    name: j.name!,
+                    avatarUrl: j.avatarAsset?.url,
+                    moves,
+                    points: moves.reduce(
+                        (sum, k) => sum + k.points * k.count,
+                        0
+                    ),
+                    change: 0.1,
+                    team: 'blue' as const,
+                };
+            }),
         };
     };

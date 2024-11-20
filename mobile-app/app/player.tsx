@@ -6,6 +6,7 @@ import {
     usePlayersQuery,
     useUpdatePlayerAvatarMutation,
 } from '@/api/calls/playerHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import ErrorScreen from '@/components/ErrorScreen';
@@ -30,8 +31,12 @@ export default function Page() {
 
     const matchesQuery = useMatchesByPlayerQuery(groupId, seasonId, id);
 
+    const movesQuery = useMoves(groupId, seasonId);
+
+    const allowedMoves = movesQuery.data?.data ?? [];
+
     const matches = (matchesQuery.data?.data ?? []).map(
-        matchDtoToMatch(playersQuery.data?.data)
+        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
     );
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
