@@ -66,8 +66,8 @@ public class MatchService {
         this.ruleMoveService = ruleMoveService;
     }
 
-    private boolean validateCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
-        return dto.getTeams().stream().allMatch(teamCreateDto ->
+    public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
+        return !dto.getTeams().stream().allMatch(teamCreateDto ->
                 teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
                     var player = playerRepository.findById(memberDto.getPlayerId());
 
@@ -79,16 +79,19 @@ public class MatchService {
                         var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
 
                         return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
-                    }) && memberDto.getMoves().stream()
-                            .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()))
-                            .count() == 1;
-                }));
+                    });
+                })) ||
+                dto.getTeams().stream()
+                        .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
+                        .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
+                        .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()))
+                        .count() != 1;
     }
 
     @Transactional
     public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto) {
         if (!group.getActiveSeason().getId().equals(season.getId()) ||
-                !validateCreateDto(group.getId(), season.getId(), matchCreateDto)) {
+                invalidCreateDto(group.getId(), season.getId(), matchCreateDto)) {
             return null;
         }
 
@@ -233,10 +236,10 @@ public class MatchService {
         return dto;
     }
 
-    public boolean validateCreateDto(Season season, MatchCreateDto dto) {
+    public boolean hasWrongTeamSizes(Season season, MatchCreateDto dto) {
         var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(new SeasonSettings());
 
-        return dto.getTeams().stream().allMatch(teamCreateDto ->
+        return !dto.getTeams().stream().allMatch(teamCreateDto ->
                 teamCreateDto.getTeamMembers().size() >= settings.getMinTeamSize() &&
                         teamCreateDto.getTeamMembers().size() <= settings.getMaxTeamSize());
     }

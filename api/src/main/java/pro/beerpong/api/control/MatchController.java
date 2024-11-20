@@ -32,7 +32,7 @@ public class MatchController {
             return error;
         }
 
-        if (!matchService.validateCreateDto(pair.getSecond(), matchCreateDto)) {
+        if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
@@ -115,7 +115,7 @@ public class MatchController {
             return error;
         }
 
-        if (!matchService.validateCreateDto(pair.getSecond(), matchCreateDto)) {
+        if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
@@ -125,6 +125,8 @@ public class MatchController {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.MATCH_NOT_FOUND);
         } else if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
             return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+        } else if (matchService.invalidCreateDto(pair.getFirst().getId(), pair.getSecond().getId(), matchCreateDto)) {
+            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 
         return ResponseEnvelope.ok(matchService.updateMatch(pair.getFirst(), match, matchCreateDto));
