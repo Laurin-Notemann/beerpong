@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dao.GroupSettings;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.GroupCreateDto;
@@ -40,7 +39,6 @@ public class GroupService {
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setInviteCode(generateRandomString(9));
-        group.setGroupSettings(new GroupSettings());
 
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
