@@ -66,7 +66,7 @@ export default function GroupSettingsScreen({
                         title="Premium Version"
                         headIcon="check-decagram"
                         tailIconType="next"
-                        onPress={() => nav.navigate('aboutPremium')}
+                        onPress={() => nav.navigate('static/aboutPremium')}
                     />
                     <MenuItem
                         title={groupName}
@@ -185,17 +185,9 @@ export default function GroupSettingsScreen({
                             onPress={() => nav.navigate('onboarding')}
                         />
                         <MenuItem
-                            title="Go to Empty Leaderboard"
-                            headIcon="dev-to"
-                            tailIconType="next"
-                            onPress={() => nav.navigate('onboarding')}
-                        />
-                        <MenuItem
                             title="Has Premium"
                             headIcon="dev-to"
-                            tailContent={
-                                <Switch value={pushNotificationsEnabled} />
-                            }
+                            tailContent={<Switch value={false} />}
                         />
                     </MenuSection>
                 )}

@@ -5,6 +5,8 @@ import Animated from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 import Swiper from 'react-native-swiper';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import Leaderboard from '@/components/Leaderboard';
 import { mockPlayers } from '@/components/mockData/players';
 import SwiperHeader from '@/components/SwiperHeader';
@@ -13,9 +15,6 @@ import SwiperHeader from '@/components/SwiperHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { navStyles } from './navigation/navStyles';
 
 const { width } = Dimensions.get('window');
 

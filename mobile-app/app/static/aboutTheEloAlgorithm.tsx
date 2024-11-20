@@ -2,12 +2,11 @@ import { Stack } from 'expo-router';
 import { ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { navStyles } from '@/app/navigation/navStyles';
 import Leaderboard from '@/components/Leaderboard';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { theme } from '@/theme';
-
-import { navStyles } from './navigation/navStyles';
 
 export default function Page() {
     return (

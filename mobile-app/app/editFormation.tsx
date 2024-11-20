@@ -3,15 +3,14 @@ import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
 import { Formation } from '@/components/CupGrid/Formation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { navStyles } from './navigation/navStyles';
 
 export default function EditFormation() {
     const [cups, setCups] = useState(Formation.Pyramid_10);

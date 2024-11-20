@@ -3,11 +3,10 @@ import React from 'react';
 import { Dimensions, Text, TouchableHighlight, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { navStyles } from './navigation/navStyles';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 

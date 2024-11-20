@@ -5,10 +5,9 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { navStyles } from '@/app/navigation/navStyles';
 import Button from '@/components/Button';
 import { theme } from '@/theme';
-
-import { navStyles } from './navigation/navStyles';
 
 interface PremiumPerk {
     title: string;

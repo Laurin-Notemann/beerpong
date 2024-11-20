@@ -6,6 +6,7 @@ import { useMatchQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { navStyles } from '@/app/navigation/navStyles';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -13,7 +14,6 @@ import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import { HeaderItem } from './(tabs)/HeaderItem';
-import { navStyles } from './navigation/navStyles';
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);

@@ -2,11 +2,10 @@ import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Text } from 'react-native';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const nav = useNavigation();
@@ -57,7 +56,7 @@ export default function Page() {
                             onPress={() => {
                                 // close the modal
                                 nav.goBack();
-                                nav.navigate('aboutTheEloAlgorithm');
+                                nav.navigate('static/aboutTheEloAlgorithm');
                             }}
                             style={{
                                 fontSize: 13,

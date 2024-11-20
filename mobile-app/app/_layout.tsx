@@ -79,7 +79,7 @@ export default function RootLayout() {
                             drawerContent={Sidebar}
                         >
                             <Drawer.Screen
-                                name="aboutPremium"
+                                name="static/aboutPremium"
                                 component={Everything}
                             />
                         </Drawer.Navigator>

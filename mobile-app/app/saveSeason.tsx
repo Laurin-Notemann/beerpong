@@ -3,15 +3,14 @@ import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import InputModal from '@/components/InputModal';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { navStyles } from './navigation/navStyles';
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const [value, setValue] = useState('');

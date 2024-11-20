@@ -1,15 +1,18 @@
 import { Link } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
+import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import ConfirmationModal from '../ConfirmationModal';
+import MenuItem from '../Menu/MenuItem';
+import MenuSection from '../Menu/MenuSection';
 import Text from '../Text';
 
 export interface SidebarGroupItemProps {
@@ -82,61 +85,125 @@ export function Sidebar({}: SidebarProps) {
     return (
         <SafeAreaView
             style={{
-                backgroundColor: '#1A1A1A',
+                backgroundColor: '#000',
                 flex: 1,
                 paddingHorizontal: 16,
+
+                gap: 20,
             }}
         >
-            <Pressable onPress={() => setShowAddGroupModal(true)}>
-                <Icon name="plus" size={24} color="#fff" />
-            </Pressable>
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
 
-            {groupIds.map((id) => (
-                <SidebarGroupItem
-                    key={id}
-                    id={id}
-                    isActive={id === selectedGroupId}
-                    onPress={() => {
-                        selectGroup(id);
+                    height: 50,
+                    paddingHorizontal: 16,
 
-                        // eslint-disable-next-line
-                        console.log(Object.keys(nav));
-                        // nav.closeDrawer();
-                    }}
-                />
-            ))}
-            {groupIds.length < 1 && (
+                    backgroundColor: '#1A1A1A',
+                    borderRadius: 10,
+                }}
+            >
                 <Text
-                    color="secondary"
+                    color="primary"
                     style={{
-                        textAlign: 'center',
-                        paddingTop: 64,
-                        lineHeight: 26,
+                        fontWeight: 500,
                     }}
                 >
-                    No groups to display. {'\n'}
-                    <Link
-                        to="/joinGroup"
-                        style={{
-                            color: theme.color.text.primary,
-                            fontWeight: 500,
-                        }}
-                    >
-                        Join
-                    </Link>{' '}
-                    or{' '}
-                    <Link
-                        to="/createGroup"
-                        style={{
-                            color: theme.color.text.primary,
-                            fontWeight: 500,
-                        }}
-                    >
-                        Create
-                    </Link>{' '}
-                    one.
+                    Edit
                 </Text>
-            )}
+                <Pressable onPress={() => setShowAddGroupModal(true)}>
+                    <Icon name="plus" size={24} color="#fff" />
+                </Pressable>
+            </View>
+
+            <View
+                style={{
+                    backgroundColor: '#1A1A1A',
+
+                    borderRadius: 10,
+
+                    flex: 1,
+                }}
+            >
+                {groupIds.map((id) => (
+                    <SidebarGroupItem
+                        key={id}
+                        id={id}
+                        isActive={id === selectedGroupId}
+                        onPress={() => {
+                            selectGroup(id);
+
+                            // eslint-disable-next-line
+                            console.log(Object.keys(nav));
+                            // nav.closeDrawer();
+                        }}
+                    />
+                ))}
+                {groupIds.length < 1 && (
+                    <Text
+                        color="secondary"
+                        style={{
+                            textAlign: 'center',
+                            // paddingTop: 64,
+                            // lineHeight: 26,
+
+                            flex: 1,
+
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                    >
+                        No groups to display. {'\n'}
+                        <Link
+                            to="/joinGroup"
+                            style={{
+                                color: theme.color.text.primary,
+                                fontWeight: 500,
+                            }}
+                        >
+                            Join
+                        </Link>{' '}
+                        or{' '}
+                        <Link
+                            to="/createGroup"
+                            style={{
+                                color: theme.color.text.primary,
+                                fontWeight: 500,
+                            }}
+                        >
+                            Create
+                        </Link>{' '}
+                        one.
+                    </Text>
+                )}
+            </View>
+            <MenuSection
+                style={{
+                    alignSelf: 'stretch',
+                }}
+                color="dark"
+            >
+                <MenuItem
+                    title="Settings"
+                    headIcon="cog-outline"
+                    onPress={() => nav.navigate('localSettings')}
+                    tailIconType="next"
+                />
+                <MenuItem
+                    title="Privacy Policy"
+                    headIcon="shield-lock"
+                    onPress={() => nav.navigate('static/privacyPolicy')}
+                    tailIconType="next"
+                />
+                <MenuItem
+                    title="About Us"
+                    headIcon="information-outline"
+                    onPress={() => nav.navigate('static/aboutUs')}
+                    tailIconType="next"
+                />
+            </MenuSection>
 
             <ConfirmationModal
                 header={false}
@@ -167,6 +234,18 @@ export function Sidebar({}: SidebarProps) {
                 }
                 isVisible={showAddGroupModal}
             />
+            <Text
+                color="secondary"
+                style={{
+                    fontSize: 12,
+                    color: '#545456',
+                    fontWeight: 400,
+
+                    textAlign: 'center',
+                }}
+            >
+                Version {env.appVersion}
+            </Text>
         </SafeAreaView>
     );
 }
