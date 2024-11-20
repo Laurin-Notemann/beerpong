@@ -21,11 +21,12 @@ export default function Select({
 }: SelectProps) {
     return (
         <MenuSection {...rest}>
-            {items.map((i) => {
+            {items.map((i, idx) => {
                 const checked = value === i.value;
 
                 return (
                     <MenuItem
+                        key={idx}
                         tailIconType={checked ? 'checked' : 'unchecked'}
                         onPress={() => {
                             if (i.value !== value) {

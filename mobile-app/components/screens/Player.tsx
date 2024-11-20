@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -120,50 +120,56 @@ export default function PlayerScreen({
                     matchesPlayedCount={matches.length}
                     elo={elo}
                 />
-                {editable ? (
-                    <MenuSection
-                        style={{
-                            width: '100%',
-                        }}
-                    >
-                        <MenuItem
-                            title={name}
-                            headIcon="pencil-outline"
-                            onPress={() =>
-                                nav.navigate('editPlayerName', { id })
-                            }
-                            tailIconType="next"
-                        />
-                        <MenuItem
-                            title="Delete Player"
-                            headIcon="delete-outline"
-                            onPress={onDelete}
-                            type="danger"
-                            confirmationPrompt={{
-                                title: 'Delete Player',
-                                description:
-                                    'Are you sure you want to delete this player?',
-                            }}
-                        />
-                    </MenuSection>
-                ) : (
-                    <>
+                <View style={{ alignItems: 'stretch' }}>
+                    {editable ? (
                         <MenuSection
-                            style={{
-                                alignSelf: 'stretch',
-                            }}
+                            style={
+                                {
+                                    // width: '100%',
+                                }
+                            }
                         >
                             <MenuItem
-                                title="Past Seasons"
+                                title={name}
                                 headIcon="pencil-outline"
-                                tailContent={pastSeasons}
+                                onPress={() =>
+                                    nav.navigate('editPlayerName', { id })
+                                }
                                 tailIconType="next"
-                                onPress={() => nav.navigate('pastSeasons')}
+                            />
+                            <MenuItem
+                                title="Delete Player"
+                                headIcon="delete-outline"
+                                onPress={onDelete}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Delete Player',
+                                    description:
+                                        'Are you sure you want to delete this player?',
+                                }}
                             />
                         </MenuSection>
-                        <MatchesList matches={matches} />
-                    </>
-                )}
+                    ) : (
+                        <>
+                            <MenuSection
+                                style={
+                                    {
+                                        // width: '100%',
+                                    }
+                                }
+                            >
+                                <MenuItem
+                                    title="Past Seasons"
+                                    headIcon="pencil-outline"
+                                    tailContent={pastSeasons}
+                                    tailIconType="next"
+                                    onPress={() => nav.navigate('pastSeasons')}
+                                />
+                            </MenuSection>
+                            <MatchesList matches={matches} />
+                        </>
+                    )}
+                </View>
             </ScrollView>
         </GestureHandlerRootView>
     );

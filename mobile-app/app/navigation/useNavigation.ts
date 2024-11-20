@@ -23,6 +23,7 @@ export type RootStackParamList = {
     matches: undefined;
     editFormationName: undefined;
     newMatch: undefined;
+    aboutTheEloAlgorithm: undefined;
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 

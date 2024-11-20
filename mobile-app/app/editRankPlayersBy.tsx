@@ -57,7 +57,7 @@ export default function Page() {
                             onPress={() => {
                                 // close the modal
                                 nav.goBack();
-                                nav.navigate('aboutPremium');
+                                nav.navigate('aboutTheEloAlgorithm');
                             }}
                             style={{
                                 fontSize: 13,
