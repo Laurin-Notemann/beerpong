@@ -11,6 +11,7 @@ public class LeaderboardEntryDto {
     private String playerId;
     private int totalPoints = 0;
     private int totalGames = 0;
+    private int totalGamePoints = 0;
     private int totalMoves = 0;
     private int totalTeamSize = 0;
     private double averagePointsPerMatch = 0.0D;
@@ -24,6 +25,10 @@ public class LeaderboardEntryDto {
 
     public void addTotalGames() {
         this.totalGames++;
+    }
+
+    public void addTotalGamePoints(int amount) {
+        this.totalGamePoints += amount;
     }
 
     public void addTotalMoves(int amount) {

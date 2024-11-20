@@ -41,11 +41,15 @@ public class LeaderboardService {
 
                 matches = matchService.streamAllMatchesInSeason(seasonId);
             }
-            case "daily" -> matches = matchService.streamAllMatchesToday(group);
+            //TODO use season setting
+            case "today" -> matches = matchService.streamAllMatchesToday(group);
             default -> matches = Stream.of();
         }
 
         Map<String, LeaderboardEntryDto> entries = Maps.newHashMap();
+        Map<String, String> memberToPlayer = Maps.newHashMap();
+
+        //TODO create entries for all player in current season, provided season or all time
 
         // go through all matches and all teams
         matches.forEach(matchDto -> matchDto.getTeams().forEach(teamDto -> {
@@ -57,17 +61,22 @@ public class LeaderboardService {
             // go through all team members
             teamMembers.forEach(teamMemberDto -> {
                 // create leaderboard entries for all members
-                if (!entries.containsKey(teamMemberDto.getId())) {
+                if (!entries.containsKey(teamMemberDto.getPlayerId())) {
                     var dto = new LeaderboardEntryDto();
 
                     dto.setPlayerId(teamMemberDto.getPlayerId());
 
-                    entries.put(teamMemberDto.getId(), dto);
+                    entries.put(teamMemberDto.getPlayerId(), dto);
+                }
+
+                // save player id by member id
+                if (!memberToPlayer.containsKey(teamMemberDto.getTeamId())) {
+                    memberToPlayer.put(teamMemberDto.getId(), teamMemberDto.getPlayerId());
                 }
 
                 // add game and team size to entry
-                entries.get(teamMemberDto.getId()).addTotalGames();
-                entries.get(teamMemberDto.getId()).addTotalTeamSize(teamMembers.size());
+                entries.get(teamMemberDto.getPlayerId()).addTotalGames();
+                entries.get(teamMemberDto.getPlayerId()).addTotalTeamSize(teamMembers.size());
             });
 
             AtomicInteger teamPoints = new AtomicInteger();
@@ -77,12 +86,13 @@ public class LeaderboardService {
             matchDto.getMatchMoves().stream()
                     .filter(dto -> teamMembers.stream().anyMatch(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId())))
                     .forEach(dto -> {
-                        if (!entries.containsKey(dto.getTeamMemberId())) {
+                        if (!memberToPlayer.containsKey(dto.getTeamMemberId()) ||
+                                !entries.containsKey(memberToPlayer.get(dto.getTeamMemberId()))) {
                             return;
                         }
 
                         // get entry and points for this move
-                        var entry = entries.get(dto.getTeamMemberId());
+                        var entry = entries.get(memberToPlayer.get(dto.getTeamMemberId()));
                         var points = ruleMoveService.getPointsById(dto.getMoveId());
 
                         if (points == null) {
@@ -105,8 +115,8 @@ public class LeaderboardService {
                         // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                         if (points.getSecond() > 0) {
                             teamMembers.forEach(teamMemberDto -> {
-                                if (entries.containsKey(teamMemberDto.getId())) {
-                                    entries.get(teamMemberDto.getId()).addTotalPoints(points.getSecond() * dto.getValue());
+                                if (entries.containsKey(teamMemberDto.getPlayerId())) {
+                                    entries.get(teamMemberDto.getPlayerId()).addTotalPoints(points.getSecond() * dto.getValue());
                                 }
                             });
                         }
@@ -114,7 +124,7 @@ public class LeaderboardService {
 
             // calculate stats for all members
             teamMembers.forEach(teamMemberDto -> {
-                if (entries.containsKey(teamMemberDto.getId())) {
+                if (!entries.containsKey(teamMemberDto.getPlayerId())) {
                     return;
                 }
 
@@ -128,7 +138,7 @@ public class LeaderboardService {
                 double normalizedScore = (playerPoints / (double) teamSize) * activityWeight;
 
                 // add normalized score to players score
-                entries.get(teamMemberDto.getId()).addElo(normalizedScore);
+                entries.get(teamMemberDto.getPlayerId()).addElo(normalizedScore);
             });
 
             // clear team member cache
@@ -150,8 +160,8 @@ public class LeaderboardService {
 
             // sort the stream based on the current algorithm
             switch (value) {
-                case AVERAGE -> stream = stream.sorted(Comparator.comparing(LeaderboardEntryDto::getAveragePointsPerMatch));
-                case ELO -> stream = stream.sorted(Comparator.comparing(LeaderboardEntryDto::getElo));
+                case AVERAGE -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
+                case ELO -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getElo(), o1.getElo()));
             }
 
             // set ranking for current algorithm

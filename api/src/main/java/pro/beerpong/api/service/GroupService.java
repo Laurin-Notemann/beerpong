@@ -91,6 +91,12 @@ public class GroupService {
         return groupDto;
     }
 
+    public GroupDto getRawGroupById(String id) {
+        return groupRepository.findById(id)
+                .map(groupMapper::groupToGroupDto)
+                .orElse(null);
+    }
+
     public GroupDto updateGroup(String id, GroupCreateDto groupCreateDto) {
         return groupRepository.findById(id)
                 .map(existingGroup -> {
