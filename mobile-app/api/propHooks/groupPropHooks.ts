@@ -1,6 +1,6 @@
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
-import { showErrorToast } from '@/toast';
+import { showErrorToast, showYouLeftGroupToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -13,7 +13,7 @@ import { useAllSeasonsQuery, useGroup } from '../calls/seasonHooks';
 import { ScreenState } from '../types';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
-    const { groupId } = useGroup();
+    const { groupId, group } = useGroup();
 
     const { removeGroup } = useGroupStore();
 
@@ -53,6 +53,12 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     function onLeaveGroup() {
         if (!groupId) return;
 
+        // TODO: i can't get this to actually show up
+        setTimeout(
+            () => showYouLeftGroupToast(group.data?.name ?? 'Unknown Group'),
+            3000
+        );
+
         removeGroup(groupId);
 
         nav.navigate('index');
@@ -62,7 +68,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
         ? {
               id: data.data.id!,
               groupCode: data.data.inviteCode!,
-              groupName: data.data.name || 'Unknown',
+              groupName: data.data.name || 'Unknown Group',
               hasPremium: false,
               pastSeasons,
               pushNotificationsEnabled: false,
