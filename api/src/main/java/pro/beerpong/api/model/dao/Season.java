@@ -23,12 +23,4 @@ public class Season {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn
     private SeasonSettings seasonSettings;
-
-    //TODO needed?
-    @PostLoad
-    public void ensureDefaultSeasonSettings() {
-        if (this.seasonSettings == null) {
-            this.seasonSettings = new SeasonSettings();
-        }
-    }
 }

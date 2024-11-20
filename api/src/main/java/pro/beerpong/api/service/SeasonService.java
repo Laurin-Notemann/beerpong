@@ -59,7 +59,15 @@ public class SeasonService {
 
         season.setStartDate(ZonedDateTime.now());
         season.setGroupId(groupOptional.get().getId());
-        season.setSeasonSettings((oldSeason != null && oldSeason.getSeasonSettings() != null ? oldSeason.getSeasonSettings() : new SeasonSettings()));
+        season.setSeasonSettings(new SeasonSettings());
+
+        if (oldSeason != null && oldSeason.getSeasonSettings() != null) {
+            season.getSeasonSettings().setMaxTeamSize(oldSeason.getSeasonSettings().getMaxTeamSize());
+            season.getSeasonSettings().setMinTeamSize(oldSeason.getSeasonSettings().getMinTeamSize());
+            season.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
+            season.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
+        }
+
         season = seasonRepository.save(season);
 
         if (oldSeason != null) {

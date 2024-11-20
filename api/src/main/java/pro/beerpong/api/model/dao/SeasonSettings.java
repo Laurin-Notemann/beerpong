@@ -14,8 +14,8 @@ public class SeasonSettings {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private int minMatchesToQualify;
-    private int minTeamSize;
-    private int maxTeamSize;
-    private RankingAlgorithm rankingAlgorithm;
+    private int minMatchesToQualify = 1;
+    private int minTeamSize = 1;
+    private int maxTeamSize = 10;
+    private RankingAlgorithm rankingAlgorithm = RankingAlgorithm.AVERAGE;
 }
