@@ -8,6 +8,7 @@ import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 
+import ConfirmationModal from '../ConfirmationModal';
 import copyToClipboard from '../copyToClipboard';
 
 export interface GroupSettingsProps {
@@ -21,7 +22,9 @@ export interface GroupSettingsProps {
 
     groupCode: string;
     onUploadWallpaperPress: () => void;
+    onDeleteWallpaperPress: () => void;
     onLeaveGroup: () => void;
+    wallpaperAsset?: { url?: string | null } | null;
 }
 export default function GroupSettingsScreen({
     id,
@@ -30,8 +33,11 @@ export default function GroupSettingsScreen({
     pushNotificationsEnabled,
     pastSeasons,
     groupCode,
-    onUploadWallpaperPress,
     onLeaveGroup,
+
+    wallpaperAsset,
+    onUploadWallpaperPress,
+    onDeleteWallpaperPress,
 }: GroupSettingsProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -43,6 +49,9 @@ export default function GroupSettingsScreen({
             setIsRefreshing(false);
         }, 2000);
     }, []);
+
+    const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
+        useState(false);
 
     return (
         <RootSiblingParent>
@@ -78,7 +87,38 @@ export default function GroupSettingsScreen({
                         title="Set Wallpaper"
                         headIcon="image-multiple"
                         tailIconType="next"
-                        onPress={onUploadWallpaperPress}
+                        onPress={() =>
+                            wallpaperAsset?.url
+                                ? setShowChangeWallpaperModal(true)
+                                : onUploadWallpaperPress()
+                        }
+                    />
+                    <ConfirmationModal
+                        onClose={() => setShowChangeWallpaperModal(false)}
+                        title="Group Wallpaper"
+                        actions={
+                            [
+                                {
+                                    title: 'Upload',
+                                    type: 'confirm',
+
+                                    onPress: () => {
+                                        onUploadWallpaperPress();
+                                        setShowChangeWallpaperModal(false);
+                                    },
+                                },
+                                {
+                                    title: 'Remove',
+                                    type: 'danger',
+
+                                    onPress: () => {
+                                        onDeleteWallpaperPress();
+                                        setShowChangeWallpaperModal(false);
+                                    },
+                                },
+                            ] as const
+                        }
+                        isVisible={showChangeWallpaperModal}
                     />
                     <MenuItem
                         title="Push Notifications"
@@ -173,6 +213,7 @@ export default function GroupSettingsScreen({
                             title: 'Leave Group',
                             description:
                                 'Are you sure you want to leave this group?',
+                            buttonText: 'Leave',
                         }}
                     />
                 </MenuSection>

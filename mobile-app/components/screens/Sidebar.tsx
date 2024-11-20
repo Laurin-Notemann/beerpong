@@ -209,7 +209,6 @@ export function Sidebar({}: SidebarProps) {
                 header={false}
                 onClose={() => setShowAddGroupModal(false)}
                 title=""
-                description=""
                 actions={
                     [
                         {

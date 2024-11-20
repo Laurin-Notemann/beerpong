@@ -9,7 +9,7 @@ export interface ConfirmationModalProps {
     onClose?: () => void;
 
     title: string;
-    description: string;
+    description?: string;
 
     header?: boolean;
 
@@ -66,18 +66,20 @@ export default function ConfirmationModal({
                         >
                             {title}
                         </Text>
-                        <Text
-                            style={{
-                                fontSize: 15,
-                                lineHeight: 22,
-                                fontWeight: 400,
-                                color: theme.color.text.primary,
+                        {description && (
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    lineHeight: 22,
+                                    fontWeight: 400,
+                                    color: theme.color.text.primary,
 
-                                textAlign: 'center',
-                            }}
-                        >
-                            {description}
-                        </Text>
+                                    textAlign: 'center',
+                                }}
+                            >
+                                {description}
+                            </Text>
+                        )}
                     </View>
                 )}
                 {actions.map((i, idx) => (

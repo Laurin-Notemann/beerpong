@@ -1,6 +1,10 @@
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
-import { showErrorToast, showYouLeftGroupToast } from '@/toast';
+import {
+    showErrorToast,
+    showSuccessToast,
+    showYouLeftGroupToast,
+} from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -43,10 +47,21 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
                 byteArray,
                 mimeType,
             });
-            nav.navigate('index');
+            showSuccessToast('Updated group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to upload group wallpaper:', err);
             showErrorToast('Failed to upload group wallpaper.');
+        }
+    }
+    async function onDeleteWallpaperPress() {
+        if (!groupId) return;
+
+        try {
+            // TODO: implement this
+            showSuccessToast('Removed group wallpaper.');
+        } catch (err) {
+            ConsoleLogger.error('failed to remove group wallpaper:', err);
+            showErrorToast('Failed to remove group wallpaper.');
         }
     }
 
@@ -73,7 +88,9 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               pastSeasons,
               pushNotificationsEnabled: false,
               onUploadWallpaperPress,
+              onDeleteWallpaperPress,
               onLeaveGroup,
+              wallpaperAsset: data.data.wallpaperAsset,
           }
         : null;
 

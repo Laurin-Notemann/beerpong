@@ -29,18 +29,21 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'MATCHES':
+                // TODO: refetch group, players, player overview
                 client.current.logger.info('refetching matches');
                 qc.invalidateQueries({
                     predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
                 });
                 break;
             case 'SEASONS':
+                // TODO: refetch players, matches?
                 client.current.logger.info('refetching seasons');
                 qc.invalidateQueries({
                     queryKey: [QK.group, e.groupId, QK.seasons],
                 });
                 break;
             case 'PLAYERS':
+                // TODO: refetch group on player create, delete
                 client.current.logger.info('refetching players');
                 qc.invalidateQueries({
                     predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
@@ -62,6 +65,7 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'RULE_MOVES':
+                // TODO: refetch matches, players (because this updates the scoring system)
                 client.current.logger.info('refetching ruleMoves');
                 qc.invalidateQueries({
                     predicate: ignoreSeason([
