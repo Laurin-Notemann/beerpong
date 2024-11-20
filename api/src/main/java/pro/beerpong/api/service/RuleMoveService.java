@@ -1,6 +1,7 @@
 package pro.beerpong.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.RuleMoveMapper;
 import pro.beerpong.api.model.dao.Group;
@@ -21,10 +22,10 @@ import java.util.Optional;
 public class RuleMoveService {
     private static final List<RuleMove> DEFAULT_RULE_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
-            buildRuleMove("Bomb", 1, 0, false),
-            buildRuleMove("Bouncer", 1, 0, false),
-            buildRuleMove("Trickshot", 1, 0, false),
-            buildRuleMove("Save", 1, 0, false),
+            buildRuleMove("Bomb", 2, 0, false),
+            buildRuleMove("Bouncer", 2, 0, false),
+            buildRuleMove("Trickshot", 2, 0, false),
+            buildRuleMove("Save", 2, 0, false),
             buildRuleMove("Finish - Normal", 0, 3, true),
             buildRuleMove("Finish - Ring of fire", 0, 10, true)
     );
@@ -87,6 +88,18 @@ public class RuleMoveService {
                 })
                 .orElse(false);
 
+    }
+
+    public Pair<Integer, Integer> getPointsById(String ruleMoveId) {
+        return moveRepository.findById(ruleMoveId)
+                .map(ruleMove -> Pair.of(ruleMove.getPointsForScorer(), ruleMove.getPointsForTeam()))
+                .orElse(Pair.of(0, 0));
+    }
+
+    public boolean isFinish(String ruleMoveId) {
+        return moveRepository.findById(ruleMoveId)
+                .map(RuleMove::isFinishingMove)
+                .orElse(false);
     }
 
     public RuleMoveDto getById(String ruleMoveId) {

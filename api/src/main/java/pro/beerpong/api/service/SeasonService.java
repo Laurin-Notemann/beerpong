@@ -67,6 +67,8 @@ public class SeasonService {
             season.getSeasonSettings().setMinTeamSize(oldSeason.getSeasonSettings().getMinTeamSize());
             season.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
             season.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
+            season.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
+            season.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
         }
 
         season = seasonRepository.save(season);
@@ -106,6 +108,8 @@ public class SeasonService {
                         existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
                         existingSeason.getSeasonSettings().setMinMatchesToQualify(dto.getSeasonSettings().getMinMatchesToQualify());
                         existingSeason.getSeasonSettings().setRankingAlgorithm(dto.getSeasonSettings().getRankingAlgorithm());
+                        existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
+                        existingSeason.getSeasonSettings().setWakeTimeHour(dto.getSeasonSettings().getWakeTimeHour());
                     }
 
                     var seasonDto = seasonMapper.seasonToSeasonDto(seasonRepository.save(existingSeason));

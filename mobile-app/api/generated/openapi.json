@@ -967,6 +967,44 @@
                 }
             }
         },
+        "/groups/{groupId}/leaderboard": {
+            "get": {
+                "tags": ["leaderboard-controller"],
+                "operationId": "getLeaderboard",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLeaderboardDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/assets/{id}": {
             "get": {
                 "tags": ["asset-controller"],
@@ -1134,7 +1172,16 @@
                     "rankingAlgorithm": {
                         "type": "string",
                         "enum": ["AVERAGE", "ELO"]
-                    }
+                    },
+                    "dailyLeaderboard": {
+                        "type": "string",
+                        "enum": [
+                            "RESET_AT_MIDNIGHT",
+                            "WAKE_TIME",
+                            "LAST_24_HOURS"
+                        ]
+                    },
+                    "wakeTimeHour": { "type": "integer", "format": "int32" }
                 }
             },
             "ResponseEnvelopeAssetMetadataDto": {
@@ -1502,6 +1549,49 @@
                         "type": "array",
                         "items": { "$ref": "#/components/schemas/ProfileDto" }
                     },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "LeaderboardDto": {
+                "type": "object",
+                "properties": {
+                    "entries": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LeaderboardEntryDto"
+                        }
+                    }
+                }
+            },
+            "LeaderboardEntryDto": {
+                "type": "object",
+                "properties": {
+                    "playerId": { "type": "string" },
+                    "totalPoints": { "type": "integer", "format": "int32" },
+                    "totalGames": { "type": "integer", "format": "int32" },
+                    "totalMoves": { "type": "integer", "format": "int32" },
+                    "totalTeamSize": { "type": "integer", "format": "int32" },
+                    "averagePointsPerMatch": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "averageTeamSize": { "type": "number", "format": "double" },
+                    "elo": { "type": "number", "format": "double" },
+                    "rankBy": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                }
+            },
+            "ResponseEnvelopeLeaderboardDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/LeaderboardDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             }

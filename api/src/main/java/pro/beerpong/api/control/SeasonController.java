@@ -58,6 +58,16 @@ public class SeasonController {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
+        if (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+        } else if (dto.getSeasonSettings().getMinTeamSize() > dto.getSeasonSettings().getMaxTeamSize()) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
+        }
+
+        dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 0), 1000));
+        dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMinTeamSize(), 1), 10));
+        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMaxTeamSize(), 1), 10));
+
         SeasonDto updatedSeason = seasonService.updateSeason(season.get(), dto);
         if (updatedSeason != null) {
             return ResponseEnvelope.ok(updatedSeason);

@@ -32,6 +32,22 @@ declare namespace Components {
             numberOfMatches?: number; // int32
             numberOfSeasons?: number; // int32
         }
+        export interface LeaderboardDto {
+            entries?: LeaderboardEntryDto[];
+        }
+        export interface LeaderboardEntryDto {
+            playerId?: string;
+            totalPoints?: number; // int32
+            totalGames?: number; // int32
+            totalMoves?: number; // int32
+            totalTeamSize?: number; // int32
+            averagePointsPerMatch?: number; // double
+            averageTeamSize?: number; // double
+            elo?: number; // double
+            rankBy?: {
+                [name: string]: number; // int32
+            };
+        }
         export interface MatchCreateDto {
             teams?: TeamCreateDto[];
         }
@@ -98,6 +114,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: GroupDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeLeaderboardDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: LeaderboardDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchDto {
@@ -227,6 +249,11 @@ declare namespace Components {
             minTeamSize?: number; // int32
             maxTeamSize?: number; // int32
             rankingAlgorithm?: 'AVERAGE' | 'ELO';
+            dailyLeaderboard?:
+                | 'RESET_AT_MIDNIGHT'
+                | 'WAKE_TIME'
+                | 'LAST_24_HOURS';
+            wakeTimeHour?: number; // int32
         }
         export interface SeasonUpdateDto {
             seasonSettings: SeasonSettings;
@@ -426,6 +453,24 @@ declare namespace Paths {
     namespace GetHealthcheck {
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
+    namespace GetLeaderboard {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Scope = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        export interface QueryParameters {
+            scope: Parameters.Scope;
+            seasonId?: Parameters.SeasonId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeLeaderboardDto;
         }
     }
     namespace GetMatchById {
@@ -876,6 +921,17 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetAllMatchOverviews.Responses.$200>;
     /**
+     * getLeaderboard
+     */
+    'getLeaderboard'(
+        parameters?: Parameters<
+            Paths.GetLeaderboard.QueryParameters &
+                Paths.GetLeaderboard.PathParameters
+        > | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
+    /**
      * getAsset
      */
     'getAsset'(
@@ -1162,6 +1218,19 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetAllMatchOverviews.Responses.$200>;
     };
+    ['/groups/{groupId}/leaderboard']: {
+        /**
+         * getLeaderboard
+         */
+        'get'(
+            parameters?: Parameters<
+                Paths.GetLeaderboard.QueryParameters &
+                    Paths.GetLeaderboard.PathParameters
+            > | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
+    };
     ['/assets/{id}']: {
         /**
          * getAsset
@@ -1200,6 +1269,8 @@ export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
+export type LeaderboardDto = Components.Schemas.LeaderboardDto;
+export type LeaderboardEntryDto = Components.Schemas.LeaderboardEntryDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
@@ -1216,6 +1287,8 @@ export type ResponseEnvelopeAssetMetadataDto =
     Components.Schemas.ResponseEnvelopeAssetMetadataDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
+export type ResponseEnvelopeLeaderboardDto =
+    Components.Schemas.ResponseEnvelopeLeaderboardDto;
 export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListMatchOverviewDto =
