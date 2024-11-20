@@ -24,7 +24,7 @@ public class MatchController {
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
-                                                                  @RequestBody MatchCreateDto matchCreateDt) {
+                                                                  @RequestBody MatchCreateDto matchCreateDto) {
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
         var error = seasonService.validateActiveSeason(MatchDto.class, pair);
 
@@ -32,7 +32,11 @@ public class MatchController {
             return error;
         }
 
-        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDt);
+        if (!matchService.validateCreateDto(pair.getSecond(), matchCreateDto)) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        }
+
+        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
@@ -109,6 +113,10 @@ public class MatchController {
 
         if (error != null || pair.getFirst() == null || pair.getSecond() == null) {
             return error;
+        }
+
+        if (!matchService.validateCreateDto(pair.getSecond(), matchCreateDto)) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
         var match = matchService.getRawMatchById(id);

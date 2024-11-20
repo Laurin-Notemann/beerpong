@@ -26,16 +26,11 @@ declare namespace Components {
             id?: string;
             name?: string;
             inviteCode?: string;
-            groupSettings?: GroupSettings;
             activeSeason?: Season;
             wallpaperAsset?: AssetMetadataDto;
             numberOfPlayers?: number; // int32
             numberOfMatches?: number; // int32
             numberOfSeasons?: number; // int32
-        }
-        export interface GroupSettings {
-            id?: string;
-            settingValue?: string;
         }
         export interface MatchCreateDto {
             teams?: TeamCreateDto[];
@@ -213,6 +208,7 @@ declare namespace Components {
             startDate?: string; // date-time
             endDate?: string; // date-time
             groupId?: string;
+            seasonSettings?: SeasonSettings;
         }
         export interface SeasonCreateDto {
             oldSeasonName?: string;
@@ -223,6 +219,17 @@ declare namespace Components {
             startDate?: string; // date-time
             endDate?: string; // date-time
             groupId?: string;
+            seasonSettings?: SeasonSettings;
+        }
+        export interface SeasonSettings {
+            id?: string;
+            minMatchesToQualify?: number; // int32
+            minTeamSize?: number; // int32
+            maxTeamSize?: number; // int32
+            rankingAlgorithm?: 'AVERAGE' | 'ELO';
+        }
+        export interface SeasonUpdateDto {
+            seasonSettings: SeasonSettings;
         }
         export interface TeamCreateDto {
             teamMembers?: TeamMemberCreateDto[];
@@ -613,6 +620,20 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeRuleMoveDto;
         }
     }
+    namespace UpdateSeasonById {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.SeasonUpdateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeSeasonDto;
+        }
+    }
     namespace WriteRules {
         namespace Parameters {
             export type GroupId = string;
@@ -702,6 +723,22 @@ export interface OperationMethods {
         data?: Paths.UpdateMatch.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+    /**
+     * getSeasonById
+     */
+    'getSeasonById'(
+        parameters?: Parameters<Paths.GetSeasonById.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetSeasonById.Responses.$200>;
+    /**
+     * updateSeasonById
+     */
+    'updateSeasonById'(
+        parameters?: Parameters<Paths.UpdateSeasonById.PathParameters> | null,
+        data?: Paths.UpdateSeasonById.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.UpdateSeasonById.Responses.$200>;
     /**
      * setAvatar
      */
@@ -839,14 +876,6 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetAllMatchOverviews.Responses.$200>;
     /**
-     * getSeasonById
-     */
-    'getSeasonById'(
-        parameters?: Parameters<Paths.GetSeasonById.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.GetSeasonById.Responses.$200>;
-    /**
      * getAsset
      */
     'getAsset'(
@@ -954,6 +983,24 @@ export interface PathsDictionary {
             data?: Paths.UpdateMatch.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{id}']: {
+        /**
+         * getSeasonById
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetSeasonById.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetSeasonById.Responses.$200>;
+        /**
+         * updateSeasonById
+         */
+        'put'(
+            parameters?: Parameters<Paths.UpdateSeasonById.PathParameters> | null,
+            data?: Paths.UpdateSeasonById.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.UpdateSeasonById.Responses.$200>;
     };
     ['/groups/{groupId}/profiles/{profileId}/avatar']: {
         /**
@@ -1115,16 +1162,6 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetAllMatchOverviews.Responses.$200>;
     };
-    ['/groups/{groupId}/seasons/{id}']: {
-        /**
-         * getSeasonById
-         */
-        'get'(
-            parameters?: Parameters<Paths.GetSeasonById.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.GetSeasonById.Responses.$200>;
-    };
     ['/assets/{id}']: {
         /**
          * getAsset
@@ -1163,7 +1200,6 @@ export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
-export type GroupSettings = Components.Schemas.GroupSettings;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
@@ -1212,6 +1248,8 @@ export type RuleMoveDto = Components.Schemas.RuleMoveDto;
 export type Season = Components.Schemas.Season;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
+export type SeasonSettings = Components.Schemas.SeasonSettings;
+export type SeasonUpdateDto = Components.Schemas.SeasonUpdateDto;
 export type TeamCreateDto = Components.Schemas.TeamCreateDto;
 export type TeamDto = Components.Schemas.TeamDto;
 export type TeamMemberCreateDto = Components.Schemas.TeamMemberCreateDto;

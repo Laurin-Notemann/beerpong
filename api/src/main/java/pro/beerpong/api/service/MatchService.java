@@ -15,6 +15,7 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Service
@@ -210,6 +211,14 @@ public class MatchService {
         ));
 
         return dto;
+    }
+
+    public boolean validateCreateDto(Season season, MatchCreateDto dto) {
+        var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(new SeasonSettings());
+
+        return dto.getTeams().stream().allMatch(teamCreateDto ->
+                teamCreateDto.getTeamMembers().size() >= settings.getMinTeamSize() &&
+                        teamCreateDto.getTeamMembers().size() <= settings.getMaxTeamSize());
     }
 
     public Match getRawMatchById(String id) {

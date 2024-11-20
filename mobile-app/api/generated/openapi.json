@@ -345,6 +345,78 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{id}": {
+            "get": {
+                "tags": ["season-controller"],
+                "operationId": "getSeasonById",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": ["season-controller"],
+                "operationId": "updateSeasonById",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeasonUpdateDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/profiles/{profileId}/avatar": {
             "put": {
                 "tags": ["profile-asset-controller"],
@@ -895,38 +967,6 @@
                 }
             }
         },
-        "/groups/{groupId}/seasons/{id}": {
-            "get": {
-                "tags": ["season-controller"],
-                "operationId": "getSeasonById",
-                "parameters": [
-                    {
-                        "name": "groupId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/assets/{id}": {
             "get": {
                 "tags": ["asset-controller"],
@@ -1050,9 +1090,6 @@
                     "id": { "type": "string" },
                     "name": { "type": "string" },
                     "inviteCode": { "type": "string" },
-                    "groupSettings": {
-                        "$ref": "#/components/schemas/GroupSettings"
-                    },
                     "activeSeason": { "$ref": "#/components/schemas/Season" },
                     "wallpaperAsset": {
                         "$ref": "#/components/schemas/AssetMetadataDto"
@@ -1060,13 +1097,6 @@
                     "numberOfPlayers": { "type": "integer", "format": "int32" },
                     "numberOfMatches": { "type": "integer", "format": "int32" },
                     "numberOfSeasons": { "type": "integer", "format": "int32" }
-                }
-            },
-            "GroupSettings": {
-                "type": "object",
-                "properties": {
-                    "id": { "type": "string" },
-                    "settingValue": { "type": "string" }
                 }
             },
             "ResponseEnvelopeGroupDto": {
@@ -1085,7 +1115,26 @@
                     "name": { "type": "string" },
                     "startDate": { "type": "string", "format": "date-time" },
                     "endDate": { "type": "string", "format": "date-time" },
-                    "groupId": { "type": "string" }
+                    "groupId": { "type": "string" },
+                    "seasonSettings": {
+                        "$ref": "#/components/schemas/SeasonSettings"
+                    }
+                }
+            },
+            "SeasonSettings": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "minMatchesToQualify": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "minTeamSize": { "type": "integer", "format": "int32" },
+                    "maxTeamSize": { "type": "integer", "format": "int32" },
+                    "rankingAlgorithm": {
+                        "type": "string",
+                        "enum": ["AVERAGE", "ELO"]
+                    }
                 }
             },
             "ResponseEnvelopeAssetMetadataDto": {
@@ -1250,6 +1299,37 @@
                     "playerId": { "type": "string" }
                 }
             },
+            "SeasonUpdateDto": {
+                "required": ["seasonSettings"],
+                "type": "object",
+                "properties": {
+                    "seasonSettings": {
+                        "$ref": "#/components/schemas/SeasonSettings"
+                    }
+                }
+            },
+            "ResponseEnvelopeSeasonDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/SeasonDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "SeasonDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "startDate": { "type": "string", "format": "date-time" },
+                    "endDate": { "type": "string", "format": "date-time" },
+                    "groupId": { "type": "string" },
+                    "seasonSettings": {
+                        "$ref": "#/components/schemas/SeasonSettings"
+                    }
+                }
+            },
             "ProfileDto": {
                 "type": "object",
                 "properties": {
@@ -1277,25 +1357,6 @@
             "SeasonCreateDto": {
                 "type": "object",
                 "properties": { "oldSeasonName": { "type": "string" } }
-            },
-            "ResponseEnvelopeSeasonDto": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
-                    "httpCode": { "type": "integer", "format": "int32" },
-                    "data": { "$ref": "#/components/schemas/SeasonDto" },
-                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
-            },
-            "SeasonDto": {
-                "type": "object",
-                "properties": {
-                    "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "startDate": { "type": "string", "format": "date-time" },
-                    "endDate": { "type": "string", "format": "date-time" },
-                    "groupId": { "type": "string" }
-                }
             },
             "ResponseEnvelopeString": {
                 "type": "object",

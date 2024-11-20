@@ -5,13 +5,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import pro.beerpong.api.util.RankingAlgorithm;
 
-@Entity(name = "group_settings")
+@Entity(name = "season_settings")
 @Data
-public class GroupSettings {
+public class SeasonSettings {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String settingValue;
+    private int minMatchesToQualify = 1;
+    private int minTeamSize = 1;
+    private int maxTeamSize = 10;
+    private RankingAlgorithm rankingAlgorithm = RankingAlgorithm.AVERAGE;
 }
