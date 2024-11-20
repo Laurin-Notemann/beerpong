@@ -139,29 +139,32 @@ export function Sidebar({}: SidebarProps) {
             )}
 
             <ConfirmationModal
+                header={false}
                 onClose={() => setShowAddGroupModal(false)}
                 title=""
                 description=""
-                actions={[
-                    {
-                        title: 'Create Group',
-                        type: 'default' as const,
+                actions={
+                    [
+                        {
+                            title: 'Create Group',
+                            type: 'default',
 
-                        onPress: () => {
-                            nav.navigate('createGroup');
-                            setShowAddGroupModal(false);
+                            onPress: () => {
+                                nav.navigate('createGroup');
+                                setShowAddGroupModal(false);
+                            },
                         },
-                    },
-                    {
-                        title: 'Join Group',
-                        type: 'default' as const,
+                        {
+                            title: 'Join Group',
+                            type: 'default',
 
-                        onPress: () => {
-                            nav.navigate('joinGroup');
-                            setShowAddGroupModal(false);
+                            onPress: () => {
+                                nav.navigate('joinGroup');
+                                setShowAddGroupModal(false);
+                            },
                         },
-                    },
-                ]}
+                    ] as const
+                }
                 isVisible={showAddGroupModal}
             />
         </SafeAreaView>
