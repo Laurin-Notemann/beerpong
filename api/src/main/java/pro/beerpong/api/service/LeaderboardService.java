@@ -5,10 +5,7 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.LeaderboardDto;
-import pro.beerpong.api.model.dto.LeaderboardEntryDto;
-import pro.beerpong.api.model.dto.MatchDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Comparator;
@@ -22,7 +19,7 @@ public class LeaderboardService {
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
 
-    private static final double K_FACTOR = 32D;
+    private static final double K_FACTOR = 10D;
     private static final int ELO_DIVIDER = 400;
 
     @Autowired
@@ -145,23 +142,33 @@ public class LeaderboardService {
                 return;
             }
 
-            // calculate team elos
-            var team1Elo = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(matchDto.getTeams().getFirst().getId()) && entries.containsKey(teamMemberDto.getPlayerId()))
-                    .map(teamMemberDto -> entries.get(teamMemberDto.getPlayerId()).getElo())
-                    .reduce(Double::sum)
-                    .orElse(0D);
-            var team2Elo = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(matchDto.getTeams().get(1).getId()) && entries.containsKey(teamMemberDto.getPlayerId()))
-                    .map(teamMemberDto -> entries.get(teamMemberDto.getPlayerId()).getElo())
-                    .reduce(Double::sum)
-                    .orElse(0D);
+            var winningPlayer = matchDto.getTeamMembers().stream()
+                    .filter(teamMemberDto -> teamMemberDto.getId().equals(winningMove.getTeamMemberId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (winningPlayer == null) {
+                // no winning player? weird...
+                return;
+            }
+
+            var winningTeam = (winningPlayer.getTeamId().equals(matchDto.getTeams().getFirst().getId()) ? matchDto.getTeams().getFirst() : matchDto.getTeams().get(1));
+            var loosingTeam = matchDto.getTeams().getFirst().getId().equals(winningTeam.getId()) ? matchDto.getTeams().get(1) : matchDto.getTeams().getFirst();
+
+            // calculate team elo averages
+            var winnerEloAvg = calcTeamEloAverage(entries, matchDto, winningTeam);
+            var looserEloAvg = calcTeamEloAverage(entries, matchDto, loosingTeam);
 
             // calculate elo for all team members
             matchDto.getTeamMembers().forEach(teamMemberDto -> {
-                var score = 1.0D; // win: 1, draw: 0.5, loss: 0.0
-                var expected = expectedScore(team1Elo, team2Elo);
-                var newRating = team1Elo + K_FACTOR * (score - expected);
+                var entry = entries.get(teamMemberDto.getPlayerId());
+
+                // win: 1.0, loss: 0.0, no draw possible
+                var score = teamMemberDto.getTeamId().equals(winningTeam.getId()) ? 1.0D : 0.0D;
+                var oppenentElo = teamMemberDto.getTeamId().equals(winningTeam.getId()) ? looserEloAvg : winnerEloAvg;
+
+                // calculate elo (source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system)
+                entry.setElo(entry.getElo() + K_FACTOR * (score - expectedScore(entry.getElo(), oppenentElo)));
             });
         });
 
@@ -180,8 +187,7 @@ public class LeaderboardService {
 
             // sort the stream based on the current algorithm
             switch (value) {
-                case AVERAGE ->
-                        stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
+                case AVERAGE -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
                 case ELO -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getElo(), o1.getElo()));
             }
 
@@ -195,9 +201,18 @@ public class LeaderboardService {
         return dto;
     }
 
+    private double calcTeamEloAverage(Map<String, LeaderboardEntryDto> entries, MatchDto matchDto, TeamDto teamDto) {
+        return matchDto.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()) && entries.containsKey(teamMemberDto.getPlayerId()))
+                .map(teamMemberDto -> entries.get(teamMemberDto.getPlayerId()).getElo())
+                .reduce(Double::sum)
+                .orElse(0D) /
+                matchDto.getTeamMembers().stream()
+                        .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
+                        .count();
+    }
+
     private double expectedScore(double elo1, double elo2) {
         return 1.0 / (1 + Math.pow(10, (elo2 - elo1) / ELO_DIVIDER));
     }
-
-
 }

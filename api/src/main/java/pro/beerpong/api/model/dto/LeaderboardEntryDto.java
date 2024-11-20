@@ -11,11 +11,9 @@ public class LeaderboardEntryDto {
     private String playerId;
     private int totalPoints = 0;
     private int totalGames = 0;
-    private int totalGamePoints = 0;
     private int totalMoves = 0;
     private int totalTeamSize = 0;
     private double averagePointsPerMatch = 0.0D;
-    private double averageEloPerMatch = 0.0D;
     private double averageTeamSize = 0.0D;
     private double elo = 100D;
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
@@ -28,10 +26,6 @@ public class LeaderboardEntryDto {
         this.totalGames++;
     }
 
-    public void addTotalGamePoints(int amount) {
-        this.totalGamePoints += amount;
-    }
-
     public void addTotalMoves(int amount) {
         this.totalMoves += amount;
     }
@@ -40,13 +34,8 @@ public class LeaderboardEntryDto {
         this.totalTeamSize += amount;
     }
 
-    public void addElo(double normalizedElo) {
-        this.elo = Math.max(this.elo + normalizedElo, 0D);
-    }
-
     public void calculate() {
         this.averagePointsPerMatch = (double) totalPoints / (double) totalGames;
-        this.averageEloPerMatch = elo / (double) totalGames;
         this.averageTeamSize = (double) totalTeamSize / (double) totalGames;
     }
 }
