@@ -96,6 +96,12 @@ public class RuleMoveService {
                 .orElse(Pair.of(0, 0));
     }
 
+    public boolean isFinish(String ruleMoveId) {
+        return moveRepository.findById(ruleMoveId)
+                .map(RuleMove::isFinishingMove)
+                .orElse(false);
+    }
+
     public RuleMoveDto getById(String ruleMoveId) {
         return moveRepository.findById(ruleMoveId)
                 .map(moveMapper::ruleMoveToRuleMoveDto)

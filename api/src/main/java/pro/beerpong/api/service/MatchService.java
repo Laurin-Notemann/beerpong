@@ -35,6 +35,7 @@ public class MatchService {
 
     private final TeamService teamService;
     private final SeasonRepository seasonRepository;
+    private final RuleMoveService ruleMoveService;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -47,7 +48,7 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository) {
+                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -62,6 +63,7 @@ public class MatchService {
 
         this.teamService = teamService;
         this.seasonRepository = seasonRepository;
+        this.ruleMoveService = ruleMoveService;
     }
 
     private boolean validateCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -77,7 +79,9 @@ public class MatchService {
                         var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
 
                         return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
-                    });
+                    }) && memberDto.getMoves().stream()
+                            .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()))
+                            .count() == 1;
                 }));
     }
 

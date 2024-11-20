@@ -17,7 +17,7 @@ public class LeaderboardEntryDto {
     private double averagePointsPerMatch = 0.0D;
     private double averageEloPerMatch = 0.0D;
     private double averageTeamSize = 0.0D;
-    private double elo = 0;
+    private double elo = 100D;
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
 
     public void addTotalPoints(int amount) {
@@ -41,7 +41,7 @@ public class LeaderboardEntryDto {
     }
 
     public void addElo(double normalizedElo) {
-        this.elo += normalizedElo;
+        this.elo = Math.max(this.elo + normalizedElo, 0D);
     }
 
     public void calculate() {
