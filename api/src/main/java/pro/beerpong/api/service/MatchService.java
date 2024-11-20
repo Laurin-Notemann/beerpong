@@ -90,7 +90,7 @@ public class MatchService {
                 dto.getTeams().stream()
                         .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
                         .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
-                        .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()))
+                        .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()) && matchMoveDto.getCount() == 1)
                         .count() != 1;
     }
 
