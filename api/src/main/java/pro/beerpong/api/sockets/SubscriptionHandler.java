@@ -82,8 +82,7 @@ public class SubscriptionHandler extends TextWebSocketHandler {
     }
 
     public void callEvent(SocketEvent<?> event) {
-        //TODO remove event body
-        LOGGER.debug("SOCKETS: Calling {} event for group {}: {}", event.getScope(), event.getGroupId(), GSON.toJson(event.getBody()));
+        LOGGER.debug("SOCKETS: Calling {} event for group {}", event.getScope(), event.getGroupId());
 
         if (!groupSessions.containsKey(event.getGroupId())) {
             return;

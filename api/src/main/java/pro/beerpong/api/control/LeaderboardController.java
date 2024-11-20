@@ -39,9 +39,9 @@ public class LeaderboardController {
             return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.LEADERBOARD_SEASON_NOT_FOUND);
         } else if (scope.equals("season") && !seasonRepository.existsById(seasonId)) {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+        } else if (scope.equals("season") && !seasonRepository.findById(seasonId).orElseThrow().getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
         }
-
-        //TODO add check if season is of group
 
         var leaderboard = leaderboardService.generateLeaderboard(group, scope, seasonId);
 

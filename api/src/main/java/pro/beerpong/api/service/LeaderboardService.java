@@ -45,7 +45,6 @@ public class LeaderboardService {
                 matches = matchService.streamAllMatchesInSeason(seasonId);
                 players = matchService.streamAllPlayersInSeason(seasonId);
             }
-            //TODO use season setting
             case "today" -> {
                 var season = group.getActiveSeason();
 
