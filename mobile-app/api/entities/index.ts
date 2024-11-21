@@ -191,6 +191,32 @@ export class MatchImpl {
         return this.teams[0];
     }
 
+    private get players(): TeamMemberImpl[] {
+        return this.blueTeam.concat(this.redTeam);
+    }
+    private get matchMoves(): MatchMoveImpl[] {
+        return this.players.flatMap((i) => i.moves);
+    }
+    private get finishMoves(): MatchMoveImpl[] {
+        return this.matchMoves.filter((i) => i.isFinish);
+    }
+
+    private get winnerPlayer(): TeamMemberImpl | null {
+        return (
+            this.players.find(
+                (i) => i.id === this.finishMoves[0]?.teamMemberId
+            ) ?? null
+        );
+    }
+
+    private get winnerTeam(): TeamImpl | null {
+        return (
+            this.teams.find((i) =>
+                i.members.find((j) => j.id === this.winnerPlayer?.id)
+            ) ?? null
+        );
+    }
+
     constructor(
         _data: Components.Schemas.MatchDto,
         _players: Components.Schemas.PlayerDto[],
@@ -258,6 +284,8 @@ export class MatchImpl {
 
             blueTeam: this.blueTeam.map((i) => i.toJSON()),
             redTeam: this.redTeam.map((i) => i.toJSON()),
+
+            winnerTeamId: this.winnerTeam?.id ?? null,
         };
     }
 }

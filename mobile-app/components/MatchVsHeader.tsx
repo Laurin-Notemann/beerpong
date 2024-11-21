@@ -11,7 +11,7 @@ import { TeamId } from './screens/NewMatchAssignTeams';
 const MAX_ITEMS = 4;
 
 export interface MatchVsHeaderProps extends ViewProps {
-    match: Omit<Match, 'date'>;
+    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
 
     hasScore?: boolean;
 }

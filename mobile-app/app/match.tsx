@@ -111,24 +111,17 @@ export default function Page() {
             >
                 <MatchPlayers
                     editable={isEditing}
-                    players={[
-                        ...(match?.blueTeam?.map((i) => ({
-                            ...i,
-                            team: 'blue' as const,
-                        })) ?? []),
-                        ...(match?.redTeam?.map((i) => ({
-                            ...i,
-                            team: 'red' as const,
-                        })) ?? []),
-                    ].map((i) => ({
-                        id: i.id!,
-                        change: i.change,
-                        moves: i.moves,
-                        name: i.name,
-                        avatarUrl: i.avatarUrl,
-                        points: i.points,
-                        team: i.team,
-                    }))}
+                    players={(match?.blueTeam ?? [])
+                        .concat(match?.redTeam ?? [])
+                        .map((i) => ({
+                            id: i.id!,
+                            change: i.change,
+                            moves: i.moves,
+                            name: i.name,
+                            avatarUrl: i.avatarUrl,
+                            points: i.points,
+                            team: i.team,
+                        }))}
                     setMoveCount={setMoveCount}
                 />
                 {isEditing && (
