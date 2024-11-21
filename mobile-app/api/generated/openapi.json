@@ -24,7 +24,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
@@ -58,7 +58,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
@@ -92,7 +92,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
                                 }
@@ -124,7 +124,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListRuleDto"
                                 }
@@ -167,7 +167,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListRuleDto"
                                 }
@@ -215,7 +215,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeRuleMoveDto"
                                 }
@@ -251,7 +251,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeString"
                                 }
@@ -289,7 +289,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeMatchDto"
                                 }
@@ -335,7 +335,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeMatchDto"
                                 }
@@ -367,7 +367,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
                                 }
@@ -407,7 +407,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
                                 }
@@ -447,7 +447,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
                                 }
@@ -479,7 +479,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
                                 }
@@ -519,7 +519,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
                                 }
@@ -555,7 +555,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
                                 }
@@ -581,7 +581,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
@@ -607,7 +607,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
@@ -639,7 +639,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListRuleMoveDto"
                                 }
@@ -679,7 +679,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeRuleMoveDto"
                                 }
@@ -711,7 +711,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListMatchDto"
                                 }
@@ -751,7 +751,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeMatchDto"
                                 }
@@ -777,7 +777,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListProfileDto"
                                 }
@@ -811,7 +811,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
                                 }
@@ -829,7 +829,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeString"
                                 }
@@ -855,7 +855,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListSeasonDto"
                                 }
@@ -887,7 +887,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListPlayerDto"
                                 }
@@ -925,7 +925,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeMatchOverviewDto"
                                 }
@@ -957,7 +957,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListMatchOverviewDto"
                                 }
@@ -995,7 +995,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeLeaderboardDto"
                                 }
@@ -1021,7 +1021,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
                                 }
@@ -1046,11 +1046,7 @@
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "object" }
-                            }
-                        }
+                        "content": { "*/*": { "schema": { "type": "object" } } }
                     }
                 }
             }
@@ -1083,7 +1079,7 @@
                     "200": {
                         "description": "OK",
                         "content": {
-                            "application/json": {
+                            "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeString"
                                 }
@@ -1123,6 +1119,7 @@
                 }
             },
             "GroupDto": {
+                "required": ["id"],
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
