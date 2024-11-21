@@ -19,6 +19,6 @@ public class Match {
     @JoinColumn(name = "season_id")
     private Season season;
 
-    @OneToMany(mappedBy = "match")
+    @OneToMany(mappedBy = "match", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Team> teams;
 }

@@ -9,4 +9,5 @@ public interface MatchMoveRepository extends JpaRepository<MatchMove, String> {
 
     List<MatchMove> findAllByTeamMemberId(String teamMemberId);
 
+    void deleteAllByTeamMemberId(String teamMemberId);
 }

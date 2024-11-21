@@ -284,7 +284,7 @@ public class MatchService {
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
-        matchRepository.findById(id).ifPresentOrElse(match -> {
+        Optional.ofNullable(getMatchById(id)).ifPresentOrElse(match -> {
             var season = seasonRepository.findById(seasonId).orElse(null);
 
             if (season == null) {
@@ -299,7 +299,9 @@ public class MatchService {
 
             if (season.getEndDate() == null) {
                 if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, matchToMatchDto(match)));
+                    match.getTeamMembers().forEach(teamMemberDto -> matchMoveRepository.deleteAllByTeamMemberId(teamMemberDto.getId()));
+
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, match));
 
                     matchRepository.deleteById(id);
                 } else {
