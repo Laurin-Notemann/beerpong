@@ -9,6 +9,8 @@ import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.util.RankingAlgorithm;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,10 +70,24 @@ public class LeaderboardService {
         Map<String, String> memberToProfile = Maps.newHashMap();
 
         players.forEach(playerDto -> {
-            var dto = new LeaderboardEntryDto();
+            var dto = entries.getOrDefault(playerDto.getProfile().getId(), new LeaderboardEntryDto());
 
-            //TODO change to profileId
-            dto.setPlayerId(playerDto.getId());
+            // if no player is saved we set the player
+            if (dto.getPlayerDto() == null) {
+                dto.setPlayerDto(playerDto);
+            // if the current player is from the active season we set him
+            } else if (playerDto.getSeason().getEndDate() == null) {
+                dto.setPlayerDto(playerDto);
+            // if the season of the current player is closer to now than the saved season we set the newer player
+            } else if (dto.getPlayerDto().getSeason().getEndDate() != null && Duration.between(
+                            ZonedDateTime.now(),
+                            playerDto.getSeason().getEndDate())
+                    .compareTo(Duration.between(
+                            ZonedDateTime.now(),
+                            dto.getPlayerDto().getSeason().getEndDate()
+                    )) < 0) {
+                dto.setPlayerDto(playerDto);
+            }
 
             entries.put(playerDto.getProfile().getId(), dto);
         });
@@ -220,7 +236,8 @@ public class LeaderboardService {
 
             // sort the stream based on the current algorithm
             switch (value) {
-                case AVERAGE -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
+                case AVERAGE ->
+                        stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
                 case ELO -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getElo(), o1.getElo()));
             }
 
