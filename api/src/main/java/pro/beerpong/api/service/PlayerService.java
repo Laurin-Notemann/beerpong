@@ -72,6 +72,11 @@ public class PlayerService {
                 return;
             }
 
+            if (!season.getGroupId().equals(groupId)) {
+                error.set(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return;
+            }
+
             if (season.getEndDate() == null) {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));

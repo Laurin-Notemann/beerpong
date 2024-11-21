@@ -97,6 +97,7 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **matchCreate:** When a match is created
 * **matchUpdate:** When a match is updated
+* **matchDelete:** When a match is delete
 
 #### Players (body: PlayerDto)
 

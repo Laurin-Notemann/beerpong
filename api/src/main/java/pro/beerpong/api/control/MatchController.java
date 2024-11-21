@@ -131,4 +131,15 @@ public class MatchController {
 
         return ResponseEnvelope.ok(matchService.updateMatch(pair.getFirst(), match, matchCreateDto));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseEnvelope<String>> deleteMatchById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        var error = matchService.deleteMatch(id, seasonId, groupId);
+
+        if (error == null) {
+            return ResponseEnvelope.ok("OK");
+        } else {
+            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, error);
+        }
+    }
 }

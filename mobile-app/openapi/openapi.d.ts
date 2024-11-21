@@ -323,6 +323,21 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeRuleMoveDto;
         }
     }
+    namespace DeleteMatchById {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
     namespace DeletePlayer {
         namespace Parameters {
             export type GroupId = string;
@@ -769,6 +784,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
     /**
+     * deleteMatchById
+     */
+    'deleteMatchById'(
+        parameters?: Parameters<Paths.DeleteMatchById.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteMatchById.Responses.$200>;
+    /**
      * getSeasonById
      */
     'getSeasonById'(
@@ -1039,6 +1062,14 @@ export interface PathsDictionary {
             data?: Paths.UpdateMatch.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateMatch.Responses.$200>;
+        /**
+         * deleteMatchById
+         */
+        'delete'(
+            parameters?: Parameters<Paths.DeleteMatchById.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteMatchById.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{id}']: {
         /**
