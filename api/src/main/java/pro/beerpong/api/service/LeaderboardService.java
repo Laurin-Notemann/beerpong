@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.util.RankingAlgorithm;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,16 +19,18 @@ import java.util.stream.Stream;
 
 @Service
 public class LeaderboardService {
-    private final RuleMoveService ruleMoveService;
-    private final MatchService matchService;
-
     private static final double K_FACTOR = 10D;
     private static final int ELO_DIVIDER = 400;
 
+    private final RuleMoveService ruleMoveService;
+    private final MatchService matchService;
+    private final PlayerRepository playerRepository;
+
     @Autowired
-    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService) {
+    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService, PlayerRepository playerRepository) {
         this.ruleMoveService = ruleMoveService;
         this.matchService = matchService;
+        this.playerRepository = playerRepository;
     }
 
     public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
@@ -62,14 +67,29 @@ public class LeaderboardService {
         }
 
         Map<String, LeaderboardEntryDto> entries = Maps.newHashMap();
-        Map<String, String> memberToPlayer = Maps.newHashMap();
+        Map<String, String> memberToProfile = Maps.newHashMap();
 
         players.forEach(playerDto -> {
-            var dto = new LeaderboardEntryDto();
+            var dto = entries.getOrDefault(playerDto.getProfile().getId(), new LeaderboardEntryDto());
 
-            dto.setPlayerId(playerDto.getId());
+            // if no player is saved we set the player
+            if (dto.getPlayerDto() == null) {
+                dto.setPlayerDto(playerDto);
+            // if the current player is from the active season we set him
+            } else if (playerDto.getSeason().getEndDate() == null) {
+                dto.setPlayerDto(playerDto);
+            // if the season of the current player is closer to now than the saved season we set the newer player
+            } else if (dto.getPlayerDto().getSeason().getEndDate() != null && Duration.between(
+                            ZonedDateTime.now(),
+                            playerDto.getSeason().getEndDate())
+                    .compareTo(Duration.between(
+                            ZonedDateTime.now(),
+                            dto.getPlayerDto().getSeason().getEndDate()
+                    )) < 0) {
+                dto.setPlayerDto(playerDto);
+            }
 
-            entries.put(playerDto.getId(), dto);
+            entries.put(playerDto.getProfile().getId(), dto);
         });
 
         // go through all matches sorted by date, starting with the earliest
@@ -87,23 +107,22 @@ public class LeaderboardService {
 
                 // go through all team members
                 teamMembers.forEach(teamMemberDto -> {
-                    // create leaderboard entries for all members
-                    if (!entries.containsKey(teamMemberDto.getPlayerId())) {
-                        var dto = new LeaderboardEntryDto();
-
-                        dto.setPlayerId(teamMemberDto.getPlayerId());
-
-                        entries.put(teamMemberDto.getPlayerId(), dto);
-                    }
-
                     // save player id by member id
-                    if (!memberToPlayer.containsKey(teamMemberDto.getTeamId())) {
-                        memberToPlayer.put(teamMemberDto.getId(), teamMemberDto.getPlayerId());
+                    if (!memberToProfile.containsKey(teamMemberDto.getId())) {
+                        var player = playerRepository.findById(teamMemberDto.getPlayerId()).orElse(null);
+
+                        if (player == null) {
+                            return;
+                        }
+
+                        memberToProfile.put(teamMemberDto.getId(), player.getProfile().getId());
                     }
+
+                    var profileId = memberToProfile.get(teamMemberDto.getId());
 
                     // add game and team size to entry
-                    entries.get(teamMemberDto.getPlayerId()).addTotalGames();
-                    entries.get(teamMemberDto.getPlayerId()).addTotalTeamSize(teamMembers.size());
+                    entries.get(profileId).addTotalGames();
+                    entries.get(profileId).addTotalTeamSize(teamMembers.size());
                 });
 
                 AtomicInteger teamPoints = new AtomicInteger();
@@ -113,13 +132,13 @@ public class LeaderboardService {
                 matchDto.getMatchMoves().stream()
                         .filter(dto -> teamMembers.stream().anyMatch(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId())))
                         .forEach(dto -> {
-                            if (!memberToPlayer.containsKey(dto.getTeamMemberId()) ||
-                                    !entries.containsKey(memberToPlayer.get(dto.getTeamMemberId()))) {
+                            if (!memberToProfile.containsKey(dto.getTeamMemberId()) ||
+                                    !entries.containsKey(memberToProfile.get(dto.getTeamMemberId()))) {
                                 return;
                             }
 
                             // get entry and points for this move
-                            var entry = entries.get(memberToPlayer.get(dto.getTeamMemberId()));
+                            var entry = entries.get(memberToProfile.get(dto.getTeamMemberId()));
                             var points = ruleMoveService.getPointsById(dto.getMoveId());
 
                             if (points == null) {
@@ -142,8 +161,12 @@ public class LeaderboardService {
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
                                 teamMembers.forEach(teamMemberDto -> {
-                                    if (entries.containsKey(teamMemberDto.getPlayerId())) {
-                                        entries.get(teamMemberDto.getPlayerId()).addTotalPoints(points.getSecond() * dto.getValue());
+                                    if (memberToProfile.containsKey(teamMemberDto.getId())) {
+                                        var profileId = memberToProfile.get(teamMemberDto.getId());
+
+                                        if (entries.containsKey(profileId)) {
+                                            entries.get(profileId).addTotalPoints(points.getSecond() * dto.getValue());
+                                        }
                                     }
                                 });
                             }
@@ -178,12 +201,16 @@ public class LeaderboardService {
             var loosingTeam = matchDto.getTeams().getFirst().getId().equals(winningTeam.getId()) ? matchDto.getTeams().get(1) : matchDto.getTeams().getFirst();
 
             // calculate team elo averages
-            var winnerEloAvg = calcTeamEloAverage(entries, matchDto, winningTeam);
-            var looserEloAvg = calcTeamEloAverage(entries, matchDto, loosingTeam);
+            var winnerEloAvg = calcTeamEloAverage(entries, memberToProfile, matchDto, winningTeam);
+            var looserEloAvg = calcTeamEloAverage(entries, memberToProfile, matchDto, loosingTeam);
 
             // calculate elo for all team members
             matchDto.getTeamMembers().forEach(teamMemberDto -> {
-                var entry = entries.get(teamMemberDto.getPlayerId());
+                if (!memberToProfile.containsKey(teamMemberDto.getId())) {
+                    return;
+                }
+
+                var entry = entries.get(memberToProfile.get(teamMemberDto.getId()));
 
                 // win: 1.0, loss: 0.0, no draw possible
                 var score = teamMemberDto.getTeamId().equals(winningTeam.getId()) ? 1.0D : 0.0D;
@@ -209,7 +236,8 @@ public class LeaderboardService {
 
             // sort the stream based on the current algorithm
             switch (value) {
-                case AVERAGE -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
+                case AVERAGE ->
+                        stream = stream.sorted((o1, o2) -> Double.compare(o2.getAveragePointsPerMatch(), o1.getAveragePointsPerMatch()));
                 case ELO -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getElo(), o1.getElo()));
             }
 
@@ -223,10 +251,12 @@ public class LeaderboardService {
         return dto;
     }
 
-    private double calcTeamEloAverage(Map<String, LeaderboardEntryDto> entries, MatchDto matchDto, TeamDto teamDto) {
+    private double calcTeamEloAverage(Map<String, LeaderboardEntryDto> entries, Map<String, String> memberToProfile, MatchDto matchDto, TeamDto teamDto) {
         return matchDto.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()) && entries.containsKey(teamMemberDto.getPlayerId()))
-                .map(teamMemberDto -> entries.get(teamMemberDto.getPlayerId()).getElo())
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()) &&
+                        memberToProfile.containsKey(teamMemberDto.getId()) &&
+                        entries.containsKey(memberToProfile.get(teamMemberDto.getId())))
+                .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getElo())
                 .reduce(Double::sum)
                 .orElse(0D) /
                 matchDto.getTeamMembers().stream()

@@ -1602,7 +1602,7 @@
             "LeaderboardEntryDto": {
                 "type": "object",
                 "properties": {
-                    "playerId": { "type": "string" },
+                    "playerDto": { "$ref": "#/components/schemas/PlayerDto" },
                     "totalPoints": { "type": "integer", "format": "int32" },
                     "totalGames": { "type": "integer", "format": "int32" },
                     "totalMoves": { "type": "integer", "format": "int32" },

@@ -36,7 +36,7 @@ declare namespace Components {
             entries?: LeaderboardEntryDto[];
         }
         export interface LeaderboardEntryDto {
-            playerId?: string;
+            playerDto?: PlayerDto;
             totalPoints?: number; // int32
             totalGames?: number; // int32
             totalMoves?: number; // int32
