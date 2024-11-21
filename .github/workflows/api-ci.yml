@@ -1,4 +1,4 @@
-name: Run api tests
+name: Api CI
 
 on: 
   push:
@@ -9,22 +9,22 @@ on:
 
 jobs:
   run-tests: 
-    name: Genereate Api docs
+    name: Run Api tests
     runs-on: ubuntu-20.04
-      #    services:
-      #      postgres:
-      #        image: postgres:15
-      #        env:
-      #          POSTGRES_USER: admin
-      #          POSTGRES_PASSWORD: user
-      #          POSTGRES_DB: beerpong
-      #        ports:
-      #          - 5432:5432
-      #        options: >-
-      #          --health-cmd pg_isready
-      #          --health-interval 10s
-      #          --health-timeout 5s
-      #          --health-retries 5
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: user
+          POSTGRES_DB: beerpong
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: checkout code
@@ -43,10 +43,10 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - run: mvn verify
+      - run: mvn verify -Dspringdoc.skip=true
         env:
-          #          POSTGRES_USER: admin
-          #          POSTGRES_PASSWORD: user
-          #          POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: user
+          POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
         working-directory: api
