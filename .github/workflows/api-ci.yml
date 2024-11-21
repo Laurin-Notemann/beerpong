@@ -1,0 +1,55 @@
+name: Run api tests
+
+on: 
+  push:
+    paths:
+      - "api/src/main/**"
+      - ".github/workflows/api-ci"
+  workflow_dispatch:
+
+jobs:
+  run-tests: 
+    permissions:
+      contents: write
+      pull-requests: write
+    name: Genereate Api docs
+    runs-on: ubuntu-20.04
+      #    services:
+      #      postgres:
+      #        image: postgres:15
+      #        env:
+      #          POSTGRES_USER: admin
+      #          POSTGRES_PASSWORD: user
+      #          POSTGRES_DB: beerpong
+      #        ports:
+      #          - 5432:5432
+      #        options: >-
+      #          --health-cmd pg_isready
+      #          --health-interval 10s
+      #          --health-timeout 5s
+      #          --health-retries 5
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: Set up JDK 21 corretto
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - run: mvn verify
+        env:
+          #          POSTGRES_USER: admin
+          #          POSTGRES_PASSWORD: user
+          #          POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
+          API_BASE_URL: http://localhost:8080/
+        working-directory: api
