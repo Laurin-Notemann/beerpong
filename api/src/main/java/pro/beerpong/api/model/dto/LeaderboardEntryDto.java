@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Data
 public class LeaderboardEntryDto {
-    private String playerId;
+    private PlayerDto playerDto;
     private int totalPoints = 0;
     private int totalGames = 0;
     private int totalMoves = 0;
