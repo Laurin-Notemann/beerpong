@@ -23,7 +23,10 @@ export default function CreateGroupSetName({
                 <Stack.Screen
                     options={{
                         headerRight: () => (
-                            <HeaderItem onPress={() => onSubmit({ name })}>
+                            <HeaderItem
+                                disabled={name.length < 1}
+                                onPress={() => onSubmit({ name })}
+                            >
                                 Create
                             </HeaderItem>
                         ),
