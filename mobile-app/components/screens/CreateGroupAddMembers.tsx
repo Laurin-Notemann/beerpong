@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { TextInput as B, View } from 'react-native';
+import { TextInput as B, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/app/(tabs)/HeaderItem';
@@ -45,65 +45,77 @@ export default function CreateGroupAddMembers({
                     },
                 }}
             />
-            <>
-                <View
-                    style={{
-                        backgroundColor: 'black',
-                        flex: 1,
-
-                        padding: 16,
+            <View
+                style={{
+                    backgroundColor: theme.color.bg,
+                    padding: 16,
+                }}
+            >
+                <TextInput
+                    autoFocus
+                    ref={inputRef}
+                    required
+                    placeholder="Group member name"
+                    returnKeyType="default"
+                    blurOnSubmit={false} // makes the cursor stay in the text field after submitting
+                    onKeyPress={(e) => {
+                        if (e.nativeEvent.key === 'Enter') {
+                            e.preventDefault();
+                        }
                     }}
-                >
-                    <TextInput
-                        ref={inputRef}
-                        required
-                        placeholder="Group member name"
-                        returnKeyType="done"
-                        onSubmitEditing={(event) => {
-                            const name = event.nativeEvent.text.trim();
+                    onSubmitEditing={(event) => {
+                        const name = event.nativeEvent.text.trim();
 
-                            if (name.length) {
-                                setMembers((prev) => [...prev, { name }]);
-                            }
+                        if (name.length) {
+                            setMembers((prev) => [...prev, { name }]);
+                        }
 
-                            inputRef.current?.clear();
+                        inputRef.current?.clear();
+                    }}
+                />
+            </View>
+            <ScrollView
+                style={{
+                    flex: 1,
 
-                            // TODO: we don't want to unfocus the element on submit, but it's still happening :()
-                            event.preventDefault();
-                            event.stopPropagation();
+                    backgroundColor: theme.color.bg,
+                }}
+                contentContainerStyle={{
+                    paddingHorizontal: 16,
+
+                    gap: 8,
+                }}
+            >
+                {members.map((i, idx) => (
+                    <View
+                        key={idx}
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+
+                            height: 60.5,
+                            paddingHorizontal: 20,
                         }}
-                    />
-                    {members.map((i, idx) => (
-                        <View
-                            key={idx}
+                    >
+                        <Avatar name={i.name} size={36} />
+                        <ThemedView
                             style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-
-                                height: 60.5,
-                                paddingHorizontal: 20,
+                                marginLeft: 12,
                             }}
                         >
-                            <Avatar name={i.name} size={36} />
-                            <ThemedView
+                            <ThemedText
                                 style={{
-                                    marginLeft: 12,
+                                    fontSize: 17,
+                                    fontWeight: 500,
+                                    color: theme.color.text.primary,
                                 }}
                             >
-                                <ThemedText
-                                    style={{
-                                        fontSize: 17,
-                                        fontWeight: 500,
-                                        color: theme.color.text.primary,
-                                    }}
-                                >
-                                    {i.name}
-                                </ThemedText>
-                            </ThemedView>
-                        </View>
-                    ))}
-                </View>
-            </>
+                                {i.name}
+                            </ThemedText>
+                        </ThemedView>
+                    </View>
+                ))}
+            </ScrollView>
         </GestureHandlerRootView>
     );
 }

@@ -50,6 +50,7 @@ export default function CreateGroupSetName({
                     }}
                 >
                     <TextInput
+                        autoFocus
                         required
                         placeholder="Group name"
                         returnKeyType="done"

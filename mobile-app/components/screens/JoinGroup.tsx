@@ -51,10 +51,6 @@ export default function JoinGroup({
     });
 
     useEffect(() => {
-        ref.current!.focus();
-    }, [ref]);
-
-    useEffect(() => {
         // auto submit when the user has entered the full code
         if (code.length === env.groupCode.length) {
             onSubmit(code);
@@ -90,6 +86,7 @@ export default function JoinGroup({
                 }}
             >
                 <CodeField
+                    autoFocus
                     ref={ref}
                     {...props}
                     value={code}
