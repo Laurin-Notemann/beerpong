@@ -138,6 +138,9 @@
 						<goals>
 							<goal>generate</goal>
 						</goals>
+            <configuration>
+              <skip>${springdoc.skip}</skip>
+            </configuration>
 					</execution>
 				</executions>
 				<configuration>
