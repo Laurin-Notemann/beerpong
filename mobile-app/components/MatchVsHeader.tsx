@@ -2,10 +2,10 @@ import React from 'react';
 import { Text, View, ViewProps } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Match } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
-import { Match } from './MatchesList';
 import { TeamId } from './screens/NewMatchAssignTeams';
 
 const MAX_ITEMS = 4;

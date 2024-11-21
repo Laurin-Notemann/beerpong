@@ -2,11 +2,12 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
+import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
-import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
+import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { Feature } from '@/constants/Features';
 import { theme } from '@/theme';
@@ -22,6 +23,12 @@ export default function CreateMatchAssignPoints({
     setMoveCount,
     onSubmit,
 }: CreateMatchAssignPointsProps) {
+    const finishes = players.flatMap((i) => i.moves).filter((i) => i.isFinish);
+
+    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
+
+    const isValidGame = numFinishes === 1;
+
     const navigation = useNavigation();
     return (
         <>
@@ -29,11 +36,14 @@ export default function CreateMatchAssignPoints({
                 options={{
                     ...navStyles,
                     headerRight: () => (
-                        <HeaderItem onPress={onSubmit}>Create</HeaderItem>
+                        <HeaderItem disabled={!isValidGame} onPress={onSubmit}>
+                            Create
+                        </HeaderItem>
                     ),
                     headerTitle: () => (
                         <MatchVsHeader
                             match={{
+                                id: '#',
                                 blueCups: players
                                     .filter((i) => i.team === 'blue')
                                     .map((i) => i.moves)

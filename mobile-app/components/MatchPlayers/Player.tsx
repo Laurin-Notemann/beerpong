@@ -7,50 +7,31 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
 import Text from '../Text';
 
-export interface PerformedMove {
-    id: string;
-    title: string;
-    points: number;
-    count: number;
-}
-
-export default function Player({
-    id,
-    avatarUrl,
-    team,
-    name,
-    points,
-    change,
-
-    expanded,
-    setIsExpanded,
-    editable = false,
-
-    moves,
-
-    setMoveCount,
-}: {
-    id: string;
-    avatarUrl?: string | null;
-    team: 'red' | 'blue';
-    name: string;
-    points: number;
-    change: number;
+export interface PlayerProps {
+    player: TeamMember;
 
     expanded: boolean;
     setIsExpanded: (value: boolean) => void;
     editable?: boolean;
 
-    moves: PerformedMove[];
-
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
-}) {
+}
+export default function Player({
+    player: { id, avatarUrl, team, name, points, change, moves },
+
+    expanded,
+    setIsExpanded,
+    editable = false,
+
+    setMoveCount,
+}: PlayerProps) {
     const animation = useRef(new Animated.Value(0)).current; // start with height 0
 
     const toggleCollapse = () => {
@@ -70,11 +51,7 @@ export default function Player({
         outputRange: [0, 44 * 8], // customize the height range based on your content
     });
 
-    const navigation = useNavigation();
-
-    // const [moves, setMoves] = useState(
-    //     mockMoves.map((i) => ({ ...i, count: 0 }))
-    // );
+    const nav = useNavigation();
 
     return (
         <>
@@ -91,7 +68,7 @@ export default function Player({
                 onPress={
                     editable
                         ? toggleCollapse
-                        : () => navigation.navigate('player', { id })
+                        : () => nav.navigate('player', { id })
                 }
                 underlayColor={theme.panel.light.active}
             >
@@ -100,7 +77,7 @@ export default function Player({
                         url={avatarUrl}
                         size={40}
                         name={name}
-                        borderColor={theme.color.team[team]}
+                        borderColor={team ? theme.color.team[team] : undefined}
                     />
                     <View style={{ marginLeft: 16 }}>
                         <Text variant="body1" color="primary">
@@ -119,6 +96,7 @@ export default function Player({
                             ) : (
                                 <Text variant="body2" color="tertiary">
                                     {moves
+                                        .filter((i) => i.count > 0)
                                         .map((i) => i.count + ' ' + i.title)
                                         .join(', ')}
                                 </Text>

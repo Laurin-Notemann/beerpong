@@ -1,19 +1,9 @@
 import React, { useState } from 'react';
 
+import { TeamMember } from '@/api/utils/matchDtoToMatch';
+
 import MenuSection from '../Menu/MenuSection';
-import { TeamId } from '../screens/NewMatchAssignTeams';
-import Player, { PerformedMove } from './Player';
-
-export interface TeamMember {
-    id: string;
-    team: TeamId;
-    avatarUrl?: string | null;
-    name: string;
-    points: number;
-    change: number;
-
-    moves: PerformedMove[];
-}
+import Player from './Player';
 
 export interface MatchPlayersProps {
     editable?: boolean;
@@ -39,19 +29,13 @@ export default function MatchPlayers({
                 {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
-                        id={i.id}
-                        avatarUrl={i.avatarUrl!}
-                        team={i.team!}
-                        name={i.name}
-                        points={i.points}
-                        change={i.change}
+                        player={i}
                         expanded={expandedId === idx}
                         setIsExpanded={(value) =>
                             setExpandedId(value ? idx : null)
                         }
                         editable={editable}
                         setMoveCount={setMoveCount}
-                        moves={i.moves}
                     />
                 ))}
             </MenuSection>
@@ -60,19 +44,13 @@ export default function MatchPlayers({
                 {redTeam.map((i, idx) => (
                     <Player
                         key={idx}
-                        id={i.id}
-                        avatarUrl={i.avatarUrl!}
-                        team={i.team!}
-                        name={i.name}
-                        points={i.points}
-                        change={i.change}
+                        player={i}
                         expanded={expandedId === idx}
                         setIsExpanded={(value) =>
                             setExpandedId(value ? idx : null)
                         }
                         editable={editable}
                         setMoveCount={setMoveCount}
-                        moves={i.moves}
                     />
                 ))}
             </MenuSection>

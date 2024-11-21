@@ -1,11 +1,11 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
+import { Text } from 'react-native';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const nav = useNavigation();
@@ -51,7 +51,28 @@ export default function Page() {
                     ]}
                     value={value}
                     onChange={onValueChange}
-                    footer="Learn more about the elo algorithm"
+                    footer={
+                        <Text
+                            onPress={() => {
+                                // close the modal
+                                nav.goBack();
+                                nav.navigate('static/aboutTheEloAlgorithm');
+                            }}
+                            style={{
+                                fontSize: 13,
+                                lineHeight: 16,
+                                fontWeight: 400,
+                                // color: '#A7A7A7',
+
+                                color: '#6291F3',
+
+                                paddingHorizontal: 16,
+                                paddingVertical: 11,
+                            }}
+                        >
+                            Learn more about the Elo algorithm
+                        </Text>
+                    }
                 />
             </InputModal>
         </>

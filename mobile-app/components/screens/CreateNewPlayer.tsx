@@ -35,7 +35,11 @@ export default function CreateNewPlayer({ onCreate }: CreateNewPlayerProps) {
                 }}
             />
             <InputModal>
-                <Avatar name={name} size={96} />
+                <Avatar
+                    name={name}
+                    size={96}
+                    style={{ marginHorizontal: 'auto' }}
+                />
                 <TextInput
                     required
                     placeholder="Player Name"

@@ -4,8 +4,8 @@ import { useCreateMatchMutation } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { TeamMember } from '@/components/MatchPlayers';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -52,6 +52,8 @@ export default function Page() {
                     count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
                     title: j.name || 'Unknown',
                     points: j.pointsForScorer!,
+                    pointsForTeam: j.pointsForTeam!,
+                    isFinish: j.finishingMove!,
                 };
             }),
         };
@@ -66,6 +68,7 @@ export default function Page() {
                 seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
+            matchDraft.actions.clear();
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);

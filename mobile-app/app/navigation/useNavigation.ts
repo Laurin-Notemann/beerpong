@@ -13,7 +13,6 @@ export type RootStackParamList = {
     editGroupName: { id: string };
     newMatchPoints: undefined;
     createNewPlayer: undefined;
-    aboutPremium: undefined;
     onboarding: undefined;
     editRankPlayersBy: undefined;
     saveSeason: undefined;
@@ -23,6 +22,13 @@ export type RootStackParamList = {
     matches: undefined;
     editFormationName: undefined;
     newMatch: undefined;
+
+    localSettings: undefined;
+
+    'static/aboutTheEloAlgorithm': undefined;
+    'static/privacyPolicy': undefined;
+    'static/aboutPremium': undefined;
+    'static/aboutUs': undefined;
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 

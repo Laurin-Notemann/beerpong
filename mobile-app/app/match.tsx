@@ -2,15 +2,19 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
 
-import { useMatchQuery } from '@/api/calls/matchHooks';
+import { useDeleteMatchMutation, useMatchQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { navStyles } from '@/app/navigation/navStyles';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
+import { showErrorToast, showSuccessToast } from '@/toast';
+import { ConsoleLogger } from '@/utils/logging';
 
 import { HeaderItem } from './(tabs)/HeaderItem';
 
@@ -27,11 +31,31 @@ export default function Page() {
 
     const matchQuery = useMatchQuery(groupId, seasonId, id);
 
+    const movesQuery = useMoves(groupId, seasonId);
+
+    const allowedMoves = movesQuery.data?.data ?? [];
+
+    const { mutateAsync } = useDeleteMatchMutation();
+
     const match = matchQuery.data?.data
-        ? matchDtoToMatch(players)(matchQuery.data.data)
+        ? matchDtoToMatch(players, allowedMoves)(matchQuery.data.data)
         : null;
 
-    async function onDelete() {}
+    async function onDelete() {
+        if (!groupId || !seasonId || !id) return;
+
+        try {
+            await mutateAsync({
+                groupId,
+                seasonId,
+                id,
+            });
+            showSuccessToast('Deleted match.');
+        } catch (err) {
+            ConsoleLogger.error('failed to delete match:', err);
+            showErrorToast('Failed to delete match.');
+        }
+    }
 
     function setMoveCount(userId: string, moveId: string, count: number) {
         // setPlayers((prev) => {
@@ -49,6 +73,8 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
+                    ...navStyles,
+                    headerBackTitleVisible: false,
                     headerRight: () => (
                         <HeaderItem
                             onPress={() => {
@@ -66,7 +92,9 @@ export default function Page() {
                                     bottom: 4,
                                 }}
                             />
-                        ) : null,
+                        ) : (
+                            ''
+                        ),
                 }}
             />
             <ScrollView
@@ -94,11 +122,11 @@ export default function Page() {
                         })) ?? []),
                     ].map((i) => ({
                         id: i.id!,
-                        change: 0,
-                        moves: [],
+                        change: i.change,
+                        moves: i.moves,
                         name: i.name,
                         avatarUrl: i.avatarUrl,
-                        points: 2,
+                        points: i.points,
                         team: i.team,
                     }))}
                     setMoveCount={setMoveCount}

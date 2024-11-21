@@ -1,13 +1,15 @@
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Switch } from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
+import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 
+import ConfirmationModal from '../ConfirmationModal';
 import copyToClipboard from '../copyToClipboard';
 
 export interface GroupSettingsProps {
@@ -21,7 +23,9 @@ export interface GroupSettingsProps {
 
     groupCode: string;
     onUploadWallpaperPress: () => void;
+    onDeleteWallpaperPress: () => void;
     onLeaveGroup: () => void;
+    wallpaperAsset?: { url?: string | null } | null;
 }
 export default function GroupSettingsScreen({
     id,
@@ -30,8 +34,11 @@ export default function GroupSettingsScreen({
     pushNotificationsEnabled,
     pastSeasons,
     groupCode,
-    onUploadWallpaperPress,
     onLeaveGroup,
+
+    wallpaperAsset,
+    onUploadWallpaperPress,
+    onDeleteWallpaperPress,
 }: GroupSettingsProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -43,6 +50,9 @@ export default function GroupSettingsScreen({
             setIsRefreshing(false);
         }, 2000);
     }, []);
+
+    const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
+        useState(false);
 
     return (
         <RootSiblingParent>
@@ -62,12 +72,14 @@ export default function GroupSettingsScreen({
                 }
             >
                 <MenuSection title="Settings">
-                    <MenuItem
-                        title="Premium Version"
-                        headIcon="check-decagram"
-                        tailIconType="next"
-                        onPress={() => nav.navigate('aboutPremium')}
-                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Premium Version"
+                            headIcon="check-decagram"
+                            tailIconType="next"
+                            onPress={() => nav.navigate('static/aboutPremium')}
+                        />
+                    )}
                     <MenuItem
                         title={groupName}
                         headIcon="pencil-outline"
@@ -78,77 +90,122 @@ export default function GroupSettingsScreen({
                         title="Set Wallpaper"
                         headIcon="image-multiple"
                         tailIconType="next"
-                        onPress={onUploadWallpaperPress}
-                    />
-                    <MenuItem
-                        title="Push Notifications"
-                        headIcon="bell-outline"
-                        tailContent={
-                            <Switch value={pushNotificationsEnabled} />
+                        onPress={() =>
+                            wallpaperAsset?.url
+                                ? setShowChangeWallpaperModal(true)
+                                : onUploadWallpaperPress()
                         }
                     />
+                    <ConfirmationModal
+                        onClose={() => setShowChangeWallpaperModal(false)}
+                        title="Group Wallpaper"
+                        actions={
+                            [
+                                {
+                                    title: 'Upload',
+                                    type: 'confirm',
+
+                                    onPress: () => {
+                                        onUploadWallpaperPress();
+                                        setShowChangeWallpaperModal(false);
+                                    },
+                                },
+                                {
+                                    title: 'Remove',
+                                    type: 'danger',
+
+                                    onPress: () => {
+                                        onDeleteWallpaperPress();
+                                        setShowChangeWallpaperModal(false);
+                                    },
+                                },
+                            ] as const
+                        }
+                        isVisible={showChangeWallpaperModal}
+                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Push Notifications"
+                            headIcon="bell-outline"
+                            tailContent={
+                                <Switch value={pushNotificationsEnabled} />
+                            }
+                        />
+                    )}
                 </MenuSection>
                 <MenuSection title="Management">
-                    <MenuItem
-                        title="Past Seasons"
-                        headIcon="pencil-outline"
-                        tailIconType="next"
-                        tailContent={pastSeasons}
-                        onPress={() => nav.navigate('pastSeasons')}
-                    />
-                    <MenuItem
-                        title="Start new Season"
-                        headIcon="cached"
-                        tailIconType="next"
-                        onPress={() => nav.navigate('saveSeason')}
-                        confirmationPrompt={{
-                            title: 'Start new Season',
-                            description:
-                                'This will reset the leaderboard. All matches and the leaderboard can still be viewed in "Past Seasons".',
-                            buttonText: 'Start new Season',
-                            type: 'confirmBlue',
-                        }}
-                    />
-                    <MenuItem
-                        title="View Statistics"
-                        headIcon="equalizer"
-                        tailIconType="next"
-                    />
+                    {env.isDev && (
+                        <>
+                            <MenuItem
+                                title="Past Seasons"
+                                headIcon="pencil-outline"
+                                tailIconType="next"
+                                tailContent={pastSeasons}
+                                onPress={() => nav.navigate('pastSeasons')}
+                            />
+                            <MenuItem
+                                title="Start new Season"
+                                headIcon="cached"
+                                tailIconType="next"
+                                onPress={() => nav.navigate('saveSeason')}
+                                confirmationPrompt={{
+                                    title: 'Start new Season',
+                                    description:
+                                        'This will reset the leaderboard. All matches and the leaderboard can still be viewed in "Past Seasons".',
+                                    buttonText: 'Start new Season',
+                                    type: 'confirmBlue',
+                                }}
+                            />
+                        </>
+                    )}
+                    {env.isDev && (
+                        <MenuItem
+                            title="View Statistics"
+                            headIcon="equalizer"
+                            tailIconType="next"
+                        />
+                    )}
                     <MenuItem
                         title="Create new Player"
                         headIcon="account-plus-outline"
                         tailIconType="next"
                         onPress={() => nav.navigate('createNewPlayer')}
                     />
-                    <MenuItem
-                        title="Rank Players by"
-                        headIcon="division"
-                        tailIconType="next"
-                        tailContent="Average Points Scored"
-                        onPress={() => nav.navigate('editRankPlayersBy')}
-                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Rank Players by"
+                            headIcon="division"
+                            tailIconType="next"
+                            tailContent="Average Points Scored"
+                            onPress={() => nav.navigate('editRankPlayersBy')}
+                        />
+                    )}
                 </MenuSection>
                 <MenuSection title="Access">
-                    <MenuItem
-                        title="Group Link"
-                        headIcon="link-variant"
-                        tailIconType="copy"
-                    />
-                    <MenuItem
-                        title="Send Invitation"
-                        headIcon="share-outline"
-                        tailIconType="next"
-                    />
-                    <MenuItem
-                        title="Show QR Code"
-                        headIcon="qrcode"
-                        tailIconType="next"
-                    />
-                    <MenuItem
-                        title="Screencast Leaderboard"
-                        headIcon="television"
-                        tailIconType="next"
-                    />
+                    {env.isDev && (
+                        <>
+                            <MenuItem
+                                title="Group Link"
+                                headIcon="link-variant"
+                                tailIconType="copy"
+                            />
+                            <MenuItem
+                                title="Send Invitation"
+                                headIcon="share-outline"
+                                tailIconType="next"
+                            />
+                            <MenuItem
+                                title="Show QR Code"
+                                headIcon="qrcode"
+                                tailIconType="next"
+                            />
+                            <MenuItem
+                                title="Screencast Leaderboard"
+                                headIcon="television"
+                                tailIconType="next"
+                            />
+                        </>
+                    )}
                     <MenuItem
                         title="Code"
                         headIcon="share-outline"
@@ -173,10 +230,11 @@ export default function GroupSettingsScreen({
                             title: 'Leave Group',
                             description:
                                 'Are you sure you want to leave this group?',
+                            buttonText: 'Leave',
                         }}
                     />
                 </MenuSection>
-                {__DEV__ && (
+                {env.isDev && (
                     <MenuSection title="Development">
                         <MenuItem
                             title="Go to Onboarding"
@@ -185,17 +243,9 @@ export default function GroupSettingsScreen({
                             onPress={() => nav.navigate('onboarding')}
                         />
                         <MenuItem
-                            title="Go to Empty Leaderboard"
-                            headIcon="dev-to"
-                            tailIconType="next"
-                            onPress={() => nav.navigate('onboarding')}
-                        />
-                        <MenuItem
                             title="Has Premium"
                             headIcon="dev-to"
-                            tailContent={
-                                <Switch value={pushNotificationsEnabled} />
-                            }
+                            tailContent={<Switch value={false} />}
                         />
                     </MenuSection>
                 )}

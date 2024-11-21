@@ -3,6 +3,8 @@ import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 
 import { env } from '@/api/env';
+import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
+import { Match } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -11,45 +13,13 @@ import Button from './Button';
 import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
 
-export type Match = {
-    id: string;
-    date: Date;
-    redCups: number;
-    blueCups: number;
-    redTeam: { id: string; name: string; avatarUrl?: string | null }[];
-    blueTeam: { id: string; name: string; avatarUrl?: string | null }[];
-};
-
-const groupIntoDays = (matches: Match[]) => {
-    const dayjsMap = matches.reduce(
-        (
-            acc: Record<string, { matches: Match[]; title: string }>,
-            obj: Match
-        ) => {
-            const dayKey = dayjs(obj.date).format('YYYY-MM-DD');
-
-            if (!acc[dayKey]) {
-                acc[dayKey] = {
-                    matches: [],
-                    title: env.format.date.matchesSeperatorDay(dayjs(obj.date)),
-                };
-            }
-            acc[dayKey].matches.push(obj);
-
-            return acc;
-        },
-        {}
-    );
-    return Object.values(dayjsMap);
-};
-
 export interface MatchesListProps {
     matches: Match[];
 }
 export default function MatchesList({ matches }: MatchesListProps) {
     const nav = useNavigation();
 
-    const days = groupIntoDays(matches);
+    const days = groupMatchesByDay(matches);
 
     return (
         <FlatList

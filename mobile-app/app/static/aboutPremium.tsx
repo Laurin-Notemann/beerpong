@@ -1,9 +1,11 @@
+import { Stack } from 'expo-router';
 import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { navStyles } from '@/app/navigation/navStyles';
 import Button from '@/components/Button';
 import { theme } from '@/theme';
 
@@ -67,6 +69,12 @@ function PremiumPerkCard({ title, description }: PremiumPerk) {
 export default function Page() {
     return (
         <GestureHandlerRootView>
+            <Stack.Screen
+                options={{
+                    ...navStyles,
+                    headerTitle: 'About Premium',
+                }}
+            />
             <ScrollView
                 style={{
                     flex: 1,

@@ -62,10 +62,11 @@ export default function MenuSection({
     color = 'light',
 }: MenuSectionProps) {
     return (
-        <>
+        <View>
             {title && <Heading title={title} titleHeadIcon={titleHeadIcon} />}
             <View
                 style={{
+                    alignItems: 'stretch',
                     overflow: 'hidden',
                     borderRadius: 10,
 
@@ -79,29 +80,29 @@ export default function MenuSection({
             >
                 {children}
             </View>
-            {footer && (
+            {typeof footer === 'string' ? (
                 <View
                     style={{
                         paddingHorizontal: 16,
                         paddingVertical: 11,
                     }}
                 >
-                    {typeof footer === 'string' ? (
-                        <Text
-                            style={{
-                                fontSize: 13,
-                                lineHeight: 16,
-                                fontWeight: 400,
-                                color: '#A7A7A7',
-                            }}
-                        >
-                            {footer}
-                        </Text>
-                    ) : (
-                        footer
-                    )}
+                    <Text
+                        style={{
+                            fontSize: 13,
+                            lineHeight: 16,
+                            fontWeight: 400,
+                            // color: '#A7A7A7',
+
+                            color: '#6291F3',
+                        }}
+                    >
+                        {footer}
+                    </Text>
                 </View>
+            ) : (
+                footer
             )}
-        </>
+        </View>
     );
 }

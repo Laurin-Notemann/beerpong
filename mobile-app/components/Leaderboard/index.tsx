@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, ViewProps } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -9,11 +9,17 @@ import Text from '../Text';
 import { ThemedView } from '../ThemedView';
 import LeaderboardPlayerItem from './LeaderboardPlayerItem';
 
-export interface LeaderboardProps {
+export interface LeaderboardProps extends ViewProps {
     players: Player[];
+
+    withPodium?: boolean;
 }
 
-export default function Leaderboard({ players }: LeaderboardProps) {
+export default function Leaderboard({
+    players,
+    withPodium = true,
+    ...rest
+}: LeaderboardProps) {
     const nav = useNavigation();
 
     const minMatchesRequiredToBeRanked = 1;
@@ -27,19 +33,26 @@ export default function Leaderboard({ players }: LeaderboardProps) {
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked
     );
-    const nonPodiumPlayers = rankedPlayers.slice(3);
+    const nonPodiumPlayers = withPodium
+        ? rankedPlayers.slice(3)
+        : rankedPlayers;
 
     const unrankedPlayers = sortedPlayers.filter(
         (i) => i.matches < minMatchesRequiredToBeRanked
     );
 
     return (
-        <>
-            <Podium
-                firstPlace={rankedPlayers[0]}
-                secondPlace={rankedPlayers[1]}
-                thirdPlace={rankedPlayers[2]}
-            />
+        <View
+            {...rest}
+            style={[rest.style, { width: '100%', alignItems: 'center' }]}
+        >
+            {withPodium && (
+                <Podium
+                    firstPlace={rankedPlayers[0]}
+                    secondPlace={rankedPlayers[1]}
+                    thirdPlace={rankedPlayers[2]}
+                />
+            )}
             <ThemedView
                 style={{
                     alignSelf: 'stretch',
@@ -52,7 +65,7 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                         key={idx}
                         name={i.name}
                         id={i.id}
-                        placement={idx + 4}
+                        placement={idx + (withPodium ? 4 : 1)}
                         points={i.points}
                         matches={i.matches}
                         elo={i.elo}
@@ -130,6 +143,6 @@ export default function Leaderboard({ players }: LeaderboardProps) {
                     </Pressable>
                 )}
             </ThemedView>
-        </>
+        </View>
     );
 }

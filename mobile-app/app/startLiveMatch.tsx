@@ -4,14 +4,13 @@ import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { navStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
 import { flipFormation, Formation } from '@/components/CupGrid/Formation';
 import LiveMatchCupControls from '@/components/LiveMatchCupControls';
 import { theme } from '@/theme';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { navStyles } from './navigation/navStyles';
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Screen() {
     const [redCups, setRedCups] = useState(Formation.Pyramid_10);

@@ -1,11 +1,10 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
 
 export default function Page() {
     const [value, setValue] = useState('');
@@ -17,7 +16,7 @@ export default function Page() {
                     headerRight: () => <HeaderItem noMargin>Done</HeaderItem>,
 
                     headerTitle: 'Formation Name',
-                    headerBackTitle: '',
+                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
 

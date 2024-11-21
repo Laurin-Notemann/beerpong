@@ -81,7 +81,8 @@ export default function MenuItem({
                     flexDirection: 'row',
                     alignItems: 'center',
 
-                    height: subtitle ? 60 : 50,
+                    height: subtitle ? undefined : 50,
+
                     paddingLeft: 16,
                     paddingRight: 9,
 
@@ -113,6 +114,8 @@ export default function MenuItem({
                                 paddingVertical: 12,
 
                                 marginRight: 'auto',
+
+                                flex: 1,
                             }}
                         >
                             <Text
@@ -135,10 +138,7 @@ export default function MenuItem({
                                     lineHeight: 16,
                                     fontWeight: 400,
                                     color: '#A6A6A6',
-
-                                    flex: 1,
                                 }}
-                                numberOfLines={1}
                             >
                                 {subtitle}
                             </Text>

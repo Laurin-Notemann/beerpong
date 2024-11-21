@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import {
@@ -12,6 +13,7 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
+import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -19,6 +21,9 @@ import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 import { modalStyles } from './navigation/modalStyles';
+
+// https://sentry.io is a error reporting SaaS we use to remotely track production issues
+Sentry.init(env.sentry);
 
 const Drawer = createDrawerNavigator();
 
@@ -79,7 +84,7 @@ export default function RootLayout() {
                             drawerContent={Sidebar}
                         >
                             <Drawer.Screen
-                                name="aboutPremium"
+                                name="static/aboutPremium"
                                 component={Everything}
                             />
                         </Drawer.Navigator>

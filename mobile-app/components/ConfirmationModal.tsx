@@ -9,7 +9,9 @@ export interface ConfirmationModalProps {
     onClose?: () => void;
 
     title: string;
-    description: string;
+    description?: string;
+
+    header?: boolean;
 
     actions: {
         type?: 'default' | 'confirm' | 'danger';
@@ -25,6 +27,8 @@ export default function ConfirmationModal({
     description,
 
     actions,
+
+    header = true,
 }: ConfirmationModalProps) {
     return (
         <Modal
@@ -41,39 +45,43 @@ export default function ConfirmationModal({
                     overflow: 'hidden',
                 }}
             >
-                <View
-                    style={{
-                        alignItems: 'center',
-
-                        paddingHorizontal: 16,
-                        paddingVertical: 18,
-                    }}
-                >
-                    <Text
+                {header && (
+                    <View
                         style={{
-                            fontSize: 15,
-                            lineHeight: 22,
-                            fontWeight: 500,
-                            color: theme.color.text.primary,
+                            alignItems: 'center',
 
-                            textAlign: 'center',
+                            paddingHorizontal: 16,
+                            paddingVertical: 18,
                         }}
                     >
-                        {title}
-                    </Text>
-                    <Text
-                        style={{
-                            fontSize: 15,
-                            lineHeight: 22,
-                            fontWeight: 400,
-                            color: theme.color.text.primary,
+                        <Text
+                            style={{
+                                fontSize: 15,
+                                lineHeight: 22,
+                                fontWeight: 500,
+                                color: theme.color.text.primary,
 
-                            textAlign: 'center',
-                        }}
-                    >
-                        {description}
-                    </Text>
-                </View>
+                                textAlign: 'center',
+                            }}
+                        >
+                            {title}
+                        </Text>
+                        {description && (
+                            <Text
+                                style={{
+                                    fontSize: 15,
+                                    lineHeight: 22,
+                                    fontWeight: 400,
+                                    color: theme.color.text.primary,
+
+                                    textAlign: 'center',
+                                }}
+                            >
+                                {description}
+                            </Text>
+                        )}
+                    </View>
+                )}
                 {actions.map((i, idx) => (
                     <TouchableHighlight
                         key={idx}
@@ -86,8 +94,13 @@ export default function ConfirmationModal({
                             paddingLeft: 16,
                             paddingRight: 9,
 
+                            marginTop: header ? 0 : idx === 0 ? 18 : 0,
+
                             borderTopWidth: 0.5,
-                            borderTopColor: theme.panel.light.active,
+                            borderBottomWidth:
+                                idx === actions.length - 1 ? 0.5 : 0,
+
+                            borderColor: '#4A4A4A',
                         }}
                         underlayColor="#4A4A4A"
                         onPress={i.onPress}

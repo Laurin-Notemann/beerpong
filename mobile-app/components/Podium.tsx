@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ViewProps } from 'react-native';
+import { TouchableOpacity, ViewProps } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -50,7 +50,8 @@ export default function Podium({
                 rest.style,
             ]}
         >
-            <Pressable
+            <TouchableOpacity
+                activeOpacity={0.6}
                 style={{ alignItems: 'center', marginTop: 48 }}
                 onPress={() =>
                     secondPlace && nav.navigate('player', secondPlace)
@@ -115,8 +116,9 @@ export default function Podium({
                         )}
                     </>
                 )}
-            </Pressable>
-            <Pressable
+            </TouchableOpacity>
+            <TouchableOpacity
+                activeOpacity={0.6}
                 onPress={() => firstPlace && nav.navigate('player', firstPlace)}
                 style={{
                     alignItems: 'center',
@@ -192,8 +194,9 @@ export default function Podium({
                         )}
                     </>
                 )}
-            </Pressable>
-            <Pressable
+            </TouchableOpacity>
+            <TouchableOpacity
+                activeOpacity={0.6}
                 style={{ alignItems: 'center', marginTop: 48 }}
                 onPress={() => thirdPlace && nav.navigate('player', thirdPlace)}
             >
@@ -254,7 +257,7 @@ export default function Podium({
                         )}
                     </>
                 )}
-            </Pressable>
+            </TouchableOpacity>
         </ThemedView>
     );
 }

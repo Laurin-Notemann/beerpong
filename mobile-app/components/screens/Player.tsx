@@ -1,16 +1,18 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { env } from '@/api/env';
+import { Match } from '@/api/utils/matchDtoToMatch';
 import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
-import MatchesList, { Match } from '@/components/MatchesList';
+import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -63,6 +65,9 @@ export default function PlayerScreen({
             <Stack.Screen
                 options={{
                     ...navStyles,
+
+                    headerBackTitleVisible: false,
+                    title: '',
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
@@ -120,50 +125,60 @@ export default function PlayerScreen({
                     matchesPlayedCount={matches.length}
                     elo={elo}
                 />
-                {editable ? (
-                    <MenuSection
-                        style={{
-                            width: '100%',
-                        }}
-                    >
-                        <MenuItem
-                            title={name}
-                            headIcon="pencil-outline"
-                            onPress={() =>
-                                nav.navigate('editPlayerName', { id })
-                            }
-                            tailIconType="next"
-                        />
-                        <MenuItem
-                            title="Delete Player"
-                            headIcon="delete-outline"
-                            onPress={onDelete}
-                            type="danger"
-                            confirmationPrompt={{
-                                title: 'Delete Player',
-                                description:
-                                    'Are you sure you want to delete this player?',
-                            }}
-                        />
-                    </MenuSection>
-                ) : (
-                    <>
+                <View style={{ alignItems: 'stretch' }}>
+                    {editable ? (
                         <MenuSection
-                            style={{
-                                alignSelf: 'stretch',
-                            }}
+                            style={
+                                {
+                                    // width: '100%',
+                                }
+                            }
                         >
                             <MenuItem
-                                title="Past Seasons"
+                                title={name}
                                 headIcon="pencil-outline"
-                                tailContent={pastSeasons}
+                                onPress={() =>
+                                    nav.navigate('editPlayerName', { id })
+                                }
                                 tailIconType="next"
-                                onPress={() => nav.navigate('pastSeasons')}
+                            />
+                            <MenuItem
+                                title="Delete Player"
+                                headIcon="delete-outline"
+                                onPress={onDelete}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Delete Player',
+                                    description:
+                                        'Are you sure you want to delete this player?',
+                                }}
                             />
                         </MenuSection>
-                        <MatchesList matches={matches} />
-                    </>
-                )}
+                    ) : (
+                        env.isDev && (
+                            <>
+                                <MenuSection
+                                    style={
+                                        {
+                                            // width: '100%',
+                                        }
+                                    }
+                                >
+                                    <MenuItem
+                                        title="Past Seasons"
+                                        headIcon="pencil-outline"
+                                        tailContent={pastSeasons}
+                                        tailIconType="next"
+                                        onPress={() =>
+                                            nav.navigate('pastSeasons')
+                                        }
+                                    />
+                                </MenuSection>
+                                <MatchesList matches={matches} />
+                            </>
+                        )
+                    )}
+                </View>
             </ScrollView>
         </GestureHandlerRootView>
     );

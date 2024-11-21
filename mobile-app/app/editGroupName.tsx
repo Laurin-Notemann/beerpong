@@ -2,14 +2,13 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 
 import { useGroupQuery, useUpdateGroupMutation } from '@/api/calls/groupHooks';
+import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-
-import { HeaderItem } from './(tabs)/HeaderItem';
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const nav = useNavigation();
@@ -50,7 +49,7 @@ export default function Page() {
                     ),
 
                     headerTitle: 'Player Name',
-                    headerBackTitle: '',
+                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
 

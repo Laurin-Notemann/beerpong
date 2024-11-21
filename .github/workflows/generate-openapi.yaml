@@ -1,13 +1,13 @@
 name: Generate OpenApi
 
-on: 
+on:
   pull_request:
-    branches: 
+    branches:
       - main
   workflow_dispatch:
 
 jobs:
-  generate-docs: 
+  generate-docs:
     permissions:
       contents: write
       pull-requests: write
@@ -35,21 +35,20 @@ jobs:
           token: ${{ secrets.PAT }}
           fetch-depth: 2
 
-            
       - name: Check recent commit authors
         id: check_authors
         run: |
           # Fetch the PR base branch
           git fetch origin ${{ github.base_ref }}
-          
+
           # Get the merge base between the PR head and base
           MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-          
+
           # Check the commits between the merge base and HEAD
           COMMIT_AUTHORS=$(git log $MERGE_BASE..HEAD --format='%h - %cn <%ce> - %s')
           echo "Commit authors since merge base:"
           echo "$COMMIT_AUTHORS"
-          
+
           if echo "$COMMIT_AUTHORS" | grep -q "github-actions"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
             echo "A recent commit was authored by a GitHub bot. Stopping the workflow."
@@ -64,9 +63,9 @@ jobs:
         if: steps.check_authors.outputs.has_bot_author != 'true'
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'corretto'
-          cache: 'maven'
+          java-version: "21"
+          distribution: "corretto"
+          cache: "maven"
 
       - name: Cache Maven packages
         if: steps.check_authors.outputs.has_bot_author != 'true'
@@ -100,9 +99,9 @@ jobs:
         if: steps.check_authors.outputs.has_bot_author != 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'mobile-app/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "mobile-app/package-lock.json"
 
       - run: npm ci && npm run gen-types && npm run format
         if: steps.check_authors.outputs.has_bot_author != 'true'
@@ -110,4 +109,4 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: steps.check_authors.outputs.has_bot_author != 'true'
         with:
-          commit_message: 'chore: update openapi types'
+          commit_message: "chore: update openapi types"

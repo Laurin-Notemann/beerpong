@@ -23,13 +23,16 @@ export default function CreateGroupSetName({
                 <Stack.Screen
                     options={{
                         headerRight: () => (
-                            <HeaderItem onPress={() => onSubmit({ name })}>
+                            <HeaderItem
+                                disabled={name.length < 1}
+                                onPress={() => onSubmit({ name })}
+                            >
                                 Create
                             </HeaderItem>
                         ),
 
                         headerTitle: 'Create Group',
-                        headerBackTitle: '',
+                        headerBackTitleVisible: false,
                         headerBackVisible: true,
                         headerTintColor: '#fff',
 
@@ -50,6 +53,7 @@ export default function CreateGroupSetName({
                     }}
                 >
                     <TextInput
+                        autoFocus
                         required
                         placeholder="Group name"
                         returnKeyType="done"
