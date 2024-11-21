@@ -14,6 +14,7 @@ import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
 import Avatar from '../Avatar';
+import Text from '../Text';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
@@ -27,6 +28,8 @@ export default function CreateGroupAddMembers({
     onSubmit,
 }: CreateGroupAddMembersProps) {
     const [members, setMembers] = useState<GroupMember[]>([]);
+
+    const [value, setValue] = useState('');
 
     const inputRef = useRef<B>(null);
 
@@ -77,13 +80,14 @@ export default function CreateGroupAddMembers({
                             e.preventDefault();
                         }
                     }}
+                    onChangeText={(text) => setValue(text.trim())}
                     onSubmitEditing={(event) => {
                         const name = event.nativeEvent.text.trim();
 
                         if (name.length) {
                             setMembers((prev) => [...prev, { name }]);
                         }
-
+                        setValue('');
                         inputRef.current?.clear();
                     }}
                 />
@@ -100,6 +104,11 @@ export default function CreateGroupAddMembers({
                     gap: 8,
                 }}
             >
+                {members.length < 1 && value.length > 0 && (
+                    <Text color="secondary" style={{ textAlign: 'center' }}>
+                        Press enter to create player "{value}"
+                    </Text>
+                )}
                 {members.map((i, idx) => (
                     <View
                         key={idx}
