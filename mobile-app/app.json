@@ -1,7 +1,7 @@
 {
     "expo": {
-        "name": "mobile-app",
-        "slug": "mobile-app",
+        "name": "beerpong-tournament",
+        "slug": "beerpong-tournament",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
@@ -48,6 +48,7 @@
             "eas": {
                 "projectId": "8dbfe974-43ce-4f4e-b3d8-cf6f77109412"
             }
-        }
+        },
+        "owner": "beerpong"
     }
 }

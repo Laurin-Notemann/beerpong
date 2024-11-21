@@ -1,12 +1,12 @@
-name: Api Deploy on Google
+name: Api Staging Deploy
 
 on:
   push:
     branches:
-      - "main"
+      - "staging"
     paths:
       - "api/**"
-      - ".github/workflows/api-cd.yml"
+      - ".github/workflows/api-cd-staging.yml"
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    name: Build and push to Google ACR
+    name: Build and push staging image to Google ACR
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -51,13 +51,13 @@ jobs:
           context: api
           file: ./api/Dockerfile
           platforms: linux/amd64
-          tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}
+          tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}
 
   deploy-api:
     permissions:
       id-token: write
       contents: read
-    name: "Deploy api on Cloud Run"
+    name: "Deploy staging api on Cloud Run"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -77,13 +77,13 @@ jobs:
       - id: 'deploy'
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          service: 'api-springboot'
-          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}'
+          service: 'api-springboot-staging'
+          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}'
           region: europe-west10
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg --no-cpu-throttling --min-instances 1 --max-instances 15'
+          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:beerpong-staging-db --no-cpu-throttling --min-instances 0 --max-instances 1'
           env_vars: |
             POSTGRES_USER=postgres
-            POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory
-            API_BASE_URL=https://beerpong.lb.laurinnotemann.dev
+            POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:beerpong-staging-db&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+            API_BASE_URL=https://beerpong.lb.staging.laurinnotemann.dev
           secrets: |-
-            POSTGRES_PASSWORD=api-pg-password:latest
+            POSTGRES_PASSWORD=api-staging-postrgres-password:latest
