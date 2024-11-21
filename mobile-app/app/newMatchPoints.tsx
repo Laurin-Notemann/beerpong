@@ -66,6 +66,7 @@ export default function Page() {
                 seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
+            matchDraft.actions.clear();
             nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
