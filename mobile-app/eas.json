@@ -16,7 +16,7 @@
             "ios": {
                 "simulator": true
             }
-        },    
+        },
         "staging": {
             "env": {
                 "EXPO_PUBLIC_API_BASE_URL": "beerpong.lb.laurinnotemann.dev"
