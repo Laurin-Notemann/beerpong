@@ -1,13 +1,16 @@
 import dayjs from 'dayjs';
-import { Text } from 'react-native';
+import { useState } from 'react';
+import { Text, TouchableOpacity } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import Leaderboard from '@/components/Leaderboard';
 import { theme } from '@/theme';
 
@@ -16,8 +19,40 @@ export default function Page() {
 
     const { players } = useLeaderboardProps(groupId, seasonId ?? null);
 
+    const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
+        useState(false);
+
+    const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
+        'ELO'
+    );
+
     return (
         <GestureHandlerRootView>
+            <ConfirmationModal
+                onClose={() => setShowChangeWallpaperModal(false)}
+                title="Sort Players By"
+                actions={
+                    [
+                        {
+                            title: 'Elo (Group Default)',
+
+                            onPress: () => {
+                                setSortingAlgorithm('ELO');
+                                setShowChangeWallpaperModal(false);
+                            },
+                        },
+                        {
+                            title: 'Average Points Scored',
+
+                            onPress: () => {
+                                setSortingAlgorithm('AVERAGE');
+                                setShowChangeWallpaperModal(false);
+                            },
+                        },
+                    ] as const
+                }
+                isVisible={showChangeWallpaperModal}
+            />
             <ScrollView
                 style={{
                     flex: 1,
@@ -40,6 +75,11 @@ export default function Page() {
                           )}`
                         : null}
                 </Text>
+                <TouchableOpacity
+                    onPress={() => setShowChangeWallpaperModal(true)}
+                >
+                    <Icon color="#fff" size={24} name="sort" />
+                </TouchableOpacity>
                 <Text
                     style={{
                         fontSize: 17,

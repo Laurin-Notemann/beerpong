@@ -208,13 +208,12 @@ export function Sidebar({}: SidebarProps) {
             </MenuSection>
 
             <ConfirmationModal
-                header={false}
                 onClose={() => setShowAddGroupModal(false)}
-                title=""
+                title="Add Group"
                 actions={
                     [
                         {
-                            title: 'Create Group',
+                            title: 'Create',
                             type: 'default',
 
                             onPress: () => {
@@ -223,7 +222,7 @@ export function Sidebar({}: SidebarProps) {
                             },
                         },
                         {
-                            title: 'Join Group',
+                            title: 'Join',
                             type: 'default',
 
                             onPress: () => {
