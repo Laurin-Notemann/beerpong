@@ -3,7 +3,7 @@ name: Api CI
 on: 
   push:
     paths:
-      - "api/src/main/**"
+      - "api/**"
       - ".github/workflows/api-ci.yml"
   workflow_dispatch:
 
