@@ -71,8 +71,6 @@ public class CreateMatchTest {
         assertEquals(prerequisiteGroup, group);
         assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
-        assertNotNull(group.getGroupSettings());
-        assertNotNull(group.getGroupSettings().getId());
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
@@ -97,19 +95,33 @@ public class CreateMatchTest {
         createRulemMoveDto.setFinishingMove(false);
         createRulemMoveDto.setPointsForTeam(0);
         createRulemMoveDto.setPointsForScorer(1);
+        var createRulemMoveDto1 = new RuleMoveCreateDto();
+        createRulemMoveDto1.setName("RuleMove2");
+        createRulemMoveDto1.setFinishingMove(true);
+        createRulemMoveDto1.setPointsForTeam(1);
+        createRulemMoveDto1.setPointsForScorer(1);
 
         var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto, RuleMoveDto.class);
+        var ruleMoveResponse1 = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto1, RuleMoveDto.class);
 
         assertNotNull(ruleMoveResponse);
+        assertNotNull(ruleMoveResponse1);
         assertEquals(200, ruleMoveResponse.getStatusCode().value());
+        assertEquals(200, ruleMoveResponse1.getStatusCode().value());
 
         ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse.getBody();
+        ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope1 = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse1.getBody();
         assertNotNull(ruleMoveEnvelope);
+        assertNotNull(ruleMoveEnvelope1);
         assertEquals(ResponseEnvelope.Status.OK, ruleMoveEnvelope.getStatus());
+        assertEquals(ResponseEnvelope.Status.OK, ruleMoveEnvelope1.getStatus());
         assertNull(ruleMoveEnvelope.getError());
+        assertNull(ruleMoveEnvelope1.getError());
         assertEquals(200, ruleMoveEnvelope.getHttpCode());
+        assertEquals(200, ruleMoveEnvelope1.getHttpCode());
 
         var ruleMove = ruleMoveEnvelope.getData();
+        var ruleMove1 = ruleMoveEnvelope1.getData();
 
         // Arrange: Erstelle ein MatchCreateDto mit Teams, TeamMembers und Moves
         MatchCreateDto matchCreateDto = new MatchCreateDto();
@@ -127,7 +139,11 @@ public class CreateMatchTest {
         move2.setMoveId(ruleMove.getId());
         move2.setCount(5);
 
-        member1.setMoves(List.of(move1, move2));
+        MatchMoveDto move7 = new MatchMoveDto();
+        move7.setMoveId(ruleMove1.getId());
+        move7.setCount(1);
+
+        member1.setMoves(List.of(move1, move2, move7));
 
         TeamMemberCreateDto member2 = new TeamMemberCreateDto();
         member2.setPlayerId(players.get(1).getId());
@@ -201,10 +217,16 @@ public class CreateMatchTest {
         // Step 2: Create a rule move
         var createRuleMoveDto = new RuleMoveDto();
         createRuleMoveDto.setName("UpdateRuleMove");
+        var createRuleMoveDto1 = new RuleMoveDto();
+        createRuleMoveDto1.setName("UpdateRuleMove");
+        createRuleMoveDto1.setFinishingMove(true);
 
         var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto, RuleMoveDto.class);
+        var ruleMoveResponse1 = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto1, RuleMoveDto.class);
         ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse.getBody();
+        ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope1 = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse1.getBody();
         var ruleMove = ruleMoveEnvelope.getData();
+        var ruleMove1 = ruleMoveEnvelope1.getData();
 
         // Step 3: Create a match with teams and members
         MatchCreateDto matchCreateDto = new MatchCreateDto();
@@ -214,8 +236,8 @@ public class CreateMatchTest {
         TeamMemberCreateDto member1 = new TeamMemberCreateDto();
         member1.setPlayerId(players.get(0).getId());
         MatchMoveDto move1 = new MatchMoveDto();
-        move1.setMoveId(ruleMove.getId());
-        move1.setCount(3);
+        move1.setMoveId(ruleMove1.getId());
+        move1.setCount(1);
         member1.setMoves(List.of(move1));
         team1.setTeamMembers(List.of(member1));
 

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -17,6 +18,7 @@ import pro.beerpong.api.util.NullablePair;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SeasonService {
@@ -54,12 +56,22 @@ public class SeasonService {
 
         var group = groupOptional.get();
         var season = new Season();
+        var oldSeason = group.getActiveSeason();
 
         season.setStartDate(ZonedDateTime.now());
         season.setGroupId(groupOptional.get().getId());
-        season = seasonRepository.save(season);
+        season.setSeasonSettings(new SeasonSettings());
 
-        var oldSeason = group.getActiveSeason();
+        if (oldSeason != null && oldSeason.getSeasonSettings() != null) {
+            season.getSeasonSettings().setMaxTeamSize(oldSeason.getSeasonSettings().getMaxTeamSize());
+            season.getSeasonSettings().setMinTeamSize(oldSeason.getSeasonSettings().getMinTeamSize());
+            season.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
+            season.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
+            season.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
+            season.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
+        }
+
+        season = seasonRepository.save(season);
 
         if (oldSeason != null) {
             oldSeason.setName(dto.getOldSeasonName());
@@ -83,6 +95,30 @@ public class SeasonService {
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.SEASON_START, groupId, eventDto));
 
         return newDto;
+    }
+
+    public SeasonDto updateSeason(Season season, SeasonUpdateDto dto) {
+        return Optional.ofNullable(season)
+                .map(existingSeason -> {
+                    if (existingSeason.getSeasonSettings() == null) {
+                        dto.getSeasonSettings().setId(null);
+                        existingSeason.setSeasonSettings(dto.getSeasonSettings());
+                    } else {
+                        existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
+                        existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
+                        existingSeason.getSeasonSettings().setMinMatchesToQualify(dto.getSeasonSettings().getMinMatchesToQualify());
+                        existingSeason.getSeasonSettings().setRankingAlgorithm(dto.getSeasonSettings().getRankingAlgorithm());
+                        existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
+                        existingSeason.getSeasonSettings().setWakeTimeHour(dto.getSeasonSettings().getWakeTimeHour());
+                    }
+
+                    var seasonDto = seasonMapper.seasonToSeasonDto(seasonRepository.save(existingSeason));
+
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.SEASON_UPDATE, seasonDto.getGroupId(), seasonDto));
+
+                    return seasonDto;
+                })
+                .orElse(null);
     }
 
     public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId) {
@@ -123,8 +159,12 @@ public class SeasonService {
     }
 
     public SeasonDto getSeasonById(String id) {
-        return seasonRepository.findById(id)
+        return getRawSeasonById(id)
                 .map(seasonMapper::seasonToSeasonDto)
                 .orElse(null);
+    }
+
+    public Optional<Season> getRawSeasonById(String id) {
+        return seasonRepository.findById(id);
     }
 }

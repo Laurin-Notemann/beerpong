@@ -14,9 +14,6 @@ public class Group {
     private String inviteCode;
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn
-    private GroupSettings groupSettings;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn
     private Season activeSeason;
     @OneToOne
     @JoinColumn(name = "assetIdWallpaper")
