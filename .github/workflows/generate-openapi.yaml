@@ -2,10 +2,6 @@ name: Generate OpenApi
 
 on: 
   pull_request:
-    paths:
-      - "api/src/main/**"
-      - ".github/workflows/generate-openapi.yaml"
-      - "mobile-app/**"
     branches: 
       - main
   workflow_dispatch:
