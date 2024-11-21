@@ -4,14 +4,11 @@ on:
   push:
     paths:
       - "api/src/main/**"
-      - ".github/workflows/api-ci"
+      - ".github/workflows/api-ci.yml"
   workflow_dispatch:
 
 jobs:
   run-tests: 
-    permissions:
-      contents: write
-      pull-requests: write
     name: Genereate Api docs
     runs-on: ubuntu-20.04
       #    services:
