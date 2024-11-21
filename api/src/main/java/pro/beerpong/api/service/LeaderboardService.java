@@ -69,6 +69,7 @@ public class LeaderboardService {
         Map<String, LeaderboardEntryDto> entries = Maps.newHashMap();
         Map<String, String> memberToProfile = Maps.newHashMap();
 
+        // create dtos for all players
         players.forEach(playerDto -> {
             var dto = entries.getOrDefault(playerDto.getProfile().getId(), new LeaderboardEntryDto());
 
@@ -125,9 +126,6 @@ public class LeaderboardService {
                     entries.get(profileId).addTotalTeamSize(teamMembers.size());
                 });
 
-                AtomicInteger teamPoints = new AtomicInteger();
-                Map<String, Integer> pointsPerPlayer = Maps.newHashMap();
-
                 // go through all moves made by this team
                 matchDto.getMatchMoves().stream()
                         .filter(dto -> teamMembers.stream().anyMatch(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId())))
@@ -144,15 +142,6 @@ public class LeaderboardService {
                             if (points == null) {
                                 return;
                             }
-
-                            // save points for player and points for team to calculate activity
-                            // here we don't include the pointsForTeam because everybody in the team receives those
-                            pointsPerPlayer.put(dto.getTeamMemberId(), pointsPerPlayer.getOrDefault(dto.getTeamMemberId(), 0) +
-                                    (points.getFirst() * dto.getValue()));
-                            // add points to teamPoints if they are not a move that gains the whole team points
-                            // to reward the player that made the move, without punishing his members for this,
-                            // we don't add those points here but to the players points
-                            teamPoints.addAndGet((points.getSecond() == 0 ? points.getFirst() * dto.getValue() : 0));
 
                             // add total moves and gained points to the scorers entry
                             entry.addTotalMoves(dto.getValue());
@@ -172,7 +161,7 @@ public class LeaderboardService {
                             }
                         });
 
-                // clear team member cache
+                // clear members cache
                 teamMembers.clear();
             });
 
@@ -187,6 +176,7 @@ public class LeaderboardService {
                 return;
             }
 
+            // find the player which made the winning move
             var winningPlayer = matchDto.getTeamMembers().stream()
                     .filter(teamMemberDto -> teamMemberDto.getId().equals(winningMove.getTeamMemberId()))
                     .findFirst()
@@ -197,6 +187,7 @@ public class LeaderboardService {
                 return;
             }
 
+            // save the winner and looser team
             var winningTeam = (winningPlayer.getTeamId().equals(matchDto.getTeams().getFirst().getId()) ? matchDto.getTeams().getFirst() : matchDto.getTeams().get(1));
             var loosingTeam = matchDto.getTeams().getFirst().getId().equals(winningTeam.getId()) ? matchDto.getTeams().get(1) : matchDto.getTeams().getFirst();
 
@@ -245,8 +236,9 @@ public class LeaderboardService {
             stream.forEach(entry -> entry.getRankBy().put(value, ranking.incrementAndGet()));
         }
 
-        // clear entries
+        // clear caches
         entries.clear();
+        memberToProfile.clear();
 
         return dto;
     }
@@ -265,6 +257,7 @@ public class LeaderboardService {
     }
 
     private double expectedScore(double elo1, double elo2) {
+        // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
         return 1.0 / (1 + Math.pow(10, (elo2 - elo1) / ELO_DIVIDER));
     }
 }
