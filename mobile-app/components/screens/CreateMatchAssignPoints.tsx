@@ -22,6 +22,12 @@ export default function CreateMatchAssignPoints({
     setMoveCount,
     onSubmit,
 }: CreateMatchAssignPointsProps) {
+    const finishes = players.flatMap((i) => i.moves).filter((i) => i.isFinish);
+
+    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
+
+    const isValidGame = numFinishes === 1;
+
     const navigation = useNavigation();
     return (
         <>
@@ -29,7 +35,9 @@ export default function CreateMatchAssignPoints({
                 options={{
                     ...navStyles,
                     headerRight: () => (
-                        <HeaderItem onPress={onSubmit}>Create</HeaderItem>
+                        <HeaderItem disabled={!isValidGame} onPress={onSubmit}>
+                            Create
+                        </HeaderItem>
                     ),
                     headerTitle: () => (
                         <MatchVsHeader

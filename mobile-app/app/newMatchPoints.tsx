@@ -52,6 +52,8 @@ export default function Page() {
                     count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
                     title: j.name || 'Unknown',
                     points: j.pointsForScorer!,
+                    pointsForTeam: j.pointsForTeam!,
+                    isFinish: j.finishingMove!,
                 };
             }),
         };

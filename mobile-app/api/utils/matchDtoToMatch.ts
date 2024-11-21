@@ -79,6 +79,8 @@ export const matchDtoToMatch =
                             )?.value ?? 0,
                         title: k.name || 'Unknown',
                         points: k.pointsForScorer!,
+                        pointsForTeam: k.pointsForTeam!,
+                        isFinish: k.finishingMove!,
                     };
                 });
 
@@ -109,6 +111,8 @@ export const matchDtoToMatch =
                             )?.value ?? 0,
                         title: k.name || 'Unknown',
                         points: k.pointsForScorer!,
+                        pointsForTeam: k.pointsForTeam!,
+                        isFinish: k.finishingMove!,
                     };
                 });
 

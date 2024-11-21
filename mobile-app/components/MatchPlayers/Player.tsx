@@ -18,6 +18,8 @@ export interface PerformedMove {
     title: string;
     points: number;
     count: number;
+    pointsForTeam: number;
+    isFinish: boolean;
 }
 
 export default function Player({
