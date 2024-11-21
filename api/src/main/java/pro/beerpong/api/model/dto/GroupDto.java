@@ -1,6 +1,7 @@
 package pro.beerpong.api.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import pro.beerpong.api.model.dao.Season;
 
