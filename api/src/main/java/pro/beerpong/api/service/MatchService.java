@@ -281,6 +281,7 @@ public class MatchService {
         return matchRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
@@ -310,7 +311,7 @@ public class MatchService {
             } else {
                 error.set(ErrorCodes.SEASON_ALREADY_ENDED);
             }
-        }, () -> error.set(ErrorCodes.PLAYER_NOT_FOUND));
+        }, () -> error.set(ErrorCodes.MATCH_NOT_FOUND));
 
         return error.get();
     }

@@ -12,7 +12,7 @@ public class MatchMove {
 
     private int value;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne
     @JoinColumn(name = "team_member_id")
     private TeamMember teamMember;
 
