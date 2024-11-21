@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
 
-import { useMatchQuery } from '@/api/calls/matchHooks';
+import { useDeleteMatchMutation, useMatchQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
@@ -13,6 +13,8 @@ import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
+import { showErrorToast, showSuccessToast } from '@/toast';
+import { ConsoleLogger } from '@/utils/logging';
 
 import { HeaderItem } from './(tabs)/HeaderItem';
 
@@ -33,11 +35,27 @@ export default function Page() {
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
+    const { mutateAsync } = useDeleteMatchMutation();
+
     const match = matchQuery.data?.data
         ? matchDtoToMatch(players, allowedMoves)(matchQuery.data.data)
         : null;
 
-    async function onDelete() {}
+    async function onDelete() {
+        if (!groupId || !seasonId || !id) return;
+
+        try {
+            await mutateAsync({
+                groupId,
+                seasonId,
+                id,
+            });
+            showSuccessToast('Deleted match.');
+        } catch (err) {
+            ConsoleLogger.error('failed to delete match:', err);
+            showErrorToast('Failed to delete match.');
+        }
+    }
 
     function setMoveCount(userId: string, moveId: string, count: number) {
         // setPlayers((prev) => {
