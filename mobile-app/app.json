@@ -1,7 +1,7 @@
 {
     "expo": {
         "name": "beerpong-tournament",
-        "slug": "beerpong-tournament",
+        "slug": "mobile-app",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
