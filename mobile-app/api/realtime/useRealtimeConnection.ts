@@ -82,7 +82,10 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'PROFILES':
-                client.current.logger.info('refetching players');
+                // refetch because apparently the create player event is for profile?
+                refetchGroup(e.groupId);
+
+                client.current.logger.info('refetching profiles');
                 qc.invalidateQueries({
                     predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
