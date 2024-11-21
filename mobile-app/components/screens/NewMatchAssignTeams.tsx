@@ -3,6 +3,7 @@ import React from 'react';
 import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -11,7 +12,6 @@ import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
-import { TeamMember } from '../MatchPlayers';
 import MatchVsHeader from '../MatchVsHeader';
 
 export type TeamId = 'red' | 'blue' | null;
@@ -145,7 +145,9 @@ export default function NewMatchAssignTeams({
                                   <MatchVsHeader
                                       match={{
                                           id: '#',
+                                          // @ts-expect-error TODO: fix typing to only require the fields we actually need
                                           blueTeam,
+                                          // @ts-expect-error TODO: fix typing to only require the fields we actually need
                                           redTeam,
                                           blueCups: 0,
                                           redCups: 0,

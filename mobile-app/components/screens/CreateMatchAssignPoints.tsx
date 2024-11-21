@@ -2,11 +2,12 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
+import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
-import MatchPlayers, { TeamMember } from '@/components/MatchPlayers';
+import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { Feature } from '@/constants/Features';
 import { theme } from '@/theme';
