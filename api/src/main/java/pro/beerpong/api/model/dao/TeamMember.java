@@ -10,7 +10,7 @@ public class TeamMember {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne
     @JoinColumn(name = "team_id")
     private Team team;
 

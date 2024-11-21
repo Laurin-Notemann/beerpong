@@ -281,7 +281,6 @@ public class MatchService {
         return matchRepository.findById(id).orElse(null);
     }
 
-    @Transactional
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
@@ -300,7 +299,30 @@ public class MatchService {
 
             if (season.getEndDate() == null) {
                 if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
-                    match.getTeamMembers().forEach(teamMemberDto -> matchMoveRepository.deleteAllByTeamMemberId(teamMemberDto.getId()));
+                    for (TeamDto team : match.getTeams()) {
+                        String teamId = team.getId();
+
+                        // Step 1: Find all team members associated with the team
+
+                        List<TeamMember> teamMembers = teamMemberRepository.findAllByTeamId(teamId);
+
+                        // Step 2: Loop through each team member
+                        for (TeamMember teamMember : teamMembers) {
+                            String teamMemberId = teamMember.getId();
+
+                            // Step 3: Find all match moves associated with the team member
+                            List<MatchMove> matchMoves = matchMoveRepository.findAllByTeamMemberId(teamMemberId);
+
+                            // Step 4: Delete all match moves
+                            matchMoveRepository.deleteAll(matchMoves);
+                        }
+
+                        // Step 5: Delete all team members
+                        teamMemberRepository.deleteAll(teamMembers);
+                    }
+
+                    // Step 6: Delete all teams
+                    teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
 
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, match));
 
