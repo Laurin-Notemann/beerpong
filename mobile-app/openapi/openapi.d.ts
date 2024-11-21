@@ -23,7 +23,7 @@ declare namespace Components {
             profileNames?: string[];
         }
         export interface GroupDto {
-            id?: string;
+            id: string;
             name?: string;
             inviteCode?: string;
             activeSeason?: Season;
