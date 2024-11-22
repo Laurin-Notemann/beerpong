@@ -39,6 +39,13 @@
                     "project": "beerpong",
                     "organization": "sackverein"
                 }
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "The app accesses your photos to let you choose a picture",
+                    "cameraPermission": "The app accesses your photos to let take a pic"
+                }
             ]
         ],
         "experiments": {
