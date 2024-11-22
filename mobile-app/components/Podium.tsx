@@ -51,6 +51,7 @@ export default function Podium({
             ]}
         >
             <TouchableOpacity
+                disabled={secondPlace == null}
                 activeOpacity={0.6}
                 style={{ alignItems: 'center', marginTop: 48 }}
                 onPress={() =>
@@ -118,6 +119,7 @@ export default function Podium({
                 )}
             </TouchableOpacity>
             <TouchableOpacity
+                disabled={firstPlace == null}
                 activeOpacity={0.6}
                 onPress={() => firstPlace && nav.navigate('player', firstPlace)}
                 style={{
@@ -196,6 +198,7 @@ export default function Podium({
                 )}
             </TouchableOpacity>
             <TouchableOpacity
+                disabled={thirdPlace == null}
                 activeOpacity={0.6}
                 style={{ alignItems: 'center', marginTop: 48 }}
                 onPress={() => thirdPlace && nav.navigate('player', thirdPlace)}
