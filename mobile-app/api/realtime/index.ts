@@ -137,4 +137,7 @@ export class RealtimeClient {
             this.registerHandler('*', handler);
         },
     };
+    public get isOpen(): boolean {
+        return this.ws.OPEN === 1;
+    }
 }
