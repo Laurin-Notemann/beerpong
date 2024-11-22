@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
@@ -21,6 +22,15 @@ export default function MatchesList({ matches }: MatchesListProps) {
 
     const days = groupMatchesByDay(matches);
 
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    }, []);
+
     return (
         <FlatList
             style={{
@@ -28,6 +38,12 @@ export default function MatchesList({ matches }: MatchesListProps) {
                 backgroundColor: theme.color.bg,
             }}
             data={days}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={onRefresh}
+                />
+            }
             renderItem={({ item: day, index: listIndex }) => (
                 <MenuSection key={listIndex} title={day.title}>
                     {day.matches.map((item, index) => (

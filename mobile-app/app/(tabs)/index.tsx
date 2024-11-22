@@ -1,8 +1,9 @@
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 import {
     GestureHandlerRootView,
+    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -25,6 +26,15 @@ export default function Page() {
     const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
         'ELO'
     );
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    }, []);
 
     return (
         <GestureHandlerRootView>
@@ -61,6 +71,12 @@ export default function Page() {
                 contentContainerStyle={{
                     alignItems: 'center',
                 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             >
                 <Text
                     style={{

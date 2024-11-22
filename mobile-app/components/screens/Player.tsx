@@ -1,8 +1,9 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
+    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
@@ -60,6 +61,15 @@ export default function PlayerScreen({
 
     const [editable, setEditable] = useState(false);
 
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    }, []);
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
@@ -90,6 +100,12 @@ export default function PlayerScreen({
                     paddingHorizontal: 16,
                     paddingBottom: 32,
                 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             >
                 <Avatar
                     url={avatarUrl}
