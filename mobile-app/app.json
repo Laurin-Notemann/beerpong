@@ -1,8 +1,8 @@
 {
     "expo": {
         "name": "beerpong-tournament",
-        "slug": "beerpong-tournament",
-        "version": "1.0.0",
+        "slug": "mobile-app",
+        "version": "1.0.1",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
@@ -23,7 +23,9 @@
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
-            }
+            },
+            "permissions": ["android.permission.RECORD_AUDIO"],
+            "package": "com.linusbolls.mobileapp"
         },
         "web": {
             "bundler": "metro",
@@ -38,6 +40,13 @@
                     "url": "https://sentry.io/",
                     "project": "beerpong",
                     "organization": "sackverein"
+                }
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "The app accesses your photos to let you choose a picture",
+                    "cameraPermission": "The app accesses your photos to let take a pic"
                 }
             ]
         ],
