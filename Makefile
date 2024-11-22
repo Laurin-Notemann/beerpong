@@ -54,3 +54,7 @@ app-build-preview:
 app-build-staging: 
 	 cd mobile-app && npx eas-cli build -p ios --profile staging --local --output=../.gen-builds/build.ipa --non-interactive
 
+.PHONY: app-submit-staging
+app-submit-staging: 
+	 cd mobile-app && npx eas-cli submit -p ios --path=../.gen-builds/build.ipa
+
