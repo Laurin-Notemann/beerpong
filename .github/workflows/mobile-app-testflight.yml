@@ -11,6 +11,13 @@ defaults:
     working-directory: mobile-app
 
 jobs:
+  bump-version:
+    name: Bump the version of the app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
   build-testflight:
     name: Build and push app to Apple Testflight
     runs-on: macos-latest
@@ -32,10 +39,10 @@ jobs:
         run: npm ci
 
       - name: Build app
-        run: npx eas-cli build -p ios -- --local --non-interactive --output=./build.ipa
+        run: npx eas-cli build -p ios --profile staging --local --non-interactive --output=./build.ipa
 
       - name: Submit to App Store
-        run: npx eas-cli submit -p ios --path=./build.ipa
+        run: npx eas-cli submit -p ios --path=./build.ipa --non-interactive
 
   build-android-test:
     name: Build and push app to Apple Testflight
@@ -58,9 +65,9 @@ jobs:
         run: npm ci
 
       - name: Build app
-        run: npx eas-cli build -p ios -- --local --non-interactive --output=./build.ipa
+        run: npx eas-cli build -p android --profile staging --local --non-interactive --output=./build.ipa
 
       - name: Submit to App Store
-        run: npx eas-cli submit -p ios --path=./build.ipa
+        run: npx eas-cli submit -p android --path=./build.ipa
 
 
