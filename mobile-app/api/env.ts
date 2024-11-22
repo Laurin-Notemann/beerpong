@@ -37,8 +37,8 @@ const getDayName = (date: Dayjs) => {
 };
 
 export const env = {
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,//assertEnvString('EXPO_PUBLIC_API_BASE_URL'),
-    realtimeBaseUrl:process.env.EXPO_PUBLIC_API_WS_URL, //assertEnvString('EXPO_PUBLIC_API_WS_URL')!,
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL, //assertEnvString('EXPO_PUBLIC_API_BASE_URL'),
+    realtimeBaseUrl: process.env.EXPO_PUBLIC_API_WS_URL, //assertEnvString('EXPO_PUBLIC_API_WS_URL')!,
 
     groupCode: {
         format: groupCodeFormat,
