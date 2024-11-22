@@ -5,7 +5,12 @@ import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-import { RealtimeClient } from '.';
+import {
+    RealtimeAffectedEntity,
+    RealtimeClient,
+    RealtimeEvent,
+    RealtimeEventHandler,
+} from '.';
 import { env } from '../env';
 import { ignoreSeason, QK } from '../utils/reactQuery';
 
@@ -22,27 +27,7 @@ export function useRealtimeConnection() {
         writeLog(...data);
     }
 
-    useEffect(() => {
-        if (client.current) {
-            client.current.logger.addEventListener('*', writeLogs);
-
-            return () =>
-                client.current.logger.removeEventListener('*', writeLogs);
-        }
-    }, [client.current]);
-
-    useEffect(() => {
-        client.current.subscribeToGroups(groupIds);
-    }, [groupIds]);
-
-    function refetchGroup(groupId: string) {
-        qc.invalidateQueries({
-            queryKey: [QK.group, groupId],
-            exact: true,
-        });
-    }
-
-    client.current.on.event((e) => {
+    const hoher: RealtimeEventHandler = (e) => {
         switch (e.eventType) {
             case 'GROUPS':
                 client.current.logger.info('refetching groups');
@@ -125,7 +110,29 @@ export function useRealtimeConnection() {
                 });
                 break;
         }
-    });
+    };
+
+    useEffect(() => {
+        if (client.current) {
+            client.current.logger.addEventListener('*', writeLogs);
+
+            client.current.on.event(hoher);
+
+            return () =>
+                client.current.logger.removeEventListener('*', writeLogs);
+        }
+    }, [client.current]);
+
+    useEffect(() => {
+        client.current.subscribeToGroups(groupIds);
+    }, [groupIds]);
+
+    function refetchGroup(groupId: string) {
+        qc.invalidateQueries({
+            queryKey: [QK.group, groupId],
+            exact: true,
+        });
+    }
 
     return client.current;
 }

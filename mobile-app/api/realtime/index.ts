@@ -72,21 +72,6 @@ export class RealtimeClient {
         });
 
         this.ws.addEventListener('message', (e) => this.onMessage(e));
-
-        this.ws.addEventListener('open', () => {
-            this.logger.info('connection opened');
-            this._subscribeToGroups();
-        });
-
-        this.ws.addEventListener('close', () => {
-            this.logger.info('connection closed');
-        });
-
-        this.ws.addEventListener('error', (e) => {
-            this.logger.error('error:', e);
-        });
-
-        this.ws.addEventListener('message', (e) => this.onMessage(e));
     }
 
     /**
