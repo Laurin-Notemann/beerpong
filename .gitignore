@@ -3,3 +3,6 @@ node_modules
 .env
 socket-test/
 build*
+
+.gen-builds/**
+.DS_Store
