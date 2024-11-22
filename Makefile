@@ -48,7 +48,7 @@ app-build-development:
 
 .PHONY: app-build-preview
 app-build-preview: 
-	 cd mobile-app && npx eas-cli build -p ios --profile preview --local --output=../.gen-builds/build.tar.gz
+	 cd mobile-app && npx eas-cli build -p ios --profile preview --local --output=../.gen-builds/build.tar.gz --non-interactive
 
 .PHONY: app-build-staging
 app-build-staging: 
