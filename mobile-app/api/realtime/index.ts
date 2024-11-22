@@ -72,7 +72,6 @@ export class RealtimeClient {
         });
 
         this.ws.addEventListener('message', (e) => this.onMessage(e));
-        this.ws = new WebSocket(this.url);
 
         this.ws.addEventListener('open', () => {
             this.logger.info('connection opened');
