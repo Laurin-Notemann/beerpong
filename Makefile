@@ -42,6 +42,10 @@ docker-backend-down:
 docker-backend-rebuild: 
 	make docker-backend-down; make docker-backend-up
 
+.PHONY: app-build-development
+app-build-development: 
+	 cd mobile-app && npx eas-cli build -p ios --profile development --local --output=../.gen-builds/build.tar.gz
+
 .PHONY: app-build-preview
 app-build-preview: 
 	 cd mobile-app && npx eas-cli build -p ios --profile preview --local --output=../.gen-builds/build.tar.gz

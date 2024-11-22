@@ -5,6 +5,11 @@
     },
     "build": {
         "development": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8080",
+                "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+                "EXPO_PUBLIC_API_WS_URL": "ws://localhost:8080"
+            },
             "developmentClient": true,
             "distribution": "internal"
         },
