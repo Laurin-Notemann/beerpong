@@ -1,65 +1,63 @@
 {
-  "expo": {
-    "name": "beerpong-tournament",
-    "slug": "mobile-app",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.linusbolls.mobileapp",
-      "infoPlist": {
-        "NSPhotoLibraryUsageDescription": true
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ],
-      "package": "com.linusbolls.mobileapp"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "beerpong",
-          "organization": "sackverein"
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "The app accesses your photos to let you choose a picture",
-          "cameraPermission": "The app accesses your photos to let take a pic"
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "8dbfe974-43ce-4f4e-b3d8-cf6f77109412"
-      }
-    },
-    "owner": "beerpong"
-  }
+    "expo": {
+        "name": "beerpong-tournament",
+        "slug": "mobile-app",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "scheme": "myapp",
+        "userInterfaceStyle": "automatic",
+        "splash": {
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.linusbolls.mobileapp",
+            "infoPlist": {
+                "NSPhotoLibraryUsageDescription": true
+            }
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/adaptive-icon.png",
+                "backgroundColor": "#ffffff"
+            },
+            "permissions": ["android.permission.RECORD_AUDIO"],
+            "package": "com.linusbolls.mobileapp"
+        },
+        "web": {
+            "bundler": "metro",
+            "output": "static",
+            "favicon": "./assets/images/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "@sentry/react-native/expo",
+                {
+                    "url": "https://sentry.io/",
+                    "project": "beerpong",
+                    "organization": "sackverein"
+                }
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "The app accesses your photos to let you choose a picture",
+                    "cameraPermission": "The app accesses your photos to let take a pic"
+                }
+            ]
+        ],
+        "experiments": {
+            "typedRoutes": true
+        },
+        "extra": {
+            "eas": {
+                "projectId": "8dbfe974-43ce-4f4e-b3d8-cf6f77109412"
+            }
+        },
+        "owner": "beerpong"
+    }
 }
