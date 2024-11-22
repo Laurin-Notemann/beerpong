@@ -9,9 +9,24 @@
             "distribution": "internal"
         },
         "preview": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "localhost:8080",
+                "SENTRY_DISABLE_AUTO_UPLOAD": true
+            },
+            "ios": {
+                "simulator": true
+            }
+        },
+        "staging": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "beerpong.lb.laurinnotemann.dev"
+            },
             "distribution": "internal"
         },
         "production": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "beerpong.lb.laurinnotemann.dev"
+            },
             "autoIncrement": true
         }
     },
