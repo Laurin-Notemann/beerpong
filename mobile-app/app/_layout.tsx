@@ -19,6 +19,7 @@ import { createQueryClient, persister } from '@/api/utils/query-client';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { LoggingProvider } from '@/utils/useLogging';
 
 import { modalStyles } from './navigation/modalStyles';
 
@@ -71,26 +72,28 @@ export default function RootLayout() {
             client={queryClient}
             persistOptions={{ persister }}
         >
-            <ApiProvider>
-                <ThemeProvider value={appTheme}>
-                    <RootSiblingParent>
-                        <Drawer.Navigator
-                            screenOptions={{
-                                drawerStyle: {
-                                    width: 256,
-                                },
-                                headerShown: false,
-                            }}
-                            drawerContent={Sidebar}
-                        >
-                            <Drawer.Screen
-                                name="static/aboutPremium"
-                                component={Everything}
-                            />
-                        </Drawer.Navigator>
-                    </RootSiblingParent>
-                </ThemeProvider>
-            </ApiProvider>
+            <LoggingProvider>
+                <ApiProvider>
+                    <ThemeProvider value={appTheme}>
+                        <RootSiblingParent>
+                            <Drawer.Navigator
+                                screenOptions={{
+                                    drawerStyle: {
+                                        width: 256,
+                                    },
+                                    headerShown: false,
+                                }}
+                                drawerContent={Sidebar}
+                            >
+                                <Drawer.Screen
+                                    name="static/aboutPremium"
+                                    component={Everything}
+                                />
+                            </Drawer.Navigator>
+                        </RootSiblingParent>
+                    </ThemeProvider>
+                </ApiProvider>
+            </LoggingProvider>
         </PersistQueryClientProvider>
     );
 }

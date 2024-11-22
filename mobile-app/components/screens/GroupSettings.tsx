@@ -251,7 +251,7 @@ export default function GroupSettingsScreen({
                 )}
                 <MenuSection title="Development">
                     <MenuItem
-                        title="Open Debug Logs"
+                        title="Debug Logs"
                         headIcon="dev-to"
                         tailIconType="next"
                         onPress={() => nav.navigate('debugLog')}

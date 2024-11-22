@@ -39,27 +39,27 @@ export class ScopedLogger implements Logger {
 
     fatal = (...args: Logs) => {
         console.error(this.getPrefixesString(), ...args);
-        this.callHandlers('*', ...args);
+        this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     error = (...args: Logs) => {
         console.error(this.getPrefixesString(), ...args);
-        this.callHandlers('*', ...args);
+        this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     warn = (...args: Logs) => {
         console.warn(this.getPrefixesString(), ...args);
-        this.callHandlers('*', ...args);
+        this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     info = (...args: Logs) => {
         console.info(this.getPrefixesString(), ...args);
-        this.callHandlers('*', ...args);
+        this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     debug = (...args: Logs) => {
         console.debug(this.getPrefixesString(), ...args);
-        this.callHandlers('*', ...args);
+        this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     trace = (...args: Logs) => {
         console.log(this.getPrefixesString(), ...args);
-        this.callHandlers('*', ...args);
+        this.callHandlers('*', this.getPrefixesString(), ...args);
     };
 
     private callHandlers(event: '*', ...args: Logs) {
