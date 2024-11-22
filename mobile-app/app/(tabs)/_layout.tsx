@@ -9,7 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-import { HeaderItem } from './HeaderItem';
+import { HeaderItem } from '../../components/HeaderItem';
 
 const GroupsButton = () => {
     const nav = useNavigation();

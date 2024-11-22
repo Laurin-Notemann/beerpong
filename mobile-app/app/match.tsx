@@ -16,7 +16,7 @@ import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-import { HeaderItem } from './(tabs)/HeaderItem';
+import { HeaderItem } from '../components/HeaderItem';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {

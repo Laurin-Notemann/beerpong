@@ -3,9 +3,9 @@ import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';

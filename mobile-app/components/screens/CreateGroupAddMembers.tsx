@@ -9,7 +9,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { HeaderItem } from '@/components/HeaderItem';
 import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 

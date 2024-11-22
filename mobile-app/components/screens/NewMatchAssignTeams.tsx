@@ -4,9 +4,9 @@ import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';

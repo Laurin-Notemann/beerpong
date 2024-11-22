@@ -5,8 +5,8 @@ import Animated from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 import Swiper from 'react-native-swiper';
 
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
+import { HeaderItem } from '@/components/HeaderItem';
 import Leaderboard from '@/components/Leaderboard';
 import { mockPlayers } from '@/components/mockData/players';
 import SwiperHeader from '@/components/SwiperHeader';
