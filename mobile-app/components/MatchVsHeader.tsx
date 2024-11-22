@@ -45,7 +45,12 @@ export default function MatchVsHeader({
                 {Array(Math.max(MAX_ITEMS - match.blueTeam.length, 0))
                     .fill(null)
                     .map((_, index) => {
-                        return <Avatar key={index} style={{ opacity: 0 }} />;
+                        return (
+                            <Avatar
+                                key={index}
+                                style={{ opacity: 0, marginLeft: -16 }}
+                            />
+                        );
                     })}
                 {match.blueTeam.slice(0, MAX_ITEMS).map((i, index) => (
                     <Avatar
@@ -59,7 +64,7 @@ export default function MatchVsHeader({
                         }
                         name={i.name}
                         borderColor={theme.color.team.blue}
-                        style={{ marginLeft: index === 0 ? 0 : -16 }}
+                        style={{ marginLeft: -16 }}
                     />
                 ))}
             </View>
@@ -110,13 +115,18 @@ export default function MatchVsHeader({
                         }
                         name={i.name}
                         borderColor={theme.color.team.red}
-                        style={{ marginLeft: index === 0 ? 0 : -16 }}
+                        style={{ marginRight: -16 }}
                     />
                 ))}
                 {Array(Math.max(MAX_ITEMS - match.redTeam.length, 0))
                     .fill(null)
                     .map((_, index) => {
-                        return <Avatar key={index} style={{ opacity: 0 }} />;
+                        return (
+                            <Avatar
+                                key={index}
+                                style={{ opacity: 0, marginRight: -16 }}
+                            />
+                        );
                     })}
             </View>
         </View>
