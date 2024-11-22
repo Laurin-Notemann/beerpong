@@ -17,6 +17,7 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 import { HeaderItem } from './(tabs)/HeaderItem';
+import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
@@ -37,6 +38,8 @@ export default function Page() {
 
     const { mutateAsync } = useDeleteMatchMutation();
 
+    const nav = useNavigation();
+
     const match = matchQuery.data?.data
         ? matchDtoToMatch(players, allowedMoves)(matchQuery.data.data)
         : null;
@@ -51,6 +54,7 @@ export default function Page() {
                 id,
             });
             showSuccessToast('Deleted match.');
+            nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to delete match:', err);
             showErrorToast('Failed to delete match.');
