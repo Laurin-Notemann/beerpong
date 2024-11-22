@@ -37,7 +37,7 @@ type Handlers = Record<RealtimeAffectedEntity | '*', RealtimeEventHandler[]>;
 export class RealtimeClient {
     private ws!: WebSocket;
 
-    public logger: Logger;
+    public logger: ScopedLogger;
 
     private handlers: Handlers = {} as Handlers;
 
