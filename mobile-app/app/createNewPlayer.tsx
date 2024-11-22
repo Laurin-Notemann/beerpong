@@ -22,7 +22,7 @@ export default function Page() {
                 seasonId,
                 name: player.name,
             });
-            nav.navigate('index');
+            nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to create player:', err);
             showErrorToast('Failed to create player.');

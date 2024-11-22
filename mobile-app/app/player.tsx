@@ -95,7 +95,6 @@ export default function Page() {
                 byteArray,
                 mimeType,
             });
-            nav.navigate('index');
         } catch (err) {
             ConsoleLogger.error('failed to upload player avatar:', err);
             showErrorToast('Failed to upload player avatar.');

@@ -14,11 +14,12 @@ export default function Page() {
 
     const { data, isLoading, error } = useFindGroupByInviteCode(inviteCode);
 
-    const { addGroup } = useGroupStore();
+    const { addGroup, selectGroup } = useGroupStore();
 
     useEffect(() => {
         if (data?.data?.id) {
             addGroup(data.data.id);
+            selectGroup(data.data.id);
 
             nav.navigate('index');
         }

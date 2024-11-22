@@ -27,7 +27,7 @@ export default function Page() {
                 id,
                 name: value,
             });
-            nav.navigate('index');
+            nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to update group:', err);
             showErrorToast('Failed to update group.');
