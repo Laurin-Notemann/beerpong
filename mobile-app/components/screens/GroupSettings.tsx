@@ -249,6 +249,14 @@ export default function GroupSettingsScreen({
                         />
                     </MenuSection>
                 )}
+                <MenuSection title="Development">
+                    <MenuItem
+                        title="Open Debug Logs"
+                        headIcon="dev-to"
+                        tailIconType="next"
+                        onPress={() => nav.navigate('debugLog')}
+                    />
+                </MenuSection>
             </ScrollView>
         </RootSiblingParent>
     );
