@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
 
 import { useDeleteMatchMutation, useMatchQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
@@ -73,6 +74,15 @@ export default function Page() {
         // });
     }
 
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    }, []);
+
     return (
         <>
             <Stack.Screen
@@ -112,6 +122,12 @@ export default function Page() {
                     paddingTop: 32,
                     paddingBottom: 32,
                 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             >
                 <MatchPlayers
                     editable={isEditing}
