@@ -6,8 +6,8 @@ import {
     useUpdatePlayerMutation,
 } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';

@@ -2,8 +2,8 @@ import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Text } from 'react-native';
 
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
 
