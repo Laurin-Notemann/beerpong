@@ -35,18 +35,34 @@ export default function CreateGroupAddMembers({
 
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
 
+    function onAddMember() {
+        if (value.length) {
+            setMembers((prev) => [...prev, { name: value }]);
+        }
+        setValue('');
+        inputRef.current?.clear();
+    }
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={!canBeCreated}
-                            onPress={() => onSubmit(members)}
-                        >
-                            Next
-                        </HeaderItem>
-                    ),
+                    headerRight: () =>
+                        value.length > 0 || members.length < 2 ? (
+                            <HeaderItem
+                                disabled={value.length < 1}
+                                onPress={onAddMember}
+                            >
+                                Add
+                            </HeaderItem>
+                        ) : (
+                            <HeaderItem
+                                disabled={!canBeCreated}
+                                onPress={() => onSubmit(members)}
+                            >
+                                Next
+                            </HeaderItem>
+                        ),
 
                     headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
                     headerBackTitleVisible: false,
@@ -81,15 +97,7 @@ export default function CreateGroupAddMembers({
                         }
                     }}
                     onChangeText={(text) => setValue(text.trim())}
-                    onSubmitEditing={(event) => {
-                        const name = event.nativeEvent.text.trim();
-
-                        if (name.length) {
-                            setMembers((prev) => [...prev, { name }]);
-                        }
-                        setValue('');
-                        inputRef.current?.clear();
-                    }}
+                    onSubmitEditing={onAddMember}
                 />
             </View>
             <ScrollView
@@ -106,7 +114,7 @@ export default function CreateGroupAddMembers({
             >
                 {members.length < 1 && value.length > 0 && (
                     <Text color="secondary" style={{ textAlign: 'center' }}>
-                        Press enter to create player "{value}"
+                        Press enter to add player "{value}"
                     </Text>
                 )}
                 {members.map((i, idx) => (
