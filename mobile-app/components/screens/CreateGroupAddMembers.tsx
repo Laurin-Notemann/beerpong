@@ -14,6 +14,7 @@ import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
 import Avatar from '../Avatar';
+import Text from '../Text';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
@@ -28,22 +29,40 @@ export default function CreateGroupAddMembers({
 }: CreateGroupAddMembersProps) {
     const [members, setMembers] = useState<GroupMember[]>([]);
 
+    const [value, setValue] = useState('');
+
     const inputRef = useRef<B>(null);
 
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
+
+    function onAddMember() {
+        if (value.length) {
+            setMembers((prev) => [...prev, { name: value }]);
+        }
+        setValue('');
+        inputRef.current?.clear();
+    }
 
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={!canBeCreated}
-                            onPress={() => onSubmit(members)}
-                        >
-                            Next
-                        </HeaderItem>
-                    ),
+                    headerRight: () =>
+                        value.length > 0 || members.length < 2 ? (
+                            <HeaderItem
+                                disabled={value.length < 1}
+                                onPress={onAddMember}
+                            >
+                                Add
+                            </HeaderItem>
+                        ) : (
+                            <HeaderItem
+                                disabled={!canBeCreated}
+                                onPress={() => onSubmit(members)}
+                            >
+                                Next
+                            </HeaderItem>
+                        ),
 
                     headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
                     headerBackTitleVisible: false,
@@ -77,15 +96,8 @@ export default function CreateGroupAddMembers({
                             e.preventDefault();
                         }
                     }}
-                    onSubmitEditing={(event) => {
-                        const name = event.nativeEvent.text.trim();
-
-                        if (name.length) {
-                            setMembers((prev) => [...prev, { name }]);
-                        }
-
-                        inputRef.current?.clear();
-                    }}
+                    onChangeText={(text) => setValue(text.trim())}
+                    onSubmitEditing={onAddMember}
                 />
             </View>
             <ScrollView
@@ -100,6 +112,11 @@ export default function CreateGroupAddMembers({
                     gap: 8,
                 }}
             >
+                {members.length < 1 && value.length > 0 && (
+                    <Text color="secondary" style={{ textAlign: 'center' }}>
+                        Press enter to add player "{value}"
+                    </Text>
+                )}
                 {members.map((i, idx) => (
                     <View
                         key={idx}

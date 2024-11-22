@@ -1,5 +1,7 @@
 import dayjs, { Dayjs } from 'dayjs';
 
+import packageJson from '../package.json';
+
 /** the spaced format of group invite codes. `[3, 4, 3]` => `"xxx xxxx xxx"` */
 const groupCodeFormat = [3, 3, 3];
 
@@ -36,7 +38,7 @@ export const env = {
         length: groupCodeFormat.reduce((sum, i) => sum + i, 0),
         seperatorIndices: groupCodeSeperatorIndices,
     },
-    appVersion: '0.1.0',
+    appVersion: packageJson.version,
 
     format: {
         date: {

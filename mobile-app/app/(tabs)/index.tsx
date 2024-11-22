@@ -75,11 +75,13 @@ export default function Page() {
                           )}`
                         : null}
                 </Text>
-                <TouchableOpacity
-                    onPress={() => setShowChangeWallpaperModal(true)}
-                >
-                    <Icon color="#fff" size={24} name="sort" />
-                </TouchableOpacity>
+                {env.isDev && (
+                    <TouchableOpacity
+                        onPress={() => setShowChangeWallpaperModal(true)}
+                    >
+                        <Icon color="#fff" size={24} name="sort" />
+                    </TouchableOpacity>
+                )}
                 <Text
                     style={{
                         fontSize: 17,

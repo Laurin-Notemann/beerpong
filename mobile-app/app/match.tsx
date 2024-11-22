@@ -17,6 +17,7 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 import { HeaderItem } from './(tabs)/HeaderItem';
+import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
@@ -37,6 +38,8 @@ export default function Page() {
 
     const { mutateAsync } = useDeleteMatchMutation();
 
+    const nav = useNavigation();
+
     const match = matchQuery.data?.data
         ? matchDtoToMatch(players, allowedMoves)(matchQuery.data.data)
         : null;
@@ -51,6 +54,7 @@ export default function Page() {
                 id,
             });
             showSuccessToast('Deleted match.');
+            nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to delete match:', err);
             showErrorToast('Failed to delete match.');
@@ -111,24 +115,17 @@ export default function Page() {
             >
                 <MatchPlayers
                     editable={isEditing}
-                    players={[
-                        ...(match?.blueTeam?.map((i) => ({
-                            ...i,
-                            team: 'blue' as const,
-                        })) ?? []),
-                        ...(match?.redTeam?.map((i) => ({
-                            ...i,
-                            team: 'red' as const,
-                        })) ?? []),
-                    ].map((i) => ({
-                        id: i.id!,
-                        change: i.change,
-                        moves: i.moves,
-                        name: i.name,
-                        avatarUrl: i.avatarUrl,
-                        points: i.points,
-                        team: i.team,
-                    }))}
+                    players={(match?.blueTeam ?? [])
+                        .concat(match?.redTeam ?? [])
+                        .map((i) => ({
+                            id: i.id!,
+                            change: i.change,
+                            moves: i.moves,
+                            name: i.name,
+                            avatarUrl: i.avatarUrl,
+                            points: i.points,
+                            team: i.team,
+                        }))}
                     setMoveCount={setMoveCount}
                 />
                 {isEditing && (

@@ -30,6 +30,8 @@ export type Match = {
     blueCups: number;
     redTeam: TeamMember[];
     blueTeam: TeamMember[];
+
+    winnerTeamId: string | null;
 };
 
 export const matchDtoToMatch =
