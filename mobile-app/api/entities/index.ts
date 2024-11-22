@@ -188,7 +188,7 @@ export class MatchImpl {
         return this.teams[0];
     }
     public get _redTeam(): TeamImpl {
-        return this.teams[0];
+        return this.teams[1];
     }
 
     private get players(): TeamMemberImpl[] {
