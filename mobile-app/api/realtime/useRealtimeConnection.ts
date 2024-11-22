@@ -1,6 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { Logs } from '@/utils/logging';
+import { useLogging } from '@/utils/useLogging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient } from '.';
@@ -13,6 +15,21 @@ export function useRealtimeConnection() {
     const qc = useQueryClient();
 
     const client = useRef(new RealtimeClient(env.realtimeBaseUrl, groupIds));
+
+    const { writeLog } = useLogging();
+
+    function writeLogs(...data: Logs) {
+        writeLog(...data);
+    }
+
+    useEffect(() => {
+        if (client.current) {
+            client.current.logger.addEventListener('*', writeLogs);
+
+            return () =>
+                client.current.logger.removeEventListener('*', writeLogs);
+        }
+    }, [client.current]);
 
     useEffect(() => {
         client.current.subscribeToGroups(groupIds);
