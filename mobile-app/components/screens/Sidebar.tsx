@@ -30,7 +30,9 @@ export function SidebarGroupItem({
     const { data, isLoading } = useGroupQuery(id);
 
     return (
-        <Pressable
+        <TouchableHighlight
+            disabled={isActive}
+            underlayColor={theme.panel.light.active}
             onPress={() => onPress(id)}
             style={{
                 display: 'flex',
@@ -39,30 +41,32 @@ export function SidebarGroupItem({
                 paddingVertical: 12,
             }}
         >
-            <Text
-                color="primary"
-                style={{
-                    fontSize: 17,
-                }}
-            >
-                {isLoading ? 'Loading...' : (data?.data?.name ?? 'Unknown')}
-            </Text>
-            <Text
-                color="secondary"
-                style={{
-                    fontSize: 12,
-                }}
-            >
-                {isLoading ? (
-                    ''
-                ) : (
-                    <>
-                        {data?.data?.numberOfPlayers} Players,{' '}
-                        {data?.data?.numberOfMatches} Matches
-                    </>
-                )}
-            </Text>
-        </Pressable>
+            <>
+                <Text
+                    color="primary"
+                    style={{
+                        fontSize: 17,
+                    }}
+                >
+                    {isLoading ? 'Loading...' : (data?.data?.name ?? 'Unknown')}
+                </Text>
+                <Text
+                    color="secondary"
+                    style={{
+                        fontSize: 12,
+                    }}
+                >
+                    {isLoading ? (
+                        ''
+                    ) : (
+                        <>
+                            {data?.data?.numberOfPlayers} Players,{' '}
+                            {data?.data?.numberOfMatches} Matches
+                        </>
+                    )}
+                </Text>
+            </>
+        </TouchableHighlight>
     );
 }
 
