@@ -70,7 +70,7 @@ export default function Player({
     // Interpolate the animated value to control height
     const contentHeight = animation.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 44 * 8], // customize the height range based on your content
+        outputRange: [0, 44 * moves.length], // customize the height range based on your content
     });
 
     const nav = useNavigation();
