@@ -131,7 +131,7 @@ export class TeamMemberImpl {
     }
     public toJSON(): TeamMember {
         return {
-            id: this.id,
+            id: this.playerId,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
             name: this.name,

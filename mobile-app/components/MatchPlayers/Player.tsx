@@ -7,12 +7,34 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { env } from '@/api/env';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
 import Text from '../Text';
+
+function Change({ value }: { value: number }) {
+    return (
+        <>
+            <Icon
+                color={value >= 0 ? theme.color.positive : theme.color.negative}
+                size={8}
+                name="triangle"
+                style={{
+                    marginLeft: 8,
+                    marginRight: 2,
+                    marginTop: 1,
+                    transform: value >= 0 ? undefined : [{ rotateX: '180deg' }],
+                }}
+            />
+            <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
+                {Math.abs(value)}
+            </Text>
+        </>
+    );
+}
 
 export interface PlayerProps {
     player: TeamMember;
@@ -94,37 +116,24 @@ export default function Player({
                                     {points} points
                                 </Text>
                             ) : (
-                                <Text variant="body2" color="tertiary">
+                                <Text
+                                    variant="body2"
+                                    color="tertiary"
+                                    style={{
+                                        fontStyle:
+                                            moves.length < 1
+                                                ? 'italic'
+                                                : undefined,
+                                    }}
+                                >
+                                    {moves.length < 1 && 'No moves'}
                                     {moves
                                         .filter((i) => i.count > 0)
                                         .map((i) => i.count + ' ' + i.title)
                                         .join(', ')}
                                 </Text>
                             )}
-                            <Icon
-                                color={
-                                    change >= 0
-                                        ? theme.color.positive
-                                        : theme.color.negative
-                                }
-                                size={8}
-                                name="triangle"
-                                style={{
-                                    marginLeft: 8,
-                                    marginRight: 2,
-                                    marginTop: 1,
-                                    transform:
-                                        change >= 0
-                                            ? undefined
-                                            : [{ rotateX: '180deg' }],
-                                }}
-                            />
-                            <Text
-                                variant="body2"
-                                color={change >= 0 ? 'positive' : 'negative'}
-                            >
-                                {Math.abs(change)}
-                            </Text>
+                            {env.isDev && <Change value={change} />}
                         </View>
                     </View>
                     {editable ? (
