@@ -1,0 +1,58 @@
+name: Bump versions of Mobile App
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "mobile-app/**"
+    branches:
+      - staging
+
+jobs:
+  bump-version:
+    name: Bump version of package.json and app.json
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump version
+        run: |
+          cd mobile-app
+          
+          # Read current version from package.json
+          current_version=$(node -p "require('./package.json').version")
+          echo "Current version: $current_version"
+          
+          # Increment patch version
+          new_version=$(node -e "
+            const [major, minor, patch] = '$current_version'.split('.');
+            console.log(\`\${major}.\${minor}.\${parseInt(patch) + 1}\`);
+          ")
+          echo "New version: $new_version"
+          
+          # Update package.json
+          jq --arg version "$new_version" '.version = $version' package.json > package.json.tmp && mv package.json.tmp package.json
+          
+          # Update app.json
+          jq --arg version "$new_version" '.expo.version = $version' app.json > app.json.tmp && mv app.json.tmp app.json
+          
+          echo "Updated version in package.json and app.json to $new_version"
+
+      - run: npm ci && npm run format
+        working-directory: mobile-app
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: minor mobile app version bump"
+
