@@ -20,14 +20,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          token: ${{ secrets.PAT }}
+          fetch-depth: 2
+
+      - name: Check recent commit messages
+        id: check_commits
+        shell: bash
+        run: |
+          # Fetch the PR base branch
+          git fetch origin ${{ github.base_ref }}
+
+          # Get the merge base between the PR head and base
+          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+
+          # Check the commits between the merge base and HEAD
+          COMMIT_MESSAGES=$(git log $MERGE_BASE..HEAD --format='%s')
+          echo "Commit messages since merge base:"
+          echo "$COMMIT_MESSAGES"
+
+          if echo "$COMMIT_MESSAGES" | grep -q "chore: minor mobile app version bump"; then
+            echo "has_version_bump=true" >> $GITHUB_OUTPUT
+            echo "A recent commit contains the version bump message. Stopping the workflow."
+            exit 0  # This will stop the workflow without failing it
+          else
+            echo "has_version_bump=false" >> $GITHUB_OUTPUT
+            echo "No version bump commit found. Continuing the workflow."
+          fi
 
       - name: Setup Node.js
+        if: steps.check_commits.outputs.has_version_bump != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Bump version
+        if: steps.check_commits.outputs.has_version_bump != 'true'
         run: |
           cd mobile-app
           
@@ -51,8 +78,10 @@ jobs:
           echo "Updated version in package.json and app.json to $new_version"
 
       - run: npm ci && npm run format
+        if: steps.check_commits.outputs.has_version_bump != 'true'
         working-directory: mobile-app
       - uses: stefanzweifel/git-auto-commit-action@v5
+        if: steps.check_commits.outputs.has_version_bump != 'true'
         with:
           commit_message: "chore: minor mobile app version bump"
 
