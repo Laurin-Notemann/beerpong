@@ -40,6 +40,12 @@
         }
     },
     "submit": {
-        "production": {}
+        "staging": {
+            "ios": {
+                "appleId": "linus.bolls@icloud.com",
+                "ascAppId": "6738529626",
+                "appleTeamId": "A5X77AGYX4"
+            }
+        }
     }
 }
