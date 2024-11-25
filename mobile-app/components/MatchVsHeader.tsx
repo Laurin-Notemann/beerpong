@@ -167,7 +167,8 @@ function Team({
                 isCopy
                     ? {
                           position: 'absolute',
-                          left: 0,
+                          left: color === 'red' ? 0 : undefined,
+                          right: color === 'blue' ? 0 : undefined,
                           top: 0,
                       }
                     : {
@@ -188,7 +189,9 @@ function Team({
                     name={i.name}
                     borderColor={theme.color.team[color]}
                     style={{
-                        marginRight: -16,
+                        marginRight: color === 'red' ? -16 : 0,
+                        marginLeft: color === 'blue' ? -16 : 0,
+
                         opacity: isCopy ? (i.id === highlightedId ? 1 : 0) : 1,
                         zIndex: i.id === highlightedId ? 1 : undefined,
                     }}
@@ -198,7 +201,11 @@ function Team({
                 return (
                     <Avatar
                         key={index}
-                        style={{ opacity: 0, marginRight: -16 }}
+                        style={{
+                            opacity: 0,
+                            marginRight: color === 'red' ? -16 : 0,
+                            marginLeft: color === 'blue' ? -16 : 0,
+                        }}
                     />
                 );
             })}
