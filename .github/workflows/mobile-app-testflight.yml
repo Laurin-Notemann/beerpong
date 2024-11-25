@@ -11,13 +11,6 @@ defaults:
     working-directory: mobile-app
 
 jobs:
-  bump-version:
-    name: Bump the version of the app
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
   build-testflight:
     name: Build and push app to Apple Testflight
     runs-on: macos-latest
@@ -42,7 +35,7 @@ jobs:
           #        run: npx eas-cli build -p ios --profile staging --local --non-interactive --output=./build.ipa
 
       - name: Submit to App Store
-        run: npx eas-cli submit -p ios --path=./build.ipa --profile=ios
+        run: npx eas-cli submit -p ios --path=./build.ipa --profile=staging
 
           #  build-android-test:
           #    name: Build and push app to Apple Testflight
