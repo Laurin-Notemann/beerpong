@@ -2,7 +2,7 @@
     "expo": {
         "name": "beerpong-tournament",
         "slug": "mobile-app",
-        "version": "1.0.6",
+        "version": "1.0.7",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
@@ -17,6 +17,9 @@
             "bundleIdentifier": "com.linusbolls.mobileapp",
             "infoPlist": {
                 "NSPhotoLibraryUsageDescription": true
+            },
+            "config": {
+                "usesNonExemptEncryption": false
             }
         },
         "android": {
