@@ -167,7 +167,7 @@ export default function NewMatchAssignTeams({
                                       }}
                                   />
                               )
-                            : 'New Match',
+                            : 'Assign Teams',
                 }}
             />
             <Heading />

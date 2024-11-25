@@ -1,9 +1,11 @@
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
+import { useApi } from '@/api/utils/create-api';
 import { navStyles } from '@/app/navigation/navStyles';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
@@ -28,6 +30,16 @@ function stringifyLogs(logs: Logs): string {
 export default function Page() {
     const { logs } = useLogging();
 
+    const [isRealtimeOpen, setIsRealtimeOpen] = useState(false);
+
+    const { realtime } = useApi();
+
+    useEffect(() => {
+        // we need to keep this in state because `realtime` is a ref and will not cause a rerender if it changes,
+        // so the indicator could be misleading
+        setIsRealtimeOpen(realtime.isOpen);
+    }, [realtime.isOpen]);
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
@@ -48,7 +60,14 @@ export default function Page() {
                     paddingBottom: 128,
                 }}
             >
-                <Heading title="Debug Logs" />
+                <Heading
+                    title={
+                        <>
+                            Debug Logs{' '}
+                            {env.isDev ? (isRealtimeOpen ? '✅' : '❌') : ''}
+                        </>
+                    }
+                />
                 {logs.map((i, idx) => (
                     <Text color="primary" key={idx} style={{ fontSize: 12 }}>
                         <Text color="secondary" style={{ fontSize: 12 }}>

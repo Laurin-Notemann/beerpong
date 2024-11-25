@@ -10,4 +10,6 @@ export function triggerHapticBump(
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
     Haptics.selectionAsync();
+
+    // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium`);
 }

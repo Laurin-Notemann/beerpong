@@ -83,7 +83,7 @@ export class ProfileImpl {
 
 export class TeamMemberImpl {
     public id: string;
-    public team: 'red' | 'blue';
+    public team!: 'red' | 'blue';
 
     public get name(): string {
         return this.player!.profile!.name;
@@ -111,9 +111,12 @@ export class TeamMemberImpl {
         return this.player.profile.avatarUrl;
     }
 
+    public setTeamColor(color: 'red' | 'blue'): void {
+        this.team = color;
+    }
+
     constructor(_data: Components.Schemas.TeamMemberDto) {
         this.id = _data.id!;
-        this.team = _data.teamId as 'red' | 'blue';
 
         this.playerId = _data.playerId!;
     }
@@ -128,7 +131,7 @@ export class TeamMemberImpl {
     }
     public toJSON(): TeamMember {
         return {
-            id: this.id,
+            id: this.playerId,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
             name: this.name,
@@ -258,6 +261,12 @@ export class MatchImpl {
                     matchMoves.filter((i) => i.teamMemberId === member.id)
                 );
             }
+        }
+        for (const player of this._blueTeam.members) {
+            player.setTeamColor('blue');
+        }
+        for (const player of this._redTeam.members) {
+            player.setTeamColor('red');
         }
     }
     public get redCups(): number {
