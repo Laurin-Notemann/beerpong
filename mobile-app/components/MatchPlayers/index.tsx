@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { Feature } from '@/constants/Features';
 
 import MenuSection from '../Menu/MenuSection';
 import Player from './Player';
@@ -9,11 +10,13 @@ export interface MatchPlayersProps {
     editable?: boolean;
     players: TeamMember[];
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
+    onPlayerPress: (player: TeamMember) => void;
 }
 export default function MatchPlayers({
     editable,
     players,
     setMoveCount,
+    onPlayerPress,
 }: MatchPlayersProps) {
     const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -30,9 +33,15 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         player={i}
-                        expanded={expandedId === idx}
+                        expanded={
+                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
+                                ? false
+                                : expandedId === idx
+                        }
                         setIsExpanded={(value) =>
-                            setExpandedId(value ? idx : null)
+                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
+                                ? onPlayerPress(i)
+                                : setExpandedId(value ? idx : null)
                         }
                         editable={editable}
                         setMoveCount={setMoveCount}
@@ -45,9 +54,15 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         player={i}
-                        expanded={expandedId === idx}
+                        expanded={
+                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
+                                ? false
+                                : expandedId === idx
+                        }
                         setIsExpanded={(value) =>
-                            setExpandedId(value ? idx : null)
+                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
+                                ? onPlayerPress(i)
+                                : setExpandedId(value ? idx : null)
                         }
                         editable={editable}
                         setMoveCount={setMoveCount}

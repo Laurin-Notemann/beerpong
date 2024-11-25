@@ -76,8 +76,6 @@ export default function MatchVsHeader({
               ? 'blue'
               : null;
 
-    const opacity = highlightedId == null ? 1 : 1;
-
     return (
         <View
             style={[
@@ -98,13 +96,13 @@ export default function MatchVsHeader({
                     width: 76,
                 }}
             >
-                <Sache
+                <Team
                     color="blue"
                     players={match.blueTeam}
                     maxItems={maxItems}
                     highlightedId={highlightedId}
                 />
-                <Sache
+                <Team
                     color="blue"
                     players={match.blueTeam}
                     maxItems={maxItems}
@@ -125,13 +123,13 @@ export default function MatchVsHeader({
                     width: 76,
                 }}
             >
-                <Sache
+                <Team
                     color="red"
                     players={match.redTeam}
                     maxItems={maxItems}
                     highlightedId={highlightedId}
                 />
-                <Sache
+                <Team
                     color="red"
                     players={match.redTeam}
                     maxItems={maxItems}
@@ -143,7 +141,7 @@ export default function MatchVsHeader({
     );
 }
 
-function Sache({
+function Team({
     highlightedId,
     players,
     maxItems,
@@ -157,6 +155,12 @@ function Sache({
 
     isCopy?: boolean;
 }) {
+    const emptyAvatarsUsedForSpacing = Array(
+        Math.max(maxItems - players.length, 0)
+    ).fill(null);
+
+    const displayedPlayers = players.slice(0, maxItems);
+
     return (
         <View
             style={[
@@ -167,12 +171,12 @@ function Sache({
                           top: 0,
                       }
                     : {
-                          opacity: 0.5,
+                          opacity: highlightedId == null ? 1 : 0.5,
                       },
                 { flexDirection: 'row' },
             ]}
         >
-            {players.slice(0, maxItems).map((i, index) => (
+            {displayedPlayers.map((i, index) => (
                 <Avatar
                     key={index}
                     url={i.avatarUrl}
@@ -185,25 +189,19 @@ function Sache({
                     borderColor={theme.color.team[color]}
                     style={{
                         marginRight: -16,
-                        opacity: isCopy
-                            ? i.id === highlightedId
-                                ? 1
-                                : 0
-                            : 0.5,
+                        opacity: isCopy ? (i.id === highlightedId ? 1 : 0) : 1,
                         zIndex: i.id === highlightedId ? 1 : undefined,
                     }}
                 />
             ))}
-            {Array(Math.max(maxItems - players.length, 0))
-                .fill(null)
-                .map((_, index) => {
-                    return (
-                        <Avatar
-                            key={index}
-                            style={{ opacity: 0, marginRight: -16 }}
-                        />
-                    );
-                })}
+            {emptyAvatarsUsedForSpacing.map((_, index) => {
+                return (
+                    <Avatar
+                        key={index}
+                        style={{ opacity: 0, marginRight: -16 }}
+                    />
+                );
+            })}
         </View>
     );
 }
