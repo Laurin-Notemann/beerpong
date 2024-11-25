@@ -20,20 +20,25 @@ public class TestUtils {
         return performCall(port, path, HttpMethod.GET, null, firstClazz, classes);
     }
 
-    public ResponseEntity<Object> performPost(int port, String path, Object body, Class<?> firstClazz, Class<?>... classes) {
+    public ResponseEntity<Object> performPost(int port, String path, Object body, Class<?> firstClazz,
+            Class<?>... classes) {
         return performCall(port, path, HttpMethod.POST, body, firstClazz, classes);
     }
 
-    public ResponseEntity<Object> performPut(int port, String path, Object body, Class<?> firstClazz, Class<?>... classes) {
+    public ResponseEntity<Object> performPut(int port, String path, Object body, Class<?> firstClazz,
+            Class<?>... classes) {
         return performCall(port, path, HttpMethod.PUT, body, firstClazz, classes);
     }
 
-    public ResponseEntity<Object> performDelete(int port, String path, Object body, Class<?> firstClazz, Class<?>... classes) {
+    public ResponseEntity<Object> performDelete(int port, String path, Object body, Class<?> firstClazz,
+            Class<?>... classes) {
         return performCall(port, path, HttpMethod.DELETE, body, firstClazz, classes);
     }
 
-    public ResponseEntity<Object> performCall(int port, String path, HttpMethod method, Object body, Class<?> firstClazz, Class<?>... classes) {
-        var exchange = restTemplate.exchange("http://localhost:" + port + path, method, body == null ? null : new HttpEntity<>(body), String.class);
+    public ResponseEntity<Object> performCall(int port, String path, HttpMethod method, Object body,
+            Class<?> firstClazz, Class<?>... classes) {
+        var exchange = restTemplate.exchange("http://localhost::" + port + path, method,
+                body == null ? null : new HttpEntity<>(body), String.class);
 
         var objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
@@ -47,33 +52,33 @@ public class TestUtils {
         for (int i = limit - 1; i >= 0; i--) {
 
             if (limit - 1 == 0) {
-                //list is empty
+                // list is empty
                 valueType = typeFactory.constructParametricType(ResponseEnvelope.class, firstClazz);
             } else {
-                //list isn't empty
+                // list isn't empty
 
                 if (i == 0) {
-                    //firstClass height
+                    // firstClass height
 
                     if (limit - 1 == 1) {
-                        //list has just 1 element
+                        // list has just 1 element
                         valueType = typeFactory.constructParametricType(firstClazz, classes[i]);
                     } else {
-                        //list has > 1 element
+                        // list has > 1 element
                         valueType = typeFactory.constructParametricType(firstClazz, valueType);
                     }
 
                     valueType = typeFactory.constructParametricType(ResponseEnvelope.class, valueType);
                 } else {
-                    //over firstClass height, inside classes list
+                    // over firstClass height, inside classes list
 
                     if (limit - 1 > 1 && i < limit - 1) {
-                        //list has > 1 element + skip last pair
+                        // list has > 1 element + skip last pair
 
                         if (valueType == null) {
-                            valueType = typeFactory.constructParametricType(classes[i-1], classes[i]);
+                            valueType = typeFactory.constructParametricType(classes[i - 1], classes[i]);
                         } else {
-                            valueType = typeFactory.constructParametricType(classes[i-1], valueType);
+                            valueType = typeFactory.constructParametricType(classes[i - 1], valueType);
                         }
                     }
                 }

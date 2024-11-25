@@ -48,7 +48,7 @@ export default function Page() {
 
     const { mutateAsync: uploadAvatarAsync } = useUpdatePlayerAvatarMutation();
 
-    if (!id) return <ErrorScreen message="Failed to find user" />;
+    if (!id) return <ErrorScreen message="Failed to find dongens haher" />;
 
     async function onDelete() {
         if (!groupId || !seasonId) return;
