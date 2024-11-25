@@ -1,4 +1,7 @@
-import { useCreatePlayerMutation } from '@/api/calls/playerHooks';
+import {
+    useCreatePlayerMutation,
+    usePlayersQuery,
+} from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import CreateNewPlayer from '@/components/screens/CreateNewPlayer';
 import { showErrorToast } from '@/toast';
@@ -10,6 +13,12 @@ export default function Page() {
     const nav = useNavigation();
 
     const { groupId, seasonId } = useGroup();
+
+    const playersQuery = usePlayersQuery(groupId, seasonId);
+
+    const players = playersQuery.data?.data ?? [];
+
+    const existingPlayers = players.map((i) => i.profile!.name!);
 
     const { mutateAsync } = useCreatePlayerMutation();
 
@@ -29,5 +38,10 @@ export default function Page() {
         }
     }
 
-    return <CreateNewPlayer onCreate={onSubmit} />;
+    return (
+        <CreateNewPlayer
+            onCreate={onSubmit}
+            existingPlayers={existingPlayers}
+        />
+    );
 }
