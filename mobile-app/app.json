@@ -17,6 +17,9 @@
             "bundleIdentifier": "com.linusbolls.mobileapp",
             "infoPlist": {
                 "NSPhotoLibraryUsageDescription": true
+            },
+            "config": {
+                "usesNonExemptEncryption": false
             }
         },
         "android": {
