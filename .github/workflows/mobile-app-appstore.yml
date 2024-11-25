@@ -6,7 +6,7 @@ on:
     paths:
       - "mobile-app/**"
     branches:
-      - staging
+      - main
 
 defaults:
   run:
@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: Build app
-        run: npx eas-cli build -p ios --profile staging --local --non-interactive --output=./build.ipa
+        run: npx eas-cli build -p ios --profile production --local --non-interactive --output=./build.ipa
 
       - name: Submit to App Store
         run: npx eas-cli submit -p ios --path=./build.ipa --profile=cd

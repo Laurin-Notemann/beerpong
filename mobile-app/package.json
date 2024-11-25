@@ -1,7 +1,7 @@
 {
     "name": "mobile-app",
     "main": "expo-router/entry",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "scripts": {
         "prestart": "cp ../.env.example .env",
         "start": "expo start",
