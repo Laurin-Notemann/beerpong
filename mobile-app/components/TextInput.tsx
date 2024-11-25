@@ -1,10 +1,11 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect } from 'react';
 import {
     TextInput as ReactNativeTextInput,
     TextInputProps as ReactNativeTextInputProps,
     View,
 } from 'react-native';
 
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 
 import Text from './Text';
@@ -26,6 +27,12 @@ const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
         ref
     ) {
         const color = '#fff';
+
+        useEffect(() => {
+            if (errorMessage) {
+                triggerHapticBump('input:error');
+            }
+        }, [errorMessage]);
 
         return (
             <View style={{ flex: 1 }}>
