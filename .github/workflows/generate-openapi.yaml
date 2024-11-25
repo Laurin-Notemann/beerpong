@@ -2,6 +2,8 @@ name: Generate OpenApi
 
 on:
   pull_request:
+    paths:
+      - "api/**"
   workflow_dispatch:
 
 jobs:
