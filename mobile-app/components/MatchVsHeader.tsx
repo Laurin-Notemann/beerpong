@@ -19,8 +19,17 @@ function ScoreChip({
         <View
             style={{
                 alignItems: 'center',
+                justifyContent: 'center',
 
                 gap: 2,
+
+                bottom: 2,
+
+                // calibrated to the height of the text + the height of the crown icon so we don't get layout shift
+                height: 49,
+
+                // calibrated to be the width of the crown icon so we don't get layout shift
+                minWidth: 34,
             }}
         >
             {winnerTeamId && (
@@ -92,8 +101,8 @@ export default function MatchVsHeader({
                 style={{
                     flexDirection: 'row',
                     position: 'relative',
+                    // calibrated to the height of the avatars so we don't get layout shift
                     height: 36,
-                    width: 76,
                 }}
             >
                 <Team
@@ -120,7 +129,7 @@ export default function MatchVsHeader({
                     flexDirection: 'row',
                     position: 'relative',
                     height: 36,
-                    width: 76,
+                    // width: 76,
                 }}
             >
                 <Team
@@ -174,9 +183,24 @@ function Team({
                     : {
                           opacity: highlightedId == null ? 1 : 0.5,
                       },
-                { flexDirection: 'row' },
+                {
+                    flexDirection: 'row',
+                    justifyContent: color === 'red' ? 'flex-end' : 'flex-end',
+                },
             ]}
         >
+            {color === 'blue' &&
+                emptyAvatarsUsedForSpacing.map((_, index) => {
+                    return (
+                        <Avatar
+                            key={index}
+                            style={{
+                                opacity: 0,
+                                marginLeft: -16,
+                            }}
+                        />
+                    );
+                })}
             {displayedPlayers.map((i, index) => (
                 <Avatar
                     key={index}
@@ -189,26 +213,26 @@ function Team({
                     name={i.name}
                     borderColor={theme.color.team[color]}
                     style={{
-                        marginRight: color === 'red' ? -16 : 0,
-                        marginLeft: color === 'blue' ? -16 : 0,
+                        marginRight: color === 'red' ? -16 : undefined,
+                        marginLeft: color === 'blue' ? -16 : undefined,
 
                         opacity: isCopy ? (i.id === highlightedId ? 1 : 0) : 1,
                         zIndex: i.id === highlightedId ? 1 : undefined,
                     }}
                 />
             ))}
-            {emptyAvatarsUsedForSpacing.map((_, index) => {
-                return (
-                    <Avatar
-                        key={index}
-                        style={{
-                            opacity: 0,
-                            marginRight: color === 'red' ? -16 : 0,
-                            marginLeft: color === 'blue' ? -16 : 0,
-                        }}
-                    />
-                );
-            })}
+            {color === 'red' &&
+                emptyAvatarsUsedForSpacing.map((_, index) => {
+                    return (
+                        <Avatar
+                            key={index}
+                            style={{
+                                opacity: 0,
+                                marginRight: -16,
+                            }}
+                        />
+                    );
+                })}
         </View>
     );
 }
