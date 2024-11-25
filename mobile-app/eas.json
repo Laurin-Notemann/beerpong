@@ -40,7 +40,7 @@
         }
     },
     "submit": {
-        "staging": {
+        "cd": {
             "ios": {
                 "appleId": "linus.bolls@icloud.com",
                 "ascAppId": "6738529626",
