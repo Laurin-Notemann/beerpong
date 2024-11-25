@@ -35,6 +35,7 @@ jobs:
 
       - name: Check recent commit authors
         id: check_authors
+        shell: bash
         run: |
           # Fetch the PR base branch
           git fetch origin ${{ github.base_ref }}
@@ -43,19 +44,19 @@ jobs:
           MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
 
           # Check the commits between the merge base and HEAD
-          COMMIT_AUTHORS=$(git log $MERGE_BASE..HEAD --format='%h - %cn <%ce> - %s')
-          echo "Commit authors since merge base:"
-          echo "$COMMIT_AUTHORS"
+          COMMIT_MESSAGES=$(git log $MERGE_BASE..HEAD --format='%s')
+          echo "Commit messages since merge base:"
+          echo "$COMMIT_MESSAGES"
 
-          if echo "$COMMIT_AUTHORS" | grep -q "github-actions"; then
+          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi types"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
-            echo "A recent commit was authored by a GitHub bot. Stopping the workflow."
+            echo "A recent commit contains the version bump message. Stopping the workflow."
             exit 0  # This will stop the workflow without failing it
           else
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
-            echo "No recent commits by GitHub bot found. Continuing the workflow."
+            echo "No version bump commit found. Continuing the workflow."
           fi
-        shell: bash
+
 
       - name: Set up JDK 21 corretto
         if: steps.check_authors.outputs.has_bot_author != 'true'
