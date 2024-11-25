@@ -65,6 +65,7 @@ export class RealtimeClient {
 
         this.ws.addEventListener('close', () => {
             this.logger.info('connection closed');
+            this.connect();
         });
 
         this.ws.addEventListener('error', (e) => {
