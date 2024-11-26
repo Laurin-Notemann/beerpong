@@ -8,9 +8,13 @@ import { HeaderItem } from './HeaderItem';
 export default function ModalDragHandle({
     onBackPress,
     onNextPress,
+
+    headerRight,
 }: {
     onBackPress?: () => void;
     onNextPress?: () => void;
+
+    headerRight?: React.ReactNode;
 }) {
     return (
         <View
@@ -66,7 +70,7 @@ export default function ModalDragHandle({
                         <Icon name="chevron-left" size={32} />
                     </HeaderItem>
                 )}
-                {onNextPress && (
+                {onNextPress && !headerRight && (
                     <HeaderItem
                         onPress={onNextPress}
                         style={{
@@ -76,6 +80,7 @@ export default function ModalDragHandle({
                         <Icon name="chevron-right" size={32} />
                     </HeaderItem>
                 )}
+                {headerRight}
             </View>
         </View>
     );

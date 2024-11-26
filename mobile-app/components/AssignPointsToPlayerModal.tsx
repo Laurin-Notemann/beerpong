@@ -8,9 +8,12 @@ import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { theme } from '@/theme';
 
 import Avatar from './Avatar';
+import { HeaderItem } from './HeaderItem';
 import MatchVsHeader from './MatchVsHeader';
 import ModalDragHandle from './ModalDragHandle';
 import Text from './Text';
+
+const showVsHeader = false;
 
 export interface AssignPointsToPlayerModalProps {
     isVisible?: boolean;
@@ -55,8 +58,11 @@ export default function AssignPointsToPlayerModal({
                         borderColor={theme.color.team[player.team!]}
                         size={96}
                     />
-                    <Text color="primary" variant="h3">
+                    <Text color="primary" variant="h3" style={{ marginTop: 8 }}>
                         {player.name}
+                    </Text>
+                    <Text color="secondary" style={{ marginTop: 16 }}>
+                        How many points did {player.name} score?
                     </Text>
                 </View>
                 {player.moves.map((i, idx) => (
@@ -139,12 +145,12 @@ export default function AssignPointsToPlayerModal({
             <SafeAreaView
                 style={{
                     backgroundColor: '#3B3B3B',
-                    marginTop: 'auto',
                     borderTopLeftRadius: 16,
                     borderTopRightRadius: 16,
                     overflow: 'hidden',
 
-                    height: 16 * 32,
+                    flex: 1,
+                    marginTop: 16 * 7,
                 }}
             >
                 <ModalDragHandle
@@ -158,11 +164,25 @@ export default function AssignPointsToPlayerModal({
                             ? undefined
                             : () => swiperRef.current?.scrollBy(+1)
                     }
+                    headerRight={
+                        playerIdx === players.length - 1 ? (
+                            <HeaderItem
+                                onPress={onClose}
+                                style={{
+                                    marginLeft: 'auto',
+                                }}
+                            >
+                                Done
+                            </HeaderItem>
+                        ) : undefined
+                    }
                 />
-                <MatchVsHeader
-                    match={match}
-                    highlightedId={players[playerIdx]?.id}
-                />
+                {showVsHeader && (
+                    <MatchVsHeader
+                        match={match}
+                        highlightedId={players[playerIdx]?.id}
+                    />
+                )}
 
                 <Swiper
                     ref={swiperRef}

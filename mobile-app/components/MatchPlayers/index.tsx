@@ -39,9 +39,12 @@ export default function MatchPlayers({
                                 : expandedId === idx
                         }
                         setIsExpanded={(value) =>
+                            setExpandedId(value ? idx : null)
+                        }
+                        onPress={
                             Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
-                                ? onPlayerPress(i)
-                                : setExpandedId(value ? idx : null)
+                                ? () => onPlayerPress(i)
+                                : undefined
                         }
                         editable={editable}
                         setMoveCount={setMoveCount}
@@ -60,9 +63,12 @@ export default function MatchPlayers({
                                 : expandedId === idx
                         }
                         setIsExpanded={(value) =>
+                            setExpandedId(value ? idx : null)
+                        }
+                        onPress={
                             Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
-                                ? onPlayerPress(i)
-                                : setExpandedId(value ? idx : null)
+                                ? () => onPlayerPress(i)
+                                : undefined
                         }
                         editable={editable}
                         setMoveCount={setMoveCount}

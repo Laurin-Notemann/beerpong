@@ -6,6 +6,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import AssignFinishModeModal from '@/components/AssignFinishMoveModal';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import { Feature } from '@/constants/Features';
@@ -18,7 +19,9 @@ export default function Page() {
 
     const matchDraft = useMatchDraftStore();
 
-    const [playerIdx, setPlayerIdx] = useState<number | null>(null);
+    const [playerIdx, setPlayerIdx] = useState<number | null>(0);
+
+    const [showFinishMoveModal, setShowFinishMoveModal] = useState(false);
 
     const { mutateAsync } = useCreateMatchMutation();
 
@@ -63,8 +66,22 @@ export default function Page() {
         };
     });
 
+    const finishes = teamMembers
+        .flatMap((i) => i.moves)
+        .filter((i) => i.isFinish);
+
+    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
+
+    const isValidGame = numFinishes === 1;
+
     async function onSubmit() {
         if (!groupId || !seasonId) return;
+
+        if (Feature.POINTS_ASSIGNMENT_MODAL.isEnabled && !isValidGame) {
+            setShowFinishMoveModal(true);
+
+            return;
+        }
 
         try {
             await mutateAsync({
@@ -106,6 +123,24 @@ export default function Page() {
                     setMoveCount={matchDraft.actions.setMoveCount}
                 />
             )}
+            <AssignFinishModeModal
+                onClose={() => setShowFinishMoveModal(false)}
+                isVisible={showFinishMoveModal}
+                match={{
+                    blueCups: players
+                        .filter((i) => i.team === 'blue')
+                        .map((i) => i.moves)
+                        .flat()
+                        .reduce((sum, i) => sum + i.count, 0),
+                    redCups: players
+                        .filter((i) => i.team === 'red')
+                        .map((i) => i.moves)
+                        .flat()
+                        .reduce((sum, i) => sum + i.count, 0),
+                    redTeam: teamMembers.filter((i) => i.team === 'red'),
+                    blueTeam: teamMembers.filter((i) => i.team === 'blue'),
+                }}
+            />
             <CreateMatchAssignPoints
                 players={teamMembers}
                 setMoveCount={matchDraft.actions.setMoveCount}
