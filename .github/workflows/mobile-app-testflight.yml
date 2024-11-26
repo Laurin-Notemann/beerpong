@@ -2,22 +2,17 @@ name: Mobile App To Testflight
 
 on:
   workflow_dispatch:
-  #  pull_request:
-  #    branches:
-  #      - staging
+  push:
+    paths:
+      - "mobile-app/**"
+    branches:
+      - staging
 
 defaults:
   run:
     working-directory: mobile-app
 
 jobs:
-  bump-version:
-    name: Bump the version of the app
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
   build-testflight:
     name: Build and push app to Apple Testflight
     runs-on: macos-latest
@@ -42,32 +37,32 @@ jobs:
         run: npx eas-cli build -p ios --profile staging --local --non-interactive --output=./build.ipa
 
       - name: Submit to App Store
-        run: npx eas-cli submit -p ios --path=./build.ipa --non-interactive
+        run: npx eas-cli submit -p ios --path=./build.ipa --profile=staging
 
-  build-android-test:
-    name: Build and push app to Apple Testflight
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-            
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build app
-        run: npx eas-cli build -p android --profile staging --local --non-interactive --output=./build.ipa
-
-      - name: Submit to App Store
-        run: npx eas-cli submit -p android --path=./build.ipa
+          #  build-android-test:
+          #    name: Build and push app to Apple Testflight
+          #    runs-on: ubuntu-latest
+          #    steps:
+          #      - name: Checkout code
+          #        uses: actions/checkout@v4
+          #      - name: Setup Node.js
+          #        uses: actions/setup-node@v4
+          #        with:
+          #          node-version: "20"
+          #      - name: Setup Expo
+          #        uses: expo/expo-github-action@v8
+          #        with:
+          #          expo-version: latest
+          #          eas-version: latest
+          #          token: ${{ secrets.EXPO_TOKEN }}
+          #            
+          #      - name: Install dependencies
+          #        run: npm ci
+          #
+          #      - name: Build app
+          #        run: npx eas-cli build -p android --profile staging --local --non-interactive --output=./build.ipa
+          #
+          #      - name: Submit to App Store
+          #        run: npx eas-cli submit -p android --path=./build.ipa
 
 

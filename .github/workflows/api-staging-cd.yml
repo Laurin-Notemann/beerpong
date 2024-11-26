@@ -45,7 +45,7 @@ jobs:
           password: ${{ steps.auth.outputs.access_token }}
       - id: "build-and-push"
         name: "Build and Push docker Image"
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           context: api
@@ -80,7 +80,7 @@ jobs:
           service: "api-springboot-staging"
           image: "europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}"
           region: europe-west10
-          flags: "--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:beerpong-staging-db --no-cpu-throttling --min-instances 0 --max-instances 1"
+          flags: "--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:beerpong-staging-db --no-cpu-throttling --min-instances 1 --max-instances 2 --allow-unauthenticated"
           env_vars: |
             POSTGRES_USER=postgres
             POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:beerpong-staging-db&socketFactory=com.google.cloud.sql.postgres.SocketFactory
