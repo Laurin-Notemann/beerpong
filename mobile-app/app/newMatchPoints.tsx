@@ -51,7 +51,14 @@ export default function Page() {
             team: i.team,
             avatarUrl: profile.profile.avatarAsset?.url,
             name: profile.profile.name || 'Unknown',
-            points: 1,
+            points: i.moves.reduce(
+                (sum, j) =>
+                    sum +
+                    j.count *
+                        (allowedMoves.find((k) => k.id === j.moveId)
+                            ?.pointsForScorer ?? 0),
+                0
+            ),
             change: 0.12,
             moves: allowedMoves.map((j) => {
                 return {
@@ -124,6 +131,9 @@ export default function Page() {
                 />
             )}
             <AssignFinishModeModal
+                onSubmit={(playerId, moveId) =>
+                    matchDraft.actions.setMoveCount(playerId, moveId, 1)
+                }
                 onClose={() => setShowFinishMoveModal(false)}
                 isVisible={showFinishMoveModal}
                 match={{

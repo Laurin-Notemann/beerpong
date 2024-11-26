@@ -62,7 +62,7 @@ export default function MenuSection({
     color = 'light',
 }: MenuSectionProps) {
     return (
-        <View>
+        <View style={{ width: '100%', flex: 1 }}>
             {title && <Heading title={title} titleHeadIcon={titleHeadIcon} />}
             <View
                 style={{
