@@ -35,12 +35,17 @@ export default function CreateGroupAddMembers({
 
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
 
+    const playerAlreadyExists = members.some((i) => i.name === value);
+
+    const canSubmit = value.length > 0 && !playerAlreadyExists;
+
     function onAddMember() {
-        if (value.length) {
+        if (canSubmit) {
             setMembers((prev) => [...prev, { name: value }]);
+
+            setValue('');
+            inputRef.current?.clear();
         }
-        setValue('');
-        inputRef.current?.clear();
     }
 
     return (
@@ -50,7 +55,7 @@ export default function CreateGroupAddMembers({
                     headerRight: () =>
                         value.length > 0 || members.length < 2 ? (
                             <HeaderItem
-                                disabled={value.length < 1}
+                                disabled={!canSubmit}
                                 onPress={onAddMember}
                             >
                                 Add
@@ -81,9 +86,16 @@ export default function CreateGroupAddMembers({
                 style={{
                     backgroundColor: theme.color.bg,
                     padding: 16,
+
+                    flexDirection: 'row',
                 }}
             >
                 <TextInput
+                    errorMessage={
+                        playerAlreadyExists
+                            ? `There\'s already a player named "${value}" in this group.`
+                            : undefined
+                    }
                     autoFocus
                     autoCorrect={false}
                     ref={inputRef}
