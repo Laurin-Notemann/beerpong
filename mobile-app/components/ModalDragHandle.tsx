@@ -36,7 +36,7 @@ export default function ModalDragHandle({
                     justifyContent: 'center',
                 }}
             >
-                <View
+                {/* <View
                     style={{
                         borderRadius: 99,
 
@@ -45,7 +45,7 @@ export default function ModalDragHandle({
                         width: 80,
                         height: 8,
                     }}
-                />
+                /> */}
             </View>
             <View
                 style={{

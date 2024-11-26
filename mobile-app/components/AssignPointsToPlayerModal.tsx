@@ -62,7 +62,7 @@ export default function AssignPointsToPlayerModal({
                         {player.name}
                     </Text>
                     <Text color="secondary" style={{ marginTop: 16 }}>
-                        How many points did {player.name} score?
+                        How many cups did {player.name} score?
                     </Text>
                 </View>
                 {player.moves.map((i, idx) => (
@@ -186,11 +186,15 @@ export default function AssignPointsToPlayerModal({
 
                 <Swiper
                     ref={swiperRef}
-                    // showsButtons={true}
                     showsPagination={false}
                     loop={false}
                     index={playerIdx}
-                    onIndexChanged={setPlayerIdx}
+                    onIndexChanged={(value) => {
+                        // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
+                        // this is a workaround that works for all pages except for the second one (index 1).
+                        if (value === 0 && playerIdx > 1) return;
+                        setPlayerIdx(value);
+                    }}
                     style={{ height: 0 }}
                 >
                     {players.map((i) => (
