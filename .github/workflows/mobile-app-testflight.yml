@@ -2,11 +2,6 @@ name: Mobile App To Testflight
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "mobile-app/**"
-    branches:
-      - staging
 
 defaults:
   run:
