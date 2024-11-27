@@ -2,7 +2,7 @@ node_modules
 .idea/*
 .env
 socket-test/
-# build*
+build*
 
 .gen-builds/**
 .DS_Store
