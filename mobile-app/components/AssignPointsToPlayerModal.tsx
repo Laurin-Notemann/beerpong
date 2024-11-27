@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SafeAreaView, TouchableOpacity, View } from 'react-native';
 import Modal from 'react-native-modal';
 import Swiper from 'react-native-swiper';
@@ -25,7 +25,7 @@ export interface AssignPointsToPlayerModalProps {
 
     match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
 
-    playerIdx: number;
+    playerIdx: number | null;
     setPlayerIdx: (idx: number) => void;
 }
 export default function AssignPointsToPlayerModal({
@@ -136,6 +136,13 @@ export default function AssignPointsToPlayerModal({
         );
     }
 
+    // used for a scuffed hack to prevent the modal from reopening when clicking outside of it
+    const playerIdxRef = useRef(playerIdx);
+
+    useEffect(() => {
+        playerIdxRef.current = playerIdx;
+    }, [playerIdx]);
+
     return (
         <Modal
             isVisible={isVisible}
@@ -180,7 +187,7 @@ export default function AssignPointsToPlayerModal({
                 {showVsHeader && (
                     <MatchVsHeader
                         match={match}
-                        highlightedId={players[playerIdx]?.id}
+                        highlightedId={players[playerIdx!]?.id}
                     />
                 )}
 
@@ -188,12 +195,16 @@ export default function AssignPointsToPlayerModal({
                     ref={swiperRef}
                     showsPagination={false}
                     loop={false}
-                    index={playerIdx}
+                    index={playerIdx!}
                     onIndexChanged={(value) => {
-                        // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
-                        // this is a workaround that works for all pages except for the second one (index 1).
-                        if (value === 0 && playerIdx > 1) return;
-                        setPlayerIdx(value);
+                        setTimeout(() => {
+                            // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
+                            // at this point, the component hasn't rerendered yet, so playerIdx will still be a non-null value, so we can't check against that.
+                            // to work around this, we wait 0ms (which actually translates to a short wait) for the playerIdx to change to null.
+                            // we have to use a ref for the playerIdx because we're inside a callback, and the value of playerIdx will be the same as when the callback was created (so non-null).
+                            if (playerIdxRef.current != null)
+                                setPlayerIdx(value);
+                        }, 0);
                     }}
                     style={{ height: 0 }}
                 >

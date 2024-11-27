@@ -109,7 +109,7 @@ export default function Page() {
             {Feature.POINTS_ASSIGNMENT_MODAL.isEnabled && (
                 <AssignPointsToPlayerModal
                     onClose={() => setPlayerIdx(null)}
-                    playerIdx={playerIdx!}
+                    playerIdx={playerIdx}
                     setPlayerIdx={setPlayerIdx}
                     match={{
                         blueCups: players
