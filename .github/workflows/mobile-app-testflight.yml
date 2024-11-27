@@ -14,7 +14,9 @@ jobs:
   build-testflight:
     name: Build and push app to Apple Testflight
     runs-on: macos-latest
-    if: contains(github.event.head_commit.message, 'Bump app version')
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, 'Bump app version'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
