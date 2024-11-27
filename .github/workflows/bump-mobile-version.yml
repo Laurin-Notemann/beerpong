@@ -2,6 +2,12 @@ name: Bump mobile app version and submit
 
 on:
   workflow_dispatch:
+    inputs:
+      patch_update:
+        description: 'Enter "true" for staging "false" for prod'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   bump-version:
@@ -32,10 +38,17 @@ jobs:
           echo "Current version: $current_version"
           
           # Increment patch version
-          new_version=$(node -e "
-            const [major, minor, patch] = '$current_version'.split('.');
-            console.log(\`\${major}.\${minor}.\${parseInt(patch) + 1}\`);
-          ")
+          if [[ "${{ inputs.patch_update }}" == "true" ]]; then
+            new_version=$(node -e "
+              const [major, minor, patch] = '$current_version'.split('.');
+              console.log(\`\${major}.\${minor}.\${parseInt(patch) + 1}\`);
+            ")
+          else
+            new_version=$(node -e "
+              const [major, minor, patch] = '$current_version'.split('.');
+              console.log(\`\${major}.\${parseInt(minor) + 1}.\${patch}\`);
+            ")
+          fi
           echo "New version: $new_version"
           
           # Update package.json
@@ -59,4 +72,4 @@ jobs:
           branch: bump-app-version-${{ steps.bump_version.outputs.new_version }}
           base: ${{ github.head_ref }}
           delete-branch: true
-          token: ${{ secrets.PAT }
+          token: ${{ secrets.PAT }}
