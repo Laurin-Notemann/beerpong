@@ -17,18 +17,15 @@ export interface CreateMatchAssignPointsProps {
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
     onSubmit: () => void;
+
+    onPlayerPress: (player: TeamMember) => void;
 }
 export default function CreateMatchAssignPoints({
     players,
     setMoveCount,
     onSubmit,
+    onPlayerPress,
 }: CreateMatchAssignPointsProps) {
-    const finishes = players.flatMap((i) => i.moves).filter((i) => i.isFinish);
-
-    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
-
-    const isValidGame = numFinishes === 1;
-
     const navigation = useNavigation();
     return (
         <>
@@ -36,7 +33,7 @@ export default function CreateMatchAssignPoints({
                 options={{
                     ...navStyles,
                     headerRight: () => (
-                        <HeaderItem disabled={!isValidGame} onPress={onSubmit}>
+                        <HeaderItem onPress={onSubmit} noMargin>
                             Create
                         </HeaderItem>
                     ),
@@ -91,6 +88,7 @@ export default function CreateMatchAssignPoints({
                     editable
                     players={players}
                     setMoveCount={setMoveCount}
+                    onPlayerPress={onPlayerPress}
                 />
             </ScrollView>
         </>

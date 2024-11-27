@@ -1,25 +1,28 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, TouchableOpacityProps } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { theme } from '@/theme';
+
+export interface HeaderItemProps extends TouchableOpacityProps {
+    children: React.ReactNode;
+    noMargin?: boolean;
+
+    onPress?: () => void;
+
+    disabled?: boolean;
+}
 
 export function HeaderItem({
     children,
     noMargin = false,
     onPress,
     disabled = false,
-}: {
-    children: string;
-    noMargin?: boolean;
-
-    onPress?: () => void;
-
-    disabled?: boolean;
-}) {
+    ...rest
+}: HeaderItemProps) {
     return (
         <>
-            <TouchableOpacity onPress={onPress} disabled={disabled}>
+            <TouchableOpacity onPress={onPress} disabled={disabled} {...rest}>
                 <ThemedText
                     style={{
                         marginLeft: noMargin ? 0 : 16,
@@ -31,6 +34,8 @@ export function HeaderItem({
                         color: theme.color.text.primary,
 
                         opacity: disabled ? 0.2 : undefined,
+
+                        width: '100%',
                     }}
                 >
                     {children}

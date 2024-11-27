@@ -129,11 +129,14 @@ export default function NewMatchAssignTeams({
     return (
         <ScrollView
             style={{
+                flex: 1,
+
                 backgroundColor: theme.color.bg,
             }}
             contentContainerStyle={{
-                flex: 1,
                 paddingHorizontal: 16,
+
+                paddingBottom: 24,
             }}
         >
             <Stack.Screen

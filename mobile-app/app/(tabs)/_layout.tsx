@@ -3,6 +3,7 @@ import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
+import { env } from '@/api/env';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { Colors } from '@/constants/Colors';
@@ -86,16 +87,22 @@ export default function TabLayout() {
                     ...groupHeader,
                 }}
             />
-            <Tabs.Screen
-                name="rules"
-                options={{
-                    title: 'Rules',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="format-section" />
-                    ),
-                    ...groupHeader,
-                }}
-            />
+            {env.isDev && (
+                <Tabs.Screen
+                    name="rules"
+                    options={{
+                        title: 'Rules',
+                        tabBarIcon: ({ color }) => (
+                            <Icon
+                                color={color}
+                                size={32}
+                                name="format-section"
+                            />
+                        ),
+                        ...groupHeader,
+                    }}
+                />
+            )}
             <Tabs.Screen
                 name="settings"
                 options={{

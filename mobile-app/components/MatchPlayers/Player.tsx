@@ -44,6 +44,8 @@ export interface PlayerProps {
     editable?: boolean;
 
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
+
+    onPress?: () => void;
 }
 export default function Player({
     player: { id, avatarUrl, team, name, points, change, moves },
@@ -53,6 +55,7 @@ export default function Player({
     editable = false,
 
     setMoveCount,
+    onPress,
 }: PlayerProps) {
     const animation = useRef(new Animated.Value(0)).current; // start with height 0
 
@@ -88,9 +91,10 @@ export default function Player({
                     borderTopColor: theme.panel.light.active,
                 }}
                 onPress={
-                    editable
+                    onPress ??
+                    (editable
                         ? toggleCollapse
-                        : () => nav.navigate('player', { id })
+                        : () => nav.navigate('player', { id }))
                 }
                 underlayColor={theme.panel.light.active}
             >

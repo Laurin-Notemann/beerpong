@@ -93,10 +93,13 @@ export default function Avatar({
                     borderColor,
                 }}
             >
-                {url ? (
+                {url && (
                     <Image
                         source={{ uri: url }}
                         style={{
+                            position: 'absolute',
+                            zIndex: 1,
+
                             width: size,
                             height: size,
                             borderRadius: 99,
@@ -106,28 +109,28 @@ export default function Avatar({
                         }}
                         resizeMode="cover"
                     />
-                ) : (
-                    <ThemedText
-                        style={{
-                            lineHeight: size,
-                            fontSize: size / 2.7,
-
-                            fontWeight: 500,
-
-                            color: theme.avatar.text,
-
-                            bottom: borderColor ? 2 : 0,
-                        }}
-                    >
-                        {content || name?.[0] || (
-                            <Icon
-                                color={theme.avatar.text}
-                                size={size / 1.6}
-                                name="account-outline"
-                            />
-                        )}
-                    </ThemedText>
                 )}
+
+                <ThemedText
+                    style={{
+                        lineHeight: size,
+                        fontSize: size / 2.7,
+
+                        fontWeight: 500,
+
+                        color: theme.avatar.text,
+
+                        bottom: borderColor ? 2 : 0,
+                    }}
+                >
+                    {content || name?.[0] || (
+                        <Icon
+                            color={theme.avatar.text}
+                            size={size / 1.6}
+                            name="account-outline"
+                        />
+                    )}
+                </ThemedText>
             </View>
             {canUpload && (
                 <Badge>

@@ -22,29 +22,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - id: 'setup-qemu'
+      - id: "setup-qemu"
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      - id: 'docker-buildx-setup'
+      - id: "docker-buildx-setup"
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v2"
         with:
           create_credentials_file: true
           token_format: access_token
-          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
-          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
-      - id: 'login-gar'
+          workload_identity_provider: "projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions"
+          service_account: "cd-beerpong@beer-pong-441815.iam.gserviceaccount.com"
+      - id: "login-gar"
         name: "Login to GAR"
         uses: docker/login-action@v3
         with:
           registry: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
-      - id: 'build-and-push'
-        name: 'Build and Push docker Image'
+      - id: "build-and-push"
+        name: "Build and Push docker Image"
         uses: docker/build-push-action@v6
         with:
           push: true
@@ -66,21 +66,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v2"
         with:
           create_credentials_file: true
           token_format: access_token
-          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
-          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
-      - id: 'deploy'
-        uses: 'google-github-actions/deploy-cloudrun@v2'
+          workload_identity_provider: "projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions"
+          service_account: "cd-beerpong@beer-pong-441815.iam.gserviceaccount.com"
+      - id: "deploy"
+        uses: "google-github-actions/deploy-cloudrun@v2"
         with:
-          service: 'api-springboot-staging'
-          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}'
+          service: "api-springboot-staging"
+          image: "europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}"
           region: europe-west10
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:beerpong-staging-db --no-cpu-throttling --min-instances 0 --max-instances 1 --allow-unauthenticated'
+          flags: "--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:beerpong-staging-db --no-cpu-throttling --min-instances 0 --max-instances 1 --allow-unauthenticated"
           env_vars: |
             POSTGRES_USER=postgres
             POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:beerpong-staging-db&socketFactory=com.google.cloud.sql.postgres.SocketFactory
