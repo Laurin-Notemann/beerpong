@@ -3,6 +3,6 @@ export const Feature = {
         isEnabled: false,
     },
     POINTS_ASSIGNMENT_MODAL: {
-        isEnabled: false,
+        isEnabled: true,
     },
 };
