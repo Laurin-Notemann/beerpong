@@ -6,7 +6,10 @@ import { ThemedText } from '@/components/ThemedText';
 import { theme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
-function Badge({ children }: PropsWithChildren) {
+function Badge({
+    children,
+    circular = true,
+}: PropsWithChildren & { circular?: boolean }) {
     return (
         <View
             style={{
@@ -15,15 +18,17 @@ function Badge({ children }: PropsWithChildren) {
                 right: 0,
                 bottom: 0,
 
-                width: 32,
-                height: 32,
+                width: circular ? 32 : undefined,
+                height: circular ? 32 : undefined,
 
                 alignItems: 'center',
                 justifyContent: 'center',
 
+                paddingHorizontal: circular ? undefined : 4,
+
                 backgroundColor: theme.avatar.badge.bg,
 
-                borderRadius: 99,
+                borderRadius: circular ? 99 : 4,
 
                 shadowOffset: {
                     width: 0,
@@ -142,10 +147,10 @@ export default function Avatar({
                 </Badge>
             )}
             {!canUpload && placement != null && (
-                <Badge>
+                <Badge circular={false}>
                     <Text
                         style={{
-                            fontSize: 26,
+                            fontSize: 20,
                             color: theme.avatar.badge.text,
 
                             fontWeight: 600,
