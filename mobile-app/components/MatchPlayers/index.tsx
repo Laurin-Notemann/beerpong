@@ -33,19 +33,11 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         player={i}
-                        expanded={
-                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
-                                ? false
-                                : expandedId === idx
-                        }
+                        expanded={false}
                         setIsExpanded={(value) =>
                             setExpandedId(value ? idx : null)
                         }
-                        onPress={
-                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
-                                ? () => onPlayerPress(i)
-                                : undefined
-                        }
+                        onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
                     />
@@ -57,19 +49,11 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         player={i}
-                        expanded={
-                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
-                                ? false
-                                : expandedId === idx
-                        }
+                        expanded={false}
                         setIsExpanded={(value) =>
                             setExpandedId(value ? idx : null)
                         }
-                        onPress={
-                            Feature.POINTS_ASSIGNMENT_MODAL.isEnabled
-                                ? () => onPlayerPress(i)
-                                : undefined
-                        }
+                        onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
                     />

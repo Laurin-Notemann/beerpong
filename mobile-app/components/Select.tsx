@@ -7,7 +7,7 @@ export interface SelectOption
 }
 
 export interface SelectProps extends Omit<MenuSectionProps, 'children'> {
-    value: string;
+    value?: string | null;
 
     onChange: (value: string) => void;
 
@@ -27,7 +27,13 @@ export default function Select({
                 return (
                     <MenuItem
                         key={idx}
-                        tailIconType={checked ? 'checked' : 'unchecked'}
+                        tailIconType={
+                            value == null
+                                ? undefined
+                                : checked
+                                  ? 'checked'
+                                  : 'unchecked'
+                        }
                         onPress={() => {
                             if (i.value !== value) {
                                 onChange(i.value);

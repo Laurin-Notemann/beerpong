@@ -31,6 +31,7 @@ export default function Screen() {
 
     async function onSubmit() {
         nav.navigate('newMatchPoints');
+        nav.navigate('assignPointsToPlayerModal', { pageIdx: 0 });
     }
 
     return (
