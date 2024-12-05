@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { Feature } from '@/constants/Features';
+import { Feature } from '@/constants/Features';
 
 import MenuSection from '../Menu/MenuSection';
 import Player from './Player';
@@ -11,11 +12,13 @@ export interface MatchPlayersProps {
     players: TeamMember[];
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
     onPlayerPress: (player: TeamMember) => void;
+    onPlayerPress: (player: TeamMember) => void;
 }
 export default function MatchPlayers({
     editable,
     players,
     setMoveCount,
+    onPlayerPress,
     onPlayerPress,
 }: MatchPlayersProps) {
     const [expandedId, setExpandedId] = useState<number | null>(null);

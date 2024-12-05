@@ -2,6 +2,9 @@ name: Mobile App To Testflight
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - staging
 
 defaults:
   run:
@@ -11,6 +14,9 @@ jobs:
   build-testflight:
     name: Build and push app to Apple Testflight
     runs-on: macos-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, 'Bump app version'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,7 +38,12 @@ jobs:
         run: npx eas-cli build -p ios --profile staging --local --non-interactive --output=./build.ipa
 
       - name: Submit to App Store
-        run: npx eas-cli submit -p ios --path=./build.ipa --profile=staging
+        run: |
+          xcrun altool --upload-app \
+          --file ./build.ipa \
+          --type ios \
+          --username "${{ secrets.APPLE_ID }}" \
+          --password "${{ secrets.APPLE_ID_PASSWORD }}"
 
           #  build-android-test:
           #    name: Build and push app to Apple Testflight
