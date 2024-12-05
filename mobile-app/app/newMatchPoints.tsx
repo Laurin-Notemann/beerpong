@@ -84,8 +84,10 @@ export default function Page() {
     async function onSubmit() {
         if (!groupId || !seasonId) return;
 
-        if (Feature.POINTS_ASSIGNMENT_MODAL.isEnabled && !isValidGame) {
-            setShowFinishMoveModal(true);
+        if (!isValidGame) {
+            nav.navigate('assignPointsToPlayerModal', {
+                pageIdx: teamMembers.length,
+            });
 
             return;
         }
@@ -105,62 +107,20 @@ export default function Page() {
     }
 
     return (
-        <>
-            {Feature.POINTS_ASSIGNMENT_MODAL.isEnabled && (
-                <AssignPointsToPlayerModal
-                    onClose={() => setPlayerIdx(null)}
-                    playerIdx={playerIdx}
-                    setPlayerIdx={setPlayerIdx}
-                    match={{
-                        blueCups: players
-                            .filter((i) => i.team === 'blue')
-                            .map((i) => i.moves)
-                            .flat()
-                            .reduce((sum, i) => sum + i.count, 0),
-                        redCups: players
-                            .filter((i) => i.team === 'red')
-                            .map((i) => i.moves)
-                            .flat()
-                            .reduce((sum, i) => sum + i.count, 0),
-                        redTeam: teamMembers.filter((i) => i.team === 'red'),
-                        blueTeam: teamMembers.filter((i) => i.team === 'blue'),
-                    }}
-                    editable
-                    isVisible={playerIdx != null}
-                    setMoveCount={matchDraft.actions.setMoveCount}
-                />
-            )}
-            <AssignFinishModeModal
-                onSubmit={(playerId, moveId) =>
-                    matchDraft.actions.setMoveCount(playerId, moveId, 1)
-                }
-                onClose={() => setShowFinishMoveModal(false)}
-                isVisible={showFinishMoveModal}
-                match={{
-                    blueCups: players
-                        .filter((i) => i.team === 'blue')
-                        .map((i) => i.moves)
-                        .flat()
-                        .reduce((sum, i) => sum + i.count, 0),
-                    redCups: players
-                        .filter((i) => i.team === 'red')
-                        .map((i) => i.moves)
-                        .flat()
-                        .reduce((sum, i) => sum + i.count, 0),
-                    redTeam: teamMembers.filter((i) => i.team === 'red'),
-                    blueTeam: teamMembers.filter((i) => i.team === 'blue'),
-                }}
-            />
-            <CreateMatchAssignPoints
-                players={teamMembers}
-                setMoveCount={matchDraft.actions.setMoveCount}
-                onSubmit={onSubmit}
-                onPlayerPress={(player) =>
-                    setPlayerIdx(
-                        teamMembers.findIndex((i) => i.id === player.id)
-                    )
-                }
-            />
-        </>
+        <CreateMatchAssignPoints
+            players={teamMembers}
+            setMoveCount={matchDraft.actions.setMoveCount}
+            onSubmit={onSubmit}
+            onCancel={() => {
+                matchDraft.actions.clear();
+                nav.goBack();
+            }}
+            onPlayerPress={(player) =>
+                // setPageIdx(teamMembers.findIndex((i) => i.id === player.id))
+                nav.navigate('assignPointsToPlayerModal', {
+                    pageIdx: teamMembers.findIndex((i) => i.id === player.id),
+                })
+            }
+        />
     );
 }

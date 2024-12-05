@@ -47,6 +47,11 @@ function Everything() {
             <Stack.Screen name="createNewPlayer" options={modalStyles} />
 
             <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
+
+            <Stack.Screen
+                name="assignPointsToPlayerModal"
+                options={modalStyles}
+            />
         </Stack>
     );
 }

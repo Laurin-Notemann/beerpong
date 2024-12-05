@@ -13,7 +13,7 @@ export interface MenuItemProps {
 
     type?: 'default' | 'danger';
 
-    headIcon?: string;
+    headIcon?: string | React.ReactElement;
     tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked';
     onPress?: () => void;
 
@@ -93,20 +93,23 @@ export default function MenuItem({
                 onPress={confirmationPrompt ? showPrompt : onPress}
             >
                 <>
-                    {headIcon && (
-                        <Icon
-                            color={
-                                type === 'danger'
-                                    ? theme.color.delete
-                                    : theme.icon.primary
-                            }
-                            size={24}
-                            name={headIcon}
-                            style={{
-                                paddingRight: 16,
-                            }}
-                        />
-                    )}
+                    {headIcon &&
+                        (typeof headIcon === 'string' ? (
+                            <Icon
+                                color={
+                                    type === 'danger'
+                                        ? theme.color.delete
+                                        : theme.icon.primary
+                                }
+                                size={24}
+                                name={headIcon}
+                                style={{
+                                    paddingRight: 16,
+                                }}
+                            />
+                        ) : (
+                            headIcon
+                        ))}
                     {subtitle ? (
                         <View
                             style={{

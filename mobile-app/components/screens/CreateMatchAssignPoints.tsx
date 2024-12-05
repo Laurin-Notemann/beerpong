@@ -17,6 +17,7 @@ export interface CreateMatchAssignPointsProps {
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
     onSubmit: () => void;
+    onCancel: () => void;
 
     onPlayerPress: (player: TeamMember) => void;
 }
@@ -24,6 +25,7 @@ export default function CreateMatchAssignPoints({
     players,
     setMoveCount,
     onSubmit,
+    onCancel,
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
     const navigation = useNavigation();
@@ -32,6 +34,11 @@ export default function CreateMatchAssignPoints({
             <Stack.Screen
                 options={{
                     ...navStyles,
+                    headerLeft: () => (
+                        <HeaderItem onPress={onCancel} noMargin>
+                            Cancel
+                        </HeaderItem>
+                    ),
                     headerRight: () => (
                         <HeaderItem onPress={onSubmit} noMargin>
                             Create

@@ -30,6 +30,9 @@ export async function readAsByteArray(fileUri: string): Promise<ByteArray> {
 export async function launchImageLibrary(
     options?: ImagePicker.ImagePickerOptions
 ): Promise<ByteArrayImagePickerAsset[]> {
+    // important: this promise never resolves if the image picker modal is dismissed by swiping
+    // see https://github.com/expo/expo/issues/15185
+    // this might have been fixed in a later version of expo-image-picker, but later versions are incompatible with our project :)
     const result = await ImagePicker.launchImageLibraryAsync(options);
 
     const assets = await Promise.all<ByteArrayImagePickerAsset>(

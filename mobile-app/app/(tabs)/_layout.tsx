@@ -87,22 +87,18 @@ export default function TabLayout() {
                     ...groupHeader,
                 }}
             />
-            {env.isDev && (
-                <Tabs.Screen
-                    name="rules"
-                    options={{
-                        title: 'Rules',
-                        tabBarIcon: ({ color }) => (
-                            <Icon
-                                color={color}
-                                size={32}
-                                name="format-section"
-                            />
-                        ),
-                        ...groupHeader,
-                    }}
-                />
-            )}
+            <Tabs.Screen
+                name="rules"
+                options={{
+                    title: 'Rules',
+                    tabBarIcon: ({ color }) => (
+                        <Icon color={color} size={32} name="format-section" />
+                    ),
+                    ...groupHeader,
+                    // hide tab in production
+                    href: env.isDev ? undefined : null,
+                }}
+            />
             <Tabs.Screen
                 name="settings"
                 options={{

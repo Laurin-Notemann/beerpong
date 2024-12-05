@@ -141,15 +141,14 @@ export default function PlayerScreen({
                     matchesPlayedCount={matches.length}
                     elo={elo}
                 />
-                <View style={{ alignItems: 'stretch' }}>
+                <View
+                    style={{
+                        width: '100%',
+                        alignItems: 'stretch',
+                    }}
+                >
                     {editable ? (
-                        <MenuSection
-                            style={
-                                {
-                                    // width: '100%',
-                                }
-                            }
-                        >
+                        <MenuSection>
                             <MenuItem
                                 title={name}
                                 headIcon="pencil-outline"
@@ -173,13 +172,7 @@ export default function PlayerScreen({
                     ) : (
                         env.isDev && (
                             <>
-                                <MenuSection
-                                    style={
-                                        {
-                                            // width: '100%',
-                                        }
-                                    }
-                                >
+                                <MenuSection>
                                     <MenuItem
                                         title="Past Seasons"
                                         headIcon="pencil-outline"
