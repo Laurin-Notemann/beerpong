@@ -59,14 +59,6 @@ export default function Page() {
                             ?.pointsForScorer ?? 0),
                 0
             ),
-            points: i.moves.reduce(
-                (sum, j) =>
-                    sum +
-                    j.count *
-                        (allowedMoves.find((k) => k.id === j.moveId)
-                            ?.pointsForScorer ?? 0),
-                0
-            ),
             change: 0.12,
             moves: allowedMoves.map((j) => {
                 return {
@@ -80,14 +72,6 @@ export default function Page() {
             }),
         };
     });
-
-    const finishes = teamMembers
-        .flatMap((i) => i.moves)
-        .filter((i) => i.isFinish);
-
-    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
-
-    const isValidGame = numFinishes === 1;
 
     const finishes = teamMembers
         .flatMap((i) => i.moves)
