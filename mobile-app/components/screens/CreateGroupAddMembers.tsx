@@ -9,11 +9,12 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
+import { HeaderItem } from '@/components/HeaderItem';
 import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
 import Avatar from '../Avatar';
+import Text from '../Text';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
@@ -28,22 +29,45 @@ export default function CreateGroupAddMembers({
 }: CreateGroupAddMembersProps) {
     const [members, setMembers] = useState<GroupMember[]>([]);
 
+    const [value, setValue] = useState('');
+
     const inputRef = useRef<B>(null);
 
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
+
+    const playerAlreadyExists = members.some((i) => i.name === value);
+
+    const canSubmit = value.length > 0 && !playerAlreadyExists;
+
+    function onAddMember() {
+        if (canSubmit) {
+            setMembers((prev) => [...prev, { name: value }]);
+
+            setValue('');
+            inputRef.current?.clear();
+        }
+    }
 
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={!canBeCreated}
-                            onPress={() => onSubmit(members)}
-                        >
-                            Next
-                        </HeaderItem>
-                    ),
+                    headerRight: () =>
+                        value.length > 0 || members.length < 2 ? (
+                            <HeaderItem
+                                disabled={!canSubmit}
+                                onPress={onAddMember}
+                            >
+                                Add
+                            </HeaderItem>
+                        ) : (
+                            <HeaderItem
+                                disabled={!canBeCreated}
+                                onPress={() => onSubmit(members)}
+                            >
+                                Next
+                            </HeaderItem>
+                        ),
 
                     headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
                     headerBackTitleVisible: false,
@@ -62,9 +86,16 @@ export default function CreateGroupAddMembers({
                 style={{
                     backgroundColor: theme.color.bg,
                     padding: 16,
+
+                    flexDirection: 'row',
                 }}
             >
                 <TextInput
+                    errorMessage={
+                        playerAlreadyExists
+                            ? `There\'s already a player named "${value}" in this group.`
+                            : undefined
+                    }
                     autoFocus
                     autoCorrect={false}
                     ref={inputRef}
@@ -77,15 +108,8 @@ export default function CreateGroupAddMembers({
                             e.preventDefault();
                         }
                     }}
-                    onSubmitEditing={(event) => {
-                        const name = event.nativeEvent.text.trim();
-
-                        if (name.length) {
-                            setMembers((prev) => [...prev, { name }]);
-                        }
-
-                        inputRef.current?.clear();
-                    }}
+                    onChangeText={(text) => setValue(text.trim())}
+                    onSubmitEditing={onAddMember}
                 />
             </View>
             <ScrollView
@@ -100,6 +124,11 @@ export default function CreateGroupAddMembers({
                     gap: 8,
                 }}
             >
+                {members.length < 1 && value.length > 0 && (
+                    <Text color="secondary" style={{ textAlign: 'center' }}>
+                        Press enter to add player "{value}"
+                    </Text>
+                )}
                 {members.map((i, idx) => (
                     <View
                         key={idx}

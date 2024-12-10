@@ -1,8 +1,8 @@
 {
     "expo": {
-        "name": "mobile-app",
+        "name": "beerpong-tournament",
         "slug": "mobile-app",
-        "version": "1.0.0",
+        "version": "1.0.11",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
@@ -17,13 +17,18 @@
             "bundleIdentifier": "com.linusbolls.mobileapp",
             "infoPlist": {
                 "NSPhotoLibraryUsageDescription": true
+            },
+            "config": {
+                "usesNonExemptEncryption": false
             }
         },
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
-            }
+            },
+            "permissions": ["android.permission.RECORD_AUDIO"],
+            "package": "com.linusbolls.mobileapp"
         },
         "web": {
             "bundler": "metro",
@@ -39,6 +44,13 @@
                     "project": "beerpong",
                     "organization": "sackverein"
                 }
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "The app accesses your photos to let you choose a picture",
+                    "cameraPermission": "The app accesses your photos to let take a pic"
+                }
             ]
         ],
         "experiments": {
@@ -48,6 +60,7 @@
             "eas": {
                 "projectId": "8dbfe974-43ce-4f4e-b3d8-cf6f77109412"
             }
-        }
+        },
+        "owner": "beerpong"
     }
 }

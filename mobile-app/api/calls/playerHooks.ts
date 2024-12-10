@@ -84,8 +84,6 @@ export const useUpdatePlayerAvatarMutation = () => {
         mutationFn: async (body) => {
             const { byteArray, mimeType, ...rest } = body;
 
-            (await api).fetchData({ id: '' });
-
             const res = await (
                 await api
             )

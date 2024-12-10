@@ -1,6 +1,7 @@
 import { Link } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { TouchableHighlight } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -29,7 +30,9 @@ export function SidebarGroupItem({
     const { data, isLoading } = useGroupQuery(id);
 
     return (
-        <Pressable
+        <TouchableHighlight
+            disabled={isActive}
+            underlayColor={theme.panel.light.active}
             onPress={() => onPress(id)}
             style={{
                 display: 'flex',
@@ -38,30 +41,32 @@ export function SidebarGroupItem({
                 paddingVertical: 12,
             }}
         >
-            <Text
-                color="primary"
-                style={{
-                    fontSize: 17,
-                }}
-            >
-                {isLoading ? 'Loading...' : (data?.data?.name ?? 'Unknown')}
-            </Text>
-            <Text
-                color="secondary"
-                style={{
-                    fontSize: 12,
-                }}
-            >
-                {isLoading ? (
-                    ''
-                ) : (
-                    <>
-                        {data?.data?.numberOfPlayers} Players,{' '}
-                        {data?.data?.numberOfMatches} Matches
-                    </>
-                )}
-            </Text>
-        </Pressable>
+            <>
+                <Text
+                    color="primary"
+                    style={{
+                        fontSize: 17,
+                    }}
+                >
+                    {isLoading ? 'Loading...' : (data?.data?.name ?? 'Unknown')}
+                </Text>
+                <Text
+                    color="secondary"
+                    style={{
+                        fontSize: 12,
+                    }}
+                >
+                    {isLoading ? (
+                        ''
+                    ) : (
+                        <>
+                            {data?.data?.numberOfPlayers} Players,{' '}
+                            {data?.data?.numberOfMatches} Matches
+                        </>
+                    )}
+                </Text>
+            </>
+        </TouchableHighlight>
     );
 }
 
@@ -92,7 +97,9 @@ export function Sidebar({}: SidebarProps) {
                 gap: 20,
             }}
         >
-            <View
+            <TouchableHighlight
+                underlayColor={theme.panel.light.active}
+                onPress={() => setShowAddGroupModal(true)}
                 style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -105,18 +112,21 @@ export function Sidebar({}: SidebarProps) {
                     borderRadius: 10,
                 }}
             >
-                <Text
+                {/* <Text
                     color="primary"
                     style={{
                         fontWeight: 500,
                     }}
                 >
                     Edit
-                </Text>
-                <Pressable onPress={() => setShowAddGroupModal(true)}>
+                </Text> */}
+                <Pressable
+                    onPress={() => setShowAddGroupModal(true)}
+                    style={{ marginLeft: 'auto' }}
+                >
                     <Icon name="plus" size={24} color="#fff" />
                 </Pressable>
-            </View>
+            </TouchableHighlight>
 
             <View
                 style={{

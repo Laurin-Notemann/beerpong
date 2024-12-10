@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
 
 import { useDeleteMatchMutation, useMatchQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
@@ -16,7 +17,8 @@ import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-import { HeaderItem } from './(tabs)/HeaderItem';
+import { HeaderItem } from '../components/HeaderItem';
+import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
@@ -37,6 +39,8 @@ export default function Page() {
 
     const { mutateAsync } = useDeleteMatchMutation();
 
+    const nav = useNavigation();
+
     const match = matchQuery.data?.data
         ? matchDtoToMatch(players, allowedMoves)(matchQuery.data.data)
         : null;
@@ -51,6 +55,7 @@ export default function Page() {
                 id,
             });
             showSuccessToast('Deleted match.');
+            nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to delete match:', err);
             showErrorToast('Failed to delete match.');
@@ -68,6 +73,15 @@ export default function Page() {
         //     return copy;
         // });
     }
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    }, []);
 
     return (
         <>
@@ -108,27 +122,26 @@ export default function Page() {
                     paddingTop: 32,
                     paddingBottom: 32,
                 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             >
                 <MatchPlayers
                     editable={isEditing}
-                    players={[
-                        ...(match?.blueTeam?.map((i) => ({
-                            ...i,
-                            team: 'blue' as const,
-                        })) ?? []),
-                        ...(match?.redTeam?.map((i) => ({
-                            ...i,
-                            team: 'red' as const,
-                        })) ?? []),
-                    ].map((i) => ({
-                        id: i.id!,
-                        change: i.change,
-                        moves: i.moves,
-                        name: i.name,
-                        avatarUrl: i.avatarUrl,
-                        points: i.points,
-                        team: i.team,
-                    }))}
+                    players={(match?.blueTeam ?? [])
+                        .concat(match?.redTeam ?? [])
+                        .map((i) => ({
+                            id: i.id!,
+                            change: i.change,
+                            moves: i.moves,
+                            name: i.name,
+                            avatarUrl: i.avatarUrl,
+                            points: i.points,
+                            team: i.team,
+                        }))}
                     setMoveCount={setMoveCount}
                 />
                 {isEditing && (

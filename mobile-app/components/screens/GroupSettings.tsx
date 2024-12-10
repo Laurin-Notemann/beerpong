@@ -40,9 +40,9 @@ export default function GroupSettingsScreen({
     onUploadWallpaperPress,
     onDeleteWallpaperPress,
 }: GroupSettingsProps) {
-    const [isRefreshing, setIsRefreshing] = useState(false);
-
     const nav = useNavigation();
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const onRefresh = useCallback(() => {
         setIsRefreshing(true);
@@ -249,6 +249,14 @@ export default function GroupSettingsScreen({
                         />
                     </MenuSection>
                 )}
+                <MenuSection title="Development">
+                    <MenuItem
+                        title="Debug Logs"
+                        headIcon="dev-to"
+                        tailIconType="next"
+                        onPress={() => nav.navigate('debugLog')}
+                    />
+                </MenuSection>
             </ScrollView>
         </RootSiblingParent>
     );

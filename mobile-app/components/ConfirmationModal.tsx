@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, Text, TouchableHighlight, View } from 'react-native';
-import Modal from 'react-native-modal';
+import { Modal } from 'react-native';
 
 import { theme } from '@/theme';
 
@@ -32,9 +32,11 @@ export default function ConfirmationModal({
 }: ConfirmationModalProps) {
     return (
         <Modal
-            isVisible={isVisible}
-            onBackdropPress={onClose}
-            style={{ margin: 0 }}
+            visible={isVisible}
+            animationType="slide"
+            onDismiss={onClose}
+            onRequestClose={onClose}
+            transparent
         >
             <SafeAreaView
                 style={{

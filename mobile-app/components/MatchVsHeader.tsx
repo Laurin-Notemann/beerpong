@@ -2,27 +2,83 @@ import React from 'react';
 import { Text, View, ViewProps } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Match } from '@/api/utils/matchDtoToMatch';
+import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import { theme } from '@/theme';
 
 import { TeamId } from './screens/NewMatchAssignTeams';
 
-const MAX_ITEMS = 4;
+function ScoreChip({
+    winnerTeamId,
+    children,
+}: {
+    winnerTeamId: 'red' | 'blue' | null;
+    children: React.ReactNode;
+}) {
+    return (
+        <View
+            style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+
+                gap: 2,
+
+                bottom: 2,
+
+                // calibrated to the height of the text + the height of the crown icon so we don't get layout shift
+                height: 49,
+
+                // calibrated to be the width of the crown icon so we don't get layout shift
+                minWidth: 34,
+            }}
+        >
+            {winnerTeamId && (
+                <Icon
+                    name="crown-outline"
+                    size={24}
+                    color={theme.color.team[winnerTeamId]}
+                />
+            )}
+            <Text
+                style={{
+                    color: '#fff',
+                    backgroundColor: '#000',
+                    borderRadius: 2,
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                    fontSize: 16,
+
+                    // backgroundColor:
+                    //   Math.round(Math.random()) === 1
+                    //     ? theme.color.team.red
+                    //     : theme.color.team.blue,
+                }}
+            >
+                {children}
+            </Text>
+        </View>
+    );
+}
 
 export interface MatchVsHeaderProps extends ViewProps {
-    match: Omit<Match, 'date'>;
+    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
 
     hasScore?: boolean;
+
+    maxItems?: number;
+
+    highlightedId?: string;
 }
 export default function MatchVsHeader({
     match,
     hasScore = true,
+    maxItems = 4,
+    highlightedId,
     ...rest
 }: MatchVsHeaderProps) {
     const redWon = match.redCups > match.blueCups;
 
-    const winner: TeamId =
+    const winnerTeamId: TeamId =
         match.redCups > match.blueCups
             ? 'red'
             : match.redCups < match.blueCups
@@ -41,84 +97,142 @@ export default function MatchVsHeader({
                 rest.style,
             ]}
         >
-            <View style={{ flexDirection: 'row' }}>
-                {Array(Math.max(MAX_ITEMS - match.blueTeam.length, 0))
-                    .fill(null)
-                    .map((_, index) => {
-                        return <Avatar key={index} style={{ opacity: 0 }} />;
-                    })}
-                {match.blueTeam.slice(0, MAX_ITEMS).map((i, index) => (
-                    <Avatar
-                        key={index}
-                        url={i.avatarUrl}
-                        content={
-                            index === MAX_ITEMS - 1 &&
-                            match.blueTeam.length > MAX_ITEMS
-                                ? '+' + (match.blueTeam.length - MAX_ITEMS + 1)
-                                : undefined
-                        }
-                        name={i.name}
-                        borderColor={theme.color.team.blue}
-                        style={{ marginLeft: index === 0 ? 0 : -16 }}
-                    />
-                ))}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    position: 'relative',
+                    // calibrated to the height of the avatars so we don't get layout shift
+                    height: 36,
+                }}
+            >
+                <Team
+                    color="blue"
+                    players={match.blueTeam}
+                    maxItems={maxItems}
+                    highlightedId={highlightedId}
+                />
+                <Team
+                    color="blue"
+                    players={match.blueTeam}
+                    maxItems={maxItems}
+                    highlightedId={highlightedId}
+                    isCopy
+                />
             </View>
+
+            <ScoreChip winnerTeamId={winnerTeamId}>
+                {hasScore ? match.blueCups + ':' + match.redCups : 'vs'}
+            </ScoreChip>
 
             <View
                 style={{
-                    alignItems: 'center',
-
-                    gap: 2,
+                    flexDirection: 'row',
+                    position: 'relative',
+                    height: 36,
+                    // width: 76,
                 }}
             >
-                {winner && (
-                    <Icon
-                        name="crown-outline"
-                        size={24}
-                        color={theme.color.team[winner]}
-                    />
-                )}
-                <Text
+                <Team
+                    color="red"
+                    players={match.redTeam}
+                    maxItems={maxItems}
+                    highlightedId={highlightedId}
+                />
+                <Team
+                    color="red"
+                    players={match.redTeam}
+                    maxItems={maxItems}
+                    highlightedId={highlightedId}
+                    isCopy
+                />
+            </View>
+        </View>
+    );
+}
+
+function Team({
+    highlightedId,
+    players,
+    maxItems,
+    color,
+    isCopy = false,
+}: {
+    highlightedId?: string | null;
+    players: TeamMember[];
+    maxItems: number;
+    color: 'red' | 'blue';
+
+    isCopy?: boolean;
+}) {
+    const emptyAvatarsUsedForSpacing = Array(
+        Math.max(maxItems - players.length, 0)
+    ).fill(null);
+
+    const displayedPlayers = players.slice(0, maxItems);
+
+    return (
+        <View
+            style={[
+                isCopy
+                    ? {
+                          position: 'absolute',
+                          left: color === 'red' ? 0 : undefined,
+                          right: color === 'blue' ? 0 : undefined,
+                          top: 0,
+                      }
+                    : {
+                          opacity: highlightedId == null ? 1 : 0.5,
+                      },
+                {
+                    flexDirection: 'row',
+                    justifyContent: color === 'red' ? 'flex-end' : 'flex-end',
+                },
+            ]}
+        >
+            {color === 'blue' &&
+                emptyAvatarsUsedForSpacing.map((_, index) => {
+                    return (
+                        <Avatar
+                            key={index}
+                            style={{
+                                opacity: 0,
+                                marginLeft: -16,
+                            }}
+                        />
+                    );
+                })}
+            {displayedPlayers.map((i, index) => (
+                <Avatar
+                    key={index}
+                    url={i.avatarUrl}
+                    content={
+                        index === maxItems - 1 && players.length > maxItems
+                            ? '+' + (players.length - maxItems + 1)
+                            : undefined
+                    }
+                    name={i.name}
+                    borderColor={theme.color.team[color]}
                     style={{
-                        color: '#fff',
-                        backgroundColor: '#000',
-                        borderRadius: 2,
-                        paddingHorizontal: 5,
-                        paddingVertical: 2,
-                        fontSize: 16,
+                        marginRight: color === 'red' ? -16 : undefined,
+                        marginLeft: color === 'blue' ? -16 : undefined,
 
-                        // backgroundColor:
-                        //   Math.round(Math.random()) === 1
-                        //     ? theme.color.team.red
-                        //     : theme.color.team.blue,
+                        opacity: isCopy ? (i.id === highlightedId ? 1 : 0) : 1,
+                        zIndex: i.id === highlightedId ? 1 : undefined,
                     }}
-                >
-                    {hasScore ? match.blueCups + ':' + match.redCups : 'vs'}
-                </Text>
-            </View>
-
-            <View style={{ flexDirection: 'row' }}>
-                {match.redTeam.slice(0, MAX_ITEMS).map((i, index) => (
-                    <Avatar
-                        key={index}
-                        url={i.avatarUrl}
-                        content={
-                            index === MAX_ITEMS - 1 &&
-                            match.redTeam.length > MAX_ITEMS
-                                ? '+' + (match.redTeam.length - MAX_ITEMS + 1)
-                                : undefined
-                        }
-                        name={i.name}
-                        borderColor={theme.color.team.red}
-                        style={{ marginLeft: index === 0 ? 0 : -16 }}
-                    />
-                ))}
-                {Array(Math.max(MAX_ITEMS - match.redTeam.length, 0))
-                    .fill(null)
-                    .map((_, index) => {
-                        return <Avatar key={index} style={{ opacity: 0 }} />;
-                    })}
-            </View>
+                />
+            ))}
+            {color === 'red' &&
+                emptyAvatarsUsedForSpacing.map((_, index) => {
+                    return (
+                        <Avatar
+                            key={index}
+                            style={{
+                                opacity: 0,
+                                marginRight: -16,
+                            }}
+                        />
+                    );
+                })}
         </View>
     );
 }

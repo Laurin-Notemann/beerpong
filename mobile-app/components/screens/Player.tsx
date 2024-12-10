@@ -1,17 +1,18 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
+    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
+import { HeaderItem } from '@/components/HeaderItem';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -60,6 +61,15 @@ export default function PlayerScreen({
 
     const [editable, setEditable] = useState(false);
 
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    }, []);
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
@@ -90,6 +100,12 @@ export default function PlayerScreen({
                     paddingHorizontal: 16,
                     paddingBottom: 32,
                 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
             >
                 <Avatar
                     url={avatarUrl}
@@ -125,15 +141,14 @@ export default function PlayerScreen({
                     matchesPlayedCount={matches.length}
                     elo={elo}
                 />
-                <View style={{ alignItems: 'stretch' }}>
+                <View
+                    style={{
+                        width: '100%',
+                        alignItems: 'stretch',
+                    }}
+                >
                     {editable ? (
-                        <MenuSection
-                            style={
-                                {
-                                    // width: '100%',
-                                }
-                            }
-                        >
+                        <MenuSection>
                             <MenuItem
                                 title={name}
                                 headIcon="pencil-outline"
@@ -157,13 +172,7 @@ export default function PlayerScreen({
                     ) : (
                         env.isDev && (
                             <>
-                                <MenuSection
-                                    style={
-                                        {
-                                            // width: '100%',
-                                        }
-                                    }
-                                >
+                                <MenuSection>
                                     <MenuItem
                                         title="Past Seasons"
                                         headIcon="pencil-outline"

@@ -5,17 +5,47 @@
     },
     "build": {
         "development": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8080",
+                "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+                "EXPO_PUBLIC_API_WS_URL": "ws://localhost:8080"
+            },
             "developmentClient": true,
             "distribution": "internal"
         },
         "preview": {
-            "distribution": "internal"
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "http://localhost:8080",
+                "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+                "EXPO_PUBLIC_API_WS_URL": "ws://localhost:8080"
+            },
+            "ios": {
+                "simulator": true
+            }
+        },
+        "staging": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "https://beerpong.lb.staging.laurinnotemann.dev",
+                "EXPO_PUBLIC_API_WS_URL": "wss://beerpong.lb.staging.laurinnotemann.dev",
+                "SENTRY_ALLOW_FAILURE": "true"
+            }
         },
         "production": {
+            "env": {
+                "EXPO_PUBLIC_API_BASE_URL": "https://beerpong.lb.laurinnotemann.dev",
+                "EXPO_PUBLIC_API_WS_URL": "wss://beerpong.lb.laurinnotemann.dev",
+                "SENTRY_ALLOW_FAILURE": "true"
+            },
             "autoIncrement": true
         }
     },
     "submit": {
-        "production": {}
+        "staging": {
+            "ios": {
+                "appleId": "linus.bolls@icloud.com",
+                "ascAppId": "6738529626",
+                "appleTeamId": "A5X77AGYX4"
+            }
+        }
     }
 }

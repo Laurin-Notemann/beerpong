@@ -2,8 +2,8 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 
 import { useGroupQuery, useUpdateGroupMutation } from '@/api/calls/groupHooks';
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
@@ -27,7 +27,7 @@ export default function Page() {
                 id,
                 name: value,
             });
-            nav.navigate('index');
+            nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to update group:', err);
             showErrorToast('Failed to update group.');
@@ -48,7 +48,7 @@ export default function Page() {
                         </HeaderItem>
                     ),
 
-                    headerTitle: 'Player Name',
+                    headerTitle: 'Group Name',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',

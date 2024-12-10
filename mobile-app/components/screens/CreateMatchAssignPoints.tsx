@@ -3,10 +3,10 @@ import React from 'react';
 import { ScrollView } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { HeaderItem } from '@/app/(tabs)/HeaderItem';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
+import { HeaderItem } from '@/components/HeaderItem';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { Feature } from '@/constants/Features';
@@ -17,33 +17,36 @@ export interface CreateMatchAssignPointsProps {
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
     onSubmit: () => void;
+    onCancel: () => void;
+
+    onPlayerPress: (player: TeamMember) => void;
 }
 export default function CreateMatchAssignPoints({
     players,
     setMoveCount,
     onSubmit,
+    onCancel,
+    onPlayerPress,
 }: CreateMatchAssignPointsProps) {
-    const finishes = players.flatMap((i) => i.moves).filter((i) => i.isFinish);
-
-    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
-
-    const isValidGame = numFinishes === 1;
-
     const navigation = useNavigation();
     return (
         <>
             <Stack.Screen
                 options={{
                     ...navStyles,
+                    headerLeft: () => (
+                        <HeaderItem onPress={onCancel} noMargin>
+                            Cancel
+                        </HeaderItem>
+                    ),
                     headerRight: () => (
-                        <HeaderItem disabled={!isValidGame} onPress={onSubmit}>
+                        <HeaderItem onPress={onSubmit} noMargin>
                             Create
                         </HeaderItem>
                     ),
                     headerTitle: () => (
                         <MatchVsHeader
                             match={{
-                                id: '#',
                                 blueCups: players
                                     .filter((i) => i.team === 'blue')
                                     .map((i) => i.moves)
@@ -92,6 +95,7 @@ export default function CreateMatchAssignPoints({
                     editable
                     players={players}
                     setMoveCount={setMoveCount}
+                    onPlayerPress={onPlayerPress}
                 />
             </ScrollView>
         </>

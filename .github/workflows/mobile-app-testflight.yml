@@ -1,0 +1,74 @@
+name: Mobile App To Testflight
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - staging
+
+defaults:
+  run:
+    working-directory: mobile-app
+
+jobs:
+  build-testflight:
+    name: Build and push app to Apple Testflight
+    runs-on: macos-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, 'Bump app version'))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+            
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npx eas-cli build -p ios --profile staging --local --non-interactive --output=./build.ipa
+
+      - name: Submit to App Store
+        run: |
+          xcrun altool --upload-app \
+          --file ./build.ipa \
+          --type ios \
+          --username "${{ secrets.APPLE_ID }}" \
+          --password "${{ secrets.APPLE_ID_PASSWORD }}"
+
+          #  build-android-test:
+          #    name: Build and push app to Apple Testflight
+          #    runs-on: ubuntu-latest
+          #    steps:
+          #      - name: Checkout code
+          #        uses: actions/checkout@v4
+          #      - name: Setup Node.js
+          #        uses: actions/setup-node@v4
+          #        with:
+          #          node-version: "20"
+          #      - name: Setup Expo
+          #        uses: expo/expo-github-action@v8
+          #        with:
+          #          expo-version: latest
+          #          eas-version: latest
+          #          token: ${{ secrets.EXPO_TOKEN }}
+          #            
+          #      - name: Install dependencies
+          #        run: npm ci
+          #
+          #      - name: Build app
+          #        run: npx eas-cli build -p android --profile staging --local --non-interactive --output=./build.ipa
+          #
+          #      - name: Submit to App Store
+          #        run: npx eas-cli submit -p android --path=./build.ipa
+
+

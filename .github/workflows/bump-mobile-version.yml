@@ -1,12 +1,13 @@
-name: Bump versions of Mobile App
+name: Bump mobile app version and submit
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "mobile-app/**"
-    branches:
-      - staging
+    inputs:
+      patch_update:
+        description: 'check for staging uncheck for prod'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   bump-version:
@@ -20,7 +21,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,6 +29,7 @@ jobs:
           node-version: '20'
 
       - name: Bump version
+        id: bump_version
         run: |
           cd mobile-app
           
@@ -36,10 +38,17 @@ jobs:
           echo "Current version: $current_version"
           
           # Increment patch version
-          new_version=$(node -e "
-            const [major, minor, patch] = '$current_version'.split('.');
-            console.log(\`\${major}.\${minor}.\${parseInt(patch) + 1}\`);
-          ")
+          if [[ "${{ inputs.patch_update }}" == "true" ]]; then
+            new_version=$(node -e "
+              const [major, minor, patch] = '$current_version'.split('.');
+              console.log(\`\${major}.\${minor}.\${parseInt(patch) + 1}\`);
+            ")
+          else
+            new_version=$(node -e "
+              const [major, minor, patch] = '$current_version'.split('.');
+              console.log(\`\${major}.\${parseInt(minor) + 1}.\${patch}\`);
+            ")
+          fi
           echo "New version: $new_version"
           
           # Update package.json
@@ -49,10 +58,18 @@ jobs:
           jq --arg version "$new_version" '.expo.version = $version' app.json > app.json.tmp && mv app.json.tmp app.json
           
           echo "Updated version in package.json and app.json to $new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
 
       - run: npm ci && npm run format
         working-directory: mobile-app
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: minor mobile app version bump"
 
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Bump app version to ${{ steps.bump_version.outputs.new_version }}
+          title: Bump app version to ${{ steps.bump_version.outputs.new_version }} and submit
+          branch: bump-app-version-${{ steps.bump_version.outputs.new_version }}
+          base: ${{ github.head_ref }}
+          delete-branch: true
+          token: ${{ secrets.PAT }}

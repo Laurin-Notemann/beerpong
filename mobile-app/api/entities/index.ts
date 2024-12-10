@@ -83,7 +83,7 @@ export class ProfileImpl {
 
 export class TeamMemberImpl {
     public id: string;
-    public team: 'red' | 'blue';
+    public team!: 'red' | 'blue';
 
     public get name(): string {
         return this.player!.profile!.name;
@@ -111,9 +111,12 @@ export class TeamMemberImpl {
         return this.player.profile.avatarUrl;
     }
 
+    public setTeamColor(color: 'red' | 'blue'): void {
+        this.team = color;
+    }
+
     constructor(_data: Components.Schemas.TeamMemberDto) {
         this.id = _data.id!;
-        this.team = _data.teamId as 'red' | 'blue';
 
         this.playerId = _data.playerId!;
     }
@@ -128,7 +131,7 @@ export class TeamMemberImpl {
     }
     public toJSON(): TeamMember {
         return {
-            id: this.id,
+            id: this.playerId,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
             name: this.name,
@@ -188,7 +191,33 @@ export class MatchImpl {
         return this.teams[0];
     }
     public get _redTeam(): TeamImpl {
-        return this.teams[0];
+        return this.teams[1];
+    }
+
+    private get players(): TeamMemberImpl[] {
+        return this.blueTeam.concat(this.redTeam);
+    }
+    private get matchMoves(): MatchMoveImpl[] {
+        return this.players.flatMap((i) => i.moves);
+    }
+    private get finishMoves(): MatchMoveImpl[] {
+        return this.matchMoves.filter((i) => i.isFinish);
+    }
+
+    private get winnerPlayer(): TeamMemberImpl | null {
+        return (
+            this.players.find(
+                (i) => i.id === this.finishMoves[0]?.teamMemberId
+            ) ?? null
+        );
+    }
+
+    private get winnerTeam(): TeamImpl | null {
+        return (
+            this.teams.find((i) =>
+                i.members.find((j) => j.id === this.winnerPlayer?.id)
+            ) ?? null
+        );
     }
 
     constructor(
@@ -233,6 +262,12 @@ export class MatchImpl {
                 );
             }
         }
+        for (const player of this._blueTeam.members) {
+            player.setTeamColor('blue');
+        }
+        for (const player of this._redTeam.members) {
+            player.setTeamColor('red');
+        }
     }
     public get redCups(): number {
         return this._redTeam.points!;
@@ -258,6 +293,8 @@ export class MatchImpl {
 
             blueTeam: this.blueTeam.map((i) => i.toJSON()),
             redTeam: this.redTeam.map((i) => i.toJSON()),
+
+            winnerTeamId: this.winnerTeam?.id ?? null,
         };
     }
 }

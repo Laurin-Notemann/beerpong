@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useCreateMatchMutation } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
@@ -6,7 +6,10 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import AssignFinishModeModal from '@/components/AssignFinishMoveModal';
+import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
+import { Feature } from '@/constants/Features';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
@@ -15,6 +18,10 @@ export default function Page() {
     const nav = useNavigation();
 
     const matchDraft = useMatchDraftStore();
+
+    const [playerIdx, setPlayerIdx] = useState<number | null>(0);
+
+    const [showFinishMoveModal, setShowFinishMoveModal] = useState(false);
 
     const { mutateAsync } = useCreateMatchMutation();
 
@@ -44,7 +51,14 @@ export default function Page() {
             team: i.team,
             avatarUrl: profile.profile.avatarAsset?.url,
             name: profile.profile.name || 'Unknown',
-            points: 1,
+            points: i.moves.reduce(
+                (sum, j) =>
+                    sum +
+                    j.count *
+                        (allowedMoves.find((k) => k.id === j.moveId)
+                            ?.pointsForScorer ?? 0),
+                0
+            ),
             change: 0.12,
             moves: allowedMoves.map((j) => {
                 return {
@@ -59,8 +73,24 @@ export default function Page() {
         };
     });
 
+    const finishes = teamMembers
+        .flatMap((i) => i.moves)
+        .filter((i) => i.isFinish);
+
+    const numFinishes = finishes.reduce((sum, i) => sum + i.count, 0);
+
+    const isValidGame = numFinishes === 1;
+
     async function onSubmit() {
         if (!groupId || !seasonId) return;
+
+        if (!isValidGame) {
+            nav.navigate('assignPointsToPlayerModal', {
+                pageIdx: teamMembers.length,
+            });
+
+            return;
+        }
 
         try {
             await mutateAsync({
@@ -81,6 +111,16 @@ export default function Page() {
             players={teamMembers}
             setMoveCount={matchDraft.actions.setMoveCount}
             onSubmit={onSubmit}
+            onCancel={() => {
+                matchDraft.actions.clear();
+                nav.goBack();
+            }}
+            onPlayerPress={(player) =>
+                // setPageIdx(teamMembers.findIndex((i) => i.id === player.id))
+                nav.navigate('assignPointsToPlayerModal', {
+                    pageIdx: teamMembers.findIndex((i) => i.id === player.id),
+                })
+            }
         />
     );
 }

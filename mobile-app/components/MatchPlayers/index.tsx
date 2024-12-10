@@ -9,11 +9,13 @@ export interface MatchPlayersProps {
     editable?: boolean;
     players: TeamMember[];
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
+    onPlayerPress: (player: TeamMember) => void;
 }
 export default function MatchPlayers({
     editable,
     players,
     setMoveCount,
+    onPlayerPress,
 }: MatchPlayersProps) {
     const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -30,10 +32,11 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         player={i}
-                        expanded={expandedId === idx}
+                        expanded={false}
                         setIsExpanded={(value) =>
                             setExpandedId(value ? idx : null)
                         }
+                        onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
                     />
@@ -45,10 +48,11 @@ export default function MatchPlayers({
                     <Player
                         key={idx}
                         player={i}
-                        expanded={expandedId === idx}
+                        expanded={false}
                         setIsExpanded={(value) =>
                             setExpandedId(value ? idx : null)
                         }
+                        onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
                     />

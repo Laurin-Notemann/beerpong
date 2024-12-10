@@ -29,6 +29,9 @@ export type RootStackParamList = {
     'static/privacyPolicy': undefined;
     'static/aboutPremium': undefined;
     'static/aboutUs': undefined;
+    debugLog: undefined;
+
+    assignPointsToPlayerModal: { pageIdx: number };
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 

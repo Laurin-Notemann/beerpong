@@ -1,9 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { Logs } from '@/utils/logging';
+import { useLogging } from '@/utils/useLogging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-import { RealtimeClient } from '.';
+import { RealtimeClient, RealtimeEventHandler } from '.';
 import { env } from '../env';
 import { ignoreSeason, QK } from '../utils/reactQuery';
 
@@ -14,18 +16,13 @@ export function useRealtimeConnection() {
 
     const client = useRef(new RealtimeClient(env.realtimeBaseUrl, groupIds));
 
-    useEffect(() => {
-        client.current.subscribeToGroups(groupIds);
-    }, [groupIds]);
+    const { writeLog } = useLogging();
 
-    function refetchGroup(groupId: string) {
-        qc.invalidateQueries({
-            queryKey: [QK.group, groupId],
-            exact: true,
-        });
+    function writeLogs(...data: Logs) {
+        writeLog(...data);
     }
 
-    client.current.on.event((e) => {
+    const hoher: RealtimeEventHandler = (e) => {
         switch (e.eventType) {
             case 'GROUPS':
                 client.current.logger.info('refetching groups');
@@ -37,7 +34,7 @@ export function useRealtimeConnection() {
 
                 // refetch because of PlayerDto.statistics.matches
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.players],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
 
                 client.current.logger.info('refetching matches');
@@ -52,18 +49,18 @@ export function useRealtimeConnection() {
 
                 // refetch because a newly created season will have new players
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.players],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
 
                 // refetch because a newly created season will have no matches
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.matches],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
                 });
 
                 client.current.logger.info('refetching seasons');
 
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.seasons],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.seasons]),
                 });
                 break;
             case 'PLAYERS':
@@ -72,7 +69,7 @@ export function useRealtimeConnection() {
 
                 // TODO: only refetch matches on player delete
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.matches],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
                 });
 
                 client.current.logger.info('refetching players');
@@ -108,7 +105,29 @@ export function useRealtimeConnection() {
                 });
                 break;
         }
-    });
+    };
+
+    useEffect(() => {
+        if (client.current) {
+            client.current.logger.addEventListener('*', writeLogs);
+
+            client.current.on.event(hoher);
+
+            return () =>
+                client.current.logger.removeEventListener('*', writeLogs);
+        }
+    }, [client.current]);
+
+    useEffect(() => {
+        client.current.subscribeToGroups(groupIds);
+    }, [groupIds]);
+
+    function refetchGroup(groupId: string) {
+        qc.invalidateQueries({
+            queryKey: [QK.group, groupId],
+            exact: true,
+        });
+    }
 
     return client.current;
 }
