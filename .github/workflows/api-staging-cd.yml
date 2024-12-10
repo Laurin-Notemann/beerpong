@@ -66,24 +66,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          create_credentials_file: true
-          token_format: access_token
-          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
-          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
-      - id: 'deploy'
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        with:
-          service: 'api-springboot-staging'
-          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}'
-          region: europe-west10
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:beerpong-staging-db --no-cpu-throttling --min-instances 1 --max-instances 2 --allow-unauthenticated'
-          env_vars: |
-            POSTGRES_USER=postgres
-            POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:beerpong-staging-db&socketFactory=com.google.cloud.sql.postgres.SocketFactory
-            API_BASE_URL=https://beerpong.lb.staging.laurinnotemann.dev
-          secrets: |-
-            POSTGRES_PASSWORD=api-staging-postrgres-password:latest
+          ssh-private-key: ${{ secrets.SSH_SECRET }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Bare Metal Server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
+          DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-staging:${{ github.sha }}
+        run: |
+          ssh $SERVER_USER@$SERVER_IP << EOF
+            # Navigate to the Docker Compose directory
+            cd ~/docker/beerpong-api
+
+            # Authenticate with Google Cloud (assuming gcloud is installed on the server)
+            gcloud auth activate-service-account --key-file=$FILE_PATH
+            gcloud auth configure-docker europe-west10-docker.pkg.dev
+
+            # Update the image in the docker-compose.yml file
+            sed -i 's|image: .*|image: $DOCKER_IMAGE|' docker-compose.yml
+
+            # Pull the latest image
+            docker-compose pull
+
+            # Restart the service
+            docker-compose up -d --force-recreate beerpong-api-staging
+
+            # Clean up old images
+            docker image prune -af
+          EOF
