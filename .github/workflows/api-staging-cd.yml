@@ -57,7 +57,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    name: "Deploy staging api on Cloud Run"
+    name: "Deploy staging api on a bare metal server"
     runs-on: ubuntu-latest
     defaults:
       run:

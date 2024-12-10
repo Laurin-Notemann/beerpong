@@ -1,4 +1,4 @@
-name: Api Deploy on Google
+name: Api Production deploy
 
 on:
   push:
@@ -53,15 +53,6 @@ jobs:
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}
 
-  deploy-api:
-    permissions:
-      id-token: write
-      contents: read
-    name: "Deploy api on Cloud Run"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     needs: build-api
     steps:
       - name: Checkout
@@ -87,3 +78,56 @@ jobs:
             API_BASE_URL=https://beerpong.lb.laurinnotemann.dev
           secrets: |-
             POSTGRES_PASSWORD=api-pg-password:latest
+
+  deploy-api:
+    permissions:
+      id-token: write
+      contents: read
+    name: "Deploy staging api on a bare metal server"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    needs: build-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+     
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_SECRET }}
+
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Bare Metal Server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
+          DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}
+        run: |
+          ssh $SERVER_USER@$SERVER_IP << EOF
+            # Navigate to the Docker Compose directory
+            cd ~/docker/beerpong-api-prod
+
+            # Authenticate with Google Cloud (assuming gcloud is installed on the server)
+            gcloud auth activate-service-account --key-file=$FILE_PATH
+            gcloud auth configure-docker europe-west10-docker.pkg.dev
+
+            # Update the image in the docker-compose.yml file
+            sed -i 's|image: .*|image: $DOCKER_IMAGE|' docker-compose.yml
+
+            # Pull the latest image
+            docker compose pull
+
+            # Restart the service
+            docker compose up -d --force-recreate beerpong-api
+
+            # Clean up old images
+            docker image prune -af
+          EOF
