@@ -53,32 +53,6 @@ jobs:
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}
 
-    needs: build-api
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          create_credentials_file: true
-          token_format: access_token
-          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
-          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
-      - id: 'deploy'
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        with:
-          service: 'api-springboot'
-          image: 'europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api:${{ github.sha }}'
-          region: europe-west10
-          flags: '--port=8080 --add-cloudsql-instances=beer-pong-441815:europe-west10:api-beerpong-pg --no-cpu-throttling --min-instances 0 --max-instances 3 --allow-unauthenticated'
-          env_vars: |
-            POSTGRES_USER=postgres
-            POSTGRES_URL=jdbc:postgresql:///beerpong?cloudSqlInstance=beer-pong-441815:europe-west10:api-beerpong-pg&socketFactory=com.google.cloud.sql.postgres.SocketFactory
-            API_BASE_URL=https://beerpong.lb.laurinnotemann.dev
-          secrets: |-
-            POSTGRES_PASSWORD=api-pg-password:latest
-
   deploy-api:
     permissions:
       id-token: write

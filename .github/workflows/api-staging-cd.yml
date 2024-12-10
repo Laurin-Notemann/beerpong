@@ -6,7 +6,7 @@ on:
       - "staging"
     paths:
       - "api/**"
-      - ".github/workflows/api-cd-staging.yml"
+      - ".github/workflows/api-staging-cd.yml"
   workflow_dispatch:
 
 jobs:
