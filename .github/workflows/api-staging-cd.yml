@@ -97,10 +97,10 @@ jobs:
             sed -i 's|image: .*|image: $DOCKER_IMAGE|' docker-compose.yml
 
             # Pull the latest image
-            docker-compose pull
+            docker compose pull
 
             # Restart the service
-            docker-compose up -d --force-recreate beerpong-api-staging
+            docker compose up -d --force-recreate beerpong-api-staging
 
             # Clean up old images
             docker image prune -af
