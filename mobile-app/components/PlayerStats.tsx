@@ -1,6 +1,7 @@
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native';
 
+import { env } from '@/api/env';
 import { HighestChip, LowestChip } from '@/components/Chip';
 import { theme } from '@/theme';
 
@@ -77,7 +78,7 @@ export default function PlayerStats({
             <Stat
                 title="Average points"
                 value={averagePointsPerMatch}
-                isLowest
+                isLowest={env.isDev}
             />
             <Stat title="Total points" value={totalPoints} />
             <Stat
@@ -87,7 +88,7 @@ export default function PlayerStats({
                         ? `${matchesWonCount} of ${matchesPlayedCount} (${matchesWonPercentage}%)`
                         : '--'
                 }
-                isHighest
+                isHighest={env.isDev}
             />
             <Stat title="Elo" value={elo} />
         </TouchableOpacity>

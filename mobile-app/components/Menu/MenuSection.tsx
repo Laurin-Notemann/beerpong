@@ -36,7 +36,7 @@ export function Heading({
 }
 
 export interface MenuSectionProps extends PropsWithChildren {
-    title?: string;
+    title?: JSX.Element | string;
     titleHeadIcon?: JSX.Element;
 
     background?: boolean;
@@ -62,7 +62,7 @@ export default function MenuSection({
     color = 'light',
 }: MenuSectionProps) {
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             {title && <Heading title={title} titleHeadIcon={titleHeadIcon} />}
             <View
                 style={{

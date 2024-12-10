@@ -3,6 +3,7 @@ import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
+import { env } from '@/api/env';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { Colors } from '@/constants/Colors';
@@ -94,6 +95,8 @@ export default function TabLayout() {
                         <Icon color={color} size={32} name="format-section" />
                     ),
                     ...groupHeader,
+                    // hide tab in production
+                    href: env.isDev ? undefined : null,
                 }}
             />
             <Tabs.Screen

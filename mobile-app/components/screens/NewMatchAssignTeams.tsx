@@ -9,6 +9,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
@@ -34,6 +35,8 @@ function PlayerItem({
                 if (player.team === null) onSelectTeam('blue');
                 if (player.team === 'blue') onSelectTeam('red');
                 if (player.team === 'red') onSelectTeam(null);
+
+                triggerHapticBump('selection');
             }}
             underlayColor={theme.panel.light.active}
             style={{
@@ -66,7 +69,10 @@ function PlayerItem({
                         width: 50,
                         height: 50,
                     }}
-                    onPress={() => onSelectTeam(isBlueTeam ? null : 'blue')}
+                    onPress={() => {
+                        onSelectTeam(isBlueTeam ? null : 'blue');
+                        triggerHapticBump('selection');
+                    }}
                 >
                     <Icon
                         color={theme.color.team.blue}
@@ -84,7 +90,10 @@ function PlayerItem({
                         width: 50,
                         height: 50,
                     }}
-                    onPress={() => onSelectTeam(isRedTeam ? null : 'red')}
+                    onPress={() => {
+                        onSelectTeam(isRedTeam ? null : 'red');
+                        triggerHapticBump('selection');
+                    }}
                 >
                     <Icon
                         color={theme.color.team.red}
@@ -120,11 +129,14 @@ export default function NewMatchAssignTeams({
     return (
         <ScrollView
             style={{
+                flex: 1,
+
                 backgroundColor: theme.color.bg,
             }}
             contentContainerStyle={{
-                flex: 1,
                 paddingHorizontal: 16,
+
+                paddingBottom: 24,
             }}
         >
             <Stack.Screen
@@ -158,7 +170,7 @@ export default function NewMatchAssignTeams({
                                       }}
                                   />
                               )
-                            : 'New Match',
+                            : 'Assign Teams',
                 }}
             />
             <Heading />

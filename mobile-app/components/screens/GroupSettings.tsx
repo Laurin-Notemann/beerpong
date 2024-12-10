@@ -40,9 +40,9 @@ export default function GroupSettingsScreen({
     onUploadWallpaperPress,
     onDeleteWallpaperPress,
 }: GroupSettingsProps) {
-    const [isRefreshing, setIsRefreshing] = useState(false);
-
     const nav = useNavigation();
+
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const onRefresh = useCallback(() => {
         setIsRefreshing(true);

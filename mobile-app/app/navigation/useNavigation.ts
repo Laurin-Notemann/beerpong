@@ -30,6 +30,8 @@ export type RootStackParamList = {
     'static/aboutPremium': undefined;
     'static/aboutUs': undefined;
     debugLog: undefined;
+
+    assignPointsToPlayerModal: { pageIdx: number };
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 

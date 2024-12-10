@@ -5,12 +5,7 @@ import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-import {
-    RealtimeAffectedEntity,
-    RealtimeClient,
-    RealtimeEvent,
-    RealtimeEventHandler,
-} from '.';
+import { RealtimeClient, RealtimeEventHandler } from '.';
 import { env } from '../env';
 import { ignoreSeason, QK } from '../utils/reactQuery';
 
@@ -39,7 +34,7 @@ export function useRealtimeConnection() {
 
                 // refetch because of PlayerDto.statistics.matches
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.players],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
 
                 client.current.logger.info('refetching matches');
@@ -54,18 +49,18 @@ export function useRealtimeConnection() {
 
                 // refetch because a newly created season will have new players
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.players],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
                 });
 
                 // refetch because a newly created season will have no matches
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.matches],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
                 });
 
                 client.current.logger.info('refetching seasons');
 
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.seasons],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.seasons]),
                 });
                 break;
             case 'PLAYERS':
@@ -74,7 +69,7 @@ export function useRealtimeConnection() {
 
                 // TODO: only refetch matches on player delete
                 qc.invalidateQueries({
-                    queryKey: [QK.group, e.groupId, QK.matches],
+                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
                 });
 
                 client.current.logger.info('refetching players');

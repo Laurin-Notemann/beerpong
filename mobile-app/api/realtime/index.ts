@@ -1,6 +1,8 @@
 import { TextEncoder } from 'text-encoding';
 
-import { Logger, ScopedLogger } from '@/utils/logging';
+import { ScopedLogger } from '@/utils/logging';
+
+import { BackOff, FIBONACCI_TIMEOUTS } from '../utils/BackOff';
 
 /**
  * stompjs is an abstraction layer on top of websocket that uses the global TextEncoder class.
@@ -41,6 +43,8 @@ export class RealtimeClient {
 
     private handlers: Handlers = {} as Handlers;
 
+    private connectionBackoff = new BackOff([0, ...FIBONACCI_TIMEOUTS]);
+
     private get url() {
         return this.host + '/update-socket';
     }
@@ -61,10 +65,15 @@ export class RealtimeClient {
         this.ws.addEventListener('open', () => {
             this.logger.info('connection opened');
             this._subscribeToGroups();
+            this.connectionBackoff.reset();
         });
 
         this.ws.addEventListener('close', () => {
-            this.logger.info('connection closed');
+            const backoffMs = this.connectionBackoff.getAndIncrement();
+
+            this.logger.info(`connection closed, retrying in ${backoffMs}ms`);
+
+            setTimeout(() => this.connect(), backoffMs);
         });
 
         this.ws.addEventListener('error', (e) => {
@@ -137,4 +146,7 @@ export class RealtimeClient {
             this.registerHandler('*', handler);
         },
     };
+    public get isOpen(): boolean {
+        return this.ws.OPEN === 1;
+    }
 }

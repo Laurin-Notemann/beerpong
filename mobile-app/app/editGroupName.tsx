@@ -48,7 +48,7 @@ export default function Page() {
                         </HeaderItem>
                     ),
 
-                    headerTitle: 'Player Name',
+                    headerTitle: 'Group Name',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
