@@ -40,8 +40,8 @@ function Change({ value }: { value: number }) {
                 {/* rounded to two decimal places with trailing zeros removed */}
                 {Math.abs(value)
                     .toFixed(2)
-                    .replace(/[1-9](0+)$/, '')
-                    .replace(/\.00$/, '.0')}
+                    .replace(/\.00$/, '.0')
+                    .replace(/([1-9])0+$/, '$1')}
             </Text>
         </>
     );
