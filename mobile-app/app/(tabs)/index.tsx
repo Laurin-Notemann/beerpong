@@ -13,6 +13,7 @@ import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Leaderboard from '@/components/Leaderboard';
+import PillButton from '@/components/PillButton';
 import { theme } from '@/theme';
 
 export default function Page() {
@@ -123,36 +124,3 @@ export default function Page() {
         </GestureHandlerRootView>
     );
 }
-
-const PillButton: React.FC<{
-    label: string;
-    iconName: string;
-    onPress?: () => void;
-}> = ({ label, iconName, onPress }) => {
-    return (
-        <TouchableOpacity
-            onPress={onPress}
-            style={{
-                height: 32,
-                backgroundColor: '#333',
-                borderRadius: 16,
-                paddingLeft: 8,
-                paddingRight: 16,
-                alignItems: 'center',
-                flexDirection: 'row',
-            }}
-        >
-            <Icon color="#fff" size={20} name={iconName} />
-            <Text
-                style={{
-                    fontSize: 12,
-                    color: '#fff',
-                    marginLeft: 4,
-                    fontWeight: '700',
-                }}
-            >
-                {label}
-            </Text>
-        </TouchableOpacity>
-    );
-};
