@@ -1,7 +1,8 @@
 import { Link } from '@react-navigation/native';
 import React, { useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { Animated, TouchableOpacity } from 'react-native';
 import { Pressable, View } from 'react-native';
-import { TouchableHighlight } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -20,12 +21,16 @@ export interface SidebarGroupItemProps {
     id: string;
     isActive: boolean;
     onPress: (id: string) => void;
+    showDeleteButton?: boolean;
+    onDelete: (id: string) => void;
 }
 
 export function SidebarGroupItem({
     id,
     isActive,
     onPress,
+    showDeleteButton = false,
+    onDelete,
 }: SidebarGroupItemProps) {
     const { data, isLoading } = useGroupQuery(id);
 
@@ -33,46 +38,70 @@ export function SidebarGroupItem({
         data?.data?.numberOfPlayers == null ||
         data?.data?.numberOfMatches == null;
 
+    // width of the square around the delete button that slides out when the sidebar is in edit mode
+    const deleteActionWidth = useRef(
+        new Animated.Value(showDeleteButton ? 40 : 0)
+    ).current;
+
+    useEffect(() => {
+        Animated.timing(deleteActionWidth, {
+            toValue: showDeleteButton ? 40 : 0,
+            duration: 150,
+            useNativeDriver: false, // width property needs JS driver to animate
+        }).start();
+    }, [showDeleteButton]);
+
     return (
-        <TouchableHighlight
-            disabled={isActive}
-            underlayColor={theme.panel.light.active}
-            onPress={() => onPress(id)}
+        <View
             style={{
-                display: 'flex',
-                backgroundColor: isActive ? 'rgba(0, 0, 0, 0.3)' : undefined,
-                paddingHorizontal: 17,
-                paddingVertical: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: isActive ? 'rgba(0,0,0,0.3)' : undefined,
+
+                height: 58,
             }}
         >
-            <>
-                <Text
-                    color="primary"
+            <Pressable onPress={() => onDelete(id)}>
+                <Animated.View
                     style={{
-                        fontSize: 17,
+                        justifyContent: 'center',
+
+                        width: deleteActionWidth,
+                        height: '100%',
                     }}
                 >
-                    {isLoading ? 'Loading...' : (data?.data?.name ?? 'Unknown')}
-                </Text>
-                <Text
-                    color="secondary"
-                    style={{
-                        fontSize: 12,
-                    }}
-                >
-                    {isLoading ? (
-                        ''
-                    ) : failedToLoad ? (
-                        <>Failed to load</>
-                    ) : (
-                        <>
-                            {data?.data?.numberOfPlayers} Players,{' '}
-                            {data?.data?.numberOfMatches} Matches
-                        </>
-                    )}
-                </Text>
-            </>
-        </TouchableHighlight>
+                    <Icon
+                        name="minus-circle"
+                        size={24}
+                        color="#f55"
+                        style={{
+                            marginLeft: 12,
+                        }}
+                    />
+                </Animated.View>
+            </Pressable>
+
+            <Pressable
+                disabled={isActive}
+                onPress={() => onPress(id)}
+                style={{ flex: 1, paddingHorizontal: 17, paddingVertical: 12 }}
+            >
+                <>
+                    <Text color="primary" style={{ fontSize: 17 }}>
+                        {isLoading
+                            ? 'Loading...'
+                            : (data?.data?.name ?? 'Unknown')}
+                    </Text>
+                    <Text color="secondary" style={{ fontSize: 12 }}>
+                        {isLoading
+                            ? ''
+                            : failedToLoad
+                              ? 'Failed to load'
+                              : `${data!.data!.numberOfPlayers} Players, ${data!.data!.numberOfMatches} Matches`}
+                    </Text>
+                </>
+            </Pressable>
+        </View>
     );
 }
 
@@ -87,12 +116,18 @@ export interface SidebarProps {}
 
 // eslint-disable-next-line no-empty-pattern
 export function Sidebar({}: SidebarProps) {
-    const { groupIds, selectedGroupId, selectGroup, clearGroups } =
+    const { groupIds, selectedGroupId, selectGroup, removeGroup } =
         useGroupStore();
 
     const nav = useNavigation();
 
     const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+
+    const [isEditMode, setIsEditMode] = useState(false);
+
+    const [groupIdToBeDeleted, setGroupIdToBeDeleted] = useState<string | null>(
+        null
+    );
 
     return (
         <SafeAreaView
@@ -104,13 +139,10 @@ export function Sidebar({}: SidebarProps) {
                 gap: 20,
             }}
         >
-            <TouchableHighlight
-                underlayColor={theme.panel.light.active}
-                onPress={() => setShowAddGroupModal(true)}
+            <View
                 style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
 
                     height: 50,
                     paddingHorizontal: 16,
@@ -119,21 +151,28 @@ export function Sidebar({}: SidebarProps) {
                     borderRadius: 10,
                 }}
             >
-                {/* <Text
-                    color="primary"
-                    style={{
-                        fontWeight: 500,
-                    }}
-                >
-                    Edit
-                </Text> */}
-                <Pressable
-                    onPress={() => setShowAddGroupModal(true)}
-                    style={{ marginLeft: 'auto' }}
-                >
-                    <Icon name="plus" size={24} color="#fff" />
-                </Pressable>
-            </TouchableHighlight>
+                <>
+                    <TouchableOpacity
+                        onPress={() => setIsEditMode(!isEditMode)}
+                        style={{ marginRight: 'auto' }}
+                    >
+                        <Text
+                            color="primary"
+                            style={{
+                                fontWeight: 500,
+                            }}
+                        >
+                            {isEditMode ? 'Done' : 'Edit'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setShowAddGroupModal(true)}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        <Icon name="plus" size={24} color="#fff" />
+                    </TouchableOpacity>
+                </>
+            </View>
 
             <View
                 style={{
@@ -156,6 +195,8 @@ export function Sidebar({}: SidebarProps) {
                             console.log(Object.keys(nav));
                             // nav.closeDrawer();
                         }}
+                        showDeleteButton={isEditMode}
+                        onDelete={setGroupIdToBeDeleted}
                     />
                 ))}
                 {groupIds.length < 1 && (
@@ -247,18 +288,38 @@ export function Sidebar({}: SidebarProps) {
                                 setShowAddGroupModal(false);
                             },
                         },
+                    ] as const
+                }
+                isVisible={showAddGroupModal}
+            />
+            <ConfirmationModal
+                onClose={() => setGroupIdToBeDeleted(null)}
+                title="Leave Group"
+                description="Are you sure you want to leave this group?"
+                actions={
+                    [
                         {
-                            title: 'Clear',
+                            title: 'Leave',
+                            type: 'danger',
+
+                            onPress: () => {
+                                if (groupIdToBeDeleted) {
+                                    removeGroup(groupIdToBeDeleted);
+                                }
+                                setGroupIdToBeDeleted(null);
+                            },
+                        },
+                        {
+                            title: 'Cancel',
                             type: 'default',
 
                             onPress: () => {
-                                clearGroups();
-                                setShowAddGroupModal(false);
+                                setGroupIdToBeDeleted(null);
                             },
                         },
                     ] as const
                 }
-                isVisible={showAddGroupModal}
+                isVisible={groupIdToBeDeleted != null}
             />
             <Text
                 color="secondary"
