@@ -38,7 +38,10 @@ function Change({ value }: { value: number }) {
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
                 {/* rounded to two decimal places with trailing zeros removed */}
-                {Math.abs(value).toFixed(2).replace(/0+$/, '')}
+                {Math.abs(value)
+                    .toFixed(2)
+                    .replace(/[1-9](0+)$/, '')
+                    .replace(/\.00$/, '.0')}
             </Text>
         </>
     );

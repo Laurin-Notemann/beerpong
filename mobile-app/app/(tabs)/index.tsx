@@ -80,19 +80,6 @@ export default function Page() {
             >
                 <Text
                     style={{
-                        fontSize: 12,
-                        color: theme.color.text.secondary,
-                        marginTop: 3,
-                    }}
-                >
-                    {group.data?.activeSeason?.startDate
-                        ? `Started ${env.format.date.seasonStartAndEnd(
-                              dayjs(group.data.activeSeason.startDate)
-                          )}`
-                        : null}
-                </Text>
-                <Text
-                    style={{
                         fontSize: 17,
                         color: theme.color.text.secondary,
                         marginTop: 32 - 6,
@@ -118,6 +105,20 @@ export default function Page() {
                     </View>
                 )}
                 <Leaderboard players={players} />
+                <Text
+                    style={{
+                        fontSize: 12,
+                        color: theme.color.text.secondary,
+                        marginTop: 32,
+                        marginBottom: 32,
+                    }}
+                >
+                    {group.data?.activeSeason?.startDate
+                        ? `Leaderboard started ${env.format.date.seasonStartAndEnd(
+                              dayjs(group.data.activeSeason.startDate)
+                          )}`
+                        : null}
+                </Text>
             </ScrollView>
         </GestureHandlerRootView>
     );
