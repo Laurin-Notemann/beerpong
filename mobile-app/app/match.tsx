@@ -3,11 +3,18 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
-import { useDeleteMatchMutation, useMatchQuery } from '@/api/calls/matchHooks';
+import {
+    useDeleteMatchMutation,
+    useMatchesQuery,
+    useMatchQuery,
+} from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import {
+    getInfluenceOfMatchOnAveragePoints,
+    matchDtoToMatch,
+} from '@/api/utils/matchDtoToMatch';
 import { navStyles } from '@/app/navigation/navStyles';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -36,6 +43,13 @@ export default function Page() {
     const movesQuery = useMoves(groupId, seasonId);
 
     const allowedMoves = movesQuery.data?.data ?? [];
+
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    const matches =
+        matchesQuery.data?.data?.map(
+            matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        ) ?? [];
 
     const { mutateAsync } = useDeleteMatchMutation();
 
@@ -135,7 +149,11 @@ export default function Page() {
                         .concat(match?.redTeam ?? [])
                         .map((i) => ({
                             id: i.id!,
-                            change: i.change,
+                            change: getInfluenceOfMatchOnAveragePoints(
+                                matches,
+                                i.id!,
+                                match?.id!
+                            ),
                             moves: i.moves,
                             name: i.name,
                             avatarUrl: i.avatarUrl,
