@@ -29,6 +29,10 @@ export function SidebarGroupItem({
 }: SidebarGroupItemProps) {
     const { data, isLoading } = useGroupQuery(id);
 
+    const failedToLoad =
+        data?.data?.numberOfPlayers == null ||
+        data?.data?.numberOfMatches == null;
+
     return (
         <TouchableHighlight
             disabled={isActive}
@@ -58,6 +62,8 @@ export function SidebarGroupItem({
                 >
                     {isLoading ? (
                         ''
+                    ) : failedToLoad ? (
+                        <>Failed to load</>
                     ) : (
                         <>
                             {data?.data?.numberOfPlayers} Players,{' '}
@@ -81,7 +87,8 @@ export interface SidebarProps {}
 
 // eslint-disable-next-line no-empty-pattern
 export function Sidebar({}: SidebarProps) {
-    const { groupIds, selectedGroupId, selectGroup } = useGroupStore();
+    const { groupIds, selectedGroupId, selectGroup, clearGroups } =
+        useGroupStore();
 
     const nav = useNavigation();
 
@@ -237,6 +244,15 @@ export function Sidebar({}: SidebarProps) {
 
                             onPress: () => {
                                 nav.navigate('joinGroup');
+                                setShowAddGroupModal(false);
+                            },
+                        },
+                        {
+                            title: 'Clear',
+                            type: 'default',
+
+                            onPress: () => {
+                                clearGroups();
                                 setShowAddGroupModal(false);
                             },
                         },

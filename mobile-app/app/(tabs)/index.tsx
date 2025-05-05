@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import { useCallback, useState } from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
@@ -91,13 +91,6 @@ export default function Page() {
                           )}`
                         : null}
                 </Text>
-                {env.isDev && (
-                    <TouchableOpacity
-                        onPress={() => setShowChangeWallpaperModal(true)}
-                    >
-                        <Icon color="#fff" size={24} name="sort" />
-                    </TouchableOpacity>
-                )}
                 <Text
                     style={{
                         fontSize: 17,
@@ -108,8 +101,57 @@ export default function Page() {
                     {group.data?.numberOfPlayers ?? 0} players ·{' '}
                     {group.data?.numberOfMatches ?? 0} matches
                 </Text>
+                {env.isDev && (
+                    <View
+                        style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}
+                    >
+                        <PillButton
+                            label="Sort"
+                            iconName="swap-vertical"
+                            onPress={() => setShowChangeWallpaperModal(true)}
+                        />
+                        <PillButton
+                            label="Invite"
+                            iconName="share-outline"
+                            onPress={() => setShowChangeWallpaperModal(true)}
+                        />
+                    </View>
+                )}
                 <Leaderboard players={players} />
             </ScrollView>
         </GestureHandlerRootView>
     );
 }
+
+const PillButton: React.FC<{
+    label: string;
+    iconName: string;
+    onPress?: () => void;
+}> = ({ label, iconName, onPress }) => {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={{
+                height: 32,
+                backgroundColor: '#333',
+                borderRadius: 16,
+                paddingLeft: 8,
+                paddingRight: 16,
+                alignItems: 'center',
+                flexDirection: 'row',
+            }}
+        >
+            <Icon color="#fff" size={20} name={iconName} />
+            <Text
+                style={{
+                    fontSize: 12,
+                    color: '#fff',
+                    marginLeft: 4,
+                    fontWeight: '700',
+                }}
+            >
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
+};
