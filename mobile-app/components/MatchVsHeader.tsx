@@ -60,6 +60,13 @@ function ScoreChip({
     );
 }
 
+const hasFinishMove = (team?: TeamMember[]): boolean => {
+    return (
+        team?.some((player) => player.moves?.some((move) => move.isFinish)) ??
+        false
+    );
+};
+
 export interface MatchVsHeaderProps extends ViewProps {
     match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
 
@@ -76,14 +83,11 @@ export default function MatchVsHeader({
     highlightedId,
     ...rest
 }: MatchVsHeaderProps) {
-    const redWon = match.redCups > match.blueCups;
-
-    const winnerTeamId: TeamId =
-        match.redCups > match.blueCups
-            ? 'red'
-            : match.redCups < match.blueCups
-              ? 'blue'
-              : null;
+    const winnerTeamId: TeamId = hasFinishMove(match.redTeam)
+        ? 'red'
+        : hasFinishMove(match.blueTeam)
+          ? 'blue'
+          : null;
 
     return (
         <View
