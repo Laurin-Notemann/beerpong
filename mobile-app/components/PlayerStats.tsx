@@ -90,7 +90,8 @@ export default function PlayerStats({
                 }
                 isHighest={env.isDev}
             />
-            <Stat title="Elo" value={elo} />
+            {/* TODO: implement elo */}
+            {/* <Stat title="Elo" value={elo} /> */}
         </TouchableOpacity>
     );
 }

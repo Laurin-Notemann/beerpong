@@ -26,11 +26,19 @@ function Change({ value }: { value: number }) {
                     marginLeft: 8,
                     marginRight: 2,
                     marginTop: 1,
-                    transform: value >= 0 ? undefined : [{ rotateX: '180deg' }],
+                    transform:
+                        value >= 0
+                            ? // we can't simply have undefined when it's facing upwards,
+                              // because this breaks with an really arcane
+                              // "TypeError: Cannot read property 'forEach' of null",
+                              // which is caused by not being able to animate to undefined
+                              [{ rotateX: '0deg' }]
+                            : [{ rotateX: '180deg' }],
                 }}
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
-                {Math.abs(value)}
+                {/* rounded to two decimal places with trailing zeros removed */}
+                {Math.abs(value).toFixed(2).replace(/0+$/, '')}
             </Text>
         </>
     );

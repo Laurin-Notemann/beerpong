@@ -19,6 +19,8 @@ export default function FinishMovePage({
                     alignItems: 'center',
 
                     flex: 1,
+
+                    paddingTop: 32,
                 }}
             >
                 <Text color="primary" variant="h3">

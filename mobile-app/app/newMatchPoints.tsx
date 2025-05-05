@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
-import { useCreateMatchMutation } from '@/api/calls/matchHooks';
+import {
+    useCreateMatchMutation,
+    useMatchesQuery,
+} from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import AssignFinishModeModal from '@/components/AssignFinishMoveModal';
-import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
-import { Feature } from '@/constants/Features';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
@@ -39,6 +39,10 @@ export default function Page() {
 
     // TODO: isFinish, pointsForTeam, stuff like that
 
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    const allMatches = matchesQuery.data?.data ?? [];
+
     const teamMembers = players.map<TeamMember>((i) => {
         const profile = profiles.find((j) => i.playerId === j.id);
 
@@ -46,20 +50,41 @@ export default function Page() {
             throw new Error('failed to get profile for team member');
         }
 
+        const pointsThisMatch = i.moves.reduce(
+            (sum, j) =>
+                sum +
+                j.count *
+                    (allowedMoves.find((k) => k.id === j.moveId)
+                        ?.pointsForScorer ?? 0),
+            0
+        );
+
+        const player = (playersQuery.data?.data ?? []).find(
+            (j) => j.id === i.playerId
+        );
+
+        const pointsFromPreviousMatches = player?.statistics?.points ?? 0;
+
+        const matches = allMatches.filter((j) =>
+            j.teamMembers?.find((k) => k.playerId === i.playerId)
+        );
+
+        const previousAverage =
+            matches.length > 0 ? pointsFromPreviousMatches / matches.length : 0;
+
+        const newAverage =
+            (pointsFromPreviousMatches + pointsThisMatch) /
+            (matches.length + 1);
+
+        const changeInAverage = newAverage - previousAverage;
+
         return {
             id: i.playerId,
             team: i.team,
             avatarUrl: profile.profile.avatarAsset?.url,
             name: profile.profile.name || 'Unknown',
-            points: i.moves.reduce(
-                (sum, j) =>
-                    sum +
-                    j.count *
-                        (allowedMoves.find((k) => k.id === j.moveId)
-                            ?.pointsForScorer ?? 0),
-                0
-            ),
-            change: 0.12,
+            points: pointsThisMatch,
+            change: changeInAverage,
             moves: allowedMoves.map((j) => {
                 return {
                     id: j.id!,
