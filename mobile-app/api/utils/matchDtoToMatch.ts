@@ -44,7 +44,7 @@ export const matchDtoToMatch =
     };
 
 export const getInfluenceOfMatchOnAveragePoints = (
-    matches: Match[],
+    matches: Omit<Match, 'winnerTeamId'>[],
     playerId: string,
     matchId: string
 ) => {

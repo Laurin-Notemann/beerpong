@@ -106,6 +106,24 @@ export class TeamMemberImpl {
     public setMoves(moves: MatchMoveImpl[]): void {
         this.moves = moves;
     }
+    public setRuleMoves(ruleMoves: RuleMoveImpl[]): void {
+        this.moves = ruleMoves.map((i) => {
+            const existing = this.moves.find((j) => j.moveId === i.id);
+
+            if (existing) {
+                return existing;
+            }
+
+            const move = new MatchMoveImpl({
+                moveId: i.id,
+                value: 0,
+                teamMemberId: this.id,
+            });
+            move.setRuleMove(i);
+
+            return move;
+        });
+    }
 
     public get avatarUrl(): string | null {
         return this.player.profile.avatarUrl;
@@ -260,6 +278,7 @@ export class MatchImpl {
                 member.setMoves(
                     matchMoves.filter((i) => i.teamMemberId === member.id)
                 );
+                member.setRuleMoves(ruleMoves);
             }
         }
         for (const player of this._blueTeam.members) {
