@@ -20,7 +20,13 @@ interface TeamDraft {
 }
 
 interface MatchEditDraftStore {
+    // whether there are changes to be saved
     isDirty: boolean;
+    // the original state before editing, used to determine isDirty
+    _baseline: {
+        redTeam: TeamDraft;
+        blueTeam: TeamDraft;
+    } | null;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
     actions: {
@@ -33,9 +39,13 @@ interface MatchEditDraftStore {
     };
 }
 
+const isEqual = (a: TeamDraft, b: TeamDraft): boolean =>
+    JSON.stringify(a) === JSON.stringify(b);
+
 export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
     (set, get) => ({
-        isDirty: true, // TODO: implement this
+        isDirty: false,
+        _baseline: null,
         redTeam: {
             teamMembers: [],
         },
@@ -52,6 +62,7 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                     blueTeam: {
                         teamMembers: [],
                     },
+                    isDirty: true,
                 }));
             },
             getPlayers: () => {
@@ -66,9 +77,9 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                 return [...bluePlayers, ...redPlayers];
             },
 
-            setPlayerTeam: async (playerId, team) => {
+            setPlayerTeam: (playerId, team) => {
                 set((state) => {
-                    const { redTeam, blueTeam } = state;
+                    const { redTeam, blueTeam, _baseline: baseline } = state;
 
                     // Remove the player from both teams
                     const updatedRedTeam = redTeam.teamMembers.filter(
@@ -80,14 +91,21 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
 
                     // Add the player to the new team, if specified
                     if (team === 'red') {
-                        updatedRedTeam.push({ playerId: playerId, moves: [] });
+                        updatedRedTeam.push({ playerId, moves: [] });
                     } else if (team === 'blue') {
-                        updatedBlueTeam.push({ playerId: playerId, moves: [] });
+                        updatedBlueTeam.push({ playerId, moves: [] });
                     }
 
+                    const newRed = { teamMembers: updatedRedTeam };
+                    const newBlue = { teamMembers: updatedBlueTeam };
+
                     return {
-                        redTeam: { teamMembers: updatedRedTeam },
-                        blueTeam: { teamMembers: updatedBlueTeam },
+                        redTeam: newRed,
+                        blueTeam: newBlue,
+                        isDirty:
+                            !baseline ||
+                            !isEqual(baseline.redTeam, newRed) ||
+                            !isEqual(baseline.blueTeam, newBlue),
                     };
                 });
             },
@@ -97,53 +115,67 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                         teamMembers: team.teamMembers.map((player) => {
                             if (player.playerId !== userId) return player;
 
-                            if (
-                                !player.moves.find(
-                                    (move) => move.moveId === moveId
-                                )
-                            ) {
-                                player.moves.push({ moveId, count });
+                            const existing = player.moves.find(
+                                (m) => m.moveId === moveId
+                            );
+                            if (!existing) {
+                                return {
+                                    ...player,
+                                    moves: [...player.moves, { moveId, count }],
+                                };
                             }
 
-                            const moves = player.moves.map((move) =>
+                            const updatedMoves = player.moves.map((move) =>
                                 move.moveId === moveId
                                     ? { ...move, count }
                                     : move
                             );
-
-                            return {
-                                ...player,
-                                moves,
-                            };
+                            return { ...player, moves: updatedMoves };
                         }),
                     });
 
+                    const newRed = updateTeam(state.redTeam);
+                    const newBlue = updateTeam(state.blueTeam);
+                    const { _baseline: baseline } = state;
+
                     return {
-                        redTeam: updateTeam(state.redTeam),
-                        blueTeam: updateTeam(state.blueTeam),
+                        redTeam: newRed,
+                        blueTeam: newBlue,
+                        isDirty:
+                            !baseline ||
+                            !isEqual(baseline.redTeam, newRed) ||
+                            !isEqual(baseline.blueTeam, newBlue),
                     };
                 });
             },
             setMatch: (match) => {
+                const redTeam = {
+                    teamMembers: match.redTeam.map((i) => ({
+                        playerId: i.id,
+                        moves: i.moves.map((m) => ({
+                            moveId: m.id,
+                            count: m.count,
+                        })),
+                    })),
+                };
+                const blueTeam = {
+                    teamMembers: match.blueTeam.map((i) => ({
+                        playerId: i.id,
+                        moves: i.moves.map((m) => ({
+                            moveId: m.id,
+                            count: m.count,
+                        })),
+                    })),
+                };
+
                 set(() => ({
-                    redTeam: {
-                        teamMembers: match.redTeam.map((i) => ({
-                            playerId: i.id,
-                            moves: i.moves.map((move) => ({
-                                moveId: move.id,
-                                count: move.count,
-                            })),
-                        })),
+                    redTeam,
+                    blueTeam,
+                    _baseline: {
+                        redTeam,
+                        blueTeam,
                     },
-                    blueTeam: {
-                        teamMembers: match.blueTeam.map((i) => ({
-                            playerId: i.id,
-                            moves: i.moves.map((move) => ({
-                                moveId: move.id,
-                                count: move.count,
-                            })),
-                        })),
-                    },
+                    isDirty: false,
                 }));
             },
         },
