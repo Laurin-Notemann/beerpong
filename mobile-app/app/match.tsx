@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
 import {
@@ -220,7 +220,10 @@ export default function Page() {
                     headerBackTitleVisible: false,
                     headerRight: () => (
                         <HeaderItem
-                            disabled={isEditing && !matchDraft.isDirty}
+                            disabled={
+                                (isEditing && !matchDraft.isDirty) ||
+                                updateMatchMutation.isPending
+                            }
                             onPress={async () => {
                                 if (!isEditing) {
                                     setIsEditing(true);
@@ -231,7 +234,15 @@ export default function Page() {
                                 }
                             }}
                         >
-                            {isEditing ? 'Save' : 'Edit'}
+                            {isEditing ? (
+                                updateMatchMutation.isPending ? (
+                                    <ActivityIndicator />
+                                ) : (
+                                    'Save'
+                                )
+                            ) : (
+                                'Edit'
+                            )}
                         </HeaderItem>
                     ),
                     headerLeft: isEditing

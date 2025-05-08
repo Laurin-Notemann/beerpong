@@ -13,14 +13,14 @@ export default function Page() {
     const nav = useNavigation();
 
     const { members, addName } = useCreateGroupStore();
-    const { mutateAsync } = useCreateGroupMutation();
+    const createGroupMutation = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
 
     async function onSubmit(group: { name: string }) {
         try {
             addName(group.name);
 
-            const data = await mutateAsync({
+            const data = await createGroupMutation.mutateAsync({
                 name: group.name,
                 profileNames: members.map((m) => m.name),
             });
@@ -35,5 +35,10 @@ export default function Page() {
             showErrorToast('Failed to create group.');
         }
     }
-    return <CreateGroupSetName onSubmit={onSubmit} />;
+    return (
+        <CreateGroupSetName
+            onSubmit={onSubmit}
+            isPending={createGroupMutation.isPending}
+        />
+    );
 }

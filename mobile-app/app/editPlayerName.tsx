@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 import {
     usePlayersQuery,
@@ -29,13 +30,13 @@ export default function Page() {
 
     const [value, setValue] = useState(player?.profile?.name || '');
 
-    const { mutateAsync } = useUpdatePlayerMutation();
+    const updatePlayerMutation = useUpdatePlayerMutation();
 
     async function onSubmit() {
         if (!groupId || !seasonId || !profileId) return;
 
         try {
-            await mutateAsync({
+            await updatePlayerMutation.mutateAsync({
                 groupId,
                 seasonId,
                 id: profileId,
@@ -54,11 +55,18 @@ export default function Page() {
                 options={{
                     headerRight: () => (
                         <HeaderItem
-                            disabled={value.length < 1}
+                            disabled={
+                                value.length < 1 ||
+                                updatePlayerMutation.isPending
+                            }
                             noMargin
                             onPress={onSubmit}
                         >
-                            Done
+                            {updatePlayerMutation.isPending ? (
+                                <ActivityIndicator />
+                            ) : (
+                                'Done'
+                            )}
                         </HeaderItem>
                     ),
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import {
     useCreateMatchMutation,
@@ -19,11 +19,7 @@ export default function Page() {
 
     const matchDraft = useMatchDraftStore();
 
-    const [playerIdx, setPlayerIdx] = useState<number | null>(0);
-
-    const [showFinishMoveModal, setShowFinishMoveModal] = useState(false);
-
-    const { mutateAsync } = useCreateMatchMutation();
+    const createMatchMutation = useCreateMatchMutation();
 
     const { groupId, seasonId } = useGroup();
 
@@ -118,7 +114,7 @@ export default function Page() {
         }
 
         try {
-            await mutateAsync({
+            await createMatchMutation.mutateAsync({
                 groupId,
                 seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
@@ -133,6 +129,7 @@ export default function Page() {
 
     return (
         <CreateMatchAssignPoints
+            isPending={createMatchMutation.isPending}
             players={teamMembers}
             setMoveCount={matchDraft.actions.setMoveCount}
             onSubmit={onSubmit}
