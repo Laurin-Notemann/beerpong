@@ -7,7 +7,7 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient, RealtimeEventHandler } from '.';
 import { env } from '../env';
-import { ignoreSeason, QK } from '../utils/reactQuery';
+import { QK, queryKeyStartsWith, replaceWildcards } from '../utils/reactQuery';
 
 export function useRealtimeConnection() {
     const { groupIds } = useGroupStore();
@@ -34,13 +34,22 @@ export function useRealtimeConnection() {
 
                 // refetch because of PlayerDto.statistics.matches
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
+                        QK.players,
+                    ]),
                 });
 
                 client.current.logger.info('refetching matches');
 
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
+                    predicate: replaceWildcards(
+                        [QK.group, e.groupId, QK.season, '*', QK.matches],
+                        { startsWith: true }
+                    ),
                 });
                 break;
             case 'SEASONS':
@@ -49,18 +58,31 @@ export function useRealtimeConnection() {
 
                 // refetch because a newly created season will have new players
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
+                        QK.players,
+                    ]),
                 });
 
                 // refetch because a newly created season will have no matches
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
+                    predicate: replaceWildcards(
+                        [QK.group, e.groupId, QK.season, '*', QK.matches],
+                        { startsWith: true }
+                    ),
                 });
 
                 client.current.logger.info('refetching seasons');
 
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.seasons]),
+                    predicate: queryKeyStartsWith([
+                        QK.group,
+                        e.groupId,
+                        QK.seasons,
+                    ]),
                 });
                 break;
             case 'PLAYERS':
@@ -69,13 +91,22 @@ export function useRealtimeConnection() {
 
                 // TODO: only refetch matches on player delete
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.matches]),
+                    predicate: replaceWildcards(
+                        [QK.group, e.groupId, QK.season, '*', QK.matches],
+                        { startsWith: true }
+                    ),
                 });
 
                 client.current.logger.info('refetching players');
 
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
+                        QK.players,
+                    ]),
                 });
                 break;
             case 'PROFILES':
@@ -84,23 +115,37 @@ export function useRealtimeConnection() {
 
                 client.current.logger.info('refetching profiles');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.players]),
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
+                        QK.players,
+                    ]),
                 });
                 break;
             case 'RULES':
                 client.current.logger.info('refetching rules');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([QK.group, e.groupId, QK.rules]),
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
+                        QK.rules,
+                    ]),
                 });
                 break;
             case 'RULE_MOVES':
                 // TODO: refetch matches, players (because this updates the scoring system)
                 client.current.logger.info('refetching ruleMoves');
                 qc.invalidateQueries({
-                    predicate: ignoreSeason([
+                    predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
-                        QK.ruleMoves,
+                        QK.season,
+                        '*',
+                        QK.players,
                     ]),
                 });
                 break;

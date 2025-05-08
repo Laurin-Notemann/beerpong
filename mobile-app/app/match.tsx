@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
@@ -18,6 +18,7 @@ import {
     matchDtoToMatch,
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -155,14 +156,11 @@ export default function Page() {
         // });
     }
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { invalidateMatches } = useQueryInvalidation();
 
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+        invalidateMatches(groupId!, seasonId!)
+    );
 
     const updateMatchMutation = useUpdateMatchMutation();
 
