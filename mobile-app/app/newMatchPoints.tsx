@@ -10,7 +10,7 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
-import { showErrorToast } from '@/toast';
+import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
@@ -121,6 +121,7 @@ export default function Page() {
             });
             matchDraft.actions.clear();
             nav.navigate('index');
+            showSuccessToast('Created match.');
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
             showErrorToast('Failed to create match.');

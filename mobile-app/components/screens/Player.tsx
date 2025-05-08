@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
@@ -21,6 +21,7 @@ import { theme } from '@/theme';
 import PlayerStats from '../PlayerStats';
 
 export interface PlayerScreenProps {
+    isPending: boolean;
     id: string;
     placement: number;
 
@@ -39,6 +40,7 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
 }
 export default function PlayerScreen({
+    isPending,
     id,
     placement,
     name,
@@ -81,9 +83,18 @@ export default function PlayerScreen({
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
+                            disabled={editable && isPending}
                             onPress={() => setEditable((prev) => !prev)}
                         >
-                            {editable ? 'Done' : 'Edit'}
+                            {editable ? (
+                                isPending ? (
+                                    <ActivityIndicator />
+                                ) : (
+                                    'Done'
+                                )
+                            ) : (
+                                'Edit'
+                            )}
                         </HeaderItem>
                     ),
                 }}
@@ -114,7 +125,7 @@ export default function PlayerScreen({
                     placement={placement}
                     name={name}
                     canUpload={editable}
-                    onPress={onUploadAvatarPress}
+                    onPress={editable ? onUploadAvatarPress : undefined}
                 />
                 <Text
                     style={{
