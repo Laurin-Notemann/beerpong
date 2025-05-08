@@ -6,6 +6,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
+import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 import { useNavigation } from './navigation/useNavigation';
@@ -37,14 +38,14 @@ export default function Page() {
         const profile = profiles.find((j) => i.playerId === j.id);
 
         if (!profile?.profile?.name) {
-            throw new Error('failed to get profile for team member');
+            ConsoleLogger.error('failed to get profile for team member');
         }
 
         return {
             id: i.playerId,
             team: i.team,
-            avatarUrl: profile.profile.avatarAsset?.url,
-            name: profile.profile.name || 'Unknown',
+            avatarUrl: profile?.profile?.avatarAsset?.url,
+            name: profile?.profile?.name || 'Unknown',
             points: i.moves.reduce(
                 (sum, j) =>
                     sum +

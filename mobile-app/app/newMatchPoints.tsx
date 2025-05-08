@@ -43,7 +43,7 @@ export default function Page() {
         const profile = profiles.find((j) => i.playerId === j.id);
 
         if (!profile?.profile?.name) {
-            throw new Error('failed to get profile for team member');
+            ConsoleLogger.error('failed to get profile for team member');
         }
 
         const pointsThisMatch = i.moves.reduce(
@@ -77,8 +77,8 @@ export default function Page() {
         return {
             id: i.playerId,
             team: i.team,
-            avatarUrl: profile.profile.avatarAsset?.url,
-            name: profile.profile.name || 'Unknown',
+            avatarUrl: profile?.profile?.avatarAsset?.url,
+            name: profile?.profile?.name || 'Unknown',
             points: pointsThisMatch,
             change: changeInAverage,
             moves: allowedMoves.map((j) => {
