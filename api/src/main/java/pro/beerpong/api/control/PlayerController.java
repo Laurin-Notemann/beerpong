@@ -23,6 +23,14 @@ public class PlayerController {
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId, @PathVariable String seasonId) {
+        if (groupId == null || groupId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (seasonId == null || seasonId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_SEASON_ID);
+        }
+
         var players = playerService.getBySeasonId(seasonId);
 
         if (players != null) {
@@ -34,6 +42,18 @@ public class PlayerController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<String>> deletePlayer(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        if (groupId == null || groupId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (seasonId == null || seasonId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_SEASON_ID);
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_PLAYER_ID);
+        }
+
         var error = playerService.deletePlayer(id, seasonId, groupId);
 
         if (error == null) {

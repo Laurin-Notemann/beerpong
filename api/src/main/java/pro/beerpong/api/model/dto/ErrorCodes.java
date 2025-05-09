@@ -29,13 +29,19 @@ public enum ErrorCodes {
     MATCH_VALIDATION_FAILED("matchValidationFailed", "The validation of the created match has failed (invalid group or season id)"),
     MATCH_CREATE_DTO_VALIDATION_FAILED("matchCreateDtoValidationFailed", "The team sizes are not in the boundaries of the season settings!"),
     MATCH_DTO_VALIDATION_FAILED("matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, or no finish move)"),
+    /* RULE MOVES */
     RULE_MOVE_NOT_FOUND("ruleMoveNotFound", "The requested ruleMove could not be found!"),
     RULE_MOVE_VALIDATION_FAILED("ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"),
     RULE_VALIDATION_FAILED("ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
+    /* PLAYERS */
     PLAYER_VALIDATION_FAILED("playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!"),
+    INVALID_PLAYER_ID("invalidPlayerId", "Player id must be non-null and non-empty!"),
+    /* PROFILES */
     PROFILE_NOT_FOUND("profileNotFound", "The requested profile could not be found!"),
+    /* ASSETS */
     ASSET_NOT_FOUND("assetNotFound", "The requested asset could not be found!"),
+    /* LEADERBOARDS */
     LEADERBOARD_SCOPE_NOT_FOUND("leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"),
     LEADERBOARD_SEASON_NOT_FOUND("leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!");
 
