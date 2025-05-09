@@ -41,3 +41,10 @@ export const useLeaderboardProps = (
         players,
     };
 };
+
+/**
+ * usage: `players.sort(byAveragePoints)`
+ */
+export const byDescendingAveragePoints = (a: Player, b: Player) =>
+    (b.matches ? b.points / b.matches : 0) -
+    (a.matches ? a.points / a.matches : 0);

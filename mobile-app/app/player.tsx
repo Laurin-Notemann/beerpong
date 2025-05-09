@@ -10,6 +10,10 @@ import {
 } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    byDescendingAveragePoints,
+    useLeaderboardProps,
+} from '@/api/propHooks/leaderboardPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { QK, replaceWildcards } from '@/api/utils/reactQuery';
 import ErrorScreen from '@/components/ErrorScreen';
@@ -54,6 +58,8 @@ export default function Page() {
     const uploadAvatarMutation = useUpdatePlayerAvatarMutation();
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
@@ -136,9 +142,8 @@ export default function Page() {
         }
     }
 
-    const sortedPlayers = (playersQuery.data?.data ?? []).sort(
-        (a, b) => b.statistics?.points! - a.statistics?.points!
-    );
+    const sortedPlayers = players.sort(byDescendingAveragePoints);
+
     const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
 
     return (
