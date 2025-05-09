@@ -34,6 +34,7 @@ export interface PlayerScreenProps {
     matches: Match[];
     matchesWon: number;
     points: number;
+    cups: number;
     elo: number;
     hasPremium?: boolean;
 
@@ -52,6 +53,7 @@ export default function PlayerScreen({
     matches,
     matchesWon,
     points,
+    cups,
     elo,
     pastSeasons,
     hasPremium = false,
@@ -153,6 +155,7 @@ export default function PlayerScreen({
                 </Text>
 
                 <PlayerStats
+                    totalCups={cups}
                     totalPoints={points}
                     matchesWonCount={matchesWon}
                     matchesPlayedCount={matches.length}

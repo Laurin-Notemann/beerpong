@@ -147,6 +147,10 @@ export class TeamMemberImpl {
             ) ?? 0
         );
     }
+    public get cups(): number {
+        return this.moves.reduce((sum, i) => sum + i.count, 0);
+    }
+
     public toJSON(): TeamMember {
         return {
             id: this.playerId,
@@ -191,6 +195,10 @@ export class TeamImpl {
 
     public get points(): number | null {
         return this.members.reduce((sum, i) => sum + (i.points ?? 0), 0) ?? 0;
+    }
+
+    public get cups(): number | null {
+        return this.members.reduce((sum, i) => sum + (i.cups ?? 0), 0) ?? 0;
     }
 
     constructor(_data: Components.Schemas.TeamDto) {
@@ -289,9 +297,15 @@ export class MatchImpl {
         }
     }
     public get redCups(): number {
-        return this._redTeam.points!;
+        return this._redTeam.cups!;
     }
     public get blueCups(): number {
+        return this._blueTeam.cups!;
+    }
+    public get redPoints(): number {
+        return this._redTeam.points!;
+    }
+    public get bluePoints(): number {
         return this._blueTeam.points!;
     }
 

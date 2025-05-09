@@ -148,6 +148,14 @@ export default function Page() {
 
     const minMatchesRequiredToBeRanked = 1;
 
+    const allTimeCups = matches.reduce((sum, i) => {
+        const player = i.blueTeam.concat(i.redTeam).find((i) => i.id === id);
+
+        if (!player) return sum;
+
+        return sum + player.moves.reduce((sum, i) => sum + i.count, 0);
+    }, 0);
+
     return (
         <PlayerScreen
             minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
@@ -158,6 +166,7 @@ export default function Page() {
             elo={216}
             matchesWon={player?.statistics?.matches ?? 0}
             points={player?.statistics?.points ?? 0}
+            cups={allTimeCups}
             hasPremium={false}
             pastSeasons={activeSeasons.length - 1}
             matches={matches}
