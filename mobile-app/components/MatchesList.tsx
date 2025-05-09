@@ -1,11 +1,13 @@
 import dayjs from 'dayjs';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
+import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -22,14 +24,13 @@ export default function MatchesList({ matches }: MatchesListProps) {
 
     const days = groupMatchesByDay(matches);
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { groupId, seasonId } = useGroup();
 
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const { invalidateMatches } = useQueryInvalidation();
+
+    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+        invalidateMatches(groupId!, seasonId!)
+    );
 
     return (
         <FlatList

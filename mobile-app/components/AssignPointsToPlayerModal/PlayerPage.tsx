@@ -72,6 +72,28 @@ export default function PlayerPage({
                         />
                     </View>
                 ))}
+            <View
+                style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    paddingTop: 32,
+                    paddingBottom: 32,
+                }}
+            >
+                <Text
+                    color="secondary"
+                    style={{
+                        marginTop: 16,
+                        fontSize: 12,
+
+                        paddingHorizontal: 48,
+                    }}
+                >
+                    If {player.name} scored the last cup of the match, please
+                    don't add it here. There is a seperate page for the winning
+                    throw.
+                </Text>
+            </View>
             {finishMove && (
                 <View
                     style={{

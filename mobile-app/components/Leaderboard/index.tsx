@@ -1,7 +1,10 @@
 import React from 'react';
 import { Pressable, View, ViewProps } from 'react-native';
 
-import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import {
+    byDescendingAveragePoints,
+    Player,
+} from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 
 import Podium from '../Podium';
@@ -24,11 +27,7 @@ export default function Leaderboard({
 
     const minMatchesRequiredToBeRanked = 1;
 
-    const sortedPlayers = players.sort(
-        (a, b) =>
-            (b.matches ? b.points / b.matches : 0) -
-            (a.matches ? a.points / a.matches : 0)
-    );
+    const sortedPlayers = players.sort(byDescendingAveragePoints);
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked

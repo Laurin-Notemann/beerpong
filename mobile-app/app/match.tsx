@@ -1,13 +1,24 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
-import { useDeleteMatchMutation, useMatchQuery } from '@/api/calls/matchHooks';
+import {
+    useDeleteMatchMutation,
+    useMatchesQuery,
+    useMatchQuery,
+    useUpdateMatchMutation,
+} from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import {
+    getInfluenceOfMatchOnAveragePoints,
+    Match,
+    matchDtoToMatch,
+    TeamMember,
+} from '@/api/utils/matchDtoToMatch';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -16,6 +27,7 @@ import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 
 import { HeaderItem } from '../components/HeaderItem';
 import { useNavigation } from './navigation/useNavigation';
@@ -27,7 +39,7 @@ export default function Page() {
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
-    const players = playersQuery.data?.data ?? [];
+    const profiles = playersQuery.data?.data ?? [];
 
     const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -37,13 +49,98 @@ export default function Page() {
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    const matchDraft = useMatchEditDraftStore();
+
+    const matches =
+        matchesQuery.data?.data?.map(
+            matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        ) ?? [];
+
     const { mutateAsync } = useDeleteMatchMutation();
 
     const nav = useNavigation();
 
     const match = matchQuery.data?.data
-        ? matchDtoToMatch(players, allowedMoves)(matchQuery.data.data)
+        ? matchDtoToMatch(profiles, allowedMoves)(matchQuery.data.data)
         : null;
+
+    useEffect(() => {
+        if (match) {
+            matchDraft.actions.setMatch(match);
+        }
+    }, [isEditing]);
+
+    const players = matchDraft.actions.getPlayers();
+
+    const teamMembers = players.map<TeamMember>((i) => {
+        const profile = profiles.find((j) => i.playerId === j.id);
+
+        if (!profile?.profile?.name) {
+            ConsoleLogger.error('failed to get profile for team member');
+        }
+
+        const ownTeam = players.filter((j) => j.team === i.team);
+
+        const pointsForOwnMoves = i.moves.reduce(
+            (sum, j) =>
+                sum +
+                j.count *
+                    (allowedMoves.find((k) => k.id === j.moveId)
+                        ?.pointsForScorer ?? 0),
+            0
+        );
+        const teamMoves = ownTeam.reduce<(typeof i)['moves']>(
+            (sum, j) => sum.concat(j.moves),
+            []
+        );
+        const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
+            const pointsForMove =
+                allowedMoves.find((k) => k.id === j.moveId)?.pointsForTeam ?? 0;
+
+            return sum + pointsForMove * j.count;
+        }, 0);
+        const pointsThisMatch = pointsForOwnMoves + pointsForTeamMoves;
+
+        return {
+            id: i.playerId,
+            team: i.team,
+            avatarUrl: profile?.profile?.avatarAsset?.url,
+            name: profile?.profile?.name || 'Unknown',
+            points: pointsThisMatch,
+            change: 0, // unused in this occurence so we don't have to calculate it here
+            moves: allowedMoves.map((j) => {
+                return {
+                    id: j.id!,
+                    count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
+                    title: j.name || 'Unknown',
+                    points: j.pointsForScorer!,
+                    pointsForTeam: j.pointsForTeam!,
+                    isFinish: j.finishingMove!,
+                };
+            }),
+        };
+    });
+
+    const matchObj: Omit<Match, 'winnerTeamId'> | null = isEditing
+        ? {
+              id: match?.id!,
+              date: match?.date!,
+              blueCups: players
+                  .filter((i) => i.team === 'blue')
+                  .map((i) => i.moves)
+                  .flat()
+                  .reduce((sum, i) => sum + i.count, 0),
+              redCups: players
+                  .filter((i) => i.team === 'red')
+                  .map((i) => i.moves)
+                  .flat()
+                  .reduce((sum, i) => sum + i.count, 0),
+              redTeam: teamMembers.filter((i) => i.team === 'red'),
+              blueTeam: teamMembers.filter((i) => i.team === 'blue'),
+          }
+        : match;
 
     async function onDelete() {
         if (!groupId || !seasonId || !id) return;
@@ -74,14 +171,61 @@ export default function Page() {
         // });
     }
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { invalidateMatches } = useQueryInvalidation();
 
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+        invalidateMatches(groupId!, seasonId!)
+    );
+
+    const updateMatchMutation = useUpdateMatchMutation();
+
+    async function updateMatch() {
+        if (!groupId || !seasonId || !match?.id) {
+            ConsoleLogger.error(
+                'Failed to update match: Group ID or Season ID is missing'
+            );
+            return;
+        }
+
+        const data = {
+            id: match.id,
+            teams: [
+                {
+                    teamMembers: matchObj!.blueTeam.map((i) => ({
+                        playerId: i.id,
+                        moves: i.moves.map((j) => ({
+                            moveId: j.id,
+                            count: j.count,
+                        })),
+                    })),
+                },
+                {
+                    teamMembers: matchObj!.redTeam.map((i) => ({
+                        playerId: i.id,
+                        moves: i.moves.map((j) => ({
+                            moveId: j.id,
+                            count: j.count,
+                        })),
+                    })),
+                },
+            ],
+            groupId,
+            seasonId,
+        };
+
+        try {
+            await updateMatchMutation.mutateAsync(data);
+            showSuccessToast('Updated match.');
+            setIsEditing(false);
+        } catch (err) {
+            ConsoleLogger.error(
+                'failed to update match:',
+                err,
+                JSON.stringify(data, null, 2)
+            );
+            showErrorToast('Failed to update match.');
+        }
+    }
 
     return (
         <>
@@ -91,13 +235,45 @@ export default function Page() {
                     headerBackTitleVisible: false,
                     headerRight: () => (
                         <HeaderItem
-                            onPress={() => {
-                                setIsEditing((prev) => !prev);
+                            disabled={
+                                (isEditing && !matchDraft.isDirty) ||
+                                updateMatchMutation.isPending
+                            }
+                            onPress={async () => {
+                                if (!isEditing) {
+                                    setIsEditing(true);
+                                    return;
+                                }
+                                if (matchDraft.isDirty) {
+                                    await updateMatch();
+                                }
                             }}
                         >
-                            {isEditing ? 'Done' : 'Edit'}
+                            {isEditing ? (
+                                updateMatchMutation.isPending ? (
+                                    <ActivityIndicator />
+                                ) : (
+                                    'Save'
+                                )
+                            ) : (
+                                'Edit'
+                            )}
                         </HeaderItem>
                     ),
+                    headerLeft: isEditing
+                        ? () => (
+                              <HeaderItem
+                                  onPress={async () => {
+                                      if (matchDraft.isDirty) {
+                                          // TODO: show confirmation dialog
+                                      }
+                                      setIsEditing(false);
+                                  }}
+                              >
+                                  Cancel
+                              </HeaderItem>
+                          )
+                        : undefined,
                     headerTitle: () =>
                         match ? (
                             <MatchVsHeader
@@ -130,12 +306,33 @@ export default function Page() {
                 }
             >
                 <MatchPlayers
+                    onPlayerPress={(player) => {
+                        if (isEditing) {
+                            const pageIdx = (matchObj?.blueTeam ?? [])
+                                .concat(matchObj?.redTeam ?? [])
+                                .findIndex((j) => j.id === player.id);
+
+                            nav.navigate('editMatchPoints', {
+                                pageIdx,
+                            });
+                        } else {
+                            nav.navigate('player', player);
+                        }
+                    }}
                     editable={isEditing}
-                    players={(match?.blueTeam ?? [])
-                        .concat(match?.redTeam ?? [])
+                    players={(matchObj?.blueTeam ?? [])
+                        .concat(matchObj?.redTeam ?? [])
                         .map((i) => ({
                             id: i.id!,
-                            change: i.change,
+                            change: getInfluenceOfMatchOnAveragePoints(
+                                isEditing
+                                    ? matches.map((i) =>
+                                          i.id === match?.id ? matchObj! : i
+                                      )
+                                    : matches,
+                                i.id!,
+                                match?.id!
+                            ),
                             moves: i.moves,
                             name: i.name,
                             avatarUrl: i.avatarUrl,

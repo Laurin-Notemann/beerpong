@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ActivityIndicator, ScrollView } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { navStyles } from '@/app/navigation/navStyles';
@@ -13,6 +13,7 @@ import { Feature } from '@/constants/Features';
 import { theme } from '@/theme';
 
 export interface CreateMatchAssignPointsProps {
+    isPending: boolean;
     players: TeamMember[];
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
@@ -22,6 +23,7 @@ export interface CreateMatchAssignPointsProps {
     onPlayerPress: (player: TeamMember) => void;
 }
 export default function CreateMatchAssignPoints({
+    isPending,
     players,
     setMoveCount,
     onSubmit,
@@ -40,8 +42,12 @@ export default function CreateMatchAssignPoints({
                         </HeaderItem>
                     ),
                     headerRight: () => (
-                        <HeaderItem onPress={onSubmit} noMargin>
-                            Create
+                        <HeaderItem
+                            onPress={onSubmit}
+                            noMargin
+                            disabled={isPending}
+                        >
+                            {isPending ? <ActivityIndicator /> : 'Create'}
                         </HeaderItem>
                     ),
                     headerTitle: () => (

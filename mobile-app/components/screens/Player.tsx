@@ -1,14 +1,16 @@
 import { Stack } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
@@ -21,6 +23,8 @@ import { theme } from '@/theme';
 import PlayerStats from '../PlayerStats';
 
 export interface PlayerScreenProps {
+    minMatchesRequiredToBeRanked: number;
+    isPending: boolean;
     id: string;
     placement: number;
 
@@ -30,6 +34,7 @@ export interface PlayerScreenProps {
     matches: Match[];
     matchesWon: number;
     points: number;
+    cups: number;
     elo: number;
     hasPremium?: boolean;
 
@@ -39,6 +44,8 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
 }
 export default function PlayerScreen({
+    minMatchesRequiredToBeRanked,
+    isPending,
     id,
     placement,
     name,
@@ -46,6 +53,7 @@ export default function PlayerScreen({
     matches,
     matchesWon,
     points,
+    cups,
     elo,
     pastSeasons,
     hasPremium = false,
@@ -61,14 +69,15 @@ export default function PlayerScreen({
 
     const [editable, setEditable] = useState(false);
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { groupId, seasonId } = useGroup();
 
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const { invalidatePlayers } = useQueryInvalidation();
+
+    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+        invalidatePlayers(groupId!, seasonId!)
+    );
+
+    const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
     return (
         <GestureHandlerRootView>
@@ -81,9 +90,18 @@ export default function PlayerScreen({
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
+                            disabled={editable && isPending}
                             onPress={() => setEditable((prev) => !prev)}
                         >
-                            {editable ? 'Done' : 'Edit'}
+                            {editable ? (
+                                isPending ? (
+                                    <ActivityIndicator />
+                                ) : (
+                                    'Done'
+                                )
+                            ) : (
+                                'Edit'
+                            )}
                         </HeaderItem>
                     ),
                 }}
@@ -112,9 +130,10 @@ export default function PlayerScreen({
                     size={96}
                     style={{ marginTop: 32, marginBottom: 8 }}
                     placement={placement}
+                    isUnranked={isUnranked}
                     name={name}
                     canUpload={editable}
-                    onPress={onUploadAvatarPress}
+                    onPress={editable ? onUploadAvatarPress : undefined}
                 />
                 <Text
                     style={{
@@ -136,6 +155,7 @@ export default function PlayerScreen({
                 </Text>
 
                 <PlayerStats
+                    totalCups={cups}
                     totalPoints={points}
                     matchesWonCount={matchesWon}
                     matchesPlayedCount={matches.length}

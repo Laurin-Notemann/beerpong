@@ -1,5 +1,6 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
@@ -9,10 +10,12 @@ import TextInput from '@/components/TextInput';
 export interface CreateNewPlayerProps {
     onCreate: (player: { name: string }) => void;
     existingPlayers?: string[];
+    isPending: boolean;
 }
 export default function CreateNewPlayer({
     onCreate,
     existingPlayers,
+    isPending,
 }: CreateNewPlayerProps) {
     const nav = useNavigation();
 
@@ -32,10 +35,14 @@ export default function CreateNewPlayer({
                     ),
                     headerRight: () => (
                         <HeaderItem
-                            disabled={name.length < 1 || playerAlreadyExists}
+                            disabled={
+                                name.length < 1 ||
+                                playerAlreadyExists ||
+                                isPending
+                            }
                             onPress={() => onCreate({ name })}
                         >
-                            Create
+                            {isPending ? <ActivityIndicator /> : 'Create'}
                         </HeaderItem>
                     ),
                 }}

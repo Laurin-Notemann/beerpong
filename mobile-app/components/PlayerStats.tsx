@@ -45,12 +45,14 @@ export function Stat({
 }
 
 export interface PlayerStatsProps {
+    totalCups: number;
     totalPoints: number;
     matchesWonCount: number;
     matchesPlayedCount: number;
     elo: number;
 }
 export default function PlayerStats({
+    totalCups,
     totalPoints,
     matchesWonCount,
     matchesPlayedCount,
@@ -80,7 +82,8 @@ export default function PlayerStats({
                 value={averagePointsPerMatch}
                 isLowest={env.isDev}
             />
-            <Stat title="Total points" value={totalPoints} />
+            <Stat title="Total points" value={totalPoints || '--'} />
+            <Stat title="Total cups" value={totalCups || '--'} />
             <Stat
                 title="Matches won"
                 value={
@@ -90,7 +93,8 @@ export default function PlayerStats({
                 }
                 isHighest={env.isDev}
             />
-            <Stat title="Elo" value={elo} />
+            {/* TODO: implement elo */}
+            {/* <Stat title="Elo" value={elo} /> */}
         </TouchableOpacity>
     );
 }

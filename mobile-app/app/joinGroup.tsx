@@ -5,6 +5,7 @@ import { useFindGroupByInviteCode } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import JoinGroup from '@/components/screens/JoinGroup';
+import { showSuccessToast } from '@/toast';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
@@ -22,6 +23,8 @@ export default function Page() {
             selectGroup(data.data.id);
 
             nav.navigate('index');
+
+            showSuccessToast(`You joined "${data.data.name}"`);
         }
     }, [data, addGroup, nav]);
 

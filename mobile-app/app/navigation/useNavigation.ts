@@ -32,6 +32,7 @@ export type RootStackParamList = {
     debugLog: undefined;
 
     assignPointsToPlayerModal: { pageIdx: number };
+    editMatchPoints: { pageIdx: number };
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;
 

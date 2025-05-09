@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/components/HeaderItem';
@@ -9,10 +9,12 @@ import { theme } from '@/theme';
 import TextInput from '../TextInput';
 
 export interface CreateGroupSetNameProps {
+    isPending: boolean;
     onSubmit: (group: { name: string }) => void;
 }
 
 export default function CreateGroupSetName({
+    isPending,
     onSubmit,
 }: CreateGroupSetNameProps) {
     const [name, setName] = useState('');
@@ -24,10 +26,10 @@ export default function CreateGroupSetName({
                     options={{
                         headerRight: () => (
                             <HeaderItem
-                                disabled={name.length < 1}
+                                disabled={name.length < 1 || isPending}
                                 onPress={() => onSubmit({ name })}
                             >
-                                Create
+                                {isPending ? <ActivityIndicator /> : 'Create'}
                             </HeaderItem>
                         ),
 

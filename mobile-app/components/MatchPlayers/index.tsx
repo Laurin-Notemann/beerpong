@@ -22,12 +22,18 @@ export default function MatchPlayers({
     const redTeam = players.filter((i) => i.team === 'red');
     const blueTeam = players.filter((i) => i.team === 'blue');
 
-    const redTeamPoints = redTeam.reduce((sum, i) => sum + i.points, 0);
-    const blueTeamPoints = blueTeam.reduce((sum, i) => sum + i.points, 0);
+    const redTeamCups = redTeam.reduce(
+        (sum, i) => sum + i.moves.reduce((sum2, j) => sum2 + j.count, 0),
+        0
+    );
+    const blueTeamCups = blueTeam.reduce(
+        (sum, i) => sum + i.moves.reduce((sum2, j) => sum2 + j.count, 0),
+        0
+    );
 
     return (
         <>
-            <MenuSection title={`Blue Team - ${blueTeamPoints} points`}>
+            <MenuSection title={`Blue Team - ${blueTeamCups} cups`}>
                 {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
@@ -43,7 +49,7 @@ export default function MatchPlayers({
                 ))}
             </MenuSection>
 
-            <MenuSection title={`Red Team - ${redTeamPoints} points`}>
+            <MenuSection title={`Red Team - ${redTeamCups} cups`}>
                 {redTeam.map((i, idx) => (
                     <Player
                         key={idx}

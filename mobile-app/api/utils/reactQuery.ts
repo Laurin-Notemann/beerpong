@@ -1,4 +1,7 @@
-import { Query, QueryKey } from '@tanstack/react-query';
+import { Query, QueryKey, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+
+import { ConsoleLogger } from '@/utils/logging';
 
 export const QK = {
     group: 'group',
@@ -19,13 +22,71 @@ const areArraysIdentical = <T>(arr1: T[], arr2: T[]): boolean => {
     return arr1.every((value, index) => value === arr2[index]);
 };
 
-export const ignoreSeason =
-    (queryKey: string[]) =>
+/**
+ * a query like `[QK.group, groupId, QK.season, seasonId, QK.players]` will be matched by `[QK.group, groupId, QK.season, "*", QK.players]`
+ */
+export const replaceWildcards =
+    (patternKey: string[], options = { startsWith: false }) =>
     (query: Query<unknown, Error, unknown, QueryKey>) => {
-        const filteredKey = (query.queryKey as string[]).filter(
-            (item, idx, arr) =>
-                !(item === QK.season || arr[idx - 1] === QK.season)
-        );
+        const actualKey = query.queryKey as string[];
 
-        return areArraysIdentical(filteredKey, queryKey);
+        const sameLength = patternKey.length === actualKey.length;
+
+        if (!options.startsWith && !sameLength) return false;
+
+        return patternKey.every((item, idx) => {
+            return item === '*' || item === actualKey[idx];
+        });
     };
+
+export const queryKeyStartsWith =
+    (key: string[]) => (query: Query<unknown, Error, unknown, QueryKey>) => {
+        return query.queryKey
+            .slice(0, key.length)
+            .every((v, i) => v === key[i]);
+    };
+
+export function useQueryInvalidation() {
+    const qc = useQueryClient();
+
+    function invalidateMatches(groupId: string, seasonId: string) {
+        ConsoleLogger.info('useQueryInvalidation.invalidateMatches');
+
+        qc.invalidateQueries({
+            predicate: queryKeyStartsWith([
+                QK.group,
+                groupId,
+                QK.season,
+                seasonId,
+                QK.matches,
+            ]),
+        });
+    }
+    function invalidatePlayers(groupId: string, seasonId: string) {
+        ConsoleLogger.info('useQueryInvalidation.invalidatePlayers');
+
+        qc.invalidateQueries({
+            predicate: queryKeyStartsWith([
+                QK.group,
+                groupId,
+                QK.season,
+                seasonId,
+                QK.players,
+            ]),
+        });
+    }
+    return { invalidateMatches, invalidatePlayers };
+}
+
+export function usePullToRefresh(func: () => void) {
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const onRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            await func();
+        } catch (err) {}
+        setIsRefreshing(false);
+    };
+    return { isRefreshing, onRefresh };
+}
