@@ -13,7 +13,6 @@ import pro.beerpong.api.service.GroupService;
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
-
     private final GroupService groupService;
 
     @Autowired
@@ -23,8 +22,15 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto) {
-        GroupDto savedGroup = groupService.createGroup(groupCreateDto);
-        return ResponseEnvelope.ok(savedGroup);
+        if (groupCreateDto.invalidName()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_NAME);
+        }
+
+        if (groupCreateDto.invalidProfileName()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+        }
+
+        return ResponseEnvelope.ok(groupService.createGroup(groupCreateDto));
     }
 
     @GetMapping

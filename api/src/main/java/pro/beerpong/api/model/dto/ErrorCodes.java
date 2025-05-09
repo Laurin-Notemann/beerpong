@@ -9,6 +9,8 @@ public enum ErrorCodes {
     GROUP_NOT_FOUND("groupNotFound", "The requested group could not be found!"),
     GROUP_INVITE_NOT_FOUND("groupInviteNotFound", "No group with the provided invite code could be found!"),
     GROUP_INVITE_CODE_NOT_PROVIDED("groupInviteCodeNotProvided", "The invite code needs to be provided!"),
+    INVALID_GROUP_NAME("invalidGroupName", "Group name must be non-null, non-empty, between 2 and 30 characters and may only contain these chars: [a-zA-Z0-9_-]"),
+    INVALID_GROUP_PROFILE_NAMES("invalidGroupProfileNames", "Group profileNames must be non-null and non-empty!"),
     SEASON_NOT_FOUND("seasonNotFound", "The requested season could not be found!"),
     SEASON_ALREADY_ENDED("seasonAlreadyEnded", "Past seasons are immutable!"),
     SEASON_WRONG_TIME_FORMAT("seasonWrongTimeFormat", "The wake time hour has to be between 0 and 23!"),
