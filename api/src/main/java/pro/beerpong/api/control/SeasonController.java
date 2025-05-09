@@ -85,15 +85,15 @@ public class SeasonController {
         if (season.isEmpty()) {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
         } else if (!season.get().getGroupId().equals(groupId)) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_OF_GROUP);
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_NOT_OF_GROUP);
         } else if (season.get().getEndDate() != null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_ALREADY_ENDED);
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
         if (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
         } else if (dto.getSeasonSettings().getMinTeamSize() > dto.getSeasonSettings().getMaxTeamSize()) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
         }
 
         dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 0), 1000));
