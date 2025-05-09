@@ -24,6 +24,7 @@ public enum ErrorCodes {
     RULE_VALIDATION_FAILED("ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
     PLAYER_VALIDATION_FAILED("playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND("playerNotFound", "The requested player could not be found!"),
+    PLAYER_ALREADY_DELETED("playerAlreadyDeleted", "This player has been deleted!"),
     PROFILE_NOT_FOUND("profileNotFound", "The requested profile could not be found!"),
     ASSET_NOT_FOUND("assetNotFound", "The requested asset could not be found!"),
     LEADERBOARD_SCOPE_NOT_FOUND("leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"),

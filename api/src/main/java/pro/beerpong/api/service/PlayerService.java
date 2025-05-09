@@ -31,6 +31,7 @@ public class PlayerService {
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
+                .filter(Player::isActiveThisSeason)
                 .map(this::createStatisticsEnrichedDto)
                 .toList();
     }
@@ -53,6 +54,7 @@ public class PlayerService {
 
         player.setSeason(season);
         player.setProfile(profile);
+        player.setActiveThisSeason(true);
 
         var enrichedDto = createStatisticsEnrichedDto(playerRepository.save(player));
 
@@ -66,6 +68,11 @@ public class PlayerService {
 
         playerRepository.findById(id).ifPresentOrElse(player -> {
             var season = seasonRepository.findById(seasonId).orElse(null);
+
+            if (!player.isActiveThisSeason()) {
+                error.set(ErrorCodes.PLAYER_ALREADY_DELETED);
+                return;
+            }
 
             if (season == null) {
                 error.set(ErrorCodes.SEASON_NOT_FOUND);
@@ -81,7 +88,8 @@ public class PlayerService {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));
 
-                    playerRepository.deleteById(id);
+                    player.setActiveThisSeason(false);
+                    playerRepository.save(player);
                 } else {
                     error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
                 }
@@ -111,6 +119,7 @@ public class PlayerService {
         Player player = new Player();
         player.setProfile(profile);
         player.setSeason(season);
+        player.setActiveThisSeason(true);
         return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
