@@ -5,6 +5,7 @@ import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
+import MoveRow from '../MoveRow';
 import Stepper from '../Stepper';
 import Text from '../Text';
 
@@ -43,34 +44,14 @@ export default function PlayerPage({
             {player.moves
                 .filter((i) => !i.isFinish)
                 .map((i, idx) => (
-                    <View
+                    <MoveRow
                         key={idx}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-
-                            height: 44,
-                            paddingLeft: 64,
-                            paddingRight: 16,
-                        }}
-                    >
-                        <Text
-                            variant="body1"
-                            color="primary"
-                            style={{
-                                marginRight: 'auto',
-                            }}
-                        >
-                            {i.title}
-                        </Text>
-                        <Stepper
-                            value={i.count}
-                            onChange={(value) =>
-                                setMoveCount(player.id, i.id, value)
-                            }
-                            min={0}
-                        />
-                    </View>
+                        title={i.title}
+                        count={i.count}
+                        onChange={(value) =>
+                            setMoveCount(player.id, i.id, value)
+                        }
+                    />
                 ))}
             <View
                 style={{
