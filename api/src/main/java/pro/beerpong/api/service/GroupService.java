@@ -2,6 +2,7 @@ package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
@@ -66,9 +67,9 @@ public class GroupService {
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
-        return groupRepository.findByInviteCode(inviteCode)
+        return withStats(groupRepository.findByInviteCode(inviteCode)
                 .map(groupMapper::groupToGroupDto)
-                .orElse(null);
+                .orElse(null));
     }
 
     public List<GroupDto> getAllGroups() {
@@ -79,20 +80,7 @@ public class GroupService {
     }
 
     public GroupDto getGroupById(String id) {
-        var groupDto = groupRepository.findById(id)
-                .map(groupMapper::groupToGroupDto)
-                .orElse(null);
-
-        if (groupDto == null) {
-            return null;
-        } else if (groupDto.getActiveSeason() == null) {
-            return groupDto;
-        }
-
-        groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
-        groupDto.setNumberOfPlayers(playerService.getBySeasonId(groupDto.getActiveSeason().getId()).size());
-        groupDto.setNumberOfSeasons(seasonRepository.findByGroupId(groupDto.getId()).size());
-        return groupDto;
+        return withStats(getRawGroupById(id));
     }
 
     public GroupDto getRawGroupById(String id) {
@@ -105,16 +93,10 @@ public class GroupService {
         return groupRepository.findById(id)
                 .map(existingGroup -> {
                     existingGroup.setName(groupCreateDto.getName());
-                    var dto = groupMapper.groupToGroupDto(groupRepository.save(existingGroup));
+                    var dto = withStats(groupMapper.groupToGroupDto(groupRepository.save(existingGroup)));
 
                     if (dto == null) {
                         return null;
-                    }
-
-                    if (dto.getActiveSeason() != null) {
-                        dto.setNumberOfMatches(matchRepository.findBySeasonId(dto.getActiveSeason().getId()).size());
-                        dto.setNumberOfPlayers(playerService.getBySeasonId(dto.getActiveSeason().getId()).size());
-                        dto.setNumberOfSeasons(seasonRepository.findByGroupId(dto.getId()).size());
                     }
 
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_UPDATE, dto.getId(), dto));
@@ -143,5 +125,19 @@ public class GroupService {
         }
 
         return assetMetadataDto;
+    }
+
+    private GroupDto withStats(@Nullable GroupDto groupDto) {
+        if (groupDto == null) {
+            return null;
+        } else if (groupDto.getActiveSeason() == null) {
+            return groupDto;
+        }
+
+        groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
+        groupDto.setNumberOfPlayers(playerService.getBySeasonId(groupDto.getActiveSeason().getId()).size());
+        groupDto.setNumberOfSeasons(seasonRepository.findByGroupId(groupDto.getId()).size());
+
+        return groupDto;
     }
 }

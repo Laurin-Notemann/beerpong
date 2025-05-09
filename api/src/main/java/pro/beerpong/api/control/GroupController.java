@@ -73,10 +73,6 @@ public class GroupController {
             return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_NAME);
         }
 
-        if (groupCreateDto.invalidProfileName()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
-        }
-
         GroupDto updatedGroup = groupService.updateGroup(id, groupCreateDto);
         if (updatedGroup != null) {
             return ResponseEnvelope.ok(updatedGroup);
