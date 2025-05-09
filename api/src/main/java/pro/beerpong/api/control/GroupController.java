@@ -36,7 +36,7 @@ public class GroupController {
     @GetMapping
     public ResponseEntity<ResponseEnvelope<GroupDto>> findGroupByInviteCode(@RequestParam String inviteCode) {
         if (inviteCode == null || inviteCode.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.GROUP_INVITE_CODE_NOT_PROVIDED);
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_INVITE_CODE);
         }
 
         var group = groupService.findGroupsByInviteCode(inviteCode);
@@ -50,6 +50,10 @@ public class GroupController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<GroupDto>> getGroupById(@PathVariable String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+        }
+
         GroupDto group = groupService.getGroupById(id);
         if (group != null) {
             return ResponseEnvelope.ok(group);
@@ -59,8 +63,20 @@ public class GroupController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseEnvelope<GroupDto>> updateGroup(
-            @PathVariable String id, @RequestBody GroupCreateDto groupCreateDto) {
+    public ResponseEntity<ResponseEnvelope<GroupDto>> updateGroup(@PathVariable String id,
+                                                                  @RequestBody GroupCreateDto groupCreateDto) {
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (groupCreateDto.invalidName()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_NAME);
+        }
+
+        if (groupCreateDto.invalidProfileName()) {
+            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+        }
+
         GroupDto updatedGroup = groupService.updateGroup(id, groupCreateDto);
         if (updatedGroup != null) {
             return ResponseEnvelope.ok(updatedGroup);

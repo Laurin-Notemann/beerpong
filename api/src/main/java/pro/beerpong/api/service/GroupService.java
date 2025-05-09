@@ -27,6 +27,8 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 @Service
 @RequiredArgsConstructor
 public class GroupService {
+    public static int GROUP_INVITE_CODE_LENGTH = 9;
+
     private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
     private final GroupRepository groupRepository;
@@ -39,7 +41,7 @@ public class GroupService {
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
-        group.setInviteCode(generateRandomString(9));
+        group.setInviteCode(generateRandomString(GROUP_INVITE_CODE_LENGTH));
 
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
