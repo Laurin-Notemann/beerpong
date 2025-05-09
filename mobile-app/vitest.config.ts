@@ -1,8 +1,14 @@
+import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 const isCIPipeline = process.env.TEST_ENV === 'CI';
 
 export default defineConfig({
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname),
+        },
+    },
     test: {
         environment: 'jsdom',
 

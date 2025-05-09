@@ -7,7 +7,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ignoreSeason, QK } from './reactQuery';
+import { QK, replaceWildcards } from './reactQuery';
 
 describe('ignoreSeason', () => {
     const queryKey = [QK.group, 'group:1', QK.season, 'season:1', QK.players];
@@ -38,7 +38,13 @@ describe('ignoreSeason', () => {
         expect(queryFn).toHaveBeenCalledTimes(1);
 
         queryClient.invalidateQueries({
-            predicate: ignoreSeason([QK.group, 'group:1', QK.players]),
+            predicate: replaceWildcards([
+                QK.group,
+                'group:1',
+                QK.season,
+                '*',
+                QK.players,
+            ]),
         });
 
         await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(2));
