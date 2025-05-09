@@ -22,11 +22,11 @@ public class SeasonController {
     @PutMapping("/active-season")
     public ResponseEntity<ResponseEnvelope<SeasonDto>> startNewSeason(@PathVariable String groupId, @RequestBody SeasonCreateDto dto) {
         if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
         if (dto.invalidName()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_SEASON_NAME);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_NAME);
         }
 
         var season = seasonService.startNewSeason(dto, groupId);
@@ -34,14 +34,14 @@ public class SeasonController {
         if (season != null) {
             return ResponseEnvelope.ok(season);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
     @GetMapping("/seasons")
     public ResponseEntity<ResponseEnvelope<List<SeasonDto>>> getAllSeasons(@PathVariable String groupId) {
         if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
         return ResponseEnvelope.ok(seasonService.getAllSeasons(groupId));
@@ -50,11 +50,11 @@ public class SeasonController {
     @GetMapping("/seasons/{id}")
     public ResponseEntity<ResponseEnvelope<SeasonDto>> getSeasonById(@PathVariable String groupId, @PathVariable String id) {
         if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
         if (id == null || id.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_SEASON_ID);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
         }
 
         var season = seasonService.getSeasonById(id);
@@ -62,38 +62,38 @@ public class SeasonController {
         if (season != null && season.getGroupId().equals(groupId)) {
             return ResponseEnvelope.ok(season);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         }
     }
 
     @PutMapping("/seasons/{id}")
     public ResponseEntity<ResponseEnvelope<SeasonDto>> updateSeasonById(@PathVariable String groupId, @PathVariable String id, @RequestBody SeasonUpdateDto dto) {
         if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_GROUP_ID);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
         if (id == null || id.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_SEASON_ID);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
         }
 
         if (dto == null || dto.getSeasonSettings() == null) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_SEASON_DTO);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_DTO);
         }
 
         var season = seasonService.getRawSeasonById(id);
 
         if (season.isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         } else if (!season.get().getGroupId().equals(groupId)) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_NOT_OF_GROUP);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         } else if (season.get().getEndDate() != null) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_ALREADY_ENDED);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
         if (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TIME_FORMAT);
         } else if (dto.getSeasonSettings().getMinTeamSize() > dto.getSeasonSettings().getMaxTeamSize()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TEAM_SIZES);
         }
 
         dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 0), 1000));
@@ -104,7 +104,7 @@ public class SeasonController {
         if (updatedSeason != null) {
             return ResponseEnvelope.ok(updatedSeason);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         }
     }
 }

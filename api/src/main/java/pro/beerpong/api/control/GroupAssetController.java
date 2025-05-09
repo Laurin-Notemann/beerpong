@@ -25,7 +25,7 @@ public class GroupAssetController {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
         var dto = groupService.storeWallpaper(group, content, request.getContentType());
