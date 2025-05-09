@@ -16,6 +16,7 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
+import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -66,6 +67,8 @@ export default function RootLayout() {
     const loaded = fontLoaded;
 
     const [queryClient] = useState(() => createQueryClient());
+
+    useRefetchEverythingOnWifiReconnect(queryClient);
 
     useEffect(() => {
         if (loaded) SplashScreen.hideAsync();
