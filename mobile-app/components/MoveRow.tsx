@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { runOnJS, useSharedValue } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-reanimated';
 
 import { triggerHapticBump } from '@/haptics';
 
@@ -27,8 +27,6 @@ export default function MoveRow({
         setValue(count);
     }, [count]);
 
-    const translateX = useSharedValue(0);
-
     const updateCount = (delta: number) => {
         const sache = (() => {
             const newValue =
@@ -48,16 +46,22 @@ export default function MoveRow({
 
     const panGesture = Gesture.Pan()
         .onUpdate((event) => {
-            translateX.value = event.translationX;
             runOnJS(updateCount)(event.translationX);
         })
         .onEnd(() => {
-            translateX.value = 0; // reset visual position
             runOnJS(onChange)(value);
         });
 
+    const tapGesture = Gesture.Tap().onEnd(() => {
+        runOnJS(triggerHapticBump)('selection');
+        // also setting value here to rerender more quickly.
+        // otherwise, the input will only rerender after the useEffect, which feels sluggish.
+        runOnJS(setValue)(value + 1);
+        runOnJS(onChange)(value + 1);
+    });
+
     return (
-        <GestureDetector gesture={panGesture}>
+        <GestureDetector gesture={Gesture.Exclusive(panGesture, tapGesture)}>
             <View
                 style={{
                     flexDirection: 'row',
