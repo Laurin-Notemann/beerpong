@@ -45,8 +45,9 @@ export default function Page() {
         if (!profile?.profile?.name) {
             ConsoleLogger.error('failed to get profile for team member');
         }
+        const ownTeam = players.filter((j) => j.team === i.team);
 
-        const pointsThisMatch = i.moves.reduce(
+        const pointsForOwnMoves = i.moves.reduce(
             (sum, j) =>
                 sum +
                 j.count *
@@ -54,6 +55,17 @@ export default function Page() {
                         ?.pointsForScorer ?? 0),
             0
         );
+        const teamMoves = ownTeam.reduce<(typeof i)['moves']>(
+            (sum, j) => sum.concat(j.moves),
+            []
+        );
+        const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
+            const pointsForMove =
+                allowedMoves.find((k) => k.id === j.moveId)?.pointsForTeam ?? 0;
+
+            return sum + pointsForMove * j.count;
+        }, 0);
+        const pointsThisMatch = pointsForOwnMoves + pointsForTeamMoves;
 
         const player = (playersQuery.data?.data ?? []).find(
             (j) => j.id === i.playerId
