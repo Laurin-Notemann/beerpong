@@ -63,7 +63,7 @@ public class GroupService {
 
         ruleMoveService.createDefaultRuleMoves(season);
 
-        return groupMapper.groupToGroupDto(group);
+        return withStats(groupMapper.groupToGroupDto(group));
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
