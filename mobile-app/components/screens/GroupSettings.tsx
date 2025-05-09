@@ -71,16 +71,18 @@ export default function GroupSettingsScreen({
                         tailIconType="next"
                         onPress={() => nav.navigate('editGroupName', { id })}
                     />
-                    <MenuItem
-                        title="Set Wallpaper"
-                        headIcon="image-multiple"
-                        tailIconType="next"
-                        onPress={() =>
-                            wallpaperAsset?.url
-                                ? setShowChangeWallpaperModal(true)
-                                : onUploadWallpaperPress()
-                        }
-                    />
+                    {env.isDev && (
+                        <MenuItem
+                            title="Set Wallpaper"
+                            headIcon="image-multiple"
+                            tailIconType="next"
+                            onPress={() =>
+                                wallpaperAsset?.url
+                                    ? setShowChangeWallpaperModal(true)
+                                    : onUploadWallpaperPress()
+                            }
+                        />
+                    )}
                     <ConfirmationModal
                         onClose={() => setShowChangeWallpaperModal(false)}
                         title="Group Wallpaper"
