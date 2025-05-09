@@ -1,16 +1,16 @@
 import dayjs from 'dayjs';
-import React, { useCallback, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Leaderboard from '@/components/Leaderboard';
 import PillButton from '@/components/PillButton';
@@ -28,14 +28,11 @@ export default function Page() {
         'ELO'
     );
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { invalidatePlayers } = useQueryInvalidation();
 
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+        invalidatePlayers(groupId!, seasonId!)
+    );
 
     return (
         <GestureHandlerRootView>

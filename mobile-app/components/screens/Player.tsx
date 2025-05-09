@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
@@ -7,8 +7,10 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
@@ -63,14 +65,13 @@ export default function PlayerScreen({
 
     const [editable, setEditable] = useState(false);
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const { groupId, seasonId } = useGroup();
 
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const { invalidatePlayers } = useQueryInvalidation();
+
+    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+        invalidatePlayers(groupId!, seasonId!)
+    );
 
     return (
         <GestureHandlerRootView>

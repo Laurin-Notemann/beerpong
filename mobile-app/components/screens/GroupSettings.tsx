@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, Switch } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, Switch } from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { env } from '@/api/env';
@@ -42,15 +42,6 @@ export default function GroupSettingsScreen({
 }: GroupSettingsProps) {
     const nav = useNavigation();
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
-
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
-
     const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
         useState(false);
 
@@ -64,12 +55,6 @@ export default function GroupSettingsScreen({
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{ paddingBottom: 16 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
             >
                 <MenuSection title="Settings">
                     {env.isDev && (

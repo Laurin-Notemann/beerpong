@@ -1,6 +1,8 @@
 import { Query, QueryKey, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
+import { ConsoleLogger } from '@/utils/logging';
+
 export const QK = {
     group: 'group',
     season: 'season',
@@ -48,6 +50,8 @@ export function useQueryInvalidation() {
     const qc = useQueryClient();
 
     function invalidateMatches(groupId: string, seasonId: string) {
+        ConsoleLogger.info('useQueryInvalidation.invalidateMatches');
+
         qc.invalidateQueries({
             predicate: queryKeyStartsWith([
                 QK.group,
@@ -58,7 +62,20 @@ export function useQueryInvalidation() {
             ]),
         });
     }
-    return { invalidateMatches };
+    function invalidatePlayers(groupId: string, seasonId: string) {
+        ConsoleLogger.info('useQueryInvalidation.invalidatePlayers');
+
+        qc.invalidateQueries({
+            predicate: queryKeyStartsWith([
+                QK.group,
+                groupId,
+                QK.season,
+                seasonId,
+                QK.players,
+            ]),
+        });
+    }
+    return { invalidateMatches, invalidatePlayers };
 }
 
 export function usePullToRefresh(func: () => void) {
