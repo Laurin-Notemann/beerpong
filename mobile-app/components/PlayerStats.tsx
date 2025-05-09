@@ -80,7 +80,7 @@ export default function PlayerStats({
                 value={averagePointsPerMatch}
                 isLowest={env.isDev}
             />
-            <Stat title="Total points" value={totalPoints} />
+            <Stat title="Total points" value={totalPoints || '--'} />
             <Stat
                 title="Matches won"
                 value={

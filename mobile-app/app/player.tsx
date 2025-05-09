@@ -146,8 +146,11 @@ export default function Page() {
 
     const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
 
+    const minMatchesRequiredToBeRanked = 1;
+
     return (
         <PlayerScreen
+            minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
             isPending={isUploadingAvatar}
             id={id}
             placement={placement}

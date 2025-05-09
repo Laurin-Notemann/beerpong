@@ -23,6 +23,7 @@ import { theme } from '@/theme';
 import PlayerStats from '../PlayerStats';
 
 export interface PlayerScreenProps {
+    minMatchesRequiredToBeRanked: number;
     isPending: boolean;
     id: string;
     placement: number;
@@ -42,6 +43,7 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
 }
 export default function PlayerScreen({
+    minMatchesRequiredToBeRanked,
     isPending,
     id,
     placement,
@@ -72,6 +74,8 @@ export default function PlayerScreen({
     const { isRefreshing, onRefresh } = usePullToRefresh(() =>
         invalidatePlayers(groupId!, seasonId!)
     );
+
+    const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
     return (
         <GestureHandlerRootView>
@@ -124,6 +128,7 @@ export default function PlayerScreen({
                     size={96}
                     style={{ marginTop: 32, marginBottom: 8 }}
                     placement={placement}
+                    isUnranked={isUnranked}
                     name={name}
                     canUpload={editable}
                     onPress={editable ? onUploadAvatarPress : undefined}

@@ -1,13 +1,14 @@
 import React, { useRef } from 'react';
 import {
     Animated,
+    StyleProp,
+    TextStyle,
     TouchableHighlight,
     TouchableOpacity,
     View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { env } from '@/api/env';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
@@ -15,26 +16,34 @@ import { theme } from '@/theme';
 
 import Text from '../Text';
 
-function Change({ value }: { value: number }) {
+function Change({
+    value,
+    style,
+}: {
+    value: number;
+    style?: StyleProp<TextStyle>;
+}) {
     return (
         <>
             <Icon
                 color={value >= 0 ? theme.color.positive : theme.color.negative}
                 size={8}
                 name="triangle"
-                style={{
-                    marginLeft: 8,
-                    marginRight: 2,
-                    marginTop: 1,
-                    transform:
-                        value >= 0
-                            ? // we can't simply have undefined when it's facing upwards,
-                              // because this breaks with an really arcane
-                              // "TypeError: Cannot read property 'forEach' of null",
-                              // which is caused by not being able to animate to undefined
-                              [{ rotateX: '0deg' }]
-                            : [{ rotateX: '180deg' }],
-                }}
+                style={[
+                    {
+                        marginRight: 2,
+                        marginTop: 1,
+                        transform:
+                            value >= 0
+                                ? // we can't simply have undefined when it's facing upwards,
+                                  // because this breaks with an really arcane
+                                  // "TypeError: Cannot read property 'forEach' of null",
+                                  // which is caused by not being able to animate to undefined
+                                  [{ rotateX: '0deg' }]
+                                : [{ rotateX: '180deg' }],
+                    },
+                    style,
+                ]}
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
                 {/* rounded to two decimal places with trailing zeros removed */}
@@ -89,6 +98,8 @@ export default function Player({
 
     const nav = useNavigation();
 
+    const performedMoves = moves.filter((i) => i.count > 0);
+
     return (
         <>
             <TouchableHighlight
@@ -136,19 +147,24 @@ export default function Player({
                                     color="tertiary"
                                     style={{
                                         fontStyle:
-                                            moves.length < 1
+                                            performedMoves.length < 1
                                                 ? 'italic'
                                                 : undefined,
                                     }}
                                 >
-                                    {moves.length < 1 && 'No moves'}
-                                    {moves
-                                        .filter((i) => i.count > 0)
+                                    {performedMoves.length < 1 &&
+                                        'No cups scored'}
+                                    {performedMoves
                                         .map((i) => i.count + ' ' + i.title)
                                         .join(', ')}
                                 </Text>
                             )}
-                            {env.isDev && <Change value={change} />}
+                            <Change
+                                value={change}
+                                style={{
+                                    marginLeft: 8,
+                                }}
+                            />
                         </View>
                     </View>
                     {editable ? (
