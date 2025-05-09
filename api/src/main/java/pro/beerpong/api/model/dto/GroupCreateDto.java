@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 @Data
 public class GroupCreateDto {
-    private static final int GROUP_NAME_MIN_LENGTH = 2;
-    private static final int GROUP_NAME_MAX_LENGTH = 50;
+    public static final int GROUP_NAME_MIN_LENGTH = 2;
+    public static final int GROUP_NAME_MAX_LENGTH = 50;
 
     private String name;
     private List<String> profileNames;

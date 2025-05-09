@@ -21,6 +21,10 @@ public enum ErrorCodes {
     SEASON_WRONG_TEAM_SIZES("seasonWrongTeamSizes", "The min team size has to be less then or equal to the max team size!"),
     SEASON_NOT_OF_GROUP("seasonHasDifferentGroup", "The season does not match the provided group id!"),
     SEASON_VALIDATION_FAILED("seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),
+    INVALID_SEASON_NAME("invalidSeasonName", "Season name must be non-null, non-empty and between 2 and 50 characters!"),
+    INVALID_SEASON_ID("invalidSeasonId", "Season id must be non-null and non-empty!"),
+    INVALID_SEASON_DTO("invalidSeasonDto", "Season update dto must be non-null and have non-null seasonSettings!"),
+    /* MATCHES */
     MATCH_NOT_FOUND("matchNotFound", "The requested match could not be found!"),
     MATCH_VALIDATION_FAILED("matchValidationFailed", "The validation of the created match has failed (invalid group or season id)"),
     MATCH_CREATE_DTO_VALIDATION_FAILED("matchCreateDtoValidationFailed", "The team sizes are not in the boundaries of the season settings!"),
