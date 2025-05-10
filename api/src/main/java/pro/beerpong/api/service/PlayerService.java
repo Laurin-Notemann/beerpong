@@ -3,6 +3,7 @@ package pro.beerpong.api.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
+import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
@@ -29,9 +30,13 @@ public class PlayerService {
     private final PlayerMapper playerMapper;
 
     public List<PlayerDto> getBySeasonId(String seasonId) {
+        return this.getBySeasonId(seasonId, false);
+    }
+
+    public List<PlayerDto> getBySeasonId(String seasonId, boolean showInactive) {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
-                .filter(Player::isActiveThisSeason)
+                .filter(player -> showInactive || player.isActiveThisSeason())
                 .map(this::createStatisticsEnrichedDto)
                 .toList();
     }
