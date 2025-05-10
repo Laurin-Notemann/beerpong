@@ -12,7 +12,7 @@ jobs:
       contents: write
       pull-requests: write
     name: Genereate Api docs
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15
@@ -58,7 +58,6 @@ jobs:
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
             echo "No version bump commit found. Continuing the workflow."
           fi
-
 
       - name: Set up JDK 21 corretto
         if: steps.check_authors.outputs.has_bot_author != 'true'
