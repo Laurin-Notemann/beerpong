@@ -15,6 +15,7 @@
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "com.linusbolls.mobileapp",
+            "buildNumber": "13",
             "infoPlist": {
                 "NSPhotoLibraryUsageDescription": true
             },
