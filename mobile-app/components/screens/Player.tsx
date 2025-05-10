@@ -190,8 +190,8 @@ export default function PlayerScreen({
                             />
                         </MenuSection>
                     ) : (
-                        env.isDev && (
-                            <>
+                        <>
+                            {env.isDev && (
                                 <MenuSection>
                                     <MenuItem
                                         title="Past Seasons"
@@ -203,9 +203,9 @@ export default function PlayerScreen({
                                         }
                                     />
                                 </MenuSection>
-                                <MatchesList matches={matches} />
-                            </>
-                        )
+                            )}
+                            <MatchesList matches={matches} />
+                        </>
                     )}
                 </View>
             </ScrollView>
