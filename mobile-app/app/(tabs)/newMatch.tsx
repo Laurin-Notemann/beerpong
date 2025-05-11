@@ -156,7 +156,7 @@ export default function Screen() {
                             headerLeft: () =>
                                 swiperPage === 0 ? (
                                     <HeaderItem
-                                        disabled={!bothTeamsEmpty}
+                                        disabled={bothTeamsEmpty}
                                         onPress={() => {
                                             matchDraft.actions.clear();
                                         }}
