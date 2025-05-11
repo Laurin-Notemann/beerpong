@@ -11,17 +11,26 @@ import Animated, {
 import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
 import Swiper from 'react-native-swiper';
 
-import { useCreateMatchMutation } from '@/api/calls/matchHooks';
+import {
+    useCreateMatchMutation,
+    useMatchesQuery,
+} from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import {
+    getInfluenceOfMatchOnAveragePoints,
+    Match,
+    matchDtoToMatch,
+    TeamMember,
+} from '@/api/utils/matchDtoToMatch';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -97,6 +106,13 @@ export default function Screen() {
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    const matches =
+        matchesQuery.data?.data?.map(
+            matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        ) ?? [];
+
     const swiperRef = useRef<Swiper>(null);
     const carouselRef = useRef<ICarouselInstance>(null);
 
@@ -113,20 +129,35 @@ export default function Screen() {
             ConsoleLogger.error('failed to get profile for team member');
         }
 
+        const ownTeam = players.filter((j) => j.team === i.team);
+
+        const pointsForOwnMoves = i.moves.reduce(
+            (sum, j) =>
+                sum +
+                j.count *
+                    (allowedMoves.find((k) => k.id === j.moveId)
+                        ?.pointsForScorer ?? 0),
+            0
+        );
+        const teamMoves = ownTeam.reduce<(typeof i)['moves']>(
+            (sum, j) => sum.concat(j.moves),
+            []
+        );
+        const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
+            const pointsForMove =
+                allowedMoves.find((k) => k.id === j.moveId)?.pointsForTeam ?? 0;
+
+            return sum + pointsForMove * j.count;
+        }, 0);
+        const points = pointsForOwnMoves + pointsForTeamMoves;
+
         return {
             id: i.playerId,
             team: i.team,
             avatarUrl: profile?.profile?.avatarAsset?.url,
             name: profile?.profile?.name || 'Unknown',
-            points: i.moves.reduce(
-                (sum, j) =>
-                    sum +
-                    j.count *
-                        (allowedMoves.find((k) => k.id === j.moveId)
-                            ?.pointsForScorer ?? 0),
-                0
-            ),
-            change: 0.12,
+            points,
+            change: 0, // we set this later, can't set it here bc we need matchObj to calculate it which requires teamMembers 🙃
             moves: allowedMoves.map((j) => {
                 return {
                     id: j.id!,
@@ -186,6 +217,32 @@ export default function Screen() {
 
     const { experimentalImprovedMatchCreation } = useLocalSettings();
 
+    const matchObj = {
+        id: '#',
+        date: new Date(),
+        blueCups: teamMembers
+            .filter((i) => i.team === 'blue')
+            .map((i) => i.moves)
+            .flat()
+            .reduce((sum, i) => sum + i.count, 0),
+        redCups: teamMembers
+            .filter((i) => i.team === 'red')
+            .map((i) => i.moves)
+            .flat()
+            .reduce((sum, i) => sum + i.count, 0),
+        redTeam: teamMembers.filter((i) => i.team === 'red'),
+        blueTeam: teamMembers.filter((i) => i.team === 'blue'),
+        winnerTeamId: null,
+    };
+
+    for (const i of teamMembers) {
+        i.change = getInfluenceOfMatchOnAveragePoints(
+            matches.concat([matchObj as Match]),
+            i.id,
+            '#'
+        );
+    }
+
     return (
         <GestureHandlerRootView>
             {experimentalImprovedMatchCreation ? (
@@ -210,14 +267,18 @@ export default function Screen() {
                                             styleOut,
                                         ]}
                                     >
-                                        <HeaderItem
-                                            disabled={bothTeamsEmpty}
-                                            onPress={() => {
-                                                matchDraft.actions.clear();
-                                            }}
-                                        >
-                                            Cancel
-                                        </HeaderItem>
+                                        {!bothTeamsEmpty && (
+                                            <HeaderItem
+                                                onPress={() => {
+                                                    matchDraft.actions.clear();
+                                                    triggerHapticBump(
+                                                        'selection'
+                                                    );
+                                                }}
+                                            >
+                                                Clear
+                                            </HeaderItem>
+                                        )}
                                     </Animated.View>
                                     <Animated.View
                                         style={[
@@ -294,34 +355,7 @@ export default function Screen() {
                                 ? 'Assign Teams'
                                 : () => (
                                       <MatchVsHeader
-                                          match={{
-                                              blueCups: teamMembers
-                                                  .filter(
-                                                      (i) => i.team === 'blue'
-                                                  )
-                                                  .map((i) => i.moves)
-                                                  .flat()
-                                                  .reduce(
-                                                      (sum, i) => sum + i.count,
-                                                      0
-                                                  ),
-                                              redCups: teamMembers
-                                                  .filter(
-                                                      (i) => i.team === 'red'
-                                                  )
-                                                  .map((i) => i.moves)
-                                                  .flat()
-                                                  .reduce(
-                                                      (sum, i) => sum + i.count,
-                                                      0
-                                                  ),
-                                              redTeam: teamMembers.filter(
-                                                  (i) => i.team === 'red'
-                                              ),
-                                              blueTeam: teamMembers.filter(
-                                                  (i) => i.team === 'blue'
-                                              ),
-                                          }}
+                                          match={matchObj}
                                           style={{
                                               bottom: 4,
                                           }}

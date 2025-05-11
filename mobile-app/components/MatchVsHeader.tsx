@@ -62,8 +62,9 @@ function ScoreChip({
 
 const hasFinishMove = (team?: TeamMember[]): boolean => {
     return (
-        team?.some((player) => player.moves?.some((move) => move.isFinish)) ??
-        false
+        team?.some((player) =>
+            player.moves?.some((move) => move.isFinish && move.count > 0)
+        ) ?? false
     );
 };
 
