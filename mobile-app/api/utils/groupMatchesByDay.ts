@@ -6,7 +6,10 @@ import { Match } from './matchDtoToMatch';
 export const groupMatchesByDay = (matches: Match[]) => {
     const dayjsMap = matches.reduce(
         (
-            acc: Record<string, { matches: Match[]; title: string }>,
+            acc: Record<
+                string,
+                { matches: Match[]; title: string; date: Date }
+            >,
             obj: Match
         ) => {
             const dayKey = dayjs(obj.date).format('YYYY-MM-DD');
@@ -15,6 +18,7 @@ export const groupMatchesByDay = (matches: Match[]) => {
                 acc[dayKey] = {
                     matches: [],
                     title: env.format.date.matchesSeperatorDay(dayjs(obj.date)),
+                    date: obj.date,
                 };
             }
             acc[dayKey].matches.push(obj);
@@ -23,5 +27,9 @@ export const groupMatchesByDay = (matches: Match[]) => {
         },
         {}
     );
-    return Object.values(dayjsMap);
+    const days = Object.values(dayjsMap);
+
+    days.sort((a, b) => (dayjs(a.date).isAfter(dayjs(b.date)) ? -1 : 1));
+
+    return days;
 };
