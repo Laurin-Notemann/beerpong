@@ -5,7 +5,7 @@ import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
-import MoveRow from '../MoveRow';
+import { ScoredMoveInputRow } from '../ScoredMoveInputRow';
 import Stepper from '../Stepper';
 import Text from '../Text';
 
@@ -44,11 +44,11 @@ export default function PlayerPage({
             {player.moves
                 .filter((i) => !i.isFinish)
                 .map((i, idx) => (
-                    <MoveRow
+                    <ScoredMoveInputRow
                         key={idx}
-                        title={i.title}
-                        count={i.count}
-                        onChange={(value) =>
+                        moveName={i.title}
+                        numScored={i.count}
+                        onNumScoredChange={(value) =>
                             setMoveCount(player.id, i.id, value)
                         }
                     />

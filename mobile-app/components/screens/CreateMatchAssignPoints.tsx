@@ -9,8 +9,8 @@ import Button from '@/components/Button';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
-import { Feature } from '@/constants/Features';
 import { theme } from '@/theme';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -31,52 +31,57 @@ export default function CreateMatchAssignPoints({
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
     const navigation = useNavigation();
+    const { experimentalImprovedMatchCreation, liveMatches } =
+        useLocalSettings();
+
     return (
         <>
-            <Stack.Screen
-                options={{
-                    ...navStyles,
-                    headerLeft: () => (
-                        <HeaderItem onPress={onCancel} noMargin>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            onPress={onSubmit}
-                            noMargin
-                            disabled={isPending}
-                        >
-                            {isPending ? <ActivityIndicator /> : 'Create'}
-                        </HeaderItem>
-                    ),
-                    headerTitle: () => (
-                        <MatchVsHeader
-                            match={{
-                                blueCups: players
-                                    .filter((i) => i.team === 'blue')
-                                    .map((i) => i.moves)
-                                    .flat()
-                                    .reduce((sum, i) => sum + i.count, 0),
-                                redCups: players
-                                    .filter((i) => i.team === 'red')
-                                    .map((i) => i.moves)
-                                    .flat()
-                                    .reduce((sum, i) => sum + i.count, 0),
-                                redTeam: players.filter(
-                                    (i) => i.team === 'red'
-                                ),
-                                blueTeam: players.filter(
-                                    (i) => i.team === 'blue'
-                                ),
-                            }}
-                            style={{
-                                bottom: 4,
-                            }}
-                        />
-                    ),
-                }}
-            />
+            {!experimentalImprovedMatchCreation && (
+                <Stack.Screen
+                    options={{
+                        ...navStyles,
+                        headerLeft: () => (
+                            <HeaderItem onPress={onCancel} noMargin>
+                                Cancel
+                            </HeaderItem>
+                        ),
+                        headerRight: () => (
+                            <HeaderItem
+                                onPress={onSubmit}
+                                noMargin
+                                disabled={isPending}
+                            >
+                                {isPending ? <ActivityIndicator /> : 'Create'}
+                            </HeaderItem>
+                        ),
+                        headerTitle: () => (
+                            <MatchVsHeader
+                                match={{
+                                    blueCups: players
+                                        .filter((i) => i.team === 'blue')
+                                        .map((i) => i.moves)
+                                        .flat()
+                                        .reduce((sum, i) => sum + i.count, 0),
+                                    redCups: players
+                                        .filter((i) => i.team === 'red')
+                                        .map((i) => i.moves)
+                                        .flat()
+                                        .reduce((sum, i) => sum + i.count, 0),
+                                    redTeam: players.filter(
+                                        (i) => i.team === 'red'
+                                    ),
+                                    blueTeam: players.filter(
+                                        (i) => i.team === 'blue'
+                                    ),
+                                }}
+                                style={{
+                                    bottom: 4,
+                                }}
+                            />
+                        ),
+                    }}
+                />
+            )}
             <ScrollView
                 style={{
                     flex: 1,
@@ -89,7 +94,7 @@ export default function CreateMatchAssignPoints({
                     paddingBottom: 32,
                 }}
             >
-                {Feature.LIVE_MATCHES.isEnabled && (
+                {liveMatches && (
                     <Button
                         variant="default"
                         title="Start Live Match"
@@ -102,6 +107,16 @@ export default function CreateMatchAssignPoints({
                     players={players}
                     setMoveCount={setMoveCount}
                     onPlayerPress={onPlayerPress}
+                />
+                <Button
+                    variant="default"
+                    title={isPending ? <ActivityIndicator /> : 'Create'}
+                    size="large"
+                    onPress={onSubmit}
+                    disabled={isPending}
+                    style={{
+                        marginTop: 32,
+                    }}
                 />
             </ScrollView>
         </>

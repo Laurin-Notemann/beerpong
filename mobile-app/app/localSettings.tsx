@@ -1,13 +1,18 @@
 import { Stack } from 'expo-router';
+import React from 'react';
 import { ScrollView } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { navStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import MenuItem from '@/components/Menu/MenuItem';
+import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 
 export default function Page() {
+    const nav = useNavigation();
+
     return (
-        <GestureHandlerRootView>
+        <>
             <Stack.Screen
                 options={{
                     ...navStyles,
@@ -23,9 +28,18 @@ export default function Page() {
                 contentContainerStyle={{
                     paddingHorizontal: 16,
 
-                    gap: 8,
+                    paddingBottom: 128,
                 }}
-            ></ScrollView>
-        </GestureHandlerRootView>
+            >
+                <MenuSection title="Development">
+                    <MenuItem
+                        title="Experimental Features"
+                        headIcon="flask-outline"
+                        tailIconType="next"
+                        onPress={() => nav.navigate('experimentalFeatures')}
+                    />
+                </MenuSection>
+            </ScrollView>
+        </>
     );
 }

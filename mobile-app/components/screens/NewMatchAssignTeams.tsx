@@ -11,6 +11,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 import Avatar from '../Avatar';
 import MatchVsHeader from '../MatchVsHeader';
@@ -126,6 +127,8 @@ export default function NewMatchAssignTeams({
 
     const canCreateMatch = blueTeam.length > 0 && redTeam.length > 0;
 
+    const { experimentalImprovedMatchCreation } = useLocalSettings();
+
     return (
         <ScrollView
             style={{
@@ -139,40 +142,42 @@ export default function NewMatchAssignTeams({
                 paddingBottom: 24,
             }}
         >
-            <Stack.Screen
-                options={{
-                    ...navStyles,
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={!canCreateMatch}
-                            onPress={() => onSubmit()}
-                        >
-                            Next
-                        </HeaderItem>
-                    ),
+            {!experimentalImprovedMatchCreation && (
+                <Stack.Screen
+                    options={{
+                        ...navStyles,
+                        headerRight: () => (
+                            <HeaderItem
+                                disabled={!canCreateMatch}
+                                onPress={() => onSubmit()}
+                            >
+                                Next
+                            </HeaderItem>
+                        ),
 
-                    headerTitle:
-                        blueTeam.length > 0 || redTeam.length > 0
-                            ? () => (
-                                  <MatchVsHeader
-                                      match={{
-                                          id: '#',
-                                          // @ts-expect-error TODO: fix typing to only require the fields we actually need
-                                          blueTeam,
-                                          // @ts-expect-error TODO: fix typing to only require the fields we actually need
-                                          redTeam,
-                                          blueCups: 0,
-                                          redCups: 0,
-                                      }}
-                                      hasScore={false}
-                                      style={{
-                                          bottom: 4,
-                                      }}
-                                  />
-                              )
-                            : 'Assign Teams',
-                }}
-            />
+                        headerTitle:
+                            blueTeam.length > 0 || redTeam.length > 0
+                                ? () => (
+                                      <MatchVsHeader
+                                          match={{
+                                              id: '#',
+                                              // @ts-expect-error TODO: fix typing to only require the fields we actually need
+                                              blueTeam,
+                                              // @ts-expect-error TODO: fix typing to only require the fields we actually need
+                                              redTeam,
+                                              blueCups: 0,
+                                              redCups: 0,
+                                          }}
+                                          hasScore={false}
+                                          style={{
+                                              bottom: 4,
+                                          }}
+                                      />
+                                  )
+                                : 'Assign Teams',
+                    }}
+                />
+            )}
             <Heading />
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
