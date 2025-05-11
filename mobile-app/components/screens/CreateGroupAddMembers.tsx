@@ -35,9 +35,11 @@ export default function CreateGroupAddMembers({
 
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
 
-    const playerAlreadyExists = members.some((i) => i.name === value);
+    const existingPlayerName = members.find(
+        (i) => i.name.toLowerCase() === value.toLowerCase()
+    )?.name;
 
-    const canSubmit = value.length > 0 && !playerAlreadyExists;
+    const canSubmit = value.length > 0 && !existingPlayerName;
 
     function onAddMember() {
         if (canSubmit) {
@@ -92,8 +94,8 @@ export default function CreateGroupAddMembers({
             >
                 <TextInput
                     errorMessage={
-                        playerAlreadyExists
-                            ? `There\'s already a player named "${value}" in this group.`
+                        existingPlayerName
+                            ? `There\'s already a player named "${existingPlayerName}" in this group.`
                             : undefined
                     }
                     autoFocus

@@ -21,7 +21,9 @@ export default function CreateNewPlayer({
 
     const [name, setName] = useState('');
 
-    const playerAlreadyExists = existingPlayers?.includes(name);
+    const existingPlayerName = existingPlayers?.find(
+        (i) => i.toLowerCase() === name.toLowerCase()
+    );
 
     return (
         <>
@@ -37,7 +39,7 @@ export default function CreateNewPlayer({
                         <HeaderItem
                             disabled={
                                 name.length < 1 ||
-                                playerAlreadyExists ||
+                                (existingPlayerName?.length ?? 0) > 0 ||
                                 isPending
                             }
                             onPress={() => onCreate({ name })}
@@ -55,8 +57,8 @@ export default function CreateNewPlayer({
                 />
                 <TextInput
                     errorMessage={
-                        playerAlreadyExists
-                            ? `There\'s already a player named "${name}" in this group.`
+                        existingPlayerName
+                            ? `There\'s already a player named "${existingPlayerName}" in this group.`
                             : undefined
                     }
                     required
