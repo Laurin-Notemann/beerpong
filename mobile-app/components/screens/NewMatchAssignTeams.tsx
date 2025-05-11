@@ -142,7 +142,7 @@ export default function NewMatchAssignTeams({
                 paddingBottom: 24,
             }}
         >
-            {experimentalImprovedMatchCreation && (
+            {!experimentalImprovedMatchCreation && (
                 <Stack.Screen
                     options={{
                         ...navStyles,

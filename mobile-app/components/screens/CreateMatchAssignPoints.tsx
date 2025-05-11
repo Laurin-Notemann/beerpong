@@ -36,7 +36,7 @@ export default function CreateMatchAssignPoints({
 
     return (
         <>
-            {experimentalImprovedMatchCreation && (
+            {!experimentalImprovedMatchCreation && (
                 <Stack.Screen
                     options={{
                         ...navStyles,
