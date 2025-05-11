@@ -1,7 +1,14 @@
 import { Stack } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Dimensions, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+    interpolate,
+    useAnimatedStyle,
+    useDerivedValue,
+    useSharedValue,
+} from 'react-native-reanimated';
+import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
 import Swiper from 'react-native-swiper';
 
 import { useCreateMatchMutation } from '@/api/calls/matchHooks';
@@ -15,6 +22,7 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
+import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -23,7 +31,37 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { navStyles } from '../navigation/navStyles';
 import { useNavigation } from '../navigation/useNavigation';
 
+const EXPERIMENTAL_CAROUSEL = true;
+
+const { width } = Dimensions.get('window');
+
 export default function Screen() {
+    const scrollX = useSharedValue(0);
+
+    // float between 0 and 1
+    const progress = useDerivedValue(
+        () => (scrollX.value / width ** 2) * -1,
+        [scrollX]
+    );
+
+    const styleOut = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateX: interpolate(progress.value, [0, 1], [0, -96]),
+            },
+        ],
+        opacity: interpolate(progress.value, [0, 1], [1, 0]),
+    }));
+
+    const styleIn = useAnimatedStyle(() => ({
+        transform: [
+            {
+                translateX: interpolate(progress.value, [0, 1], [96, 0]),
+            },
+        ],
+        opacity: interpolate(progress.value, [0, 1], [0, 1]),
+    }));
+
     const nav = useNavigation();
 
     const { groupId, seasonId } = useGroup();
@@ -60,6 +98,7 @@ export default function Screen() {
     const allowedMoves = movesQuery.data?.data ?? [];
 
     const swiperRef = useRef<Swiper>(null);
+    const carouselRef = useRef<ICarouselInstance>(null);
 
     const [swiperPage, setSwiperPage] = useState(0);
 
@@ -138,6 +177,7 @@ export default function Screen() {
             showSuccessToast('Created match.');
             nav.navigate('index');
             swiperRef.current?.scrollBy(-1);
+            carouselRef.current?.prev();
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
             showErrorToast('Failed to create match.');
@@ -153,47 +193,103 @@ export default function Screen() {
                     <Stack.Screen
                         options={{
                             ...navStyles,
-                            headerLeft: () =>
-                                swiperPage === 0 ? (
-                                    <HeaderItem
-                                        disabled={bothTeamsEmpty}
-                                        onPress={() => {
-                                            matchDraft.actions.clear();
-                                        }}
+                            headerLeft: () => (
+                                <View
+                                    style={{
+                                        overflow: 'hidden',
+
+                                        width: 96,
+                                        height: 22,
+                                    }}
+                                >
+                                    <Animated.View
+                                        style={[
+                                            {
+                                                position: 'absolute',
+                                            },
+                                            styleOut,
+                                        ]}
                                     >
-                                        Cancel
-                                    </HeaderItem>
-                                ) : (
-                                    <HeaderItem
-                                        onPress={() => {
-                                            swiperRef.current?.scrollBy(-1);
-                                        }}
+                                        <HeaderItem
+                                            disabled={bothTeamsEmpty}
+                                            onPress={() => {
+                                                matchDraft.actions.clear();
+                                            }}
+                                        >
+                                            Cancel
+                                        </HeaderItem>
+                                    </Animated.View>
+                                    <Animated.View
+                                        style={[
+                                            {
+                                                position: 'absolute',
+                                            },
+                                            styleIn,
+                                        ]}
                                     >
-                                        Cancel
-                                    </HeaderItem>
-                                ),
-                            headerRight: () =>
-                                swiperPage === 0 ? (
-                                    <HeaderItem
-                                        onPress={() => {
-                                            swiperRef.current?.scrollBy(1);
-                                        }}
-                                        disabled={!hasValidTeams}
+                                        <HeaderItem
+                                            onPress={() => {
+                                                swiperRef.current?.scrollBy(-1);
+                                                carouselRef.current?.prev();
+                                            }}
+                                        >
+                                            Back
+                                        </HeaderItem>
+                                    </Animated.View>
+                                </View>
+                            ),
+                            headerRight: () => (
+                                <View
+                                    style={{
+                                        overflow: 'hidden',
+
+                                        flexDirection: 'row-reverse',
+
+                                        width: 96,
+                                        height: 22,
+                                    }}
+                                >
+                                    <Animated.View
+                                        style={[
+                                            {
+                                                position: 'absolute',
+                                            },
+                                            styleOut,
+                                        ]}
                                     >
-                                        Next
-                                    </HeaderItem>
-                                ) : (
-                                    <HeaderItem
-                                        onPress={onCreateMatch}
-                                        disabled={createMatchMutation.isPending}
+                                        <HeaderItem
+                                            onPress={() => {
+                                                swiperRef.current?.scrollBy(1);
+                                                carouselRef.current?.next();
+                                            }}
+                                            disabled={!hasValidTeams}
+                                        >
+                                            Next
+                                        </HeaderItem>
+                                    </Animated.View>
+                                    <Animated.View
+                                        style={[
+                                            {
+                                                position: 'absolute',
+                                            },
+                                            styleIn,
+                                        ]}
                                     >
-                                        {createMatchMutation.isPending ? (
-                                            <ActivityIndicator />
-                                        ) : (
-                                            'Next'
-                                        )}
-                                    </HeaderItem>
-                                ),
+                                        <HeaderItem
+                                            onPress={onCreateMatch}
+                                            disabled={
+                                                createMatchMutation.isPending
+                                            }
+                                        >
+                                            {createMatchMutation.isPending ? (
+                                                <ActivityIndicator />
+                                            ) : (
+                                                'Create'
+                                            )}
+                                        </HeaderItem>
+                                    </Animated.View>
+                                </View>
+                            ),
                             headerTitle: bothTeamsEmpty
                                 ? 'Assign Teams'
                                 : () => (
@@ -233,37 +329,104 @@ export default function Screen() {
                                   ),
                         }}
                     />
-                    <Swiper
-                        showsPagination={false}
-                        loop={false}
-                        ref={swiperRef}
-                        index={swiperPage}
-                        onIndexChanged={onIndexChanged}
-                        scrollEnabled={!(swiperPage === 0 && !hasValidTeams)}
-                    >
-                        <NewMatchAssignTeams
-                            players={profiles}
-                            setTeam={matchDraft.actions.setPlayerTeam}
-                            onSubmit={oldFlowGoToNextPage}
-                        />
-                        <CreateMatchAssignPoints
-                            isPending={createMatchMutation.isPending}
-                            players={teamMembers}
-                            setMoveCount={matchDraft.actions.setMoveCount}
-                            onSubmit={onCreateMatch}
-                            onCancel={() => {
-                                matchDraft.actions.clear();
-                                nav.goBack();
+                    {EXPERIMENTAL_CAROUSEL ? (
+                        <Carousel
+                            ref={carouselRef}
+                            style={{
+                                backgroundColor: theme.color.bg,
                             }}
-                            onPlayerPress={(player) =>
-                                nav.navigate('assignPointsToPlayerModal', {
-                                    pageIdx: teamMembers.findIndex(
-                                        (i) => i.id === player.id
-                                    ),
-                                })
+                            onProgressChange={(
+                                relativeOffset,
+                                absoluteProgress
+                            ) => {
+                                scrollX.value = relativeOffset * width;
+
+                                // if (swiperPage === 0 && absoluteProgress > 0) {
+                                //     nav.navigate('assignPointsToPlayerModal', {
+                                //         pageIdx: 0,
+                                //     });
+                                // }
+                            }}
+                            onSnapToItem={setSwiperPage}
+                            loop={false}
+                            width={width}
+                            enabled={!(swiperPage === 0 && !hasValidTeams)}
+                            data={[null, null]}
+                            renderItem={(item) =>
+                                item.index === 0 ? (
+                                    <NewMatchAssignTeams
+                                        players={profiles}
+                                        setTeam={
+                                            matchDraft.actions.setPlayerTeam
+                                        }
+                                        onSubmit={oldFlowGoToNextPage}
+                                    />
+                                ) : (
+                                    <CreateMatchAssignPoints
+                                        isPending={
+                                            createMatchMutation.isPending
+                                        }
+                                        players={teamMembers}
+                                        setMoveCount={
+                                            matchDraft.actions.setMoveCount
+                                        }
+                                        onSubmit={onCreateMatch}
+                                        onCancel={() => {
+                                            matchDraft.actions.clear();
+                                            nav.goBack();
+                                        }}
+                                        onPlayerPress={(player) =>
+                                            nav.navigate(
+                                                'assignPointsToPlayerModal',
+                                                {
+                                                    pageIdx:
+                                                        teamMembers.findIndex(
+                                                            (i) =>
+                                                                i.id ===
+                                                                player.id
+                                                        ),
+                                                }
+                                            )
+                                        }
+                                    />
+                                )
                             }
                         />
-                    </Swiper>
+                    ) : (
+                        <Swiper
+                            showsPagination={false}
+                            loop={false}
+                            ref={swiperRef}
+                            index={swiperPage}
+                            onIndexChanged={onIndexChanged}
+                            scrollEnabled={
+                                !(swiperPage === 0 && !hasValidTeams)
+                            }
+                        >
+                            <NewMatchAssignTeams
+                                players={profiles}
+                                setTeam={matchDraft.actions.setPlayerTeam}
+                                onSubmit={oldFlowGoToNextPage}
+                            />
+                            <CreateMatchAssignPoints
+                                isPending={createMatchMutation.isPending}
+                                players={teamMembers}
+                                setMoveCount={matchDraft.actions.setMoveCount}
+                                onSubmit={onCreateMatch}
+                                onCancel={() => {
+                                    matchDraft.actions.clear();
+                                    nav.goBack();
+                                }}
+                                onPlayerPress={(player) =>
+                                    nav.navigate('assignPointsToPlayerModal', {
+                                        pageIdx: teamMembers.findIndex(
+                                            (i) => i.id === player.id
+                                        ),
+                                    })
+                                }
+                            />
+                        </Swiper>
+                    )}
                 </>
             ) : (
                 <NewMatchAssignTeams
