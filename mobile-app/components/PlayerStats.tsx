@@ -51,6 +51,10 @@ export interface PlayerStatsProps {
     matchesPlayedCount: number;
     elo: number;
 }
+/**
+ * TODO: in the future, we might want to have some sort of modal or page show up on click,
+ * which either explains how these are calculated or shows more detailed stats.
+ */
 export default function PlayerStats({
     totalCups,
     totalPoints,
@@ -69,6 +73,7 @@ export default function PlayerStats({
 
     return (
         <TouchableOpacity
+            disabled
             style={{
                 flexDirection: 'row',
                 alignItems: 'flex-end',

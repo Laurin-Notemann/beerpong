@@ -34,9 +34,14 @@ export default function MatchesList({ matches }: MatchesListProps) {
 
     return (
         <FlatList
+            contentContainerStyle={{
+                paddingBottom: 32,
+            }}
             style={{
                 alignSelf: 'stretch',
                 backgroundColor: theme.color.bg,
+
+                paddingHorizontal: 16,
             }}
             data={days}
             refreshControl={
