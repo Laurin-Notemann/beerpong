@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { HeaderItem } from '@/components/HeaderItem';
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
@@ -47,7 +48,12 @@ export default function CreateGroupAddMembers({
 
             setValue('');
             inputRef.current?.clear();
+            triggerHapticBump('selection');
         }
+    }
+    function onRemoveMember(idx: number) {
+        setMembers((prev) => prev.filter((_, index) => index !== idx));
+        triggerHapticBump('selection');
     }
 
     return (
@@ -159,11 +165,7 @@ export default function CreateGroupAddMembers({
                             </ThemedText>
                         </ThemedView>
                         <TouchableOpacity
-                            onPress={() =>
-                                setMembers((prev) =>
-                                    prev.filter((_, index) => index !== idx)
-                                )
-                            }
+                            onPress={() => onRemoveMember(idx)}
                             style={{ marginLeft: 'auto' }}
                         >
                             <Icon

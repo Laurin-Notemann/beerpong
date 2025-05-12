@@ -2,7 +2,7 @@ import React from 'react';
 
 import { useCreateGroupMutation } from '@/api/calls/groupHooks';
 import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
-import { showErrorToast } from '@/toast';
+import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -28,6 +28,8 @@ export default function Page() {
                 throw new Error('invalid create group response');
             }
             addGroup(data.data.id);
+
+            showSuccessToast(`You created "${group.name}"`);
 
             nav.navigate('index');
         } catch (err) {
