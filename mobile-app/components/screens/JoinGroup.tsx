@@ -1,3 +1,4 @@
+import * as Clipboard from 'expo-clipboard';
 import { Stack } from 'expo-router';
 import React, { Fragment, useEffect, useState } from 'react';
 import {
@@ -11,9 +12,11 @@ import {
     useBlurOnFulfill,
     useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import { theme } from '@/theme';
+import { showSuccessToast } from '@/toast';
 
 import Button from '../Button';
 import { useAutoFocus } from './useAutoFocus';
@@ -46,6 +49,7 @@ export default function JoinGroup({
     isNotFound = false,
 }: JoinGroupProps) {
     const [code, setCode] = useState('');
+    const [codeFromClipboard, setCodeFromClipboard] = useState('');
 
     const ref = useBlurOnFulfill({
         value: code,
@@ -60,16 +64,40 @@ export default function JoinGroup({
 
     useEffect(() => {
         // auto submit when the user has entered the full code
-        if (code.length === env.groupCode.length) {
+        if (
+            code.length === env.groupCode.length &&
+            code !== codeFromClipboard
+        ) {
             onSubmit(code);
         }
     }, [code, onSubmit]);
+
+    const handlePaste = async () => {
+        const clipboardContents = await Clipboard.getStringAsync();
+        const withoutWhitespace = clipboardContents
+            .replace(/\s/g, '')
+            .toUpperCase();
+        if (
+            withoutWhitespace.length !== env.groupCode.length ||
+            !withoutWhitespace.match(/^[a-zA-Z0-9]+$/)
+        ) {
+            return;
+        }
+        setCodeFromClipboard(withoutWhitespace);
+        setCode(withoutWhitespace);
+
+        showSuccessToast('Filled in from clipboard');
+    };
+
+    useEffect(() => {
+        handlePaste();
+    }, []);
 
     return (
         <>
             <Stack.Screen
                 options={{
-                    headerTitle: '',
+                    headerTitle: 'Join Group',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: '#fff',
@@ -99,13 +127,16 @@ export default function JoinGroup({
                         {...props}
                         value={code}
                         onChangeText={(value) =>
-                            setCode(value.replace(nonAlphaNumericChars, ''))
+                            setCode(
+                                value
+                                    .replace(nonAlphaNumericChars, '')
+                                    .toUpperCase()
+                            )
                         }
                         cellCount={env.groupCode.length}
                         textContentType="oneTimeCode"
                         rootStyle={{
                             paddingTop: 128 * 2,
-                            paddingBottom: 64,
                             gap: 8,
                         }}
                         renderCell={({ index, symbol, isFocused }) => (
@@ -140,6 +171,27 @@ export default function JoinGroup({
                             </Fragment>
                         )}
                     />
+                    <TouchableOpacity
+                        onPress={() => setCode('')}
+                        style={{
+                            paddingTop: 16,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                color: theme.color.text.secondary,
+
+                                fontSize: 16,
+                                fontWeight: 500,
+
+                                marginBottom: 32,
+
+                                opacity: isLoading || code.length < 1 ? 0 : 1,
+                            }}
+                        >
+                            Clear
+                        </Text>
+                    </TouchableOpacity>
                     {isNotFound && (
                         <Text
                             style={{
