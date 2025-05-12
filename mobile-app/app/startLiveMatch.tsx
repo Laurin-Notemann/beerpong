@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
 
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -80,7 +79,7 @@ export default function Screen() {
                             width={300}
                             formation={redCups}
                             onCupTap={(cup) =>
-                                runOnJS(setRedCups)({
+                                setRedCups({
                                     ...redCups,
                                     cups: redCups.cups.filter(
                                         (i) => !(i.x === cup.x && i.y === cup.y)
@@ -93,7 +92,7 @@ export default function Screen() {
                             width={300}
                             formation={blueCups}
                             onCupTap={(cup) =>
-                                runOnJS(setBlueCups)({
+                                setBlueCups({
                                     ...blueCups,
                                     cups: blueCups.cups.filter(
                                         (i) => !(i.x === cup.x && i.y === cup.y)

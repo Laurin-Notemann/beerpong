@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 
 import { theme } from '@/theme';
 
@@ -115,7 +116,11 @@ const CupGrid = ({
                             onTap={
                                 canEdit
                                     ? getCupTapGesture(cup)
-                                    : Gesture.Tap().onEnd(() => onCupTap?.(cup))
+                                    : Gesture.Tap().onEnd(
+                                          () =>
+                                              onCupTap &&
+                                              runOnJS(onCupTap)?.(cup)
+                                      )
                             }
                         />
                     );
