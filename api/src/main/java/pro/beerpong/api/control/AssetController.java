@@ -12,6 +12,10 @@ import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.AssetService;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/assets")
@@ -51,7 +55,16 @@ public class AssetController {
             return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.ASSET_NOT_FOUND);
         }
 
-        return ResponseEntity.ok().contentType(MediaType.valueOf(assetMetadata.getMediaType()))
+        String cacheControl = "public, max-age=31536000, immutable";
+        String expires = ZonedDateTime
+                            .now(ZoneOffset.UTC)
+                            .plusYears(1)
+                            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(assetMetadata.getMediaType()))
+                .header(HttpHeaders.CACHE_CONTROL, cacheControl)
+                .header(HttpHeaders.EXPIRES, expires)
                 .body(asset);
     }
 
