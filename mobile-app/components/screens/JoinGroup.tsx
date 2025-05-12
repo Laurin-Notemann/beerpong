@@ -16,6 +16,7 @@ import { env } from '@/api/env';
 import { theme } from '@/theme';
 
 import Button from '../Button';
+import { useAutoFocus } from './useAutoFocus';
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 
@@ -50,6 +51,8 @@ export default function JoinGroup({
         value: code,
         cellCount: env.groupCode.length,
     });
+    useAutoFocus(ref);
+
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value: code,
         setValue: (value) => setCode(value.toUpperCase()),
@@ -92,7 +95,6 @@ export default function JoinGroup({
             >
                 <KeyboardAvoidingView>
                     <CodeField
-                        autoFocus
                         ref={ref}
                         {...props}
                         value={code}

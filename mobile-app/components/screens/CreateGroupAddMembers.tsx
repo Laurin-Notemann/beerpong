@@ -19,6 +19,7 @@ import Text from '../Text';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
+import { useAutoFocus } from './useAutoFocus';
 
 const MIN_GROUP_MEMBERS = 2;
 
@@ -33,6 +34,8 @@ export default function CreateGroupAddMembers({
     const [value, setValue] = useState('');
 
     const inputRef = useRef<B>(null);
+
+    useAutoFocus(inputRef);
 
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
 
@@ -104,7 +107,6 @@ export default function CreateGroupAddMembers({
                             ? `There\'s already a player named "${existingPlayerName}" in this group.`
                             : undefined
                     }
-                    autoFocus
                     autoCorrect={false}
                     ref={inputRef}
                     required
