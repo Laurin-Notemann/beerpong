@@ -374,14 +374,19 @@ export default function Screen() {
                                 absoluteProgress
                             ) => {
                                 scrollX.value = relativeOffset * width;
-
-                                // if (swiperPage === 0 && absoluteProgress > 0) {
-                                //     nav.navigate('assignPointsToPlayerModal', {
-                                //         pageIdx: 0,
-                                //     });
-                                // }
                             }}
-                            onSnapToItem={setSwiperPage}
+                            onSnapToItem={(pageIdx) => {
+                                if (
+                                    pageIdx === 1 &&
+                                    !matchDraft.hasBeenOnPageTwo
+                                ) {
+                                    nav.navigate('assignPointsToPlayerModal', {
+                                        pageIdx: 0,
+                                    });
+                                    matchDraft.actions.setHasBeenOnPageTwo();
+                                }
+                                setSwiperPage(pageIdx);
+                            }}
                             loop={false}
                             width={width}
                             enabled={!(swiperPage === 0 && !hasValidTeams)}
