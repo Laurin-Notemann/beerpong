@@ -4,12 +4,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import Avatar from '@/components/Avatar';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
-
-import Avatar from '../Avatar';
 
 export type TeamId = 'red' | 'blue' | null;
 
@@ -108,12 +107,10 @@ export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 export interface NewMatchAssignTeamsProps {
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
-    onSubmit: () => void;
 }
 export default function NewMatchAssignTeams({
     players,
     setTeam,
-    onSubmit,
 }: NewMatchAssignTeamsProps) {
     const nav = useNavigation();
 
