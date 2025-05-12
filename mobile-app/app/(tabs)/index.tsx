@@ -30,7 +30,7 @@ export default function Page() {
 
     const { invalidatePlayers } = useQueryInvalidation();
 
-    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+    const refresh = usePullToRefresh(() =>
         invalidatePlayers(groupId!, seasonId!)
     );
 
@@ -69,12 +69,7 @@ export default function Page() {
                 contentContainerStyle={{
                     alignItems: 'center',
                 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
+                refreshControl={<RefreshControl {...refresh} />}
             >
                 <Text
                     style={{

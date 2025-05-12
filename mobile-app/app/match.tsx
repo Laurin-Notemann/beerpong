@@ -184,7 +184,7 @@ export default function Page() {
 
     const { invalidateMatches } = useQueryInvalidation();
 
-    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+    const refresh = usePullToRefresh(() =>
         invalidateMatches(groupId!, seasonId!)
     );
 
@@ -319,12 +319,7 @@ export default function Page() {
                     paddingTop: 32,
                     paddingBottom: 32,
                 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
+                refreshControl={<RefreshControl {...refresh} />}
             >
                 <MatchPlayers
                     onPlayerPress={(player) => {

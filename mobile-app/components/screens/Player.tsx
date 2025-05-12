@@ -7,19 +7,17 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
-import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { RefreshProps } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { theme } from '@/theme';
-
-import { PlayerPageHeadSection } from '../PlayerPageHeadSection';
 
 export interface PlayerScreenProps {
     minMatchesRequiredToBeRanked: number;
@@ -41,6 +39,7 @@ export interface PlayerScreenProps {
 
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
+    refresh: RefreshProps;
 }
 export default function PlayerScreen({
     minMatchesRequiredToBeRanked,
@@ -59,22 +58,15 @@ export default function PlayerScreen({
 
     onDelete,
     onUploadAvatarPress,
+    refresh,
 }: PlayerScreenProps) {
     const nav = useNavigation();
+
+    const [editable, setEditable] = useState(false);
 
     // account for division by zero
     const averagePointsPerMatch =
         matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
-
-    const [editable, setEditable] = useState(false);
-
-    const { groupId, seasonId } = useGroup();
-
-    const { invalidatePlayers } = useQueryInvalidation();
-
-    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
-        invalidatePlayers(groupId!, seasonId!)
-    );
 
     const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
@@ -116,12 +108,7 @@ export default function PlayerScreen({
 
                     paddingBottom: 32,
                 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
+                refreshControl={<RefreshControl {...refresh} />}
             >
                 <PlayerPageHeadSection
                     avatarUrl={avatarUrl}
@@ -192,7 +179,10 @@ export default function PlayerScreen({
                                 </MenuSection>
                             )}
                         </View>
-                        <MatchesList matches={matches} />
+                        <MatchesList
+                            matches={matches}
+                            refresh={{ refreshing: false }}
+                        />
                     </>
                 )}
             </ScrollView>
