@@ -78,15 +78,23 @@ export function useQueryInvalidation() {
     return { invalidateMatches, invalidatePlayers };
 }
 
-export function usePullToRefresh(func: () => void) {
-    const [isRefreshing, setIsRefreshing] = useState(false);
+/**
+ * usage: `<RefreshControl {...refresh} />`
+ */
+export interface RefreshProps {
+    refreshing: boolean;
+    onRefresh?: () => void;
+}
+
+export function usePullToRefresh(func: () => void): RefreshProps {
+    const [refreshing, setRefreshing] = useState(false);
 
     const onRefresh = async () => {
-        setIsRefreshing(true);
+        setRefreshing(true);
         try {
             await func();
         } catch (err) {}
-        setIsRefreshing(false);
+        setRefreshing(false);
     };
-    return { isRefreshing, onRefresh };
+    return { refreshing, onRefresh };
 }

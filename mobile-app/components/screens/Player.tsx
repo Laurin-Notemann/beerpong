@@ -1,26 +1,23 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
-import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { RefreshProps } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { theme } from '@/theme';
-
-import PlayerStats from '../PlayerStats';
 
 export interface PlayerScreenProps {
     minMatchesRequiredToBeRanked: number;
@@ -42,6 +39,7 @@ export interface PlayerScreenProps {
 
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
+    refresh: RefreshProps;
 }
 export default function PlayerScreen({
     minMatchesRequiredToBeRanked,
@@ -60,22 +58,15 @@ export default function PlayerScreen({
 
     onDelete,
     onUploadAvatarPress,
+    refresh,
 }: PlayerScreenProps) {
     const nav = useNavigation();
+
+    const [editable, setEditable] = useState(false);
 
     // account for division by zero
     const averagePointsPerMatch =
         matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
-
-    const [editable, setEditable] = useState(false);
-
-    const { groupId, seasonId } = useGroup();
-
-    const { invalidatePlayers } = useQueryInvalidation();
-
-    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
-        invalidatePlayers(groupId!, seasonId!)
-    );
 
     const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
@@ -115,59 +106,32 @@ export default function PlayerScreen({
                 contentContainerStyle={{
                     alignItems: 'center',
 
-                    paddingHorizontal: 16,
                     paddingBottom: 32,
                 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
+                refreshControl={<RefreshControl {...refresh} />}
             >
-                <Avatar
-                    url={avatarUrl}
-                    size={96}
-                    style={{ marginTop: 32, marginBottom: 8 }}
+                <PlayerPageHeadSection
+                    avatarUrl={avatarUrl}
                     placement={placement}
-                    isUnranked={isUnranked}
                     name={name}
-                    canUpload={editable}
-                    onPress={editable ? onUploadAvatarPress : undefined}
-                />
-                <Text
-                    style={{
-                        fontSize: 15,
-                        color: theme.color.text.secondary,
-                    }}
-                >
-                    {averagePointsPerMatch}
-                </Text>
-                <Text
-                    style={{
-                        fontSize: 25,
-                        color: theme.color.text.primary,
-
-                        marginBottom: 32,
-                    }}
-                >
-                    {name}
-                </Text>
-
-                <PlayerStats
-                    totalCups={cups}
-                    totalPoints={points}
-                    matchesWonCount={matchesWon}
-                    matchesPlayedCount={matches.length}
                     elo={elo}
+                    matchesWon={matchesWon}
+                    points={points}
+                    cups={cups}
+                    isUnranked={isUnranked}
+                    editable={editable}
+                    averagePointsPerMatch={averagePointsPerMatch}
+                    onUploadAvatarPress={onUploadAvatarPress}
+                    matches={matches}
                 />
-                <View
-                    style={{
-                        width: '100%',
-                        alignItems: 'stretch',
-                    }}
-                >
-                    {editable ? (
+                {editable && (
+                    <View
+                        style={{
+                            width: '100%',
+                            alignItems: 'stretch',
+                            paddingHorizontal: 16,
+                        }}
+                    >
                         <MenuSection>
                             <MenuItem
                                 title={name}
@@ -189,8 +153,18 @@ export default function PlayerScreen({
                                 }}
                             />
                         </MenuSection>
-                    ) : (
-                        <>
+                    </View>
+                )}
+
+                {!editable && (
+                    <>
+                        <View
+                            style={{
+                                width: '100%',
+                                alignItems: 'stretch',
+                                paddingHorizontal: 16,
+                            }}
+                        >
                             {env.isDev && (
                                 <MenuSection>
                                     <MenuItem
@@ -204,10 +178,13 @@ export default function PlayerScreen({
                                     />
                                 </MenuSection>
                             )}
-                            <MatchesList matches={matches} />
-                        </>
-                    )}
-                </View>
+                        </View>
+                        <MatchesList
+                            matches={matches}
+                            refresh={{ refreshing: false }}
+                        />
+                    </>
+                )}
             </ScrollView>
         </GestureHandlerRootView>
     );

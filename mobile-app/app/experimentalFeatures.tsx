@@ -10,13 +10,7 @@ import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { navStyles } from './navigation/navStyles';
 
 export default function Page() {
-    const {
-        experimentalImprovedMatchCreation,
-        toggleExperimentalImprovedMatchCreation,
-
-        liveMatches,
-        toggleLiveMatches,
-    } = useLocalSettings();
+    const { liveMatches, toggleLiveMatches } = useLocalSettings();
 
     return (
         <>
@@ -39,17 +33,6 @@ export default function Page() {
                 }}
             >
                 <MenuSection title="Experimental Features">
-                    <MenuItem
-                        title="Improved New Match Tab"
-                        tailContent={
-                            <Switch
-                                value={experimentalImprovedMatchCreation}
-                                onChange={
-                                    toggleExperimentalImprovedMatchCreation
-                                }
-                            />
-                        }
-                    />
                     <MenuItem
                         title="Live Matches"
                         tailContent={

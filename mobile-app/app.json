@@ -1,6 +1,6 @@
 {
     "expo": {
-        "name": "beerpong-tournament",
+        "name": "Versus",
         "slug": "mobile-app",
         "version": "1.0.14",
         "orientation": "portrait",
@@ -10,7 +10,7 @@
         "splash": {
             "image": "./assets/images/splash.png",
             "resizeMode": "contain",
-            "backgroundColor": "#ffffff"
+            "backgroundColor": "#000000"
         },
         "ios": {
             "supportsTablet": true,
@@ -26,7 +26,7 @@
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
+                "backgroundColor": "#000000"
             },
             "permissions": ["android.permission.RECORD_AUDIO"],
             "package": "com.linusbolls.mobileapp"

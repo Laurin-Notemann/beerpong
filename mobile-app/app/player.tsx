@@ -15,7 +15,12 @@ import {
     useLeaderboardProps,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import { QK, replaceWildcards } from '@/api/utils/reactQuery';
+import {
+    QK,
+    replaceWildcards,
+    usePullToRefresh,
+    useQueryInvalidation,
+} from '@/api/utils/reactQuery';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import PlayerScreen from '@/components/screens/Player';
@@ -61,6 +66,12 @@ export default function Page() {
 
     const { players } = useLeaderboardProps(groupId, seasonId ?? null);
 
+    const { invalidatePlayers } = useQueryInvalidation();
+
+    const refresh = usePullToRefresh(() =>
+        invalidatePlayers(groupId!, seasonId!)
+    );
+
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
     const player = (playersQuery.data?.data ?? []).find((i) => i.id === id);
@@ -86,7 +97,13 @@ export default function Page() {
 
     const profileId = player?.profile?.id;
 
-    if (playersQuery.isLoading) return <LoadingScreen />;
+    const isLoading =
+        playersQuery.isLoading ||
+        matchesQuery.isLoading ||
+        movesQuery.isLoading ||
+        seasonsQuery.isLoading;
+
+    if (isLoading) return <LoadingScreen />;
 
     if (!playersQuery.data?.data)
         return <ErrorScreen error={playersQuery.error} />;
@@ -173,6 +190,7 @@ export default function Page() {
             onDelete={onDelete}
             avatarUrl={player?.profile?.avatarAsset?.url}
             onUploadAvatarPress={onUploadAvatarPress}
+            refresh={refresh}
         />
     );
 }

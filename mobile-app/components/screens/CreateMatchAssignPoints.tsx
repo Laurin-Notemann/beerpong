@@ -31,94 +31,45 @@ export default function CreateMatchAssignPoints({
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
     const navigation = useNavigation();
-    const { experimentalImprovedMatchCreation, liveMatches } =
-        useLocalSettings();
+    const { liveMatches } = useLocalSettings();
 
     return (
-        <>
-            {!experimentalImprovedMatchCreation && (
-                <Stack.Screen
-                    options={{
-                        ...navStyles,
-                        headerLeft: () => (
-                            <HeaderItem onPress={onCancel} noMargin>
-                                Cancel
-                            </HeaderItem>
-                        ),
-                        headerRight: () => (
-                            <HeaderItem
-                                onPress={onSubmit}
-                                noMargin
-                                disabled={isPending}
-                            >
-                                {isPending ? <ActivityIndicator /> : 'Create'}
-                            </HeaderItem>
-                        ),
-                        headerTitle: () => (
-                            <MatchVsHeader
-                                match={{
-                                    blueCups: players
-                                        .filter((i) => i.team === 'blue')
-                                        .map((i) => i.moves)
-                                        .flat()
-                                        .reduce((sum, i) => sum + i.count, 0),
-                                    redCups: players
-                                        .filter((i) => i.team === 'red')
-                                        .map((i) => i.moves)
-                                        .flat()
-                                        .reduce((sum, i) => sum + i.count, 0),
-                                    redTeam: players.filter(
-                                        (i) => i.team === 'red'
-                                    ),
-                                    blueTeam: players.filter(
-                                        (i) => i.team === 'blue'
-                                    ),
-                                }}
-                                style={{
-                                    bottom: 4,
-                                }}
-                            />
-                        ),
-                    }}
-                />
-            )}
-            <ScrollView
-                style={{
-                    flex: 1,
+        <ScrollView
+            style={{
+                flex: 1,
 
-                    backgroundColor: theme.color.bg,
-                }}
-                contentContainerStyle={{
-                    paddingHorizontal: 16,
-                    paddingTop: 32,
-                    paddingBottom: 32,
-                }}
-            >
-                {liveMatches && (
-                    <Button
-                        variant="default"
-                        title="Start Live Match"
-                        size="small"
-                        onPress={() => navigation.navigate('startLiveMatch')}
-                    />
-                )}
-                <MatchPlayers
-                    editable
-                    players={players}
-                    setMoveCount={setMoveCount}
-                    onPlayerPress={onPlayerPress}
-                />
+                backgroundColor: theme.color.bg,
+            }}
+            contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingTop: 32,
+                paddingBottom: 32,
+            }}
+        >
+            {liveMatches && (
                 <Button
                     variant="default"
-                    title={isPending ? <ActivityIndicator /> : 'Create'}
-                    size="large"
-                    onPress={onSubmit}
-                    disabled={isPending}
-                    style={{
-                        marginTop: 32,
-                    }}
+                    title="Start Live Match"
+                    size="small"
+                    onPress={() => navigation.navigate('startLiveMatch')}
                 />
-            </ScrollView>
-        </>
+            )}
+            <MatchPlayers
+                editable
+                players={players}
+                setMoveCount={setMoveCount}
+                onPlayerPress={onPlayerPress}
+            />
+            <Button
+                variant="default"
+                title={isPending ? <ActivityIndicator /> : 'Create'}
+                size="large"
+                onPress={onSubmit}
+                disabled={isPending}
+                style={{
+                    marginTop: 32,
+                }}
+            />
+        </ScrollView>
     );
 }

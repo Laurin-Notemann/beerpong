@@ -20,6 +20,7 @@ import {
 } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
+import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -31,6 +32,14 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 
 import { HeaderItem } from '../components/HeaderItem';
 import { useNavigation } from './navigation/useNavigation';
+
+/**
+ * currently, we need to fetch every single match of the season here, in order to calculate the influence of the viewed match on the
+ * ranking of the players. in the future, we might want to move away from this for performance reasons.
+ *
+ * TODO: find a way to not have to fetch all matches of the season here
+ */
+const USE_MATCH_QUERY = false;
 
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
@@ -62,9 +71,11 @@ export default function Page() {
 
     const nav = useNavigation();
 
-    const match = matchQuery.data?.data
-        ? matchDtoToMatch(profiles, allowedMoves)(matchQuery.data.data)
-        : null;
+    const match = USE_MATCH_QUERY
+        ? matchQuery.data?.data
+            ? matchDtoToMatch(profiles, allowedMoves)(matchQuery.data.data)
+            : null
+        : matches.find((i) => i.id === id);
 
     useEffect(() => {
         if (match) {
@@ -140,7 +151,7 @@ export default function Page() {
               redTeam: teamMembers.filter((i) => i.team === 'red'),
               blueTeam: teamMembers.filter((i) => i.team === 'blue'),
           }
-        : match;
+        : match!;
 
     async function onDelete() {
         if (!groupId || !seasonId || !id) return;
@@ -173,7 +184,7 @@ export default function Page() {
 
     const { invalidateMatches } = useQueryInvalidation();
 
-    const { isRefreshing, onRefresh } = usePullToRefresh(() =>
+    const refresh = usePullToRefresh(() =>
         invalidateMatches(groupId!, seasonId!)
     );
 
@@ -226,6 +237,16 @@ export default function Page() {
             showErrorToast('Failed to update match.');
         }
     }
+
+    const isLoading =
+        !groupId ||
+        !seasonId ||
+        matchesQuery.isLoading ||
+        playersQuery.isLoading ||
+        movesQuery.isLoading ||
+        (USE_MATCH_QUERY && matchQuery.isLoading);
+
+    if (isLoading) return <LoadingScreen />;
 
     return (
         <>
@@ -298,12 +319,7 @@ export default function Page() {
                     paddingTop: 32,
                     paddingBottom: 32,
                 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
+                refreshControl={<RefreshControl {...refresh} />}
             >
                 <MatchPlayers
                     onPlayerPress={(player) => {

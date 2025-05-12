@@ -1,20 +1,15 @@
-import { Stack } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 import Avatar from '../Avatar';
-import MatchVsHeader from '../MatchVsHeader';
 
 export type TeamId = 'red' | 'blue' | null;
 
@@ -122,13 +117,6 @@ export default function NewMatchAssignTeams({
 }: NewMatchAssignTeamsProps) {
     const nav = useNavigation();
 
-    const blueTeam = players.filter((i) => i.team === 'blue');
-    const redTeam = players.filter((i) => i.team === 'red');
-
-    const canCreateMatch = blueTeam.length > 0 && redTeam.length > 0;
-
-    const { experimentalImprovedMatchCreation } = useLocalSettings();
-
     return (
         <ScrollView
             style={{
@@ -142,42 +130,6 @@ export default function NewMatchAssignTeams({
                 paddingBottom: 24,
             }}
         >
-            {!experimentalImprovedMatchCreation && (
-                <Stack.Screen
-                    options={{
-                        ...navStyles,
-                        headerRight: () => (
-                            <HeaderItem
-                                disabled={!canCreateMatch}
-                                onPress={() => onSubmit()}
-                            >
-                                Next
-                            </HeaderItem>
-                        ),
-
-                        headerTitle:
-                            blueTeam.length > 0 || redTeam.length > 0
-                                ? () => (
-                                      <MatchVsHeader
-                                          match={{
-                                              id: '#',
-                                              // @ts-expect-error TODO: fix typing to only require the fields we actually need
-                                              blueTeam,
-                                              // @ts-expect-error TODO: fix typing to only require the fields we actually need
-                                              redTeam,
-                                              blueCups: 0,
-                                              redCups: 0,
-                                          }}
-                                          hasScore={false}
-                                          style={{
-                                              bottom: 4,
-                                          }}
-                                      />
-                                  )
-                                : 'Assign Teams',
-                    }}
-                />
-            )}
             <Heading />
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
