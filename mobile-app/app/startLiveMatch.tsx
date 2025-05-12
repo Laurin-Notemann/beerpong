@@ -24,85 +24,87 @@ export default function Screen() {
     const nav = useNavigation();
 
     return (
-        <>
-            <Stack.Screen
-                options={{
-                    ...navStyles,
-                    headerTitle: 'Start Live Match',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem onPress={() => {}}>Create</HeaderItem>
-                    ),
-                }}
-            />
-            <View
-                style={{
-                    backgroundColor: '#000',
+        // <>
+        //     <Stack.Screen
+        //         options={{
+        //             ...navStyles,
+        //             headerTitle: 'Start Live Match',
+        //             headerLeft: () => (
+        //                 <HeaderItem onPress={() => nav.goBack()}>
+        //                     Cancel
+        //                 </HeaderItem>
+        //             ),
+        //             headerRight: () => (
+        //                 <HeaderItem onPress={() => {}}>Create</HeaderItem>
+        //             ),
+        //         }}
+        //     />
+        <View
+            style={{
+                backgroundColor: '#000',
 
-                    alignItems: 'center',
-                    flex: 1,
+                alignItems: 'center',
+                flex: 1,
+            }}
+        >
+            <LiveMatchCupControls onFlip={flipCups} />
+            <GestureHandlerRootView
+                style={{
+                    backgroundColor: 'none',
                 }}
             >
-                <LiveMatchCupControls onFlip={flipCups} />
-                <GestureHandlerRootView
+                <Text
                     style={{
+                        color: theme.color.text.secondary,
+                        fontSize: 13,
+                        textAlign: 'center',
+
+                        marginTop: 16,
+                        marginBottom: 32,
+                    }}
+                >
+                    Tap a cup to remove it
+                </Text>
+                <View
+                    style={{
+                        gap: 64,
+                        transform: [{ rotateX: isFlipped ? '180deg' : '0deg' }],
                         backgroundColor: 'none',
                     }}
                 >
-                    <Text
-                        style={{
-                            color: theme.color.text.secondary,
-                            fontSize: 13,
-                            textAlign: 'center',
-
-                            marginTop: 16,
-                            marginBottom: 32,
-                        }}
-                    >
-                        Tap a cup to remove it
-                    </Text>
-                    <View
-                        style={{
-                            gap: 64,
-                            transform: [
-                                { rotateX: isFlipped ? '180deg' : '0deg' },
-                            ],
-                            backgroundColor: 'none',
-                        }}
-                    >
-                        <CupGrid
-                            color={theme.color.team.red}
-                            width={300}
-                            formation={redCups}
-                            onCupTap={(cup) =>
-                                setRedCups({
-                                    ...redCups,
-                                    cups: redCups.cups.filter(
-                                        (i) => !(i.x === cup.x && i.y === cup.y)
-                                    ),
+                    <CupGrid
+                        color={theme.color.team.red}
+                        width={300}
+                        formation={redCups}
+                        onCupTap={
+                            (cup) =>
+                                nav.navigate('assignCupHitModal', {
+                                    pageIdx: 0,
                                 })
-                            }
-                        />
-                        <CupGrid
-                            color={theme.color.team.blue}
-                            width={300}
-                            formation={blueCups}
-                            onCupTap={(cup) =>
-                                setBlueCups({
-                                    ...blueCups,
-                                    cups: blueCups.cups.filter(
-                                        (i) => !(i.x === cup.x && i.y === cup.y)
-                                    ),
-                                })
-                            }
-                        />
-                    </View>
-                </GestureHandlerRootView>
-            </View>
-        </>
+                            // setRedCups({
+                            //     ...redCups,
+                            //     cups: redCups.cups.filter(
+                            //         (i) => !(i.x === cup.x && i.y === cup.y)
+                            //     ),
+                            // })
+                        }
+                    />
+                    <CupGrid
+                        color={theme.color.team.blue}
+                        width={300}
+                        formation={blueCups}
+                        onCupTap={(cup) =>
+                            setBlueCups({
+                                ...blueCups,
+                                cups: blueCups.cups.filter(
+                                    (i) => !(i.x === cup.x && i.y === cup.y)
+                                ),
+                            })
+                        }
+                    />
+                </View>
+            </GestureHandlerRootView>
+        </View>
+        // </>
     );
 }

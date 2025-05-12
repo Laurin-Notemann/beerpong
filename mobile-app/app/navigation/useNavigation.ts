@@ -33,6 +33,7 @@ export type RootStackParamList = {
     experimentalFeatures: undefined;
 
     assignPointsToPlayerModal: { pageIdx: number };
+    assignCupHitModal: { pageIdx: number };
     editMatchPoints: { pageIdx: number };
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;

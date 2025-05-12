@@ -19,6 +19,7 @@ import {
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import Cups from '@/app/startLiveMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import NewMatchAssignTeams, {
@@ -32,7 +33,9 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 const { width } = Dimensions.get('window');
 
-export default function Screen() {
+export default function NewMatchScreen() {
+    const [cupsPage, setCupsPage] = useState(false);
+
     const scrollX = useSharedValue(0);
 
     // float between 0 and 1
@@ -242,6 +245,8 @@ export default function Screen() {
                             players={profiles}
                             setTeam={matchDraft.actions.setPlayerTeam}
                         />
+                    ) : cupsPage ? (
+                        <Cups />
                     ) : (
                         <CreateMatchAssignPoints
                             isPending={createMatchMutation.isPending}

@@ -53,6 +53,7 @@ function Everything() {
                 name="assignPointsToPlayerModal"
                 options={modalStyles}
             />
+            <Stack.Screen name="assignCupHitModal" options={modalStyles} />
             <Stack.Screen name="editMatchPoints" options={modalStyles} />
         </Stack>
     );
