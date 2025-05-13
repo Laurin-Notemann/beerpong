@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useCreateGroupMutation } from '@/api/calls/groupHooks';
 import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 import { useNavigation } from './navigation/useNavigation';
 
@@ -16,9 +17,18 @@ export default function Page() {
     const createGroupMutation = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
 
+    const [isPresetSelection, setIsPresetSelection] = useState(false);
+
+    const { supportAdditionalGames } = useLocalSettings();
+
     async function onSubmit(group: { name: string }) {
         try {
             addName(group.name);
+
+            if (supportAdditionalGames) {
+                setIsPresetSelection(true);
+                return;
+            }
 
             const data = await createGroupMutation.mutateAsync({
                 name: group.name,
@@ -37,6 +47,7 @@ export default function Page() {
             showErrorToast('Failed to create group.');
         }
     }
+    if (isPresetSelection) return null;
     return (
         <CreateGroupSetName
             onSubmit={onSubmit}

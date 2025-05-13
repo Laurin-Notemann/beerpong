@@ -13,6 +13,7 @@ import { theme } from '@/theme';
 
 import Button from './Button';
 import IconHead from './IconHead';
+import { MatchesListItem } from './MatchesListItem';
 import MatchVsHeader from './MatchVsHeader';
 
 export interface MatchesListProps {
@@ -39,53 +40,12 @@ export default function MatchesList({ matches, refresh }: MatchesListProps) {
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item: day, index: listIndex }) => (
                 <MenuSection key={listIndex} title={day.title}>
-                    {day.matches.map((item, index) => (
-                        <TouchableHighlight
-                            underlayColor={theme.panel.light.active}
-                            key={index}
-                            style={{
-                                backgroundColor: theme.panel.light.bg,
-                                gap: 4,
-                                paddingHorizontal: 16,
-                                paddingVertical: 7,
-
-                                borderTopColor: theme.panel.light.active,
-                                borderTopWidth: 0.5,
-                            }}
-                            onPress={() =>
-                                nav.navigate('match', { id: item.id })
-                            }
-                        >
-                            <>
-                                <MatchVsHeader match={item} />
-                                <View style={{ flexDirection: 'row', gap: 16 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: 15,
-                                            color: theme.color.text.tertiary,
-                                        }}
-                                    >
-                                        {env.format.date.matchHour(
-                                            dayjs(item.date)
-                                        )}
-                                    </Text>
-                                    <Text
-                                        style={{
-                                            fontSize: 15,
-                                            color: theme.color.text.tertiary,
-                                        }}
-                                    >
-                                        {item.blueTeam
-                                            .map((i) => i.name)
-                                            .join(', ') +
-                                            ' - ' +
-                                            item.redTeam
-                                                .map((i) => i.name)
-                                                .join(', ')}
-                                    </Text>
-                                </View>
-                            </>
-                        </TouchableHighlight>
+                    {day.matches.map((match, idx) => (
+                        <MatchesListItem
+                            key={idx}
+                            match={match}
+                            onPress={() => nav.navigate('match', match)}
+                        />
                     ))}
                 </MenuSection>
             )}

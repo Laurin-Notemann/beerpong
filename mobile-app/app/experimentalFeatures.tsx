@@ -10,7 +10,14 @@ import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { navStyles } from './navigation/navStyles';
 
 export default function Page() {
-    const { liveMatches, toggleLiveMatches } = useLocalSettings();
+    const {
+        tutorials,
+        toggleTutorials,
+        beerpongProMode,
+        toggleBeerpongProMode,
+        supportAdditionalGames,
+        toggleSupportAdditionalGames,
+    } = useLocalSettings();
 
     return (
         <>
@@ -34,11 +41,29 @@ export default function Page() {
             >
                 <MenuSection title="Experimental Features">
                     <MenuItem
-                        title="Live Matches"
+                        title="Beerpong Pro Mode"
                         tailContent={
                             <Switch
-                                value={liveMatches}
-                                onChange={toggleLiveMatches}
+                                value={beerpongProMode}
+                                onChange={toggleBeerpongProMode}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Support Additional Games"
+                        tailContent={
+                            <Switch
+                                value={supportAdditionalGames}
+                                onChange={toggleSupportAdditionalGames}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Tutorials"
+                        tailContent={
+                            <Switch
+                                value={tutorials}
+                                onChange={toggleTutorials}
                             />
                         }
                     />

@@ -9,20 +9,29 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
+import { useTutorials } from '@/zustand/tutorialStore';
+
+import { TutorialBubble } from '../TutorialBubble';
 
 export type TeamId = 'red' | 'blue' | null;
 
 function PlayerItem({
     player,
     onSelectTeam,
+
+    hasTutorial = false,
 }: {
     player: Player;
     isRedTeam?: boolean;
     isBlueTeam?: boolean;
     onSelectTeam: (team: TeamId) => void;
+
+    hasTutorial?: boolean;
 }) {
     const isRedTeam = player.team === 'red';
     const isBlueTeam = player.team === 'blue';
+
+    const { setHasTappedToAssignPlayers } = useTutorials();
 
     return (
         <TouchableHighlight
@@ -31,10 +40,13 @@ function PlayerItem({
                 if (player.team === 'blue') onSelectTeam('red');
                 if (player.team === 'red') onSelectTeam(null);
 
+                setHasTappedToAssignPlayers();
+
                 triggerHapticBump('selection');
             }}
             underlayColor={theme.panel.light.active}
             style={{
+                position: 'relative',
                 flexDirection: 'row',
                 alignItems: 'center',
 
@@ -97,6 +109,9 @@ function PlayerItem({
                         style={{ opacity: isRedTeam ? 1 : 0.7 }}
                     />
                 </Pressable>
+                {hasTutorial && (
+                    <TutorialBubble text="Try double-tapping a players name!" />
+                )}
             </>
         </TouchableHighlight>
     );
@@ -113,6 +128,8 @@ export default function NewMatchAssignTeams({
     setTeam,
 }: NewMatchAssignTeamsProps) {
     const nav = useNavigation();
+
+    const { hasTappedToAssignPlayers } = useTutorials();
 
     return (
         <ScrollView
@@ -139,6 +156,7 @@ export default function NewMatchAssignTeams({
             <MenuSection>
                 {players.map((i, idx) => (
                     <PlayerItem
+                        hasTutorial={!hasTappedToAssignPlayers && idx === 1}
                         key={idx}
                         player={i}
                         onSelectTeam={(team) => setTeam(i.id, team)}
