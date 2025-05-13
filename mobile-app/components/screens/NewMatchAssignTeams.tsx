@@ -9,6 +9,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 import { TutorialBubble } from '../TutorialBubble';
@@ -131,6 +132,8 @@ export default function NewMatchAssignTeams({
 
     const { hasTappedToAssignPlayers } = useTutorials();
 
+    const experiments = useLocalSettings();
+
     return (
         <ScrollView
             style={{
@@ -156,7 +159,11 @@ export default function NewMatchAssignTeams({
             <MenuSection>
                 {players.map((i, idx) => (
                     <PlayerItem
-                        hasTutorial={!hasTappedToAssignPlayers && idx === 1}
+                        hasTutorial={
+                            experiments.tutorials &&
+                            !hasTappedToAssignPlayers &&
+                            idx === 1
+                        }
                         key={idx}
                         player={i}
                         onSelectTeam={(team) => setTeam(i.id, team)}

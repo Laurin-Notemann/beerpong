@@ -79,7 +79,9 @@ export default function Screen() {
                         onCupTap={
                             (cup) =>
                                 nav.navigate('assignCupHitModal', {
-                                    pageIdx: 0,
+                                    x: cup.x,
+                                    y: cup.y,
+                                    color: theme.color.team.red,
                                 })
                             // setRedCups({
                             //     ...redCups,
@@ -93,13 +95,19 @@ export default function Screen() {
                         color={theme.color.team.blue}
                         width={300}
                         formation={blueCups}
-                        onCupTap={(cup) =>
-                            setBlueCups({
-                                ...blueCups,
-                                cups: blueCups.cups.filter(
-                                    (i) => !(i.x === cup.x && i.y === cup.y)
-                                ),
-                            })
+                        onCupTap={
+                            (cup) =>
+                                nav.navigate('assignCupHitModal', {
+                                    x: cup.x,
+                                    y: cup.y,
+                                    color: theme.color.team.blue,
+                                })
+                            // setBlueCups({
+                            //     ...blueCups,
+                            //     cups: blueCups.cups.filter(
+                            //         (i) => !(i.x === cup.x && i.y === cup.y)
+                            //     ),
+                            // })
                         }
                     />
                 </View>

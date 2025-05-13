@@ -8,19 +8,23 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import CupGrid from '@/components/CupGrid';
-import { Formation } from '@/components/CupGrid/Formation';
+import { flipFormation, Formation } from '@/components/CupGrid/Formation';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
 import { theme } from '@/theme';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
-export default function Page() {
-    const isBlue = false;
+import { useNavigation } from './navigation/useNavigation';
 
-    const { pageIdx: initialPageIdx } = useLocalSearchParams<{
-        pageIdx: string;
+export default function Page() {
+    const cup = useLocalSearchParams<{
+        x: string;
+        y: string;
+        color: string;
     }>();
+
+    const isBlue = cup.color === '#18A0FB';
 
     const matchDraft = useMatchDraftStore();
 
@@ -79,12 +83,26 @@ export default function Page() {
     );
     const [move, setMove] = useState<string | null>(null);
 
+    const shape = isBlue
+        ? flipFormation(Formation.Pyramid_10)
+        : Formation.Pyramid_10;
+
     const formation = {
-        ...Formation.Pyramid_10,
-        cups: Formation.Pyramid_10.cups.map((i) =>
-            i.x === 0 && i.y === 0 ? { ...i } : { ...i, disabled: true }
+        ...shape,
+        cups: shape.cups.map((i) =>
+            i.x === parseInt(cup.x) && i.y === parseInt(cup.y)
+                ? { ...i }
+                : { ...i, disabled: true }
         ),
     };
+
+    const nav = useNavigation();
+
+    function onSelectMove(moveId: string) {
+        setMove(moveId);
+
+        nav.goBack();
+    }
 
     return (
         <View
@@ -153,7 +171,7 @@ export default function Page() {
                                 value: i.id!,
                                 title: i.name!,
                             }))}
-                        onChange={setMove}
+                        onChange={onSelectMove}
                         value={move}
                     />
                 </>
@@ -161,8 +179,8 @@ export default function Page() {
         </View>
     );
 }
-// TODO: actually highlight clicked cup, keep formation in matchDraft
-// TODO: overflow behaviour
+// TODO: keep formation in matchDraft, show removed cups in formation
+// TODO: overflow behaviour in modal
 
 // TODO: "Create" button doesn't make sense for cup mode
 

@@ -25,7 +25,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             beerpongProMode: false,
             rulesTab: false,
             supportAdditionalGames: false,
-            tutorials: true,
+            tutorials: false,
 
             actions: {
                 toggleLiveMatches: () => {
