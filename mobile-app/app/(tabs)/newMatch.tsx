@@ -29,11 +29,14 @@ import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 const { width } = Dimensions.get('window');
 
 export default function NewMatchScreen() {
+    const { beerpongProMode } = useLocalSettings();
+
     const [cupsPage, setCupsPage] = useState(false);
 
     const scrollX = useSharedValue(0);
@@ -238,35 +241,42 @@ export default function NewMatchScreen() {
                 loop={false}
                 width={width}
                 enabled={!(swiperPage === 0 && !hasValidTeams)}
-                data={[null, null]}
-                renderItem={(item) =>
-                    item.index === 0 ? (
-                        <NewMatchAssignTeams
-                            players={profiles}
-                            setTeam={matchDraft.actions.setPlayerTeam}
-                        />
-                    ) : cupsPage ? (
-                        <Cups />
-                    ) : (
-                        <CreateMatchAssignPoints
-                            isPending={createMatchMutation.isPending}
-                            players={teamMembers}
-                            setMoveCount={matchDraft.actions.setMoveCount}
-                            onSubmit={onCreateMatch}
-                            onCancel={() => {
-                                matchDraft.actions.clear();
-                                nav.goBack();
-                            }}
-                            onPlayerPress={(player) =>
-                                nav.navigate('assignPointsToPlayerModal', {
-                                    pageIdx: teamMembers.findIndex(
-                                        (i) => i.id === player.id
-                                    ),
-                                })
-                            }
-                        />
-                    )
-                }
+                data={beerpongProMode ? [null, null, null] : [null, null]}
+                renderItem={(item) => {
+                    if (item.index === 0) {
+                        return (
+                            <NewMatchAssignTeams
+                                players={profiles}
+                                setTeam={matchDraft.actions.setPlayerTeam}
+                            />
+                        );
+                    }
+                    if (item.index === 1) {
+                        return (
+                            <CreateMatchAssignPoints
+                                isPending={createMatchMutation.isPending}
+                                players={teamMembers}
+                                setMoveCount={matchDraft.actions.setMoveCount}
+                                onSubmit={onCreateMatch}
+                                onCancel={() => {
+                                    matchDraft.actions.clear();
+                                    nav.goBack();
+                                }}
+                                onPlayerPress={(player) =>
+                                    nav.navigate('assignPointsToPlayerModal', {
+                                        pageIdx: teamMembers.findIndex(
+                                            (i) => i.id === player.id
+                                        ),
+                                    })
+                                }
+                            />
+                        );
+                    }
+                    if (item.index === 2) {
+                        return <Cups />;
+                    }
+                    throw new Error('Invalid swiper index');
+                }}
             />
         </GestureHandlerRootView>
     );
