@@ -1,5 +1,6 @@
 /* eslint @typescript-eslint/explicit-function-return-type: ["error"] */
 import { Components } from '@/openapi/openapi';
+import { ConsoleLogger } from '@/utils/logging';
 
 import { Match, PerformedMove, TeamMember } from '../utils/matchDtoToMatch';
 
@@ -86,7 +87,7 @@ export class TeamMemberImpl {
     public team!: 'red' | 'blue';
 
     public get name(): string {
-        return this.player!.profile!.name;
+        return this.player?.profile?.name;
     }
     // TODO: implement this
     public get change(): number {
@@ -126,7 +127,7 @@ export class TeamMemberImpl {
     }
 
     public get avatarUrl(): string | null {
-        return this.player.profile.avatarUrl;
+        return this.player?.profile?.avatarUrl;
     }
 
     public setTeamColor(color: 'red' | 'blue'): void {
@@ -282,9 +283,16 @@ export class MatchImpl {
             team.setMembers(members.map((i) => new TeamMemberImpl(i)));
 
             for (const member of team.members!) {
-                member.setPlayer(
-                    players.find((i) => i.id === member.playerId)!
-                );
+                const player = players.find((i) => i.id === member.playerId);
+
+                if (!player) {
+                    // this has been observed in the wild: https://sackverein.sentry.io/issues/41383161/?project=4508333445152848&query=is%3Aunresolved%20issue.priority%3A%5Bhigh%2C%20medium%5D&referrer=issue-stream&stream_index=0
+                    ConsoleLogger.error(
+                        `MatchImpl failed to resolve profile with id "$${member.playerId}" for match`,
+                        JSON.stringify({ _data, _players }, null, 2)
+                    );
+                }
+                if (player) member.setPlayer(player);
 
                 member.setMoves(
                     matchMoves.filter((i) => i.teamMemberId === member.id)
