@@ -138,7 +138,7 @@ export default function PlayerScreen({
                         </>
                     }
                     matches={matches}
-                    refresh={{ refreshing: false }}
+                    refresh={refresh}
                     forPlayer={{ id }}
                 />
             )}
