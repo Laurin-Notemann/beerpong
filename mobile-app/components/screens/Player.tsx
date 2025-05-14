@@ -97,34 +97,79 @@ export default function PlayerScreen({
                     ),
                 }}
             />
-            <ScrollView
-                style={{
-                    flex: 1,
-
-                    backgroundColor: theme.color.bg,
-                }}
-                contentContainerStyle={{
-                    alignItems: 'center',
-
-                    paddingBottom: 32,
-                }}
-                refreshControl={<RefreshControl {...refresh} />}
-            >
-                <PlayerPageHeadSection
-                    avatarUrl={avatarUrl}
-                    placement={placement}
-                    name={name}
-                    elo={elo}
-                    matchesWon={matchesWon}
-                    points={points}
-                    cups={cups}
-                    isUnranked={isUnranked}
-                    editable={editable}
-                    averagePointsPerMatch={averagePointsPerMatch}
-                    onUploadAvatarPress={onUploadAvatarPress}
+            {!editable && (
+                <MatchesList
+                    ListHeaderComponent={
+                        <>
+                            <PlayerPageHeadSection
+                                avatarUrl={avatarUrl}
+                                placement={placement}
+                                name={name}
+                                elo={elo}
+                                matchesWon={matchesWon}
+                                points={points}
+                                cups={cups}
+                                isUnranked={isUnranked}
+                                editable={editable}
+                                averagePointsPerMatch={averagePointsPerMatch}
+                                onUploadAvatarPress={onUploadAvatarPress}
+                                matches={matches}
+                            />
+                            <View
+                                style={{
+                                    width: '100%',
+                                    alignItems: 'stretch',
+                                }}
+                            >
+                                {env.isDev && (
+                                    <MenuSection>
+                                        <MenuItem
+                                            title="Past Seasons"
+                                            headIcon="pencil-outline"
+                                            tailContent={pastSeasons}
+                                            tailIconType="next"
+                                            onPress={() =>
+                                                nav.navigate('pastSeasons')
+                                            }
+                                        />
+                                    </MenuSection>
+                                )}
+                            </View>
+                        </>
+                    }
                     matches={matches}
+                    refresh={{ refreshing: false }}
+                    forPlayer={{ id }}
                 />
-                {editable && (
+            )}
+            {editable && (
+                <ScrollView
+                    style={{
+                        flex: 1,
+
+                        backgroundColor: theme.color.bg,
+                    }}
+                    contentContainerStyle={{
+                        alignItems: 'center',
+
+                        paddingBottom: 32,
+                    }}
+                    refreshControl={<RefreshControl {...refresh} />}
+                >
+                    <PlayerPageHeadSection
+                        avatarUrl={avatarUrl}
+                        placement={placement}
+                        name={name}
+                        elo={elo}
+                        matchesWon={matchesWon}
+                        points={points}
+                        cups={cups}
+                        isUnranked={isUnranked}
+                        editable={editable}
+                        averagePointsPerMatch={averagePointsPerMatch}
+                        onUploadAvatarPress={onUploadAvatarPress}
+                        matches={matches}
+                    />
                     <View
                         style={{
                             width: '100%',
@@ -154,38 +199,8 @@ export default function PlayerScreen({
                             />
                         </MenuSection>
                     </View>
-                )}
-
-                {!editable && (
-                    <>
-                        <View
-                            style={{
-                                width: '100%',
-                                alignItems: 'stretch',
-                                paddingHorizontal: 16,
-                            }}
-                        >
-                            {env.isDev && (
-                                <MenuSection>
-                                    <MenuItem
-                                        title="Past Seasons"
-                                        headIcon="pencil-outline"
-                                        tailContent={pastSeasons}
-                                        tailIconType="next"
-                                        onPress={() =>
-                                            nav.navigate('pastSeasons')
-                                        }
-                                    />
-                                </MenuSection>
-                            )}
-                        </View>
-                        <MatchesList
-                            matches={matches}
-                            refresh={{ refreshing: false }}
-                        />
-                    </>
-                )}
-            </ScrollView>
+                </ScrollView>
+            )}
         </GestureHandlerRootView>
     );
 }
