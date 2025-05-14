@@ -39,7 +39,7 @@ public class RuleMoveController {
         if (move != null) {
             return ResponseEnvelope.ok(move);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         }
     }
 
@@ -55,11 +55,11 @@ public class RuleMoveController {
         var move = moveService.getById(ruleMoveId);
 
         if (move == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.RULE_MOVE_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_NOT_FOUND);
         }
 
         if (!moveService.validateGroupAndSeason(groupId, seasonId, move)) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
         }
 
         return ResponseEnvelope.ok(moveService.updateRuleMove(groupId, move, dto));
@@ -77,17 +77,17 @@ public class RuleMoveController {
         var move = moveService.getById(ruleMoveId);
 
         if (move == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.RULE_MOVE_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_NOT_FOUND);
         }
 
         if (moveService.validateGroupAndSeason(groupId, seasonId, move)) {
             if (moveService.delete(groupId, move)) {
                 return ResponseEnvelope.ok("OK");
             } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.RULE_MOVE_NOT_FOUND);
+                return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_NOT_FOUND);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
         }
     }
 

@@ -27,7 +27,7 @@ public class AssetController {
     /*@DeleteMapping("{id}")
     public ResponseEntity<ResponseEnvelope<Object>> deleteAsset(@PathVariable String id) {
         if (!assetService.assetExists(id)) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.ASSET_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
         }
 
         assetService.deleteAsset(id);
@@ -40,7 +40,7 @@ public class AssetController {
         var assetMetadata = assetService.getAssetMetadata(id);
 
         if (assetMetadata == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.ASSET_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
         }
 
         return ResponseEnvelope.ok(assetMetadata);
@@ -52,7 +52,7 @@ public class AssetController {
         byte[] asset = assetService.fetchAsset(id);
 
         if (assetMetadata == null || asset == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.ASSET_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
         }
 
         String cacheControl = "public, max-age=31536000, immutable";

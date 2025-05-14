@@ -25,13 +25,13 @@ public class ProfileAssetController {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
         var profile = profileService.getProfileById(profileId);
 
         if (profile == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
         }
 
         var dto = profileService.storeProfilePicture(profile, content, request.getContentType());

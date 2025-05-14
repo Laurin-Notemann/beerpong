@@ -127,11 +127,11 @@ public class SeasonService {
 
     public <T> ResponseEntity<ResponseEnvelope<T>> validateSeason(Class<T> dtoClass, NullablePair<Group, Season> pair) {
         if (pair.getFirst() == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         } else if (pair.getSecond() == null) {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
         return null;
@@ -145,7 +145,7 @@ public class SeasonService {
         }
 
         if (pair.getSecond().getEndDate() != null) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_ALREADY_ENDED);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
         return null;

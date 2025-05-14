@@ -36,7 +36,7 @@ public class ProfileController {
 
             return ResponseEnvelope.ok(dto);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
@@ -47,7 +47,7 @@ public class ProfileController {
         if (group != null) {
             return ResponseEnvelope.ok(profileService.listAllProfilesOfGroup(groupId));
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
@@ -61,10 +61,10 @@ public class ProfileController {
             if (profile != null) {
                 return ResponseEnvelope.ok(profile);
             } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
+                return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
@@ -80,10 +80,10 @@ public class ProfileController {
 
                 return ResponseEnvelope.ok(updatedProfile);
             } else {
-                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
+                return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
@@ -96,10 +96,10 @@ public class ProfileController {
 //            if (profileService.deleteProfile(id)) {
 //                return ResponseEnvelope.ok("OK");
 //            } else {
-//                return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.PROFILE_NOT_FOUND);
+//                return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
 //            }
 //        } else {
-//            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+//            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
 //        }
 //    }
 }

@@ -29,6 +29,10 @@ public class ResponseEnvelope<T> {
         return new ResponseEntity<>(envelope, HttpStatus.NO_CONTENT);
     }
 
+    public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(ErrorCodes code) {
+        return notOk(code.getHttpStatus(), code.toDetails());
+    }
+
     public static <T> ResponseEntity<ResponseEnvelope<T>> notOk(HttpStatus status, ErrorCodes code) {
         return notOk(status, code.toDetails());
     }

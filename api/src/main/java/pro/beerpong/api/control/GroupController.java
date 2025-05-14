@@ -13,7 +13,6 @@ import pro.beerpong.api.service.GroupService;
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
-
     private final GroupService groupService;
 
     @Autowired
@@ -23,14 +22,21 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto) {
-        GroupDto savedGroup = groupService.createGroup(groupCreateDto);
-        return ResponseEnvelope.ok(savedGroup);
+        if (groupCreateDto.invalidName()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_NAME);
+        }
+
+        if (groupCreateDto.invalidProfileName()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+        }
+
+        return ResponseEnvelope.ok(groupService.createGroup(groupCreateDto));
     }
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<GroupDto>> findGroupByInviteCode(@RequestParam String inviteCode) {
         if (inviteCode == null || inviteCode.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(HttpStatus.BAD_REQUEST, ErrorCodes.GROUP_INVITE_CODE_NOT_PROVIDED);
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_INVITE_CODE);
         }
 
         var group = groupService.findGroupsByInviteCode(inviteCode);
@@ -38,28 +44,40 @@ public class GroupController {
         if (group != null) {
             return ResponseEnvelope.ok(group);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_INVITE_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_INVITE_NOT_FOUND);
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<GroupDto>> getGroupById(@PathVariable String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
         GroupDto group = groupService.getGroupById(id);
         if (group != null) {
             return ResponseEnvelope.ok(group);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseEnvelope<GroupDto>> updateGroup(
-            @PathVariable String id, @RequestBody GroupCreateDto groupCreateDto) {
+    public ResponseEntity<ResponseEnvelope<GroupDto>> updateGroup(@PathVariable String id,
+                                                                  @RequestBody GroupCreateDto groupCreateDto) {
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (groupCreateDto.invalidName()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_NAME);
+        }
+
         GroupDto updatedGroup = groupService.updateGroup(id, groupCreateDto);
         if (updatedGroup != null) {
             return ResponseEnvelope.ok(updatedGroup);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
     }
 }

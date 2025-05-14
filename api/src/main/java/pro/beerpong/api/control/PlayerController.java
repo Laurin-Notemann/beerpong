@@ -25,23 +25,43 @@ public class PlayerController {
     public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId,
                                                                         @PathVariable String seasonId,
                                                                         @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+        if (groupId == null || groupId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (seasonId == null || seasonId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
+        }
+
         var players = playerService.getBySeasonId(seasonId, showInactive);
 
         if (players != null) {
             return ResponseEnvelope.ok(players);
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<String>> deletePlayer(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        if (groupId == null || groupId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (seasonId == null || seasonId.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_PLAYER_ID);
+        }
+
         var error = playerService.deletePlayer(id, seasonId, groupId);
 
         if (error == null) {
             return ResponseEnvelope.ok("OK");
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.NOT_FOUND, error);
+            return ResponseEnvelope.notOk(error);
         }
     }
 }
