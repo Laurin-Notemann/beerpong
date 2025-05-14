@@ -11,6 +11,7 @@ public enum ErrorCodes {
     /* GROUPS */
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "groupNotFound", "The requested group could not be found!"),
     GROUP_INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "groupInviteNotFound", "No group with the provided invite code could be found!"),
+    GROUP_INVITE_CODE_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "groupInviteCodeNotProvided", "The invite code needs to be provided!"),
     INVALID_GROUP_NAME(HttpStatus.BAD_REQUEST, "invalidGroupName", "Group name must be non-null, non-empty and between 2 and 50 characters!"),
     INVALID_GROUP_PROFILE_NAMES(HttpStatus.BAD_REQUEST, "invalidGroupProfileNames", "Group profileNames must be non-null and non-empty!"),
     INVALID_GROUP_INVITE_CODE(HttpStatus.BAD_REQUEST, "invalidGroupInviteCode", "Group invite code must be non-null and non-empty!"),
@@ -37,6 +38,7 @@ public enum ErrorCodes {
     /* PLAYERS */
     PLAYER_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "playerNotFound", "The requested player could not be found!"),
+    PLAYER_ALREADY_DELETED(HttpStatus.FORBIDDEN, "playerAlreadyDeleted", "This player has been deleted!"),
     INVALID_PLAYER_ID(HttpStatus.BAD_REQUEST, "invalidPlayerId", "Player id must be non-null and non-empty!"),
     /* PROFILES */
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "profileNotFound", "The requested profile could not be found!"),

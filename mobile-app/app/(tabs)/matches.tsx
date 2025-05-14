@@ -16,8 +16,6 @@ export default function Screen() {
     return (
         <View
             style={{
-                paddingHorizontal: 16,
-
                 backgroundColor: theme.color.bg,
 
                 flex: 1,

@@ -25,6 +25,8 @@ export const theme = {
 
             positive: '#1BC097',
             negative: '#EE4A58',
+
+            branding: '#2C6BED',
         },
         bg: black,
         topNav: black,

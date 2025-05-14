@@ -23,13 +23,22 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                 backgroundColor: '#1B1B1B',
             }}
         >
-            <Text variant="h3" color="primary" bold>
-                Welcome to Beerpong Pro
+            <Text
+                variant="h3"
+                color="primary"
+                bold
+                style={{ textAlign: 'center', marginBottom: 96 }}
+            >
+                Welcome to{' '}
+                <Text variant="h3" color="branding" bold>
+                    Versus
+                </Text>
+                , the beerpong leaderboard app!
             </Text>
-            <Text variant="body1" color="secondary">
+            {/* <Text variant="body1" color="secondary">
                 - sick leaderboard{'\n'}- intuitively assign points {'\n'}- view
                 sick stats {'\n'}- Completely free, forever
-            </Text>
+            </Text> */}
             <View
                 style={{
                     flexDirection: 'row',

@@ -55,6 +55,7 @@ export interface AvatarProps {
 
     canUpload?: boolean;
     placement?: number;
+    isUnranked?: boolean;
 
     onPress?: () => void;
 }
@@ -67,6 +68,7 @@ export default function Avatar({
     borderColor,
     canUpload = false,
     placement,
+    isUnranked = false,
 
     onPress,
 }: AvatarProps) {
@@ -156,7 +158,7 @@ export default function Avatar({
                             fontWeight: 600,
                         }}
                     >
-                        {formatPlacement(placement)}
+                        {isUnranked ? '--' : formatPlacement(placement)}
                     </Text>
                 </Badge>
             )}

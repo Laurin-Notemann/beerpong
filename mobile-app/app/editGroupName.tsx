@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 import { useGroupQuery, useUpdateGroupMutation } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -19,11 +20,11 @@ export default function Page() {
 
     const [value, setValue] = useState(groupQuery?.data?.data?.name || '');
 
-    const { mutateAsync } = useUpdateGroupMutation();
+    const updateGroupMutation = useUpdateGroupMutation();
 
     async function onSubmit() {
         try {
-            await mutateAsync({
+            await updateGroupMutation.mutateAsync({
                 id,
                 name: value,
             });
@@ -40,11 +41,18 @@ export default function Page() {
                 options={{
                     headerRight: () => (
                         <HeaderItem
-                            disabled={value.length < 1}
+                            disabled={
+                                value.length < 1 ||
+                                updateGroupMutation.isPending
+                            }
                             noMargin
                             onPress={onSubmit}
                         >
-                            Done
+                            {updateGroupMutation.isPending ? (
+                                <ActivityIndicator />
+                            ) : (
+                                'Done'
+                            )}
                         </HeaderItem>
                     ),
 

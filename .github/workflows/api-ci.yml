@@ -1,6 +1,6 @@
 name: Api CI
 
-on: 
+on:
   push:
     paths:
       - "api/**"
@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-tests: 
+  run-tests:
     name: Run Api tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15
@@ -32,9 +32,9 @@ jobs:
       - name: Set up JDK 21 corretto
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'corretto'
-          cache: 'maven'
+          java-version: "21"
+          distribution: "corretto"
+          cache: "maven"
 
       - name: Cache Maven packages
         uses: actions/cache@v4

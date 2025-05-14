@@ -4,6 +4,7 @@ import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 
 import Select from '../Select';
 import Text from '../Text';
+import { useScrollLockIfNotOverflowing } from '../useScrollLockIfNotOverflowing';
 
 export default function FinishMovePage({
     finisher,
@@ -19,6 +20,8 @@ export default function FinishMovePage({
                     alignItems: 'center',
 
                     flex: 1,
+
+                    paddingTop: 32,
                 }}
             >
                 <Text color="primary" variant="h3">
@@ -27,6 +30,7 @@ export default function FinishMovePage({
                         : 'Error'}
                 </Text>
                 <ScrollView
+                    {...useScrollLockIfNotOverflowing()}
                     style={{
                         width: '100%',
                     }}

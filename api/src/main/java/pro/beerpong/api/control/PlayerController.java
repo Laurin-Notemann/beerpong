@@ -22,7 +22,9 @@ public class PlayerController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId, @PathVariable String seasonId) {
+    public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId,
+                                                                        @PathVariable String seasonId,
+                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
         if (groupId == null || groupId.trim().isEmpty()) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
@@ -31,7 +33,7 @@ public class PlayerController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
         }
 
-        var players = playerService.getBySeasonId(seasonId);
+        var players = playerService.getBySeasonId(seasonId, showInactive);
 
         if (players != null) {
             return ResponseEnvelope.ok(players);

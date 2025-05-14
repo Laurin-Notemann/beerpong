@@ -89,6 +89,7 @@ declare namespace Components {
             id?: string;
             profile?: ProfileDto;
             season?: SeasonDto;
+            activeThisSeason?: boolean;
             statistics?: PlayerStatisticsDto;
         }
         export interface PlayerStatisticsDto {
@@ -523,10 +524,14 @@ declare namespace Paths {
         namespace Parameters {
             export type GroupId = string;
             export type SeasonId = string;
+            export type ShowInactive = boolean;
         }
         export interface PathParameters {
             groupId: Parameters.GroupId;
             seasonId: Parameters.SeasonId;
+        }
+        export interface QueryParameters {
+            showInactive?: Parameters.ShowInactive;
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListPlayerDto;
@@ -923,7 +928,9 @@ export interface OperationMethods {
      * getPlayers
      */
     'getPlayers'(
-        parameters?: Parameters<Paths.GetPlayers.PathParameters> | null,
+        parameters?: Parameters<
+            Paths.GetPlayers.QueryParameters & Paths.GetPlayers.PathParameters
+        > | null,
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetPlayers.Responses.$200>;
@@ -1224,7 +1231,10 @@ export interface PathsDictionary {
          * getPlayers
          */
         'get'(
-            parameters?: Parameters<Paths.GetPlayers.PathParameters> | null,
+            parameters?: Parameters<
+                Paths.GetPlayers.QueryParameters &
+                    Paths.GetPlayers.PathParameters
+            > | null,
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetPlayers.Responses.$200>;

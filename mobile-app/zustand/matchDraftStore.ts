@@ -15,9 +15,12 @@ interface TeamDraft {
 }
 
 interface MatchDraftStore {
+    hasBeenOnPageTwo: boolean;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
     actions: {
+        getHasBeenOnPageTwo: () => boolean;
+        setHasBeenOnPageTwo: () => void;
         clear: () => void;
         getPlayers: () => (PlayerDraft & { team: TeamId })[];
 
@@ -27,6 +30,7 @@ interface MatchDraftStore {
 }
 
 export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
+    hasBeenOnPageTwo: false,
     redTeam: {
         teamMembers: [],
     },
@@ -35,8 +39,17 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
     },
 
     actions: {
+        getHasBeenOnPageTwo: () => {
+            return get().hasBeenOnPageTwo;
+        },
+        setHasBeenOnPageTwo: () => {
+            set(() => ({
+                hasBeenOnPageTwo: true,
+            }));
+        },
         clear: () => {
             set(() => ({
+                hasBeenOnPageTwo: false,
                 redTeam: {
                     teamMembers: [],
                 },

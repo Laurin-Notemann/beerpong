@@ -7,6 +7,7 @@ import { theme } from '@/theme';
 import Avatar from '../Avatar';
 import Select from '../Select';
 import Text from '../Text';
+import { useScrollLockIfNotOverflowing } from '../useScrollLockIfNotOverflowing';
 
 export default function FinishScorerPage({
     finisher,
@@ -24,12 +25,15 @@ export default function FinishScorerPage({
                     alignItems: 'center',
 
                     flex: 1,
+
+                    paddingTop: 32,
                 }}
             >
                 <Text color="primary" variant="h3">
                     Who scored the final cup?
                 </Text>
                 <ScrollView
+                    {...useScrollLockIfNotOverflowing()}
                     style={{
                         width: '100%',
                     }}

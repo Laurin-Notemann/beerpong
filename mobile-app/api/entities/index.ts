@@ -106,6 +106,24 @@ export class TeamMemberImpl {
     public setMoves(moves: MatchMoveImpl[]): void {
         this.moves = moves;
     }
+    public setRuleMoves(ruleMoves: RuleMoveImpl[]): void {
+        this.moves = ruleMoves.map((i) => {
+            const existing = this.moves.find((j) => j.moveId === i.id);
+
+            if (existing) {
+                return existing;
+            }
+
+            const move = new MatchMoveImpl({
+                moveId: i.id,
+                value: 0,
+                teamMemberId: this.id,
+            });
+            move.setRuleMove(i);
+
+            return move;
+        });
+    }
 
     public get avatarUrl(): string | null {
         return this.player.profile.avatarUrl;
@@ -121,7 +139,10 @@ export class TeamMemberImpl {
         this.playerId = _data.playerId!;
     }
 
-    public get points(): number {
+    /**
+     * doesn't include points from team moves like finishes!
+     */
+    public get pointsScoredThemselves(): number {
         return (
             this.moves.reduce(
                 (sum, i) => sum + i.count * i.move!.pointsForScorer,
@@ -129,13 +150,17 @@ export class TeamMemberImpl {
             ) ?? 0
         );
     }
+    public get cups(): number {
+        return this.moves.reduce((sum, i) => sum + i.count, 0);
+    }
+
     public toJSON(): TeamMember {
         return {
             id: this.playerId,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
             name: this.name,
-            points: this.points,
+            points: this.pointsScoredThemselves,
             team: this.team,
             avatarUrl: this.avatarUrl,
         };
@@ -171,8 +196,8 @@ export class TeamImpl {
         this.members = members;
     }
 
-    public get points(): number | null {
-        return this.members.reduce((sum, i) => sum + (i.points ?? 0), 0) ?? 0;
+    public get cups(): number | null {
+        return this.members.reduce((sum, i) => sum + (i.cups ?? 0), 0) ?? 0;
     }
 
     constructor(_data: Components.Schemas.TeamDto) {
@@ -220,6 +245,8 @@ export class MatchImpl {
         );
     }
 
+    private ruleMoves: RuleMoveImpl[];
+
     constructor(
         _data: Components.Schemas.MatchDto,
         _players: Components.Schemas.PlayerDto[],
@@ -237,6 +264,8 @@ export class MatchImpl {
 
         const players = _players.map((i) => new PlayerImpl(i));
         const ruleMoves = _ruleMoves.map((i) => new RuleMoveImpl(i));
+
+        this.ruleMoves = ruleMoves;
 
         const matchMoves = _data.matchMoves!.map((i) => new MatchMoveImpl(i));
 
@@ -260,6 +289,7 @@ export class MatchImpl {
                 member.setMoves(
                     matchMoves.filter((i) => i.teamMemberId === member.id)
                 );
+                member.setRuleMoves(ruleMoves);
             }
         }
         for (const player of this._blueTeam.members) {
@@ -270,10 +300,10 @@ export class MatchImpl {
         }
     }
     public get redCups(): number {
-        return this._redTeam.points!;
+        return this._redTeam.cups!;
     }
     public get blueCups(): number {
-        return this._blueTeam.points!;
+        return this._blueTeam.cups!;
     }
 
     public get blueTeam(): TeamMemberImpl[] {
@@ -291,8 +321,42 @@ export class MatchImpl {
             blueCups: this.blueCups,
             redCups: this.redCups,
 
-            blueTeam: this.blueTeam.map((i) => i.toJSON()),
-            redTeam: this.redTeam.map((i) => i.toJSON()),
+            blueTeam: this.blueTeam.map((i) => {
+                const player = i.toJSON();
+
+                const teamMoves = this.blueTeam.reduce<(typeof i)['moves']>(
+                    (sum, j) => sum.concat(j.moves),
+                    []
+                );
+                const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
+                    const pointsForMove =
+                        this.ruleMoves.find((k) => k.id === j.moveId)
+                            ?.pointsForTeam ?? 0;
+
+                    return sum + pointsForMove * j.count;
+                }, 0);
+                player.points += pointsForTeamMoves;
+
+                return player;
+            }),
+            redTeam: this.redTeam.map((i) => {
+                const player = i.toJSON();
+
+                const teamMoves = this.redTeam.reduce<(typeof i)['moves']>(
+                    (sum, j) => sum.concat(j.moves),
+                    []
+                );
+                const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
+                    const pointsForMove =
+                        this.ruleMoves.find((k) => k.id === j.moveId)
+                            ?.pointsForTeam ?? 0;
+
+                    return sum + pointsForMove * j.count;
+                }, 0);
+                player.points += pointsForTeamMoves;
+
+                return player;
+            }),
 
             winnerTeamId: this.winnerTeam?.id ?? null,
         };

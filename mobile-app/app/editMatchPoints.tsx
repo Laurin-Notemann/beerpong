@@ -1,26 +1,25 @@
 import { useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
+import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal';
 import { ConsoleLogger } from '@/utils/logging';
-import { useMatchDraftStore } from '@/zustand/matchDraftStore';
+import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const { pageIdx: initialPageIdx } = useLocalSearchParams<{
         pageIdx: string;
+        match: string;
     }>();
 
     const nav = useNavigation();
 
     const [pageIdx, setPageIdx] = useState(parseInt(initialPageIdx));
-
-    const matchDraft = useMatchDraftStore();
 
     const { groupId, seasonId } = useGroup();
 
@@ -31,6 +30,8 @@ export default function Page() {
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
     const profiles = playersQuery.data?.data ?? [];
+
+    const matchDraft = useMatchEditDraftStore();
 
     const players = matchDraft.actions.getPlayers();
 
@@ -68,27 +69,25 @@ export default function Page() {
         };
     });
 
-    const match = {
-        blueCups: players
-            .filter((i) => i.team === 'blue')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
-        redCups: players
-            .filter((i) => i.team === 'red')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
-        redTeam: teamMembers.filter((i) => i.team === 'red'),
-        blueTeam: teamMembers.filter((i) => i.team === 'blue'),
-    };
-
     return (
         <AssignPointsToPlayerModal
             onClose={nav.goBack}
             pageIdx={pageIdx}
             setPageIdx={setPageIdx}
-            match={match}
+            match={{
+                blueCups: players
+                    .filter((i) => i.team === 'blue')
+                    .map((i) => i.moves)
+                    .flat()
+                    .reduce((sum, i) => sum + i.count, 0),
+                redCups: players
+                    .filter((i) => i.team === 'red')
+                    .map((i) => i.moves)
+                    .flat()
+                    .reduce((sum, i) => sum + i.count, 0),
+                redTeam: teamMembers.filter((i) => i.team === 'red'),
+                blueTeam: teamMembers.filter((i) => i.team === 'blue'),
+            }}
             isVisible={pageIdx != null}
             setMoveCount={matchDraft.actions.setMoveCount}
         />

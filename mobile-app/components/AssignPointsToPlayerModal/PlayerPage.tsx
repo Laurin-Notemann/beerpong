@@ -5,6 +5,7 @@ import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
+import { ScoredMoveInputRow } from '../ScoredMoveInputRow';
 import Stepper from '../Stepper';
 import Text from '../Text';
 
@@ -43,35 +44,37 @@ export default function PlayerPage({
             {player.moves
                 .filter((i) => !i.isFinish)
                 .map((i, idx) => (
-                    <View
+                    <ScoredMoveInputRow
                         key={idx}
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-
-                            height: 44,
-                            paddingLeft: 64,
-                            paddingRight: 16,
-                        }}
-                    >
-                        <Text
-                            variant="body1"
-                            color="primary"
-                            style={{
-                                marginRight: 'auto',
-                            }}
-                        >
-                            {i.title}
-                        </Text>
-                        <Stepper
-                            value={i.count}
-                            onChange={(value) =>
-                                setMoveCount(player.id, i.id, value)
-                            }
-                            min={0}
-                        />
-                    </View>
+                        moveName={i.title}
+                        numScored={i.count}
+                        onNumScoredChange={(value) =>
+                            setMoveCount(player.id, i.id, value)
+                        }
+                    />
                 ))}
+            <View
+                style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    paddingTop: 32,
+                    paddingBottom: 32,
+                }}
+            >
+                <Text
+                    color="secondary"
+                    style={{
+                        marginTop: 16,
+                        fontSize: 12,
+
+                        paddingHorizontal: 48,
+                    }}
+                >
+                    If {player.name} scored the last cup of the match, please
+                    don't add it here. There is a seperate page for the winning
+                    throw.
+                </Text>
+            </View>
             {finishMove && (
                 <View
                     style={{

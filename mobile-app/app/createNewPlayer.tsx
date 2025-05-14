@@ -20,13 +20,13 @@ export default function Page() {
 
     const existingPlayers = players.map((i) => i.profile!.name!);
 
-    const { mutateAsync } = useCreatePlayerMutation();
+    const createPlayerMutation = useCreatePlayerMutation();
 
     async function onSubmit(player: { name: string }) {
         if (!groupId || !seasonId) return;
 
         try {
-            await mutateAsync({
+            await createPlayerMutation.mutateAsync({
                 groupId,
                 seasonId,
                 name: player.name,
@@ -43,6 +43,7 @@ export default function Page() {
         <CreateNewPlayer
             onCreate={onSubmit}
             existingPlayers={existingPlayers}
+            isPending={createPlayerMutation.isPending}
         />
     );
 }

@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
@@ -9,18 +9,19 @@ import {
 
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
+import { RefreshProps } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { theme } from '@/theme';
 
-import PlayerStats from '../PlayerStats';
-
 export interface PlayerScreenProps {
+    minMatchesRequiredToBeRanked: number;
+    isPending: boolean;
     id: string;
     placement: number;
 
@@ -30,6 +31,7 @@ export interface PlayerScreenProps {
     matches: Match[];
     matchesWon: number;
     points: number;
+    cups: number;
     elo: number;
     hasPremium?: boolean;
 
@@ -37,8 +39,11 @@ export interface PlayerScreenProps {
 
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
+    refresh: RefreshProps;
 }
 export default function PlayerScreen({
+    minMatchesRequiredToBeRanked,
+    isPending,
     id,
     placement,
     name,
@@ -46,29 +51,24 @@ export default function PlayerScreen({
     matches,
     matchesWon,
     points,
+    cups,
     elo,
     pastSeasons,
     hasPremium = false,
 
     onDelete,
     onUploadAvatarPress,
+    refresh,
 }: PlayerScreenProps) {
     const nav = useNavigation();
+
+    const [editable, setEditable] = useState(false);
 
     // account for division by zero
     const averagePointsPerMatch =
         matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
 
-    const [editable, setEditable] = useState(false);
-
-    const [isRefreshing, setIsRefreshing] = useState(false);
-
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
+    const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
     return (
         <GestureHandlerRootView>
@@ -81,9 +81,18 @@ export default function PlayerScreen({
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
+                            disabled={editable && isPending}
                             onPress={() => setEditable((prev) => !prev)}
                         >
-                            {editable ? 'Done' : 'Edit'}
+                            {editable ? (
+                                isPending ? (
+                                    <ActivityIndicator />
+                                ) : (
+                                    'Done'
+                                )
+                            ) : (
+                                'Edit'
+                            )}
                         </HeaderItem>
                     ),
                 }}
@@ -97,57 +106,32 @@ export default function PlayerScreen({
                 contentContainerStyle={{
                     alignItems: 'center',
 
-                    paddingHorizontal: 16,
                     paddingBottom: 32,
                 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
+                refreshControl={<RefreshControl {...refresh} />}
             >
-                <Avatar
-                    url={avatarUrl}
-                    size={96}
-                    style={{ marginTop: 32, marginBottom: 8 }}
+                <PlayerPageHeadSection
+                    avatarUrl={avatarUrl}
                     placement={placement}
                     name={name}
-                    canUpload={editable}
-                    onPress={onUploadAvatarPress}
-                />
-                <Text
-                    style={{
-                        fontSize: 15,
-                        color: theme.color.text.secondary,
-                    }}
-                >
-                    {averagePointsPerMatch}
-                </Text>
-                <Text
-                    style={{
-                        fontSize: 25,
-                        color: theme.color.text.primary,
-
-                        marginBottom: 32,
-                    }}
-                >
-                    {name}
-                </Text>
-
-                <PlayerStats
-                    totalPoints={points}
-                    matchesWonCount={matchesWon}
-                    matchesPlayedCount={matches.length}
                     elo={elo}
+                    matchesWon={matchesWon}
+                    points={points}
+                    cups={cups}
+                    isUnranked={isUnranked}
+                    editable={editable}
+                    averagePointsPerMatch={averagePointsPerMatch}
+                    onUploadAvatarPress={onUploadAvatarPress}
+                    matches={matches}
                 />
-                <View
-                    style={{
-                        width: '100%',
-                        alignItems: 'stretch',
-                    }}
-                >
-                    {editable ? (
+                {editable && (
+                    <View
+                        style={{
+                            width: '100%',
+                            alignItems: 'stretch',
+                            paddingHorizontal: 16,
+                        }}
+                    >
                         <MenuSection>
                             <MenuItem
                                 title={name}
@@ -169,9 +153,19 @@ export default function PlayerScreen({
                                 }}
                             />
                         </MenuSection>
-                    ) : (
-                        env.isDev && (
-                            <>
+                    </View>
+                )}
+
+                {!editable && (
+                    <>
+                        <View
+                            style={{
+                                width: '100%',
+                                alignItems: 'stretch',
+                                paddingHorizontal: 16,
+                            }}
+                        >
+                            {env.isDev && (
                                 <MenuSection>
                                     <MenuItem
                                         title="Past Seasons"
@@ -183,11 +177,14 @@ export default function PlayerScreen({
                                         }
                                     />
                                 </MenuSection>
-                                <MatchesList matches={matches} />
-                            </>
-                        )
-                    )}
-                </View>
+                            )}
+                        </View>
+                        <MatchesList
+                            matches={matches}
+                            refresh={{ refreshing: false }}
+                        />
+                    </>
+                )}
             </ScrollView>
         </GestureHandlerRootView>
     );

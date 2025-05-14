@@ -23,6 +23,9 @@ public class Player {
     @Transient
     private PlayerStatistics statistics;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean activeThisSeason;
+
     @OneToMany(mappedBy = "player")
     private List<TeamMember> teamMembers;
 }

@@ -1,11 +1,12 @@
 import dayjs from 'dayjs';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { FlatList, Text, TouchableHighlight, View } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
+import { RefreshProps } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -15,35 +16,27 @@ import IconHead from './IconHead';
 import MatchVsHeader from './MatchVsHeader';
 
 export interface MatchesListProps {
+    refresh: RefreshProps;
     matches: Match[];
 }
-export default function MatchesList({ matches }: MatchesListProps) {
+export default function MatchesList({ matches, refresh }: MatchesListProps) {
     const nav = useNavigation();
 
     const days = groupMatchesByDay(matches);
 
-    const [isRefreshing, setIsRefreshing] = useState(false);
-
-    const onRefresh = useCallback(() => {
-        setIsRefreshing(true);
-        setTimeout(() => {
-            setIsRefreshing(false);
-        }, 2000);
-    }, []);
-
     return (
         <FlatList
+            contentContainerStyle={{
+                paddingBottom: 32,
+            }}
             style={{
                 alignSelf: 'stretch',
                 backgroundColor: theme.color.bg,
+
+                paddingHorizontal: 16,
             }}
             data={days}
-            refreshControl={
-                <RefreshControl
-                    refreshing={isRefreshing}
-                    onRefresh={onRefresh}
-                />
-            }
+            refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item: day, index: listIndex }) => (
                 <MenuSection key={listIndex} title={day.title}>
                     {day.matches.map((item, index) => (

@@ -66,7 +66,7 @@ export default function LeaderboardPlayerItem({
                     color: theme.color.text.secondary,
                 }}
             >
-                {formatPlacement(placement)}
+                {matches ? formatPlacement(placement) : '  '}
             </ThemedText>
             <Avatar url={avatarUrl} name={name} size={36} />
             <ThemedView

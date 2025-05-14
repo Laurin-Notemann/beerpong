@@ -1,5 +1,6 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
@@ -9,16 +10,20 @@ import TextInput from '@/components/TextInput';
 export interface CreateNewPlayerProps {
     onCreate: (player: { name: string }) => void;
     existingPlayers?: string[];
+    isPending: boolean;
 }
 export default function CreateNewPlayer({
     onCreate,
     existingPlayers,
+    isPending,
 }: CreateNewPlayerProps) {
     const nav = useNavigation();
 
     const [name, setName] = useState('');
 
-    const playerAlreadyExists = existingPlayers?.includes(name);
+    const existingPlayerName = existingPlayers?.find(
+        (i) => i.toLowerCase() === name.toLowerCase()
+    );
 
     return (
         <>
@@ -32,10 +37,14 @@ export default function CreateNewPlayer({
                     ),
                     headerRight: () => (
                         <HeaderItem
-                            disabled={name.length < 1 || playerAlreadyExists}
+                            disabled={
+                                name.length < 1 ||
+                                (existingPlayerName?.length ?? 0) > 0 ||
+                                isPending
+                            }
                             onPress={() => onCreate({ name })}
                         >
-                            Create
+                            {isPending ? <ActivityIndicator /> : 'Create'}
                         </HeaderItem>
                     ),
                 }}
@@ -48,8 +57,8 @@ export default function CreateNewPlayer({
                 />
                 <TextInput
                     errorMessage={
-                        playerAlreadyExists
-                            ? `There\'s already a player named "${name}" in this group.`
+                        existingPlayerName
+                            ? `There\'s already a player named "${existingPlayerName}" in this group.`
                             : undefined
                     }
                     required

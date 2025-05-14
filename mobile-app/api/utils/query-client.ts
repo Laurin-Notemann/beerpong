@@ -1,13 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
+import { DefaultOptions, QueryClient } from '@tanstack/react-query';
 
 import { hours, minutes } from '@/utils/time';
 
 /**
  * Default query configuration options
  */
-const defaultQueryOptions = {
+const defaultQueryOptions: DefaultOptions = {
     queries: {
         staleTime: minutes(2), // Data becomes stale after 2 minutes
         retry: false, // Don't retry failed queries
@@ -16,7 +16,7 @@ const defaultQueryOptions = {
     mutations: {
         retry: false, // Don't retry failed mutations
     },
-} as const;
+};
 
 /**
  * Creates and configures a new QueryClient instance

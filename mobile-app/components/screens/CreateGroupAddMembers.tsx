@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { HeaderItem } from '@/components/HeaderItem';
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
@@ -18,6 +19,7 @@ import Text from '../Text';
 import TextInput from '../TextInput';
 import { ThemedText } from '../ThemedText';
 import { ThemedView } from '../ThemedView';
+import { useAutoFocus } from './useAutoFocus';
 
 const MIN_GROUP_MEMBERS = 2;
 
@@ -33,11 +35,15 @@ export default function CreateGroupAddMembers({
 
     const inputRef = useRef<B>(null);
 
+    useAutoFocus(inputRef);
+
     const canBeCreated = members.length >= MIN_GROUP_MEMBERS;
 
-    const playerAlreadyExists = members.some((i) => i.name === value);
+    const existingPlayerName = members.find(
+        (i) => i.name.toLowerCase() === value.toLowerCase()
+    )?.name;
 
-    const canSubmit = value.length > 0 && !playerAlreadyExists;
+    const canSubmit = value.length > 0 && !existingPlayerName;
 
     function onAddMember() {
         if (canSubmit) {
@@ -45,7 +51,12 @@ export default function CreateGroupAddMembers({
 
             setValue('');
             inputRef.current?.clear();
+            triggerHapticBump('selection');
         }
+    }
+    function onRemoveMember(idx: number) {
+        setMembers((prev) => prev.filter((_, index) => index !== idx));
+        triggerHapticBump('selection');
     }
 
     return (
@@ -92,11 +103,10 @@ export default function CreateGroupAddMembers({
             >
                 <TextInput
                     errorMessage={
-                        playerAlreadyExists
-                            ? `There\'s already a player named "${value}" in this group.`
+                        existingPlayerName
+                            ? `There\'s already a player named "${existingPlayerName}" in this group.`
                             : undefined
                     }
-                    autoFocus
                     autoCorrect={false}
                     ref={inputRef}
                     required
@@ -157,11 +167,7 @@ export default function CreateGroupAddMembers({
                             </ThemedText>
                         </ThemedView>
                         <TouchableOpacity
-                            onPress={() =>
-                                setMembers((prev) =>
-                                    prev.filter((_, index) => index !== idx)
-                                )
-                            }
+                            onPress={() => onRemoveMember(idx)}
                             style={{ marginLeft: 'auto' }}
                         >
                             <Icon
