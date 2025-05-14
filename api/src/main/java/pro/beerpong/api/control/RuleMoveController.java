@@ -59,7 +59,7 @@ public class RuleMoveController {
         }
 
         if (!moveService.validateGroupAndSeason(groupId, seasonId, move)) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
         }
 
         return ResponseEnvelope.ok(moveService.updateRuleMove(groupId, move, dto));
@@ -87,7 +87,7 @@ public class RuleMoveController {
                 return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_NOT_FOUND);
             }
         } else {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
         }
     }
 

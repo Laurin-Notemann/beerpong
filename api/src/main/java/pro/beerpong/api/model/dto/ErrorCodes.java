@@ -21,7 +21,7 @@ public enum ErrorCodes {
     SEASON_ALREADY_ENDED(HttpStatus.FORBIDDEN, "seasonAlreadyEnded", "Past seasons are immutable!"),
     SEASON_WRONG_TIME_FORMAT(HttpStatus.BAD_REQUEST, "seasonWrongTimeFormat", "The wake time hour has to be between 0 and 23!"),
     SEASON_WRONG_TEAM_SIZES(HttpStatus.BAD_REQUEST, "seasonWrongTeamSizes", "The min team size has to be less then or equal to the max team size!"),
-    SEASON_NOT_OF_GROUP(HttpStatus.BAD_REQUEST, "seasonHasDifferentGroup", "The season does not match the provided group id!"),
+    SEASON_NOT_OF_GROUP(HttpStatus.FORBIDDEN, "seasonHasDifferentGroup", "The season does not match the provided group id!"),
     SEASON_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),
     INVALID_SEASON_NAME(HttpStatus.BAD_REQUEST, "invalidSeasonName", "Season name must be non-null, non-empty and between 2 and 50 characters!"),
     INVALID_SEASON_ID(HttpStatus.BAD_REQUEST, "invalidSeasonId", "Season id must be non-null and non-empty!"),
@@ -30,10 +30,10 @@ public enum ErrorCodes {
     MATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "matchNotFound", "The requested match could not be found!"),
     MATCH_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "matchValidationFailed", "The validation of the created match has failed (invalid group or season id)"),
     MATCH_CREATE_DTO_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "matchCreateDtoValidationFailed", "The team sizes are not in the boundaries of the season settings!"),
-    MATCH_DTO_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, or no finish move)"),
+    MATCH_DTO_VALIDATION_FAILED(HttpStatus.FORBIDDEN, "matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, or no finish move)"),
     /* RULE MOVES */
     RULE_MOVE_NOT_FOUND(HttpStatus.NOT_FOUND, "ruleMoveNotFound", "The requested ruleMove could not be found!"),
-    RULE_MOVE_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"),
+    RULE_MOVE_VALIDATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"),
     RULE_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
     /* PLAYERS */
     PLAYER_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "playerValidationFailed", "The player is not part of the provided season or group!"),

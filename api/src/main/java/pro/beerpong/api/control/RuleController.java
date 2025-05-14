@@ -34,7 +34,7 @@ public class RuleController {
         } else if (pair.getSecond() == null) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
         return ResponseEnvelope.ok(ruleService.getAllRules(seasonId));
@@ -49,9 +49,9 @@ public class RuleController {
         } else if (pair.getSecond() == null) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
         } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroupId())) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_NOT_OF_GROUP);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         } else if (pair.getSecond().getEndDate() != null) {
-            return ResponseEnvelope.notOk(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.SEASON_ALREADY_ENDED);
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
         var ruleDtos = ruleService.writeRules(groupId, pair.getSecond(), rules);
