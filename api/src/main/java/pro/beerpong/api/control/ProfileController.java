@@ -30,7 +30,7 @@ public class ProfileController {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var dto = profileService.createProfile(groupId, profileCreateDto);
+            var dto = profileService.createPlayer(groupId, profileCreateDto);
 
             subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_CREATE, groupId, dto));
 

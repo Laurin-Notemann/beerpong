@@ -22,8 +22,10 @@ public class PlayerController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId, @PathVariable String seasonId) {
-        var players = playerService.getBySeasonId(seasonId);
+    public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId,
+                                                                        @PathVariable String seasonId,
+                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+        var players = playerService.getBySeasonId(seasonId, showInactive);
 
         if (players != null) {
             return ResponseEnvelope.ok(players);

@@ -3,6 +3,7 @@ package pro.beerpong.api.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
+import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
@@ -16,6 +17,7 @@ import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,10 +31,23 @@ public class PlayerService {
     private final PlayerMapper playerMapper;
 
     public List<PlayerDto> getBySeasonId(String seasonId) {
+        return this.getBySeasonId(seasonId, false);
+    }
+
+    public List<PlayerDto> getBySeasonId(String seasonId, boolean showInactive) {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
+                .filter(player -> showInactive || player.isActiveThisSeason())
                 .map(this::createStatisticsEnrichedDto)
                 .toList();
+    }
+
+    public Player findLatestPlayer(String profileId) {
+        return playerRepository.findAllByProfileId(profileId)
+                .stream()
+                .sorted(Comparator.comparing(player -> player.getSeason().getStartDate()))
+                .toList()
+                .getLast();
     }
 
     public PlayerDto createPlayer(String seasonId, String profileId, PlayerCreateDto dto) {
@@ -45,7 +60,7 @@ public class PlayerService {
         var optional = profileRepository.findById(profileId);
 
         if (optional.isEmpty()) {
-            return null;
+            //create profile
         }
 
         var profile = optional.get();
@@ -53,6 +68,7 @@ public class PlayerService {
 
         player.setSeason(season);
         player.setProfile(profile);
+        player.setActiveThisSeason(true);
 
         var enrichedDto = createStatisticsEnrichedDto(playerRepository.save(player));
 
@@ -61,11 +77,28 @@ public class PlayerService {
         return enrichedDto;
     }
 
+    public boolean reactivatePlayer(PlayerDto dto) {
+        if (dto.isActiveThisSeason()) {
+            return false;
+        }
+
+        dto.setActiveThisSeason(true);
+
+        playerRepository.save(playerMapper.playerDtoToPlayer(dto));
+
+        return true;
+    }
+
     public ErrorCodes deletePlayer(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
         playerRepository.findById(id).ifPresentOrElse(player -> {
             var season = seasonRepository.findById(seasonId).orElse(null);
+
+            if (!player.isActiveThisSeason()) {
+                error.set(ErrorCodes.PLAYER_ALREADY_DELETED);
+                return;
+            }
 
             if (season == null) {
                 error.set(ErrorCodes.SEASON_NOT_FOUND);
@@ -81,7 +114,8 @@ public class PlayerService {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
                     subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));
 
-                    playerRepository.deleteById(id);
+                    player.setActiveThisSeason(false);
+                    playerRepository.save(player);
                 } else {
                     error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
                 }
@@ -111,6 +145,7 @@ public class PlayerService {
         Player player = new Player();
         player.setProfile(profile);
         player.setSeason(season);
+        player.setActiveThisSeason(true);
         return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
