@@ -917,6 +917,12 @@
                         "in": "path",
                         "required": true,
                         "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "showInactive",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "boolean", "default": false }
                     }
                 ],
                 "responses": {
@@ -1480,6 +1486,7 @@
                     "id": { "type": "string" },
                     "profile": { "$ref": "#/components/schemas/ProfileDto" },
                     "season": { "$ref": "#/components/schemas/SeasonDto" },
+                    "activeThisSeason": { "type": "boolean" },
                     "statistics": {
                         "$ref": "#/components/schemas/PlayerStatisticsDto"
                     }
