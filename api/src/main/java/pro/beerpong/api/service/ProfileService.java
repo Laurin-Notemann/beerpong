@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.dao.Profile;
+import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
+import pro.beerpong.api.model.dto.ProfileCreatedDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.ProfileRepository;
@@ -24,7 +26,48 @@ public class ProfileService {
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
 
+    public ProfileCreatedDto createPlayer(String groupId, ProfileCreateDto dto) {
+        var existing = this.getProfileByName(groupId, dto.getName());
+
+        if (existing != null) {
+            var groupOptional = groupRepository.findById(groupId);
+
+            if (groupOptional.isEmpty() || !existing.getGroupId().equals(groupId)) {
+                return null;
+            }
+
+            var group = groupOptional.get();
+            var season = group.getActiveSeason();
+
+            if (season == null) {
+                return null;
+            }
+
+            var existingPlayer = playerService.getBySeasonId(season.getId(), true).stream()
+                    .filter(playerDto -> playerDto.getProfile().getId().equals(existing.getId()))
+                    .findFirst();
+
+            if (existingPlayer.isPresent()) {
+                boolean success = playerService.reactivatePlayer(existingPlayer.get());
+
+                return new ProfileCreatedDto(existing, success, (success ? season.getId() : null));
+            } else {
+                var lastPlayer = playerService.findLatestPlayer(existing.getId());
+
+                playerService.createPlayer(season, profileMapper.profileDtoToProfile(existing));
+
+                return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
+            }
+        } else {
+            return new ProfileCreatedDto(this.createProfile(groupId, dto), false, null);
+        }
+    }
+
     public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto) {
+        return this.createProfile(groupId, profileCreateDto, true);
+    }
+
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer) {
         var groupOptional = groupRepository.findById(groupId);
 
         var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
@@ -32,7 +75,9 @@ public class ProfileService {
 
         var savedProfile = profileRepository.save(profile);
 
-        playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile);
+        if (createPlayer) {
+            playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile);
+        }
 
         return profileMapper.profileToProfileDto(savedProfile);
     }
@@ -59,6 +104,13 @@ public class ProfileService {
 
     public Profile getRawProfileById(String id) {
         return profileRepository.findById(id).orElse(null);
+    }
+
+    public ProfileDto getProfileByName(String groupId, String name) {
+        return listAllProfilesOfGroup(groupId).stream()
+                .filter(profileDto -> profileDto.getName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
     public boolean deleteProfile(String id) {

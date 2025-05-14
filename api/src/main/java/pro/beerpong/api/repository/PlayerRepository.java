@@ -10,6 +10,8 @@ import java.util.List;
 public interface PlayerRepository extends JpaRepository<Player, String> {
     List<Player> findAllBySeasonId(String seasonId);
 
+    List<Player> findAllByProfileId(String profileId);
+
     @Query("""
            SELECT new pro.beerpong.api.model.dao.PlayerStatistics(
                       COALESCE((SELECT COUNT(*)

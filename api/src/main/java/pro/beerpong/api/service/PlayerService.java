@@ -17,6 +17,7 @@ import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,6 +42,14 @@ public class PlayerService {
                 .toList();
     }
 
+    public Player findLatestPlayer(String profileId) {
+        return playerRepository.findAllByProfileId(profileId)
+                .stream()
+                .sorted(Comparator.comparing(player -> player.getSeason().getStartDate()))
+                .toList()
+                .getLast();
+    }
+
     public PlayerDto createPlayer(String seasonId, String profileId, PlayerCreateDto dto) {
         return seasonRepository.findById(seasonId)
                 .map(season -> this.createPlayer(season, profileId, dto))
@@ -51,7 +60,7 @@ public class PlayerService {
         var optional = profileRepository.findById(profileId);
 
         if (optional.isEmpty()) {
-            return null;
+            //create profile
         }
 
         var profile = optional.get();
@@ -66,6 +75,18 @@ public class PlayerService {
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_CREATE, season.getGroupId(), enrichedDto));
 
         return enrichedDto;
+    }
+
+    public boolean reactivatePlayer(PlayerDto dto) {
+        if (dto.isActiveThisSeason()) {
+            return false;
+        }
+
+        dto.setActiveThisSeason(true);
+
+        playerRepository.save(playerMapper.playerDtoToPlayer(dto));
+
+        return true;
     }
 
     public ErrorCodes deletePlayer(String id, String seasonId, String groupId) {
