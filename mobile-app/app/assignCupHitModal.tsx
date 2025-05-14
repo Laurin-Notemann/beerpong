@@ -8,7 +8,7 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import CupGrid from '@/components/CupGrid';
-import { flipFormation, Formation } from '@/components/CupGrid/Formation';
+import { flipFormation } from '@/components/CupGrid/Formation';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
 import { theme } from '@/theme';
@@ -18,11 +18,16 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
-    const cup = useLocalSearchParams<{
+    const cupProp = useLocalSearchParams<{
         x: string;
         y: string;
         color: string;
     }>();
+    const cup = {
+        x: parseInt(cupProp.x),
+        y: parseInt(cupProp.y),
+        color: cupProp.color,
+    };
 
     const isBlue = cup.color === '#18A0FB';
 
@@ -84,22 +89,24 @@ export default function Page() {
     const [move, setMove] = useState<string | null>(null);
 
     const shape = isBlue
-        ? flipFormation(Formation.Pyramid_10)
-        : Formation.Pyramid_10;
+        ? flipFormation(matchDraft.blueTeam.cups.currentFormation)
+        : matchDraft.redTeam.cups.currentFormation;
 
     const formation = {
         ...shape,
         cups: shape.cups.map((i) =>
-            i.x === parseInt(cup.x) && i.y === parseInt(cup.y)
-                ? { ...i }
-                : { ...i, disabled: true }
+            i.x === cup.x && i.y === cup.y ? { ...i } : { ...i, disabled: true }
         ),
     };
 
     const nav = useNavigation();
 
     function onSelectMove(moveId: string) {
+        if (!player) return;
+
         setMove(moveId);
+
+        matchDraft.actions.setCupHit(cup, player.id, moveId);
 
         nav.goBack();
     }

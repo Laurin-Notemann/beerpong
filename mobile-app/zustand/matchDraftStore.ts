@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { Formation, FormationType } from '@/components/CupGrid/Formation';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 
 interface MoveDraft {
@@ -12,6 +13,21 @@ interface PlayerDraft {
 }
 interface TeamDraft {
     teamMembers: PlayerDraft[];
+
+    cups: CupsState;
+}
+
+interface CupsState {
+    initialFormation: FormationType;
+    currentFormation: {
+        rows: number;
+        columns: number;
+        cups: {
+            x: number;
+            y: number;
+            hitby?: string; // matchmove
+        }[];
+    };
 }
 
 interface MatchDraftStore {
@@ -26,6 +42,11 @@ interface MatchDraftStore {
 
         setPlayerTeam: (playerId: string, team: TeamId) => void;
         setMoveCount: (userId: string, moveId: string, count: number) => void;
+        setCupHit: (
+            cup: { x: number; y: number },
+            playerId: string,
+            moveId: string
+        ) => void;
     };
 }
 
@@ -33,9 +54,19 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
     hasBeenOnPageTwo: false,
     redTeam: {
         teamMembers: [],
+
+        cups: {
+            initialFormation: Formation.Pyramid_10,
+            currentFormation: Formation.Pyramid_10,
+        },
     },
     blueTeam: {
         teamMembers: [],
+
+        cups: {
+            initialFormation: Formation.Pyramid_10,
+            currentFormation: Formation.Pyramid_10,
+        },
     },
 
     actions: {
@@ -52,9 +83,17 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                 hasBeenOnPageTwo: false,
                 redTeam: {
                     teamMembers: [],
+                    cups: {
+                        initialFormation: Formation.Pyramid_10,
+                        currentFormation: Formation.Pyramid_10,
+                    },
                 },
                 blueTeam: {
                     teamMembers: [],
+                    cups: {
+                        initialFormation: Formation.Pyramid_10,
+                        currentFormation: Formation.Pyramid_10,
+                    },
                 },
             }));
         },
@@ -90,8 +129,14 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                 }
 
                 return {
-                    redTeam: { teamMembers: updatedRedTeam },
-                    blueTeam: { teamMembers: updatedBlueTeam },
+                    redTeam: {
+                        teamMembers: updatedRedTeam,
+                        cups: redTeam.cups,
+                    },
+                    blueTeam: {
+                        teamMembers: updatedBlueTeam,
+                        cups: blueTeam.cups,
+                    },
                 };
             });
         },
@@ -116,6 +161,48 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                             moves,
                         };
                     }),
+                    cups: team.cups,
+                });
+
+                return {
+                    redTeam: updateTeam(state.redTeam),
+                    blueTeam: updateTeam(state.blueTeam),
+                };
+            });
+        },
+        setCupHit: (cup, playerId, moveId) => {
+            set((state) => {
+                const updateTeam = (team: TeamDraft) => ({
+                    teamMembers: team.teamMembers.map((player) => {
+                        if (player.playerId !== playerId) return player;
+
+                        const moves = player.moves.map((move) =>
+                            move.moveId === moveId
+                                ? { ...move, count: move.count + 1 }
+                                : move
+                        );
+
+                        return {
+                            ...player,
+                            moves,
+                        };
+                    }),
+                    cups: {
+                        ...team.cups,
+                        currentFormation: team.teamMembers.some(
+                            (p) => p.playerId === playerId
+                        )
+                            ? team.cups.currentFormation
+                            : {
+                                  ...team.cups.currentFormation,
+                                  cups: team.cups.currentFormation.cups.map(
+                                      (i) =>
+                                          i.x === cup.x && i.y === cup.y
+                                              ? { ...i, hitby: playerId }
+                                              : i
+                                  ),
+                              },
+                    },
                 });
 
                 return {
