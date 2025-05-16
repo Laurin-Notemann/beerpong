@@ -1,10 +1,13 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { Host as PortalProvider } from 'react-native-portalize';
 import Swiper from 'react-native-swiper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
+import { useTutorials } from '@/zustand/tutorialStore';
 
 import { HeaderItem } from '../HeaderItem';
 import MatchVsHeader from '../MatchVsHeader';
@@ -33,6 +36,10 @@ export default function AssignPointsToPlayerModal({
     pageIdx,
     setPageIdx,
 }: AssignPointsToPlayerModalProps) {
+    const experiments = useLocalSettings();
+
+    const { hasDraggedToAssignPoints } = useTutorials();
+
     const players = match.blueTeam.concat(match.redTeam);
 
     const swiperRef = useRef<Swiper>(null);
@@ -121,73 +128,81 @@ export default function AssignPointsToPlayerModal({
                                 ),
                 }}
             />
-            <View
-                style={{
-                    backgroundColor: '#1B1B1B',
+            <PortalProvider>
+                <View
+                    style={{
+                        backgroundColor: '#1B1B1B',
 
-                    flex: 1,
-                }}
-            >
-                {showVsHeader && (
-                    <MatchVsHeader
-                        match={match}
-                        highlightedId={players[pageIdx!]?.id}
-                    />
-                )}
-
-                <Swiper
-                    ref={swiperRef}
-                    showsPagination={false}
-                    loop={false}
-                    index={pageIdx!}
-                    onIndexChanged={(value) => {
-                        setTimeout(() => {
-                            // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
-                            // at this point, the component hasn't rerendered yet, so playerIdx will still be a non-null value, so we can't check against that.
-                            // to work around this, we wait 0ms (which actually translates to a short wait) for the playerIdx to change to null.
-                            // we have to use a ref for the playerIdx because we're inside a callback, and the value of playerIdx will be the same as when the callback was created (so non-null).
-                            if (playerIdxRef.current != null) setPageIdx(value);
-                        }, 0);
+                        flex: 1,
                     }}
-                    style={{ height: 0 }}
                 >
-                    {[...players, null, null].map((i, idx) => {
-                        if (idx < players.length)
-                            return (
-                                <PlayerPage
-                                    key={idx}
-                                    player={i!}
-                                    finishMove={
-                                        finisherId === i!.id
-                                            ? finishMove
-                                            : undefined
-                                    }
-                                    setMoveCount={setMoveCount}
-                                />
-                            );
-                        if (idx === players.length)
-                            return (
-                                <FinishScorerPage
-                                    key={idx}
-                                    finisher={finisher}
-                                    players={players}
-                                    onSetFinisher={onSetFinisher}
-                                />
-                            );
+                    {showVsHeader && (
+                        <MatchVsHeader
+                            match={match}
+                            highlightedId={players[pageIdx!]?.id}
+                        />
+                    )}
 
-                        if (finisher)
-                            return (
-                                <FinishMovePage
-                                    key={idx}
-                                    finisher={finisher}
-                                    onSetFinishMove={onSetFinishMove}
-                                />
-                            );
+                    <Swiper
+                        ref={swiperRef}
+                        showsPagination={false}
+                        loop={false}
+                        index={pageIdx!}
+                        onIndexChanged={(value) => {
+                            setTimeout(() => {
+                                // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
+                                // at this point, the component hasn't rerendered yet, so playerIdx will still be a non-null value, so we can't check against that.
+                                // to work around this, we wait 0ms (which actually translates to a short wait) for the playerIdx to change to null.
+                                // we have to use a ref for the playerIdx because we're inside a callback, and the value of playerIdx will be the same as when the callback was created (so non-null).
+                                if (playerIdxRef.current != null)
+                                    setPageIdx(value);
+                            }, 0);
+                        }}
+                        style={{ height: 0 }}
+                    >
+                        {[...players, null, null].map((i, idx) => {
+                            if (idx < players.length)
+                                return (
+                                    <PlayerPage
+                                        key={idx}
+                                        player={i!}
+                                        finishMove={
+                                            finisherId === i!.id
+                                                ? finishMove
+                                                : undefined
+                                        }
+                                        setMoveCount={setMoveCount}
+                                        hasSwipeTutorial={
+                                            experiments.tutorials &&
+                                            !hasDraggedToAssignPoints &&
+                                            idx === 0
+                                        }
+                                    />
+                                );
+                            if (idx === players.length)
+                                return (
+                                    <FinishScorerPage
+                                        key={idx}
+                                        finisher={finisher}
+                                        players={players}
+                                        onSetFinisher={onSetFinisher}
+                                    />
+                                );
 
-                        return null;
-                    })}
-                </Swiper>
-            </View>
+                            if (finisher)
+                                return (
+                                    <FinishMovePage
+                                        key={idx}
+                                        finisher={finisher}
+                                        onSetFinishMove={onSetFinishMove}
+                                    />
+                                );
+
+                            return null;
+                        })}
+                    </Swiper>
+                </View>
+            </PortalProvider>
         </>
     );
 }

@@ -10,10 +10,12 @@ import Stepper from '../Stepper';
 import Text from '../Text';
 
 export default function PlayerPage({
+    hasSwipeTutorial = false,
     finishMove,
     player,
     setMoveCount,
 }: {
+    hasSwipeTutorial?: boolean;
     finishMove?: PerformedMove | null;
     player: TeamMember;
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
@@ -51,6 +53,7 @@ export default function PlayerPage({
                         onNumScoredChange={(value) =>
                             setMoveCount(player.id, i.id, value)
                         }
+                        hasTutorial={hasSwipeTutorial && idx === 1}
                     />
                 ))}
             <View

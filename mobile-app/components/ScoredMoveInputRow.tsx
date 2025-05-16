@@ -3,10 +3,11 @@ import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
+import Stepper from '@/components/Stepper';
+import Text from '@/components/Text';
+import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
-
-import Stepper from './Stepper';
-import Text from './Text';
+import { useTutorials } from '@/zustand/tutorialStore';
 
 const clamp = (num: number, min: number, max: number) => {
     return num <= min ? min : num >= max ? max : num;
@@ -21,6 +22,8 @@ export interface ScoredMoveInputRowProps {
     dragSensitivity?: number;
     /** defaults to `99` */
     maxValue?: number;
+
+    hasTutorial?: boolean;
 }
 
 /**
@@ -39,6 +42,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
 
     maxValue = 99,
     dragSensitivity = 0.5,
+    hasTutorial = false,
 }) => {
     // used to make ui updates to the count less sluggish when the user drags or taps. setting this only updates the ui, and doesn't notify the parent.
     const [uiCount, setUiCount] = useState(numScored);
@@ -46,6 +50,8 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
     useEffect(() => {
         setUiCount(numScored);
     }, [numScored]);
+
+    const { setHasDraggedToAssignPoints } = useTutorials();
 
     const onHorizontalDrag = (horizontalDragDistance: number) => {
         const change = Math.round(
@@ -57,7 +63,10 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
         setUiCount((prev) => {
             const hasChanged = prev !== newValue;
 
-            if (hasChanged) triggerHapticBump('selection');
+            if (hasChanged) {
+                triggerHapticBump('selection');
+                setHasDraggedToAssignPoints();
+            }
 
             return newValue;
         });
@@ -84,6 +93,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
     return (
         <View
             style={{
+                position: 'relative',
                 flexDirection: 'row',
                 alignItems: 'center',
 
@@ -92,6 +102,13 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
                 paddingRight: 16,
             }}
         >
+            {hasTutorial && (
+                <TutorialBubble
+                    text="Try pulling this to the right!"
+                    left={12}
+                    top={12}
+                />
+            )}
             <GestureDetector
                 gesture={Gesture.Exclusive(slideToChangeValue, incrementOnTap)}
             >

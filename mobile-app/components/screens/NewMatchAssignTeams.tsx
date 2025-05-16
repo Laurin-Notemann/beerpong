@@ -111,7 +111,11 @@ function PlayerItem({
                     />
                 </Pressable>
                 {hasTutorial && (
-                    <TutorialBubble text="Try double-tapping a players name!" />
+                    <TutorialBubble
+                        text="Try double-tapping a players name!"
+                        left={-12}
+                        top={-12}
+                    />
                 )}
             </>
         </TouchableHighlight>
