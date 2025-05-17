@@ -61,6 +61,8 @@ export function PlayerPageHeadSection({
                     color: theme.color.text.primary,
 
                     marginBottom: 32,
+
+                    textAlign: 'center',
                 }}
             >
                 {name}

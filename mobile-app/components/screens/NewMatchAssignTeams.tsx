@@ -58,12 +58,14 @@ function PlayerItem({
             <>
                 <Avatar url={player.avatarUrl} size={36} name={player.name} />
                 <Text
+                    numberOfLines={1}
                     style={{
                         fontSize: 17,
                         color: theme.color.text.primary,
 
                         marginLeft: 12,
                         marginRight: 'auto',
+                        flex: 1,
                     }}
                 >
                     {player.name}

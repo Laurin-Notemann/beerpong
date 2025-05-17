@@ -24,7 +24,11 @@ export default function FinishMovePage({
                     paddingTop: 32,
                 }}
             >
-                <Text color="primary" variant="h3">
+                <Text
+                    color="primary"
+                    variant="h3"
+                    style={{ paddingHorizontal: 16, textAlign: 'center' }}
+                >
                     {finisher
                         ? `How did ${finisher.name} score the final cup?`
                         : 'Error'}

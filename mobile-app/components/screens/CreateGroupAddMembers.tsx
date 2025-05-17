@@ -147,16 +147,20 @@ export default function CreateGroupAddMembers({
                             alignItems: 'center',
 
                             height: 60.5,
-                            paddingHorizontal: 20,
+                            paddingHorizontal: 8,
                         }}
                     >
                         <Avatar name={i.name} size={36} />
                         <ThemedView
                             style={{
+                                flex: 1,
+
                                 marginLeft: 12,
+                                marginRight: 8,
                             }}
                         >
                             <ThemedText
+                                numberOfLines={2}
                                 style={{
                                     fontSize: 17,
                                     fontWeight: 500,

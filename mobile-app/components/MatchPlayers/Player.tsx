@@ -127,8 +127,8 @@ export default function Player({
                         name={name}
                         borderColor={team ? theme.color.team[team] : undefined}
                     />
-                    <View style={{ marginLeft: 16 }}>
-                        <Text variant="body1" color="primary">
+                    <View style={{ marginLeft: 16, flex: 1 }}>
+                        <Text variant="body1" color="primary" numberOfLines={1}>
                             {name}
                         </Text>
                         <View

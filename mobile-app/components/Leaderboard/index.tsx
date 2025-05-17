@@ -55,7 +55,6 @@ export default function Leaderboard({
             <ThemedView
                 style={{
                     alignSelf: 'stretch',
-                    // paddingHorizontal: 16,
                     paddingTop: 14,
                 }}
             >

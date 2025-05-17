@@ -72,9 +72,12 @@ export default function LeaderboardPlayerItem({
             <ThemedView
                 style={{
                     marginLeft: 12,
+
+                    flex: 1,
                 }}
             >
                 <ThemedText
+                    numberOfLines={1}
                     style={{
                         fontSize: 17,
                         fontWeight: 500,

@@ -149,7 +149,10 @@ export default function NewMatchScreen() {
     const isValidGame = numFinishes === 1;
 
     async function onCreateMatch() {
-        if (!groupId || !seasonId) return;
+        if (!groupId || !seasonId) {
+            ConsoleLogger.warn('no groupId or seasonId');
+            return;
+        }
 
         if (!isValidGame) {
             nav.navigate('assignPointsToPlayerModal', {
