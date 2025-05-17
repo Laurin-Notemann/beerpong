@@ -39,7 +39,10 @@ export function Cup({
         // to always put the cups in the lower rows over the upper ones for consistency
         zIndex: y,
     }));
-    const gestures = disabled ? [] : [onPan, onTap].filter((i) => i != null);
+    const gestures = [
+        onPan?.enabled(!disabled),
+        onTap?.enabled(!disabled),
+    ].filter((i) => i != null);
 
     return (
         <GestureDetector gesture={Gesture.Race(...gestures)}>

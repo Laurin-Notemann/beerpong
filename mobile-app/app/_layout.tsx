@@ -10,6 +10,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
@@ -53,6 +54,7 @@ function Everything() {
                 name="assignPointsToPlayerModal"
                 options={modalStyles}
             />
+            <Stack.Screen name="assignCupHitModal" options={modalStyles} />
             <Stack.Screen name="editMatchPoints" options={modalStyles} />
         </Stack>
     );
@@ -84,22 +86,24 @@ export default function RootLayout() {
             <LoggingProvider>
                 <ApiProvider>
                     <ThemeProvider value={appTheme}>
-                        <RootSiblingParent>
-                            <Drawer.Navigator
-                                screenOptions={{
-                                    drawerStyle: {
-                                        width: 256,
-                                    },
-                                    headerShown: false,
-                                }}
-                                drawerContent={Sidebar}
-                            >
-                                <Drawer.Screen
-                                    name="static/aboutPremium"
-                                    component={Everything}
-                                />
-                            </Drawer.Navigator>
-                        </RootSiblingParent>
+                        <PortalProvider>
+                            <RootSiblingParent>
+                                <Drawer.Navigator
+                                    screenOptions={{
+                                        drawerStyle: {
+                                            width: 256,
+                                        },
+                                        headerShown: false,
+                                    }}
+                                    drawerContent={Sidebar}
+                                >
+                                    <Drawer.Screen
+                                        name="static/aboutPremium"
+                                        component={Everything}
+                                    />
+                                </Drawer.Navigator>
+                            </RootSiblingParent>
+                        </PortalProvider>
                     </ThemeProvider>
                 </ApiProvider>
             </LoggingProvider>

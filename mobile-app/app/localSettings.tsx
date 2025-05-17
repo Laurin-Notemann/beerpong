@@ -7,9 +7,12 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
+import { useTutorials } from '@/zustand/tutorialStore';
 
 export default function Page() {
     const nav = useNavigation();
+
+    const tutorials = useTutorials();
 
     return (
         <>
@@ -37,6 +40,12 @@ export default function Page() {
                         headIcon="flask-outline"
                         tailIconType="next"
                         onPress={() => nav.navigate('experimentalFeatures')}
+                    />
+                    <MenuItem
+                        title="Reset Tutorials"
+                        headIcon="flask-outline"
+                        tailIconType="next"
+                        onPress={tutorials.reset}
                     />
                 </MenuSection>
             </ScrollView>

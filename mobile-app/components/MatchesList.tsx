@@ -1,123 +1,72 @@
-import dayjs from 'dayjs';
 import React from 'react';
-import { FlatList, Text, TouchableHighlight, View } from 'react-native';
+import { FlatList, FlatListProps } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
-import { env } from '@/api/env';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
+import { MatchesListItem } from '@/components/MatchesListItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
 
-import Button from './Button';
-import IconHead from './IconHead';
-import MatchVsHeader from './MatchVsHeader';
-
-export interface MatchesListProps {
+export interface MatchesListProps
+    extends Omit<
+        FlatListProps<{
+            matches: Match[];
+            title: string;
+            date: Date;
+        }>,
+        'data' | 'renderItem'
+    > {
     refresh: RefreshProps;
     matches: Match[];
+
+    /**
+     * if provided:
+     * - filter out matches not played by this player
+     * - display whether the player was on the winning team
+     * - display the influence of the match on the player's ranking
+     */
+    forPlayer?: {
+        id: string;
+    };
 }
-export default function MatchesList({ matches, refresh }: MatchesListProps) {
+export default function MatchesList({
+    matches,
+    refresh,
+    forPlayer,
+
+    ...rest
+}: MatchesListProps) {
     const nav = useNavigation();
 
     const days = groupMatchesByDay(matches);
 
     return (
         <FlatList
-            contentContainerStyle={{
-                paddingBottom: 32,
-            }}
+            contentContainerStyle={{ paddingBottom: 32 }}
             style={{
                 alignSelf: 'stretch',
-                backgroundColor: theme.color.bg,
-
                 paddingHorizontal: 16,
             }}
             data={days}
             refreshControl={<RefreshControl {...refresh} />}
-            renderItem={({ item: day, index: listIndex }) => (
-                <MenuSection key={listIndex} title={day.title}>
-                    {day.matches.map((item, index) => (
-                        <TouchableHighlight
-                            underlayColor={theme.panel.light.active}
-                            key={index}
-                            style={{
-                                backgroundColor: theme.panel.light.bg,
-                                gap: 4,
-                                paddingHorizontal: 16,
-                                paddingVertical: 7,
-
-                                borderTopColor: theme.panel.light.active,
-                                borderTopWidth: 0.5,
-                            }}
+            renderItem={({ item, index }) => (
+                <MenuSection key={index} title={item.title}>
+                    {item.matches.map((match, idx) => (
+                        <MatchesListItem
+                            key={idx}
+                            match={match}
                             onPress={() =>
-                                nav.navigate('match', { id: item.id })
+                                nav.navigate('match', { id: match.id })
                             }
-                        >
-                            <>
-                                <MatchVsHeader match={item} />
-                                <View style={{ flexDirection: 'row', gap: 16 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: 15,
-                                            color: theme.color.text.tertiary,
-                                        }}
-                                    >
-                                        {env.format.date.matchHour(
-                                            dayjs(item.date)
-                                        )}
-                                    </Text>
-                                    <Text
-                                        style={{
-                                            fontSize: 15,
-                                            color: theme.color.text.tertiary,
-                                        }}
-                                    >
-                                        {item.blueTeam
-                                            .map((i) => i.name)
-                                            .join(', ') +
-                                            ' - ' +
-                                            item.redTeam
-                                                .map((i) => i.name)
-                                                .join(', ')}
-                                    </Text>
-                                </View>
-                            </>
-                        </TouchableHighlight>
+                        />
                     ))}
                 </MenuSection>
             )}
-            ListEmptyComponent={
-                <View style={{ paddingTop: 64 }}>
-                    <IconHead
-                        onTouchStart={() => nav.navigate('newMatch')}
-                        iconName="format-list-bulleted"
-                        title="No Matches Played"
-                        description={
-                            <Button
-                                style={{
-                                    marginTop: 24,
-                                }}
-                                onPress={() => {}}
-                                title="Create match"
-                                variant="primary"
-                            />
-                            // <Link
-                            //     to="/joinGroup"
-                            //     style={{
-                            //         color: theme.color.text.primary,
-                            //         fontWeight: 500,
-                            //     }}
-                            // >
-                            //     foo
-                            // </Link>
-                        }
-                    />
-                </View>
-            }
-            // StickyHeaderComponent={}
+            ListEmptyComponent={<NoMatchesPlayedYet />}
+            {...rest}
         />
     );
 }

@@ -4,26 +4,35 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import Avatar from '@/components/Avatar';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
+import { useTutorials } from '@/zustand/tutorialStore';
 
-import Avatar from '../Avatar';
+import { TutorialBubble } from '../TutorialBubble';
 
 export type TeamId = 'red' | 'blue' | null;
 
 function PlayerItem({
     player,
     onSelectTeam,
+
+    hasTutorial = false,
 }: {
     player: Player;
     isRedTeam?: boolean;
     isBlueTeam?: boolean;
     onSelectTeam: (team: TeamId) => void;
+
+    hasTutorial?: boolean;
 }) {
     const isRedTeam = player.team === 'red';
     const isBlueTeam = player.team === 'blue';
+
+    const { setHasTappedToAssignPlayers } = useTutorials();
 
     return (
         <TouchableHighlight
@@ -32,10 +41,13 @@ function PlayerItem({
                 if (player.team === 'blue') onSelectTeam('red');
                 if (player.team === 'red') onSelectTeam(null);
 
+                setHasTappedToAssignPlayers();
+
                 triggerHapticBump('selection');
             }}
             underlayColor={theme.panel.light.active}
             style={{
+                position: 'relative',
                 flexDirection: 'row',
                 alignItems: 'center',
 
@@ -98,6 +110,13 @@ function PlayerItem({
                         style={{ opacity: isRedTeam ? 1 : 0.7 }}
                     />
                 </Pressable>
+                {hasTutorial && (
+                    <TutorialBubble
+                        text="Try double-tapping a players name!"
+                        left={-12}
+                        top={-12}
+                    />
+                )}
             </>
         </TouchableHighlight>
     );
@@ -108,14 +127,16 @@ export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 export interface NewMatchAssignTeamsProps {
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
-    onSubmit: () => void;
 }
 export default function NewMatchAssignTeams({
     players,
     setTeam,
-    onSubmit,
 }: NewMatchAssignTeamsProps) {
     const nav = useNavigation();
+
+    const { hasTappedToAssignPlayers } = useTutorials();
+
+    const experiments = useLocalSettings();
 
     return (
         <ScrollView
@@ -142,6 +163,11 @@ export default function NewMatchAssignTeams({
             <MenuSection>
                 {players.map((i, idx) => (
                     <PlayerItem
+                        hasTutorial={
+                            experiments.tutorials &&
+                            !hasTappedToAssignPlayers &&
+                            idx === 1
+                        }
                         key={idx}
                         player={i}
                         onSelectTeam={(team) => setTeam(i.id, team)}

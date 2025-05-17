@@ -5,6 +5,7 @@ export type RootStackParamList = {
     index: undefined;
     formations: undefined;
     createGroupSetName: undefined;
+    createGroupSetGame: undefined;
     editFormation: undefined;
     createGroup: undefined;
     joinGroup: undefined;
@@ -33,6 +34,7 @@ export type RootStackParamList = {
     experimentalFeatures: undefined;
 
     assignPointsToPlayerModal: { pageIdx: number };
+    assignCupHitModal: { x: number; y: number; color: string };
     editMatchPoints: { pageIdx: number };
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;

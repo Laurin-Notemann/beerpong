@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { SafeAreaView, TouchableOpacity, View } from 'react-native';
 import Modal from 'react-native-modal';
+import { Host as PortalProvider } from 'react-native-portalize';
 import Swiper from 'react-native-swiper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -149,70 +150,72 @@ export default function AssignPointsToPlayerModal({
             onBackdropPress={onClose}
             style={{ margin: 0 }}
         >
-            <SafeAreaView
-                style={{
-                    backgroundColor: '#3B3B3B',
-                    borderTopLeftRadius: 16,
-                    borderTopRightRadius: 16,
-                    overflow: 'hidden',
+            <PortalProvider>
+                <SafeAreaView
+                    style={{
+                        backgroundColor: '#3B3B3B',
+                        borderTopLeftRadius: 16,
+                        borderTopRightRadius: 16,
+                        overflow: 'hidden',
 
-                    flex: 1,
-                    marginTop: 16 * 7,
-                }}
-            >
-                <ModalDragHandle
-                    onBackPress={
-                        playerIdx === 0
-                            ? undefined
-                            : () => swiperRef.current?.scrollBy(-1)
-                    }
-                    onNextPress={
-                        playerIdx === players.length - 1
-                            ? undefined
-                            : () => swiperRef.current?.scrollBy(+1)
-                    }
-                    headerRight={
-                        playerIdx === players.length - 1 ? (
-                            <HeaderItem
-                                onPress={onClose}
-                                style={{
-                                    marginLeft: 'auto',
-                                }}
-                            >
-                                Done
-                            </HeaderItem>
-                        ) : undefined
-                    }
-                />
-                {showVsHeader && (
-                    <MatchVsHeader
-                        match={match}
-                        highlightedId={players[playerIdx!]?.id}
-                    />
-                )}
-
-                <Swiper
-                    ref={swiperRef}
-                    showsPagination={false}
-                    loop={false}
-                    index={playerIdx!}
-                    onIndexChanged={(value) => {
-                        setTimeout(() => {
-                            // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
-                            // at this point, the component hasn't rerendered yet, so playerIdx will still be a non-null value, so we can't check against that.
-                            // to work around this, we wait 0ms (which actually translates to a short wait) for the playerIdx to change to null.
-                            // we have to use a ref for the playerIdx because we're inside a callback, and the value of playerIdx will be the same as when the callback was created (so non-null).
-                            if (playerIdxRef.current != null)
-                                setPlayerIdx(value);
-                        }, 0);
+                        flex: 1,
+                        marginTop: 16 * 7,
                     }}
-                    style={{ height: 0 }}
                 >
-                    {players.map((i) => (
-                        <PlayerPage key={i.id} player={i} />
-                    ))}
-                </Swiper>
-            </SafeAreaView>
+                    <ModalDragHandle
+                        onBackPress={
+                            playerIdx === 0
+                                ? undefined
+                                : () => swiperRef.current?.scrollBy(-1)
+                        }
+                        onNextPress={
+                            playerIdx === players.length - 1
+                                ? undefined
+                                : () => swiperRef.current?.scrollBy(+1)
+                        }
+                        headerRight={
+                            playerIdx === players.length - 1 ? (
+                                <HeaderItem
+                                    onPress={onClose}
+                                    style={{
+                                        marginLeft: 'auto',
+                                    }}
+                                >
+                                    Done
+                                </HeaderItem>
+                            ) : undefined
+                        }
+                    />
+                    {showVsHeader && (
+                        <MatchVsHeader
+                            match={match}
+                            highlightedId={players[playerIdx!]?.id}
+                        />
+                    )}
+
+                    <Swiper
+                        ref={swiperRef}
+                        showsPagination={false}
+                        loop={false}
+                        index={playerIdx!}
+                        onIndexChanged={(value) => {
+                            setTimeout(() => {
+                                // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
+                                // at this point, the component hasn't rerendered yet, so playerIdx will still be a non-null value, so we can't check against that.
+                                // to work around this, we wait 0ms (which actually translates to a short wait) for the playerIdx to change to null.
+                                // we have to use a ref for the playerIdx because we're inside a callback, and the value of playerIdx will be the same as when the callback was created (so non-null).
+                                if (playerIdxRef.current != null)
+                                    setPlayerIdx(value);
+                            }, 0);
+                        }}
+                        style={{ height: 0 }}
+                    >
+                        {players.map((i) => (
+                            <PlayerPage key={i.id} player={i} />
+                        ))}
+                    </Swiper>
+                </SafeAreaView>
+            </PortalProvider>
         </Modal>
     );
 }
