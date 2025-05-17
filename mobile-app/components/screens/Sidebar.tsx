@@ -1,7 +1,7 @@
 import { Link } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
-import { Animated, TouchableOpacity } from 'react-native';
+import { Animated, ScrollView, TouchableOpacity } from 'react-native';
 import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -174,7 +174,7 @@ export function Sidebar({}: SidebarProps) {
                 </>
             </View>
 
-            <View
+            <ScrollView
                 style={{
                     backgroundColor: '#1A1A1A',
 
@@ -236,102 +236,108 @@ export function Sidebar({}: SidebarProps) {
                         one.
                     </Text>
                 )}
+            </ScrollView>
+            <View
+                style={{
+                    height: 200, // this is not really pixel perfect lol, this needs to have an explicit height in order for the layout to autosize correctly
+                }}
+            >
+                <MenuSection
+                    style={{
+                        alignSelf: 'stretch',
+                    }}
+                    color="dark"
+                >
+                    <MenuItem
+                        title="Settings"
+                        headIcon="cog-outline"
+                        onPress={() => nav.navigate('localSettings')}
+                        tailIconType="next"
+                    />
+
+                    <MenuItem
+                        title="Privacy Policy"
+                        headIcon="shield-lock"
+                        onPress={() => nav.navigate('static/privacyPolicy')}
+                        tailIconType="next"
+                    />
+                    <MenuItem
+                        title="About Us"
+                        headIcon="information-outline"
+                        onPress={() => nav.navigate('static/aboutUs')}
+                        tailIconType="next"
+                    />
+                </MenuSection>
+
+                <ConfirmationModal
+                    onClose={() => setShowAddGroupModal(false)}
+                    title="Add Group"
+                    actions={
+                        [
+                            {
+                                title: 'Create',
+                                type: 'default',
+
+                                onPress: () => {
+                                    nav.navigate('createGroup');
+                                    setShowAddGroupModal(false);
+                                },
+                            },
+                            {
+                                title: 'Join',
+                                type: 'default',
+
+                                onPress: () => {
+                                    nav.navigate('joinGroup');
+                                    setShowAddGroupModal(false);
+                                },
+                            },
+                        ] as const
+                    }
+                    isVisible={showAddGroupModal}
+                />
+                <ConfirmationModal
+                    onClose={() => setGroupIdToBeDeleted(null)}
+                    title="Leave Group"
+                    description="Are you sure you want to leave this group?"
+                    actions={
+                        [
+                            {
+                                title: 'Leave',
+                                type: 'danger',
+
+                                onPress: () => {
+                                    if (groupIdToBeDeleted) {
+                                        removeGroup(groupIdToBeDeleted);
+                                    }
+                                    setGroupIdToBeDeleted(null);
+                                },
+                            },
+                            {
+                                title: 'Cancel',
+                                type: 'default',
+
+                                onPress: () => {
+                                    setGroupIdToBeDeleted(null);
+                                },
+                            },
+                        ] as const
+                    }
+                    isVisible={groupIdToBeDeleted != null}
+                />
+                <Text
+                    color="secondary"
+                    style={{
+                        fontSize: 12,
+                        color: '#545456',
+                        fontWeight: 400,
+
+                        textAlign: 'center',
+                    }}
+                >
+                    Version {env.appVersion}
+                </Text>
             </View>
-            <MenuSection
-                style={{
-                    alignSelf: 'stretch',
-                }}
-                color="dark"
-            >
-                <MenuItem
-                    title="Settings"
-                    headIcon="cog-outline"
-                    onPress={() => nav.navigate('localSettings')}
-                    tailIconType="next"
-                />
-
-                <MenuItem
-                    title="Privacy Policy"
-                    headIcon="shield-lock"
-                    onPress={() => nav.navigate('static/privacyPolicy')}
-                    tailIconType="next"
-                />
-                <MenuItem
-                    title="About Us"
-                    headIcon="information-outline"
-                    onPress={() => nav.navigate('static/aboutUs')}
-                    tailIconType="next"
-                />
-            </MenuSection>
-
-            <ConfirmationModal
-                onClose={() => setShowAddGroupModal(false)}
-                title="Add Group"
-                actions={
-                    [
-                        {
-                            title: 'Create',
-                            type: 'default',
-
-                            onPress: () => {
-                                nav.navigate('createGroup');
-                                setShowAddGroupModal(false);
-                            },
-                        },
-                        {
-                            title: 'Join',
-                            type: 'default',
-
-                            onPress: () => {
-                                nav.navigate('joinGroup');
-                                setShowAddGroupModal(false);
-                            },
-                        },
-                    ] as const
-                }
-                isVisible={showAddGroupModal}
-            />
-            <ConfirmationModal
-                onClose={() => setGroupIdToBeDeleted(null)}
-                title="Leave Group"
-                description="Are you sure you want to leave this group?"
-                actions={
-                    [
-                        {
-                            title: 'Leave',
-                            type: 'danger',
-
-                            onPress: () => {
-                                if (groupIdToBeDeleted) {
-                                    removeGroup(groupIdToBeDeleted);
-                                }
-                                setGroupIdToBeDeleted(null);
-                            },
-                        },
-                        {
-                            title: 'Cancel',
-                            type: 'default',
-
-                            onPress: () => {
-                                setGroupIdToBeDeleted(null);
-                            },
-                        },
-                    ] as const
-                }
-                isVisible={groupIdToBeDeleted != null}
-            />
-            <Text
-                color="secondary"
-                style={{
-                    fontSize: 12,
-                    color: '#545456',
-                    fontWeight: 400,
-
-                    textAlign: 'center',
-                }}
-            >
-                Version {env.appVersion}
-            </Text>
         </SafeAreaView>
     );
 }
