@@ -87,7 +87,11 @@ export function SidebarGroupItem({
                 style={{ flex: 1, paddingHorizontal: 17, paddingVertical: 12 }}
             >
                 <>
-                    <Text color="primary" style={{ fontSize: 17 }}>
+                    <Text
+                        color="primary"
+                        style={{ fontSize: 17 }}
+                        numberOfLines={2}
+                    >
                         {isLoading
                             ? 'Loading...'
                             : (data?.data?.name ?? 'Unknown')}

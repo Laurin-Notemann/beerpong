@@ -53,7 +53,11 @@ export default function Podium({
             <TouchableOpacity
                 disabled={secondPlace == null}
                 activeOpacity={0.6}
-                style={{ alignItems: 'center', marginTop: 48 }}
+                style={{
+                    alignItems: 'center',
+                    marginTop: 48,
+                    flex: 1,
+                }}
                 onPress={() =>
                     secondPlace && nav.navigate('player', secondPlace)
                 }
@@ -79,6 +83,8 @@ export default function Podium({
                                 fontSize: 15,
                                 color: theme.color.text.primary,
                                 marginTop: 12,
+
+                                textAlign: 'center',
                             }}
                         >
                             {secondPlace?.name}
@@ -137,6 +143,7 @@ export default function Podium({
                     },
                     shadowOpacity: 0.3,
                     shadowRadius: 8,
+                    flex: 1,
                 }}
             >
                 <ThemedText
@@ -160,6 +167,8 @@ export default function Podium({
                                 fontSize: 15,
                                 color: theme.color.text.primary,
                                 marginTop: 12,
+
+                                textAlign: 'center',
                             }}
                         >
                             {firstPlace?.name}
@@ -200,7 +209,7 @@ export default function Podium({
             <TouchableOpacity
                 disabled={thirdPlace == null}
                 activeOpacity={0.6}
-                style={{ alignItems: 'center', marginTop: 48 }}
+                style={{ alignItems: 'center', marginTop: 48, flex: 1 }}
                 onPress={() => thirdPlace && nav.navigate('player', thirdPlace)}
             >
                 <ThemedText
@@ -224,6 +233,8 @@ export default function Podium({
                                 fontSize: 15,
                                 color: theme.color.text.primary,
                                 marginTop: 12,
+
+                                textAlign: 'center',
                             }}
                         >
                             {thirdPlace?.name}

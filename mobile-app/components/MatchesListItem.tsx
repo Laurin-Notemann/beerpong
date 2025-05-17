@@ -41,6 +41,8 @@ export const MatchesListItem: React.FC<{
                         style={{
                             fontSize: 15,
                             color: theme.color.text.tertiary,
+
+                            flex: 1,
                         }}
                     >
                         {match.blueTeam.map((i) => i.name).join(', ') +

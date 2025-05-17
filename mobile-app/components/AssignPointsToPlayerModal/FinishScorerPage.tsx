@@ -29,7 +29,11 @@ export default function FinishScorerPage({
                     paddingTop: 32,
                 }}
             >
-                <Text color="primary" variant="h3">
+                <Text
+                    color="primary"
+                    variant="h3"
+                    style={{ paddingHorizontal: 16, textAlign: 'center' }}
+                >
                     Who scored the final cup?
                 </Text>
                 <ScrollView
