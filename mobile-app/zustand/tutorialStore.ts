@@ -22,14 +22,18 @@ export const useTutorialStore = create<TutorialStore>()(
 
             actions: {
                 setHasDraggedToAssignPoints: () => {
-                    set(() => ({
-                        hasDraggedToAssignPoints: true,
-                    }));
+                    set((state) =>
+                        state.hasDraggedToAssignPoints
+                            ? state
+                            : { hasDraggedToAssignPoints: true }
+                    );
                 },
                 setHasTappedToAssignPlayers: () => {
-                    set(() => ({
-                        hasTappedToAssignPlayers: true,
-                    }));
+                    set((state) =>
+                        state.hasTappedToAssignPlayers
+                            ? state
+                            : { hasTappedToAssignPlayers: true }
+                    );
                 },
                 reset: () => {
                     set(() => ({
