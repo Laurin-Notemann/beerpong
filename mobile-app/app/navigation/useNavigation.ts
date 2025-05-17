@@ -5,6 +5,7 @@ export type RootStackParamList = {
     index: undefined;
     formations: undefined;
     createGroupSetName: undefined;
+    createGroupSetGame: undefined;
     editFormation: undefined;
     createGroup: undefined;
     joinGroup: undefined;

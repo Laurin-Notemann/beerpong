@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { useCreateGroupMutation } from '@/api/calls/groupHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import CreateGroupSetName from '@/components/screens/CreateGroupSetName';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -8,30 +9,30 @@ import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
-import { useNavigation } from './navigation/useNavigation';
-
 export default function Page() {
     const nav = useNavigation();
-
-    const { members, addName } = useCreateGroupStore();
+    const { members, addName, name } = useCreateGroupStore();
     const createGroupMutation = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
 
-    const [isPresetSelection, setIsPresetSelection] = useState(false);
-
     const { supportAdditionalGames } = useLocalSettings();
 
-    async function onSubmit(group: { name: string }) {
+    async function onNameGroup(group: { name: string }) {
+        addName(group.name);
+
+        if (supportAdditionalGames) {
+            nav.navigate('createGroupSetGame');
+        } else {
+            createGroup();
+        }
+    }
+
+    async function createGroup() {
+        if (!name) return;
+
         try {
-            addName(group.name);
-
-            if (supportAdditionalGames) {
-                setIsPresetSelection(true);
-                return;
-            }
-
             const data = await createGroupMutation.mutateAsync({
-                name: group.name,
+                name,
                 profileNames: members.map((m) => m.name),
             });
             if (!data?.data?.id) {
@@ -39,7 +40,7 @@ export default function Page() {
             }
             addGroup(data.data.id);
 
-            showSuccessToast(`You created "${group.name}"`);
+            showSuccessToast(`You created "${name}"`);
 
             nav.navigate('index');
         } catch (err) {
@@ -47,11 +48,11 @@ export default function Page() {
             showErrorToast('Failed to create group.');
         }
     }
-    if (isPresetSelection) return null;
     return (
         <CreateGroupSetName
-            onSubmit={onSubmit}
+            onSubmit={onNameGroup}
             isPending={createGroupMutation.isPending}
+            hasNextStep={supportAdditionalGames}
         />
     );
 }

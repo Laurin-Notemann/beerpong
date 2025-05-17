@@ -11,11 +11,13 @@ import TextInput from '../TextInput';
 export interface CreateGroupSetNameProps {
     isPending: boolean;
     onSubmit: (group: { name: string }) => void;
+    hasNextStep: boolean;
 }
 
 export default function CreateGroupSetName({
     isPending,
     onSubmit,
+    hasNextStep,
 }: CreateGroupSetNameProps) {
     const [name, setName] = useState('');
 
@@ -29,11 +31,19 @@ export default function CreateGroupSetName({
                                 disabled={name.length < 1 || isPending}
                                 onPress={() => onSubmit({ name })}
                             >
-                                {isPending ? <ActivityIndicator /> : 'Create'}
+                                {isPending ? (
+                                    <ActivityIndicator />
+                                ) : hasNextStep ? (
+                                    'Next'
+                                ) : (
+                                    'Create'
+                                )}
                             </HeaderItem>
                         ),
 
-                        headerTitle: 'Create Group',
+                        headerTitle: hasNextStep
+                            ? 'Set Group Name'
+                            : 'Create Group',
                         headerBackTitleVisible: false,
                         headerBackVisible: true,
                         headerTintColor: '#fff',
