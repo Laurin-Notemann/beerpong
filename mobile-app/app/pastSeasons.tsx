@@ -1,12 +1,17 @@
 import * as React from 'react';
+import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
 import { Dimensions, ScrollView, StyleSheet } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
+import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import { env } from '@/api/env';
 import { navStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import ErrorScreen from '@/components/ErrorScreen';
 import { HeaderItem } from '@/components/HeaderItem';
 import Leaderboard from '@/components/Leaderboard';
-import { mockPlayers } from '@/components/mockData/players';
+import LoadingScreen from '@/components/LoadingScreen';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
@@ -16,9 +21,15 @@ const { width, height } = Dimensions.get('window');
 /**
  * TODO: use <SwiperHeader /> with <PaginationDot />
  */
-function Card() {
-    const players = mockPlayers;
-
+function Card({
+    season,
+    players,
+    numMatches,
+}: {
+    season: { name: string; startDate: string; endDate: string };
+    players: any[];
+    numMatches: number;
+}) {
     return (
         <ThemedView style={styles.card}>
             <ThemedText
@@ -29,7 +40,7 @@ function Card() {
                     marginTop: 48,
                 }}
             >
-                Kroatien
+                {season.name}
             </ThemedText>
             <ThemedText
                 style={{
@@ -38,7 +49,8 @@ function Card() {
                     marginTop: 3,
                 }}
             >
-                9.9.2024 - 16.9.2024
+                {env.format.date.seasonStartAndEnd(dayjs(season.startDate))} -{' '}
+                {env.format.date.seasonStartAndEnd(dayjs(season.endDate))}
             </ThemedText>
             <ThemedText
                 style={{
@@ -47,7 +59,7 @@ function Card() {
                     marginTop: 32 - 6,
                 }}
             >
-                {players.length} players · 78 matches
+                {players.length} players · {numMatches} matches
             </ThemedText>
             <Leaderboard players={players} />
         </ThemedView>
@@ -58,6 +70,19 @@ function Card() {
  * <Carousel /> intercepts touch events, so we can't wrap it inside a scrollview. instead, we have to put each item inside a scrollview.
  */
 export default function Page() {
+    const nav = useNavigation();
+
+    const { groupId } = useGroup();
+
+    const seasonsQuery = useAllSeasonsQuery(groupId);
+
+    const seasons =
+        seasonsQuery.data?.data?.filter((i) => i.endDate != null) ?? [];
+
+    if (seasonsQuery.isLoading) return <LoadingScreen />;
+    if (!seasonsQuery.data?.data)
+        return <ErrorScreen error={seasonsQuery.error} />;
+
     return (
         <>
             <Stack.Screen
@@ -65,11 +90,15 @@ export default function Page() {
                     ...navStyles,
                     headerBackTitleVisible: false,
                     headerTitle: 'Past Seasons',
-                    headerRight: () => <HeaderItem>Done</HeaderItem>,
+                    headerRight: () => (
+                        <HeaderItem onPress={() => nav.goBack()}>
+                            Done
+                        </HeaderItem>
+                    ),
                 }}
             />
             <Carousel
-                data={[0, 0, 0, 0, 0]}
+                data={seasons}
                 height={height - 90}
                 loop={false}
                 width={
@@ -78,7 +107,7 @@ export default function Page() {
                     theme.carousel.peekSize * 2
                 }
                 style={{ width }}
-                renderItem={() => (
+                renderItem={(season) => (
                     <ScrollView
                         style={{
                             marginHorizontal: theme.carousel.peekGap,
@@ -87,7 +116,17 @@ export default function Page() {
                                 theme.carousel.peekSize,
                         }}
                     >
-                        <Card />
+                        <Card
+                            season={{
+                                name: season.item.name!,
+                                startDate: season.item.startDate!,
+                                endDate: season.item.endDate!,
+                            }}
+                            // @ts-ignore TODO: type this properly
+                            numMatches={season.item.numMatches!}
+                            // @ts-ignore TODO: type this properly
+                            players={season.item.players}
+                        />
                     </ScrollView>
                 )}
             />
