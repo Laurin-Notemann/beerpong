@@ -121,30 +121,26 @@ export default function GroupSettingsScreen({
                     )}
                 </MenuSection>
                 <MenuSection title="Management">
-                    {env.isDev && (
-                        <>
-                            <MenuItem
-                                title="Past Seasons"
-                                headIcon="pencil-outline"
-                                tailIconType="next"
-                                tailContent={pastSeasons}
-                                onPress={() => nav.navigate('pastSeasons')}
-                            />
-                            <MenuItem
-                                title="Start new Season"
-                                headIcon="cached"
-                                tailIconType="next"
-                                onPress={() => nav.navigate('saveSeason')}
-                                confirmationPrompt={{
-                                    title: 'Start new Season',
-                                    description:
-                                        'This will reset the leaderboard. All matches and the leaderboard can still be viewed in "Past Seasons".',
-                                    buttonText: 'Start new Season',
-                                    type: 'confirmBlue',
-                                }}
-                            />
-                        </>
-                    )}
+                    <MenuItem
+                        title="Past Seasons"
+                        headIcon="pencil-outline"
+                        tailIconType="next"
+                        tailContent={pastSeasons}
+                        onPress={() => nav.navigate('pastSeasons')}
+                    />
+                    <MenuItem
+                        title="Start new Season"
+                        headIcon="cached"
+                        tailIconType="next"
+                        onPress={() => nav.navigate('saveSeason')}
+                        confirmationPrompt={{
+                            title: 'Start new Season',
+                            description:
+                                'This will reset the leaderboard. All matches and the leaderboard can still be viewed in "Past Seasons".',
+                            buttonText: 'Start new Season',
+                            type: 'confirmBlue',
+                        }}
+                    />
                     {env.isDev && (
                         <MenuItem
                             title="View Statistics"
