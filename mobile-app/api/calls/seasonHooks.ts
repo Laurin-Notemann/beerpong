@@ -7,6 +7,7 @@ import { ApiId } from '../types';
 import { useApi } from '../utils/create-api';
 import { QK } from '../utils/reactQuery';
 import { useGroupQuery } from './groupHooks';
+import { LeaderboardScope } from './leaderboardHooks';
 
 export const useSeasonQuery = (seasonId: ApiId | null) => {
     const { api } = useApi();
@@ -36,7 +37,47 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
             }
             const res = await (await api).getAllSeasons(groupId);
 
-            return res?.data;
+            const rawSeasons = res.data.data ?? [];
+
+            const seasons = await Promise.all(
+                rawSeasons.map(async (season) => {
+                    const matches = await (
+                        await api
+                    ).getAllMatches({
+                        groupId,
+                        seasonId: season.id!,
+                    });
+
+                    const leaderboard = await (
+                        await api
+                    ).getLeaderboard({
+                        groupId,
+                        seasonId: season.id!,
+                        scope: LeaderboardScope.SEASON,
+                    });
+
+                    const players = leaderboard.data.data?.entries ?? [];
+
+                    return {
+                        ...season,
+                        numMatches: matches.data.data?.length ?? 0,
+                        players: players.map((i) => {
+                            return {
+                                id: i.playerDto!.id!,
+                                name: i.playerDto!.profile!.name!,
+                                points: i.totalPoints!,
+                                matches: i.totalGames!,
+                                matchesWon: 0,
+                                elo: 0,
+                            };
+                        }),
+                    };
+                })
+            );
+
+            return {
+                data: seasons,
+            };
         },
     });
 };

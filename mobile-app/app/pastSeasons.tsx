@@ -1,26 +1,35 @@
+import * as React from 'react';
+import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Dimensions, ScrollView, StyleSheet } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
-import Swiper from 'react-native-swiper';
 
+import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import { env } from '@/api/env';
 import { navStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import ErrorScreen from '@/components/ErrorScreen';
 import { HeaderItem } from '@/components/HeaderItem';
 import Leaderboard from '@/components/Leaderboard';
-import { mockPlayers } from '@/components/mockData/players';
-import SwiperHeader from '@/components/SwiperHeader';
-// import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-// import Carousel from "react-native-snap-carousel";
+import LoadingScreen from '@/components/LoadingScreen';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-function Card() {
-    const players = mockPlayers;
-
+/**
+ * TODO: use <SwiperHeader /> with <PaginationDot />
+ */
+function Card({
+    season,
+    players,
+    numMatches,
+}: {
+    season: { name: string; startDate: string; endDate: string };
+    players: any[];
+    numMatches: number;
+}) {
     return (
         <ThemedView style={styles.card}>
             <ThemedText
@@ -31,7 +40,7 @@ function Card() {
                     marginTop: 48,
                 }}
             >
-                Kroatien
+                {season.name}
             </ThemedText>
             <ThemedText
                 style={{
@@ -40,7 +49,8 @@ function Card() {
                     marginTop: 3,
                 }}
             >
-                9.9.2024 - 16.9.2024
+                {env.format.date.seasonStartAndEnd(dayjs(season.startDate))} -{' '}
+                {env.format.date.seasonStartAndEnd(dayjs(season.endDate))}
             </ThemedText>
             <ThemedText
                 style={{
@@ -49,21 +59,30 @@ function Card() {
                     marginTop: 32 - 6,
                 }}
             >
-                {players.length} players · 78 matches
+                {players.length} players · {numMatches} matches
             </ThemedText>
             <Leaderboard players={players} />
         </ThemedView>
     );
 }
 
-export default function Screen() {
-    const [cardIdx, setCardIdx] = useState(0);
+/**
+ * <Carousel /> intercepts touch events, so we can't wrap it inside a scrollview. instead, we have to put each item inside a scrollview.
+ */
+export default function Page() {
+    const nav = useNavigation();
 
-    function onSwiped(idx: number) {
-        setCardIdx(idx);
-    }
+    const { groupId } = useGroup();
 
-    // if (EXPERIMENTAL_CAROUSEL) {
+    const seasonsQuery = useAllSeasonsQuery(groupId);
+
+    const seasons =
+        seasonsQuery.data?.data?.filter((i) => i.endDate != null) ?? [];
+
+    if (seasonsQuery.isLoading) return <LoadingScreen />;
+    if (!seasonsQuery.data?.data)
+        return <ErrorScreen error={seasonsQuery.error} />;
+
     return (
         <>
             <Stack.Screen
@@ -71,95 +90,47 @@ export default function Screen() {
                     ...navStyles,
                     headerBackTitleVisible: false,
                     headerTitle: 'Past Seasons',
-                    headerRight: () => <HeaderItem>Done</HeaderItem>,
+                    headerRight: () => (
+                        <HeaderItem onPress={() => nav.goBack()}>
+                            Done
+                        </HeaderItem>
+                    ),
                 }}
             />
-
             <Carousel
-                mode="parallax"
-                modeConfig={{
-                    parallaxScrollingScale: 0.9,
-                    parallaxScrollingOffset: 50,
-                }}
-                style={{
-                    // width: width * 0.86,
-
-                    backgroundColor: theme.color.bg,
-                }}
+                data={seasons}
+                height={height - 90}
                 loop={false}
-                width={width}
-                height={1000}
-                data={[0, 0, 0, 0, 0]}
-                renderItem={(item) => <Card />}
-                // sliderWidth={Dimensions.get("screen").width}
-                // itemWidth={Dimensions.get("screen").width - 32}
+                width={
+                    width -
+                    theme.carousel.peekGap * 2 -
+                    theme.carousel.peekSize * 2
+                }
+                style={{ width }}
+                renderItem={(season) => (
+                    <ScrollView
+                        style={{
+                            marginHorizontal: theme.carousel.peekGap,
+                            left:
+                                theme.carousel.peekGap +
+                                theme.carousel.peekSize,
+                        }}
+                    >
+                        <Card
+                            season={{
+                                name: season.item.name!,
+                                startDate: season.item.startDate!,
+                                endDate: season.item.endDate!,
+                            }}
+                            // @ts-ignore TODO: type this properly
+                            numMatches={season.item.numMatches!}
+                            // @ts-ignore TODO: type this properly
+                            players={season.item.players}
+                        />
+                    </ScrollView>
+                )}
             />
         </>
-    );
-    // }
-
-    return (
-        // <ParallaxScrollView
-        //   headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
-        //   headerImage={
-        //     <Ionicons size={310} name="code-slash" style={styles.headerImage} />
-        //   }
-        // >
-        <Animated.ScrollView style={{ backgroundColor: theme.color.bg }}>
-            <ThemedView
-                style={{
-                    flex: 1,
-                    paddingBottom: 16,
-                }}
-            >
-                {/* <ThemedView>
-        <SwiperHeader
-        // currentItemIdx={activeSubexpenseIdx}
-        // numItems={activeSubexpenses.length}
-        /> */}
-                <SwiperHeader numItems={5} currentItemIdx={cardIdx} />
-                <Swiper
-                    removeClippedSubviews={false}
-                    // contentContainerStyle={{
-                    //   paddingHorizontal: 10,
-                    // }}
-                    // containerStyle={{
-                    //   width: width * 0.9,
-                    //   // Center the current item
-                    //   alignSelf: "center",
-                    // }}
-                    // contentContainerStyle={{ width: 100, flex: 0 }}
-                    // contentInset={{ left: 64 }}
-                    // contentOffset={{ x: 64, y: 0 }}
-                    style={
-                        {
-                            // backgroundColor: "red",
-                        }
-                    }
-                    showsButtons={false}
-                    showsPagination={false}
-                    loop={false}
-                    // index={activeSubexpenseIdx}
-                    // onIndexChanged={onSwiped}
-                    index={0}
-                    onIndexChanged={(idx) => {
-                        // ReactNativeHapticFeedback.trigger("impactLight", {
-                        //   enableVibrateFallback: false,
-                        //   ignoreAndroidSystemSettings: false,
-                        // });
-                        onSwiped(idx);
-                    }}
-                >
-                    <Card />
-                    <Card />
-                    <Card />
-                    <Card />
-                    <Card />
-                </Swiper>
-                {/* </ThemedView> */}
-            </ThemedView>
-        </Animated.ScrollView>
-        // </ParallaxScrollView>
     );
 }
 
@@ -169,26 +140,6 @@ const styles = StyleSheet.create({
         flex: 1,
 
         borderRadius: theme.borderRadius.card,
-
         backgroundColor: theme.color.modal.bg,
-
-        marginHorizontal: 16,
-
-        width: 16 * 20,
-
-        // justifyContent: "center",
-        // // Make each slide slightly smaller than the full width
-        // width: width * 0.8,
-    },
-
-    headerImage: {
-        color: '#808080',
-        bottom: -90,
-        left: -35,
-        position: 'absolute',
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        gap: 8,
     },
 });

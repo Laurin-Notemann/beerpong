@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import { navStyles } from '@/app/navigation/navStyles';
@@ -9,7 +10,7 @@ import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
-import { showErrorToast } from '@/toast';
+import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 export default function Page() {
@@ -19,14 +20,14 @@ export default function Page() {
 
     const { groupId } = useGroup();
 
-    const { mutateAsync } = useStartNewSeasonMutation();
+    const newSeasonMutation = useStartNewSeasonMutation();
 
     const qc = useQueryClient();
 
     async function onStartNewSeason(oldSeasonName: string) {
         if (!groupId) return;
         try {
-            await mutateAsync({
+            await newSeasonMutation.mutateAsync({
                 groupId,
                 oldSeasonName,
             });
@@ -35,6 +36,9 @@ export default function Page() {
                 exact: false,
             });
             nav.navigate('index');
+            showSuccessToast(
+                `Saved current leaderboard as "${oldSeasonName}".`
+            );
         } catch (err) {
             ConsoleLogger.error('failed to start new season:', err);
             showErrorToast('Failed to create start new season.');
@@ -49,10 +53,16 @@ export default function Page() {
                     headerTitle: 'Save old Season',
                     headerRight: () => (
                         <HeaderItem
-                            disabled={value.length < 1}
+                            disabled={
+                                value.length < 1 || newSeasonMutation.isPending
+                            }
                             onPress={() => onStartNewSeason(value)}
                         >
-                            Save
+                            {newSeasonMutation.isPending ? (
+                                <ActivityIndicator />
+                            ) : (
+                                'Save'
+                            )}
                         </HeaderItem>
                     ),
                 }}

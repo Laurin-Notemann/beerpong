@@ -1,6 +1,12 @@
 const black = '#000';
 
 export const theme = {
+    carousel: {
+        /* the gap to the previous and next cards */
+        peekGap: 8,
+        /* how much of the previous and next cards is visible */
+        peekSize: 8,
+    },
     avatar: {
         bg: '#D2D2DC',
         text: '#4F4F6D',
