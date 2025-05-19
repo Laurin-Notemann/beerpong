@@ -194,7 +194,9 @@ export default function GroupSettingsScreen({
                         headIcon="share-outline"
                         tailIconType="next"
                         tailContent={formatGroupCode(groupCode)}
-                        onPress={() => copyToClipboard(groupCode)}
+                        onPress={() =>
+                            copyToClipboard(formatGroupCode(groupCode))
+                        }
                     />
                 </MenuSection>
                 <MenuSection
