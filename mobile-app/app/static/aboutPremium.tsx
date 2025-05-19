@@ -1,12 +1,19 @@
 import { Stack } from 'expo-router';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View } from 'react-native';
 
 import { navStyles } from '@/app/navigation/navStyles';
 import { PremiumPerksCarousel } from '@/components/PremiumPerksCarousel';
+import { theme } from '@/theme';
 
 export default function Page() {
     return (
-        <GestureHandlerRootView>
+        <View
+            style={{
+                flex: 1,
+                paddingTop: 32,
+                backgroundColor: theme.color.bg,
+            }}
+        >
             <Stack.Screen
                 options={{
                     ...navStyles,
@@ -17,6 +24,6 @@ export default function Page() {
                 onGetPremiumPress={() => {}}
                 onSecondaryActionPress={() => {}}
             />
-        </GestureHandlerRootView>
+        </View>
     );
 }

@@ -71,7 +71,9 @@ export default function PlayerScreen({
     const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
     return (
-        <GestureHandlerRootView>
+        <GestureHandlerRootView
+            style={{ backgroundColor: theme.color.bg, flex: 1 }}
+        >
             <Stack.Screen
                 options={{
                     ...navStyles,
