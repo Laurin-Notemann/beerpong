@@ -8,6 +8,8 @@ interface LocalSettingsStore {
     rulesTab: boolean;
     supportAdditionalGames: boolean;
     tutorials: boolean;
+    eloAlgorithm: boolean;
+    premiumVersion: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -15,6 +17,8 @@ interface LocalSettingsStore {
         toggleRulesTab: () => void;
         toggleSupportAdditionalGames: () => void;
         toggleTutorials: () => void;
+        toggleEloAlgorithm: () => void;
+        togglePremiumVersion: () => void;
     };
 }
 
@@ -26,6 +30,8 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             rulesTab: false,
             supportAdditionalGames: false,
             tutorials: false,
+            eloAlgorithm: false,
+            premiumVersion: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -53,6 +59,16 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         tutorials: !get().tutorials,
                     }));
                 },
+                toggleEloAlgorithm: () => {
+                    set(() => ({
+                        eloAlgorithm: !get().eloAlgorithm,
+                    }));
+                },
+                togglePremiumVersion: () => {
+                    set(() => ({
+                        premiumVersion: !get().premiumVersion,
+                    }));
+                },
             },
         }),
         {
@@ -64,6 +80,8 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 rulesTab: state.rulesTab,
                 supportAdditionalGames: state.supportAdditionalGames,
                 tutorials: state.tutorials,
+                eloAlgorithm: state.eloAlgorithm,
+                premiumVersion: state.premiumVersion,
             }),
         }
     )

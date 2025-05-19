@@ -17,6 +17,10 @@ export default function Page() {
         toggleBeerpongProMode,
         supportAdditionalGames,
         toggleSupportAdditionalGames,
+        premiumVersion,
+        togglePremiumVersion,
+        eloAlgorithm,
+        toggleEloAlgorithm,
     } = useLocalSettings();
 
     return (
@@ -64,6 +68,24 @@ export default function Page() {
                             <Switch
                                 value={tutorials}
                                 onChange={toggleTutorials}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Premium Version"
+                        tailContent={
+                            <Switch
+                                value={premiumVersion}
+                                onChange={togglePremiumVersion}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Elo Algorithm"
+                        tailContent={
+                            <Switch
+                                value={eloAlgorithm}
+                                onChange={toggleEloAlgorithm}
                             />
                         }
                     />

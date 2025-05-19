@@ -39,12 +39,12 @@ export default function CreateNewPlayer({
                         <HeaderItem
                             disabled={
                                 name.length < 1 ||
-                                (existingPlayerName?.length ?? 0) > 0 ||
-                                isPending
+                                (existingPlayerName?.length ?? 0) > 0
                             }
+                            isLoading={isPending}
                             onPress={() => onCreate({ name })}
                         >
-                            {isPending ? <ActivityIndicator /> : 'Create'}
+                            Create
                         </HeaderItem>
                     ),
                 }}

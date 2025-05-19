@@ -67,7 +67,7 @@ export default function Page() {
             matchDtoToMatch(playersQuery.data?.data, allowedMoves)
         ) ?? [];
 
-    const { mutateAsync } = useDeleteMatchMutation();
+    const deleteMatchMutation = useDeleteMatchMutation();
 
     const nav = useNavigation();
 
@@ -157,7 +157,7 @@ export default function Page() {
         if (!groupId || !seasonId || !id) return;
 
         try {
-            await mutateAsync({
+            await deleteMatchMutation.mutateAsync({
                 groupId,
                 seasonId,
                 id,
@@ -256,9 +256,10 @@ export default function Page() {
                     headerBackTitleVisible: false,
                     headerRight: () => (
                         <HeaderItem
-                            disabled={
-                                (isEditing && !matchDraft.isDirty) ||
-                                updateMatchMutation.isPending
+                            disabled={isEditing && !matchDraft.isDirty}
+                            isLoading={
+                                updateMatchMutation.isPending ||
+                                deleteMatchMutation.isPending
                             }
                             onPress={async () => {
                                 if (!isEditing) {
@@ -270,15 +271,7 @@ export default function Page() {
                                 }
                             }}
                         >
-                            {isEditing ? (
-                                updateMatchMutation.isPending ? (
-                                    <ActivityIndicator />
-                                ) : (
-                                    'Save'
-                                )
-                            ) : (
-                                'Edit'
-                            )}
+                            {isEditing ? 'Save' : 'Edit'}
                         </HeaderItem>
                     ),
                     headerLeft: isEditing

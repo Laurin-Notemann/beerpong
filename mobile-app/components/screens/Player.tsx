@@ -71,7 +71,9 @@ export default function PlayerScreen({
     const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
     return (
-        <GestureHandlerRootView>
+        <GestureHandlerRootView
+            style={{ backgroundColor: theme.color.bg, flex: 1 }}
+        >
             <Stack.Screen
                 options={{
                     ...navStyles,
@@ -81,18 +83,10 @@ export default function PlayerScreen({
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
-                            disabled={editable && isPending}
+                            isLoading={isPending}
                             onPress={() => setEditable((prev) => !prev)}
                         >
-                            {editable ? (
-                                isPending ? (
-                                    <ActivityIndicator />
-                                ) : (
-                                    'Done'
-                                )
-                            ) : (
-                                'Edit'
-                            )}
+                            {editable ? 'Done' : 'Edit'}
                         </HeaderItem>
                     ),
                 }}

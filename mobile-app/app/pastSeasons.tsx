@@ -1,7 +1,7 @@
 import * as React from 'react';
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
-import { Dimensions, ScrollView, StyleSheet } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
@@ -84,7 +84,7 @@ export default function Page() {
         return <ErrorScreen error={seasonsQuery.error} />;
 
     return (
-        <>
+        <View style={{ flex: 1, backgroundColor: theme.color.bg }}>
             <Stack.Screen
                 options={{
                     ...navStyles,
@@ -102,17 +102,15 @@ export default function Page() {
                 height={height - 90}
                 loop={false}
                 width={
-                    width -
-                    theme.carousel.peekGap * 2 -
-                    theme.carousel.peekSize * 2
+                    width - theme.carousel.peekGap - theme.carousel.peekSize * 2
                 }
                 style={{ width }}
                 renderItem={(season) => (
                     <ScrollView
                         style={{
-                            marginHorizontal: theme.carousel.peekGap,
+                            marginHorizontal: theme.carousel.peekGap / 2,
                             left:
-                                theme.carousel.peekGap +
+                                theme.carousel.peekGap / 2 +
                                 theme.carousel.peekSize,
                         }}
                     >
@@ -130,7 +128,7 @@ export default function Page() {
                     </ScrollView>
                 )}
             />
-        </>
+        </View>
     );
 }
 
