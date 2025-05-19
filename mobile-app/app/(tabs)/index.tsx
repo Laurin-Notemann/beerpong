@@ -12,17 +12,20 @@ import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import copyToClipboard from '@/components/copyToClipboard';
 import Leaderboard from '@/components/Leaderboard';
 import PillButton from '@/components/PillButton';
 import { theme } from '@/theme';
+import { formatGroupCode } from '@/utils/groupCode';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
     const { groupId, seasonId, group } = useGroup();
 
     const { players } = useLeaderboardProps(groupId, seasonId ?? null);
 
-    const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
-        useState(false);
+    const [showSortModal, setShowSortModal] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
 
     const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
         'ELO'
@@ -34,10 +37,12 @@ export default function Page() {
         invalidatePlayers(groupId!, seasonId!)
     );
 
+    const experiments = useLocalSettings();
+
     return (
         <GestureHandlerRootView>
             <ConfirmationModal
-                onClose={() => setShowChangeWallpaperModal(false)}
+                onClose={() => setShowSortModal(false)}
                 title="Sort Players By"
                 actions={
                     [
@@ -46,7 +51,7 @@ export default function Page() {
 
                             onPress: () => {
                                 setSortingAlgorithm('ELO');
-                                setShowChangeWallpaperModal(false);
+                                setShowSortModal(false);
                             },
                         },
                         {
@@ -54,12 +59,34 @@ export default function Page() {
 
                             onPress: () => {
                                 setSortingAlgorithm('AVERAGE');
-                                setShowChangeWallpaperModal(false);
+                                setShowSortModal(false);
                             },
                         },
                     ] as const
                 }
-                isVisible={showChangeWallpaperModal}
+                isVisible={showSortModal}
+            />
+            <ConfirmationModal
+                onClose={() => setShowInviteModal(false)}
+                title="Invite Friends to this Group"
+                actions={
+                    [
+                        {
+                            title: 'Copy Group Code',
+
+                            onPress: () => {
+                                if (group.data?.inviteCode) {
+                                    // this should always be true
+                                    copyToClipboard(
+                                        formatGroupCode(group.data.inviteCode)
+                                    );
+                                    setShowInviteModal(false);
+                                }
+                            },
+                        },
+                    ] as const
+                }
+                isVisible={showInviteModal}
             />
             <ScrollView
                 style={{
@@ -81,19 +108,19 @@ export default function Page() {
                     {group.data?.numberOfPlayers ?? 0} players ·{' '}
                     {group.data?.numberOfMatches ?? 0} matches
                 </Text>
-                {env.isDev && (
+                {experiments.eloAlgorithm && (
                     <View
                         style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}
                     >
                         <PillButton
                             label="Sort"
                             iconName="swap-vertical"
-                            onPress={() => setShowChangeWallpaperModal(true)}
+                            onPress={() => setShowSortModal(true)}
                         />
                         <PillButton
                             label="Invite"
                             iconName="share-outline"
-                            onPress={() => setShowChangeWallpaperModal(true)}
+                            onPress={() => setShowInviteModal(true)}
                         />
                     </View>
                 )}

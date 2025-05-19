@@ -8,6 +8,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 import ConfirmationModal from '../ConfirmationModal';
 import copyToClipboard from '../copyToClipboard';
@@ -45,6 +46,8 @@ export default function GroupSettingsScreen({
     const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
         useState(false);
 
+    const experiments = useLocalSettings();
+
     return (
         <RootSiblingParent>
             <ScrollView
@@ -57,7 +60,7 @@ export default function GroupSettingsScreen({
                 contentContainerStyle={{ paddingBottom: 16 }}
             >
                 <MenuSection title="Settings">
-                    {env.isDev && (
+                    {experiments.premiumVersion && (
                         <MenuItem
                             title="Premium Version"
                             headIcon="check-decagram"
@@ -154,7 +157,7 @@ export default function GroupSettingsScreen({
                         tailIconType="next"
                         onPress={() => nav.navigate('createNewPlayer')}
                     />
-                    {env.isDev && (
+                    {experiments.eloAlgorithm && (
                         <MenuItem
                             title="Rank Players by"
                             headIcon="division"
