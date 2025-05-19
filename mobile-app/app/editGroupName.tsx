@@ -41,18 +41,12 @@ export default function Page() {
                 options={{
                     headerRight: () => (
                         <HeaderItem
-                            disabled={
-                                value.length < 1 ||
-                                updateGroupMutation.isPending
-                            }
+                            isLoading={updateGroupMutation.isPending}
+                            disabled={value.length < 1}
                             noMargin
                             onPress={onSubmit}
                         >
-                            {updateGroupMutation.isPending ? (
-                                <ActivityIndicator />
-                            ) : (
-                                'Done'
-                            )}
+                            Done
                         </HeaderItem>
                     ),
 

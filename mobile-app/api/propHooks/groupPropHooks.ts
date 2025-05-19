@@ -25,7 +25,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     const nav = useNavigation();
 
-    const { mutateAsync } = useUpdateGroupWallpaperMutation();
+    const updateGroupWallpaperMutation = useUpdateGroupWallpaperMutation();
 
     const pastSeasons = (seasonsQuery.data?.data?.length ?? 1) - 1;
 
@@ -42,7 +42,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
         if (!groupId || !mimeType || !byteArray) return;
 
         try {
-            await mutateAsync({
+            await updateGroupWallpaperMutation.mutateAsync({
                 groupId,
                 byteArray,
                 mimeType,

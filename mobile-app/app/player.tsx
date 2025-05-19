@@ -37,7 +37,7 @@ export default function Page() {
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
-    const { mutateAsync } = useDeletePlayerMutation();
+    const deletePlayerMutation = useDeletePlayerMutation();
 
     const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -82,7 +82,7 @@ export default function Page() {
         if (!groupId || !seasonId) return;
 
         try {
-            await mutateAsync({
+            await deletePlayerMutation.mutateAsync({
                 groupId,
                 seasonId,
                 id,
@@ -176,7 +176,7 @@ export default function Page() {
     return (
         <PlayerScreen
             minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
-            isPending={isUploadingAvatar}
+            isPending={isUploadingAvatar || deletePlayerMutation.isPending}
             id={id}
             placement={placement}
             name={playerName}

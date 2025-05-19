@@ -64,9 +64,9 @@ export const NewMatchStack: React.FC<{
                         slot2={
                             <HeaderItem
                                 onPress={onCreate}
-                                disabled={isCreating}
+                                isLoading={isCreating}
                             >
-                                {isCreating ? <ActivityIndicator /> : 'Create'}
+                                Create
                             </HeaderItem>
                         }
                     />

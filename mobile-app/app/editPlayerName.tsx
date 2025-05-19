@@ -55,18 +55,12 @@ export default function Page() {
                 options={{
                     headerRight: () => (
                         <HeaderItem
-                            disabled={
-                                value.length < 1 ||
-                                updatePlayerMutation.isPending
-                            }
+                            isLoading={updatePlayerMutation.isPending}
+                            disabled={value.length < 1}
                             noMargin
                             onPress={onSubmit}
                         >
-                            {updatePlayerMutation.isPending ? (
-                                <ActivityIndicator />
-                            ) : (
-                                'Done'
-                            )}
+                            Done
                         </HeaderItem>
                     ),
 

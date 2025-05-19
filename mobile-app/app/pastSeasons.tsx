@@ -102,17 +102,15 @@ export default function Page() {
                 height={height - 90}
                 loop={false}
                 width={
-                    width -
-                    theme.carousel.peekGap * 2 -
-                    theme.carousel.peekSize * 2
+                    width - theme.carousel.peekGap - theme.carousel.peekSize * 2
                 }
                 style={{ width }}
                 renderItem={(season) => (
                     <ScrollView
                         style={{
-                            marginHorizontal: theme.carousel.peekGap,
+                            marginHorizontal: theme.carousel.peekGap / 2,
                             left:
-                                theme.carousel.peekGap +
+                                theme.carousel.peekGap / 2 +
                                 theme.carousel.peekSize,
                         }}
                     >

@@ -28,16 +28,11 @@ export default function CreateGroupSetName({
                     options={{
                         headerRight: () => (
                             <HeaderItem
-                                disabled={name.length < 1 || isPending}
+                                disabled={name.length < 1}
+                                isLoading={isPending}
                                 onPress={() => onSubmit({ name })}
                             >
-                                {isPending ? (
-                                    <ActivityIndicator />
-                                ) : hasNextStep ? (
-                                    'Next'
-                                ) : (
-                                    'Create'
-                                )}
+                                {hasNextStep ? 'Next' : 'Create'}
                             </HeaderItem>
                         ),
 

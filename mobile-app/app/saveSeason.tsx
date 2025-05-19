@@ -53,16 +53,11 @@ export default function Page() {
                     headerTitle: 'Save old Season',
                     headerRight: () => (
                         <HeaderItem
-                            disabled={
-                                value.length < 1 || newSeasonMutation.isPending
-                            }
+                            disabled={value.length < 1}
+                            isLoading={newSeasonMutation.isPending}
                             onPress={() => onStartNewSeason(value)}
                         >
-                            {newSeasonMutation.isPending ? (
-                                <ActivityIndicator />
-                            ) : (
-                                'Save'
-                            )}
+                            Save
                         </HeaderItem>
                     ),
                 }}

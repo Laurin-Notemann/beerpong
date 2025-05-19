@@ -81,18 +81,10 @@ export default function PlayerScreen({
                     headerTitle: 'Player',
                     headerRight: () => (
                         <HeaderItem
-                            disabled={editable && isPending}
+                            isLoading={isPending}
                             onPress={() => setEditable((prev) => !prev)}
                         >
-                            {editable ? (
-                                isPending ? (
-                                    <ActivityIndicator />
-                                ) : (
-                                    'Done'
-                                )
-                            ) : (
-                                'Edit'
-                            )}
+                            {editable ? 'Done' : 'Edit'}
                         </HeaderItem>
                     ),
                 }}

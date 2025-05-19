@@ -1,5 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import {
+    ActivityIndicator,
+    TouchableOpacity,
+    TouchableOpacityProps,
+} from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { theme } from '@/theme';
@@ -11,6 +15,7 @@ export interface HeaderItemProps extends TouchableOpacityProps {
     onPress?: () => void;
 
     disabled?: boolean;
+    isLoading?: boolean;
 }
 
 export function HeaderItem({
@@ -18,11 +23,16 @@ export function HeaderItem({
     noMargin = false,
     onPress,
     disabled = false,
+    isLoading = false,
     ...rest
 }: HeaderItemProps) {
     return (
         <>
-            <TouchableOpacity onPress={onPress} disabled={disabled} {...rest}>
+            <TouchableOpacity
+                onPress={onPress}
+                disabled={disabled || isLoading}
+                {...rest}
+            >
                 <ThemedText
                     style={{
                         marginLeft: noMargin ? 0 : 16,
@@ -33,12 +43,12 @@ export function HeaderItem({
                         letterSpacing: 0.1,
                         color: theme.color.text.primary,
 
-                        opacity: disabled ? 0.2 : undefined,
+                        opacity: disabled && !isLoading ? 0.2 : undefined,
 
                         width: '100%',
                     }}
                 >
-                    {children}
+                    {isLoading ? <ActivityIndicator /> : children}
                 </ThemedText>
             </TouchableOpacity>
             {/* <Button
