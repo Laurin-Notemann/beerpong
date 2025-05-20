@@ -7,6 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 
 export interface RuleProps {
@@ -62,6 +63,7 @@ export const Rule: React.FC<RuleProps> = ({
     }));
 
     const toggleCollapse = () => {
+        triggerHapticBump('selection');
         setIsExpanded((prev) => {
             const next = !prev;
 

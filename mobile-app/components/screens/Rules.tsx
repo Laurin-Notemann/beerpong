@@ -13,6 +13,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
 import { Rule } from '@/components/Rules/Rule';
+import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 
@@ -45,7 +46,10 @@ export default function Rules({ rules, setRules }: RulesProps) {
     }: RenderItemParams<RuleRenderItem>) => {
         return (
             <Rule
-                onLongPress={() => setModalId(item.id)}
+                onLongPress={() => {
+                    triggerHapticBump('selection');
+                    setModalId(item.id);
+                }}
                 active={isActive}
                 draggable={isEditing}
                 title={item.title}
@@ -123,6 +127,9 @@ export default function Rules({ rules, setRules }: RulesProps) {
                     Rules
                 </Text> */}
                 <NestableDraggableFlatList
+                    onLayout={() => {
+                        triggerHapticBump('selection');
+                    }}
                     data={rules}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
