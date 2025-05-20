@@ -1,13 +1,12 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import {
     GestureHandlerRootView,
     RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
@@ -115,7 +114,7 @@ export default function PlayerScreen({
                                     alignItems: 'stretch',
                                 }}
                             >
-                                {env.isDev && (
+                                {pastSeasons > 0 && (
                                     <MenuSection>
                                         <MenuItem
                                             title="Past Seasons"

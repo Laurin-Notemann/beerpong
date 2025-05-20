@@ -1,16 +1,15 @@
-import { Stack } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView } from 'react-native';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    View,
+} from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { navStyles } from '@/app/navigation/navStyles';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
-import { HeaderItem } from '@/components/HeaderItem';
 import MatchPlayers from '@/components/MatchPlayers';
-import MatchVsHeader from '@/components/MatchVsHeader';
 import { theme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -30,46 +29,57 @@ export default function CreateMatchAssignPoints({
     onCancel,
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
-    const navigation = useNavigation();
-    const { liveMatches } = useLocalSettings();
-
     return (
-        <ScrollView
-            style={{
-                flex: 1,
-
-                backgroundColor: theme.color.bg,
-            }}
-            contentContainerStyle={{
-                paddingHorizontal: 16,
-                paddingTop: 32,
-                paddingBottom: 32,
-            }}
-        >
-            {liveMatches && (
-                <Button
-                    variant="default"
-                    title="Start Live Match"
-                    size="small"
-                    onPress={() => navigation.navigate('startLiveMatch')}
-                />
-            )}
-            <MatchPlayers
-                editable
-                players={players}
-                setMoveCount={setMoveCount}
-                onPlayerPress={onPlayerPress}
-            />
-            <Button
-                variant="default"
-                title={isPending ? <ActivityIndicator /> : 'Create'}
-                size="large"
-                onPress={onSubmit}
-                disabled={isPending}
+        <View style={{ position: 'relative', flex: 1 }}>
+            <ScrollView
                 style={{
-                    marginTop: 32,
+                    flex: 1,
+
+                    backgroundColor: theme.color.bg,
                 }}
-            />
-        </ScrollView>
+                contentContainerStyle={{
+                    paddingHorizontal: 16,
+                    paddingTop: 32,
+                    paddingBottom: 32,
+                }}
+            >
+                <MatchPlayers
+                    editable
+                    players={players}
+                    setMoveCount={setMoveCount}
+                    onPlayerPress={onPlayerPress}
+                />
+            </ScrollView>
+            <SafeAreaView
+                style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+
+                    marginHorizontal: 8,
+                    marginBottom: 16,
+                }}
+            >
+                <Button
+                    variant="primary"
+                    title={isPending ? <ActivityIndicator /> : 'Create'}
+                    size="large"
+                    onPress={onSubmit}
+                    disabled={isPending}
+                    style={{
+                        // box shadow:
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 0,
+                            height: 4,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 5,
+                    }}
+                />
+            </SafeAreaView>
+        </View>
     );
 }

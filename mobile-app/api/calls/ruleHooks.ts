@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { Paths } from '@/openapi/openapi';
 
@@ -52,6 +52,32 @@ export const useRules = (
                 return null;
             }
             const res = await (await api).getRules({ groupId, seasonId });
+
+            return res?.data;
+        },
+    });
+};
+
+export const useSetRulesMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.WriteRules.Responses.$200 | null,
+        Error,
+        {
+            groupId: string;
+            seasonId: string;
+            rules: {
+                title: string;
+                description: string;
+            }[];
+        }
+    >({
+        mutationFn: async (body) => {
+            const { groupId, seasonId, rules } = body;
+            const res = await (
+                await api
+            ).writeRules({ groupId, seasonId }, rules);
 
             return res?.data;
         },

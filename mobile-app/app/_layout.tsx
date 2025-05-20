@@ -47,6 +47,7 @@ function Everything() {
             <Stack.Screen name="+not-found" />
 
             <Stack.Screen name="createNewPlayer" options={modalStyles} />
+            <Stack.Screen name="createNewRule" options={modalStyles} />
 
             <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
 

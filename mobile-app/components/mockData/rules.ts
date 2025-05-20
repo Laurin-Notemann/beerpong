@@ -12,7 +12,7 @@ export const mockRules = [
     {
         title: 'Aufstellung der Becher',
         description:
-            'ie Becher sind in einer Pyramide mit der Spitze nach vorne anzuordnen, sodass die hinterste Reihe nah (nicht weiter weg als ein Becherdurchmesser) an der Tischkante steht. ',
+            'Die Becher sind in einer Pyramide mit der Spitze nach vorne anzuordnen, sodass die hinterste Reihe nah (nicht weiter weg als ein Becherdurchmesser) an der Tischkante steht. ',
     },
     {
         title: 'Befüllung',
@@ -79,7 +79,7 @@ export const mockRules = [
     {
         title: 'Mehrfache Treffer in den selben Becher',
         description:
-            'Treffen zwei oder mehr Bälle in denselben Becher, darf von der werfenden Mannschaft pro weiterem Treffer ein weiterer ausgesucht werden, der dann als getroffen gilt. Das gilt nur, wenn zu Beginn der Runde mindestens vier gegnerische Becher übriggeblieben sind und grundsätzlich immer nach einem Balls Back. Bleiben nur noch drei oder weniger Bechern zu Beginn einer Runde übrig, bedeutet das, dass jeder für sich getroffen werden muss',
+            'Treffen zwei oder mehr Bälle in denselben Becher, darf von der werfenden Mannschaft pro weiterem Treffer ein weiterer ausgesucht werden, der dann als getroffen gilt. Das gilt nur, wenn zu Beginn der Runde mindestens vier gegnerische Becher übriggeblieben sind und grundsätzlich immer nach einem Balls Back. Bleiben nur noch drei oder weniger Bechern zu Beginn einer Runde übrig, bedeutet das, dass jeder für sich getroffen werden muss.',
     },
     {
         title: 'Balls Back',
@@ -106,7 +106,7 @@ export const mockRules = [
     {
         title: 'Treffen eigener Becher',
         description:
-            'Wer aus etwaigem Grund in seinen eigenen Becher trifft oder von einem gegnerischen Wurf getroffen wird und der Abpraller einen eigenen Becher trifft, trinkt den getroffenen Becher leer, egal ob der Ball bereits außerhalb der Tischplatte aufgekommen ist. Ist der Ball bei diesem Szenario vorher auf dem Tisch und noch nicht auf dem Boden aufgekommen (siehe Paragraph Bouncer) aufgekommen, zählt dies als Bouncer',
+            'Wer aus etwaigem Grund in seinen eigenen Becher trifft oder von einem gegnerischen Wurf getroffen wird und der Abpraller einen eigenen Becher trifft, trinkt den getroffenen Becher leer, egal ob der Ball bereits außerhalb der Tischplatte aufgekommen ist. Ist der Ball bei diesem Szenario vorher auf dem Tisch und noch nicht auf dem Boden aufgekommen (siehe Paragraph Bouncer) aufgekommen, zählt dies als Bouncer.',
     },
     {
         title: 'Umwerfen gegnerischer Becher',

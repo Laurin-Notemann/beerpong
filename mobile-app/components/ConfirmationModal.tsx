@@ -4,6 +4,7 @@ import {
     Dimensions,
     Modal,
     SafeAreaView,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableHighlight,
@@ -104,9 +105,12 @@ export default function ConfirmationModal({
                         <View style={styles.header}>
                             <Text style={styles.title}>{title}</Text>
                             {description && (
-                                <Text style={styles.description}>
-                                    {description}
-                                </Text>
+                                // max 15 lines + half a line of peek so the user realizes they can scroll
+                                <ScrollView style={{ maxHeight: 22 * 15 + 11 }}>
+                                    <Text style={styles.description}>
+                                        {description}
+                                    </Text>
+                                </ScrollView>
                             )}
                         </View>
                     )}
