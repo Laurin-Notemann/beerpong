@@ -1,0 +1,32 @@
+import { useGroup } from '@/api/calls/seasonHooks';
+import CreateNewRule from '@/components/screens/CreateNewRule';
+import { showErrorToast, showSuccessToast } from '@/toast';
+import { ConsoleLogger } from '@/utils/logging';
+
+import { useNavigation } from './navigation/useNavigation';
+
+export default function Page() {
+    const nav = useNavigation();
+
+    const { groupId, seasonId } = useGroup();
+
+    async function onSubmit(rule: { title: string; description: string }) {
+        if (!groupId || !seasonId) return;
+
+        try {
+            showSuccessToast(`Created rule "${rule.title}".`);
+            nav.goBack();
+        } catch (err) {
+            ConsoleLogger.error('failed to create rule:', err);
+            showErrorToast('Failed to create rule.');
+        }
+    }
+
+    return (
+        <CreateNewRule
+            onCreate={onSubmit}
+            existingRules={[]}
+            isPending={false}
+        />
+    );
+}

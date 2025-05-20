@@ -1,7 +1,13 @@
 import * as React from 'react';
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
-import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
+import {
+    Dimensions,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    View,
+} from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
@@ -106,26 +112,31 @@ export default function Page() {
                 }
                 style={{ width }}
                 renderItem={(season) => (
-                    <ScrollView
-                        style={{
-                            marginHorizontal: theme.carousel.peekGap / 2,
-                            left:
-                                theme.carousel.peekGap / 2 +
-                                theme.carousel.peekSize,
-                        }}
-                    >
-                        <Card
-                            season={{
-                                name: season.item.name!,
-                                startDate: season.item.startDate!,
-                                endDate: season.item.endDate!,
+                    <SafeAreaView>
+                        <ScrollView
+                            style={{
+                                marginHorizontal: theme.carousel.peekGap / 2,
+                                left:
+                                    theme.carousel.peekGap / 2 +
+                                    theme.carousel.peekSize,
+
+                                borderRadius: theme.borderRadius.card,
+                                backgroundColor: theme.color.modal.bg,
                             }}
-                            // @ts-ignore TODO: type this properly
-                            numMatches={season.item.numMatches!}
-                            // @ts-ignore TODO: type this properly
-                            players={season.item.players}
-                        />
-                    </ScrollView>
+                        >
+                            <Card
+                                season={{
+                                    name: season.item.name!,
+                                    startDate: season.item.startDate!,
+                                    endDate: season.item.endDate!,
+                                }}
+                                // @ts-ignore TODO: type this properly
+                                numMatches={season.item.numMatches!}
+                                // @ts-ignore TODO: type this properly
+                                players={season.item.players}
+                            />
+                        </ScrollView>
+                    </SafeAreaView>
                 )}
             />
         </View>
@@ -136,8 +147,5 @@ const styles = StyleSheet.create({
     card: {
         alignItems: 'center',
         flex: 1,
-
-        borderRadius: theme.borderRadius.card,
-        backgroundColor: theme.color.modal.bg,
     },
 });

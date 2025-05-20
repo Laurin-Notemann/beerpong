@@ -8,6 +8,7 @@ import {
 } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
@@ -34,6 +35,8 @@ export default function Rules({ rules, setRules }: RulesProps) {
     const [modalId, setModalId] = useState<string | null>(null);
 
     const modalItem = rules.find((i) => i.id === modalId);
+
+    const nav = useNavigation();
 
     const renderItem = ({
         item,
@@ -110,7 +113,7 @@ export default function Rules({ rules, setRules }: RulesProps) {
                     backgroundColor: theme.color.bg,
                 }}
             >
-                <Text
+                {/* <Text
                     style={{
                         color: theme.color.text.primary,
                         fontSize: 14,
@@ -118,7 +121,7 @@ export default function Rules({ rules, setRules }: RulesProps) {
                     }}
                 >
                     Rules
-                </Text>
+                </Text> */}
                 <NestableDraggableFlatList
                     data={rules}
                     renderItem={renderItem}
@@ -128,7 +131,7 @@ export default function Rules({ rules, setRules }: RulesProps) {
                         <IconHead iconName="format-section" title="No Rules" />
                     }
                 />
-                <Text
+                {/* <Text
                     style={{
                         color: '#777',
                         fontWeight: 700,
@@ -146,7 +149,7 @@ export default function Rules({ rules, setRules }: RulesProps) {
                     ListEmptyComponent={
                         <IconHead iconName="format-section" title="No Moves" />
                     }
-                />
+                /> */}
             </NestableScrollContainer>
             <View
                 style={{
@@ -158,7 +161,10 @@ export default function Rules({ rules, setRules }: RulesProps) {
                     width: 16 * 8,
                 }}
             >
-                <Button title="Add Rule" onPress={() => {}} />
+                <Button
+                    title="Add Rule"
+                    onPress={() => nav.navigate('createNewRule')}
+                />
             </View>
         </GestureHandlerRootView>
     );
