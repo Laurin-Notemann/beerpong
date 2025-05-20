@@ -9,6 +9,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 import { HeaderItem } from '../../components/HeaderItem';
 
@@ -27,6 +28,8 @@ export default function TabLayout() {
     const { selectedGroupId } = useGroupStore();
 
     const selectedGroup = useGroupQuery(selectedGroupId);
+
+    const experiments = useLocalSettings();
 
     const headerTitleIfGroupIsLoading = '';
     const headerTitleIfGroupCantBeFound = '';
@@ -96,7 +99,7 @@ export default function TabLayout() {
                     ),
                     ...groupHeader,
                     // hide tab in production
-                    href: env.isDev ? undefined : null,
+                    href: experiments.rulesTab ? undefined : null,
                 }}
             />
             <Tabs.Screen

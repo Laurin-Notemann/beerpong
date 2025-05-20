@@ -21,6 +21,8 @@ export default function Page() {
         togglePremiumVersion,
         eloAlgorithm,
         toggleEloAlgorithm,
+        rulesTab,
+        toggleRulesTab,
     } = useLocalSettings();
 
     return (
@@ -86,6 +88,15 @@ export default function Page() {
                             <Switch
                                 value={eloAlgorithm}
                                 onChange={toggleEloAlgorithm}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Rules Tab"
+                        tailContent={
+                            <Switch
+                                value={rulesTab}
+                                onChange={toggleRulesTab}
                             />
                         }
                     />
