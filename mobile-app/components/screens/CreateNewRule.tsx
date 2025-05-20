@@ -63,9 +63,7 @@ export default function CreateNewRule({
                 />
                 <View
                     style={{
-                        flex: 1,
-
-                        gap: 64,
+                        gap: 16,
                     }}
                 >
                     <TextInput

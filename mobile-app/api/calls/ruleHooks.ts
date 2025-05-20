@@ -1,10 +1,11 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { useGroup } from '@/api/calls/seasonHooks';
+import { ApiId } from '@/api/types';
+import { useApi } from '@/api/utils/create-api';
+import { QK } from '@/api/utils/reactQuery';
+import { mockRules } from '@/components/mockData/rules';
 import { Paths } from '@/openapi/openapi';
-
-import { ApiId } from '../types';
-import { useApi } from '../utils/create-api';
-import { QK } from '../utils/reactQuery';
 
 export const useMoves = (
     groupId: ApiId | null,
@@ -33,7 +34,7 @@ export const useMoves = (
     });
 };
 
-export const useRules = (
+export const useGetRules = (
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined
 ) => {
@@ -83,3 +84,71 @@ export const useSetRulesMutation = () => {
         },
     });
 };
+
+export function useRules() {
+    const { groupId, seasonId } = useGroup();
+
+    const qc = useQueryClient();
+
+    const { data, ...rulesQuery } = useGetRules(groupId, seasonId);
+
+    const setRulesMutation = useSetRulesMutation();
+
+    const rules = (data?.data ?? []).map((i) => ({
+        id: i.id!,
+        title: i.title!,
+        description: i.description!,
+    }));
+
+    function _setRules(rules: { title: string; description: string }[]) {
+        qc.setQueryData([QK.group, groupId, QK.season, seasonId, QK.rules], {
+            data: rules,
+        });
+        setRulesMutation.mutate({
+            groupId: groupId!,
+            seasonId: seasonId!,
+            rules,
+        });
+    }
+
+    function deleteRules(id: string[]) {
+        _setRules(rules.filter((i) => !id.includes(i.id)));
+    }
+
+    function updateRule(id: string, title: string, description: string) {
+        _setRules(
+            rules.map((i) => (i.id === id ? { ...i, title, description } : i))
+        );
+    }
+    const reorderRules = _setRules;
+
+    const createRulesMutation = useMutation<
+        void,
+        Error,
+        {
+            title: string;
+            description: string;
+        }[]
+    >({
+        mutationFn: async (input) => _setRules([...rules, ...input]),
+    });
+
+    function setDefaultRules() {
+        _setRules(
+            mockRules.map((i) => ({
+                title: i.title,
+                description: i.description.slice(0, 255),
+            }))
+        );
+    }
+
+    return {
+        ...rulesQuery,
+        rules,
+        reorderRules,
+        createRulesMutation,
+        setDefaultRules,
+        deleteRules,
+        updateRule,
+    };
+}

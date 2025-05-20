@@ -35,7 +35,7 @@ const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
         }, [errorMessage]);
 
         return (
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minHeight: 48 }}>
                 <ReactNativeTextInput
                     ref={ref}
                     placeholder={
