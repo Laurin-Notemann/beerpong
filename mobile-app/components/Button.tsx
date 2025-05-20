@@ -64,6 +64,8 @@ export default function Button({
                     backgroundColor: disabled ? '#666' : style.backgroundColor,
 
                     alignSelf: 'stretch',
+
+                    paddingHorizontal: 16,
                 },
             ]}
             underlayColor={style.active}

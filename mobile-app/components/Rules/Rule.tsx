@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -7,6 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useAnimatedSideActionStyle } from '@/components/Rules/useAnimatedSideActionStyle';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 
@@ -15,17 +16,19 @@ export interface RuleProps {
     description: string;
 
     active: boolean;
-    draggable: boolean;
+    editMode: boolean;
 
     onLongPress: () => void;
     onDragToReorder: () => void;
-    onDelete: () => void;
+
+    selected?: boolean;
+    onSelect: () => void;
 }
 /**
  * list element with a title.
  * - on tap, expands to show a description.
  * - on long press, shows a modal to edit the rule.
- * - if `draggable`, shows a drag icon to reorder the item within the list. the description gets collapsed.
+ * - if `editMode`, shows a drag icon to reorder the item within the list. the description gets collapsed.
  * - `active` is used for styling the item while it's being dragged.
  */
 export const Rule: React.FC<RuleProps> = ({
@@ -33,11 +36,13 @@ export const Rule: React.FC<RuleProps> = ({
     description,
 
     active,
-    draggable,
+    editMode,
 
     onLongPress,
     onDragToReorder,
-    onDelete,
+
+    onSelect,
+    selected = false,
 }) => {
     // used to measure the height of the text for the collapse / expand animation
     const descriptionTextRef = useRef<Text>(null);
@@ -59,7 +64,7 @@ export const Rule: React.FC<RuleProps> = ({
     const descriptionContainerHeight = useSharedValue(0);
 
     const animatedHeight = useAnimatedStyle(() => ({
-        height: descriptionContainerHeight.value,
+        height: editMode ? 0 : descriptionContainerHeight.value,
     }));
 
     const toggleCollapse = () => {
@@ -76,54 +81,45 @@ export const Rule: React.FC<RuleProps> = ({
         });
     };
 
-    // width of the square around the delete button that slides out when the sidebar is in edit mode
-    const deleteActionWidth = useSharedValue(draggable ? 40 : 0);
-
-    useEffect(() => {
-        deleteActionWidth.value = withTiming(draggable ? 40 : 0, {
-            duration: 150,
-        });
-    }, [draggable]);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        width: deleteActionWidth.value,
-    }));
+    const selectIconStyle = useAnimatedSideActionStyle(editMode);
 
     return (
         <>
             <Pressable
-                onPress={toggleCollapse}
+                onPress={editMode ? onSelect : toggleCollapse}
                 onLongPress={onLongPress}
                 style={[
                     styles.rowItem,
                     {
                         backgroundColor: active
                             ? theme.panel.dark.active
-                            : undefined,
+                            : selected
+                              ? 'rgba(255, 255, 255, 0.08)'
+                              : undefined,
                     },
                 ]}
             >
-                <Pressable onPress={onDelete}>
-                    <Animated.View
-                        style={[
-                            animatedStyle,
-                            {
-                                justifyContent: 'center',
+                <Animated.View
+                    style={[
+                        selectIconStyle,
+                        {
+                            justifyContent: 'center',
 
-                                height: '100%',
-                            },
-                        ]}
-                    >
-                        <Icon
-                            name="minus-circle"
-                            size={24}
-                            color="#f55"
-                            style={{
-                                marginLeft: 12,
-                            }}
-                        />
-                    </Animated.View>
-                </Pressable>
+                            height: '100%',
+                        },
+                    ]}
+                >
+                    <Icon
+                        name={selected ? 'check-circle' : 'circle-outline'}
+                        size={24}
+                        color={
+                            selected ? theme.icon.primary : theme.icon.secondary
+                        }
+                        style={{
+                            marginLeft: 12,
+                        }}
+                    />
+                </Animated.View>
                 <Icon
                     name="format-section"
                     size={24}
@@ -135,22 +131,23 @@ export const Rule: React.FC<RuleProps> = ({
                 <Text style={styles.text} numberOfLines={1}>
                     {title}
                 </Text>
-                {draggable && (
-                    <Pressable
-                        onPressIn={onDragToReorder}
-                        style={{
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            aspectRatio: 1,
-                            marginLeft: 'auto',
-                        }}
-                    >
-                        <Icon
-                            name="drag-horizontal-variant"
-                            size={24}
-                            color={theme.color.text.primary}
-                        />
+                {editMode && (
+                    <Pressable onPressIn={onDragToReorder}>
+                        <View
+                            style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: '100%',
+                                aspectRatio: 1,
+                                marginLeft: 'auto',
+                            }}
+                        >
+                            <Icon
+                                name="drag-horizontal-variant"
+                                size={24}
+                                color={theme.color.text.primary}
+                            />
+                        </View>
                     </Pressable>
                 )}
             </Pressable>
@@ -213,7 +210,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
 
         height: 50,
-        paddingLeft: 16,
+
+        paddingLeft: 12,
     },
     text: {
         color: theme.color.text.primary,

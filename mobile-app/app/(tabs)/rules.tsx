@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { mockRules } from '@/components/mockData/rules';
+import { useRules } from '@/api/calls/ruleHooks';
 import Rules from '@/components/screens/Rules';
 
 export default function Page() {
-    const [rules, setRules] = useState(mockRules);
+    const { rules, reorderRules, deleteRules, setDefaultRules, updateRule } =
+        useRules();
 
-    return <Rules rules={rules} setRules={setRules} />;
+    return (
+        <Rules
+            rules={rules}
+            onReorderRules={reorderRules}
+            onDeleteRules={deleteRules}
+            onResetRules={setDefaultRules}
+            onUpdateRule={updateRule}
+        />
+    );
 }
