@@ -31,7 +31,7 @@ export const CreateGroupSetGame: React.FC<{
     isPending?: boolean;
 }> = ({ games, onSubmit, isPending = false }) => {
     return (
-        <ScrollView>
+        <ScrollView style={{ flex: 1, backgroundColor: theme.color.bg }}>
             <Stack.Screen
                 options={{
                     headerRight: () =>
