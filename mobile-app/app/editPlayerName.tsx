@@ -1,6 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator } from 'react-native';
 
 import {
     usePlayersQuery,

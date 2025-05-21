@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { ScrollView, Switch } from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
+import { useMoves } from '@/api/calls/ruleHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { AllowedMoves } from '@/components/AllowedMoves';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
-
-import ConfirmationModal from '../ConfirmationModal';
-import copyToClipboard from '../copyToClipboard';
 
 export interface GroupSettingsProps {
     id: string;
@@ -47,6 +49,12 @@ export default function GroupSettingsScreen({
         useState(false);
 
     const experiments = useLocalSettings();
+
+    const { groupId, seasonId } = useGroup();
+
+    const movesQuery = useMoves(groupId, seasonId);
+
+    const allowedMoves = movesQuery.data?.data ?? [];
 
     return (
         <RootSiblingParent>
@@ -245,6 +253,17 @@ export default function GroupSettingsScreen({
                         onPress={() => nav.navigate('debugLog')}
                     />
                 </MenuSection>
+                <AllowedMoves
+                    moves={allowedMoves.map((i) => ({
+                        id: i.id!,
+                        name: i.name!,
+                        finishingMove: i.finishingMove!,
+                        pointsForScorer: i.pointsForScorer!,
+                        pointsForTeam: i.pointsForTeam!,
+                    }))}
+                    onNewPress={() => {}}
+                    editable={false}
+                />
             </ScrollView>
         </RootSiblingParent>
     );

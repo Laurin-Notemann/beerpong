@@ -1,12 +1,11 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/components/HeaderItem';
+import TextInput from '@/components/TextInput';
 import { theme } from '@/theme';
-
-import TextInput from '../TextInput';
 
 export interface CreateGroupSetNameProps {
     isPending: boolean;

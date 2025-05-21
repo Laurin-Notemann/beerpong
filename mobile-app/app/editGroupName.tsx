@@ -1,6 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator } from 'react-native';
 
 import { useGroupQuery, useUpdateGroupMutation } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';

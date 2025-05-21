@@ -6,15 +6,17 @@ import { theme } from '@/theme';
 export function Heading({
     title,
     titleHeadIcon,
-}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon'>) {
+    titleTailIcon,
+}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'>) {
     return (
         <View
             style={{
+                flexDirection: 'row',
+                alignItems: 'flex-end',
+
                 height: 64,
                 paddingHorizontal: 8,
                 paddingBottom: 12,
-
-                justifyContent: 'flex-end',
             }}
         >
             {titleHeadIcon}
@@ -31,6 +33,7 @@ export function Heading({
             >
                 {title}
             </Text>
+            {titleTailIcon}
         </View>
     );
 }
@@ -38,6 +41,7 @@ export function Heading({
 export interface MenuSectionProps extends PropsWithChildren {
     title?: JSX.Element | string;
     titleHeadIcon?: JSX.Element;
+    titleTailIcon?: JSX.Element;
 
     background?: boolean;
 
@@ -50,6 +54,7 @@ export interface MenuSectionProps extends PropsWithChildren {
 export default function MenuSection({
     title,
     titleHeadIcon,
+    titleTailIcon,
 
     background,
 
@@ -63,7 +68,13 @@ export default function MenuSection({
 }: MenuSectionProps) {
     return (
         <View style={{ flex: 1 }}>
-            {title && <Heading title={title} titleHeadIcon={titleHeadIcon} />}
+            {title && (
+                <Heading
+                    title={title}
+                    titleHeadIcon={titleHeadIcon}
+                    titleTailIcon={titleTailIcon}
+                />
+            )}
             <View
                 style={{
                     alignItems: 'stretch',
@@ -94,7 +105,7 @@ export default function MenuSection({
                             fontWeight: 400,
                             // color: '#A7A7A7',
 
-                            color: '#6291F3',
+                            color: theme.color.text.primary,
                         }}
                     >
                         {footer}

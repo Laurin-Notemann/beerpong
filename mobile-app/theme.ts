@@ -1,6 +1,7 @@
 const black = '#000';
 
 export const theme = {
+    keyboardAppearance: 'dark' as const,
     carousel: {
         /* the gap to the previous and next cards */
         peekGap: 8,

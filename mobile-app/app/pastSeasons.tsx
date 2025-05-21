@@ -147,5 +147,7 @@ const styles = StyleSheet.create({
     card: {
         alignItems: 'center',
         flex: 1,
+
+        paddingBottom: 32,
     },
 });

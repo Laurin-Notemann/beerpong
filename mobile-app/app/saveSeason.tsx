@@ -1,7 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator } from 'react-native';
 
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import { navStyles } from '@/app/navigation/navStyles';
