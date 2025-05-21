@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { ApiId } from '@/api/types';
@@ -6,6 +7,7 @@ import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { mockRules } from '@/components/mockData/rules';
 import { Paths } from '@/openapi/openapi';
+import { showErrorToast } from '@/toast';
 
 export const useMoves = (
     groupId: ApiId | null,
@@ -94,29 +96,40 @@ export function useRules() {
 
     const setRulesMutation = useSetRulesMutation();
 
-    const rules = (data?.data ?? []).map((i) => ({
-        id: i.id!,
-        title: i.title!,
-        description: i.description!,
-    }));
+    const rules = useMemo(
+        () =>
+            (data?.data ?? []).map((i) => ({
+                id: i.id!,
+                title: i.title!,
+                description: i.description!,
+            })),
+        [data?.data]
+    );
 
-    function _setRules(rules: { title: string; description: string }[]) {
+    async function _setRules(
+        rules: { id: string; title: string; description: string }[]
+    ) {
+        setLocalRules(rules);
         qc.setQueryData([QK.group, groupId, QK.season, seasonId, QK.rules], {
             data: rules,
         });
-        setRulesMutation.mutate({
-            groupId: groupId!,
-            seasonId: seasonId!,
-            rules,
-        });
+        try {
+            await setRulesMutation.mutateAsync({
+                groupId: groupId!,
+                seasonId: seasonId!,
+                rules,
+            });
+        } catch (err) {
+            showErrorToast('Failed to update rules.');
+        }
     }
 
-    function deleteRules(id: string[]) {
-        _setRules(rules.filter((i) => !id.includes(i.id)));
+    async function deleteRules(id: string[]) {
+        await _setRules(rules.filter((i) => !id.includes(i.id)));
     }
 
-    function updateRule(id: string, title: string, description: string) {
-        _setRules(
+    async function updateRule(id: string, title: string, description: string) {
+        await _setRules(
             rules.map((i) => (i.id === id ? { ...i, title, description } : i))
         );
     }
@@ -130,21 +143,32 @@ export function useRules() {
             description: string;
         }[]
     >({
-        mutationFn: async (input) => _setRules([...rules, ...input]),
+        mutationFn: (input) =>
+            _setRules([
+                ...rules,
+                ...input.map((i, idx) => ({ ...i, id: idx.toString() })),
+            ]),
     });
 
-    function setDefaultRules() {
-        _setRules(
-            mockRules.map((i) => ({
+    async function setDefaultRules() {
+        await _setRules(
+            mockRules.map((i, idx) => ({
+                id: idx.toString(),
                 title: i.title,
-                description: i.description.slice(0, 255),
+                description: i.description,
             }))
         );
     }
 
+    const [localRules, setLocalRules] = useState(rules);
+
+    useEffect(() => {
+        setLocalRules(rules);
+    }, [rules]);
+
     return {
         ...rulesQuery,
-        rules,
+        rules: localRules,
         reorderRules,
         createRulesMutation,
         setDefaultRules,

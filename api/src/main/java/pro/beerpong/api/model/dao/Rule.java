@@ -12,6 +12,7 @@ public class Rule {
 
     private String title;
 
+    @Column(length = 9999)
     private String description;
 
     @ManyToOne
