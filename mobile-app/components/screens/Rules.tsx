@@ -207,9 +207,6 @@ export default function Rules({
                     Rules
                 </Text> */}
                 <NestableDraggableFlatList
-                    onLayout={() => {
-                        triggerHapticBump('selection');
-                    }}
                     data={rules}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
