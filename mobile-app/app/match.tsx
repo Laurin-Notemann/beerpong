@@ -1,7 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView } from 'react-native';
-import { RefreshControl } from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native';
 
 import {
     useDeleteMatchMutation,
@@ -20,18 +19,18 @@ import {
 } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
-
-import { HeaderItem } from '../components/HeaderItem';
-import { useNavigation } from './navigation/useNavigation';
 
 /**
  * currently, we need to fetch every single match of the season here, in order to calculate the influence of the viewed match on the

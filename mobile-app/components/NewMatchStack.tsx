@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { ActivityIndicator } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { Match } from '@/api/utils/matchDtoToMatch';

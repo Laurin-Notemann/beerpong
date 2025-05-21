@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
-    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
@@ -15,6 +14,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import Leaderboard from '@/components/Leaderboard';
 import PillButton from '@/components/PillButton';
+import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';

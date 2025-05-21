@@ -1,6 +1,9 @@
 const black = '#000';
 
 export const theme = {
+    refreshControl: {
+        tintColor: '#999',
+    },
     keyboardAppearance: 'dark' as const,
     carousel: {
         /* the gap to the previous and next cards */

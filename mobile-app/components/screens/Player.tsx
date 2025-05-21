@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import {
     GestureHandlerRootView,
-    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
@@ -16,6 +15,7 @@ import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
+import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
 
 export interface PlayerScreenProps {
