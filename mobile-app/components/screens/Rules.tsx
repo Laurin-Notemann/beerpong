@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { RefreshControl, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import {
     NestableDraggableFlatList,
     NestableScrollContainer,
@@ -16,6 +16,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
+import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';

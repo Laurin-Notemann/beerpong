@@ -27,7 +27,11 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     const updateGroupWallpaperMutation = useUpdateGroupWallpaperMutation();
 
-    const pastSeasons = (seasonsQuery.data?.data?.length ?? 1) - 1;
+    const pastSeasons =
+        seasonsQuery.data?.data
+            ?.filter((i) => i.endDate != null)
+            // @ts-ignore TODO: type this properly
+            ?.filter((i) => i.numMatches > 0) ?? [];
 
     const { data, ...screenState } = useGroupQuery(groupId);
 
@@ -85,7 +89,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               groupCode: data.data.inviteCode!,
               groupName: data.data.name || 'Unknown Group',
               hasPremium: false,
-              pastSeasons,
+              pastSeasons: pastSeasons.length,
               pushNotificationsEnabled: false,
               onUploadWallpaperPress,
               onDeleteWallpaperPress,

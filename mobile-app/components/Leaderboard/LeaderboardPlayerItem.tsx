@@ -1,12 +1,10 @@
 import { TouchableOpacity } from 'react-native';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
+import Avatar from '@/components/Avatar';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
-
-import Avatar from '../Avatar';
-import { ThemedText } from '../ThemedText';
-import { ThemedView } from '../ThemedView';
 
 export interface LeaderboardPlayerItemProps {
     id: string;
@@ -20,6 +18,8 @@ export interface LeaderboardPlayerItemProps {
     points: number;
     elo: number;
     unranked?: boolean;
+
+    onPlayerPress?: (id: string) => void;
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -31,11 +31,10 @@ export default function LeaderboardPlayerItem({
     points,
     elo,
     unranked = false,
+    onPlayerPress,
 }: LeaderboardPlayerItemProps) {
     // account for division by zero
     const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
-
-    const nav = useNavigation();
 
     return (
         // <Link
@@ -47,6 +46,7 @@ export default function LeaderboardPlayerItem({
         //   }}
         // >
         <TouchableOpacity
+            disabled={!onPlayerPress}
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -56,7 +56,7 @@ export default function LeaderboardPlayerItem({
 
                 opacity: unranked ? 0.5 : undefined,
             }}
-            onPress={() => nav.navigate('player', { id })}
+            onPress={() => onPlayerPress?.(id)}
         >
             <ThemedText
                 style={{

@@ -1,6 +1,5 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator } from 'react-native';
 
 import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';

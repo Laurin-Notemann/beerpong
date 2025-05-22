@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import {
     GestureHandlerRootView,
-    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
@@ -11,15 +10,19 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import Leaderboard from '@/components/Leaderboard';
+import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
+import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
+    const nav = useNavigation();
     const { groupId, seasonId, group } = useGroup();
 
     const { players } = useLeaderboardProps(groupId, seasonId ?? null);
@@ -98,16 +101,12 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                <Text
-                    style={{
-                        fontSize: 17,
-                        color: theme.color.text.secondary,
-                        marginTop: 32 - 6,
-                    }}
-                >
-                    {group.data?.numberOfPlayers ?? 0} players ·{' '}
-                    {group.data?.numberOfMatches ?? 0} matches
-                </Text>
+                <LeaderBoardSeasonInfo
+                    numPlayers={group.data?.numberOfPlayers ?? 0}
+                    numMatches={group.data?.numberOfMatches ?? 0}
+                    startDate={group.data?.activeSeason?.startDate!}
+                    isCurrentSeason
+                />
                 {experiments.eloAlgorithm && (
                     <View
                         style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}
@@ -124,7 +123,10 @@ export default function Page() {
                         />
                     </View>
                 )}
-                <Leaderboard players={players} />
+                <Leaderboard
+                    players={players}
+                    onPlayerPress={(id) => nav.navigate('player', { id })}
+                />
                 <Text
                     style={{
                         fontSize: 12,

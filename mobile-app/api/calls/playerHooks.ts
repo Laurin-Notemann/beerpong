@@ -112,3 +112,18 @@ export const useDeletePlayerMutation = () => {
         },
     });
 };
+
+export const useDeletePlayerAvatarMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.SetAvatar.Responses.$200 | null,
+        Error,
+        { groupId: ApiId; seasonId: ApiId; profileId: ApiId }
+    >({
+        mutationFn: async () => {
+            const res = await (await api).setAvatar();
+            return res?.data;
+        },
+    });
+};

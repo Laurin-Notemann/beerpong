@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { useMatchesByPlayerQuery } from '@/api/calls/matchHooks';
 import {
+    useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
     usePlayersQuery,
     useUpdatePlayerAvatarMutation,
@@ -53,14 +54,20 @@ export default function Page() {
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const seasons = seasonsQuery.data?.data ?? [];
+    const pastSeasons =
+        seasonsQuery.data?.data
+            ?.filter((i) => i.endDate != null)
+            // @ts-ignore TODO: type this properly
+            ?.filter((i) => i.numMatches > 0) ?? [];
 
     const qc = useQueryClient();
 
     // TODO: this should only be the seasons where this specific player was active
-    const activeSeasons = seasons;
+    const activeSeasons = pastSeasons;
 
     const uploadAvatarMutation = useUpdatePlayerAvatarMutation();
+
+    const deleteAvatarMutation = useDeletePlayerAvatarMutation();
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -159,6 +166,35 @@ export default function Page() {
         }
     }
 
+    async function onDeleteAvatarPress() {
+        if (!groupId || !seasonId || !profileId) return;
+
+        setIsUploadingAvatar(true);
+
+        try {
+            await deleteAvatarMutation.mutateAsync({
+                groupId,
+                seasonId,
+                profileId,
+            });
+            await qc.invalidateQueries({
+                predicate: replaceWildcards([
+                    QK.group,
+                    groupId,
+                    QK.season,
+                    '*',
+                    QK.players,
+                ]),
+            });
+            showSuccessToast('Player avatar deleted.');
+        } catch (err) {
+            ConsoleLogger.error('failed to delete player avatar:', err);
+            showErrorToast('Failed to delete player avatar.');
+        } finally {
+            setIsUploadingAvatar(false);
+        }
+    }
+
     const sortedPlayers = players.sort(byDescendingAveragePoints);
 
     const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
@@ -185,11 +221,12 @@ export default function Page() {
             points={player?.statistics?.points ?? 0}
             cups={allTimeCups}
             hasPremium={false}
-            pastSeasons={activeSeasons.length - 1}
+            pastSeasons={activeSeasons.length}
             matches={matches}
             onDelete={onDelete}
             avatarUrl={player?.profile?.avatarAsset?.url}
             onUploadAvatarPress={onUploadAvatarPress}
+            onDeleteAvatarPress={onDeleteAvatarPress}
             refresh={refresh}
         />
     );

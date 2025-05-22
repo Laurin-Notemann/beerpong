@@ -9,17 +9,16 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
+import { useAutoFocus } from '@/components/screens/useAutoFocus';
+import Text from '@/components/Text';
+import TextInput from '@/components/TextInput';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
-
-import Avatar from '../Avatar';
-import Text from '../Text';
-import TextInput from '../TextInput';
-import { ThemedText } from '../ThemedText';
-import { ThemedView } from '../ThemedView';
-import { useAutoFocus } from './useAutoFocus';
 
 const MIN_GROUP_MEMBERS = 2;
 

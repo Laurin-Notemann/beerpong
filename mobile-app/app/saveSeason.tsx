@@ -1,36 +1,39 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { ActivityIndicator } from 'react-native';
 
+import { useMatchesQuery } from '@/api/calls/matchHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
-import { navStyles } from '@/app/navigation/navStyles';
+import {
+    byDescendingAveragePoints,
+    useLeaderboardProps,
+} from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
-import InputModal from '@/components/InputModal';
-import Podium from '@/components/Podium';
-import TextInput from '@/components/TextInput';
+import { Components } from '@/openapi/openapi';
+import { SaveSeasonScreen } from '@/screens/SaveSeason';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 export default function Page() {
-    const [value, setValue] = useState('');
-
     const nav = useNavigation();
 
-    const { groupId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
 
     const newSeasonMutation = useStartNewSeasonMutation();
 
     const qc = useQueryClient();
 
-    async function onStartNewSeason(oldSeasonName: string) {
+    async function onStartNewSeason(
+        oldSeasonName: string,
+        newSeasonAllowedMoves: Components.Schemas.RuleMoveDto[]
+    ) {
         if (!groupId) return;
         try {
             await newSeasonMutation.mutateAsync({
                 groupId,
-                oldSeasonName,
+                oldSeasonName: oldSeasonName,
+                // newSeasonAllowedMoves
             });
+
             qc.invalidateQueries({
                 queryKey: ['groups', groupId],
                 exact: false,
@@ -45,36 +48,33 @@ export default function Page() {
         }
     }
 
+    const movesQuery = useMoves(groupId, seasonId);
+
+    const allowedMoves = movesQuery.data?.data ?? [];
+
+    const minMatchesRequiredToBeRanked = 1;
+
+    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
+
+    const sortedPlayers = players.sort(byDescendingAveragePoints);
+
+    const rankedPlayers = sortedPlayers.filter(
+        (i) => i.matches >= minMatchesRequiredToBeRanked
+    );
+
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
+
+    const matches = matchesQuery.data?.data ?? [];
+
     return (
-        <>
-            <Stack.Screen
-                options={{
-                    ...navStyles,
-                    headerTitle: 'Save old Season',
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={value.length < 1}
-                            isLoading={newSeasonMutation.isPending}
-                            onPress={() => onStartNewSeason(value)}
-                        >
-                            Save
-                        </HeaderItem>
-                    ),
-                }}
-            />
-            <InputModal>
-                <Podium detailed={false} style={{ marginHorizontal: 'auto' }} />
-                <TextInput
-                    required
-                    placeholder="Season Name"
-                    defaultValue={value}
-                    onChangeText={(text) => setValue(text.trim())}
-                    autoFocus
-                    style={{
-                        alignSelf: 'stretch',
-                    }}
-                />
-            </InputModal>
-        </>
+        <SaveSeasonScreen
+            onStartNewSeason={onStartNewSeason}
+            numMatches={matches.length}
+            players={rankedPlayers}
+            oldSeasonMoves={allowedMoves}
+            oldSeasonStartDate={group.data?.activeSeason?.startDate!}
+            onCancel={() => nav.goBack()}
+            isCreating={newSeasonMutation.isPending}
+        />
     );
 }

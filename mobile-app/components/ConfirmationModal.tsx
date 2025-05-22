@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
         right: 0,
     },
     sheet: {
-        backgroundColor: '#3B3B3B',
+        backgroundColor: theme.panel.light.active,
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         overflow: 'hidden',

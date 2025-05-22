@@ -26,7 +26,7 @@ const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
         }: TextInputProps,
         ref
     ) {
-        const color = '#fff';
+        const color = theme.color.text.primary;
 
         useEffect(() => {
             if (errorMessage) {
@@ -37,6 +37,7 @@ const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
         return (
             <View style={{ flex: 1, minHeight: 48 }}>
                 <ReactNativeTextInput
+                    keyboardAppearance={theme.keyboardAppearance}
                     ref={ref}
                     placeholder={
                         placeholder

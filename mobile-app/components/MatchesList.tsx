@@ -1,6 +1,5 @@
 import React from 'react';
 import { FlatList, FlatListProps } from 'react-native';
-import { RefreshControl } from 'react-native-gesture-handler';
 
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
@@ -9,6 +8,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { RefreshControl } from '@/components/RefreshControl';
 
 export interface MatchesListProps
     extends Omit<

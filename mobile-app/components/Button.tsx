@@ -30,19 +30,19 @@ export default function Button({
     const style = (
         {
             default: {
-                backgroundColor: '#2E2E2E',
+                backgroundColor: theme.panel.light.bg,
                 color: theme.color.text.primary,
                 active: theme.panel.light.active,
             },
             primary: {
                 backgroundColor: '#2C6BED',
-                color: theme.color.text.primary,
+                color: 'white',
                 active: '#2C58B3',
             },
             secondary: {
-                backgroundColor: '#1B1B1B',
+                backgroundColor: theme.panel.dark.bg,
                 color: '#2C6BED',
-                active: '#202020',
+                active: theme.panel.dark.active,
             },
         } as const
     )[variant];

@@ -2,13 +2,65 @@ import React from 'react';
 import { TouchableOpacity, ViewProps } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
+import Avatar from '@/components/Avatar';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
-import Avatar from './Avatar';
-import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
+const Description: React.FC<{
+    detailed?: boolean;
+    player?: { name: string; points: number; matches: number };
+    average: string;
+}> = ({ detailed, player, average }) => {
+    return (
+        <>
+            <ThemedText
+                style={{
+                    fontSize: 15,
+                    color: theme.color.text.primary,
+                    marginTop: 12,
+
+                    textAlign: 'center',
+                }}
+            >
+                {player?.name}
+            </ThemedText>
+
+            {detailed && player && (
+                <>
+                    <ThemedText
+                        style={{
+                            fontSize: 22,
+                            color: theme.color.text.primary,
+                        }}
+                    >
+                        {average}
+                    </ThemedText>
+                    <ThemedText
+                        style={{
+                            fontSize: 13,
+                            color: theme.color.text.secondary,
+                            marginTop: 13,
+                        }}
+                    >
+                        {player.points} points
+                    </ThemedText>
+
+                    <ThemedText
+                        style={{
+                            fontSize: 13,
+                            color: theme.color.text.secondary,
+                            marginTop: -8,
+                        }}
+                    >
+                        {player.matches} matches
+                    </ThemedText>
+                </>
+            )}
+        </>
+    );
+};
 
 export interface PodiumProps extends ViewProps {
     detailed?: boolean;
@@ -16,16 +68,18 @@ export interface PodiumProps extends ViewProps {
     firstPlace?: Player;
     secondPlace?: Player;
     thirdPlace?: Player;
+
+    onPlayerPress?: (id: string) => void;
 }
 export default function Podium({
     detailed = true,
     firstPlace,
     secondPlace,
     thirdPlace,
+
+    onPlayerPress,
     ...rest
 }: PodiumProps) {
-    const nav = useNavigation();
-
     const firstPlaceAveragePointsPerMatch = firstPlace?.matches
         ? (firstPlace?.points / firstPlace?.matches).toFixed(1)
         : '--';
@@ -51,16 +105,16 @@ export default function Podium({
             ]}
         >
             <TouchableOpacity
-                disabled={secondPlace == null}
+                disabled={secondPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
                 style={{
                     alignItems: 'center',
                     marginTop: 48,
                     flex: 1,
+
+                    opacity: secondPlace ? 1 : 0.2,
                 }}
-                onPress={() =>
-                    secondPlace && nav.navigate('player', secondPlace)
-                }
+                onPress={() => secondPlace && onPlayerPress?.(secondPlace?.id)}
             >
                 <ThemedText
                     style={{
@@ -76,58 +130,16 @@ export default function Podium({
                     name={secondPlace?.name}
                     size={96}
                 />
-                {detailed && (
-                    <>
-                        <ThemedText
-                            style={{
-                                fontSize: 15,
-                                color: theme.color.text.primary,
-                                marginTop: 12,
-
-                                textAlign: 'center',
-                            }}
-                        >
-                            {secondPlace?.name}
-                        </ThemedText>
-
-                        {secondPlace && (
-                            <>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 22,
-                                        color: theme.color.text.primary,
-                                    }}
-                                >
-                                    {secondPlaceAveragePointsPerMatch}
-                                </ThemedText>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        color: theme.color.text.secondary,
-                                        marginTop: 13,
-                                    }}
-                                >
-                                    {secondPlace.points} points
-                                </ThemedText>
-
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        color: theme.color.text.secondary,
-                                        marginTop: -8,
-                                    }}
-                                >
-                                    {secondPlace.matches} matches
-                                </ThemedText>
-                            </>
-                        )}
-                    </>
-                )}
+                <Description
+                    detailed={detailed}
+                    player={secondPlace}
+                    average={secondPlaceAveragePointsPerMatch}
+                />
             </TouchableOpacity>
             <TouchableOpacity
-                disabled={firstPlace == null}
+                disabled={firstPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
-                onPress={() => firstPlace && nav.navigate('player', firstPlace)}
+                onPress={() => firstPlace && onPlayerPress?.(firstPlace?.id)}
                 style={{
                     alignItems: 'center',
 
@@ -144,6 +156,8 @@ export default function Podium({
                     shadowOpacity: 0.3,
                     shadowRadius: 8,
                     flex: 1,
+
+                    opacity: firstPlace ? 1 : 0.2,
                 }}
             >
                 <ThemedText
@@ -160,57 +174,22 @@ export default function Podium({
                     name={firstPlace?.name}
                     size={128}
                 />
-                {detailed && (
-                    <>
-                        <ThemedText
-                            style={{
-                                fontSize: 15,
-                                color: theme.color.text.primary,
-                                marginTop: 12,
-
-                                textAlign: 'center',
-                            }}
-                        >
-                            {firstPlace?.name}
-                        </ThemedText>
-                        {firstPlace && (
-                            <>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 22,
-                                        color: theme.color.text.primary,
-                                    }}
-                                >
-                                    {firstPlaceAveragePointsPerMatch}
-                                </ThemedText>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        color: theme.color.text.secondary,
-                                        marginTop: 13,
-                                    }}
-                                >
-                                    {firstPlace.points} points
-                                </ThemedText>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        color: theme.color.text.secondary,
-                                        marginTop: -8,
-                                    }}
-                                >
-                                    {firstPlace.matches} matches
-                                </ThemedText>
-                            </>
-                        )}
-                    </>
-                )}
+                <Description
+                    detailed={detailed}
+                    player={firstPlace}
+                    average={firstPlaceAveragePointsPerMatch}
+                />
             </TouchableOpacity>
             <TouchableOpacity
-                disabled={thirdPlace == null}
+                disabled={thirdPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
-                style={{ alignItems: 'center', marginTop: 48, flex: 1 }}
-                onPress={() => thirdPlace && nav.navigate('player', thirdPlace)}
+                style={{
+                    alignItems: 'center',
+                    marginTop: 48,
+                    flex: 1,
+                    opacity: thirdPlace ? 1 : 0.2,
+                }}
+                onPress={() => thirdPlace && onPlayerPress?.(thirdPlace?.id)}
             >
                 <ThemedText
                     style={{
@@ -226,51 +205,11 @@ export default function Podium({
                     name={thirdPlace?.name}
                     size={96}
                 />
-                {detailed && (
-                    <>
-                        <ThemedText
-                            style={{
-                                fontSize: 15,
-                                color: theme.color.text.primary,
-                                marginTop: 12,
-
-                                textAlign: 'center',
-                            }}
-                        >
-                            {thirdPlace?.name}
-                        </ThemedText>
-                        {thirdPlace && (
-                            <>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 22,
-                                        color: theme.color.text.primary,
-                                    }}
-                                >
-                                    {thirdPlaceAveragePointsPerMatch}
-                                </ThemedText>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        color: theme.color.text.secondary,
-                                        marginTop: 13,
-                                    }}
-                                >
-                                    {thirdPlace.points} points
-                                </ThemedText>
-                                <ThemedText
-                                    style={{
-                                        fontSize: 13,
-                                        color: theme.color.text.secondary,
-                                        marginTop: -8,
-                                    }}
-                                >
-                                    {thirdPlace.matches} matches
-                                </ThemedText>
-                            </>
-                        )}
-                    </>
-                )}
+                <Description
+                    detailed={detailed}
+                    player={thirdPlace}
+                    average={thirdPlaceAveragePointsPerMatch}
+                />
             </TouchableOpacity>
         </ThemedView>
     );

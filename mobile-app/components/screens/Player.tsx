@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import {
     GestureHandlerRootView,
-    RefreshControl,
     ScrollView,
 } from 'react-native-gesture-handler';
 
@@ -16,6 +15,7 @@ import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
+import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
 
 export interface PlayerScreenProps {
@@ -38,6 +38,7 @@ export interface PlayerScreenProps {
 
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
+    onDeleteAvatarPress: () => void;
     refresh: RefreshProps;
 }
 export default function PlayerScreen({
@@ -57,6 +58,7 @@ export default function PlayerScreen({
 
     onDelete,
     onUploadAvatarPress,
+    onDeleteAvatarPress,
     refresh,
 }: PlayerScreenProps) {
     const nav = useNavigation();
@@ -188,6 +190,17 @@ export default function PlayerScreen({
                                     title: 'Delete Player',
                                     description:
                                         'Are you sure you want to delete this player?',
+                                }}
+                            />
+                            <MenuItem
+                                title="Remove Profile Picture"
+                                headIcon="delete-outline"
+                                onPress={onDeleteAvatarPress}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Remove Profile Picture',
+                                    description:
+                                        "Are you sure you want to remove this player's profile picture?",
                                 }}
                             />
                         </MenuSection>

@@ -1,8 +1,15 @@
 import { PropsWithChildren } from 'react';
 import { View } from 'react-native';
 
-export interface InputModalProps extends PropsWithChildren {}
-export default function InputModal({ children }: InputModalProps) {
+import { theme } from '@/theme';
+
+export interface InputModalProps extends PropsWithChildren {
+    isDark?: boolean;
+}
+export default function InputModal({
+    children,
+    isDark = false,
+}: InputModalProps) {
     return (
         <View
             style={{
@@ -13,7 +20,7 @@ export default function InputModal({ children }: InputModalProps) {
                 paddingHorizontal: 16,
                 paddingTop: 20,
 
-                backgroundColor: '#1B1B1B',
+                backgroundColor: isDark ? theme.color.bg : theme.panel.dark.bg,
             }}
         >
             {children}

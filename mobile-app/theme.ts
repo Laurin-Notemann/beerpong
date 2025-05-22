@@ -1,6 +1,81 @@
 const black = '#000';
 
-export const theme = {
+const lightModeTheme = {
+    refreshControl: {
+        tintColor: '#666', // lighter tint
+    },
+    keyboardAppearance: 'light' as const,
+    carousel: {
+        peekGap: 8,
+        peekSize: 8,
+    },
+    avatar: {
+        bg: '#ECECEC', // light background
+        text: '#333333', // dark text
+
+        badge: {
+            bg: '#EEEEEE',
+            text: '#333333',
+        },
+    },
+    color: {
+        positive: '#1BC097', // keep accents
+        negative: '#EE4A58',
+        premium: '#9647FD',
+
+        modal: {
+            bg: '#FFFFFF', // white modal
+        },
+        text: {
+            primary: '#1A1A1A', // dark primary
+            secondary: '#4F4F4F',
+            tertiary: '#7D7D7D',
+
+            positive: '#1BC097',
+            negative: '#EE4A58',
+
+            branding: '#2C6BED',
+
+            link: '#6291F3',
+        },
+        bg: '#EFEFF0', // white background
+        topNav: '#FFFFFF',
+        bottomNav: '#F7F7F7', // light bottom nav
+        team: {
+            red: '#EE4A58',
+            blue: '#18A0FB',
+        },
+        delete: '#F44336',
+        confirm: '#6291F3',
+    },
+    borderRadius: {
+        card: 10,
+    },
+    tabBarInactiveTintColor: '#8E8E8E',
+    panel: {
+        light: {
+            bg: '#FFFFFF',
+            border: '#E0E0E0',
+            active: '#F5F5F5',
+            dividers: '#E0E0E0',
+        },
+        dark: {
+            bg: '#F0F0F0', // slightly darker for “dark” panels in light mode
+            active: '#EAEAEA',
+            dividers: '#EAEAEA',
+        },
+    },
+    icon: {
+        primary: '#444444',
+        secondary: '#999999',
+    },
+};
+
+const darkModeTheme = {
+    refreshControl: {
+        tintColor: '#999',
+    },
+    keyboardAppearance: 'dark' as const,
     carousel: {
         /* the gap to the previous and next cards */
         peekGap: 8,
@@ -33,6 +108,8 @@ export const theme = {
             negative: '#EE4A58',
 
             branding: '#2C6BED',
+
+            link: '#6291F3',
         },
         bg: black,
         topNav: black,
@@ -66,3 +143,5 @@ export const theme = {
         secondary: '#666',
     },
 };
+
+export const theme = darkModeTheme;

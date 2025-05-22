@@ -15,11 +15,10 @@ import {
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
+import Button from '@/components/Button';
+import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import { theme } from '@/theme';
 import { showSuccessToast } from '@/toast';
-
-import Button from '../Button';
-import { useAutoFocus } from './useAutoFocus';
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 

@@ -6,21 +6,36 @@ import {
     Player,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
+import Podium from '@/components/Podium';
+import Text from '@/components/Text';
+import { ThemedView } from '@/components/ThemedView';
 
-import Podium from '../Podium';
-import Text from '../Text';
-import { ThemedView } from '../ThemedView';
-import LeaderboardPlayerItem from './LeaderboardPlayerItem';
+import { LeaderBoardSeasonInfo } from './LeaderboardSeasonInfo';
 
 export interface LeaderboardProps extends ViewProps {
     players: Player[];
 
     withPodium?: boolean;
+    showUnranked?: boolean;
+
+    onPlayerPress?: (id: string) => void;
+
+    season?: {
+        name: string;
+        startDate: string;
+        endDate?: string;
+        numPlayers: number;
+        numMatches: number;
+    };
 }
 
 export default function Leaderboard({
     players,
     withPodium = true,
+    onPlayerPress,
+    showUnranked = true,
+    season,
     ...rest
 }: LeaderboardProps) {
     const nav = useNavigation();
@@ -45,11 +60,13 @@ export default function Leaderboard({
             {...rest}
             style={[rest.style, { width: '100%', alignItems: 'center' }]}
         >
+            {season && <LeaderBoardSeasonInfo {...season} />}
             {withPodium && (
                 <Podium
                     firstPlace={rankedPlayers[0]}
                     secondPlace={rankedPlayers[1]}
                     thirdPlace={rankedPlayers[2]}
+                    onPlayerPress={onPlayerPress}
                 />
             )}
             <ThemedView
@@ -69,9 +86,10 @@ export default function Leaderboard({
                         elo={i.elo}
                         matchesWon={i.matchesWon}
                         avatarUrl={i.avatarUrl}
+                        onPlayerPress={onPlayerPress}
                     />
                 ))}
-                {unrankedPlayers.length ? (
+                {showUnranked && unrankedPlayers.length ? (
                     <View
                         style={{
                             flexDirection: 'row',
@@ -102,22 +120,25 @@ export default function Leaderboard({
                         </Text>
                     </View>
                 ) : null}
-                {unrankedPlayers.map((i, idx) => (
-                    <LeaderboardPlayerItem
-                        key={idx}
-                        name={i.name}
-                        id={i.id}
-                        placement={
-                            sortedPlayers.findIndex((j) => j.id === i.id) + 1
-                        }
-                        points={i.points}
-                        matches={i.matches}
-                        elo={i.elo}
-                        matchesWon={i.matchesWon}
-                        avatarUrl={i.avatarUrl}
-                        unranked
-                    />
-                ))}
+                {showUnranked &&
+                    unrankedPlayers.map((i, idx) => (
+                        <LeaderboardPlayerItem
+                            key={idx}
+                            name={i.name}
+                            id={i.id}
+                            placement={
+                                sortedPlayers.findIndex((j) => j.id === i.id) +
+                                1
+                            }
+                            points={i.points}
+                            matches={i.matches}
+                            elo={i.elo}
+                            matchesWon={i.matchesWon}
+                            avatarUrl={i.avatarUrl}
+                            unranked
+                            onPlayerPress={onPlayerPress}
+                        />
+                    ))}
                 {players.length < 1 && (
                     <Pressable onPress={() => nav.navigate('newMatch')}>
                         <Text

@@ -31,7 +31,8 @@ const PillButton: React.FC<{
     label: string;
     iconName: string;
     onPress?: () => void;
-}> = ({ label, iconName, onPress }) => {
+    small?: boolean;
+}> = ({ label, iconName, onPress, small = false }) => {
     const scale = useRef(new Animated.Value(1)).current;
 
     const animate = (to: number) =>
@@ -49,7 +50,15 @@ const PillButton: React.FC<{
             onPress={onPress}
         >
             <Animated.View
-                style={[styles.container, { transform: [{ scale }] }]}
+                style={[
+                    styles.container,
+                    {
+                        height: small ? 26 : 32,
+                        paddingRight: small ? 8 : 16,
+                        paddingLeft: small ? 4 : 8,
+                    },
+                    { transform: [{ scale }] },
+                ]}
             >
                 <Icon color="#fff" size={20} name={iconName} />
                 <Text style={styles.label}>{label}</Text>

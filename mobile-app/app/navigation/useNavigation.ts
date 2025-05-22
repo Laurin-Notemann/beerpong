@@ -25,6 +25,8 @@ export type RootStackParamList = {
     newMatch: undefined;
 
     localSettings: undefined;
+    settings: undefined;
+    allowedMoves: undefined;
 
     'static/aboutTheEloAlgorithm': undefined;
     'static/privacyPolicy': undefined;
