@@ -24,6 +24,7 @@ public enum ErrorCodes {
     SEASON_NOT_OF_GROUP(HttpStatus.FORBIDDEN, "seasonHasDifferentGroup", "The season does not match the provided group id!"),
     SEASON_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),
     INVALID_SEASON_NAME(HttpStatus.BAD_REQUEST, "invalidSeasonName", "Season name must be non-null, non-empty and between 2 and 50 characters!"),
+    INVALID_RULE_MOVES(HttpStatus.BAD_REQUEST, "invalidRuleMoves", "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam > 0)"),
     INVALID_SEASON_ID(HttpStatus.BAD_REQUEST, "invalidSeasonId", "Season id must be non-null and non-empty!"),
     INVALID_SEASON_DTO(HttpStatus.BAD_REQUEST, "invalidSeasonDto", "Season update dto must be non-null and have non-null seasonSettings!"),
     /* MATCHES */

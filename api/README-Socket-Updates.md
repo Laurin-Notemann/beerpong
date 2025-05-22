@@ -112,7 +112,6 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **ruleMovesCreate:** When a rule move is created
 * **ruleMovesUpdate:** When a rule move is update
-* **ruleMovesDelete:** When a rule move is delete
 
 #### Seasons (body: SeasonStartDto | SeasonDto)
 

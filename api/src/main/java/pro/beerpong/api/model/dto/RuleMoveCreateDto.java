@@ -8,4 +8,9 @@ public class RuleMoveCreateDto {
     private int pointsForTeam;
     private int pointsForScorer;
     private boolean finishingMove;
+
+    public boolean invalidDto() {
+        return this.name == null || this.name.isEmpty() ||
+                this.pointsForTeam < 0 || this.pointsForScorer < 0;
+    }
 }

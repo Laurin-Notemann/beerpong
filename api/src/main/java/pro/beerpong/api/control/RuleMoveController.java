@@ -34,7 +34,7 @@ public class RuleMoveController {
             return error;
         }
 
-        var move = moveService.createRuleMove(pair.getFirst(), pair.getSecond(), dto);
+        var move = moveService.createRuleMove(pair.getFirst(), pair.getSecond(), dto, true);
 
         if (move != null) {
             return ResponseEnvelope.ok(move);

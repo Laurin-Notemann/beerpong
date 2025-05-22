@@ -81,8 +81,10 @@ public class SeasonService {
 
             playerService.copyPlayersFromOldSeason(oldSeason, season);
             ruleService.copyRulesFromOldSeason(oldSeason, season);
-            ruleMoveService.copyRuleMovesFromOldSeason(oldSeason, season);
         }
+
+        var finalSeason = season;
+        dto.getRuleMoves().forEach(ruleMoveDto -> ruleMoveService.createRuleMove(group, finalSeason, ruleMoveDto, false));
 
         group.setActiveSeason(season);
         groupRepository.save(group);
