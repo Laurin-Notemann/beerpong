@@ -263,6 +263,7 @@ export default function GroupSettingsScreen({
                     }))}
                     onNewPress={() => {}}
                     editable={false}
+                    footer="The rules of the ongoing season cannot be changed. To change what moves can be played, start a new season."
                 />
             </ScrollView>
         </RootSiblingParent>
