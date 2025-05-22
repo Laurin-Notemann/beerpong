@@ -38,6 +38,7 @@ export interface PlayerScreenProps {
 
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
+    onDeleteAvatarPress: () => void;
     refresh: RefreshProps;
 }
 export default function PlayerScreen({
@@ -57,6 +58,7 @@ export default function PlayerScreen({
 
     onDelete,
     onUploadAvatarPress,
+    onDeleteAvatarPress,
     refresh,
 }: PlayerScreenProps) {
     const nav = useNavigation();
@@ -188,6 +190,17 @@ export default function PlayerScreen({
                                     title: 'Delete Player',
                                     description:
                                         'Are you sure you want to delete this player?',
+                                }}
+                            />
+                            <MenuItem
+                                title="Remove Profile Picture"
+                                headIcon="delete-outline"
+                                onPress={onDeleteAvatarPress}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Remove Profile Picture',
+                                    description:
+                                        "Are you sure you want to remove this player's profile picture?",
                                 }}
                             />
                         </MenuSection>
