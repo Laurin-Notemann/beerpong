@@ -2,10 +2,11 @@ package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.SneakyThrows;
 
 @Entity(name = "rules")
 @Data
-public class Rule {
+public class Rule implements Cloneable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -18,4 +19,10 @@ public class Rule {
     @ManyToOne
     @JoinColumn(name = "seasonId")
     private Season season;
+
+    @Override
+    @SneakyThrows
+    public Rule clone() {
+        return (Rule) super.clone();
+    }
 }
