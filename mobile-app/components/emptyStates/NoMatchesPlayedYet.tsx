@@ -9,7 +9,6 @@ export const NoMatchesPlayedYet: React.FC = () => {
     return (
         <View style={{ paddingTop: 64 }}>
             <IconHead
-                onTouchStart={() => nav.navigate('newMatch')}
                 iconName="format-list-bulleted"
                 title="No Matches Played"
                 description={
@@ -17,7 +16,7 @@ export const NoMatchesPlayedYet: React.FC = () => {
                         style={{
                             marginTop: 24,
                         }}
-                        onPress={() => {}}
+                        onPress={() => nav.navigate('newMatch')}
                         title="Create match"
                         variant="primary"
                     />

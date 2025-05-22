@@ -25,7 +25,9 @@ export const usePlayersQuery = (
                 return null;
             }
 
-            const res = await (await api).getPlayers({ groupId, seasonId });
+            const res = await (
+                await api
+            ).getPlayers({ groupId, seasonId, showInactive: true });
 
             return res?.data;
         },

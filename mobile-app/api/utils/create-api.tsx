@@ -4,17 +4,16 @@ import React, {
     createContext,
     ReactNode,
     useContext,
-    useEffect,
+    useRef,
     useState,
 } from 'react';
 
+import { env } from '@/api/env';
+import beerpongDefinition from '@/api/generated/openapi.json';
+import { RealtimeClient } from '@/api/realtime';
+import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
+import { Client as BeerPongClient } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
-
-import beerpongDefinition from '../../api/generated/openapi.json';
-import { Client as BeerPongClient } from '../../openapi/openapi';
-import { env } from '../env';
-import { RealtimeClient } from '../realtime';
-import { useRealtimeConnection } from '../realtime/useRealtimeConnection';
 
 type ApiContextType = {
     realtime: RealtimeClient;
@@ -33,7 +32,61 @@ const openApi = new OpenAPIClientAxios({
 });
 
 export function ApiProvider({ children }: { children: ReactNode }) {
-    const api = openApi.getClient<BeerPongClient>();
+    const api = useRef(
+        new Promise<BeerPongClient>(async (resolve) => {
+            const awaitedApi = await openApi.getClient<BeerPongClient>();
+
+            const client = await openApi.init();
+
+            client.interceptors.response.use(
+                (res) => {
+                    return res;
+                },
+                (err) => {
+                    if (err.response) {
+                        writeLog(
+                            '[api] request failed:',
+                            err.config?.method?.toUpperCase(),
+                            err.config?.url,
+                            err.response.status,
+                            err.response.data
+                        );
+                        Sentry.captureException(err, {
+                            extra: {
+                                url: err.config?.url,
+                                method: err.config?.method,
+                                status: err.response.status,
+                                statusText: err.response.statusText,
+                                responseData: err.response.data,
+                            },
+                        });
+                    } else if (err.request) {
+                        writeLog(
+                            '[api] no response received:',
+                            err.config?.method,
+                            err.config?.url
+                        );
+                        Sentry.captureException(err, {
+                            extra: {
+                                url: err.config?.url,
+                                method: err.config?.method,
+                                request: err.request,
+                            },
+                        });
+                    } else {
+                        writeLog('[api] setup error:', err.message);
+                        Sentry.captureException(err, {
+                            extra: {
+                                message: err.message,
+                            },
+                        });
+                    }
+                    return Promise.reject(err);
+                }
+            );
+            resolve(awaitedApi);
+        })
+    );
 
     const realtime = useRealtimeConnection();
     const { writeLog } = useLogging();
@@ -41,73 +94,9 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    useEffect(() => {
-        const initializeApi = async () => {
-            try {
-                await openApi.init();
-
-                const awaitedApi = await api;
-
-                awaitedApi.interceptors.response.use(
-                    (res) => res,
-                    (err) => {
-                        if (err.response) {
-                            writeLog(
-                                '[api] request failed:',
-                                err.config?.method,
-                                err.config?.url,
-                                err.response.status,
-                                err.response.data
-                            );
-                            Sentry.captureException(err, {
-                                extra: {
-                                    url: err.config?.url,
-                                    method: err.config?.method,
-                                    status: err.response.status,
-                                    statusText: err.response.statusText,
-                                    responseData: err.response.data,
-                                },
-                            });
-                        } else if (err.request) {
-                            writeLog(
-                                '[api] no response received:',
-                                err.config?.method,
-                                err.config?.url
-                            );
-                            Sentry.captureException(err, {
-                                extra: {
-                                    url: err.config?.url,
-                                    method: err.config?.method,
-                                    request: err.request,
-                                },
-                            });
-                        } else {
-                            writeLog('[api] setup error:', err.message);
-                            Sentry.captureException(err, {
-                                extra: {
-                                    message: err.message,
-                                },
-                            });
-                        }
-                        return Promise.reject(err);
-                    }
-                );
-            } catch (err) {
-                setError(
-                    err instanceof Error
-                        ? err
-                        : new Error('Failed to initialize API client')
-                );
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        initializeApi();
-    }, []);
-
     const contextValue: ApiContextType = {
         realtime,
-        api,
+        api: api.current,
         isLoading,
         error,
     };

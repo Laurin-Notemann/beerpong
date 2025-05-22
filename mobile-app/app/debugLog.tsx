@@ -1,11 +1,13 @@
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useApi } from '@/api/utils/create-api';
 import { navStyles } from '@/app/navigation/navStyles';
+import copyToClipboard from '@/components/copyToClipboard';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { theme } from '@/theme';
@@ -69,7 +71,22 @@ export default function Page() {
                         </>
                     }
                 />
-                <Heading title="Debug Logs" />
+                <Heading
+                    title="Debug Logs"
+                    titleTailIcon={
+                        <TouchableOpacity
+                            onPress={() =>
+                                copyToClipboard(JSON.stringify(logs))
+                            }
+                        >
+                            <Icon
+                                color={theme.color.text.primary}
+                                name="content-copy"
+                                size={16}
+                            />
+                        </TouchableOpacity>
+                    }
+                />
                 {logs.map((i, idx) => (
                     <Text color="primary" key={idx} style={{ fontSize: 12 }}>
                         <Text color="secondary" style={{ fontSize: 12 }}>

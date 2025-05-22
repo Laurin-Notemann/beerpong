@@ -5,6 +5,7 @@ import {
     ScrollView,
     View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Button from '@/components/Button';
@@ -53,14 +54,43 @@ export default function CreateMatchAssignPoints({
             <SafeAreaView
                 style={{
                     position: 'absolute',
+                    flexDirection: 'row',
                     bottom: 0,
                     left: 0,
                     right: 0,
 
                     marginHorizontal: 8,
                     marginBottom: 16,
+
+                    gap: 16,
                 }}
             >
+                <Button
+                    variant="secondary"
+                    title={
+                        <Icon
+                            color={theme.color.text.primary}
+                            size={24}
+                            name="camera"
+                        />
+                    }
+                    size="large"
+                    onPress={onSubmit}
+                    disabled={isPending}
+                    style={{
+                        // box shadow:
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 0,
+                            height: 4,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 4,
+                        elevation: 5,
+
+                        aspectRatio: 1,
+                    }}
+                />
                 <Button
                     variant="primary"
                     title={isPending ? <ActivityIndicator /> : 'Create'}
@@ -77,6 +107,8 @@ export default function CreateMatchAssignPoints({
                         shadowOpacity: 0.25,
                         shadowRadius: 4,
                         elevation: 5,
+
+                        flex: 1,
                     }}
                 />
             </SafeAreaView>

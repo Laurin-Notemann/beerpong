@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { DefaultOptions, QueryClient } from '@tanstack/react-query';
+import { DefaultOptions, QueryCache, QueryClient } from '@tanstack/react-query';
 
+import { ConsoleLogger } from '@/utils/logging';
 import { hours, minutes } from '@/utils/time';
 
 /**
@@ -22,7 +23,14 @@ const defaultQueryOptions: DefaultOptions = {
  * Creates and configures a new QueryClient instance
  */
 export const createQueryClient = () => {
+    const queryCache = new QueryCache({
+        onError: (error, query) => {
+            ConsoleLogger.error(`Query key ${query.queryKey} failed:`, error);
+        },
+    });
+
     const queryClient = new QueryClient({
+        queryCache,
         defaultOptions: defaultQueryOptions,
     });
 

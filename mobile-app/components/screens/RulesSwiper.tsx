@@ -1,9 +1,8 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import Button from '@/components/Button';
 import copyToClipboard from '@/components/copyToClipboard';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
@@ -161,18 +160,42 @@ export default function RulesSwiper({
                                     )}
                                     {!isEditing && (
                                         <>
-                                            <Text
-                                                color="primary"
+                                            <TouchableOpacity
                                                 style={{
-                                                    fontSize: 25,
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'center',
 
-                                                    marginBottom: 16,
-
-                                                    textAlign: 'center',
+                                                    gap: 12,
                                                 }}
+                                                onPress={() =>
+                                                    copyToClipboard(
+                                                        rule.description
+                                                    )
+                                                }
                                             >
-                                                {rule.title}
-                                            </Text>
+                                                <Text
+                                                    color="primary"
+                                                    style={{
+                                                        fontSize: 25,
+
+                                                        marginBottom: 16,
+
+                                                        textAlign: 'center',
+                                                    }}
+                                                >
+                                                    {rule.title}
+                                                </Text>
+                                                <Icon
+                                                    color={
+                                                        theme.color.text.primary
+                                                    }
+                                                    name="content-copy"
+                                                    size={20}
+                                                    style={{
+                                                        top: 4,
+                                                    }}
+                                                />
+                                            </TouchableOpacity>
                                             <Text
                                                 color="secondary"
                                                 style={{
@@ -183,7 +206,7 @@ export default function RulesSwiper({
                                             >
                                                 {rule.description}
                                             </Text>
-                                            <View
+                                            {/* <View
                                                 style={{
                                                     flexDirection: 'row',
                                                     justifyContent:
@@ -191,18 +214,10 @@ export default function RulesSwiper({
                                                 }}
                                             >
                                                 <Button
-                                                    title="Copy to Clipboard"
-                                                    onPress={() =>
-                                                        copyToClipboard(
-                                                            rule.description
-                                                        )
-                                                    }
-                                                />
-                                                <Button
                                                     title="Copy to Group"
                                                     onPress={() => {}}
                                                 />
-                                            </View>
+                                            </View> */}
                                         </>
                                     )}
                                 </View>
