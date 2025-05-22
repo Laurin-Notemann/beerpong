@@ -1,4 +1,4 @@
-import { RefreshControl as ReactNativeRefreshControl } from 'react-native-gesture-handler';
+import { RefreshControl as ReactNativeRefreshControl } from 'react-native';
 
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { theme } from '@/theme';
