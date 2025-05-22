@@ -25,8 +25,8 @@ public class RuleMoveService {
             buildRuleMove("Bouncer", 2, 0, false),
             buildRuleMove("Trickshot", 2, 0, false),
             buildRuleMove("Save", 2, 0, false),
-            buildRuleMove("Finish - Normal", 0, 3, true),
-            buildRuleMove("Finish - Ring of fire", 0, 10, true)
+            buildRuleMove("Finish - Normal", 1, 3, true),
+            buildRuleMove("Finish - Ring of fire", 1, 10, true)
     );
 
     private final SubscriptionHandler subscriptionHandler;
