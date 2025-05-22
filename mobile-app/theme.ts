@@ -35,6 +35,8 @@ const lightModeTheme = {
             negative: '#EE4A58',
 
             branding: '#2C6BED',
+
+            link: '#6291F3',
         },
         bg: '#EFEFF0', // white background
         topNav: '#FFFFFF',
@@ -106,6 +108,8 @@ const darkModeTheme = {
             negative: '#EE4A58',
 
             branding: '#2C6BED',
+
+            link: '#6291F3',
         },
         bg: black,
         topNav: black,

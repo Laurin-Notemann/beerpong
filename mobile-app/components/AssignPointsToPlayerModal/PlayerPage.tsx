@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
 
 import Avatar from '../Avatar';
@@ -20,6 +21,8 @@ export default function PlayerPage({
     player: TeamMember;
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 }) {
+    const nav = useNavigation();
+
     return (
         <View style={{ flex: 1 }}>
             <View
@@ -39,8 +42,17 @@ export default function PlayerPage({
                 <Text color="primary" variant="h3" style={{ marginTop: 8 }}>
                     {player.name}
                 </Text>
-                <Text color="secondary" style={{ marginTop: 16 }}>
-                    How many cups did {player.name} score?
+                <Text
+                    color="secondary"
+                    style={{
+                        marginTop: 16,
+                        paddingHorizontal: 48,
+                        textAlign: 'center',
+                    }}
+                >
+                    If {player.name} scored the last cup of the match, please
+                    don't add it here. There is a seperate page for the winning
+                    throw.
                 </Text>
             </View>
             {player.moves
@@ -65,17 +77,24 @@ export default function PlayerPage({
                 }}
             >
                 <Text
+                    onPress={() => {
+                        nav.goBack(); // dismiss the modal we're in
+                        nav.navigate('allowedMoves');
+                    }}
                     color="secondary"
                     style={{
                         marginTop: 16,
-                        fontSize: 12,
+                        fontSize: 13,
 
                         paddingHorizontal: 48,
+
+                        textAlign: 'center',
                     }}
                 >
-                    If {player.name} scored the last cup of the match, please
-                    don't add it here. There is a seperate page for the winning
-                    throw.
+                    You can change what moves can be played in this group.{' '}
+                    <Text color="link" style={{ fontSize: 13 }}>
+                        Learn more
+                    </Text>
                 </Text>
             </View>
             {finishMove && (
@@ -86,7 +105,7 @@ export default function PlayerPage({
 
                         height: 44,
                         paddingLeft: 64,
-                        paddingRight: 16,
+                        paddingRight: 64 - 8,
 
                         marginTop: 16,
                     }}
@@ -94,7 +113,7 @@ export default function PlayerPage({
                     <Icon
                         name="crown-outline"
                         size={24}
-                        color="#DCAB38"
+                        color={theme.color.text.primary}
                         style={{
                             marginRight: 8,
                         }}

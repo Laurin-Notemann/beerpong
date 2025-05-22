@@ -165,6 +165,13 @@ export default function GroupSettingsScreen({
                         tailIconType="next"
                         onPress={() => nav.navigate('createNewPlayer')}
                     />
+                    <MenuItem
+                        title="Allowed Moves"
+                        headIcon="bullseye-arrow"
+                        tailIconType="next"
+                        tailContent={allowedMoves.length}
+                        onPress={() => nav.navigate('allowedMoves')}
+                    />
                     {experiments.eloAlgorithm && (
                         <MenuItem
                             title="Rank Players by"
@@ -253,18 +260,6 @@ export default function GroupSettingsScreen({
                         onPress={() => nav.navigate('debugLog')}
                     />
                 </MenuSection>
-                <AllowedMoves
-                    moves={allowedMoves.map((i) => ({
-                        id: i.id!,
-                        name: i.name!,
-                        finishingMove: i.finishingMove!,
-                        pointsForScorer: i.pointsForScorer!,
-                        pointsForTeam: i.pointsForTeam!,
-                    }))}
-                    onNewPress={() => {}}
-                    editable={false}
-                    footer="The rules of the ongoing season cannot be changed. To change what moves can be played, start a new season."
-                />
             </ScrollView>
         </RootSiblingParent>
     );

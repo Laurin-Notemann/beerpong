@@ -167,7 +167,7 @@ export default function AssignPointsToPlayerModal({
                                         key={idx}
                                         player={i!}
                                         finishMove={
-                                            finisherId === i!.id
+                                            finisher?.id === i!.id
                                                 ? finishMove
                                                 : undefined
                                         }
