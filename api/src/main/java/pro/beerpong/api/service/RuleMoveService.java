@@ -16,7 +16,6 @@ import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class RuleMoveService {
@@ -45,17 +44,20 @@ public class RuleMoveService {
         this.moveMapper = moveMapper;
     }
 
-    public RuleMoveDto createRuleMove(Group group, Season season, RuleMoveCreateDto createDto) {
+    public RuleMoveDto createRuleMove(Group group, Season season, RuleMoveCreateDto createDto, boolean callSocket) {
         var rule = moveMapper.ruleMoveCreateDtoToRuleMove(createDto);
         rule.setSeason(season);
 
-        if (!rule.getSeason().getId().equals(season.getId()) || !rule.getSeason().getGroupId().equals(group.getId())) {
+        if (!rule.getSeason().getId().equals(season.getId()) || !rule.getSeason().getGroupId().equals(group.getId()) ||
+                createDto.invalidDto()) {
             return null;
         }
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(rule));
 
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_CREATE, group.getId(), dto));
+        if (callSocket) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_CREATE, group.getId(), dto));
+        }
 
         return dto;
     }
@@ -68,26 +70,12 @@ public class RuleMoveService {
         move.setName(createDto.getName());
         move.setPointsForTeam(createDto.getPointsForTeam());
         move.setPointsForScorer(createDto.getPointsForScorer());
-        move.setFinishingMove(createDto.isFinishingMove());
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(moveMapper.ruleMoveDtoToRuleMove(move)));
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_UPDATE, groupId, dto));
 
         return dto;
-    }
-
-    public boolean delete(String groupId, RuleMoveDto dto) {
-        return Optional.ofNullable(dto)
-                .map(ruleMove -> {
-                    moveRepository.deleteById(ruleMove.getId());
-
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_DELETE, groupId, ruleMove));
-
-                    return true;
-                })
-                .orElse(false);
-
     }
 
     public Pair<Integer, Integer> getPointsById(String ruleMoveId) {

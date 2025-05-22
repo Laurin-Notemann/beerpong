@@ -29,6 +29,10 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_NAME);
         }
 
+        if (dto.invalidRuleMoves()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_RULE_MOVES);
+        }
+
         var season = seasonService.startNewSeason(dto, groupId);
 
         if (season != null) {

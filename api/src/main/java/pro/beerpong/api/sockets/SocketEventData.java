@@ -23,7 +23,6 @@ public class SocketEventData<T> {
 
     public static final SocketEventData<RuleMoveDto> RULE_MOVE_CREATE = new SocketEventData<>(RuleMoveDto.class, SocketEventType.RULE_MOVES, "ruleMovesCreate");
     public static final SocketEventData<RuleMoveDto> RULE_MOVE_UPDATE = new SocketEventData<>(RuleMoveDto.class, SocketEventType.RULE_MOVES, "ruleMovesUpdate");
-    public static final SocketEventData<RuleMoveDto> RULE_MOVE_DELETE = new SocketEventData<>(RuleMoveDto.class, SocketEventType.RULE_MOVES, "ruleMovesDelete");
 
     public static final SocketEventData<SeasonStartDto> SEASON_START = new SocketEventData<>(SeasonStartDto.class, SocketEventType.SEASONS, "seasonStart");
     public static final SocketEventData<SeasonDto> SEASON_UPDATE = new SocketEventData<>(SeasonDto.class, SocketEventType.SEASONS, "seasonUpdate");

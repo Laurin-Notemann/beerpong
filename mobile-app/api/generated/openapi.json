@@ -223,42 +223,6 @@
                         }
                     }
                 }
-            },
-            "delete": {
-                "tags": ["rule-move-controller"],
-                "operationId": "deleteRuleMove",
-                "parameters": [
-                    {
-                        "name": "groupId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "seasonId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "ruleMoveId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
         "/groups/{groupId}/seasons/{seasonId}/matches/{id}": {
@@ -1445,7 +1409,15 @@
             },
             "SeasonCreateDto": {
                 "type": "object",
-                "properties": { "oldSeasonName": { "type": "string" } }
+                "properties": {
+                    "oldSeasonName": { "type": "string" },
+                    "ruleMoves": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RuleMoveCreateDto"
+                        }
+                    }
+                }
             },
             "ResponseEnvelopeString": {
                 "type": "object",
