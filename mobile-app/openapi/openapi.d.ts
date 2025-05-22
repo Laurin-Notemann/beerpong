@@ -235,6 +235,7 @@ declare namespace Components {
         }
         export interface SeasonCreateDto {
             oldSeasonName?: string;
+            ruleMoves?: RuleMoveCreateDto[];
         }
         export interface SeasonDto {
             id?: string;
@@ -349,21 +350,6 @@ declare namespace Paths {
             groupId: Parameters.GroupId;
             seasonId: Parameters.SeasonId;
             id: Parameters.Id;
-        }
-        namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeString;
-        }
-    }
-    namespace DeleteRuleMove {
-        namespace Parameters {
-            export type GroupId = string;
-            export type RuleMoveId = string;
-            export type SeasonId = string;
-        }
-        export interface PathParameters {
-            groupId: Parameters.GroupId;
-            seasonId: Parameters.SeasonId;
-            ruleMoveId: Parameters.RuleMoveId;
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
@@ -765,14 +751,6 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateRuleMove.Responses.$200>;
     /**
-     * deleteRuleMove
-     */
-    'deleteRuleMove'(
-        parameters?: Parameters<Paths.DeleteRuleMove.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
-    /**
      * getMatchById
      */
     'getMatchById'(
@@ -1043,14 +1021,6 @@ export interface PathsDictionary {
             data?: Paths.UpdateRuleMove.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateRuleMove.Responses.$200>;
-        /**
-         * deleteRuleMove
-         */
-        'delete'(
-            parameters?: Parameters<Paths.DeleteRuleMove.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.DeleteRuleMove.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/matches/{id}']: {
         /**
