@@ -167,7 +167,9 @@ export function useRules() {
     }, [rules]);
 
     return {
+        isMutationPending: setRulesMutation.isPending,
         ...rulesQuery,
+        setRules: _setRules,
         rules: localRules,
         reorderRules,
         createRulesMutation,

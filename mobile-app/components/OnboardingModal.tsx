@@ -33,7 +33,7 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                 <Text variant="h3" color="branding" bold>
                     Versus
                 </Text>
-                , the beerpong leaderboard app!
+                , the leaderboard app!
             </Text>
             {/* <Text variant="body1" color="secondary">
                 - sick leaderboard{'\n'}- intuitively assign points {'\n'}- view

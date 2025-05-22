@@ -1,54 +1,20 @@
 import * as React from 'react';
 import { Stack } from 'expo-router';
-import {
-    Dimensions,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    View,
-} from 'react-native';
+import { Dimensions, SafeAreaView, ScrollView, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
-import { HeaderItem } from '@/components/HeaderItem';
-import Leaderboard from '@/components/Leaderboard';
 import LoadingScreen from '@/components/LoadingScreen';
-import { ThemedView } from '@/components/ThemedView';
+import {
+    PastSeasonsEmptyScreen,
+    SeasonCard,
+} from '@/screens/PastSeasonsEmptyScreen';
 import { theme } from '@/theme';
 
 const { width, height } = Dimensions.get('window');
-
-/**
- * TODO: use <SwiperHeader /> with <PaginationDot />
- */
-function Card({
-    season,
-    players,
-    numMatches,
-}: {
-    season: {
-        name: string;
-        startDate: string;
-        endDate: string;
-        numPlayers?: number;
-        numMatches?: number;
-    };
-    players: any[];
-    numMatches: number;
-}) {
-    return (
-        <ThemedView style={styles.card}>
-            <Leaderboard
-                players={players}
-                showUnranked={false}
-                season={{ ...season, numPlayers: players.length, numMatches }}
-            />
-        </ThemedView>
-    );
-}
 
 /**
  * <Carousel /> intercepts touch events, so we can't wrap it inside a scrollview. instead, we have to put each item inside a scrollview.
@@ -77,59 +43,52 @@ export default function Page() {
                     ...navStyles,
                     headerBackTitleVisible: false,
                     headerTitle: 'Past Seasons',
-                    headerRight: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Done
-                        </HeaderItem>
-                    ),
                 }}
             />
-            <Carousel
-                data={seasons}
-                height={height - 90}
-                loop={false}
-                width={
-                    width - theme.carousel.peekGap - theme.carousel.peekSize * 2
-                }
-                style={{ width }}
-                renderItem={(season) => (
-                    <SafeAreaView>
-                        <ScrollView
-                            style={{
-                                marginHorizontal: theme.carousel.peekGap / 2,
-                                left:
-                                    theme.carousel.peekGap / 2 +
-                                    theme.carousel.peekSize,
+            {seasons.length === 0 && <PastSeasonsEmptyScreen />}
+            {seasons.length > 0 && (
+                <Carousel
+                    data={seasons}
+                    height={height - 90}
+                    loop={false}
+                    width={
+                        width -
+                        theme.carousel.peekGap -
+                        theme.carousel.peekSize * 2
+                    }
+                    style={{ width }}
+                    renderItem={(season) => (
+                        <SafeAreaView>
+                            <ScrollView
+                                style={{
+                                    marginHorizontal:
+                                        theme.carousel.peekGap / 2,
+                                    left:
+                                        theme.carousel.peekGap / 2 +
+                                        theme.carousel.peekSize,
 
-                                borderRadius: theme.borderRadius.card,
-                                backgroundColor: theme.color.modal.bg,
+                                    borderRadius: theme.borderRadius.card,
+                                    backgroundColor: theme.color.modal.bg,
 
-                                minHeight: '100%',
-                            }}
-                        >
-                            <Card
-                                season={{
-                                    name: season.item.name!,
-                                    startDate: season.item.startDate!,
-                                    endDate: season.item.endDate!,
+                                    minHeight: '100%',
                                 }}
-                                // @ts-ignore TODO: type this properly
-                                numMatches={season.item.numMatches!}
-                                // @ts-ignore TODO: type this properly
-                                players={season.item.players}
-                            />
-                        </ScrollView>
-                    </SafeAreaView>
-                )}
-            />
+                            >
+                                <SeasonCard
+                                    season={{
+                                        name: season.item.name!,
+                                        startDate: season.item.startDate!,
+                                        endDate: season.item.endDate!,
+                                    }}
+                                    // @ts-ignore TODO: type this properly
+                                    numMatches={season.item.numMatches!}
+                                    // @ts-ignore TODO: type this properly
+                                    players={season.item.players}
+                                />
+                            </ScrollView>
+                        </SafeAreaView>
+                    )}
+                />
+            )}
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    card: {
-        flex: 1,
-
-        paddingBottom: 32,
-    },
-});
