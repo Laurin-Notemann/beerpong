@@ -11,6 +11,7 @@ import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { theme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 import ConfirmationModal from '../ConfirmationModal';
 import MenuItem from '../Menu/MenuItem';
@@ -133,6 +134,8 @@ export function Sidebar({}: SidebarProps) {
         null
     );
 
+    const matchDraft = useMatchDraftStore((store) => store.actions);
+
     return (
         <SafeAreaView
             style={{
@@ -198,6 +201,7 @@ export function Sidebar({}: SidebarProps) {
                         isActive={id === selectedGroupId}
                         onPress={() => {
                             selectGroup(id);
+                            matchDraft.clear();
 
                             while (nav.canGoBack()) {
                                 nav.goBack();

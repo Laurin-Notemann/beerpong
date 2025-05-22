@@ -225,6 +225,7 @@ export default function NewMatchScreen() {
                 isCreating={createMatchMutation.isPending}
             />
             <Carousel
+                defaultIndex={0}
                 ref={carouselRef}
                 style={{
                     backgroundColor: theme.color.bg,
