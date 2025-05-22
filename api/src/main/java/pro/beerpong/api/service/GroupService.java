@@ -39,6 +39,7 @@ public class GroupService {
     private final MatchRepository matchRepository;
     private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
+    private final RuleService ruleService;
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
@@ -62,6 +63,7 @@ public class GroupService {
         });
 
         ruleMoveService.createDefaultRuleMoves(season);
+        ruleService.createDefaultRules(season);
 
         return withStats(groupMapper.groupToGroupDto(group));
     }
