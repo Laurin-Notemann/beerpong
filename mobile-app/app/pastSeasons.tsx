@@ -67,7 +67,7 @@ function Card({
             >
                 {players.length} players · {numMatches} matches
             </ThemedText>
-            <Leaderboard players={players} />
+            <Leaderboard players={players} showUnranked={false} />
         </ThemedView>
     );
 }
@@ -122,6 +122,8 @@ export default function Page() {
 
                                 borderRadius: theme.borderRadius.card,
                                 backgroundColor: theme.color.modal.bg,
+
+                                minHeight: '100%',
                             }}
                         >
                             <Card

@@ -2,13 +2,11 @@ import React from 'react';
 import { TouchableOpacity, ViewProps } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
+import Avatar from '@/components/Avatar';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
-
-import Avatar from './Avatar';
-import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
 
 export interface PodiumProps extends ViewProps {
     detailed?: boolean;
@@ -16,16 +14,18 @@ export interface PodiumProps extends ViewProps {
     firstPlace?: Player;
     secondPlace?: Player;
     thirdPlace?: Player;
+
+    onPlayerPress?: (id: string) => void;
 }
 export default function Podium({
     detailed = true,
     firstPlace,
     secondPlace,
     thirdPlace,
+
+    onPlayerPress,
     ...rest
 }: PodiumProps) {
-    const nav = useNavigation();
-
     const firstPlaceAveragePointsPerMatch = firstPlace?.matches
         ? (firstPlace?.points / firstPlace?.matches).toFixed(1)
         : '--';
@@ -51,16 +51,14 @@ export default function Podium({
             ]}
         >
             <TouchableOpacity
-                disabled={secondPlace == null}
+                disabled={secondPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
                 style={{
                     alignItems: 'center',
                     marginTop: 48,
                     flex: 1,
                 }}
-                onPress={() =>
-                    secondPlace && nav.navigate('player', secondPlace)
-                }
+                onPress={() => secondPlace && onPlayerPress?.(secondPlace?.id)}
             >
                 <ThemedText
                     style={{
@@ -125,9 +123,9 @@ export default function Podium({
                 )}
             </TouchableOpacity>
             <TouchableOpacity
-                disabled={firstPlace == null}
+                disabled={firstPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
-                onPress={() => firstPlace && nav.navigate('player', firstPlace)}
+                onPress={() => firstPlace && onPlayerPress?.(firstPlace?.id)}
                 style={{
                     alignItems: 'center',
 
@@ -207,10 +205,10 @@ export default function Podium({
                 )}
             </TouchableOpacity>
             <TouchableOpacity
-                disabled={thirdPlace == null}
+                disabled={thirdPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
                 style={{ alignItems: 'center', marginTop: 48, flex: 1 }}
-                onPress={() => thirdPlace && nav.navigate('player', thirdPlace)}
+                onPress={() => thirdPlace && onPlayerPress?.(thirdPlace?.id)}
             >
                 <ThemedText
                     style={{

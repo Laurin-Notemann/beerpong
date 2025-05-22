@@ -38,6 +38,7 @@ export default function Page() {
                 <Heading title="How Elo ranking works" />
                 <Text color="primary">Lorem ipsum dolor sit amet</Text>
                 <Leaderboard
+                    showUnranked={false}
                     withPodium={false}
                     style={{
                         transform: [{ scale: 0.8 }],

@@ -10,6 +10,7 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import Leaderboard from '@/components/Leaderboard';
@@ -20,6 +21,7 @@ import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
+    const nav = useNavigation();
     const { groupId, seasonId, group } = useGroup();
 
     const { players } = useLeaderboardProps(groupId, seasonId ?? null);
@@ -124,7 +126,10 @@ export default function Page() {
                         />
                     </View>
                 )}
-                <Leaderboard players={players} />
+                <Leaderboard
+                    players={players}
+                    onPlayerPress={(id) => nav.navigate('player', { id })}
+                />
                 <Text
                     style={{
                         fontSize: 12,
