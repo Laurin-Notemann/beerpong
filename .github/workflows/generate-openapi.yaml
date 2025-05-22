@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    name: Genereate Api docs
+    name: Generate Api docs
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -33,23 +33,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Check recent commit authors
         id: check_authors
         shell: bash
         run: |
-          # Fetch the PR base branch
-          git fetch origin ${{ github.base_ref }}
-
-          # Get the merge base between the PR head and base
-          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-
-          # Check the commits between the merge base and HEAD
-          COMMIT_MESSAGES=$(git log $MERGE_BASE..HEAD --format='%s')
-          echo "Commit messages since merge base:"
+          # For pull requests, use the base ref
+          if [[ -n "${{ github.base_ref }}" ]]; then
+            # Fetch the PR base branch
+            git fetch origin ${{ github.base_ref }}
+            
+            # Get the merge base between the PR head and base
+            MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+            
+            # Check the commits between the merge base and HEAD
+            COMMIT_RANGE="$MERGE_BASE..HEAD"
+          else
+            # For direct pushes or workflow_dispatch, check last few commits
+            COMMIT_RANGE="HEAD~10..HEAD"
+          fi
+          
+          COMMIT_MESSAGES=$(git log $COMMIT_RANGE --format='%s')
+          echo "Commit messages in range:"
           echo "$COMMIT_MESSAGES"
-
+          
           if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi types"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
             echo "A recent commit contains the version bump message. Stopping the workflow."
@@ -83,6 +91,7 @@ jobs:
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
         working-directory: api
+        
       - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
         if: steps.check_authors.outputs.has_bot_author != 'true'
 
@@ -106,6 +115,7 @@ jobs:
       - run: npm ci && npm run gen-types && npm run format
         if: steps.check_authors.outputs.has_bot_author != 'true'
         working-directory: mobile-app
+        
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: steps.check_authors.outputs.has_bot_author != 'true'
         with:
