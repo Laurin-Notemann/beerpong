@@ -14,33 +14,21 @@ export const OldSeasonNameInput: React.FC<{
 
     onChangeName: (name: string) => void;
 }> = ({ numMatches, numPlayers, startDate, rankedPlayers, onChangeName }) => {
+    // <KeyboardAvoidingView
+    //     behavior="height"
+    //     style={{ backgroundColor: 'red', overflow: 'hidden' }}
+    // >
+    {
+        /* <ScrollView style={{ backgroundColor: 'orange', height: '100%' }}> */
+    }
     return (
-        <KeyboardAvoidingView
-            behavior="height"
-            style={{ backgroundColor: 'red', overflow: 'hidden' }}
-        >
-            {/* <ScrollView style={{ backgroundColor: 'orange', height: '100%' }}> */}
-            {/* <InputModal isDark> */}
+        <InputModal isDark>
             <LeaderBoardSeasonInfo
                 isCurrentSeason
                 numMatches={numMatches}
                 numPlayers={numPlayers}
                 startDate={startDate}
                 endDate={new Date().toString()}
-            />
-            <Podium
-                detailed={false}
-                style={{ marginHorizontal: 'auto' }}
-                firstPlace={rankedPlayers[0]}
-                secondPlace={rankedPlayers[1]}
-                thirdPlace={rankedPlayers[2]}
-            />
-            <Podium
-                detailed={false}
-                style={{ marginHorizontal: 'auto' }}
-                firstPlace={rankedPlayers[0]}
-                secondPlace={rankedPlayers[1]}
-                thirdPlace={rankedPlayers[2]}
             />
             <Podium
                 detailed={false}
@@ -59,8 +47,10 @@ export const OldSeasonNameInput: React.FC<{
                     alignSelf: 'stretch',
                 }}
             />
-            {/* </InputModal> */}
-            {/* </ScrollView> */}
-        </KeyboardAvoidingView>
+        </InputModal>
     );
+    {
+        /* </ScrollView> */
+    }
+    // </KeyboardAvoidingView>
 };

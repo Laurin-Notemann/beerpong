@@ -3,15 +3,13 @@ import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
-import { env } from '@/api/env';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
-
-import { HeaderItem } from '../../components/HeaderItem';
 
 const GroupsButton = () => {
     const nav = useNavigation();

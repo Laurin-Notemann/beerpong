@@ -270,10 +270,10 @@ export default function Rules({
                                 title="Delete"
                                 onPress={() => setShowDeleteConfirmation(true)}
                             />
-                            <Button
+                            {/* <Button
                                 title="Copy to Group"
                                 onPress={() => setShowDeleteConfirmation(true)}
-                            />
+                            /> */}
                         </>
                     )}
                     <Button

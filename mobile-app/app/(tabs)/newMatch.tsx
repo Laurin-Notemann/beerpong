@@ -37,8 +37,6 @@ const { width } = Dimensions.get('window');
 export default function NewMatchScreen() {
     const { beerpongProMode } = useLocalSettings();
 
-    const [cupsPage, setCupsPage] = useState(false);
-
     const scrollX = useSharedValue(0);
 
     // float between 0 and 1
