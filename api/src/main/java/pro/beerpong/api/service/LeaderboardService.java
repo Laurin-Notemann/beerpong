@@ -12,6 +12,7 @@ import pro.beerpong.api.util.RankingAlgorithm;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -217,7 +218,9 @@ public class LeaderboardService {
 
         // create dto and set entries
         var dto = new LeaderboardDto();
-        dto.setEntries(Lists.newArrayList(entries.values()));
+        dto.setEntries(entries.values().stream()
+                .filter(leaderboardEntryDto -> leaderboardEntryDto.getPlayerDto().isActiveThisSeason())
+                .toList());
 
         // calculate ranking for all possible algorithms
         for (RankingAlgorithm value : RankingAlgorithm.values()) {

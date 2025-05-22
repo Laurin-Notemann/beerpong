@@ -184,7 +184,6 @@ public class MatchService {
 
     public Stream<PlayerDto> streamAllPlayersInSeason(String seasonId) {
         return playerRepository.findAllBySeasonId(seasonId).stream()
-                .filter(Player::isActiveThisSeason)
                 .map(playerMapper::playerToPlayerDto);
     }
 
