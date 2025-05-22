@@ -1,4 +1,4 @@
-import { ScrollView } from 'react-native';
+import { KeyboardAvoidingView, ScrollView } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import InputModal from '@/components/InputModal';
@@ -15,32 +15,52 @@ export const OldSeasonNameInput: React.FC<{
     onChangeName: (name: string) => void;
 }> = ({ numMatches, numPlayers, startDate, rankedPlayers, onChangeName }) => {
     return (
-        <ScrollView>
-            <InputModal isDark>
-                <LeaderBoardSeasonInfo
-                    isCurrentSeason
-                    numMatches={numMatches}
-                    numPlayers={numPlayers}
-                    startDate={startDate}
-                    endDate={new Date().toString()}
-                />
-                <Podium
-                    detailed={false}
-                    style={{ marginHorizontal: 'auto' }}
-                    firstPlace={rankedPlayers[0]}
-                    secondPlace={rankedPlayers[1]}
-                    thirdPlace={rankedPlayers[2]}
-                />
-                <TextInput
-                    required
-                    placeholder="Season Name"
-                    onChangeText={onChangeName}
-                    autoFocus
-                    style={{
-                        alignSelf: 'stretch',
-                    }}
-                />
-            </InputModal>
-        </ScrollView>
+        <KeyboardAvoidingView
+            behavior="height"
+            style={{ backgroundColor: 'red', overflow: 'hidden' }}
+        >
+            {/* <ScrollView style={{ backgroundColor: 'orange', height: '100%' }}> */}
+            {/* <InputModal isDark> */}
+            <LeaderBoardSeasonInfo
+                isCurrentSeason
+                numMatches={numMatches}
+                numPlayers={numPlayers}
+                startDate={startDate}
+                endDate={new Date().toString()}
+            />
+            <Podium
+                detailed={false}
+                style={{ marginHorizontal: 'auto' }}
+                firstPlace={rankedPlayers[0]}
+                secondPlace={rankedPlayers[1]}
+                thirdPlace={rankedPlayers[2]}
+            />
+            <Podium
+                detailed={false}
+                style={{ marginHorizontal: 'auto' }}
+                firstPlace={rankedPlayers[0]}
+                secondPlace={rankedPlayers[1]}
+                thirdPlace={rankedPlayers[2]}
+            />
+            <Podium
+                detailed={false}
+                style={{ marginHorizontal: 'auto' }}
+                firstPlace={rankedPlayers[0]}
+                secondPlace={rankedPlayers[1]}
+                thirdPlace={rankedPlayers[2]}
+            />
+
+            <TextInput
+                required
+                placeholder="Season Name"
+                onChangeText={onChangeName}
+                autoFocus
+                style={{
+                    alignSelf: 'stretch',
+                }}
+            />
+            {/* </InputModal> */}
+            {/* </ScrollView> */}
+        </KeyboardAvoidingView>
     );
 };

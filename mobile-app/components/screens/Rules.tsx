@@ -70,7 +70,8 @@ export default function Rules({
                 key={item.id}
                 onLongPress={() => {
                     triggerHapticBump('selection');
-                    setModalId(item.id);
+                    nav.navigate('rule', { id: item.id });
+                    // setModalId(item.id);
                 }}
                 active={isActive}
                 editMode={isEditing}
@@ -248,35 +249,43 @@ export default function Rules({
                     </Text>
                 )}
             </NestableScrollContainer>
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'stretch',
-                    justifyContent: 'space-between',
-
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    paddingBottom: 16,
-                    paddingHorizontal: 16,
-                }}
-            >
-                {selectedIds.length > 0 && (
-                    <Button
-                        title="Delete"
-                        onPress={() => setShowDeleteConfirmation(true)}
-                    />
-                )}
-                <Button
-                    title="Add Rule"
-                    onPress={() => nav.navigate('createNewRule')}
+            {isEditing && (
+                <View
                     style={{
-                        alignSelf: 'stretch',
-                        marginLeft: 'auto',
+                        flexDirection: 'row',
+                        alignItems: 'stretch',
+                        justifyContent: 'space-between',
+
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        paddingBottom: 16,
+                        paddingHorizontal: 16,
                     }}
-                />
-            </View>
+                >
+                    {selectedIds.length > 0 && (
+                        <>
+                            <Button
+                                title="Delete"
+                                onPress={() => setShowDeleteConfirmation(true)}
+                            />
+                            <Button
+                                title="Copy to Group"
+                                onPress={() => setShowDeleteConfirmation(true)}
+                            />
+                        </>
+                    )}
+                    <Button
+                        title="Add Rule"
+                        onPress={() => nav.navigate('createNewRule')}
+                        style={{
+                            alignSelf: 'stretch',
+                            marginLeft: 'auto',
+                        }}
+                    />
+                </View>
+            )}
         </GestureHandlerRootView>
     );
 }

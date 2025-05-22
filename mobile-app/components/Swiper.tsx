@@ -1,14 +1,21 @@
-import { forwardRef, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Dimensions } from 'react-native';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
-import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
+import Carousel, {
+    ICarouselInstance,
+    TCarouselProps,
+} from 'react-native-reanimated-carousel';
 
 import { theme } from '@/theme';
 
 const { width } = Dimensions.get('window');
 
-export interface SwiperProps {
-    children: React.ReactNode[];
+export interface SwiperProps
+    extends Omit<
+        TCarouselProps,
+        'data' | 'renderItem' | 'mode' | 'vertical' | 'modeConfig'
+    > {
+    children: React.ReactNode | React.ReactNode[];
 
     enabled?: boolean;
 
@@ -23,15 +30,21 @@ export interface SwiperProps {
  * - peek
  */
 export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
-    ({ children, enabled, onPageChange, swiperProgress }, ref) => {
-        const pages = children.filter((i) => !!i) as JSX.Element[];
+    ({ children, enabled, onPageChange, swiperProgress, ...rest }, ref) => {
+        const pages = Array.isArray(children) ? children : [children];
+
+        const cleanPages = pages.filter((i) => !!i) as JSX.Element[];
 
         return (
             <Carousel
+                {...rest}
                 ref={ref}
-                style={{
-                    backgroundColor: theme.color.bg,
-                }}
+                style={[
+                    {
+                        backgroundColor: theme.color.bg,
+                    },
+                    rest.style,
+                ]}
                 onProgressChange={(relativeOffset) => {
                     swiperProgress.value = -relativeOffset / width;
                 }}
@@ -39,7 +52,7 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
                 loop={false}
                 width={width}
                 enabled={enabled}
-                data={pages}
+                data={cleanPages}
                 renderItem={(item) => item.item}
             />
         );
@@ -52,11 +65,17 @@ Swiper.displayName = 'Swiper';
  * @returns swiperProgress - float representing the interpolated page idx (e.g. 1.5 if the user if halfway between page 2 and 3)
  */
 export function useSwiper(options?: { initialPage?: number }) {
-    const swiperProgress = useSharedValue(options?.initialPage ?? 0);
+    const initialPage = options?.initialPage ?? 0;
 
-    const [swiperPage, setSwiperPage] = useState(0);
+    const swiperProgress = useSharedValue(initialPage);
+
+    const [swiperPage, setSwiperPage] = useState(initialPage);
 
     const ref = useRef<ICarouselInstance>(null);
+
+    useEffect(() => {
+        ref.current!.scrollTo({ index: initialPage, animated: false });
+    }, [initialPage]);
 
     return {
         swiperPage,

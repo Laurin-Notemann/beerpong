@@ -46,7 +46,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const oldSeasonIsEmpty = numMatches < 1;
 
-    const swiper = useSwiper({ initialPage: oldSeasonIsEmpty ? 1 : 0 });
+    const swiper = useSwiper({ initialPage: 0 });
 
     const hasValidName =
         oldSeasonIsEmpty || newSeasonDraft.oldSeasonName.length > 0;
