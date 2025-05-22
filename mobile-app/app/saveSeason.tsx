@@ -24,14 +24,14 @@ export default function Page() {
 
     async function onStartNewSeason(
         oldSeasonName: string,
-        newSeasonAllowedMoves: Components.Schemas.RuleMoveDto[]
+        ruleMoves: Components.Schemas.RuleMoveDto[]
     ) {
         if (!groupId) return;
         try {
             await newSeasonMutation.mutateAsync({
                 groupId,
-                oldSeasonName: oldSeasonName,
-                // newSeasonAllowedMoves
+                oldSeasonName,
+                ruleMoves,
             });
 
             qc.invalidateQueries({
