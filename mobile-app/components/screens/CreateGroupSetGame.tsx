@@ -1,6 +1,5 @@
 import { Stack } from 'expo-router';
 import {
-    ActivityIndicator,
     Dimensions,
     Image,
     ScrollView,
@@ -8,8 +7,11 @@ import {
     View,
 } from 'react-native';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
+import { HeaderItem } from '@/components/HeaderItem';
 import Text from '@/components/Text';
 import { theme } from '@/theme';
+import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -27,15 +29,31 @@ export interface GameOption {
 
 export const CreateGroupSetGame: React.FC<{
     games: GameOption[];
-    onSubmit: (game: GameOption) => void;
+    onSubmit: (game: {
+        preset?: string;
+        custom?: {
+            name: string;
+        };
+    }) => void;
     isPending?: boolean;
 }> = ({ games, onSubmit, isPending = false }) => {
+    const nav = useNavigation();
+
+    const { sport, setSport } = useCreateGroupStore();
+
     return (
         <ScrollView style={{ flex: 1, backgroundColor: theme.color.bg }}>
             <Stack.Screen
                 options={{
-                    headerRight: () =>
-                        isPending ? <ActivityIndicator /> : undefined,
+                    headerRight: () => (
+                        <HeaderItem
+                            onPress={() => onSubmit(sport!)}
+                            disabled={!sport}
+                            isLoading={isPending}
+                        >
+                            Create
+                        </HeaderItem>
+                    ),
 
                     headerTitle: 'Create Group',
                     headerBackTitleVisible: false,
@@ -72,10 +90,20 @@ export const CreateGroupSetGame: React.FC<{
                         key={game.id}
                         title={game.title}
                         imageUrl={game.imageUrl}
-                        onPress={() => onSubmit(game)}
+                        onPress={() => setSport({ preset: game.id })}
+                        selected={sport?.preset === game.id}
                     />
                 ))}
-                <Item title="Other" onPress={() => {}} />
+                <Item
+                    title={sport?.custom?.name || 'Other'}
+                    onPress={() => {
+                        setSport({
+                            custom: { name: sport?.custom?.name ?? '' },
+                        });
+                        nav.navigate('createGroupCustomGameModal');
+                    }}
+                    selected={sport?.custom != null}
+                />
             </View>
         </ScrollView>
     );
@@ -85,10 +113,12 @@ function Item({
     title,
     imageUrl,
     onPress,
+    selected = false,
 }: {
     title: string;
     imageUrl?: string;
     onPress: () => void;
+    selected?: boolean;
 }) {
     const size = Math.floor(
         (SCREEN_WIDTH - paddingHorizontal * 2 - (gap * numCols - 1)) / numCols
@@ -96,19 +126,25 @@ function Item({
 
     return (
         <TouchableHighlight
-            style={{
-                alignItems: 'center',
-                justifyContent: 'center',
+            style={[
+                {
+                    alignItems: 'center',
+                    justifyContent: 'center',
 
-                width: size,
-                height: size,
+                    width: size,
+                    height: size,
 
-                borderRadius: 16, // ios app icon would be size / 4.5 and gap would be size / 2
+                    borderRadius: 16, // ios app icon would be size / 4.5 and gap would be size / 2
 
-                backgroundColor: '#2E2E2E',
+                    backgroundColor: '#2E2E2E',
 
-                overflow: 'hidden',
-            }}
+                    overflow: 'hidden',
+                },
+                selected && {
+                    borderColor: theme.color.text.primary,
+                    borderWidth: 2,
+                },
+            ]}
             underlayColor="#3B3B3B"
             onPress={onPress}
         >
@@ -151,6 +187,8 @@ function Item({
                     style={{
                         fontSize: 24,
                         fontWeight: 'bold',
+
+                        textAlign: 'center',
                     }}
                 >
                     {title}

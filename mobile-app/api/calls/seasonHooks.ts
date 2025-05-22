@@ -69,6 +69,8 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                                 matches: i.totalGames!,
                                 matchesWon: 0,
                                 elo: 0,
+                                avatarUrl:
+                                    i.playerDto!.profile!.avatarAsset?.url,
                             };
                         }),
                     };

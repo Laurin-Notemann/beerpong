@@ -66,7 +66,15 @@ export function HeaderItem({
                         width: '100%',
                     }}
                 >
-                    {isLoading ? <ActivityIndicator /> : children}
+                    {isLoading ? (
+                        <ActivityIndicator
+                            style={{
+                                paddingTop: 4,
+                            }}
+                        />
+                    ) : (
+                        children
+                    )}
                 </ThemedText>
             </TouchableOpacity>
             {/* <Button

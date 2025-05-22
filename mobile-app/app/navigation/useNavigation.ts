@@ -35,6 +35,8 @@ export type RootStackParamList = {
     debugLog: undefined;
     experimentalFeatures: undefined;
 
+    createGroupCustomGameModal: undefined;
+
     assignPointsToPlayerModal: { pageIdx: number };
     assignCupHitModal: { x: number; y: number; color: string };
     editMatchPoints: { pageIdx: number };

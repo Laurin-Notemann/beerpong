@@ -161,8 +161,10 @@ export default function MenuItem({
                                 paddingVertical: 9,
 
                                 marginRight: 'auto',
+
+                                flex: 1,
                             }}
-                            numberOfLines={2}
+                            numberOfLines={1}
                         >
                             {title}
                         </Text>

@@ -14,7 +14,12 @@ export default function Page() {
     const createGroupMutation = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
 
-    async function createGroup() {
+    async function createGroup(sport: {
+        preset?: string;
+        custom?: {
+            name: string;
+        };
+    }) {
         if (!name) return;
 
         try {

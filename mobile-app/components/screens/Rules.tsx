@@ -198,15 +198,6 @@ export default function Rules({
                     backgroundColor: theme.color.bg,
                 }}
             >
-                {/* <Text
-                    style={{
-                        color: theme.color.text.primary,
-                        fontSize: 14,
-                        paddingHorizontal: 16,
-                    }}
-                >
-                    Rules
-                </Text> */}
                 <NestableDraggableFlatList
                     data={rules}
                     renderItem={renderItem}
@@ -256,25 +247,6 @@ export default function Rules({
                         .
                     </Text>
                 )}
-                {/* <Text
-                    style={{
-                        color: '#777',
-                        fontWeight: 700,
-                        fontSize: 14,
-                        paddingHorizontal: 8,
-                    }}
-                >
-                    Moves
-                </Text>
-                <NestableDraggableFlatList
-                    data={rules}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
-                    onDragEnd={({ data }) => setRules(data)}
-                    ListEmptyComponent={
-                        <IconHead iconName="format-section" title="No Moves" />
-                    }
-                /> */}
             </NestableScrollContainer>
             <View
                 style={{
