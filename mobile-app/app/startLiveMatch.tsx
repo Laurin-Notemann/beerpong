@@ -36,7 +36,7 @@ export default function Screen() {
         //     />
         <View
             style={{
-                backgroundColor: '#000',
+                backgroundColor: theme.color.bg,
 
                 alignItems: 'center',
                 flex: 1,

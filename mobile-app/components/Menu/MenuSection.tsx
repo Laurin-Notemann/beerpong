@@ -25,7 +25,7 @@ export function Heading({
                     fontSize: 17,
                     lineHeight: 22,
                     fontWeight: 500,
-                    color: '#e9e9e9',
+                    color: theme.color.text.primary,
 
                     marginLeft: titleHeadIcon ? 8 : 0,
                     marginRight: 'auto',

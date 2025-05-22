@@ -136,7 +136,7 @@ export function Sidebar({}: SidebarProps) {
     return (
         <SafeAreaView
             style={{
-                backgroundColor: '#000',
+                backgroundColor: theme.color.bg,
                 flex: 1,
                 paddingHorizontal: 16,
 
@@ -151,7 +151,7 @@ export function Sidebar({}: SidebarProps) {
                     height: 50,
                     paddingHorizontal: 16,
 
-                    backgroundColor: '#1A1A1A',
+                    backgroundColor: theme.panel.dark.bg,
                     borderRadius: 10,
                 }}
             >
@@ -173,14 +173,18 @@ export function Sidebar({}: SidebarProps) {
                         onPress={() => setShowAddGroupModal(true)}
                         style={{ marginLeft: 'auto' }}
                     >
-                        <Icon name="plus" size={24} color="#fff" />
+                        <Icon
+                            name="plus"
+                            size={24}
+                            color={theme.color.text.primary}
+                        />
                     </TouchableOpacity>
                 </>
             </View>
 
             <ScrollView
                 style={{
-                    backgroundColor: '#1A1A1A',
+                    backgroundColor: theme.panel.dark.bg,
 
                     borderRadius: 10,
 
@@ -194,6 +198,10 @@ export function Sidebar({}: SidebarProps) {
                         isActive={id === selectedGroupId}
                         onPress={() => {
                             selectGroup(id);
+
+                            while (nav.canGoBack()) {
+                                nav.goBack();
+                            }
 
                             // eslint-disable-next-line
                             console.log(Object.keys(nav));

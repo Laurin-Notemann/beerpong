@@ -62,7 +62,11 @@ export default function LiveMatchCupControls({
                 onPress={() => nav.navigate('formations')}
             >
                 <>
-                    <Icon name="arrow-collapse" size={24} color="#fff" />
+                    <Icon
+                        name="arrow-collapse"
+                        size={24}
+                        color={theme.color.text.primary}
+                    />
                     <View
                         style={[
                             styles.dot,
@@ -77,7 +81,11 @@ export default function LiveMatchCupControls({
                 underlayColor={theme.panel.light.active}
                 onPress={onFlip}
             >
-                <Icon name="swap-vertical" size={24} color="#fff" />
+                <Icon
+                    name="swap-vertical"
+                    size={24}
+                    color={theme.color.text.primary}
+                />
             </TouchableHighlight>
             {/* <Link
         href={{
@@ -92,7 +100,11 @@ export default function LiveMatchCupControls({
                 onPress={() => nav.navigate('formations')}
             >
                 <>
-                    <Icon name="arrow-collapse" size={24} color="#fff" />
+                    <Icon
+                        name="arrow-collapse"
+                        size={24}
+                        color={theme.color.text.primary}
+                    />
                     <View
                         style={[
                             styles.dot,

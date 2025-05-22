@@ -51,7 +51,7 @@ const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
                 paddingBottom: 45,
                 gap: 20,
 
-                backgroundColor: '#222',
+                backgroundColor: theme.color.modal.bg,
 
                 borderRadius: 10,
             }}
@@ -83,7 +83,7 @@ const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
                     fontSize: 14,
                     fontWeight: 500,
 
-                    color: '#A6A6A6',
+                    color: theme.color.text.secondary,
 
                     textAlign: 'center',
                 }}

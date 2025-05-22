@@ -26,7 +26,7 @@ const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
         }: TextInputProps,
         ref
     ) {
-        const color = '#fff';
+        const color = theme.color.text.primary;
 
         useEffect(() => {
             if (errorMessage) {

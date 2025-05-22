@@ -99,7 +99,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
 
                 height: 44,
                 paddingLeft: 64,
-                paddingRight: 16,
+                paddingRight: 64 - 8,
             }}
         >
             {hasTutorial && (
