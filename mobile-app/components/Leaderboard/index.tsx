@@ -11,6 +11,8 @@ import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import { ThemedView } from '@/components/ThemedView';
 
+import { LeaderBoardSeasonInfo } from './LeaderboardSeasonInfo';
+
 export interface LeaderboardProps extends ViewProps {
     players: Player[];
 
@@ -18,6 +20,14 @@ export interface LeaderboardProps extends ViewProps {
     showUnranked?: boolean;
 
     onPlayerPress?: (id: string) => void;
+
+    season?: {
+        name: string;
+        startDate: string;
+        endDate?: string;
+        numPlayers: number;
+        numMatches: number;
+    };
 }
 
 export default function Leaderboard({
@@ -25,6 +35,7 @@ export default function Leaderboard({
     withPodium = true,
     onPlayerPress,
     showUnranked = true,
+    season,
     ...rest
 }: LeaderboardProps) {
     const nav = useNavigation();
@@ -49,6 +60,7 @@ export default function Leaderboard({
             {...rest}
             style={[rest.style, { width: '100%', alignItems: 'center' }]}
         >
+            {season && <LeaderBoardSeasonInfo {...season} />}
             {withPodium && (
                 <Podium
                     firstPlace={rankedPlayers[0]}

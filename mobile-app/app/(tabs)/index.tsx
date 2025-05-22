@@ -14,6 +14,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import Leaderboard from '@/components/Leaderboard';
+import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
@@ -100,16 +101,12 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                <Text
-                    style={{
-                        fontSize: 17,
-                        color: theme.color.text.secondary,
-                        marginTop: 32 - 6,
-                    }}
-                >
-                    {group.data?.numberOfPlayers ?? 0} players ·{' '}
-                    {group.data?.numberOfMatches ?? 0} matches
-                </Text>
+                <LeaderBoardSeasonInfo
+                    numPlayers={group.data?.numberOfPlayers ?? 0}
+                    numMatches={group.data?.numberOfMatches ?? 0}
+                    startDate={group.data?.activeSeason?.startDate!}
+                    isCurrentSeason
+                />
                 {experiments.eloAlgorithm && (
                     <View
                         style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}

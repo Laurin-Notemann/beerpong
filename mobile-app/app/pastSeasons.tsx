@@ -1,5 +1,4 @@
 import * as React from 'react';
-import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
 import {
     Dimensions,
@@ -11,14 +10,12 @@ import {
 import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import { env } from '@/api/env';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import { HeaderItem } from '@/components/HeaderItem';
 import Leaderboard from '@/components/Leaderboard';
 import LoadingScreen from '@/components/LoadingScreen';
-import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { theme } from '@/theme';
 
@@ -32,42 +29,23 @@ function Card({
     players,
     numMatches,
 }: {
-    season: { name: string; startDate: string; endDate: string };
+    season: {
+        name: string;
+        startDate: string;
+        endDate: string;
+        numPlayers?: number;
+        numMatches?: number;
+    };
     players: any[];
     numMatches: number;
 }) {
     return (
         <ThemedView style={styles.card}>
-            <ThemedText
-                type="title"
-                style={{
-                    fontSize: 25,
-                    color: theme.color.text.primary,
-                    marginTop: 48,
-                }}
-            >
-                {season.name}
-            </ThemedText>
-            <ThemedText
-                style={{
-                    fontSize: 12,
-                    color: theme.color.text.secondary,
-                    marginTop: 3,
-                }}
-            >
-                {env.format.date.seasonStartAndEnd(dayjs(season.startDate))} -{' '}
-                {env.format.date.seasonStartAndEnd(dayjs(season.endDate))}
-            </ThemedText>
-            <ThemedText
-                style={{
-                    fontSize: 17,
-                    color: theme.color.text.secondary,
-                    marginTop: 32 - 6,
-                }}
-            >
-                {players.length} players · {numMatches} matches
-            </ThemedText>
-            <Leaderboard players={players} showUnranked={false} />
+            <Leaderboard
+                players={players}
+                showUnranked={false}
+                season={{ ...season, numPlayers: players.length, numMatches }}
+            />
         </ThemedView>
     );
 }
@@ -83,7 +61,10 @@ export default function Page() {
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
     const seasons =
-        seasonsQuery.data?.data?.filter((i) => i.endDate != null) ?? [];
+        seasonsQuery.data?.data
+            ?.filter((i) => i.endDate != null)
+            // @ts-ignore TODO: type this properly
+            ?.filter((i) => i.numMatches > 0) ?? [];
 
     if (seasonsQuery.isLoading) return <LoadingScreen />;
     if (!seasonsQuery.data?.data)
@@ -147,7 +128,6 @@ export default function Page() {
 
 const styles = StyleSheet.create({
     card: {
-        alignItems: 'center',
         flex: 1,
 
         paddingBottom: 32,
