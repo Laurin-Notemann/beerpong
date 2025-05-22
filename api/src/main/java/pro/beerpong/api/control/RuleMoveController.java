@@ -65,32 +65,6 @@ public class RuleMoveController {
         return ResponseEnvelope.ok(moveService.updateRuleMove(groupId, move, dto));
     }
 
-    @DeleteMapping("/{ruleMoveId}")
-    public ResponseEntity<ResponseEnvelope<String>> deleteRuleMove(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String ruleMoveId) {
-        var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
-        var error = seasonService.validateActiveSeason(String.class, pair);
-
-        if (error != null) {
-            return error;
-        }
-
-        var move = moveService.getById(ruleMoveId);
-
-        if (move == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_NOT_FOUND);
-        }
-
-        if (moveService.validateGroupAndSeason(groupId, seasonId, move)) {
-            if (moveService.delete(groupId, move)) {
-                return ResponseEnvelope.ok("OK");
-            } else {
-                return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_NOT_FOUND);
-            }
-        } else {
-            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_VALIDATION_FAILED);
-        }
-    }
-
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<RuleMoveDto>>> getAllRuleMoves(@PathVariable String groupId, @PathVariable String seasonId) {
         return ResponseEnvelope.ok(moveService.getAllMoves(seasonId));
