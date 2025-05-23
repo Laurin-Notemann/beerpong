@@ -27,6 +27,7 @@ export type RootStackParamList = {
     localSettings: undefined;
     settings: undefined;
     allowedMoves: undefined;
+    allowedMove: { id: string };
 
     'static/aboutTheEloAlgorithm': undefined;
     'static/privacyPolicy': undefined;

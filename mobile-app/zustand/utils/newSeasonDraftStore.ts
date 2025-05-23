@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-interface MoveInput {
+export interface NewSeasonMoveInput {
     id: string;
     name: string;
     finishingMove: boolean;
@@ -11,12 +11,12 @@ interface MoveInput {
 interface NewSeasonDraftStore {
     oldSeasonName: string;
 
-    newSeasonAllowedMoves: MoveInput[];
+    newSeasonAllowedMoves: NewSeasonMoveInput[];
 
     actions: {
         setOldSeasonName: (oldSeasonName: string) => void;
         setNewSeasonAllowedMoves: (
-            newSeasonAllowedMoves: Omit<MoveInput, 'id'>[]
+            newSeasonAllowedMoves: Omit<NewSeasonMoveInput, 'id'>[]
         ) => void;
 
         clear: () => void;

@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
@@ -24,7 +24,10 @@ export default function PlayerPage({
     const nav = useNavigation();
 
     return (
-        <View style={{ flex: 1 }}>
+        <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 32 }}
+        >
             <View
                 style={{
                     width: '100%',
@@ -130,6 +133,6 @@ export default function PlayerPage({
                     <Stepper value={1} min={1} max={1} />
                 </View>
             )}
-        </View>
+        </ScrollView>
     );
 }
