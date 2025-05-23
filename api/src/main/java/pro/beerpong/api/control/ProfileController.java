@@ -87,6 +87,27 @@ public class ProfileController {
         }
     }
 
+    @PutMapping("/{id}/avatar")
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId, @PathVariable String id) {
+        var group = groupService.getGroupById(groupId);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var profile = profileService.getProfileById(id);
+
+        if (profile == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
+        }
+
+        var dto = profileService.storeProfilePicture(profile);
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
+
+        return ResponseEnvelope.ok(dto);
+    }
+
 // it is not intended to delete profiles!
 //    @DeleteMapping("/{id}")
 //    public ResponseEntity<ResponseEnvelope<String>> deleteProfile(@PathVariable String groupId, @PathVariable String id) {

@@ -4,20 +4,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
     private final GroupService groupService;
+    private final SubscriptionHandler subscriptionHandler;
 
     @Autowired
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, SubscriptionHandler subscriptionHandler) {
         this.groupService = groupService;
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @PostMapping
@@ -79,5 +81,20 @@ public class GroupController {
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
+    }
+
+    @PutMapping("/{id}/wallpaper")
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String id) {
+        var group = groupService.getGroupById(id);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var dto = groupService.storeWallpaper(group);
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_SET, id, dto));
+
+        return ResponseEnvelope.ok(dto);
     }
 }
