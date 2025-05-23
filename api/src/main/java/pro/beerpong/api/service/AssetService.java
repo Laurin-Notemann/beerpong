@@ -6,6 +6,7 @@ import pro.beerpong.api.mapping.AssetMapper;
 import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.repository.AssetRepository;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
 
@@ -23,24 +24,13 @@ public class AssetService {
         assetRepository.deleteById(assetId);
     }
 
-    public byte[] fetchAsset(String assetId) {
-        var asset = assetRepository.findById(assetId).orElse(null);
-
-        if (asset == null) {
-            return null;
-        }
-
-        return asset.getData();
-    }
-
-    public AssetMetadataDto getAssetMetadata(String assetId) {
+    public AssetMetadataDto getAssetData(String assetId) {
         return assetMapper.assetToAssetMetadataDto(assetRepository.findById(assetId).orElse(null));
     }
 
-    public AssetMetadataDto storeAsset(byte[] assetBinary, String mediaType) {
+    public AssetMetadataDto storeAsset(AssetType assetType) {
         var asset = new Asset();
-        asset.setData(assetBinary);
-        asset.setMediaType(mediaType);
+        asset.setType(assetType);
         asset.setUploadedAt(ZonedDateTime.now());
 
         return assetMapper.assetToAssetMetadataDto(assetRepository.save(asset));

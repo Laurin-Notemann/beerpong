@@ -18,6 +18,7 @@ import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -109,14 +110,14 @@ public class GroupService {
     }
 
     @Transactional
-    public AssetMetadataDto storeWallpaper(GroupDto groupDto, byte[] content, String contentType) {
+    public AssetMetadataDto storeWallpaper(GroupDto groupDto) {
         String oldWallpaperAssetId = null;
 
         if (groupDto.getWallpaperAsset() != null) {
             oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
         }
 
-        var assetMetadataDto = assetService.storeAsset(content, contentType);
+        var assetMetadataDto = assetService.storeAsset(AssetType.GROUP_WALLPAPER);
 
         groupDto.setWallpaperAsset(assetMetadataDto);
 

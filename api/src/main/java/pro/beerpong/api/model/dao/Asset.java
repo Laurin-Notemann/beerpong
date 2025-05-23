@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
 
@@ -14,7 +15,6 @@ public class Asset {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private byte[] data;
-    private String mediaType;
+    private AssetType type;
     private ZonedDateTime uploadedAt;
 }

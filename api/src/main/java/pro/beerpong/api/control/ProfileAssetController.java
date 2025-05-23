@@ -1,8 +1,6 @@
 package pro.beerpong.api.control;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
@@ -21,7 +19,7 @@ public class ProfileAssetController {
     private final SubscriptionHandler subscriptionHandler;
 
     @PutMapping("/avatar")
-    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId, @PathVariable String profileId, HttpServletRequest request, @RequestBody byte[] content) {
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId, @PathVariable String profileId) {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {
@@ -34,7 +32,7 @@ public class ProfileAssetController {
             return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
         }
 
-        var dto = profileService.storeProfilePicture(profile, content, request.getContentType());
+        var dto = profileService.storeProfilePicture(profile);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
 

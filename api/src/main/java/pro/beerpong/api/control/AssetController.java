@@ -1,8 +1,6 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +10,6 @@ import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.AssetService;
-import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/assets")
@@ -25,7 +19,7 @@ public class AssetController {
 
     @GetMapping("{id}")
     public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> getAsset(@PathVariable String id) {
-        var assetMetadata = assetService.getAssetMetadata(id);
+        var assetMetadata = assetService.getAssetData(id);
 
         if (assetMetadata == null) {
             return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);

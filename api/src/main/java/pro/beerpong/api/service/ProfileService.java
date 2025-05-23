@@ -12,6 +12,7 @@ import pro.beerpong.api.model.dto.ProfileCreatedDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.ProfileRepository;
+import pro.beerpong.api.util.AssetType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -134,14 +135,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileDto storeProfilePicture(ProfileDto profileDto, byte[] content, String contentType) {
+    public ProfileDto storeProfilePicture(ProfileDto profileDto) {
         String oldProfilePictureAssetId = null;
 
         if (profileDto.getAvatarAsset() != null) {
             oldProfilePictureAssetId = profileDto.getAvatarAsset().getId();
         }
 
-        var assetMetadataDto = assetService.storeAsset(content, contentType);
+        var assetMetadataDto = assetService.storeAsset(AssetType.PROFILE_AVATAR);
 
         profileDto.setAvatarAsset(assetMetadataDto);
 

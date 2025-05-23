@@ -1,8 +1,6 @@
 package pro.beerpong.api.control;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
@@ -21,14 +19,14 @@ public class GroupAssetController {
     private final SubscriptionHandler subscriptionHandler;
 
     @PutMapping("/wallpaper")
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String groupId, HttpServletRequest request, @RequestBody byte[] content) {
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String groupId) {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
-        var dto = groupService.storeWallpaper(group, content, request.getContentType());
+        var dto = groupService.storeWallpaper(group);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_SET, groupId, dto));
 
