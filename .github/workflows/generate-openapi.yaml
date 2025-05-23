@@ -97,6 +97,8 @@ jobs:
       - run: sed -i '' 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
         if: steps.check_authors.outputs.has_bot_author != 'true'
 
+      - run: cat mobile-app/api/generated/openapi.json
+
       - name: Cache npm packages
         if: steps.check_authors.outputs.has_bot_author != 'true'
         uses: actions/cache@v4
