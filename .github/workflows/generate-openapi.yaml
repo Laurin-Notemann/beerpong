@@ -92,7 +92,9 @@ jobs:
           API_BASE_URL: http://localhost:8080/
         working-directory: api
 
-      - run: sed -i 's/"\*\\\?\/\*"/"application\/json"/g' ./mobile-app/api/generated/openapi.json
+      - run: cat mobile-app/api/generated/openapi.json
+
+      - run: sed -i '' 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
         if: steps.check_authors.outputs.has_bot_author != 'true'
 
       - name: Cache npm packages
