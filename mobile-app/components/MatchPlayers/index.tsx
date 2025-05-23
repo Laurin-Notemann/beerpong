@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-
-import MenuSection from '../Menu/MenuSection';
-import Player from './Player';
+import Player from '@/components/MatchPlayers/Player';
+import MenuSection from '@/components/Menu/MenuSection';
 
 export interface MatchPlayersProps {
     editable?: boolean;

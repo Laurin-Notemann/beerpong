@@ -7,11 +7,10 @@ import {
 } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
+import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import { ThemedView } from '@/components/ThemedView';
-
-import { LeaderBoardSeasonInfo } from './LeaderboardSeasonInfo';
 
 export interface LeaderboardProps extends ViewProps {
     players: Player[];

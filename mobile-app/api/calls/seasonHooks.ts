@@ -1,13 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
+import { useGroupQuery } from '@/api/calls/groupHooks';
+import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
+import { ApiId } from '@/api/types';
+import { useApi } from '@/api/utils/create-api';
+import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-
-import { ApiId } from '../types';
-import { useApi } from '../utils/create-api';
-import { QK } from '../utils/reactQuery';
-import { useGroupQuery } from './groupHooks';
-import { LeaderboardScope } from './leaderboardHooks';
 
 export const useSeasonQuery = (seasonId: ApiId | null) => {
     const { api } = useApi();

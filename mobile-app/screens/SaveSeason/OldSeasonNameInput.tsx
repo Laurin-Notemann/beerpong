@@ -1,4 +1,9 @@
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    TextInput as RNTextInput,
+    View,
+} from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
@@ -6,13 +11,21 @@ import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
 
 export const OldSeasonNameInput: React.FC<{
+    oldSeasonNameInputRef: React.RefObject<RNTextInput>;
     numMatches: number;
     numPlayers: number;
     startDate: string;
     rankedPlayers: Player[];
 
     onChangeName: (name: string) => void;
-}> = ({ numMatches, numPlayers, startDate, rankedPlayers, onChangeName }) => {
+}> = ({
+    numMatches,
+    numPlayers,
+    startDate,
+    rankedPlayers,
+    onChangeName,
+    oldSeasonNameInputRef,
+}) => {
     return (
         <KeyboardAvoidingView
             style={{
@@ -44,6 +57,7 @@ export const OldSeasonNameInput: React.FC<{
             />
             <View style={{ height: 16 }} />
             <TextInput
+                ref={oldSeasonNameInputRef}
                 required
                 placeholder="Season Name"
                 onChangeText={onChangeName}

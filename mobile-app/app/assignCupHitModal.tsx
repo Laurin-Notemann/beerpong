@@ -6,6 +6,7 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import CupGrid from '@/components/CupGrid';
 import { flipFormation } from '@/components/CupGrid/Formation';
@@ -14,8 +15,6 @@ import Text from '@/components/Text';
 import { theme } from '@/theme';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
-
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const cupProp = useLocalSearchParams<{

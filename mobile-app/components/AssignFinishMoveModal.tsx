@@ -1,15 +1,14 @@
 import React, { useRef, useState } from 'react';
-import { SafeAreaView, ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import Modal from 'react-native-modal';
 import Swiper from 'react-native-swiper';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
-
-import MatchPlayers from './MatchPlayers';
-import MenuItem from './Menu/MenuItem';
-import MenuSection from './Menu/MenuSection';
-import ModalDragHandle from './ModalDragHandle';
-import Text from './Text';
+import MatchPlayers from '@/components/MatchPlayers';
+import MenuItem from '@/components/Menu/MenuItem';
+import MenuSection from '@/components/Menu/MenuSection';
+import ModalDragHandle from '@/components/ModalDragHandle';
+import Text from '@/components/Text';
 
 export interface AssignFinishModeModalProps {
     isVisible?: boolean;

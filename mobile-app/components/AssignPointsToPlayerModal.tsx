@@ -6,13 +6,12 @@ import Swiper from 'react-native-swiper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
+import Avatar from '@/components/Avatar';
+import { HeaderItem } from '@/components/HeaderItem';
+import MatchVsHeader from '@/components/MatchVsHeader';
+import ModalDragHandle from '@/components/ModalDragHandle';
+import Text from '@/components/Text';
 import { theme } from '@/theme';
-
-import Avatar from './Avatar';
-import { HeaderItem } from './HeaderItem';
-import MatchVsHeader from './MatchVsHeader';
-import ModalDragHandle from './ModalDragHandle';
-import Text from './Text';
 
 const showVsHeader = false;
 

@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
-import { Logs } from './logging';
+import { Logs } from '@/utils/logging';
 
 export type Log = { data: Logs; date: Date };
 

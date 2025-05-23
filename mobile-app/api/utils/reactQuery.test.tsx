@@ -7,6 +7,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// eslint-disable-next-line no-restricted-imports
 import { QK, replaceWildcards } from './reactQuery';
 
 describe('ignoreSeason', () => {

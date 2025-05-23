@@ -2,10 +2,9 @@ import React from 'react';
 import { Text, TouchableHighlight, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import ConfirmationModal from '@/components/ConfirmationModal';
+import useBoolean from '@/components/useBoolean';
 import { theme } from '@/theme';
-
-import ConfirmationModal from '../ConfirmationModal';
-import useBoolean from '../useBoolean';
 
 export interface MenuItemProps {
     title: string;

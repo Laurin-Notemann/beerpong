@@ -1,10 +1,9 @@
 import { ScrollView, View } from 'react-native';
 
 import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
-
-import Select from '../Select';
-import Text from '../Text';
-import { useScrollLockIfNotOverflowing } from '../useScrollLockIfNotOverflowing';
+import Select from '@/components/Select';
+import Text from '@/components/Text';
+import { useScrollLockIfNotOverflowing } from '@/components/useScrollLockIfNotOverflowing';
 
 export default function FinishMovePage({
     finisher,

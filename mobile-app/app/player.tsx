@@ -22,14 +22,13 @@ import {
     usePullToRefresh,
     useQueryInvalidation,
 } from '@/api/utils/reactQuery';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import PlayerScreen from '@/components/screens/Player';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
-
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const nav = useNavigation();

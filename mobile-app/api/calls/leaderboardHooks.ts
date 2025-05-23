@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { ApiId } from '@/api/types';
+import { useApi } from '@/api/utils/create-api';
+import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
-
-import { ApiId } from '../types';
-import { useApi } from '../utils/create-api';
-import { QK } from '../utils/reactQuery';
 
 export enum LeaderboardScope {
     TODAY = 'today',

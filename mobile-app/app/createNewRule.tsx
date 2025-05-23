@@ -1,10 +1,9 @@
 import { useRules } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import CreateNewRule from '@/components/screens/CreateNewRule';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const nav = useNavigation();

@@ -1,9 +1,7 @@
 import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { theme } from '@/theme';
-
-import { HeaderItem } from './HeaderItem';
+import { HeaderItem } from '@/components/HeaderItem';
 
 export default function ModalDragHandle({
     onBackPress,

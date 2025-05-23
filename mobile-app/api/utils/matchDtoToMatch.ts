@@ -1,7 +1,6 @@
+import { MatchImpl } from '@/api/entities';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { Components } from '@/openapi/openapi';
-
-import { MatchImpl } from '../entities';
 
 export interface PerformedMove {
     id: string;

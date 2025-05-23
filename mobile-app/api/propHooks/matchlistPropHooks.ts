@@ -1,12 +1,11 @@
+import { useMatchesQuery } from '@/api/calls/matchHooks';
+import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
+import { ScreenState } from '@/api/types';
+import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { MatchesListProps } from '@/components/MatchesList';
-
-import { useMatchesQuery } from '../calls/matchHooks';
-import { usePlayersQuery } from '../calls/playerHooks';
-import { useMoves } from '../calls/ruleHooks';
-import { useGroup } from '../calls/seasonHooks';
-import { ScreenState } from '../types';
-import { matchDtoToMatch } from '../utils/matchDtoToMatch';
-import { usePullToRefresh, useQueryInvalidation } from '../utils/reactQuery';
 
 export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const { groupId, seasonId } = useGroup();

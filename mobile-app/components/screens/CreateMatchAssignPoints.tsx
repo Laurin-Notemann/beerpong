@@ -44,7 +44,7 @@ export default function CreateMatchAssignPoints({
                 contentContainerStyle={{
                     paddingHorizontal: 16,
                     paddingTop: 32,
-                    paddingBottom: 32,
+                    paddingBottom: 84,
                 }}
             >
                 <MatchPlayers

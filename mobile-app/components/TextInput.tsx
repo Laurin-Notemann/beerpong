@@ -5,10 +5,9 @@ import {
     View,
 } from 'react-native';
 
+import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
-
-import Text from './Text';
 
 export interface TextInputProps extends ReactNativeTextInputProps {
     required?: boolean;

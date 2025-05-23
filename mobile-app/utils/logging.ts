@@ -37,28 +37,41 @@ export class ScopedLogger implements Logger {
         return new ScopedLogger(...this.prefixes, prefix);
     }
 
+    public isConsoleEnabled = true;
+
+    public disableConsole() {
+        this.isConsoleEnabled = false;
+        return this;
+    }
+
     fatal = (...args: Logs) => {
-        console.error(this.getPrefixesString(), ...args);
+        if (this.isConsoleEnabled)
+            console.error(this.getPrefixesString(), ...args);
         this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     error = (...args: Logs) => {
-        console.error(this.getPrefixesString(), ...args);
+        if (this.isConsoleEnabled)
+            console.error(this.getPrefixesString(), ...args);
         this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     warn = (...args: Logs) => {
-        console.warn(this.getPrefixesString(), ...args);
+        if (this.isConsoleEnabled)
+            console.warn(this.getPrefixesString(), ...args);
         this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     info = (...args: Logs) => {
-        console.info(this.getPrefixesString(), ...args);
+        if (this.isConsoleEnabled)
+            console.info(this.getPrefixesString(), ...args);
         this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     debug = (...args: Logs) => {
-        console.debug(this.getPrefixesString(), ...args);
+        if (this.isConsoleEnabled)
+            console.debug(this.getPrefixesString(), ...args);
         this.callHandlers('*', this.getPrefixesString(), ...args);
     };
     trace = (...args: Logs) => {
-        console.log(this.getPrefixesString(), ...args);
+        if (this.isConsoleEnabled)
+            console.log(this.getPrefixesString(), ...args);
         this.callHandlers('*', this.getPrefixesString(), ...args);
     };
 

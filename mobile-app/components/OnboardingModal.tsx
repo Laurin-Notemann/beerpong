@@ -1,9 +1,8 @@
 import { Image, View } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
-
-import Button from './Button';
-import Text from './Text';
+import Button from '@/components/Button';
+import Text from '@/components/Text';
 
 export interface OnboardingModalProps {}
 // eslint-disable-next-line no-empty-pattern

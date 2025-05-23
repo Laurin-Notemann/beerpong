@@ -3,12 +3,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import Avatar from '@/components/Avatar';
+import { ScoredMoveInputRow } from '@/components/ScoredMoveInputRow';
+import Stepper from '@/components/Stepper';
+import Text from '@/components/Text';
 import { theme } from '@/theme';
-
-import Avatar from '../Avatar';
-import { ScoredMoveInputRow } from '../ScoredMoveInputRow';
-import Stepper from '../Stepper';
-import Text from '../Text';
 
 export default function PlayerPage({
     hasSwipeTutorial = false,
