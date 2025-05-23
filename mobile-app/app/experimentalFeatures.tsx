@@ -23,6 +23,8 @@ export default function Page() {
         toggleEloAlgorithm,
         rulesTab,
         toggleRulesTab,
+        matchPhotos,
+        toggleMatchPhotos,
     } = useLocalSettings();
 
     return (
@@ -97,6 +99,15 @@ export default function Page() {
                             <Switch
                                 value={rulesTab}
                                 onChange={toggleRulesTab}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Team Photos"
+                        tailContent={
+                            <Switch
+                                value={matchPhotos}
+                                onChange={toggleMatchPhotos}
                             />
                         }
                     />

@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import { Components } from '@/openapi/openapi';
@@ -53,6 +55,8 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const hasValidMoves = newSeasonDraft.newSeasonAllowedMoves.length > 0;
 
+    const nav = useNavigation();
+
     return (
         <>
             <SaveSeasonStack
@@ -94,7 +98,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 )}
                 <NewSeasonRulesInput
                     moves={newSeasonDraft.newSeasonAllowedMoves}
-                    onNewPress={() =>
+                    onNewPress={() => {
                         newSeasonDraft.actions.setNewSeasonAllowedMoves([
                             ...newSeasonDraft.newSeasonAllowedMoves,
                             {
@@ -103,8 +107,11 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                                 pointsForScorer: 1,
                                 pointsForTeam: 0,
                             },
-                        ])
-                    }
+                        ]);
+                        nav.navigate('allowedMove', {
+                            id: newSeasonDraft.newSeasonAllowedMoves.length.toString(),
+                        });
+                    }}
                     onDelete={(id) =>
                         newSeasonDraft.actions.setNewSeasonAllowedMoves(
                             newSeasonDraft.newSeasonAllowedMoves.filter(

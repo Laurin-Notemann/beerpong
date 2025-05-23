@@ -1,7 +1,6 @@
-import { KeyboardAvoidingView, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
-import InputModal from '@/components/InputModal';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
@@ -14,15 +13,21 @@ export const OldSeasonNameInput: React.FC<{
 
     onChangeName: (name: string) => void;
 }> = ({ numMatches, numPlayers, startDate, rankedPlayers, onChangeName }) => {
-    // <KeyboardAvoidingView
-    //     behavior="height"
-    //     style={{ backgroundColor: 'red', overflow: 'hidden' }}
-    // >
-    {
-        /* <ScrollView style={{ backgroundColor: 'orange', height: '100%' }}> */
-    }
     return (
-        <InputModal isDark>
+        <KeyboardAvoidingView
+            style={{
+                flex: 1,
+                justifyContent: 'flex-end',
+
+                paddingHorizontal: 16,
+                paddingTop: 20,
+            }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.select({
+                ios: 60 + 36,
+                android: 0 + 36,
+            })}
+        >
             <LeaderBoardSeasonInfo
                 isCurrentSeason
                 numMatches={numMatches}
@@ -37,7 +42,7 @@ export const OldSeasonNameInput: React.FC<{
                 secondPlace={rankedPlayers[1]}
                 thirdPlace={rankedPlayers[2]}
             />
-
+            <View style={{ height: 16 }} />
             <TextInput
                 required
                 placeholder="Season Name"
@@ -47,10 +52,7 @@ export const OldSeasonNameInput: React.FC<{
                     alignSelf: 'stretch',
                 }}
             />
-        </InputModal>
+            <View style={{ height: 16 }} />
+        </KeyboardAvoidingView>
     );
-    {
-        /* </ScrollView> */
-    }
-    // </KeyboardAvoidingView>
 };

@@ -5,7 +5,7 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal';
+import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 

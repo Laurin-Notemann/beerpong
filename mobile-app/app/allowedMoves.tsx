@@ -26,7 +26,7 @@ export default function Page() {
                 }}
             />
             <InputModal>
-                <ScrollView>
+                <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
                     <AllowedMoves
                         moves={allowedMoves.map((i) => ({
                             id: i.id!,

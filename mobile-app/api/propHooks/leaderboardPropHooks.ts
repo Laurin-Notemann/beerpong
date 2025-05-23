@@ -25,17 +25,19 @@ export const useLeaderboardProps = (
         return { players: [] };
     }
 
-    const players: Player[] = data.data.map((player) => {
-        return {
-            id: player.id!,
-            name: player.profile?.name ?? 'NO NAME FOUND',
-            points: player.statistics?.points ?? 0,
-            matches: player.statistics?.matches ?? 0,
-            matchesWon: player.statistics?.matches ?? 0,
-            elo: 14,
-            avatarUrl: player.profile?.avatarAsset?.url,
-        };
-    });
+    const players: Player[] = data.data
+        .filter((i) => i.activeThisSeason)
+        .map((player) => {
+            return {
+                id: player.id!,
+                name: player.profile?.name ?? 'NO NAME FOUND',
+                points: player.statistics?.points ?? 0,
+                matches: player.statistics?.matches ?? 0,
+                matchesWon: player.statistics?.matches ?? 0,
+                elo: 14,
+                avatarUrl: player.profile?.avatarAsset?.url,
+            };
+        });
 
     return {
         players,

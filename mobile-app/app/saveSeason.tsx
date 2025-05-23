@@ -12,6 +12,7 @@ import { Components } from '@/openapi/openapi';
 import { SaveSeasonScreen } from '@/screens/SaveSeason';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
     const nav = useNavigation();
@@ -21,6 +22,8 @@ export default function Page() {
     const newSeasonMutation = useStartNewSeasonMutation();
 
     const qc = useQueryClient();
+
+    const matchDraft = useMatchDraftStore((store) => store.actions);
 
     async function onStartNewSeason(
         oldSeasonName: string,
@@ -39,6 +42,7 @@ export default function Page() {
                 exact: false,
             });
             nav.navigate('index');
+            matchDraft.clear();
             showSuccessToast(
                 `Saved current leaderboard as "${oldSeasonName}".`
             );
