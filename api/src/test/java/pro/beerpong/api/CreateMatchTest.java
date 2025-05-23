@@ -260,6 +260,8 @@ public class CreateMatchTest {
         var match = matchEnvelope.getData();
 
         team1.getTeamMembers().get(0).getMoves().get(0).setCount(1);
+        team1.setExistingTeamId(match.getTeams().get(0).getId());
+        team2.setExistingTeamId(match.getTeams().get(1).getId());
         matchCreateDto.setTeams(List.of(team1, team2));
 
         // Step 5: Update the match
