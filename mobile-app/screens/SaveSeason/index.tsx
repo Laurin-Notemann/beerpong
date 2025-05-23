@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { TextInput } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -57,6 +57,8 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const nav = useNavigation();
 
+    const oldSeasonNameInputRef = useRef<TextInput>(null);
+
     return (
         <>
             <SaveSeasonStack
@@ -84,9 +86,13 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
             <Swiper
                 {...swiper}
                 enabled={!(swiper.swiperPage === 0 && !hasValidName)}
+                onScrollBegin={() => {
+                    oldSeasonNameInputRef.current?.blur();
+                }}
             >
                 {!oldSeasonIsEmpty && (
                     <OldSeasonNameInput
+                        oldSeasonNameInputRef={oldSeasonNameInputRef}
                         numMatches={numMatches}
                         numPlayers={players.length}
                         startDate={oldSeasonStartDate}
