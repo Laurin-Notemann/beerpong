@@ -1,5 +1,7 @@
 name: Generate OpenApi
 
+# please refer to OPENAPI_CODEGEN.md for details on this workflow
+
 on:
   pull_request:
     paths:
@@ -83,6 +85,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      # spin up the backend including database, which is needed for the openapi generation
       - run: mvn verify
         if: steps.check_authors.outputs.has_bot_author != 'true'
         env:
@@ -92,6 +95,7 @@ jobs:
           API_BASE_URL: http://localhost:8080/
         working-directory: api
 
+      # replace all occurences of "*/*" with "application/json" in the openapi.json file
       - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
         if: steps.check_authors.outputs.has_bot_author != 'true'
 
