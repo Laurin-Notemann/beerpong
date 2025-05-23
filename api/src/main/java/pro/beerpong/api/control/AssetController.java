@@ -23,18 +23,6 @@ import org.springframework.http.HttpHeaders;
 public class AssetController {
     private final AssetService assetService;
 
-    //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
-    /*@DeleteMapping("{id}")
-    public ResponseEntity<ResponseEnvelope<Object>> deleteAsset(@PathVariable String id) {
-        if (!assetService.assetExists(id)) {
-            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
-        }
-
-        assetService.deleteAsset(id);
-
-        return ResponseEnvelope.okNoContent();
-    }*/
-
     @GetMapping("{id}")
     public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> getAsset(@PathVariable String id) {
         var assetMetadata = assetService.getAssetMetadata(id);
@@ -46,27 +34,17 @@ public class AssetController {
         return ResponseEnvelope.ok(assetMetadata);
     }
 
-    @GetMapping("{id}/data")
-    public ResponseEntity<?> fetchData(@PathVariable String id) {
-        var assetMetadata = assetService.getAssetMetadata(id);
-        byte[] asset = assetService.fetchAsset(id);
-
-        if (assetMetadata == null || asset == null) {
+    //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
+    /*@DeleteMapping("{id}")
+    public ResponseEntity<ResponseEnvelope<Object>> deleteAsset(@PathVariable String id) {
+        if (!assetService.assetExists(id)) {
             return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
         }
 
-        String cacheControl = "public, max-age=31536000, immutable";
-        String expires = ZonedDateTime
-                            .now(ZoneOffset.UTC)
-                            .plusYears(1)
-                            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        assetService.deleteAsset(id);
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.valueOf(assetMetadata.getMediaType()))
-                .header(HttpHeaders.CACHE_CONTROL, cacheControl)
-                .header(HttpHeaders.EXPIRES, expires)
-                .body(asset);
-    }
+        return ResponseEnvelope.okNoContent();
+    }*/
 
     //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
     /*@PostMapping
