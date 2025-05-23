@@ -31,6 +31,7 @@ public class GroupControllerTest {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
+        createDto.setSportPreset("beerpong");
 
         var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 
@@ -53,6 +54,7 @@ public class GroupControllerTest {
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
+        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
     }
 
     @Test
@@ -62,6 +64,7 @@ public class GroupControllerTest {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
+        createDto.setSportPreset("beerpong");
 
         var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 
@@ -100,5 +103,6 @@ public class GroupControllerTest {
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
+        assertEquals(group.getSportPreset(), prerequisiteGroup.getSportPreset());
     }
 }
