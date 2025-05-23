@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 
@@ -14,11 +17,13 @@ import java.util.List;
 public class MatchController {
     private final MatchService matchService;
     private final SeasonService seasonService;
+    private final SubscriptionHandler subscriptionHandler;
 
     @Autowired
-    public MatchController(MatchService matchService, SeasonService seasonService) {
+    public MatchController(MatchService matchService, SeasonService seasonService, SubscriptionHandler subscriptionHandler) {
         this.matchService = matchService;
         this.seasonService = seasonService;
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @PostMapping
@@ -41,7 +46,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
@@ -69,7 +74,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
@@ -97,7 +102,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
@@ -144,5 +149,35 @@ public class MatchController {
         } else {
             return ResponseEnvelope.notOk(error);
         }
+    }
+
+    @PutMapping("/{id}/photos/{teamId}")
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> updateMatch(@PathVariable String groupId,
+                                                                  @PathVariable String seasonId,
+                                                                  @PathVariable String id,
+                                                                  @PathVariable String teamId) {
+        var match = matchService.getMatchById(id);
+
+        if (match == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
+        if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+        }
+
+        var teamOpt = match.getTeams().stream()
+                .filter(teamDto -> teamDto.getId().equals(teamId))
+                .findFirst();
+
+        if (teamOpt.isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NO_TEAM_FOUND);
+        }
+
+        var dto = matchService.saveMatchPhoto(teamOpt.get());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_PHOTO_SET, id, dto));
+
+        return ResponseEnvelope.ok(dto);
     }
 }

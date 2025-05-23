@@ -33,7 +33,9 @@ public enum ErrorCodes {
     MATCH_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "matchValidationFailed", "The validation of the created match has failed (invalid group or season id)"),
     MATCH_CREATE_DTO_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "matchCreateDtoValidationFailed", "The team sizes are not in the boundaries of the season settings!"),
     MATCH_CREATE_DTO_NEEDS_IDS(HttpStatus.BAD_REQUEST, "matchCreateDtoNeedsIds", "Every team needs a 'existingTeamId' attribute containing the id of the existing team!"),
-    MATCH_DTO_VALIDATION_FAILED(HttpStatus.FORBIDDEN, "matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, or no finish move)")
+    MATCH_DTO_VALIDATION_FAILED(HttpStatus.FORBIDDEN, "matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, or no finish move)"),
+    MATCH_NO_TEAM_FOUND(HttpStatus.FORBIDDEN, "matchNoTeamFound", "Could not find a team with the provided id linked to the provided match!"),
+    MATCH_GROUP_OR_SEASON_ID_DONT_MATCH(HttpStatus.BAD_REQUEST, "matchGroupOrSeasonIdDontMatch", "The provided group and season id dont match the group and season id of the provided match!")
     /* RULE MOVES */,
     RULE_MOVE_NOT_FOUND(HttpStatus.NOT_FOUND, "ruleMoveNotFound", "The requested ruleMove could not be found!"),
     RULE_MOVE_VALIDATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"),

@@ -9,4 +9,7 @@ import pro.beerpong.api.model.dto.TeamDto;
 public interface TeamMapper {
     @Mapping(source = "match.id", target = "matchId")
     TeamDto teamToTeamDto(Team team);
+
+    @Mapping(source = "matchId", target = "match.id")
+    Team teamDtoToTeam(TeamDto teamDto);
 }

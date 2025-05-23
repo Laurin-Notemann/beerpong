@@ -7,12 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.mapping.PlayerMapper;
+import pro.beerpong.api.mapping.TeamMapper;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -43,6 +45,8 @@ public class MatchService {
     private final TeamService teamService;
     private final RuleMoveService ruleMoveService;
     private final PlayerMapper playerMapper;
+    private final AssetService assetService;
+    private final TeamMapper teamMapper;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -55,7 +59,10 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper) {
+                        TeamService teamService,
+                        SeasonRepository seasonRepository,
+                        RuleMoveService ruleMoveService,
+                        PlayerMapper playerMapper, AssetService assetService, TeamMapper teamMapper) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -72,6 +79,8 @@ public class MatchService {
         this.teamService = teamService;
         this.ruleMoveService = ruleMoveService;
         this.playerMapper = playerMapper;
+        this.assetService = assetService;
+        this.teamMapper = teamMapper;
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -287,6 +296,27 @@ public class MatchService {
 
     public Match getRawMatchById(String id) {
         return matchRepository.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public AssetMetadataDto saveMatchPhoto(TeamDto team) {
+        String oldWallpaperAssetId = null;
+
+        if (team.getPhotoAsset() != null) {
+            oldWallpaperAssetId = team.getPhotoAsset().getId();
+        }
+
+        var assetMetadataDto = assetService.storeAsset(AssetType.TEAM_PHOTO);
+
+        team.setPhotoAsset(assetMetadataDto);
+
+        teamRepository.save(teamMapper.teamDtoToTeam(team));
+
+        if (oldWallpaperAssetId != null) {
+            assetService.deleteAsset(oldWallpaperAssetId);
+        }
+
+        return assetMetadataDto;
     }
 
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
