@@ -92,7 +92,7 @@ export class RealtimeClient {
     ) {
         this.connect();
 
-        this.logger = new ScopedLogger('realtime');
+        this.logger = new ScopedLogger('realtime').disableConsole();
     }
 
     /**

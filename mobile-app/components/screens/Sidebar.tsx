@@ -1,4 +1,5 @@
 import { Link } from '@react-navigation/native';
+import { AxiosError } from 'axios';
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
 import { Animated, ScrollView, TouchableOpacity } from 'react-native';
@@ -32,7 +33,13 @@ export function SidebarGroupItem({
     showDeleteButton = false,
     onDelete,
 }: SidebarGroupItemProps) {
-    const { data, isLoading } = useGroupQuery(id);
+    const { data, isLoading, error } = useGroupQuery(id);
+
+    // we don't have functionality to delete a group, so this most likely means that either
+    // (1) the backend database was wiped
+    // (2) we switched e.g. from local dev to staging backend
+    const groupDoesntExist =
+        error instanceof AxiosError && error.response?.status === 404;
 
     const failedToLoad =
         data?.data?.numberOfPlayers == null ||
@@ -92,16 +99,30 @@ export function SidebarGroupItem({
                         style={{ fontSize: 17 }}
                         numberOfLines={2}
                     >
-                        {isLoading
-                            ? 'Loading...'
-                            : (data?.data?.name ?? 'Unknown')}
+                        {isLoading ? (
+                            'Loading...'
+                        ) : groupDoesntExist ? (
+                            <>
+                                <Icon
+                                    name="alert"
+                                    size={16}
+                                    color="#CCA700"
+                                    style={{
+                                        marginLeft: 12,
+                                    }}
+                                />{' '}
+                                Unknown
+                            </>
+                        ) : (
+                            data?.data?.name || 'Unknown'
+                        )}
                     </Text>
                     <Text color="secondary" style={{ fontSize: 12 }}>
                         {isLoading
                             ? ''
                             : failedToLoad
                               ? 'Failed to load'
-                              : `${data!.data!.numberOfPlayers} Players, ${data!.data!.numberOfMatches} Matches`}
+                              : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`}
                     </Text>
                 </>
             </Pressable>
