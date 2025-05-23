@@ -68,26 +68,18 @@
                 }
             }
         },
-        "/groups/{groupId}/wallpaper": {
+        "/groups/{id}/wallpaper": {
             "put": {
-                "tags": ["group-asset-controller"],
+                "tags": ["group-controller"],
                 "operationId": "setWallpaper",
                 "parameters": [
                     {
-                        "name": "groupId",
+                        "name": "id",
                         "in": "path",
                         "required": true,
                         "schema": { "type": "string" }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": { "type": "string", "format": "byte" }
-                        }
-                    },
-                    "required": true
-                },
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -95,6 +87,30 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["group-controller"],
+                "operationId": "deleteWallpaper",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
                             }
                         }
@@ -345,6 +361,92 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/matches/{id}/photos/{teamId}": {
+            "put": {
+                "tags": ["match-controller"],
+                "operationId": "setPhoto",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTeamDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["match-controller"],
+                "operationId": "deletePhoto",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTeamDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{id}": {
             "get": {
                 "tags": ["season-controller"],
@@ -417,46 +519,6 @@
                 }
             }
         },
-        "/groups/{groupId}/profiles/{profileId}/avatar": {
-            "put": {
-                "tags": ["profile-asset-controller"],
-                "operationId": "setAvatar",
-                "parameters": [
-                    {
-                        "name": "groupId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "profileId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": { "type": "string", "format": "byte" }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/groups/{groupId}/profiles/{id}": {
             "get": {
                 "tags": ["profile-controller"],
@@ -515,6 +577,68 @@
                     },
                     "required": true
                 },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{id}/avatar": {
+            "put": {
+                "tags": ["profile-controller"],
+                "operationId": "setAvatar",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["profile-controller"],
+                "operationId": "deleteAvatar",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1037,30 +1161,6 @@
                 }
             }
         },
-        "/assets/{id}/data": {
-            "get": {
-                "tags": ["asset-controller"],
-                "operationId": "fetchData",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "object" }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/groups/{groupId}/seasons/{seasonId}/players/{id}": {
             "delete": {
                 "tags": ["player-controller"],
@@ -1117,7 +1217,14 @@
                 "properties": {
                     "id": { "type": "string" },
                     "url": { "type": "string" },
-                    "mediaType": { "type": "string" },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GROUP_WALLPAPER",
+                            "PROFILE_AVATAR",
+                            "TEAM_PHOTO"
+                        ]
+                    },
                     "uploadedAt": { "type": "string", "format": "date-time" }
                 }
             },
@@ -1277,6 +1384,8 @@
             "TeamCreateDto": {
                 "type": "object",
                 "properties": {
+                    "existingTeamId": { "type": "string" },
+                    "savePhoto": { "type": "boolean" },
                     "teamMembers": {
                         "type": "array",
                         "items": {
@@ -1341,7 +1450,10 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "matchId": { "type": "string" }
+                    "matchId": { "type": "string" },
+                    "photoAsset": {
+                        "$ref": "#/components/schemas/AssetMetadataDto"
+                    }
                 }
             },
             "TeamMemberDto": {
@@ -1350,6 +1462,15 @@
                     "id": { "type": "string" },
                     "teamId": { "type": "string" },
                     "playerId": { "type": "string" }
+                }
+            },
+            "ResponseEnvelopeTeamDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/TeamDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "SeasonUpdateDto": {
@@ -1383,6 +1504,10 @@
                     }
                 }
             },
+            "ProfileCreateDto": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } }
+            },
             "ProfileDto": {
                 "type": "object",
                 "properties": {
@@ -1402,10 +1527,6 @@
                     "data": { "$ref": "#/components/schemas/ProfileDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
-            },
-            "ProfileCreateDto": {
-                "type": "object",
-                "properties": { "name": { "type": "string" } }
             },
             "SeasonCreateDto": {
                 "type": "object",

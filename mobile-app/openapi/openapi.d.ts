@@ -11,7 +11,7 @@ declare namespace Components {
         export interface AssetMetadataDto {
             id?: string;
             url?: string;
-            mediaType?: string;
+            type?: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO';
             uploadedAt?: string; // date-time
         }
         export interface ErrorDetails {
@@ -201,6 +201,12 @@ declare namespace Components {
             data?: string;
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeTeamDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: TeamDto;
+            error?: ErrorDetails;
+        }
         export interface RuleCreateDto {
             title?: string;
             description?: string;
@@ -261,11 +267,14 @@ declare namespace Components {
             seasonSettings: SeasonSettings;
         }
         export interface TeamCreateDto {
+            existingTeamId?: string;
+            savePhoto?: boolean;
             teamMembers?: TeamMemberCreateDto[];
         }
         export interface TeamDto {
             id?: string;
             matchId?: string;
+            photoAsset?: AssetMetadataDto;
         }
         export interface TeamMemberCreateDto {
             playerId?: string;
@@ -325,6 +334,19 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeRuleMoveDto;
         }
     }
+    namespace DeleteAvatar {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
+        }
+    }
     namespace DeleteMatchById {
         namespace Parameters {
             export type GroupId = string;
@@ -338,6 +360,23 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
+    namespace DeletePhoto {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+            export type SeasonId = string;
+            export type TeamId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            id: Parameters.Id;
+            teamId: Parameters.TeamId;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeTeamDto;
         }
     }
     namespace DeletePlayer {
@@ -355,7 +394,7 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
-    namespace FetchData {
+    namespace DeleteWallpaper {
         namespace Parameters {
             export type Id = string;
         }
@@ -363,7 +402,7 @@ declare namespace Paths {
             id: Parameters.Id;
         }
         namespace Responses {
-            export interface $200 {}
+            export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
     namespace FindGroupByInviteCode {
@@ -577,25 +616,40 @@ declare namespace Paths {
     namespace SetAvatar {
         namespace Parameters {
             export type GroupId = string;
-            export type ProfileId = string;
+            export type Id = string;
         }
         export interface PathParameters {
             groupId: Parameters.GroupId;
-            profileId: Parameters.ProfileId;
+            id: Parameters.Id;
         }
-        export type RequestBody = string; // byte
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
-    namespace SetWallpaper {
+    namespace SetPhoto {
         namespace Parameters {
             export type GroupId = string;
+            export type Id = string;
+            export type SeasonId = string;
+            export type TeamId = string;
         }
         export interface PathParameters {
             groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            id: Parameters.Id;
+            teamId: Parameters.TeamId;
         }
-        export type RequestBody = string; // byte
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeTeamDto;
+        }
+    }
+    namespace SetWallpaper {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeAssetMetadataDto;
@@ -723,9 +777,17 @@ export interface OperationMethods {
      */
     'setWallpaper'(
         parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
-        data?: Paths.SetWallpaper.RequestBody,
+        data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
+    /**
+     * deleteWallpaper
+     */
+    'deleteWallpaper'(
+        parameters?: Parameters<Paths.DeleteWallpaper.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteWallpaper.Responses.$200>;
     /**
      * getRules
      */
@@ -775,6 +837,22 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteMatchById.Responses.$200>;
     /**
+     * setPhoto
+     */
+    'setPhoto'(
+        parameters?: Parameters<Paths.SetPhoto.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetPhoto.Responses.$200>;
+    /**
+     * deletePhoto
+     */
+    'deletePhoto'(
+        parameters?: Parameters<Paths.DeletePhoto.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeletePhoto.Responses.$200>;
+    /**
      * getSeasonById
      */
     'getSeasonById'(
@@ -791,14 +869,6 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateSeasonById.Responses.$200>;
     /**
-     * setAvatar
-     */
-    'setAvatar'(
-        parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
-        data?: Paths.SetAvatar.RequestBody,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.SetAvatar.Responses.$200>;
-    /**
      * getProfileById
      */
     'getProfileById'(
@@ -814,6 +884,22 @@ export interface OperationMethods {
         data?: Paths.UpdateProfile.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.UpdateProfile.Responses.$200>;
+    /**
+     * setAvatar
+     */
+    'setAvatar'(
+        parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetAvatar.Responses.$200>;
+    /**
+     * deleteAvatar
+     */
+    'deleteAvatar'(
+        parameters?: Parameters<Paths.DeleteAvatar.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteAvatar.Responses.$200>;
     /**
      * startNewSeason
      */
@@ -948,14 +1034,6 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetAsset.Responses.$200>;
     /**
-     * fetchData
-     */
-    'fetchData'(
-        parameters?: Parameters<Paths.FetchData.PathParameters> | null,
-        data?: any,
-        config?: AxiosRequestConfig
-    ): OperationResponse<Paths.FetchData.Responses.$200>;
-    /**
      * deletePlayer
      */
     'deletePlayer'(
@@ -984,15 +1062,23 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateGroup.Responses.$200>;
     };
-    ['/groups/{groupId}/wallpaper']: {
+    ['/groups/{id}/wallpaper']: {
         /**
          * setWallpaper
          */
         'put'(
             parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
-            data?: Paths.SetWallpaper.RequestBody,
+            data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
+        /**
+         * deleteWallpaper
+         */
+        'delete'(
+            parameters?: Parameters<Paths.DeleteWallpaper.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteWallpaper.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/rules']: {
         /**
@@ -1048,6 +1134,24 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeleteMatchById.Responses.$200>;
     };
+    ['/groups/{groupId}/seasons/{seasonId}/matches/{id}/photos/{teamId}']: {
+        /**
+         * setPhoto
+         */
+        'put'(
+            parameters?: Parameters<Paths.SetPhoto.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetPhoto.Responses.$200>;
+        /**
+         * deletePhoto
+         */
+        'delete'(
+            parameters?: Parameters<Paths.DeletePhoto.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeletePhoto.Responses.$200>;
+    };
     ['/groups/{groupId}/seasons/{id}']: {
         /**
          * getSeasonById
@@ -1066,16 +1170,6 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateSeasonById.Responses.$200>;
     };
-    ['/groups/{groupId}/profiles/{profileId}/avatar']: {
-        /**
-         * setAvatar
-         */
-        'put'(
-            parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
-            data?: Paths.SetAvatar.RequestBody,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.SetAvatar.Responses.$200>;
-    };
     ['/groups/{groupId}/profiles/{id}']: {
         /**
          * getProfileById
@@ -1093,6 +1187,24 @@ export interface PathsDictionary {
             data?: Paths.UpdateProfile.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.UpdateProfile.Responses.$200>;
+    };
+    ['/groups/{groupId}/profiles/{id}/avatar']: {
+        /**
+         * setAvatar
+         */
+        'put'(
+            parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetAvatar.Responses.$200>;
+        /**
+         * deleteAvatar
+         */
+        'delete'(
+            parameters?: Parameters<Paths.DeleteAvatar.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteAvatar.Responses.$200>;
     };
     ['/groups/{groupId}/active-season']: {
         /**
@@ -1252,16 +1364,6 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetAsset.Responses.$200>;
     };
-    ['/assets/{id}/data']: {
-        /**
-         * fetchData
-         */
-        'get'(
-            parameters?: Parameters<Paths.FetchData.PathParameters> | null,
-            data?: any,
-            config?: AxiosRequestConfig
-        ): OperationResponse<Paths.FetchData.Responses.$200>;
-    };
     ['/groups/{groupId}/seasons/{seasonId}/players/{id}']: {
         /**
          * deletePlayer
@@ -1325,6 +1427,8 @@ export type ResponseEnvelopeRuleMoveDto =
 export type ResponseEnvelopeSeasonDto =
     Components.Schemas.ResponseEnvelopeSeasonDto;
 export type ResponseEnvelopeString = Components.Schemas.ResponseEnvelopeString;
+export type ResponseEnvelopeTeamDto =
+    Components.Schemas.ResponseEnvelopeTeamDto;
 export type RuleCreateDto = Components.Schemas.RuleCreateDto;
 export type RuleDto = Components.Schemas.RuleDto;
 export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
