@@ -94,7 +94,7 @@ jobs:
 
       - run: cat mobile-app/api/generated/openapi.json
 
-      - run: sed -i '' 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
+      - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
         if: steps.check_authors.outputs.has_bot_author != 'true'
 
       - run: cat mobile-app/api/generated/openapi.json
