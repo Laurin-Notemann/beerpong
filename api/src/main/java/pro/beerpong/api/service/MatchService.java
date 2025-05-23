@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import com.google.common.collect.Maps;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -108,7 +110,7 @@ public class MatchService {
 
         match = matchRepository.save(match);
 
-        teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
+        teamService.createTeamsForMatch(match, matchCreateDto.getTeams(), null);
 
         var dto = matchToMatchDto(match);
 
@@ -126,6 +128,7 @@ public class MatchService {
 
         // Step 1: Find all teams associated with the match
         List<Team> teams = teamRepository.findAllByMatchId(match.getId());
+        Map<String, Asset> teamAssets = Maps.newHashMap();
 
         // Step 2: Loop through each team
         for (Team team : teams) {
@@ -148,6 +151,11 @@ public class MatchService {
 
             // Step 7: Delete all team members
             teamMemberRepository.deleteAll(teamMembers);
+
+            // Step 8: If the team has a photo, save it to be reused
+            if (team.getPhotoAsset() != null) {
+                teamAssets.put(team.getId(), team.getPhotoAsset());
+            }
         }
 
         // Step 8: Delete all teams
@@ -155,7 +163,7 @@ public class MatchService {
 
         MatchDto updatedDto = matchToEmptyMatchDto(match);
 
-        teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
+        teamService.createTeamsForMatch(match, matchCreateDto.getTeams(), teamAssets);
 
         loadMatchInfo(match, updatedDto);
 

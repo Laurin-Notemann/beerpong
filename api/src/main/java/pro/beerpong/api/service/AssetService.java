@@ -28,6 +28,10 @@ public class AssetService {
         return assetMapper.assetToAssetMetadataDto(assetRepository.findById(assetId).orElse(null));
     }
 
+    public Asset map(AssetMetadataDto dto) {
+        return assetMapper.assetMetadataDtoToAsset(dto);
+    }
+
     public AssetMetadataDto storeAsset(AssetType assetType) {
         var asset = new Asset();
         asset.setType(assetType);

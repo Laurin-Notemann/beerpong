@@ -16,6 +16,8 @@ public abstract class AssetMapper {
     @Mapping(target = "url", expression = "java(generateUrl(asset))")
     public abstract AssetMetadataDto assetToAssetMetadataDto(Asset asset);
 
+    public abstract Asset assetMetadataDtoToAsset(AssetMetadataDto asset);
+
     protected String generateUrl(Asset asset) {
         return UriComponentsBuilder.fromHttpUrl(apiProperties.getApiBaseUrl())
                 .pathSegment("assets")

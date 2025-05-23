@@ -18,4 +18,8 @@ public class Team {
 
     @OneToMany(mappedBy = "team")
     private List<TeamMember> teamMembers;
+
+    @OneToOne
+    @JoinColumn(name = "assetIdPhoto")
+    private Asset photoAsset;
 }

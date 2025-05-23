@@ -1,7 +1,6 @@
 package pro.beerpong.api.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
@@ -117,6 +116,10 @@ public class MatchController {
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        }
+
+        if (matchCreateDto.getTeams().stream().anyMatch(teamCreateDto -> teamCreateDto.getExistingTeamId() == null)) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_NEEDS_IDS);
         }
 
         var match = matchService.getRawMatchById(id);
