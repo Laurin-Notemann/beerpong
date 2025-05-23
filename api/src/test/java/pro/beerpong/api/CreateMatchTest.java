@@ -51,7 +51,7 @@ public class CreateMatchTest {
         assertEquals(200, prerequisiteEnvelope.getHttpCode());
 
         var prerequisiteGroup = prerequisiteEnvelope.getData();
-        assertEquals(GroupPresetsController.BEERPONG, prerequisiteGroup.getSportPreset());
+        assertEquals(GroupPresetsController.BEERPONG.getId(), prerequisiteGroup.getSportPreset().getId());
         var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
 
         assertNotNull(response);

@@ -54,7 +54,7 @@ public class GroupControllerTest {
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
-        assertEquals(GroupPresetsController.BEERPONG, group.getSportPreset());
+        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
     }
 
     @Test
