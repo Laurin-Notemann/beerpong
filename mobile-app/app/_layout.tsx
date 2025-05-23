@@ -49,7 +49,7 @@ function Everything() {
             <Stack.Screen name="createNewPlayer" options={modalStyles} />
             <Stack.Screen name="createNewRule" options={modalStyles} />
             <Stack.Screen name="rule" options={modalStyles} />
-            <Stack.Screen name="editAllowedMoveModal" options={modalStyles} />
+            <Stack.Screen name="allowedMove" options={modalStyles} />
 
             <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
 

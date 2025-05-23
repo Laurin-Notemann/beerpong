@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
@@ -55,6 +56,8 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
     const [modalId, setModalId] = useState<string | null>(null);
 
     const modalItem = moves.find((i) => i.id === modalId);
+
+    const nav = useNavigation();
 
     return (
         <>
@@ -116,7 +119,12 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
                             subtitle={formatStats(move)}
                             tailIconType={editable ? 'next' : undefined}
                             onPress={
-                                editable ? () => setModalId(move.id) : undefined
+                                editable
+                                    ? () =>
+                                          nav.navigate('allowedMove', {
+                                              id: move.id,
+                                          })
+                                    : undefined
                             }
                             headIcon="bullseye-arrow"
                         />

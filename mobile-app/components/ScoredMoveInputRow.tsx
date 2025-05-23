@@ -127,6 +127,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
                         style={{
                             alignItems: 'center',
                         }}
+                        numberOfLines={1}
                     >
                         {moveName}
                     </Text>
