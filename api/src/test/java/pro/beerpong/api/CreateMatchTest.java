@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.model.dto.*;
 
 import java.util.List;
@@ -50,7 +51,7 @@ public class CreateMatchTest {
         assertEquals(200, prerequisiteEnvelope.getHttpCode());
 
         var prerequisiteGroup = prerequisiteEnvelope.getData();
-
+        assertEquals(GroupPresetsController.BEERPONG, prerequisiteGroup.getSportPreset());
         var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
 
         assertNotNull(response);
@@ -63,7 +64,6 @@ public class CreateMatchTest {
         assertEquals(200, envelope.getHttpCode());
 
         var group = envelope.getData();
-
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
 
