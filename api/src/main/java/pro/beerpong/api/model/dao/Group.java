@@ -2,6 +2,7 @@ package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import pro.beerpong.api.model.dto.GroupPreset;
 
 @Entity(name = "groups")
 @Data
@@ -18,4 +19,6 @@ public class Group {
     @OneToOne
     @JoinColumn(name = "assetIdWallpaper")
     private Asset wallpaperAsset;
+    private String sportPreset;
+    private String customSportName;
 }

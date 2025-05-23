@@ -2,12 +2,16 @@ package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.GroupPreset;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
+
+import java.util.Arrays;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/group-presets")
@@ -26,6 +30,12 @@ public class GroupPresetsController {
             CHESS,
             BILLIARDS
     };
+
+    public static Optional<GroupPreset> byId(@Nullable String id) {
+        if (id == null) return Optional.empty();
+
+        return Arrays.stream(PRESETS).filter(groupPreset -> groupPreset.getId().equals(id)).findFirst();
+    }
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<GroupPreset[]>> getPresets() {
