@@ -20,7 +20,6 @@ public abstract class AssetMapper {
         return UriComponentsBuilder.fromHttpUrl(apiProperties.getApiBaseUrl())
                 .pathSegment("assets")
                 .pathSegment(asset.getId())
-                .pathSegment("data")
                 .toUriString();
     }
 }
