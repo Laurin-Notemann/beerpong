@@ -12,6 +12,7 @@ import pro.beerpong.api.model.dto.ResponseEnvelope;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/group-presets")
@@ -38,7 +39,7 @@ public class GroupPresetsController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseEnvelope<GroupPreset[]>> getPresets() {
+    public ResponseEntity<ResponseEnvelope<List<GroupPreset>>> getPresets() {
         return ResponseEnvelope.ok(PRESETS);
     }
 }
