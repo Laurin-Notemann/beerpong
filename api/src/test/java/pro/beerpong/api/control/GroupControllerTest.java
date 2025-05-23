@@ -31,6 +31,7 @@ public class GroupControllerTest {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
+        createDto.setSportPreset("beerpong");
 
         var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 
@@ -62,6 +63,7 @@ public class GroupControllerTest {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
+        createDto.setSportPreset("beerpong");
 
         var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 

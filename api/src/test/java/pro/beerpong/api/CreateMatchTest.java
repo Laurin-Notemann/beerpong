@@ -36,6 +36,7 @@ public class CreateMatchTest {
         var createGroupDto = new GroupCreateDto();
         createGroupDto.setProfileNames(List.of("player1", "player2", "player3", "player4"));
         createGroupDto.setName("test");
+        createGroupDto.setSportPreset("beerpong");
 
         var prerequisiteGroupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
 
@@ -203,6 +204,7 @@ public class CreateMatchTest {
         var createGroupDto = new GroupCreateDto();
         createGroupDto.setProfileNames(List.of("player1", "player2", "player3", "player4"));
         createGroupDto.setName("test-update");
+        createGroupDto.setSportPreset("beerpong");
 
         var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
         ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
@@ -282,6 +284,7 @@ public class CreateMatchTest {
 //        var createGroupDto = new GroupCreateDto();
 //        createGroupDto.setProfileNames(List.of("player1", "player2"));
 //        createGroupDto.setName("test-get");
+    //createGroupDto.setSportPreset("beerpong");
 //
 //        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
 //        ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
