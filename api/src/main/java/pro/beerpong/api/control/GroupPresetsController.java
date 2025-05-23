@@ -29,8 +29,9 @@ public static final List<GroupPreset> PRESETS =
 
     public static Optional<GroupPreset> byId(@Nullable String id) {
         if (id == null) return Optional.empty();
-
-        return Arrays.stream(PRESETS).filter(groupPreset -> groupPreset.getId().equals(id)).findFirst();
+        return PRESETS.stream()
+                    .filter(p -> p.getId().equals(id))
+                    .findFirst();
     }
 
     @GetMapping
