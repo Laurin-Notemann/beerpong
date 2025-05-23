@@ -7,7 +7,7 @@ import Text from '@/components/Text';
 export const NewSeasonRulesInput: React.FC<AllowedMovesProps> = (props) => {
     return (
         <InputModal isDark>
-            <ScrollView>
+            <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
                 <Text
                     color="secondary"
                     style={{

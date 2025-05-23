@@ -53,15 +53,17 @@ export default function NewMatchScreen() {
 
     const matchDraft = useMatchDraftStore();
 
-    const profiles = (playersQuery.data?.data ?? []).map<Player>((i) => ({
-        id: i.id!,
-        name: i.profile?.name || 'Unknown',
-        team:
-            matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
-                ?.team ?? null,
+    const profiles = (playersQuery.data?.data ?? [])
+        .filter((i) => i.activeThisSeason)
+        .map<Player>((i) => ({
+            id: i.id!,
+            name: i.profile?.name || 'Unknown',
+            team:
+                matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
+                    ?.team ?? null,
 
-        avatarUrl: i.profile?.avatarAsset?.url,
-    }));
+            avatarUrl: i.profile?.avatarAsset?.url,
+        }));
 
     const hasValidTeams =
         matchDraft.redTeam.teamMembers.length &&
@@ -223,7 +225,12 @@ export default function NewMatchScreen() {
                 isCreating={createMatchMutation.isPending}
             />
             <Carousel
-                defaultIndex={0}
+                // kinda hacky, this is how we get the carousel to re-mount when switching groups or seasons.
+                // it needs to re-mount so it starts at the first page again.
+                // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
+                // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
+                // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
+                key={groupId + ':' + seasonId}
                 ref={carouselRef}
                 style={{
                     backgroundColor: theme.color.bg,

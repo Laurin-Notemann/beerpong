@@ -74,7 +74,7 @@ export function useSwiper(options?: { initialPage?: number }) {
     const ref = useRef<ICarouselInstance>(null);
 
     useEffect(() => {
-        ref.current!.scrollTo({ index: initialPage, animated: false });
+        ref.current?.scrollTo({ index: initialPage, animated: false });
     }, [initialPage]);
 
     return {

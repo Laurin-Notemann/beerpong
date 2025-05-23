@@ -11,6 +11,7 @@ import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Button from '@/components/Button';
 import MatchPlayers from '@/components/MatchPlayers';
 import { theme } from '@/theme';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -30,6 +31,8 @@ export default function CreateMatchAssignPoints({
     onCancel,
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
+    const experiments = useLocalSettings();
+
     return (
         <View style={{ position: 'relative', flex: 1 }}>
             <ScrollView
@@ -65,32 +68,34 @@ export default function CreateMatchAssignPoints({
                     gap: 16,
                 }}
             >
-                <Button
-                    variant="secondary"
-                    title={
-                        <Icon
-                            color={theme.color.text.primary}
-                            size={24}
-                            name="camera"
-                        />
-                    }
-                    size="large"
-                    onPress={onSubmit}
-                    disabled={isPending}
-                    style={{
-                        // box shadow:
-                        shadowColor: '#000',
-                        shadowOffset: {
-                            width: 0,
-                            height: 4,
-                        },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 4,
-                        elevation: 5,
+                {experiments.matchPhotos && (
+                    <Button
+                        variant="secondary"
+                        title={
+                            <Icon
+                                color={theme.color.text.primary}
+                                size={24}
+                                name="camera"
+                            />
+                        }
+                        size="large"
+                        onPress={onSubmit}
+                        disabled={isPending}
+                        style={{
+                            // box shadow:
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 4,
+                            },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 4,
+                            elevation: 5,
 
-                        aspectRatio: 1,
-                    }}
-                />
+                            aspectRatio: 1,
+                        }}
+                    />
+                )}
                 <Button
                     variant="primary"
                     title={isPending ? <ActivityIndicator /> : 'Create'}

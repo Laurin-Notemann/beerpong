@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, Text, TouchableHighlight } from 'react-native';
+import { Pressable, ScrollView, TouchableHighlight, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
@@ -7,12 +7,12 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
+import Text from '@/components/Text';
+import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
-
-import { TutorialBubble } from '../TutorialBubble';
 
 export type TeamId = 'red' | 'blue' | null;
 
@@ -58,10 +58,10 @@ function PlayerItem({
             <>
                 <Avatar url={player.avatarUrl} size={36} name={player.name} />
                 <Text
+                    color="primary"
                     numberOfLines={1}
                     style={{
                         fontSize: 17,
-                        color: theme.color.text.primary,
 
                         marginLeft: 12,
                         marginRight: 'auto',
@@ -163,6 +163,25 @@ export default function NewMatchAssignTeams({
                 />
             </MenuSection>
             <MenuSection>
+                {players.length === 0 && (
+                    <View
+                        style={{
+                            height: 62,
+                            width: '100%',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Text
+                            color="secondary"
+                            style={{
+                                textAlign: 'center',
+                            }}
+                        >
+                            Add players to create a match
+                        </Text>
+                    </View>
+                )}
                 {players.map((i, idx) => (
                     <PlayerItem
                         hasTutorial={

@@ -100,7 +100,7 @@ export default function Avatar({
                     borderColor,
                 }}
             >
-                {url && (
+                {url && !content && (
                     <Image
                         source={{ uri: url }}
                         style={{

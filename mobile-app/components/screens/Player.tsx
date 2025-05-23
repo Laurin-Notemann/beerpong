@@ -18,6 +18,8 @@ import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import { theme } from '@/theme';
 
+const SHOW_PAST_SEASONS = false;
+
 export interface PlayerScreenProps {
     minMatchesRequiredToBeRanked: number;
     isPending: boolean;
@@ -116,7 +118,7 @@ export default function PlayerScreen({
                                     alignItems: 'stretch',
                                 }}
                             >
-                                {pastSeasons > 0 && (
+                                {SHOW_PAST_SEASONS && pastSeasons > 0 && (
                                     <MenuSection>
                                         <MenuItem
                                             title="Past Seasons"
