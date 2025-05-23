@@ -7,6 +7,7 @@ import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileCreatedDto;
 import pro.beerpong.api.model.dto.ProfileDto;
@@ -132,6 +133,13 @@ public class ProfileService {
         profile.setName(profileCreateDto.getName());
 
         return profileMapper.profileToProfileDto(profileRepository.save(profile));
+    }
+
+    public ProfileDto deleteProfilePicture(ProfileDto profileDto) {
+        profileDto.setAvatarAsset(null);
+        profileRepository.save(profileMapper.profileDtoToProfile(profileDto));
+
+        return profileDto;
     }
 
     @Transactional

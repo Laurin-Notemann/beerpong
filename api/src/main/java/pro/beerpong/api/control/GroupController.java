@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.service.AssetService;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -14,11 +15,13 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 @RequestMapping("/groups")
 public class GroupController {
     private final GroupService groupService;
+    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
 
     @Autowired
-    public GroupController(GroupService groupService, SubscriptionHandler subscriptionHandler) {
+    public GroupController(GroupService groupService, AssetService assetService, SubscriptionHandler subscriptionHandler) {
         this.groupService = groupService;
+        this.assetService = assetService;
         this.subscriptionHandler = subscriptionHandler;
     }
 
@@ -96,5 +99,27 @@ public class GroupController {
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_SET, id, dto));
 
         return ResponseEnvelope.ok(dto);
+    }
+
+    @DeleteMapping("{id}/wallpaper")
+    public ResponseEntity<ResponseEnvelope<GroupDto>> deleteWallpaper(@PathVariable String id) {
+        var group = groupService.getGroupById(id);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var asset = group.getWallpaperAsset();
+
+        if (asset == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_HAS_NO_WALLPAPER);
+        }
+
+        group = groupService.deleteWallpaper(group);
+        assetService.deleteAsset(asset.getId());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_DELETE, id, group));
+
+        return ResponseEnvelope.ok(group);
     }
 }

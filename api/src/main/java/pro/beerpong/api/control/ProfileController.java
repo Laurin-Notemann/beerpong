@@ -9,6 +9,7 @@ import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.service.AssetService;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.ProfileService;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -23,6 +24,7 @@ import java.util.List;
 public class ProfileController {
     private final GroupService groupService;
     private final ProfileService profileService;
+    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
 
     @PostMapping
@@ -106,6 +108,38 @@ public class ProfileController {
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
 
         return ResponseEnvelope.ok(dto);
+    }
+
+    @DeleteMapping("{id}/avatar")
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> deleteAvatar(@PathVariable String groupId, @PathVariable String id) {
+        var group = groupService.getGroupById(groupId);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var profile = profileService.getProfileById(id);
+
+        if (profile == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
+        }
+
+        if (!profile.getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_OF_GROUP);
+        }
+
+        var asset = profile.getAvatarAsset();
+
+        if (asset == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_HAS_NO_AVATAR);
+        }
+
+        profile = profileService.deleteProfilePicture(profile);
+        assetService.deleteAsset(asset.getId());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_DELETE, id, profile));
+
+        return ResponseEnvelope.ok(profile);
     }
 
 // it is not intended to delete profiles!

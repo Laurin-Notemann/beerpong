@@ -109,6 +109,13 @@ public class GroupService {
                 .orElse(null);
     }
 
+    public GroupDto deleteWallpaper(GroupDto groupDto) {
+        groupDto.setWallpaperAsset(null);
+        groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
+
+        return groupDto;
+    }
+
     @Transactional
     public AssetMetadataDto storeWallpaper(GroupDto groupDto) {
         String oldWallpaperAssetId = null;

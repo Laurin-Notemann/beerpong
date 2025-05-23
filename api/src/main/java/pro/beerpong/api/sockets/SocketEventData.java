@@ -28,7 +28,9 @@ public class SocketEventData<T> {
     public static final SocketEventData<SeasonDto> SEASON_UPDATE = new SocketEventData<>(SeasonDto.class, SocketEventType.SEASONS, "seasonUpdate");
 
     public static final SocketEventData<ProfileDto> PROFILE_AVATAR_SET = new SocketEventData<>(ProfileDto.class, SocketEventType.ASSETS, "profileAvatarSet");
+    public static final SocketEventData<ProfileDto> PROFILE_AVATAR_DELETE = new SocketEventData<>(ProfileDto.class, SocketEventType.ASSETS, "profileAvatarDelete");
     public static final SocketEventData<AssetMetadataDto> GROUP_WALLPAPER_SET = new SocketEventData<>(AssetMetadataDto.class, SocketEventType.ASSETS, "groupWallpaperSet");
+    public static final SocketEventData<GroupDto> GROUP_WALLPAPER_DELETE = new SocketEventData<>(GroupDto.class, SocketEventType.ASSETS, "groupWallpaperDelete");
 
     public static final SocketEventData<ProfileDto> PROFILE_CREATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileCreate");
     public static final SocketEventData<ProfileDto> PROFILE_UPDATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileUpdate");

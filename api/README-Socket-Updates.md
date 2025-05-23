@@ -120,8 +120,10 @@ A list of all event types with their corresponding dto and all available scopes:
 
 #### Assets (body: AssetMetadataDto | ProfileDto)
 
-* **groupWallpaperSet:** When a groups wallpaper is updated
-* **profileAvatarSet:** When a profiles avatar is updated
+* **groupWallpaperSet:** When a groups wallpaper is updated, result is the newly created asset
+* **groupWallpaperDelete:** When a groups wallpaper is deleted, result is the group
+* **profileAvatarSet:** When a profiles avatar is updated, result is the profile
+* **profileAvatarDelete:** When a profiles avatar is deleted, result is the profile
 *
 #### Profiles (body: ProfileDto)
 
