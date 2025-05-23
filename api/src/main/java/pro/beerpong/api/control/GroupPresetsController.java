@@ -24,13 +24,8 @@ public class GroupPresetsController {
     public static final GroupPreset CHESS = new GroupPreset("chess", "Chess", "https://media.istockphoto.com/id/1128789429/photo/plan-leading-strategy-of-successful-business-competition-leader-concept-hand-of-player-chess.jpg?s=612x612&w=0&k=20&c=srlCT0xWXduYvZsQgGVYl6B4QAaBjoPjpsceTQrP5XQ=");
     public static final GroupPreset BILLIARDS = new GroupPreset("billiards", "Billiards", "https://media.istockphoto.com/id/1370682737/photo/a-group-of-young-people-came-to-play-billiards-and-in-the-young-hands-was-a-cane-and-layers.jpg?s=612x612&w=0&k=20&c=monjVEGbEEjeau83cCqBScfiR1n9SOaqlZpDEB3-Ioo=");
 
-    public static final GroupPreset[] PRESETS = new GroupPreset[]{
-            BEERPONG,
-            KICKER,
-            TABLE_TENNIS,
-            CHESS,
-            BILLIARDS
-    };
+public static final List<GroupPreset> PRESETS =
+    List.of(BEERPONG, KICKER, TABLE_TENNIS, CHESS, BILLIARDS);
 
     public static Optional<GroupPreset> byId(@Nullable String id) {
         if (id == null) return Optional.empty();
