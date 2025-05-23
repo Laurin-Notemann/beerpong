@@ -2,12 +2,11 @@ import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
+import { Cup } from '@/components/CupGrid/Cup';
+import { Formation, FormationType } from '@/components/CupGrid/Formation';
+import Point from '@/components/CupGrid/Point';
+import { useCupGrid } from '@/components/CupGrid/useCupGrid';
 import { theme } from '@/theme';
-
-import { Cup } from './Cup';
-import { Formation, FormationType } from './Formation';
-import Point from './Point';
-import { useCupGrid } from './useCupGrid';
 
 export interface CupFormationProps {
     /**

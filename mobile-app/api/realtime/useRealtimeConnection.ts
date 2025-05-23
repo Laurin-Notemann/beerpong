@@ -1,13 +1,17 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { env } from '@/api/env';
+import {
+    QK,
+    queryKeyStartsWith,
+    replaceWildcards,
+} from '@/api/utils/reactQuery';
 import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient, RealtimeEventHandler } from '.';
-import { env } from '../env';
-import { QK, queryKeyStartsWith, replaceWildcards } from '../utils/reactQuery';
 
 export function useRealtimeConnection() {
     const { groupIds } = useGroupStore();

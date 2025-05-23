@@ -14,8 +14,10 @@ import {
     ViewStyle,
 } from 'react-native';
 
-import Dot from './component/Dot';
-import EmptyDot, { defaultEmptyDotSize } from './component/EmptyDot';
+import Dot from '@/components/PaginationDots/component/Dot';
+import EmptyDot, {
+    defaultEmptyDotSize,
+} from '@/components/PaginationDots/component/EmptyDot';
 
 function usePrevious<T>(value: T): T | undefined {
     const ref = useRef<T>();

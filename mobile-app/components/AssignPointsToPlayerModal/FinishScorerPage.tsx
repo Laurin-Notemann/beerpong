@@ -2,12 +2,11 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import Avatar from '@/components/Avatar';
+import Select from '@/components/Select';
+import Text from '@/components/Text';
+import { useScrollLockIfNotOverflowing } from '@/components/useScrollLockIfNotOverflowing';
 import { theme } from '@/theme';
-
-import Avatar from '../Avatar';
-import Select from '../Select';
-import Text from '../Text';
-import { useScrollLockIfNotOverflowing } from '../useScrollLockIfNotOverflowing';
 
 export default function FinishScorerPage({
     finisher,

@@ -1,5 +1,5 @@
-import MenuItem, { MenuItemProps } from './Menu/MenuItem';
-import MenuSection, { MenuSectionProps } from './Menu/MenuSection';
+import MenuItem, { MenuItemProps } from '@/components/Menu/MenuItem';
+import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 
 export interface SelectOption
     extends Omit<MenuItemProps, 'onPress' | 'tailIconType'> {

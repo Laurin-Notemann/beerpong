@@ -5,11 +5,10 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
-
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const { pageIdx: initialPageIdx } = useLocalSearchParams<{

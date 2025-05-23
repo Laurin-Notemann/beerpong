@@ -1,8 +1,7 @@
 import { View, ViewProps } from 'react-native';
 
+import Text from '@/components/Text';
 import { theme } from '@/theme';
-
-import Text from './Text';
 
 export interface ErrorScreenProps extends ViewProps {
     message?: string | JSX.Element;

@@ -1,8 +1,7 @@
 /* eslint @typescript-eslint/explicit-function-return-type: ["error"] */
+import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { Components } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
-
-import { Match, PerformedMove, TeamMember } from '../utils/matchDtoToMatch';
 
 // TODO: respect pointsForTeam for point calculation
 

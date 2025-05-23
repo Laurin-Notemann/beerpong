@@ -5,5 +5,11 @@ module.exports = {
         'react-hooks/rules-of-hooks': 'error',
         'no-console': 'error',
         eqeqeq: ['error', 'smart'],
+        'no-restricted-imports': [
+            'error',
+            {
+                patterns: ['./*', '../*'],
+            },
+        ],
     },
 };

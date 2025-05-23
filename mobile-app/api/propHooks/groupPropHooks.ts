@@ -1,3 +1,9 @@
+import {
+    useGroupQuery,
+    useUpdateGroupWallpaperMutation,
+} from '@/api/calls/groupHooks';
+import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import { ScreenState } from '@/api/types';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
@@ -8,13 +14,6 @@ import {
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-
-import {
-    useGroupQuery,
-    useUpdateGroupWallpaperMutation,
-} from '../calls/groupHooks';
-import { useAllSeasonsQuery, useGroup } from '../calls/seasonHooks';
-import { ScreenState } from '../types';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const { groupId, group } = useGroup();

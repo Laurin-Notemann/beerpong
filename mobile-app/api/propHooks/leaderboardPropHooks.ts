@@ -1,5 +1,5 @@
-import { usePlayersQuery } from '../calls/playerHooks';
-import { ApiId } from '../types';
+import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { ApiId } from '@/api/types';
 
 export interface LeaderboardProps {
     players: Player[];

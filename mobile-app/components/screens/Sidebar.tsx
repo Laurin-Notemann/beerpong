@@ -9,14 +9,13 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import MenuItem from '@/components/Menu/MenuItem';
+import MenuSection from '@/components/Menu/MenuSection';
+import Text from '@/components/Text';
 import { theme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
-
-import ConfirmationModal from '../ConfirmationModal';
-import MenuItem from '../Menu/MenuItem';
-import MenuSection from '../Menu/MenuSection';
-import Text from '../Text';
 
 export interface SidebarGroupItemProps {
     id: string;

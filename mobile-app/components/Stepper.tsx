@@ -1,10 +1,9 @@
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
 import { theme } from '@/theme';
-
-import Text from './Text';
 
 export interface StepperProps {
     value: number;

@@ -1,11 +1,10 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
+import { env } from '@/api/env';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
+import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
-
-import { env } from '../env';
-import { QK } from '../utils/reactQuery';
 
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();

@@ -1,10 +1,9 @@
 import { Text, View } from 'react-native';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
+import Avatar from '@/components/Avatar';
+import PlayerStats from '@/components/PlayerStats';
 import { theme } from '@/theme';
-
-import Avatar from './Avatar';
-import PlayerStats from './PlayerStats';
 
 export function PlayerPageHeadSection({
     avatarUrl,

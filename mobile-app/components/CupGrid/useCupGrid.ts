@@ -1,8 +1,9 @@
 import { Gesture } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
+import { FormationCup } from '@/components/CupGrid/Formation';
+
 import { CupFormationProps } from '.';
-import { FormationCup } from './Formation';
 
 type Required<T> = {
     [P in keyof T]-?: T[P];

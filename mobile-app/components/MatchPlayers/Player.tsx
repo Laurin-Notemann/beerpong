@@ -12,9 +12,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
+import Text from '@/components/Text';
 import { theme } from '@/theme';
-
-import Text from '../Text';
 
 function Change({
     value,
