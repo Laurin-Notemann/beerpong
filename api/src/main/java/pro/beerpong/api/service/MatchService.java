@@ -299,7 +299,7 @@ public class MatchService {
     }
 
     @Transactional
-    public AssetMetadataDto saveMatchPhoto(TeamDto team) {
+    public TeamDto saveMatchPhoto(TeamDto team) {
         String oldWallpaperAssetId = null;
 
         if (team.getPhotoAsset() != null) {
@@ -316,7 +316,19 @@ public class MatchService {
             assetService.deleteAsset(oldWallpaperAssetId);
         }
 
-        return assetMetadataDto;
+        return team;
+    }
+
+    @Transactional
+    public TeamDto deleteMatchPhoto(TeamDto team) {
+        if (team.getPhotoAsset() != null) {
+            assetService.deleteAsset(team.getPhotoAsset().getId());
+            team.setPhotoAsset(null);
+        }
+
+        teamRepository.save(teamMapper.teamDtoToTeam(team));
+
+        return team;
     }
 
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {

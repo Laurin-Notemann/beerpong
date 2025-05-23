@@ -152,7 +152,7 @@ public class MatchController {
     }
 
     @PutMapping("/{id}/photos/{teamId}")
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> updateMatch(@PathVariable String groupId,
+    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId,
                                                                   @PathVariable String seasonId,
                                                                   @PathVariable String id,
                                                                   @PathVariable String teamId) {
@@ -176,7 +176,41 @@ public class MatchController {
 
         var dto = matchService.saveMatchPhoto(teamOpt.get());
 
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_PHOTO_SET, id, dto));
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_TEAM_PHOTO_SET, id, dto));
+
+        return ResponseEnvelope.ok(dto);
+    }
+
+    @DeleteMapping("/{id}/photos/{teamId}")
+    public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId,
+                                                                          @PathVariable String seasonId,
+                                                                          @PathVariable String id,
+                                                                          @PathVariable String teamId) {
+        var match = matchService.getMatchById(id);
+
+        if (match == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
+        if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+        }
+
+        var teamOpt = match.getTeams().stream()
+                .filter(teamDto -> teamDto.getId().equals(teamId))
+                .findFirst();
+
+        if (teamOpt.isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NO_TEAM_FOUND);
+        }
+
+        if (teamOpt.get().getPhotoAsset() == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_HAS_NO_PHOTO);
+        }
+
+        var dto = matchService.deleteMatchPhoto(teamOpt.get());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_TEAM_PHOTO_DELETE, id, dto));
 
         return ResponseEnvelope.ok(dto);
     }
