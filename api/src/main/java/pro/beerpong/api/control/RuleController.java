@@ -10,6 +10,9 @@ import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
 import pro.beerpong.api.service.RuleService;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 
@@ -18,11 +21,13 @@ import java.util.List;
 public class RuleController {
     private final RuleService ruleService;
     private final SeasonService seasonService;
+    private final SubscriptionHandler subscriptionHandler;
 
     @Autowired
-    public RuleController(RuleService ruleService, SeasonService seasonService) {
+    public RuleController(RuleService ruleService, SeasonService seasonService, SubscriptionHandler subscriptionHandler) {
         this.ruleService = ruleService;
         this.seasonService = seasonService;
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @GetMapping
@@ -57,6 +62,8 @@ public class RuleController {
         var ruleDtos = ruleService.writeRules(groupId, pair.getSecond(), rules);
 
         if (ruleDtos != null) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, ruleDtos.toArray(new RuleDto[0])));
+
             return ResponseEnvelope.ok(ruleDtos);
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
