@@ -2,12 +2,11 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView, Switch } from 'react-native';
 
+import { navStyles } from '@/app/navigation/navStyles';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
-
-import { navStyles } from './navigation/navStyles';
 
 export default function Page() {
     const {
@@ -15,8 +14,6 @@ export default function Page() {
         toggleTutorials,
         beerpongProMode,
         toggleBeerpongProMode,
-        supportAdditionalGames,
-        toggleSupportAdditionalGames,
         premiumVersion,
         togglePremiumVersion,
         eloAlgorithm,
@@ -54,15 +51,6 @@ export default function Page() {
                             <Switch
                                 value={beerpongProMode}
                                 onChange={toggleBeerpongProMode}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Support Additional Games"
-                        tailContent={
-                            <Switch
-                                value={supportAdditionalGames}
-                                onChange={toggleSupportAdditionalGames}
                             />
                         }
                     />

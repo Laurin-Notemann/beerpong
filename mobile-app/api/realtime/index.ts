@@ -1,8 +1,7 @@
 import { TextEncoder } from 'text-encoding';
 
+import { BackOff, FIBONACCI_TIMEOUTS } from '@/api/utils/BackOff';
 import { ScopedLogger } from '@/utils/logging';
-
-import { BackOff, FIBONACCI_TIMEOUTS } from '../utils/BackOff';
 
 /**
  * stompjs is an abstraction layer on top of websocket that uses the global TextEncoder class.
@@ -93,7 +92,7 @@ export class RealtimeClient {
     ) {
         this.connect();
 
-        this.logger = new ScopedLogger('realtime');
+        this.logger = new ScopedLogger('realtime').disableConsole();
     }
 
     /**

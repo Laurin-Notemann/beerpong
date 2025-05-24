@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.model.dto.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class CreateMatchTest {
         var createGroupDto = new GroupCreateDto();
         createGroupDto.setProfileNames(List.of("player1", "player2", "player3", "player4"));
         createGroupDto.setName("test");
+        createGroupDto.setSportPreset("beerpong");
 
         var prerequisiteGroupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
 
@@ -49,7 +51,7 @@ public class CreateMatchTest {
         assertEquals(200, prerequisiteEnvelope.getHttpCode());
 
         var prerequisiteGroup = prerequisiteEnvelope.getData();
-
+        assertEquals(GroupPresetsController.BEERPONG.getId(), prerequisiteGroup.getSportPreset().getId());
         var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
 
         assertNotNull(response);
@@ -62,7 +64,6 @@ public class CreateMatchTest {
         assertEquals(200, envelope.getHttpCode());
 
         var group = envelope.getData();
-
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
 
@@ -203,6 +204,7 @@ public class CreateMatchTest {
         var createGroupDto = new GroupCreateDto();
         createGroupDto.setProfileNames(List.of("player1", "player2", "player3", "player4"));
         createGroupDto.setName("test-update");
+        createGroupDto.setSportPreset("beerpong");
 
         var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
         ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
@@ -284,6 +286,7 @@ public class CreateMatchTest {
 //        var createGroupDto = new GroupCreateDto();
 //        createGroupDto.setProfileNames(List.of("player1", "player2"));
 //        createGroupDto.setName("test-get");
+    //createGroupDto.setSportPreset("beerpong");
 //
 //        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
 //        ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();

@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs';
 
-import packageJson from '../package.json';
+import packageJson from '@/package.json';
 
 /** the spaced format of group invite codes. `[3, 4, 3]` => `"xxx xxxx xxx"` */
 const groupCodeFormat = [3, 3, 3];

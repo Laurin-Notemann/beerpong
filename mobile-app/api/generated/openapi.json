@@ -1135,6 +1135,24 @@
                 }
             }
         },
+        "/group-presets": {
+            "get": {
+                "tags": ["group-presets-controller"],
+                "operationId": "getPresets",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListGroupPreset"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/assets/{id}": {
             "get": {
                 "tags": ["asset-controller"],
@@ -1209,7 +1227,9 @@
                     "profileNames": {
                         "type": "array",
                         "items": { "type": "string" }
-                    }
+                    },
+                    "sportPreset": { "type": "string" },
+                    "customSportName": { "type": "string" }
                 }
             },
             "AssetMetadataDto": {
@@ -1245,9 +1265,21 @@
                     "wallpaperAsset": {
                         "$ref": "#/components/schemas/AssetMetadataDto"
                     },
+                    "sportPreset": {
+                        "$ref": "#/components/schemas/GroupPreset"
+                    },
+                    "customSportName": { "type": "string" },
                     "numberOfPlayers": { "type": "integer", "format": "int32" },
                     "numberOfMatches": { "type": "integer", "format": "int32" },
                     "numberOfSeasons": { "type": "integer", "format": "int32" }
+                }
+            },
+            "GroupPreset": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "imageUrl": { "type": "string" }
                 }
             },
             "ResponseEnvelopeGroupDto": {
@@ -1728,6 +1760,18 @@
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/LeaderboardDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "ResponseEnvelopeListGroupPreset": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/GroupPreset" }
+                    },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             }

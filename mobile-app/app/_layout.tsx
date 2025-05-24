@@ -18,12 +18,11 @@ import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
+import { modalStyles } from '@/app/navigation/modalStyles';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { LoggingProvider } from '@/utils/useLogging';
-
-import { modalStyles } from './navigation/modalStyles';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
 Sentry.init(env.sentry);

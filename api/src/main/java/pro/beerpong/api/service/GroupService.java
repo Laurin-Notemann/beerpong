@@ -46,6 +46,13 @@ public class GroupService {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setInviteCode(generateRandomString(GROUP_INVITE_CODE_LENGTH));
 
+        if (group.getSportPreset() != null && group.getCustomSportName() != null) {
+            group.setCustomSportName(null);
+        } else if ((group.getCustomSportName() != null && group.getCustomSportName().isBlank()) ||
+                (group.getSportPreset() == null && group.getCustomSportName() == null)) {
+            return null;
+        }
+
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
         season.setSeasonSettings(new SeasonSettings());
@@ -63,7 +70,7 @@ public class GroupService {
             profileService.createProfile(finalGroup.getId(), profileDto);
         });
 
-        ruleMoveService.createDefaultRuleMoves(season);
+        ruleMoveService.createDefaultRuleMoves(group, season);
         ruleService.createDefaultRules(season);
 
         return withStats(groupMapper.groupToGroupDto(group));

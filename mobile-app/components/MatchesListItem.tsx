@@ -4,9 +4,8 @@ import { TouchableHighlight } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
+import MatchVsHeader from '@/components/MatchVsHeader';
 import { theme } from '@/theme';
-
-import MatchVsHeader from './MatchVsHeader';
 
 export const MatchesListItem: React.FC<{
     match: Match;

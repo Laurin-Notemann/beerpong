@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
-import { env } from '../env';
-import { Match } from './matchDtoToMatch';
+import { env } from '@/api/env';
+import { Match } from '@/api/utils/matchDtoToMatch';
 
 export const groupMatchesByDay = (matches: Match[]) => {
     const dayjsMap = matches.reduce(

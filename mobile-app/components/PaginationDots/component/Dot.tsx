@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated } from 'react-native';
 
-import EmptyDot from './EmptyDot';
+import EmptyDot from '@/components/PaginationDots/component/EmptyDot';
 
 function usePrevious<T>(value: T): T | undefined {
     const ref = useRef<T>();

@@ -6,14 +6,13 @@ import Swiper from 'react-native-swiper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
+import FinishMovePage from '@/components/AssignPointsToPlayerModal/FinishMovePage';
+import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScorerPage';
+import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
+import { HeaderItem } from '@/components/HeaderItem';
+import MatchVsHeader from '@/components/MatchVsHeader';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
-
-import { HeaderItem } from '../HeaderItem';
-import MatchVsHeader from '../MatchVsHeader';
-import FinishMovePage from './FinishMovePage';
-import FinishScorerPage from './FinishScorerPage';
-import PlayerPage from './PlayerPage';
 
 const showVsHeader = false;
 

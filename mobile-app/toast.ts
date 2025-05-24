@@ -1,6 +1,6 @@
 import Toast from 'react-native-root-toast';
 
-import { triggerHapticBump } from './haptics';
+import { triggerHapticBump } from '@/haptics';
 
 export function showErrorToast(message: string) {
     triggerHapticBump('toast:error');

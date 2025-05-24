@@ -4,9 +4,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { theme } from '@/theme';
-
-import { TeamId } from './screens/NewMatchAssignTeams';
 
 function ScoreChip({
     winnerTeamId,

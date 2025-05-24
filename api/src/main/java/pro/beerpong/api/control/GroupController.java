@@ -35,7 +35,13 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
         }
 
-        return ResponseEnvelope.ok(groupService.createGroup(groupCreateDto));
+        var group = groupService.createGroup(groupCreateDto);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_SPORT);
+        }
+
+        return ResponseEnvelope.ok(group);
     }
 
     @GetMapping

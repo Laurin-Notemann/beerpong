@@ -10,13 +10,11 @@ import { theme } from '@/theme';
 export interface CreateGroupSetNameProps {
     isPending: boolean;
     onSubmit: (group: { name: string }) => void;
-    hasNextStep: boolean;
 }
 
 export default function CreateGroupSetName({
     isPending,
     onSubmit,
-    hasNextStep,
 }: CreateGroupSetNameProps) {
     const [name, setName] = useState('');
 
@@ -31,13 +29,11 @@ export default function CreateGroupSetName({
                                 isLoading={isPending}
                                 onPress={() => onSubmit({ name })}
                             >
-                                {hasNextStep ? 'Next' : 'Create'}
+                                Next
                             </HeaderItem>
                         ),
 
-                        headerTitle: hasNextStep
-                            ? 'Set Group Name'
-                            : 'Create Group',
+                        headerTitle: 'Set Group Name',
                         headerBackTitleVisible: false,
                         headerBackVisible: true,
                         headerTintColor: '#fff',

@@ -15,6 +15,7 @@ public enum ErrorCodes {
     GROUP_HAS_NO_WALLPAPER(HttpStatus.NOT_FOUND, "groupHasNoWallpaper", "The provided group does not have a wallpaper saved!"),
     INVALID_GROUP_NAME(HttpStatus.BAD_REQUEST, "invalidGroupName", "Group name must be non-null, non-empty and between 2 and 50 characters!"),
     INVALID_GROUP_PROFILE_NAMES(HttpStatus.BAD_REQUEST, "invalidGroupProfileNames", "Group profileNames must be non-null and non-empty!"),
+    INVALID_GROUP_SPORT(HttpStatus.BAD_REQUEST, "invalidGroupSport", "Either a valid preset-id has to be set to 'sportPreset' or a non-null, non-empty 'customSportName' has to be supplied!"),
     INVALID_GROUP_INVITE_CODE(HttpStatus.BAD_REQUEST, "invalidGroupInviteCode", "Group invite code must be non-null and non-empty!"),
     INVALID_GROUP_ID(HttpStatus.BAD_REQUEST, "invalidGroupId", "Group id must be non-null and non-empty!")
     /* SEASONS */,

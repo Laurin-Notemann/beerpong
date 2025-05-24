@@ -21,6 +21,8 @@ declare namespace Components {
         export interface GroupCreateDto {
             name?: string;
             profileNames?: string[];
+            sportPreset?: string;
+            customSportName?: string;
         }
         export interface GroupDto {
             id?: string;
@@ -28,9 +30,16 @@ declare namespace Components {
             inviteCode?: string;
             activeSeason?: Season;
             wallpaperAsset?: AssetMetadataDto;
+            sportPreset?: GroupPreset;
+            customSportName?: string;
             numberOfPlayers?: number; // int32
             numberOfMatches?: number; // int32
             numberOfSeasons?: number; // int32
+        }
+        export interface GroupPreset {
+            id?: string;
+            title?: string;
+            imageUrl?: string;
         }
         export interface LeaderboardDto {
             entries?: LeaderboardEntryDto[];
@@ -121,6 +130,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: LeaderboardDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeListGroupPreset {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: GroupPreset[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchDto {
@@ -560,6 +575,12 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListPlayerDto;
+        }
+    }
+    namespace GetPresets {
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListGroupPreset;
         }
     }
     namespace GetProfileById {
@@ -1026,6 +1047,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
     /**
+     * getPresets
+     */
+    'getPresets'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetPresets.Responses.$200>;
+    /**
      * getAsset
      */
     'getAsset'(
@@ -1354,6 +1383,16 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
     };
+    ['/group-presets']: {
+        /**
+         * getPresets
+         */
+        'get'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetPresets.Responses.$200>;
+    };
     ['/assets/{id}']: {
         /**
          * getAsset
@@ -1382,6 +1421,7 @@ export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
+export type GroupPreset = Components.Schemas.GroupPreset;
 export type LeaderboardDto = Components.Schemas.LeaderboardDto;
 export type LeaderboardEntryDto = Components.Schemas.LeaderboardEntryDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
@@ -1402,6 +1442,8 @@ export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
 export type ResponseEnvelopeLeaderboardDto =
     Components.Schemas.ResponseEnvelopeLeaderboardDto;
+export type ResponseEnvelopeListGroupPreset =
+    Components.Schemas.ResponseEnvelopeListGroupPreset;
 export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListMatchOverviewDto =

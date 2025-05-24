@@ -12,6 +12,8 @@ public class GroupCreateDto {
 
     private String name;
     private List<String> profileNames;
+    private String sportPreset;
+    private String customSportName;
 
     public boolean invalidName() {
         return this.name == null || this.name.isEmpty() ||

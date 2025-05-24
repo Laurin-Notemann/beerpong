@@ -3,6 +3,7 @@ package pro.beerpong.api.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMoveMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.RuleMove;
@@ -16,10 +17,11 @@ import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class RuleMoveService {
-    private static final List<RuleMove> DEFAULT_RULE_MOVES = List.of(
+    private static final List<RuleMove> DEFAULT_BEERPONG_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Bomb", 2, 0, false),
             buildRuleMove("Bouncer", 2, 0, false),
@@ -27,6 +29,11 @@ public class RuleMoveService {
             buildRuleMove("Save", 2, 0, false),
             buildRuleMove("Finish - Normal", 1, 3, true),
             buildRuleMove("Finish - Ring of fire", 1, 10, true)
+    );
+
+    private static final List<RuleMove> DEFAULT_MOVES = List.of(
+            buildRuleMove("Normal", 1, 0, false),
+            buildRuleMove("Finish - Normal", 1, 3, true)
     );
 
     private final SubscriptionHandler subscriptionHandler;
@@ -121,9 +128,16 @@ public class RuleMoveService {
         });
     }
 
-    public void createDefaultRuleMoves(Season season) {
-        DEFAULT_RULE_MOVES.stream()
-                .map(ruleMove -> {
+    public void createDefaultRuleMoves(Group group, Season season) {
+        Stream<RuleMove> ruleMoves;
+
+        if (group.getSportPreset() != null && group.getSportPreset().equals(GroupPresetsController.BEERPONG.getId())) {
+            ruleMoves = DEFAULT_BEERPONG_MOVES.stream();
+        } else {
+            ruleMoves = DEFAULT_MOVES.stream();
+        }
+
+        ruleMoves.map(ruleMove -> {
                     var move = ruleMove.clone();
                     move.setSeason(season);
                     return move;

@@ -3,11 +3,10 @@ import {
     usePlayersQuery,
 } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import CreateNewPlayer from '@/components/screens/CreateNewPlayer';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-
-import { useNavigation } from './navigation/useNavigation';
 
 export default function Page() {
     const nav = useNavigation();

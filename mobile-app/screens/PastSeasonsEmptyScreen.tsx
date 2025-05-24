@@ -2,6 +2,7 @@ import { ScrollView, Text, View, ViewProps } from 'react-native';
 
 import Leaderboard from '@/components/Leaderboard';
 import { ThemedView } from '@/components/ThemedView';
+import { mockSeasons } from '@/screens/mockSeasons';
 import { theme } from '@/theme';
 
 export const PastSeasonsEmptyScreen: React.FC = () => {
@@ -17,6 +18,7 @@ export const PastSeasonsEmptyScreen: React.FC = () => {
                 }}
             >
                 <DecorativeSeasonCard
+                    {...mockSeasons[0]}
                     style={{
                         position: 'absolute',
                         transform: [{ rotateZ: '-20deg' }],
@@ -32,6 +34,7 @@ export const PastSeasonsEmptyScreen: React.FC = () => {
                     }}
                 />
                 <DecorativeSeasonCard
+                    {...mockSeasons[1]}
                     style={{
                         position: 'absolute',
                         transform: [{ rotateZ: '15deg' }],
@@ -47,6 +50,7 @@ export const PastSeasonsEmptyScreen: React.FC = () => {
                     }}
                 />
                 <DecorativeSeasonCard
+                    {...mockSeasons[2]}
                     style={{
                         position: 'absolute',
 
@@ -106,7 +110,13 @@ export const PastSeasonsEmptyScreen: React.FC = () => {
     );
 };
 
-const DecorativeSeasonCard: React.FC<ViewProps> = ({ style, ...props }) => {
+const DecorativeSeasonCard: React.FC<ViewProps & SeasonCardProps> = ({
+    style,
+    season,
+    players,
+    numMatches,
+    ...props
+}) => {
     return (
         <View
             style={[
@@ -130,55 +140,15 @@ const DecorativeSeasonCard: React.FC<ViewProps> = ({ style, ...props }) => {
             ]}
         >
             <SeasonCard
-                season={{
-                    name: 'Vacation Kroatia',
-                    startDate: '',
-                    endDate: '',
-                }}
-                players={[
-                    {
-                        id: '#0',
-                        name: 'Moritz',
-                        points: 120,
-                        matches: 10,
-                        matchesWon: 10,
-                    },
-                    {
-                        id: '#1',
-                        name: 'Timon',
-                        points: 120,
-                        matches: 10,
-                        matchesWon: 10,
-                    },
-                    {
-                        id: '#2',
-                        name: 'Bolls',
-                        points: 120,
-                        matches: 10,
-                        matchesWon: 10,
-                    },
-                    {
-                        id: '#3',
-                        name: 'Ole',
-                        points: 120,
-                        matches: 10,
-                        matchesWon: 10,
-                    },
-                    {
-                        id: '#4',
-                        name: 'Thies',
-                        points: 120,
-                        matches: 10,
-                        matchesWon: 10,
-                    },
-                ]}
-                numMatches={0}
+                season={season}
+                players={players}
+                numMatches={numMatches}
             />
         </View>
     );
 };
 
-export const SeasonCard: React.FC<{
+export interface SeasonCardProps {
     season: {
         name: string;
         startDate: string;
@@ -188,7 +158,12 @@ export const SeasonCard: React.FC<{
     };
     players: any[];
     numMatches: number;
-}> = ({ season, players, numMatches }) => {
+}
+export const SeasonCard: React.FC<SeasonCardProps> = ({
+    season,
+    players,
+    numMatches,
+}) => {
     return (
         <ThemedView
             style={{
