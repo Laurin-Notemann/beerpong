@@ -110,13 +110,7 @@ public class MatchService {
 
         teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
 
-        var dto = matchToMatchDto(match);
-
-        if (dto.getSeason().getGroupId().equals(group.getId())) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, group.getId(), dto));
-        }
-
-        return dto;
+        return matchToMatchDto(match);
     }
 
     public MatchDto updateMatch(Group group, Match match, MatchCreateDto matchCreateDto) {

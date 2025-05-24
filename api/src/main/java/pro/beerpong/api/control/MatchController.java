@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 
@@ -15,11 +18,13 @@ import java.util.List;
 public class MatchController {
     private final MatchService matchService;
     private final SeasonService seasonService;
+    private final SubscriptionHandler subscriptionHandler;
 
     @Autowired
-    public MatchController(MatchService matchService, SeasonService seasonService) {
+    public MatchController(MatchService matchService, SeasonService seasonService, SubscriptionHandler subscriptionHandler) {
         this.matchService = matchService;
         this.seasonService = seasonService;
+        this.subscriptionHandler = subscriptionHandler;
     }
 
     @PostMapping
@@ -40,6 +45,8 @@ public class MatchController {
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+                subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, groupId, match));
+
                 return ResponseEnvelope.ok(match);
             } else {
                 return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
