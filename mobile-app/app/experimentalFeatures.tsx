@@ -14,8 +14,6 @@ export default function Page() {
         toggleTutorials,
         beerpongProMode,
         toggleBeerpongProMode,
-        supportAdditionalGames,
-        toggleSupportAdditionalGames,
         premiumVersion,
         togglePremiumVersion,
         eloAlgorithm,
@@ -53,15 +51,6 @@ export default function Page() {
                             <Switch
                                 value={beerpongProMode}
                                 onChange={toggleBeerpongProMode}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Support Additional Games"
-                        tailContent={
-                            <Switch
-                                value={supportAdditionalGames}
-                                onChange={toggleSupportAdditionalGames}
                             />
                         }
                     />

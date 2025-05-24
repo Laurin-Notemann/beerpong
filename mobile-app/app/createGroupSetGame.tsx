@@ -26,6 +26,8 @@ export default function Page() {
             const data = await createGroupMutation.mutateAsync({
                 name,
                 profileNames: members.map((m) => m.name),
+                sportPreset: sport.preset,
+                customSportName: sport.custom?.name,
             });
             if (!data?.data?.id) {
                 throw new Error('invalid create group response');

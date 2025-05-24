@@ -6,7 +6,6 @@ interface LocalSettingsStore {
     liveMatches: boolean;
     beerpongProMode: boolean;
     rulesTab: boolean;
-    supportAdditionalGames: boolean;
     tutorials: boolean;
     eloAlgorithm: boolean;
     premiumVersion: boolean;
@@ -16,7 +15,6 @@ interface LocalSettingsStore {
         toggleLiveMatches: () => void;
         toggleBeerpongProMode: () => void;
         toggleRulesTab: () => void;
-        toggleSupportAdditionalGames: () => void;
         toggleTutorials: () => void;
         toggleEloAlgorithm: () => void;
         togglePremiumVersion: () => void;
@@ -30,7 +28,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             liveMatches: false,
             beerpongProMode: false,
             rulesTab: false,
-            supportAdditionalGames: false,
             tutorials: false,
             eloAlgorithm: false,
             premiumVersion: false,
@@ -50,11 +47,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 toggleRulesTab: () => {
                     set(() => ({
                         rulesTab: !get().rulesTab,
-                    }));
-                },
-                toggleSupportAdditionalGames: () => {
-                    set(() => ({
-                        supportAdditionalGames: !get().supportAdditionalGames,
                     }));
                 },
                 toggleTutorials: () => {
@@ -86,7 +78,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 liveMatches: state.liveMatches,
                 beerpongProMode: state.beerpongProMode,
                 rulesTab: state.rulesTab,
-                supportAdditionalGames: state.supportAdditionalGames,
                 tutorials: state.tutorials,
                 eloAlgorithm: state.eloAlgorithm,
                 premiumVersion: state.premiumVersion,
