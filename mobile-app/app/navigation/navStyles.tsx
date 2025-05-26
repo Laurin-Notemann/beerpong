@@ -15,7 +15,7 @@ export const navStyles = {
     tabBarActiveTintColor: theme.color.text.primary,
     tabBarInactiveTintColor: theme.tabBarInactiveTintColor,
     tabBarStyle: {
-        backgroundColor: theme.color.bottomNav,
+        backgroundColor: 'transparent',
 
         borderTopWidth: 0,
     },
