@@ -4,6 +4,7 @@ import { ScrollView } from 'react-native';
 
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -13,6 +14,8 @@ export default function Page() {
     const nav = useNavigation();
 
     const tutorials = useTutorials();
+
+    const insets = useInsets(true);
 
     return (
         <>
@@ -29,6 +32,7 @@ export default function Page() {
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
+                    paddingTop: insets.top,
                     paddingHorizontal: 16,
 
                     paddingBottom: 128,

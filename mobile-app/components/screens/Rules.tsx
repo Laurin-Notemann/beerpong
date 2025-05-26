@@ -202,7 +202,7 @@ export default function Rules({
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
-                    paddingTop: insets.top,
+                    paddingTop: insets.top + 16,
                     paddingBottom: insets.bottom,
                 }}
             >

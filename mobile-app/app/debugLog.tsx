@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useApi } from '@/api/utils/create-api';
 import { navStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import copyToClipboard from '@/components/copyToClipboard';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
@@ -35,6 +36,8 @@ export default function Page() {
 
     const { realtime } = useApi();
 
+    const insets = useInsets(true);
+
     useEffect(() => {
         // we need to keep this in state because `realtime` is a ref and will not cause a rerender if it changes,
         // so the indicator could be misleading
@@ -58,7 +61,8 @@ export default function Page() {
                 contentContainerStyle={{
                     paddingHorizontal: 16,
 
-                    paddingBottom: 128,
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom + 128,
                 }}
             >
                 <Heading

@@ -4,6 +4,7 @@ import { ScrollView } from 'react-native';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { navStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import { AllowedMoves } from '@/components/AllowedMoves';
 import InputModal from '@/components/InputModal';
 
@@ -13,6 +14,8 @@ export default function Page() {
     const movesQuery = useMoves(groupId, seasonId);
 
     const allowedMoves = movesQuery.data?.data ?? [];
+
+    const insets = useInsets();
 
     return (
         <>
@@ -26,7 +29,12 @@ export default function Page() {
                 }}
             />
             <InputModal>
-                <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+                <ScrollView
+                    contentContainerStyle={{
+                        paddingTop: insets.top,
+                        paddingBottom: 32,
+                    }}
+                >
                     <AllowedMoves
                         moves={allowedMoves.map((i) => ({
                             id: i.id!,

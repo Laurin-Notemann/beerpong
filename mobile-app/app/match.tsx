@@ -20,6 +20,7 @@ import {
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
@@ -69,6 +70,8 @@ export default function Page() {
     const deleteMatchMutation = useDeleteMatchMutation();
 
     const nav = useNavigation();
+
+    const insets = useInsets();
 
     const match = USE_MATCH_QUERY
         ? matchQuery.data?.data
@@ -308,7 +311,7 @@ export default function Page() {
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,
-                    paddingTop: 32,
+                    paddingTop: insets.top + 32,
                     paddingBottom: 32,
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
