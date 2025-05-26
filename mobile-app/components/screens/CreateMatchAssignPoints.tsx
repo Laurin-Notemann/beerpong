@@ -8,6 +8,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
 import MatchPlayers from '@/components/MatchPlayers';
 import { theme } from '@/theme';
@@ -33,6 +34,8 @@ export default function CreateMatchAssignPoints({
 }: CreateMatchAssignPointsProps) {
     const experiments = useLocalSettings();
 
+    const insets = useInsets(true, true);
+
     return (
         <View style={{ position: 'relative', flex: 1 }}>
             <ScrollView
@@ -43,8 +46,8 @@ export default function CreateMatchAssignPoints({
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,
-                    paddingTop: 32,
-                    paddingBottom: 84,
+                    paddingTop: insets.top + 32,
+                    paddingBottom: insets.bottom + 84,
                 }}
             >
                 <MatchPlayers
@@ -63,7 +66,7 @@ export default function CreateMatchAssignPoints({
                     right: 0,
 
                     marginHorizontal: 8,
-                    marginBottom: 16,
+                    marginBottom: insets.bottom + 16,
 
                     gap: 16,
                 }}

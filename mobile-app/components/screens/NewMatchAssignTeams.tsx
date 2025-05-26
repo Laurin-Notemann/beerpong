@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
@@ -134,6 +135,8 @@ export default function NewMatchAssignTeams({
     players,
     setTeam,
 }: NewMatchAssignTeamsProps) {
+    const insets = useInsets(true, true);
+
     const nav = useNavigation();
 
     const { hasTappedToAssignPlayers } = useTutorials();
@@ -148,9 +151,10 @@ export default function NewMatchAssignTeams({
                 backgroundColor: theme.color.bg,
             }}
             contentContainerStyle={{
+                paddingTop: insets.top,
                 paddingHorizontal: 16,
 
-                paddingBottom: 24,
+                paddingBottom: insets.bottom + 24,
             }}
         >
             <Heading />

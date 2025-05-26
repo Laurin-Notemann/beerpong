@@ -6,7 +6,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { AllowedMoves } from '@/components/AllowedMoves';
+import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -54,6 +54,8 @@ export default function GroupSettingsScreen({
 
     const movesQuery = useMoves(groupId, seasonId);
 
+    const insets = useInsets(true, true);
+
     const allowedMoves = movesQuery.data?.data ?? [];
 
     return (
@@ -65,7 +67,10 @@ export default function GroupSettingsScreen({
 
                     backgroundColor: theme.color.bg,
                 }}
-                contentContainerStyle={{ paddingBottom: 16 }}
+                contentContainerStyle={{
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom + 16,
+                }}
             >
                 <MenuSection title="Settings">
                     {experiments.premiumVersion && (

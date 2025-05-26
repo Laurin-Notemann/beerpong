@@ -11,6 +11,7 @@ import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import Leaderboard from '@/components/Leaderboard';
@@ -41,6 +42,8 @@ export default function Page() {
     );
 
     const experiments = useLocalSettings();
+
+    const insets = useInsets(true, true);
 
     return (
         <GestureHandlerRootView>
@@ -98,6 +101,9 @@ export default function Page() {
                 }}
                 contentContainerStyle={{
                     alignItems: 'center',
+
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom,
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
