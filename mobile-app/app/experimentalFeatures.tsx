@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, Switch } from 'react-native';
 
 import { navStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { theme } from '@/theme';
@@ -39,6 +40,7 @@ export default function Page() {
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
+                    paddingTop: useInsets(true).top,
                     paddingHorizontal: 16,
 
                     paddingBottom: 128,

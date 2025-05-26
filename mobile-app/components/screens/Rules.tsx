@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
@@ -49,6 +50,8 @@ export default function Rules({
     const modalItem = rules.find((i) => i.id === modalId);
 
     const nav = useNavigation();
+
+    const insets = useInsets(true, true);
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -198,6 +201,10 @@ export default function Rules({
                 style={{
                     backgroundColor: theme.color.bg,
                 }}
+                contentContainerStyle={{
+                    paddingTop: insets.top + 16,
+                    paddingBottom: insets.bottom,
+                }}
             >
                 <NestableDraggableFlatList
                     data={rules}
@@ -260,7 +267,7 @@ export default function Rules({
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        paddingBottom: 16,
+                        paddingBottom: insets.bottom + 16,
                         paddingHorizontal: 16,
                     }}
                 >

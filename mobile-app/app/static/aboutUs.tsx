@@ -3,9 +3,11 @@ import { ScrollView, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { navStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import { theme } from '@/theme';
 
 export default function Page() {
+    const insets = useInsets(true);
     return (
         <GestureHandlerRootView>
             <Stack.Screen
@@ -21,6 +23,7 @@ export default function Page() {
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
+                    paddingTop: insets.top,
                     paddingHorizontal: 16,
 
                     paddingBottom: 128,

@@ -10,6 +10,7 @@ import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { navStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -67,6 +68,8 @@ export default function PlayerScreen({
 
     const [editable, setEditable] = useState(false);
 
+    const insets = useInsets(true);
+
     // account for division by zero
     const averagePointsPerMatch =
         matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
@@ -96,6 +99,9 @@ export default function PlayerScreen({
             />
             {!editable && (
                 <MatchesList
+                    contentContainerStyle={{
+                        paddingTop: insets.top,
+                    }}
                     ListHeaderComponent={
                         <>
                             <PlayerPageHeadSection
@@ -147,6 +153,7 @@ export default function PlayerScreen({
                         backgroundColor: theme.color.bg,
                     }}
                     contentContainerStyle={{
+                        top: insets.top,
                         alignItems: 'center',
 
                         paddingBottom: 32,

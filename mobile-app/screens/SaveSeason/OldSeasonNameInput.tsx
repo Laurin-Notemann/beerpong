@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { useInsets } from '@/app/useInsets';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
@@ -26,6 +27,8 @@ export const OldSeasonNameInput: React.FC<{
     onChangeName,
     oldSeasonNameInputRef,
 }) => {
+    const insets = useInsets(true);
+
     return (
         <KeyboardAvoidingView
             style={{
@@ -33,7 +36,7 @@ export const OldSeasonNameInput: React.FC<{
                 justifyContent: 'flex-end',
 
                 paddingHorizontal: 16,
-                paddingTop: 20,
+                paddingTop: insets.top + 20,
             }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.select({

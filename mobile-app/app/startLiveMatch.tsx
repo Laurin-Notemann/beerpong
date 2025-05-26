@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import CupGrid from '@/components/CupGrid';
 import { flipFormation } from '@/components/CupGrid/Formation';
 import LiveMatchCupControls from '@/components/LiveMatchCupControls';
@@ -17,6 +18,8 @@ export default function Screen() {
     const flipCups = () => setIsFlipped((prev) => !prev);
 
     const nav = useNavigation();
+
+    const insets = useInsets(true, true);
 
     return (
         // <>
@@ -40,6 +43,9 @@ export default function Screen() {
 
                 alignItems: 'center',
                 flex: 1,
+
+                paddingTop: insets.top,
+                paddingBottom: insets.bottom,
             }}
         >
             <LiveMatchCupControls onFlip={flipCups} />
