@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -12,7 +12,7 @@ import {
     View,
 } from 'react-native';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const DarkBackdrop: React.FC<{
     opacity: Animated.Value;
@@ -53,9 +53,67 @@ export default function ConfirmationModal({
     actions,
     header = true,
 }: ConfirmationModalProps) {
+    const theme = useTheme();
     const [show, setShow] = useState(isVisible);
     const fade = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+    const styles = useMemo(
+        () =>
+            StyleSheet.create({
+                sheetContainer: {
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                },
+                sheet: {
+                    backgroundColor: theme.panel.light.active,
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    overflow: 'hidden',
+                },
+                header: {
+                    alignItems: 'center',
+                    paddingHorizontal: 16,
+                    paddingVertical: 18,
+                },
+                title: {
+                    fontSize: 15,
+                    lineHeight: 22,
+                    fontWeight: '500',
+                    color: theme.color.text.primary,
+                    textAlign: 'center',
+                },
+                description: {
+                    fontSize: 15,
+                    lineHeight: 22,
+                    fontWeight: '400',
+                    color: theme.color.text.primary,
+                    textAlign: 'center',
+                },
+                action: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 61,
+                    paddingHorizontal: 16,
+                    borderTopWidth: 0.5,
+                    borderColor: '#4A4A4A',
+                },
+                lastAction: {
+                    borderBottomWidth: 0.5,
+                },
+                actionText: {
+                    fontSize: 17,
+                    lineHeight: 22,
+                    fontWeight: '500',
+                    paddingHorizontal: 16,
+                    paddingVertical: 9,
+                },
+            }),
+        [theme]
+    );
 
     useEffect(() => {
         if (isVisible) {
@@ -147,56 +205,3 @@ export default function ConfirmationModal({
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    sheetContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-    },
-    sheet: {
-        backgroundColor: theme.panel.light.active,
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
-        overflow: 'hidden',
-    },
-    header: {
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 18,
-    },
-    title: {
-        fontSize: 15,
-        lineHeight: 22,
-        fontWeight: '500',
-        color: theme.color.text.primary,
-        textAlign: 'center',
-    },
-    description: {
-        fontSize: 15,
-        lineHeight: 22,
-        fontWeight: '400',
-        color: theme.color.text.primary,
-        textAlign: 'center',
-    },
-    action: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 61,
-        paddingHorizontal: 16,
-        borderTopWidth: 0.5,
-        borderColor: '#4A4A4A',
-    },
-    lastAction: {
-        borderBottomWidth: 0.5,
-    },
-    actionText: {
-        fontSize: 17,
-        lineHeight: 22,
-        fontWeight: '500',
-        paddingHorizontal: 16,
-        paddingVertical: 9,
-    },
-});

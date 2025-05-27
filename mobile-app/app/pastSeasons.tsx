@@ -4,15 +4,14 @@ import { Dimensions, SafeAreaView, ScrollView, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import { navStyles } from '@/app/navigation/navStyles';
-import { useNavigation } from '@/app/navigation/useNavigation';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import {
     PastSeasonsEmptyScreen,
     SeasonCard,
 } from '@/screens/PastSeasonsEmptyScreen';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,11 +19,13 @@ const { width, height } = Dimensions.get('window');
  * <Carousel /> intercepts touch events, so we can't wrap it inside a scrollview. instead, we have to put each item inside a scrollview.
  */
 export default function Page() {
-    const nav = useNavigation();
+    const theme = useTheme();
 
     const { groupId } = useGroup();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
+
+    const navStyles = useNavStyles();
 
     const seasons =
         seasonsQuery.data?.data

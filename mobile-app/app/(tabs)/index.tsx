@@ -10,6 +10,7 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -18,7 +19,7 @@ import Leaderboard from '@/components/Leaderboard';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -45,8 +46,11 @@ export default function Page() {
 
     const insets = useInsets(true, true);
 
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
+            <AppBackground />
             <ConfirmationModal
                 onClose={() => setShowSortModal(false)}
                 title="Sort Players By"
@@ -97,7 +101,6 @@ export default function Page() {
             <ScrollView
                 style={{
                     flex: 1,
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     alignItems: 'center',

@@ -3,7 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
 export interface LeaderboardPlayerItemProps {
@@ -33,6 +33,7 @@ export default function LeaderboardPlayerItem({
     unranked = false,
     onPlayerPress,
 }: LeaderboardPlayerItemProps) {
+    const theme = useTheme();
     // account for division by zero
     const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
 

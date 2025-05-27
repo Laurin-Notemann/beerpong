@@ -3,7 +3,7 @@ import {
     TextProps as ReactNativeTextProps,
 } from 'react-native';
 
-import { theme } from '@/theme';
+import { Theme, useTheme } from '@/theme';
 
 const fontSizeMap = {
     h1: 32, // Large header for primary titles
@@ -22,7 +22,7 @@ export interface TextProps extends ReactNativeTextProps {
     variant?: keyof typeof fontSizeMap;
     bold?: boolean;
 
-    color: keyof (typeof theme)['color']['text'];
+    color: keyof Theme['color']['text'];
 }
 export default function Text({
     children,
@@ -31,6 +31,8 @@ export default function Text({
     bold = false,
     ...rest
 }: TextProps) {
+    const theme = useTheme();
+
     return (
         <ReactNativeText
             {...rest}

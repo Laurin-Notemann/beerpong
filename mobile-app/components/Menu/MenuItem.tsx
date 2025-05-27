@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import ConfirmationModal from '@/components/ConfirmationModal';
 import useBoolean from '@/components/useBoolean';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface MenuItemProps {
     title: string;
@@ -46,6 +46,8 @@ export default function MenuItem({
     confirmationPrompt,
 }: MenuItemProps) {
     const [isPromptShown, showPrompt, hidePrompt] = useBoolean(false);
+
+    const theme = useTheme();
 
     return (
         <>

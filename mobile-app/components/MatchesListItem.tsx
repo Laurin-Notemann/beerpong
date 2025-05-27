@@ -5,12 +5,14 @@ import { TouchableHighlight } from 'react-native-gesture-handler';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import MatchVsHeader from '@/components/MatchVsHeader';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export const MatchesListItem: React.FC<{
     match: Match;
     onPress: () => void;
 }> = ({ match, onPress }) => {
+    const theme = useTheme();
+
     return (
         <TouchableHighlight
             underlayColor={theme.panel.light.active}

@@ -18,7 +18,7 @@ import {
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
@@ -28,7 +28,7 @@ import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
@@ -42,6 +42,8 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 const USE_MATCH_QUERY = false;
 
 export default function Page() {
+    const theme = useTheme();
+
     const [isEditing, setIsEditing] = useState(false);
 
     const { groupId, seasonId } = useGroup();
@@ -189,6 +191,7 @@ export default function Page() {
     const refresh = usePullToRefresh(() =>
         invalidateMatches(groupId!, seasonId!)
     );
+    const navStyles = useNavStyles();
 
     const updateMatchMutation = useUpdateMatchMutation();
 

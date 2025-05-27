@@ -11,7 +11,7 @@ import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import ModalDragHandle from '@/components/ModalDragHandle';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const showVsHeader = false;
 
@@ -40,6 +40,8 @@ export default function AssignPointsToPlayerModal({
     const players = match.blueTeam.concat(match.redTeam);
 
     const swiperRef = useRef<Swiper>(null);
+
+    const theme = useTheme();
 
     function PlayerPage({ player }: { player: TeamMember }) {
         return (

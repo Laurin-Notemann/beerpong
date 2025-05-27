@@ -6,7 +6,7 @@ import Carousel, {
     TCarouselProps,
 } from 'react-native-reanimated-carousel';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -34,6 +34,8 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
         const pages = Array.isArray(children) ? children : [children];
 
         const cleanPages = pages.filter((i) => !!i) as JSX.Element[];
+
+        const theme = useTheme();
 
         return (
             <Carousel

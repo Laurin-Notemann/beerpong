@@ -3,7 +3,7 @@ import { ScrollView } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import { AllowedMoves } from '@/components/AllowedMoves';
 import InputModal from '@/components/InputModal';
@@ -21,7 +21,7 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Allowed Moves',
                     headerStyle: {
                         backgroundColor: '#1B1B1B',

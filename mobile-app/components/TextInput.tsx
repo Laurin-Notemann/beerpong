@@ -7,7 +7,7 @@ import {
 
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface TextInputProps extends ReactNativeTextInputProps {
     required?: boolean;
@@ -25,6 +25,8 @@ const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
         }: TextInputProps,
         ref
     ) {
+        const theme = useTheme();
+
         const color = theme.color.text.primary;
 
         useEffect(() => {

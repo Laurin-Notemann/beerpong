@@ -17,24 +17,28 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 import { env } from '@/api/env';
 import Button from '@/components/Button';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 
-const seperatorDash = (
-    <Text
-        style={{
-            lineHeight: 38,
+const SeperatorDash = () => {
+    const theme = useTheme();
 
-            fontSize: 22,
+    return (
+        <Text
+            style={{
+                lineHeight: 38,
 
-            color: theme.color.text.tertiary,
-        }}
-    >
-        -
-    </Text>
-);
+                fontSize: 22,
+
+                color: theme.color.text.tertiary,
+            }}
+        >
+            -
+        </Text>
+    );
+};
 
 export interface JoinGroupProps {
     isLoading?: boolean;
@@ -91,6 +95,8 @@ export default function JoinGroup({
     useEffect(() => {
         handlePaste();
     }, []);
+
+    const theme = useTheme();
 
     return (
         <>
@@ -166,7 +172,7 @@ export default function JoinGroup({
                                 </Text>
                                 {env.groupCode.seperatorIndices.includes(
                                     index
-                                ) && seperatorDash}
+                                ) && <SeperatorDash />}
                             </Fragment>
                         )}
                     />

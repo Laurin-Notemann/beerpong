@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function Page() {
     const [value, setValue] = useState('');
+
+    const theme = useTheme();
 
     return (
         <>

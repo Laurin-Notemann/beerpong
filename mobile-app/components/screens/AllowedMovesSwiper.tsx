@@ -1,5 +1,5 @@
 import { Stack, useNavigation } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
     TextInput as ReactNativeTextInput,
     ScrollView,
@@ -14,7 +14,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import {
     NewSeasonMoveInput,
     useNewSeasonDraft,
@@ -30,6 +30,7 @@ export default function AllowedMovesSwiper({
     initialId,
 }: AllowedMovesSwiperProps) {
     const nav = useNavigation();
+    const theme = useTheme();
 
     const swiper = useSwiper({
         initialPage: allowedMoves.findIndex((i) => i.id === initialId),
@@ -136,6 +137,7 @@ const NumberInput: React.FC<{
             });
         }, 0);
     }
+    const theme = useTheme();
 
     return (
         <ReactNativeTextInput
@@ -184,6 +186,8 @@ const AllowedMovePage: React.FC<{
     onChangeIsFinish,
     onDelete,
 }) => {
+    const theme = useTheme();
+
     return (
         <ScrollView contentContainerStyle={{ paddingBottom: 32 }} key={move.id}>
             <InputModal>

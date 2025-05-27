@@ -1,7 +1,7 @@
 import { View, ViewProps } from 'react-native';
 
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface ErrorScreenProps extends ViewProps {
     message?: string | JSX.Element;
@@ -12,6 +12,8 @@ export default function ErrorScreen({
     message = error ? (error as Error).message || 'Unknown error' : undefined,
     ...rest
 }: ErrorScreenProps) {
+    const theme = useTheme();
+
     return (
         <View
             {...rest}

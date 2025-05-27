@@ -8,7 +8,7 @@ import {
 
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
@@ -17,7 +17,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const SHOW_PAST_SEASONS = false;
 
@@ -64,6 +64,8 @@ export default function PlayerScreen({
     onDeleteAvatarPress,
     refresh,
 }: PlayerScreenProps) {
+    const theme = useTheme();
+
     const nav = useNavigation();
 
     const [editable, setEditable] = useState(false);
@@ -82,7 +84,7 @@ export default function PlayerScreen({
         >
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
 
                     headerBackTitleVisible: false,
                     title: '',

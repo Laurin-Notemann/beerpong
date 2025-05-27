@@ -1,10 +1,93 @@
+import { useLocalSettings } from '@/zustand/localSettingsStore';
+
 const black = '#000';
 
-const lightModeTheme = {
+export interface Theme {
+    id: string;
+    blur: {
+        intensity: number;
+        tint: 'dark' | 'light';
+    };
+    barStyle: 'dark-content' | 'light-content';
+    refreshControl: {
+        tintColor: string;
+    };
+    keyboardAppearance: 'light' | 'dark';
+    carousel: {
+        peekGap: number;
+        peekSize: number;
+    };
+    avatar: {
+        bg: string;
+        text: string;
+        badge: {
+            bg: string;
+            text: string;
+        };
+    };
+    color: {
+        positive: string;
+        negative: string;
+        premium: string;
+        modal: {
+            bg: string;
+        };
+        text: {
+            primary: string;
+            secondary: string;
+            tertiary: string;
+            positive: string;
+            negative: string;
+            branding: string;
+            link: string;
+        };
+        bg: string;
+        topNav: string;
+        bottomNav: string;
+        team: {
+            red: string;
+            blue: string;
+        };
+        delete: string;
+        confirm: string;
+    };
+    borderRadius: {
+        card: number;
+    };
+    tabBarInactiveTintColor: string;
+    panel: {
+        light: {
+            bg: string;
+            border: string;
+            active: string;
+            dividers: string;
+        };
+        dark: {
+            bg: string;
+            active: string;
+            dividers: string;
+        };
+    };
+    icon: {
+        primary: string;
+        secondary: string;
+    };
+    bg: {
+        url?: any; // image or undefined
+    };
+}
+
+const lightModeTheme: Theme = {
+    id: 'light',
+    blur: {
+        intensity: 0,
+        tint: 'light',
+    },
+    barStyle: 'dark-content',
     refreshControl: {
         tintColor: '#666', // lighter tint
     },
-    keyboardAppearance: 'light' as const,
+    keyboardAppearance: 'light',
     carousel: {
         peekGap: 8,
         peekSize: 8,
@@ -69,13 +152,22 @@ const lightModeTheme = {
         primary: '#444444',
         secondary: '#999999',
     },
+    bg: {
+        url: undefined,
+    },
 };
 
-const darkModeTheme = {
+const darkModeTheme: Theme = {
+    id: 'dark',
+    blur: {
+        intensity: 0,
+        tint: 'dark',
+    },
+    barStyle: 'light-content',
     refreshControl: {
         tintColor: '#999',
     },
-    keyboardAppearance: 'dark' as const,
+    keyboardAppearance: 'dark',
     carousel: {
         /* the gap to the previous and next cards */
         peekGap: 8,
@@ -142,6 +234,97 @@ const darkModeTheme = {
         primary: '#D4D4D4',
         secondary: '#666',
     },
+    bg: {
+        url: undefined,
+    },
 };
 
-export const theme = darkModeTheme;
+const darkWithGloss: Theme = {
+    id: 'darkWithGloss',
+    blur: {
+        intensity: 50,
+        tint: 'dark',
+    },
+    barStyle: 'light-content',
+    refreshControl: {
+        tintColor: '#999',
+    },
+    keyboardAppearance: 'dark',
+    carousel: {
+        /* the gap to the previous and next cards */
+        peekGap: 8,
+        /* how much of the previous and next cards is visible */
+        peekSize: 8,
+    },
+    avatar: {
+        bg: '#D2D2DC',
+        text: '#bbb',
+
+        badge: {
+            bg: '#D4D4D4',
+            text: '#333',
+        },
+    },
+    color: {
+        positive: '#1BC097',
+        negative: '#EE4A58',
+        premium: '#9647FD',
+
+        modal: {
+            bg: '#222',
+        },
+        text: {
+            primary: '#f6f6f6',
+            secondary: '#B3B3B3',
+            tertiary: '#8F8F92',
+
+            positive: '#1BC097',
+            negative: '#EE4A58',
+
+            branding: '#2C6BED',
+
+            link: '#6291F3',
+        },
+        bg: black,
+        topNav: black,
+        bottomNav: '#31302F',
+        team: {
+            red: '#EE4A58',
+            blue: '#18A0FB',
+        },
+        delete: '#F44336',
+        confirm: '#6291F3',
+    },
+    borderRadius: {
+        card: 10,
+    },
+    tabBarInactiveTintColor: '#828181',
+    panel: {
+        light: {
+            bg: '#2e2e2e',
+            border: '#444',
+            active: '#3B3B3B',
+            dividers: '#3B3B3B',
+        },
+        dark: {
+            bg: '#1B1B1B',
+            active: '#2F2F2F',
+            dividers: '#2F2F2F',
+        },
+    },
+    icon: {
+        primary: '#D4D4D4',
+        secondary: '#666',
+    },
+    bg: {
+        url: require('./assets/images/background.png'),
+    },
+};
+
+export const themes = [lightModeTheme, darkModeTheme, darkWithGloss];
+
+export function useTheme(): Theme {
+    const settings = useLocalSettings();
+
+    return themes.find((i) => i.id === settings.themeId)!;
+}

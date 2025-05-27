@@ -3,25 +3,27 @@ import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
 import { Formation } from '@/components/CupGrid/Formation';
 import { HeaderItem } from '@/components/HeaderItem';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function EditFormation() {
     const [cups, setCups] = useState(Formation.Pyramid_10);
 
     const nav = useNavigation();
 
+    const theme = useTheme();
+
     return (
         <>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Edit Formation',
                     headerRight: () => <HeaderItem>Done</HeaderItem>,
                 }}

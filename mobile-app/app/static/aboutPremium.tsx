@@ -1,13 +1,15 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import { PremiumPerksCarousel } from '@/components/PremiumPerksCarousel';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function Page() {
     const insets = useInsets(true);
+
+    const theme = useTheme();
 
     return (
         <View
@@ -20,7 +22,7 @@ export default function Page() {
         >
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'About Premium',
                 }}
             />

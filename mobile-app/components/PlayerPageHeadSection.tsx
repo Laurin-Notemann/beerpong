@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import PlayerStats from '@/components/PlayerStats';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export function PlayerPageHeadSection({
     avatarUrl,
@@ -34,6 +34,8 @@ export function PlayerPageHeadSection({
     editable: boolean;
     averagePointsPerMatch: string;
 }) {
+    const theme = useTheme();
+
     return (
         <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
             <Avatar

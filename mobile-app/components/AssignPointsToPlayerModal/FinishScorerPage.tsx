@@ -6,7 +6,7 @@ import Avatar from '@/components/Avatar';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
 import { useScrollLockIfNotOverflowing } from '@/components/useScrollLockIfNotOverflowing';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function FinishScorerPage({
     finisher,
@@ -17,6 +17,8 @@ export default function FinishScorerPage({
     players: TeamMember[];
     onSetFinisher: (player: TeamMember) => void;
 }) {
+    const theme = useTheme();
+
     return (
         <View style={{ flex: 1, width: '100%' }}>
             <View

@@ -11,7 +11,7 @@ import MenuSection from '@/components/Menu/MenuSection';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useEditRulesStore } from '@/zustand/editRulesStore';
 
 export interface EditRuleProps {
@@ -42,6 +42,8 @@ export default function RulesSwiper({
     useEffect(() => {
         editRulesStore.actions.initialize(rules);
     }, [rules]);
+
+    const theme = useTheme();
 
     return (
         <>

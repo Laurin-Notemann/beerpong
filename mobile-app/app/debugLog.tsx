@@ -6,12 +6,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useApi } from '@/api/utils/create-api';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import copyToClipboard from '@/components/copyToClipboard';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 
@@ -44,11 +44,13 @@ export default function Page() {
         setIsRealtimeOpen(realtime.isOpen);
     }, [realtime.isOpen]);
 
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Debug Logs',
                 }}
             />

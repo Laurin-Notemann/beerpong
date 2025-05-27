@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -40,6 +40,8 @@ export const CreateGroupSetGame: React.FC<{
     const nav = useNavigation();
 
     const { sport, setSport } = useCreateGroupStore();
+
+    const theme = useTheme();
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: theme.color.bg }}>
@@ -123,6 +125,7 @@ function Item({
     const size = Math.floor(
         (SCREEN_WIDTH - paddingHorizontal * 2 - (gap * numCols - 1)) / numCols
     );
+    const theme = useTheme();
 
     return (
         <TouchableHighlight

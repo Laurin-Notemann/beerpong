@@ -6,7 +6,6 @@ import { Cup } from '@/components/CupGrid/Cup';
 import { Formation, FormationType } from '@/components/CupGrid/Formation';
 import Point from '@/components/CupGrid/Point';
 import { useCupGrid } from '@/components/CupGrid/useCupGrid';
-import { theme } from '@/theme';
 
 export interface CupFormationProps {
     /**
@@ -61,7 +60,7 @@ export interface CupFormationProps {
 }
 
 const CupGrid = ({
-    color = theme.color.team.red,
+    color = '#EE4A58', // our red color
     width,
 
     canEdit = false,

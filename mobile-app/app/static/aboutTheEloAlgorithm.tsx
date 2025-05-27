@@ -2,21 +2,23 @@ import { Stack } from 'expo-router';
 import { ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import Leaderboard from '@/components/Leaderboard';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function Page() {
     const insets = useInsets(true);
+
+    const theme = useTheme();
 
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'About the Elo Algorithm',
                 }}
             />

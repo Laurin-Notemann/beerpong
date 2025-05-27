@@ -5,7 +5,7 @@ import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
 const Description: React.FC<{
@@ -13,6 +13,8 @@ const Description: React.FC<{
     player?: { name: string; points: number; matches: number };
     average: string;
 }> = ({ detailed, player, average }) => {
+    const theme = useTheme();
+
     return (
         <>
             <ThemedText
@@ -91,6 +93,8 @@ export default function Podium({
     const thirdPlaceAveragePointsPerMatch = thirdPlace?.matches
         ? (thirdPlace?.points / thirdPlace?.matches).toFixed(1)
         : '--';
+
+    const theme = useTheme();
 
     return (
         <ThemedView

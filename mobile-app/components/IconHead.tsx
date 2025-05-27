@@ -1,7 +1,7 @@
 import { Text, View, ViewProps } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface IconHeadProps extends ViewProps {
     iconName: string;
@@ -14,6 +14,8 @@ export default function IconHead({
     description,
     ...rest
 }: IconHeadProps) {
+    const theme = useTheme();
+
     return (
         <View
             {...rest}
