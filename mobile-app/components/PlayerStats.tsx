@@ -3,7 +3,7 @@ import { Text } from 'react-native';
 
 import { env } from '@/api/env';
 import { HighestChip, LowestChip } from '@/components/Chip';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export function Stat({
     value,
@@ -16,6 +16,8 @@ export function Stat({
     isHighest?: boolean;
     isLowest?: boolean;
 }) {
+    const theme = useTheme();
+
     return (
         <View style={{ alignItems: 'center' }}>
             {isHighest && <HighestChip />}

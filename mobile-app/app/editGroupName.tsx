@@ -6,7 +6,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
@@ -33,6 +33,7 @@ export default function Page() {
             showErrorToast('Failed to update group.');
         }
     }
+    const theme = useTheme();
 
     return (
         <>

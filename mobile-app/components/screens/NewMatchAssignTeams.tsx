@@ -11,7 +11,7 @@ import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
@@ -34,6 +34,8 @@ function PlayerItem({
     const isBlueTeam = player.team === 'blue';
 
     const { setHasTappedToAssignPlayers } = useTutorials();
+
+    const theme = useTheme();
 
     return (
         <TouchableHighlight

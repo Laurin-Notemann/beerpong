@@ -19,7 +19,7 @@ import Leaderboard from '@/components/Leaderboard';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -45,6 +45,8 @@ export default function Page() {
     const experiments = useLocalSettings();
 
     const insets = useInsets(true, true);
+
+    const theme = useTheme();
 
     return (
         <GestureHandlerRootView>

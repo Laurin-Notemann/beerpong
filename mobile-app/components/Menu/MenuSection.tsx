@@ -2,13 +2,14 @@ import { BlurView } from 'expo-blur';
 import React, { PropsWithChildren } from 'react';
 import { Text, View } from 'react-native';
 
-import { theme, useTheme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export function Heading({
     title,
     titleHeadIcon,
     titleTailIcon,
 }: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'>) {
+    const theme = useTheme();
     return (
         <View
             style={{
@@ -87,7 +88,7 @@ export default function MenuSection({
                     borderRadius: theme.borderRadius.card,
 
                     backgroundColor:
-                        background === false || theme.blur?.intensity != null
+                        background === false || !!theme.blur?.intensity
                             ? undefined
                             : theme.panel[color].bg,
 

@@ -3,7 +3,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface StepperProps {
     value: number;
@@ -15,6 +15,8 @@ export interface StepperProps {
 export default function Stepper({ value, onChange, min, max }: StepperProps) {
     const minDisabled = min != null && value <= min;
     const maxDisabled = max != null && value >= max;
+
+    const theme = useTheme();
 
     return (
         <View style={styles.container}>

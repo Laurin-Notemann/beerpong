@@ -9,6 +9,7 @@ import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet'
 import { MatchesListItem } from '@/components/MatchesListItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { useTheme } from '@/theme';
 
 export interface MatchesListProps
     extends Omit<
@@ -40,6 +41,7 @@ export default function MatchesList({
     ...rest
 }: MatchesListProps) {
     const nav = useNavigation();
+    const theme = useTheme();
 
     const days = groupMatchesByDay(matches);
 

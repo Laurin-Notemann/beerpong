@@ -14,7 +14,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
@@ -155,6 +155,8 @@ export function Sidebar({}: SidebarProps) {
     );
 
     const matchDraft = useMatchDraftStore((store) => store.actions);
+
+    const theme = useTheme();
 
     return (
         <SafeAreaView

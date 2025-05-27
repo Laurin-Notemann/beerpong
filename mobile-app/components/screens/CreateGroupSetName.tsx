@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/components/HeaderItem';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface CreateGroupSetNameProps {
     isPending: boolean;
@@ -17,6 +17,8 @@ export default function CreateGroupSetName({
     onSubmit,
 }: CreateGroupSetNameProps) {
     const [name, setName] = useState('');
+
+    const theme = useTheme();
 
     return (
         <GestureHandlerRootView>

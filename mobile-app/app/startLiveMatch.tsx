@@ -7,10 +7,12 @@ import { useInsets } from '@/app/useInsets';
 import CupGrid from '@/components/CupGrid';
 import { flipFormation } from '@/components/CupGrid/Formation';
 import LiveMatchCupControls from '@/components/LiveMatchCupControls';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Screen() {
+    const theme = useTheme();
+
     const matchDraft = useMatchDraftStore();
 
     const [isFlipped, setIsFlipped] = useState(false);

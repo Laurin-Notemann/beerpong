@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import Animated from 'react-native-reanimated';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { HeaderItem, HeaderTitle } from '@/components/HeaderItem';
 import { SwipeButtons } from '@/components/SwipeButtons';
 
@@ -35,7 +35,7 @@ export const SaveSeasonStack: React.FC<{
     return (
         <Stack.Screen
             options={{
-                ...navStyles,
+                ...useNavStyles(),
                 headerLeft: () =>
                     oldSeasonIsEmpty ? (
                         <HeaderItem onPress={onClear}>Cancel</HeaderItem>

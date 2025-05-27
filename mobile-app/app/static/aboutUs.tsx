@@ -2,17 +2,19 @@ import { Stack } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function Page() {
     const insets = useInsets(true);
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'About Us',
                 }}
             />

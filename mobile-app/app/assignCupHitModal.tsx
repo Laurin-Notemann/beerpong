@@ -12,7 +12,7 @@ import CupGrid from '@/components/CupGrid';
 import { flipFormation } from '@/components/CupGrid/Formation';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
@@ -109,6 +109,7 @@ export default function Page() {
 
         nav.goBack();
     }
+    const theme = useTheme();
 
     return (
         <View

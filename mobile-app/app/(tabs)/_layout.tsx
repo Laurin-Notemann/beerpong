@@ -7,9 +7,10 @@ import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
+import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -28,6 +29,10 @@ export default function TabLayout() {
     const selectedGroup = useGroupQuery(selectedGroupId);
 
     const experiments = useLocalSettings();
+
+    const navStyles = useNavStyles();
+
+    const theme = useTheme();
 
     const headerTitleIfGroupIsLoading = '';
     const headerTitleIfGroupCantBeFound = '';
@@ -60,8 +65,8 @@ export default function TabLayout() {
                         }}
                     >
                         <BlurView
-                            intensity={50}
-                            tint="dark"
+                            intensity={theme.blur?.intensity || 50}
+                            tint={theme.blur?.tint}
                             style={StyleSheet.absoluteFill}
                         />
                         <BottomTabBar {...props} />

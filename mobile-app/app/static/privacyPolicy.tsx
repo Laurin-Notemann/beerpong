@@ -2,10 +2,10 @@ import { Stack } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import { Heading } from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 function P({ children }: any) {
     return <Text style={{ color: 'white' }}>{children}</Text>;
@@ -13,11 +13,13 @@ function P({ children }: any) {
 
 export default function Page() {
     const insets = useInsets(true);
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Privacy Policy',
                 }}
             />

@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface CreateNewRuleProps {
     onCreate: (rule: { title: string; description: string }) => void;
@@ -26,6 +26,7 @@ export default function CreateNewRule({
     const existingValue = existingRules?.find(
         (i) => i.title.toLowerCase() === title.toLowerCase()
     );
+    const theme = useTheme();
 
     return (
         <>

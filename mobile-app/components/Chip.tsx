@@ -1,6 +1,6 @@
 import { Text } from 'react-native';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface ChipProps {
     title: string;
@@ -28,6 +28,8 @@ export default function Chip({ title, backgroundColor, color }: ChipProps) {
 }
 
 export function HighestChip() {
+    const theme = useTheme();
+
     return (
         <Chip
             title="HIGHEST"
@@ -37,6 +39,8 @@ export function HighestChip() {
     );
 }
 export function LowestChip() {
+    const theme = useTheme();
+
     return (
         <Chip
             title="LOWEST"
@@ -46,6 +50,8 @@ export function LowestChip() {
     );
 }
 export function PremiumChip() {
+    const theme = useTheme();
+
     return (
         <Chip
             title="HIGHEST"

@@ -11,7 +11,7 @@ import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
 import MatchPlayers from '@/components/MatchPlayers';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export interface CreateMatchAssignPointsProps {
@@ -35,6 +35,8 @@ export default function CreateMatchAssignPoints({
     const experiments = useLocalSettings();
 
     const insets = useInsets(true, true);
+
+    const theme = useTheme();
 
     return (
         <View style={{ position: 'relative', flex: 1 }}>

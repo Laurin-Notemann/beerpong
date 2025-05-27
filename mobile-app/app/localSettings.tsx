@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -27,7 +27,7 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Settings',
                 }}
             />

@@ -4,10 +4,12 @@ import { useInsets } from '@/app/useInsets';
 import Leaderboard from '@/components/Leaderboard';
 import { ThemedView } from '@/components/ThemedView';
 import { mockSeasons } from '@/screens/mockSeasons';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export const PastSeasonsEmptyScreen: React.FC = () => {
     const insets = useInsets(true);
+    const theme = useTheme();
+
     return (
         <ScrollView
             style={{ flex: 1, backgroundColor: theme.color.bg }}
@@ -124,6 +126,8 @@ const DecorativeSeasonCard: React.FC<ViewProps & SeasonCardProps> = ({
     numMatches,
     ...props
 }) => {
+    const theme = useTheme();
+
     return (
         <View
             style={[

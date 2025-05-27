@@ -4,7 +4,7 @@ const black = '#000';
 
 export interface Theme {
     id: string;
-    blur?: {
+    blur: {
         intensity: number;
         tint: 'dark' | 'light';
     };
@@ -79,7 +79,10 @@ export interface Theme {
 
 const lightModeTheme: Theme = {
     id: 'light',
-    blur: undefined,
+    blur: {
+        intensity: 0,
+        tint: 'light',
+    },
     barStyle: 'dark-content',
     refreshControl: {
         tintColor: '#666', // lighter tint
@@ -156,7 +159,10 @@ const lightModeTheme: Theme = {
 
 const darkModeTheme: Theme = {
     id: 'dark',
-    blur: undefined,
+    blur: {
+        intensity: 0,
+        tint: 'dark',
+    },
     barStyle: 'light-content',
     refreshControl: {
         tintColor: '#999',
@@ -314,8 +320,6 @@ const darkWithGloss: Theme = {
         url: require('./assets/images/background.png'),
     },
 };
-
-export const theme = darkModeTheme;
 
 export const themes = [lightModeTheme, darkModeTheme, darkWithGloss];
 

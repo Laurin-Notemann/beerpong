@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 function ScoreChip({
     winnerTeamId,
@@ -14,6 +14,7 @@ function ScoreChip({
     winnerTeamId: 'red' | 'blue' | null;
     children: React.ReactNode;
 }) {
+    const theme = useTheme();
     return (
         <View
             style={{
@@ -168,6 +169,8 @@ function Team({
 
     isCopy?: boolean;
 }) {
+    const theme = useTheme();
+
     const emptyAvatarsUsedForSpacing = Array(
         Math.max(maxItems - players.length, 0)
     ).fill(null);

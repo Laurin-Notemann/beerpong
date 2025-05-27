@@ -3,7 +3,7 @@ import React from 'react';
 import { Dimensions, Text, TouchableHighlight, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import CupGrid from '@/components/CupGrid';
 import { HeaderItem } from '@/components/HeaderItem';
@@ -60,7 +60,7 @@ export default function Formations() {
         <>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Formations',
                     headerRight: () => <HeaderItem>Edit</HeaderItem>,
                 }}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAnimatedSideActionStyle } from '@/components/Rules/useAnimatedSideActionStyle';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface RuleProps {
     title: string;
@@ -82,6 +82,29 @@ export const Rule: React.FC<RuleProps> = ({
     };
 
     const selectIconStyle = useAnimatedSideActionStyle(editMode);
+
+    const theme = useTheme();
+
+    const styles = useMemo(
+        () =>
+            StyleSheet.create({
+                rowItem: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+
+                    height: 50,
+
+                    paddingLeft: 12,
+                },
+                text: {
+                    color: theme.color.text.primary,
+                    fontSize: 16,
+
+                    flex: 1,
+                },
+            }),
+        [theme]
+    );
 
     return (
         <>
@@ -203,20 +226,3 @@ export const Rule: React.FC<RuleProps> = ({
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    rowItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-
-        height: 50,
-
-        paddingLeft: 12,
-    },
-    text: {
-        color: theme.color.text.primary,
-        fontSize: 16,
-
-        flex: 1,
-    },
-});

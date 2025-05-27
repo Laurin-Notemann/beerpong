@@ -21,7 +21,7 @@ import IconHead from '@/components/IconHead';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 
 export type RuleRenderItem = {
@@ -44,6 +44,7 @@ export default function Rules({
     onResetRules,
     onUpdateRule,
 }: RulesProps) {
+    const theme = useTheme();
     const [isEditing, setIsEditing] = useState(false);
 
     const [modalId, setModalId] = useState<string | null>(null);

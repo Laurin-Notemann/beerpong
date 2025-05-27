@@ -3,7 +3,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import Carousel from 'react-native-reanimated-carousel';
 
 import Button from '@/components/Button';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +41,8 @@ const perks: PremiumPerk[] = [
 ];
 
 const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
+    const theme = useTheme();
+
     return (
         <View
             style={{
@@ -101,6 +103,8 @@ export const PremiumPerksCarousel = ({
     onGetPremiumPress: () => void;
     onSecondaryActionPress: () => void;
 }) => {
+    const theme = useTheme();
+
     return (
         <View
             style={{

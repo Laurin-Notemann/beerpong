@@ -111,7 +111,9 @@ export default function Avatar({
 
                     borderRadius: 99,
 
-                    backgroundColor: theme.blur ? undefined : theme.avatar.bg,
+                    backgroundColor: !!theme.blur?.intensity
+                        ? undefined
+                        : theme.avatar.bg,
 
                     borderWidth: borderColor ? 2 : undefined,
                     borderColor,
