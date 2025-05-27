@@ -10,6 +10,7 @@ interface LocalSettingsStore {
     eloAlgorithm: boolean;
     premiumVersion: boolean;
     matchPhotos: boolean;
+    themeId: string;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -19,6 +20,7 @@ interface LocalSettingsStore {
         toggleEloAlgorithm: () => void;
         togglePremiumVersion: () => void;
         toggleMatchPhotos: () => void;
+        setTheme: (themeId: string) => void;
     };
 }
 
@@ -32,6 +34,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             eloAlgorithm: false,
             premiumVersion: false,
             matchPhotos: false,
+            themeId: 'dark',
 
             actions: {
                 toggleLiveMatches: () => {
@@ -69,6 +72,11 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         matchPhotos: !get().matchPhotos,
                     }));
                 },
+                setTheme: (themeId: string) => {
+                    set(() => ({
+                        themeId,
+                    }));
+                },
             },
         }),
         {
@@ -82,6 +90,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 eloAlgorithm: state.eloAlgorithm,
                 premiumVersion: state.premiumVersion,
                 matchPhotos: state.matchPhotos,
+                themeId: state.themeId,
             }),
         }
     )

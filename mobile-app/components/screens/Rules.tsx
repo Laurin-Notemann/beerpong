@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
@@ -106,6 +107,7 @@ export default function Rules({
 
     return (
         <GestureHandlerRootView>
+            <AppBackground />
             <Stack.Screen
                 options={{
                     headerRight: () => (
@@ -198,9 +200,6 @@ export default function Rules({
 
             <NestableScrollContainer
                 refreshControl={<RefreshControl {...refresh} />}
-                style={{
-                    backgroundColor: theme.color.bg,
-                }}
                 contentContainerStyle={{
                     paddingTop: insets.top + 16,
                     paddingBottom: insets.bottom,

@@ -18,6 +18,7 @@ import {
     matchDtoToMatch,
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Cups from '@/app/startLiveMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
@@ -26,7 +27,6 @@ import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -206,6 +206,7 @@ export default function NewMatchScreen() {
 
     return (
         <GestureHandlerRootView>
+            <AppBackground />
             <NewMatchStack
                 animationProgress={animationProgress}
                 match={matchObj}
@@ -232,9 +233,6 @@ export default function NewMatchScreen() {
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
                 key={groupId + ':' + seasonId}
                 ref={carouselRef}
-                style={{
-                    backgroundColor: theme.color.bg,
-                }}
                 onProgressChange={(relativeOffset) => {
                     scrollX.value = relativeOffset * width;
                 }}

@@ -147,8 +147,6 @@ export default function NewMatchAssignTeams({
         <ScrollView
             style={{
                 flex: 1,
-
-                backgroundColor: theme.color.bg,
             }}
             contentContainerStyle={{
                 paddingTop: insets.top,

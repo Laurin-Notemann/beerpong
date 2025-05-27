@@ -5,13 +5,13 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -60,12 +60,11 @@ export default function GroupSettingsScreen({
 
     return (
         <RootSiblingParent>
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
                     paddingHorizontal: 16,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingTop: insets.top,

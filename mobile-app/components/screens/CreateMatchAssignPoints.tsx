@@ -41,8 +41,6 @@ export default function CreateMatchAssignPoints({
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,

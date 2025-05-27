@@ -1,15 +1,17 @@
+import { BlurView } from 'expo-blur';
 import { PropsWithChildren } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ThemedText } from '@/components/ThemedText';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
 function Badge({
     children,
     circular = true,
 }: PropsWithChildren & { circular?: boolean }) {
+    const theme = useTheme();
     return (
         <View
             style={{
@@ -72,11 +74,15 @@ export default function Avatar({
 
     onPress,
 }: AvatarProps) {
+    const theme = useTheme();
     return (
         <Pressable
             style={{
                 width: size,
                 height: size,
+
+                borderRadius: 99,
+                overflow: 'hidden',
 
                 ...style,
             }}
@@ -84,6 +90,17 @@ export default function Avatar({
             // so an avatar without an onPress doesn't intercept clicks
             disabled={onPress == null}
         >
+            <BlurView
+                intensity={theme.blur?.intensity ?? 0}
+                tint={theme.blur?.tint}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: size,
+                    height: size,
+                }}
+            />
             <View
                 style={{
                     alignItems: 'center',
@@ -94,7 +111,7 @@ export default function Avatar({
 
                     borderRadius: 99,
 
-                    backgroundColor: theme.avatar.bg,
+                    backgroundColor: theme.blur ? undefined : theme.avatar.bg,
 
                     borderWidth: borderColor ? 2 : undefined,
                     borderColor,
