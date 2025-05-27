@@ -1,6 +1,7 @@
 const black = '#000';
 
 const lightModeTheme = {
+    barStyle: 'dark-content' as const,
     refreshControl: {
         tintColor: '#666', // lighter tint
     },
@@ -72,6 +73,7 @@ const lightModeTheme = {
 };
 
 const darkModeTheme = {
+    barStyle: 'light-content' as const,
     refreshControl: {
         tintColor: '#999',
     },

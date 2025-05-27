@@ -10,6 +10,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { StatusBar } from 'react-native';
 import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
@@ -22,6 +23,7 @@ import { modalStyles } from '@/app/navigation/modalStyles';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { theme } from '@/theme';
 import { LoggingProvider } from '@/utils/useLogging';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
@@ -94,6 +96,7 @@ export default function RootLayout() {
                     <ThemeProvider value={appTheme}>
                         <PortalProvider>
                             <RootSiblingParent>
+                                <StatusBar barStyle={theme.barStyle} />
                                 <Drawer.Navigator
                                     screenOptions={{
                                         drawerStyle: {
