@@ -12,7 +12,6 @@ export type RootStackParamList = {
     pastSeasons: undefined;
     editPlayerName: { id: string };
     editGroupName: { id: string };
-    newMatchPoints: undefined;
     createNewPlayer: undefined;
     onboarding: undefined;
     editRankPlayersBy: undefined;

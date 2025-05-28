@@ -31,6 +31,7 @@ export interface Theme {
         premium: string;
         modal: {
             bg: string;
+            buttonUnderlay: string;
         };
         text: {
             primary: string;
@@ -108,6 +109,7 @@ const lightModeTheme: Theme = {
 
         modal: {
             bg: '#FFFFFF', // white modal
+            buttonUnderlay: '#EAEAEA',
         },
         text: {
             primary: '#1A1A1A', // dark primary
@@ -190,6 +192,7 @@ const darkModeTheme: Theme = {
 
         modal: {
             bg: '#222',
+            buttonUnderlay: '#4A4A4A',
         },
         text: {
             primary: '#f6f6f6',
@@ -272,6 +275,7 @@ const darkWithGloss: Theme = {
 
         modal: {
             bg: '#222',
+            buttonUnderlay: '#4A4A4A',
         },
         text: {
             primary: '#f6f6f6',

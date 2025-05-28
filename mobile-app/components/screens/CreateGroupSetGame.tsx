@@ -60,10 +60,10 @@ export const CreateGroupSetGame: React.FC<{
                     headerTitle: 'Create Group',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#000',
+                        backgroundColor: theme.color.topNav,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,
@@ -139,7 +139,7 @@ function Item({
 
                     borderRadius: 16, // ios app icon would be size / 4.5 and gap would be size / 2
 
-                    backgroundColor: '#2E2E2E',
+                    backgroundColor: theme.panel.light.bg,
 
                     overflow: 'hidden',
                 },
@@ -148,7 +148,7 @@ function Item({
                     borderWidth: 2,
                 },
             ]}
-            underlayColor="#3B3B3B"
+            underlayColor={theme.panel.light.dividers}
             onPress={onPress}
         >
             <>
@@ -192,6 +192,8 @@ function Item({
                         fontWeight: 'bold',
 
                         textAlign: 'center',
+
+                        color: imageUrl ? '#fff' : theme.color.text.primary,
                     }}
                 >
                     {title}

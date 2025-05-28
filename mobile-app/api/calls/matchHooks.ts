@@ -1,4 +1,6 @@
+import * as Sentry from '@sentry/react-native';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
@@ -71,8 +73,21 @@ export const useCreateMatchMutation = () => {
         Paths.CreateMatch.RequestBody & { groupId: ApiId; seasonId: ApiId }
     >({
         mutationFn: async (body) => {
-            const res = await (await api).createMatch(body, body);
-            return res?.data;
+            try {
+                const res = await (await api).createMatch(body, body);
+                return res?.data;
+            } catch (err) {
+                Sentry.captureEvent({
+                    message: 'Failed to create match',
+                    level: 'error',
+                    extra: {
+                        body,
+                        response: (err as AxiosError).response?.data,
+                        status: (err as AxiosError).response?.status,
+                    },
+                });
+                throw err;
+            }
         },
     });
 };

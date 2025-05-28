@@ -53,10 +53,10 @@ export default function Page() {
                     headerTitle: 'Group Name',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#1B1B1B',
+                        backgroundColor: theme.panel.dark.bg,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,

@@ -105,10 +105,10 @@ export default function JoinGroup({
                     headerTitle: 'Join Group',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#000',
+                        backgroundColor: theme.color.topNav,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,

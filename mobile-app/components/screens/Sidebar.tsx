@@ -168,113 +168,110 @@ export function Sidebar({}: SidebarProps) {
                 gap: 20,
             }}
         >
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
+            <MenuSection>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
 
-                    height: 50,
-                    paddingHorizontal: 16,
-
-                    backgroundColor: theme.panel.dark.bg,
-                    borderRadius: 10,
-                }}
-            >
-                <>
-                    <TouchableOpacity
-                        onPress={() => setIsEditMode(!isEditMode)}
-                        style={{ marginRight: 'auto' }}
-                    >
-                        <Text
-                            color="primary"
-                            style={{
-                                fontWeight: 500,
-                            }}
+                        height: 50,
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    <>
+                        <TouchableOpacity
+                            onPress={() => setIsEditMode(!isEditMode)}
+                            style={{ marginRight: 'auto' }}
                         >
-                            {isEditMode ? 'Done' : 'Edit'}
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setShowAddGroupModal(true)}
-                        style={{ marginLeft: 'auto' }}
-                    >
-                        <Icon
-                            name="plus"
-                            size={24}
-                            color={theme.color.text.primary}
-                        />
-                    </TouchableOpacity>
-                </>
-            </View>
+                            <Text
+                                color="primary"
+                                style={{
+                                    fontWeight: 500,
+                                }}
+                            >
+                                {isEditMode ? 'Done' : 'Edit'}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setShowAddGroupModal(true)}
+                            style={{ marginLeft: 'auto' }}
+                        >
+                            <Icon
+                                name="plus"
+                                size={24}
+                                color={theme.color.text.primary}
+                            />
+                        </TouchableOpacity>
+                    </>
+                </View>
+            </MenuSection>
 
-            <ScrollView
+            <MenuSection
                 style={{
-                    backgroundColor: theme.panel.dark.bg,
-
-                    borderRadius: 10,
-
                     flex: 1,
                 }}
             >
-                {groupIds.map((id) => (
-                    <SidebarGroupItem
-                        key={id}
-                        id={id}
-                        isActive={id === selectedGroupId}
-                        onPress={() => {
-                            selectGroup(id);
-                            matchDraft.clear();
+                <ScrollView>
+                    {groupIds.map((id) => (
+                        <SidebarGroupItem
+                            key={id}
+                            id={id}
+                            isActive={id === selectedGroupId}
+                            onPress={() => {
+                                selectGroup(id);
+                                matchDraft.clear();
 
-                            while (nav.canGoBack()) {
-                                nav.goBack();
-                            }
+                                while (nav.canGoBack()) {
+                                    nav.goBack();
+                                }
 
-                            // eslint-disable-next-line
-                            console.log(Object.keys(nav));
-                            // nav.closeDrawer();
-                        }}
-                        showDeleteButton={isEditMode}
-                        onDelete={setGroupIdToBeDeleted}
-                    />
-                ))}
-                {groupIds.length < 1 && (
-                    <Text
-                        color="secondary"
-                        style={{
-                            textAlign: 'center',
-                            // paddingTop: 64,
-                            // lineHeight: 26,
-
-                            flex: 1,
-
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
-                        No groups to display. {'\n'}
-                        <Link
-                            to="/joinGroup"
+                                // eslint-disable-next-line
+                                console.log(Object.keys(nav));
+                                // nav.closeDrawer();
+                            }}
+                            showDeleteButton={isEditMode}
+                            onDelete={setGroupIdToBeDeleted}
+                        />
+                    ))}
+                    {groupIds.length < 1 && (
+                        <Text
+                            color="secondary"
                             style={{
-                                color: theme.color.text.primary,
-                                fontWeight: 500,
+                                textAlign: 'center',
+                                // paddingTop: 64,
+                                // lineHeight: 26,
+
+                                flex: 1,
+
+                                display: 'flex',
+                                alignItems: 'center',
                             }}
                         >
-                            Join
-                        </Link>{' '}
-                        or{' '}
-                        <Link
-                            to="/createGroup"
-                            style={{
-                                color: theme.color.text.primary,
-                                fontWeight: 500,
-                            }}
-                        >
-                            Create
-                        </Link>{' '}
-                        one.
-                    </Text>
-                )}
-            </ScrollView>
+                            No groups to display. {'\n'}
+                            <Link
+                                to="/joinGroup"
+                                style={{
+                                    color: theme.color.text.primary,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Join
+                            </Link>{' '}
+                            or{' '}
+                            <Link
+                                to="/createGroup"
+                                style={{
+                                    color: theme.color.text.primary,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Create
+                            </Link>{' '}
+                            one.
+                        </Text>
+                    )}
+                </ScrollView>
+            </MenuSection>
             <View
                 style={{
                     height: 200, // this is not really pixel perfect lol, this needs to have an explicit height in order for the layout to autosize correctly

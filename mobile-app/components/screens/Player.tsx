@@ -103,6 +103,7 @@ export default function PlayerScreen({
                 <MatchesList
                     contentContainerStyle={{
                         paddingTop: insets.top,
+                        paddingBottom: insets.bottom,
                     }}
                     ListHeaderComponent={
                         <>

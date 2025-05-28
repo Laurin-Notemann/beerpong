@@ -114,7 +114,7 @@ export default function Page() {
     return (
         <View
             style={{
-                backgroundColor: '#1B1B1B',
+                backgroundColor: theme.panel.dark.bg,
 
                 flex: 1,
 

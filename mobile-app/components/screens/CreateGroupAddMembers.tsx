@@ -83,10 +83,10 @@ export default function CreateGroupAddMembers({
                     headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#000',
+                        backgroundColor: theme.color.topNav,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,

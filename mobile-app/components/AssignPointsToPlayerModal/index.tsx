@@ -11,6 +11,7 @@ import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScore
 import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
+import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
@@ -80,6 +81,7 @@ export default function AssignPointsToPlayerModal({
         // timeout of 0 is necessary because the next page isn't even rendered yet
         setTimeout(() => swiperRef.current?.scrollBy(1), 0);
     }
+    const theme = useTheme();
 
     return (
         <>
@@ -130,7 +132,7 @@ export default function AssignPointsToPlayerModal({
             <PortalProvider>
                 <View
                     style={{
-                        backgroundColor: '#1B1B1B',
+                        backgroundColor: theme.panel.dark.bg,
 
                         flex: 1,
                     }}
