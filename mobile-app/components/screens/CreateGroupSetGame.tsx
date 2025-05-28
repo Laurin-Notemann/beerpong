@@ -23,7 +23,7 @@ export interface GameOption {
     id: string;
     title: string;
 
-    icon: string; // currently unused, but we might want to use icons for disciplines e.g. in the group list in the sidebar?
+    icon?: string; // currently unused, but we might want to use icons for disciplines e.g. in the group list in the sidebar?
     imageUrl: string;
 }
 

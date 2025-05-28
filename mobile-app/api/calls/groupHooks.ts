@@ -6,6 +6,18 @@ import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
 
+export const useGroupPresetsQuery = () => {
+    const { api } = useApi();
+
+    return useQuery<Paths.GetPresets.Responses.$200 | null>({
+        queryKey: [],
+        queryFn: async () => {
+            const res = await (await api).getPresets();
+            return res?.data;
+        },
+    });
+};
+
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
 
