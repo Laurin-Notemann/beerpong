@@ -81,82 +81,86 @@ export default function Avatar({
                 width: size,
                 height: size,
 
-                borderRadius: 99,
-                overflow: 'hidden',
-
                 ...style,
             }}
             onPress={onPress}
             // so an avatar without an onPress doesn't intercept clicks
             disabled={onPress == null}
         >
-            <BlurView
-                intensity={theme.blur?.intensity ?? 0}
-                tint={theme.blur?.tint}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: size,
-                    height: size,
-                }}
-            />
             <View
                 style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-
-                    width: size,
-                    height: size,
-
                     borderRadius: 99,
-
-                    backgroundColor: !!theme.blur?.intensity
-                        ? undefined
-                        : theme.avatar.bg,
-
-                    borderWidth: borderColor ? 2 : undefined,
-                    borderColor,
+                    overflow: 'hidden',
                 }}
             >
-                {url && !content && (
-                    <Image
-                        source={{ uri: url }}
-                        style={{
-                            position: 'absolute',
-                            zIndex: 1,
-
-                            width: size,
-                            height: size,
-                            borderRadius: 99,
-
-                            borderWidth: borderColor ? 2 : undefined,
-                            borderColor,
-                        }}
-                        resizeMode="cover"
-                    />
-                )}
-
-                <ThemedText
+                <BlurView
+                    intensity={theme.blur?.intensity ?? 0}
+                    tint={theme.blur?.tint}
                     style={{
-                        lineHeight: size,
-                        fontSize: size / 2.7,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: size,
+                        height: size,
+                    }}
+                />
+                <View
+                    style={{
+                        alignItems: 'center',
+                        justifyContent: 'center',
 
-                        fontWeight: 500,
+                        width: size,
+                        height: size,
 
-                        color: theme.avatar.text,
+                        borderRadius: 99,
 
-                        bottom: borderColor ? 2 : 0,
+                        backgroundColor: !!theme.blur?.intensity
+                            ? undefined
+                            : theme.avatar.bg,
+
+                        borderWidth: borderColor ? 2 : undefined,
+                        borderColor,
                     }}
                 >
-                    {content || name?.[0] || (
-                        <Icon
-                            color={theme.avatar.text}
-                            size={size / 1.6}
-                            name="account-outline"
+                    {url && !content && (
+                        <Image
+                            source={{ uri: url }}
+                            style={{
+                                position: 'absolute',
+                                zIndex: 1,
+
+                                width: size,
+                                height: size,
+                                borderRadius: 99,
+
+                                borderWidth: borderColor ? 2 : undefined,
+                                borderColor,
+                            }}
+                            resizeMode="cover"
                         />
                     )}
-                </ThemedText>
+
+                    <ThemedText
+                        style={{
+                            lineHeight: size,
+                            fontSize: size / 2.7,
+
+                            fontWeight: 500,
+
+                            color: theme.avatar.text,
+
+                            bottom: borderColor ? 2 : 0,
+                        }}
+                    >
+                        {content || name?.[0] || (
+                            <Icon
+                                color={theme.avatar.text}
+                                size={size / 1.6}
+                                name="account-outline"
+                            />
+                        )}
+                    </ThemedText>
+                </View>
             </View>
             {canUpload && (
                 <Badge>
