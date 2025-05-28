@@ -52,6 +52,8 @@ export interface MenuSectionProps extends PropsWithChildren {
     footer?: string | JSX.Element;
 
     color?: 'light' | 'dark'; // | "transparent";
+
+    noFlex?: boolean;
 }
 export default function MenuSection({
     title,
@@ -67,11 +69,13 @@ export default function MenuSection({
     footer,
 
     color = 'light',
+
+    noFlex = false,
 }: MenuSectionProps) {
     const theme = useTheme();
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: noFlex ? undefined : 1 }}>
             {title && (
                 <Heading
                     title={title}

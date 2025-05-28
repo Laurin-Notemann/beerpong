@@ -115,3 +115,18 @@ export const useGroup = () => {
         group: { ...(groupQueryData ?? {}) },
     };
 };
+
+export const useSetSeasonSettingsMutations = () => {
+    const { api } = useApi();
+    return useMutation<
+        Paths.UpdateSeasonById.Responses.$200 | null,
+        Error,
+        Paths.UpdateSeasonById.RequestBody &
+            Paths.UpdateSeasonById.PathParameters
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).updateSeasonById(body);
+            return res?.data;
+        },
+    });
+};

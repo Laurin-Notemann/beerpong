@@ -84,6 +84,7 @@ export default function Rules({
                 description={item.description}
                 onDragToReorder={drag}
                 onSelect={() => {
+                    triggerHapticBump('selection');
                     if (selectedIds.includes(item.id)) {
                         setSelectedIds((prev) =>
                             prev.filter((i) => i !== item.id)
@@ -211,6 +212,7 @@ export default function Rules({
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id}
                     onDragEnd={({ data }) => {
+                        triggerHapticBump('selection');
                         onReorderRules(data);
                     }}
                     ListEmptyComponent={

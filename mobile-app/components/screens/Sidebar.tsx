@@ -168,7 +168,7 @@ export function Sidebar({}: SidebarProps) {
                 gap: 20,
             }}
         >
-            <MenuSection>
+            <MenuSection color="dark" noFlex>
                 <View
                     style={{
                         flexDirection: 'row',
@@ -207,6 +207,7 @@ export function Sidebar({}: SidebarProps) {
             </MenuSection>
 
             <MenuSection
+                color="dark"
                 style={{
                     flex: 1,
                 }}

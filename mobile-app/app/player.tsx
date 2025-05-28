@@ -216,7 +216,18 @@ export default function Page() {
             placement={placement}
             name={playerName}
             elo={216}
-            matchesWon={player?.statistics?.matches ?? 0}
+            matchesWon={
+                matches.filter(
+                    (i) =>
+                        i.redTeam
+                            .concat(i.blueTeam)
+                            .find((j) =>
+                                j.moves.some((k) => k.isFinish && k.count > 0)
+                            )?.team ===
+                        i.redTeam.concat(i.blueTeam).find((j) => j.id === id)
+                            ?.team
+                ).length
+            }
             points={player?.statistics?.points ?? 0}
             cups={allTimeCups}
             hasPremium={false}

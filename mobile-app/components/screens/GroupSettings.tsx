@@ -86,7 +86,7 @@ export default function GroupSettingsScreen({
                         tailIconType="next"
                         onPress={() => nav.navigate('editGroupName', { id })}
                     />
-                    {env.isDev && (
+                    {experiments.showWallpaper && (
                         <MenuItem
                             title="Set Wallpaper"
                             headIcon="image-multiple"
@@ -138,7 +138,7 @@ export default function GroupSettingsScreen({
                 <MenuSection title="Management">
                     <MenuItem
                         title="Past Seasons"
-                        headIcon="pencil-outline"
+                        headIcon="cards"
                         tailIconType="next"
                         tailContent={pastSeasons}
                         onPress={() => nav.navigate('pastSeasons')}
@@ -264,6 +264,35 @@ export default function GroupSettingsScreen({
                         onPress={() => nav.navigate('debugLog')}
                     />
                 </MenuSection>
+                {env.isDev && (
+                    <MenuSection title="Advanced">
+                        <MenuItem
+                            title="Min Matches to Qualify"
+                            headIcon="account-lock"
+                            tailContent="1"
+                            tailIconType="next"
+                        />
+                        <MenuItem
+                            title="Team Size"
+                            headIcon="account-group-outline"
+                            tailContent="1 - 4 People"
+                            tailIconType="next"
+                        />
+                        <MenuItem
+                            title="Daily Leaderboard Reset Shows"
+                            headIcon="dev-to"
+                            tailContent="Last 24 Hours" // Or "Time Since Start of Day"
+                            tailIconType="next"
+                        />
+                        <MenuItem
+                            title="Start of Day"
+                            subtitle="Time of day when the leaderboard resets"
+                            headIcon="alarm"
+                            tailContent="08:00"
+                            tailIconType="next"
+                        />
+                    </MenuSection>
+                )}
             </ScrollView>
         </RootSiblingParent>
     );
