@@ -24,26 +24,31 @@ function Change({
 }) {
     const theme = useTheme();
     return (
-        <>
+        <View
+            style={[
+                {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                },
+                style,
+            ]}
+        >
             <Icon
                 color={value >= 0 ? theme.color.positive : theme.color.negative}
                 size={8}
                 name="triangle"
-                style={[
-                    {
-                        marginRight: 2,
-                        marginTop: 1,
-                        transform:
-                            value >= 0
-                                ? // we can't simply have undefined when it's facing upwards,
-                                  // because this breaks with an really arcane
-                                  // "TypeError: Cannot read property 'forEach' of null",
-                                  // which is caused by not being able to animate to undefined
-                                  [{ rotateX: '0deg' }]
-                                : [{ rotateX: '180deg' }],
-                    },
-                    style,
-                ]}
+                style={{
+                    marginRight: 2,
+                    marginTop: 1,
+                    transform:
+                        value >= 0
+                            ? // we can't simply have undefined when it's facing upwards,
+                              // because this breaks with an really arcane
+                              // "TypeError: Cannot read property 'forEach' of null",
+                              // which is caused by not being able to animate to undefined
+                              [{ rotateX: '0deg' }]
+                            : [{ rotateX: '180deg' }],
+                }}
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
                 {/* rounded to two decimal places with trailing zeros removed */}
@@ -52,7 +57,7 @@ function Change({
                     .replace(/\.00$/, '.0')
                     .replace(/([1-9])0+$/, '$1')}
             </Text>
-        </>
+        </View>
     );
 }
 
@@ -141,7 +146,17 @@ export default function Player({
                         >
                             {editable ? (
                                 <Text variant="body2" color="tertiary">
-                                    {points} points
+                                    {points} points{'  '}
+                                    <Change
+                                        value={change}
+                                        style={{
+                                            transform: [
+                                                {
+                                                    translateY: 3,
+                                                },
+                                            ],
+                                        }}
+                                    />
                                 </Text>
                             ) : (
                                 <Text
@@ -159,14 +174,19 @@ export default function Player({
                                     {performedMoves
                                         .map((i) => i.count + ' ' + i.title)
                                         .join(', ')}
+                                    {'  '}
+                                    <Change
+                                        value={change}
+                                        style={{
+                                            transform: [
+                                                {
+                                                    translateY: 3,
+                                                },
+                                            ],
+                                        }}
+                                    />
                                 </Text>
                             )}
-                            <Change
-                                value={change}
-                                style={{
-                                    marginLeft: 8,
-                                }}
-                            />
                         </View>
                     </View>
                     {editable ? (
