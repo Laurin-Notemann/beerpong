@@ -38,10 +38,10 @@ export default function CreateGroupSetName({
                         headerTitle: 'Set Group Name',
                         headerBackTitleVisible: false,
                         headerBackVisible: true,
-                        headerTintColor: '#fff',
+                        headerTintColor: theme.color.text.primary,
 
                         headerStyle: {
-                            backgroundColor: '#000',
+                            backgroundColor: theme.color.topNav,
                         },
                         headerTitleStyle: {
                             color: theme.color.text.primary,
@@ -50,7 +50,7 @@ export default function CreateGroupSetName({
                 />
                 <View
                     style={{
-                        backgroundColor: 'black',
+                        backgroundColor: theme.color.bg,
                         flex: 1,
 
                         padding: 16,

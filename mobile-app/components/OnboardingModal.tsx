@@ -3,11 +3,14 @@ import { Image, View } from 'react-native';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import Text from '@/components/Text';
+import { useTheme } from '@/theme';
 
 export interface OnboardingModalProps {}
 // eslint-disable-next-line no-empty-pattern
 export default function OnboardingModal({}: OnboardingModalProps) {
     const navigation = useNavigation();
+
+    const theme = useTheme();
 
     return (
         <View
@@ -19,7 +22,7 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                 paddingHorizontal: 16,
                 paddingTop: 128,
 
-                backgroundColor: '#1B1B1B',
+                backgroundColor: theme.panel.dark.bg,
             }}
         >
             <Text

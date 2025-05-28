@@ -11,6 +11,7 @@ interface LocalSettingsStore {
     premiumVersion: boolean;
     matchPhotos: boolean;
     themeId: string;
+    showWallpaper: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -21,6 +22,7 @@ interface LocalSettingsStore {
         togglePremiumVersion: () => void;
         toggleMatchPhotos: () => void;
         setTheme: (themeId: string) => void;
+        toggleShowWallpaper: () => void;
     };
 }
 
@@ -35,6 +37,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             premiumVersion: false,
             matchPhotos: false,
             themeId: 'dark',
+            showWallpaper: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -77,6 +80,11 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         themeId,
                     }));
                 },
+                toggleShowWallpaper: () => {
+                    set(() => ({
+                        showWallpaper: !get().showWallpaper,
+                    }));
+                },
             },
         }),
         {
@@ -91,6 +99,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 premiumVersion: state.premiumVersion,
                 matchPhotos: state.matchPhotos,
                 themeId: state.themeId,
+                showWallpaper: state.showWallpaper,
             }),
         }
     )

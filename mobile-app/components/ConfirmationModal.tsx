@@ -99,7 +99,7 @@ export default function ConfirmationModal({
                     height: 61,
                     paddingHorizontal: 16,
                     borderTopWidth: 0.5,
-                    borderColor: '#4A4A4A',
+                    borderColor: theme.color.modal.buttonUnderlay,
                 },
                 lastAction: {
                     borderBottomWidth: 0.5,
@@ -180,7 +180,7 @@ export default function ConfirmationModal({
                                 styles.action,
                                 i === actions.length - 1 && styles.lastAction,
                             ]}
-                            underlayColor="#4A4A4A"
+                            underlayColor={theme.color.modal.buttonUnderlay}
                             onPress={action.onPress}
                         >
                             <Text

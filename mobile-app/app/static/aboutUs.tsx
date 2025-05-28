@@ -31,7 +31,7 @@ export default function Page() {
                     paddingBottom: 128,
                 }}
             >
-                <Text style={{ color: 'white' }}>
+                <Text style={{ color: theme.color.text.primary }}>
                     Did you expect this app to be the product of a soulless
                     corporation? Far from it! We are a group of eight german
                     university students. While on vacation, we got the idea of

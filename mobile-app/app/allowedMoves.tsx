@@ -7,6 +7,7 @@ import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import { AllowedMoves } from '@/components/AllowedMoves';
 import InputModal from '@/components/InputModal';
+import { useTheme } from '@/theme';
 
 export default function Page() {
     const { groupId, seasonId } = useGroup();
@@ -17,6 +18,8 @@ export default function Page() {
 
     const insets = useInsets();
 
+    const theme = useTheme();
+
     return (
         <>
             <Stack.Screen
@@ -24,7 +27,7 @@ export default function Page() {
                     ...useNavStyles(),
                     headerTitle: 'Allowed Moves',
                     headerStyle: {
-                        backgroundColor: '#1B1B1B',
+                        backgroundColor: theme.panel.dark.bg,
                     },
                 }}
             />

@@ -8,7 +8,8 @@ import { Heading } from '@/components/Menu/MenuSection';
 import { useTheme } from '@/theme';
 
 function P({ children }: any) {
-    return <Text style={{ color: 'white' }}>{children}</Text>;
+    const theme = useTheme();
+    return <Text style={{ color: theme.color.text.primary }}>{children}</Text>;
 }
 
 export default function Page() {

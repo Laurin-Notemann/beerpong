@@ -25,7 +25,7 @@ export function useNavStyles() {
 
             borderTopWidth: 0,
         },
-        headerTintColor: 'white',
+        headerTintColor: theme.color.text.primary,
 
         headerBackground: () => (
             <BlurView

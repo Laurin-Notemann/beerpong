@@ -17,7 +17,6 @@ export const MatchesListItem: React.FC<{
         <TouchableHighlight
             underlayColor={theme.panel.light.active}
             style={{
-                backgroundColor: theme.panel.light.bg,
                 gap: 4,
                 paddingHorizontal: 16,
                 paddingVertical: 7,

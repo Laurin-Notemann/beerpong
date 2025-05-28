@@ -23,6 +23,8 @@ export default function Page() {
         toggleRulesTab,
         matchPhotos,
         toggleMatchPhotos,
+        showWallpaper,
+        toggleShowWallpaper,
     } = useLocalSettings();
 
     const theme = useTheme();
@@ -100,6 +102,15 @@ export default function Page() {
                             <Switch
                                 value={matchPhotos}
                                 onChange={toggleMatchPhotos}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Group Wallpaper"
+                        tailContent={
+                            <Switch
+                                value={showWallpaper}
+                                onChange={toggleShowWallpaper}
                             />
                         }
                     />

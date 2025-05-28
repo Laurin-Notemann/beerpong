@@ -6,7 +6,7 @@ export function useModalStyles(): any {
         presentation: 'modal',
 
         headerStyle: {
-            backgroundColor: '#1B1B1B',
+            backgroundColor: theme.panel.dark.bg,
 
             elevation: 0, // For Android
             shadowOpacity: 0, // For iOS
@@ -23,6 +23,6 @@ export function useModalStyles(): any {
 
             borderTopWidth: 0,
         },
-        headerTintColor: 'white',
+        headerTintColor: theme.color.text.primary,
     };
 }
