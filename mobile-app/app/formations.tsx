@@ -5,8 +5,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import CupGrid from '@/components/CupGrid';
 import { HeaderItem } from '@/components/HeaderItem';
+import { useTheme } from '@/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -16,6 +18,8 @@ function Item({}: ItemProps) {
     const size = Math.floor((SCREEN_WIDTH - 32 - 16) / 3);
 
     const nav = useNavigation();
+
+    const theme = useTheme();
 
     return (
         <TouchableHighlight
@@ -30,13 +34,9 @@ function Item({}: ItemProps) {
 
                 borderRadius: 10,
 
-                backgroundColor: '#2E2E2E',
-
-                borderWidth: 1,
-
-                borderColor: '#444444',
+                backgroundColor: theme.panel.light.bg,
             }}
-            underlayColor="#3B3B3B"
+            underlayColor={theme.panel.dark.active}
             onPress={() => nav.navigate('editFormation')}
         >
             <>
@@ -45,7 +45,7 @@ function Item({}: ItemProps) {
                 <Text
                     style={{
                         fontSize: 16,
-                        color: '#fff',
+                        color: theme.color.text.primary,
                     }}
                 >
                     10x Pyramid
@@ -56,6 +56,10 @@ function Item({}: ItemProps) {
 }
 
 export default function Formations() {
+    const insets = useInsets(true);
+
+    const theme = useTheme();
+
     return (
         <>
             <Stack.Screen
@@ -68,7 +72,9 @@ export default function Formations() {
             <GestureHandlerRootView
                 style={{
                     flex: 1,
-                    backgroundColor: '#000',
+                    backgroundColor: theme.color.bg,
+
+                    paddingTop: insets.top + 16,
                 }}
             >
                 <View
