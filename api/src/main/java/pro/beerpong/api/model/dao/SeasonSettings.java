@@ -19,6 +19,6 @@ public class SeasonSettings {
     private int minTeamSize = 1;
     private int maxTeamSize = 10;
     private RankingAlgorithm rankingAlgorithm = RankingAlgorithm.AVERAGE;
-    private DailyLeaderboard dailyLeaderboard = DailyLeaderboard.RESET_AT_MIDNIGHT;
-    private int wakeTimeHour = 7;
+    private DailyLeaderboard dailyLeaderboard = DailyLeaderboard.WAKE_TIME;
+    private int wakeTimeHour = 0;
 }
