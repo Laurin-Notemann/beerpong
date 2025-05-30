@@ -29,10 +29,21 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                 variant="h3"
                 color="primary"
                 bold
-                style={{ textAlign: 'center', marginBottom: 96 }}
+                style={{
+                    textAlign: 'center',
+                    marginBottom: 96,
+                    fontSize: 16 * 2,
+                }}
             >
                 Welcome to{' '}
-                <Text variant="h3" color="branding" bold>
+                <Text
+                    variant="h3"
+                    color="branding"
+                    bold
+                    style={{
+                        fontSize: 16 * 2,
+                    }}
+                >
                     Versus
                 </Text>
                 , the leaderboard app!
@@ -53,7 +64,8 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                         height: 100 * 2.1741293532,
                         resizeMode: 'contain',
 
-                        transform: [{ rotateY: '45deg' }],
+                        // transform: [{ rotateY: '45deg' }],
+                        transform: [{ scale: 0.9 }],
                     }}
                 />
                 <Image
@@ -71,7 +83,8 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                         height: 100 * 2.1741293532,
                         resizeMode: 'contain',
 
-                        transform: [{ rotateY: '-45deg' }],
+                        // transform: [{ rotateY: '-45deg' }],
+                        transform: [{ scale: 0.9 }],
                     }}
                 />
             </View>

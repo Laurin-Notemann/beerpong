@@ -1,50 +1,46 @@
 import { AxiosError } from 'axios';
-import React, { useEffect } from 'react';
+import React from 'react';
 
-import { useFindGroupByInviteCode } from '@/api/calls/groupHooks';
+import { useJoinGroupMutation } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import ErrorScreen from '@/components/ErrorScreen';
 import JoinGroup from '@/components/screens/JoinGroup';
 import { showSuccessToast } from '@/toast';
+import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
-    const [inviteCode, setInviteCode] = React.useState<string | null>(null);
-
     const nav = useNavigation();
 
-    const { data, isLoading, error } = useFindGroupByInviteCode(inviteCode);
+    const joinGroupMutation = useJoinGroupMutation();
 
     const { addGroup, selectGroup } = useGroupStore();
 
-    useEffect(() => {
-        if (data?.data?.id) {
-            addGroup(data.data.id);
-            selectGroup(data.data.id);
+    async function onSubmit(code: string) {
+        try {
+            const data = await joinGroupMutation.mutateAsync(code);
 
-            nav.navigate('index');
+            if (data?.data?.id) {
+                addGroup(data.data.id);
+                selectGroup(data.data.id);
 
-            showSuccessToast(`You joined "${data.data.name}"`);
+                nav.navigate('index');
+
+                showSuccessToast(`You joined "${data.data.name}"`);
+            }
+        } catch (err) {
+            ConsoleLogger.error('Error joining group:', err);
         }
-    }, [data, addGroup, nav]);
-
-    const isNotFound = (error as AxiosError | undefined)?.status === 404;
-
-    if (error && !isNotFound) {
-        return (
-            <ErrorScreen
-                message={(error as Error).message || 'Unknown error'}
-            />
-        );
     }
+
+    const isNotFound =
+        (joinGroupMutation.error as AxiosError | undefined)?.status === 404;
 
     return (
         <JoinGroup
             isNotFound={isNotFound}
-            isLoading={isLoading}
-            onSubmit={(code) => {
-                setInviteCode(code);
-            }}
+            isLoading={joinGroupMutation.isPending}
+            onSubmit={onSubmit}
+            joinGroupError={joinGroupMutation.error}
         />
     );
 }

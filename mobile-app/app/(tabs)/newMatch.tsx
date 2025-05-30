@@ -47,7 +47,12 @@ export default function NewMatchScreen() {
 
     const nav = useNavigation();
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
+
+    const minTeamSize =
+        group.data?.activeSeason?.seasonSettings?.minTeamSize ?? 1;
+    const maxTeamSize =
+        group.data?.activeSeason?.seasonSettings?.maxTeamSize ?? 10;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -66,8 +71,10 @@ export default function NewMatchScreen() {
         }));
 
     const hasValidTeams =
-        matchDraft.redTeam.teamMembers.length &&
-        matchDraft.blueTeam.teamMembers.length;
+        matchDraft.redTeam.teamMembers.length >= minTeamSize &&
+        matchDraft.blueTeam.teamMembers.length >= minTeamSize &&
+        matchDraft.redTeam.teamMembers.length <= maxTeamSize &&
+        matchDraft.blueTeam.teamMembers.length <= maxTeamSize;
 
     const movesQuery = useMoves(groupId, seasonId);
 
@@ -253,6 +260,8 @@ export default function NewMatchScreen() {
                     if (item.index === 0) {
                         return (
                             <NewMatchAssignTeams
+                                minTeamSize={minTeamSize}
+                                maxTeamSize={maxTeamSize}
                                 players={profiles}
                                 setTeam={matchDraft.actions.setPlayerTeam}
                             />

@@ -145,9 +145,9 @@ const lightModeTheme: Theme = {
             dividers: '#E0E0E0',
         },
         dark: {
-            bg: '#F0F0F0', // slightly darker for “dark” panels in light mode
-            active: '#EAEAEA',
-            dividers: '#EAEAEA',
+            bg: '#FFFFFF',
+            active: '#F5F5F5',
+            dividers: '#E0E0E0',
         },
     },
     icon: {

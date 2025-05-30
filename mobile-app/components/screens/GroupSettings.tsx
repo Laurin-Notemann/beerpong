@@ -11,9 +11,21 @@ import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
+import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';
 import MenuSection from '@/components/Menu/MenuSection';
+import { SeasonSettings } from '@/openapi/openapi';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+
+const formatTeamSize = (seasonSettings?: SeasonSettings) => {
+    if (seasonSettings?.minTeamSize === seasonSettings?.maxTeamSize) {
+        if (seasonSettings?.minTeamSize === 1) {
+            return 'Exactly One Person';
+        }
+        return `Exactly ${seasonSettings?.minTeamSize} People`;
+    }
+    return `${seasonSettings?.minTeamSize} - ${seasonSettings?.maxTeamSize} People`;
+};
 
 export interface GroupSettingsProps {
     id: string;
@@ -50,7 +62,7 @@ export default function GroupSettingsScreen({
 
     const experiments = useLocalSettings();
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
 
     const movesQuery = useMoves(groupId, seasonId);
 
@@ -135,7 +147,7 @@ export default function GroupSettingsScreen({
                         />
                     )}
                 </MenuSection>
-                <MenuSection title="Management">
+                <MenuSection title="Gameplay">
                     <MenuItem
                         title="Past Seasons"
                         headIcon="cards"
@@ -183,6 +195,58 @@ export default function GroupSettingsScreen({
                             tailIconType="next"
                             tailContent="Average Points Scored"
                             onPress={() => nav.navigate('editRankPlayersBy')}
+                        />
+                    )}
+                    <MenuItem
+                        title="Min Matches to Qualify"
+                        headIcon="account-lock-open"
+                        tailIconType="next"
+                        tailContent={
+                            group.data?.activeSeason?.seasonSettings
+                                ?.minMatchesToQualify
+                        }
+                        onPress={() =>
+                            nav.navigate('minMatchesToQualifySettings')
+                        }
+                    />
+                    <MenuItem
+                        title="Team Size"
+                        headIcon="account-group-outline"
+                        tailContent={formatTeamSize(
+                            group.data?.activeSeason?.seasonSettings
+                        )}
+                        tailIconType="next"
+                        onPress={() => nav.navigate('teamSizeSettings')}
+                    />
+                    {experiments.dailyLeaderboard && (
+                        <MenuItem
+                            title="Daily Leaderboard"
+                            headIcon="calendar-today"
+                            tailContent={(() => {
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard === 'WAKE_TIME'
+                                ) {
+                                    return `Resets at ${group.data?.activeSeason?.seasonSettings.wakeTimeHour}:00`;
+                                }
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard ===
+                                    'RESET_AT_MIDNIGHT'
+                                ) {
+                                    return 'Resets at 0:00';
+                                }
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard === 'LAST_24_HOURS'
+                                ) {
+                                    return 'Last 24h';
+                                }
+                            })()}
+                            tailIconType="next"
+                            onPress={() =>
+                                nav.navigate('dailyLeaderboardSettings')
+                            }
                         />
                     )}
                 </MenuSection>
@@ -264,35 +328,6 @@ export default function GroupSettingsScreen({
                         onPress={() => nav.navigate('debugLog')}
                     />
                 </MenuSection>
-                {env.isDev && (
-                    <MenuSection title="Advanced">
-                        <MenuItem
-                            title="Min Matches to Qualify"
-                            headIcon="account-lock"
-                            tailContent="1"
-                            tailIconType="next"
-                        />
-                        <MenuItem
-                            title="Team Size"
-                            headIcon="account-group-outline"
-                            tailContent="1 - 4 People"
-                            tailIconType="next"
-                        />
-                        <MenuItem
-                            title="Daily Leaderboard Reset Shows"
-                            headIcon="dev-to"
-                            tailContent="Last 24 Hours" // Or "Time Since Start of Day"
-                            tailIconType="next"
-                        />
-                        <MenuItem
-                            title="Start of Day"
-                            subtitle="Time of day when the leaderboard resets"
-                            headIcon="alarm"
-                            tailContent="08:00"
-                            tailIconType="next"
-                        />
-                    </MenuSection>
-                )}
             </ScrollView>
         </RootSiblingParent>
     );

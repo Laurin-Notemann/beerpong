@@ -154,6 +154,7 @@ const DecorativeSeasonCard: React.FC<ViewProps & SeasonCardProps> = ({
                 season={season}
                 players={players}
                 numMatches={numMatches}
+                minMatchesRequiredToBeRanked={1}
             />
         </View>
     );
@@ -169,11 +170,13 @@ export interface SeasonCardProps {
     };
     players: any[];
     numMatches: number;
+    minMatchesRequiredToBeRanked: number;
 }
 export const SeasonCard: React.FC<SeasonCardProps> = ({
     season,
     players,
     numMatches,
+    minMatchesRequiredToBeRanked,
 }) => {
     return (
         <ThemedView
@@ -187,6 +190,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 players={players}
                 showUnranked={false}
                 season={{ ...season, numPlayers: players.length, numMatches }}
+                minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
             />
         </ThemedView>
     );
