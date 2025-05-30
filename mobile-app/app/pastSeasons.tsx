@@ -75,6 +75,10 @@ export default function Page() {
                                 }}
                             >
                                 <SeasonCard
+                                    minMatchesRequiredToBeRanked={
+                                        season.item.seasonSettings
+                                            ?.minMatchesToQualify ?? 0
+                                    }
                                     season={{
                                         name: season.item.name!,
                                         startDate: season.item.startDate!,
