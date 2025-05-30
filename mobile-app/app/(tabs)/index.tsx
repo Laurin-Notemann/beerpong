@@ -135,6 +135,10 @@ export default function Page() {
                 <Leaderboard
                     players={players}
                     onPlayerPress={(id) => nav.navigate('player', { id })}
+                    minMatchesRequiredToBeRanked={
+                        group.data?.activeSeason?.seasonSettings
+                            ?.minMatchesToQualify ?? 1
+                    }
                 />
                 <Text
                     style={{

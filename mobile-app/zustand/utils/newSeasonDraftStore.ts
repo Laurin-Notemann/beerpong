@@ -16,7 +16,7 @@ interface NewSeasonDraftStore {
     actions: {
         setOldSeasonName: (oldSeasonName: string) => void;
         setNewSeasonAllowedMoves: (
-            newSeasonAllowedMoves: Omit<NewSeasonMoveInput, 'id'>[]
+            newSeasonAllowedMoves: NewSeasonMoveInput[]
         ) => void;
 
         clear: () => void;
@@ -35,10 +35,7 @@ const useNewSeasonDraftStore = create<NewSeasonDraftStore>()((set) => ({
         },
         setNewSeasonAllowedMoves: (newSeasonAllowedMoves) => {
             set(() => ({
-                newSeasonAllowedMoves: newSeasonAllowedMoves.map((i, idx) => ({
-                    ...i,
-                    id: idx.toString(),
-                })),
+                newSeasonAllowedMoves,
             }));
         },
         clear: () => {

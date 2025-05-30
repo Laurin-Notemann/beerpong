@@ -25,6 +25,8 @@ export default function Page() {
         toggleMatchPhotos,
         showWallpaper,
         toggleShowWallpaper,
+        dailyLeaderboard,
+        toggleDailyLeaderboard,
     } = useLocalSettings();
 
     const theme = useTheme();
@@ -111,6 +113,15 @@ export default function Page() {
                             <Switch
                                 value={showWallpaper}
                                 onChange={toggleShowWallpaper}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Daily Leaderboard"
+                        tailContent={
+                            <Switch
+                                value={dailyLeaderboard}
+                                onChange={toggleDailyLeaderboard}
                             />
                         }
                     />

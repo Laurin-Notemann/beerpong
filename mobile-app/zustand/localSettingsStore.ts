@@ -12,6 +12,7 @@ interface LocalSettingsStore {
     matchPhotos: boolean;
     themeId: string;
     showWallpaper: boolean;
+    dailyLeaderboard: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -23,6 +24,7 @@ interface LocalSettingsStore {
         toggleMatchPhotos: () => void;
         setTheme: (themeId: string) => void;
         toggleShowWallpaper: () => void;
+        toggleDailyLeaderboard: () => void;
     };
 }
 
@@ -38,6 +40,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             matchPhotos: false,
             themeId: 'dark',
             showWallpaper: false,
+            dailyLeaderboard: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -85,6 +88,11 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         showWallpaper: !get().showWallpaper,
                     }));
                 },
+                toggleDailyLeaderboard: () => {
+                    set(() => ({
+                        dailyLeaderboard: !get().dailyLeaderboard,
+                    }));
+                },
             },
         }),
         {
@@ -100,6 +108,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 matchPhotos: state.matchPhotos,
                 themeId: state.themeId,
                 showWallpaper: state.showWallpaper,
+                dailyLeaderboard: state.dailyLeaderboard,
             }),
         }
     )

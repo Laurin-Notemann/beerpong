@@ -44,6 +44,7 @@ export default function Page() {
                 <Heading title="How Elo ranking works" />
                 <Text color="primary">Lorem ipsum dolor sit amet</Text>
                 <Leaderboard
+                    minMatchesRequiredToBeRanked={1}
                     showUnranked={false}
                     withPodium={false}
                     style={{

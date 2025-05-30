@@ -27,6 +27,7 @@ export interface LeaderboardProps extends ViewProps {
         numPlayers: number;
         numMatches: number;
     };
+    minMatchesRequiredToBeRanked: number;
 }
 
 export default function Leaderboard({
@@ -35,11 +36,10 @@ export default function Leaderboard({
     onPlayerPress,
     showUnranked = true,
     season,
+    minMatchesRequiredToBeRanked,
     ...rest
 }: LeaderboardProps) {
     const nav = useNavigation();
-
-    const minMatchesRequiredToBeRanked = 1;
 
     const sortedPlayers = players.sort(byDescendingAveragePoints);
 

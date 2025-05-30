@@ -35,14 +35,15 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export interface ConfirmationModalProps {
     isVisible?: boolean;
     onClose?: () => void;
-    title: string;
+    title?: string;
     description?: string;
     header?: boolean;
-    actions: {
+    actions?: {
         type?: 'default' | 'confirm' | 'danger';
         title: string;
         onPress: () => void;
     }[];
+    content?: JSX.Element | string;
 }
 
 export default function ConfirmationModal({
@@ -52,6 +53,7 @@ export default function ConfirmationModal({
     description,
     actions,
     header = true,
+    content,
 }: ConfirmationModalProps) {
     const theme = useTheme();
     const [show, setShow] = useState(isVisible);
@@ -161,7 +163,7 @@ export default function ConfirmationModal({
                 <SafeAreaView style={styles.sheet}>
                     {header && (
                         <View style={styles.header}>
-                            <Text style={styles.title}>{title}</Text>
+                            {title && <Text style={styles.title}>{title}</Text>}
                             {description && (
                                 // max 15 lines + half a line of peek so the user realizes they can scroll
                                 <ScrollView style={{ maxHeight: 22 * 15 + 11 }}>
@@ -172,8 +174,8 @@ export default function ConfirmationModal({
                             )}
                         </View>
                     )}
-
-                    {actions.map((action, i) => (
+                    {content}
+                    {actions?.map((action, i) => (
                         <TouchableHighlight
                             key={i}
                             style={[

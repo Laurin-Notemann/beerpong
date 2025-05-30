@@ -8,6 +8,7 @@ import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
+import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
@@ -69,7 +70,10 @@ export default function Page() {
                         title="Reset Tutorials"
                         headIcon="flask-outline"
                         tailIconType="next"
-                        onPress={tutorials.reset}
+                        onPress={() => {
+                            tutorials.reset();
+                            triggerHapticBump('toast:success');
+                        }}
                     />
                 </MenuSection>
             </ScrollView>

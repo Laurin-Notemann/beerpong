@@ -15,6 +15,9 @@ export type RootStackParamList = {
     createNewPlayer: undefined;
     onboarding: undefined;
     editRankPlayersBy: undefined;
+    dailyLeaderboardSettings: undefined;
+    teamSizeSettings: undefined;
+    minMatchesToQualifySettings: undefined;
     saveSeason: undefined;
     startLiveMatch: undefined;
     player: { id: string };

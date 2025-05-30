@@ -108,6 +108,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                         newSeasonDraft.actions.setNewSeasonAllowedMoves([
                             ...newSeasonDraft.newSeasonAllowedMoves,
                             {
+                                id: Date.now().toString(),
                                 name: 'New Move',
                                 finishingMove: false,
                                 pointsForScorer: 1,
@@ -125,6 +126,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                             )
                         )
                     }
+                    onReorder={newSeasonDraft.actions.setNewSeasonAllowedMoves}
                 />
             </Swiper>
         </>

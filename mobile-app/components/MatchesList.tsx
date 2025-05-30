@@ -70,12 +70,12 @@ export default function MatchesList({
                             onPress={() =>
                                 nav.navigate('match', { id: match.id })
                             }
+                            highlightedId={forPlayer?.id}
                         />
                     ))}
                 </MenuSection>
             )}
             ListEmptyComponent={<NoMatchesPlayedYet />}
-            {...rest}
         />
     );
 }

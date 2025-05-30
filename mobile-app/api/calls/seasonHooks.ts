@@ -1,24 +1,32 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { Paths } from '@/openapi/openapi';
+import { Paths, SeasonSettings } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-export const useSeasonQuery = (seasonId: ApiId | null) => {
+export const useSeasonQuery = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null
+) => {
     const { api } = useApi();
 
     return useQuery<Paths.GetSeasonById.Responses.$200 | null>({
         // TODO: this won't get refetched by the realtime event because we don't have access to the group id here
-        queryKey: [QK.seasons, seasonId],
+        queryKey: [QK.group, groupId, QK.seasons, seasonId],
         queryFn: async () => {
             if (!seasonId) {
                 return null;
             }
-            const res = await (await api).getSeasonById(seasonId);
+            const res = await (
+                await api
+            ).getSeasonById({
+                groupId: groupId!,
+                id: seasonId!,
+            });
 
             return res?.data;
         },
@@ -125,8 +133,59 @@ export const useSetSeasonSettingsMutations = () => {
             Paths.UpdateSeasonById.PathParameters
     >({
         mutationFn: async (body) => {
-            const res = await (await api).updateSeasonById(body);
+            const { groupId, id, ...rest } = body;
+            const res = await (
+                await api
+            ).updateSeasonById({ groupId, id }, rest);
             return res?.data;
         },
     });
 };
+
+export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
+    const settingsMutation = useSetSeasonSettingsMutations();
+
+    const qc = useQueryClient();
+
+    const seasonQuery = useSeasonQuery(groupId, seasonId);
+
+    const seasonSettings = seasonQuery.data?.data?.seasonSettings as
+        | Required<SeasonSettings>
+        | undefined;
+
+    const updateSeasonSettingsMutation = useMutation({
+        mutationFn: async (partialUpdate: Omit<SeasonSettings, 'id'>) => {
+            if (!groupId || !seasonId || !seasonSettings) return;
+
+            qc.setQueryData([QK.group, groupId, QK.seasons, seasonId], {
+                data: {
+                    seasonSettings: {
+                        ...seasonSettings,
+                        ...partialUpdate,
+                    },
+                },
+            });
+            await settingsMutation.mutateAsync({
+                groupId,
+                id: seasonId,
+                seasonSettings: {
+                    ...seasonSettings,
+                    ...partialUpdate,
+                },
+            });
+
+            await qc.invalidateQueries({
+                queryKey: [QK.group, groupId],
+            });
+            await qc.invalidateQueries({
+                queryKey: [QK.group, groupId, QK.seasons, seasonId],
+            });
+        },
+    });
+
+    return {
+        seasonQuery,
+        seasonSettings,
+        updateSeasonSettingsMutation,
+    };
+}
