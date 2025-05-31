@@ -72,6 +72,7 @@ export interface PodiumProps extends ViewProps {
     thirdPlace?: Player;
 
     onPlayerPress?: (id: string) => void;
+    onPlayerLongPress?: (id: string) => void;
 }
 export default function Podium({
     detailed = true,
@@ -80,6 +81,7 @@ export default function Podium({
     thirdPlace,
 
     onPlayerPress,
+    onPlayerLongPress,
     ...rest
 }: PodiumProps) {
     const firstPlaceAveragePointsPerMatch = firstPlace?.matches
@@ -119,6 +121,9 @@ export default function Podium({
                     opacity: secondPlace ? 1 : 0.2,
                 }}
                 onPress={() => secondPlace && onPlayerPress?.(secondPlace?.id)}
+                onLongPress={() =>
+                    secondPlace && onPlayerLongPress?.(secondPlace?.id)
+                }
             >
                 <ThemedText
                     style={{
@@ -144,6 +149,9 @@ export default function Podium({
                 disabled={firstPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
                 onPress={() => firstPlace && onPlayerPress?.(firstPlace?.id)}
+                onLongPress={() =>
+                    firstPlace && onPlayerLongPress?.(firstPlace?.id)
+                }
                 style={{
                     alignItems: 'center',
 
@@ -194,6 +202,9 @@ export default function Podium({
                     opacity: thirdPlace ? 1 : 0.2,
                 }}
                 onPress={() => thirdPlace && onPlayerPress?.(thirdPlace?.id)}
+                onLongPress={() =>
+                    thirdPlace && onPlayerLongPress?.(thirdPlace?.id)
+                }
             >
                 <ThemedText
                     style={{

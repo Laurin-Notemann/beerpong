@@ -1,5 +1,6 @@
 import { Text, View, ViewProps } from 'react-native';
 
+import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
 import { mockSeasons } from '@/screens/mockSeasons';
 import { useTheme } from '@/theme';
@@ -8,6 +9,12 @@ export const LeaderboardEmptyComponent: React.FC<{ message?: string }> = ({
     message = 'No Matches Played Yet',
 }) => {
     const theme = useTheme();
+
+    return (
+        <View style={{ marginBottom: 64 }}>
+            <NoMatchesPlayedYet message={message} />
+        </View>
+    );
 
     return (
         <>

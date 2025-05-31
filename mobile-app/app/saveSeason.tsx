@@ -58,9 +58,12 @@ export default function Page() {
 
     const minMatchesRequiredToBeRanked = 1;
 
-    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
+    const { currentSeasonPlayers } = useLeaderboardProps(
+        groupId,
+        seasonId ?? null
+    );
 
-    const sortedPlayers = players.sort(byDescendingAveragePoints);
+    const sortedPlayers = currentSeasonPlayers.sort(byDescendingAveragePoints);
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked

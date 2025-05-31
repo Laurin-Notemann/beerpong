@@ -20,6 +20,7 @@ export interface LeaderboardPlayerItemProps {
     unranked?: boolean;
 
     onPlayerPress?: (id: string) => void;
+    onPlayerLongPress?: (id: string) => void;
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -32,20 +33,13 @@ export default function LeaderboardPlayerItem({
     elo,
     unranked = false,
     onPlayerPress,
+    onPlayerLongPress,
 }: LeaderboardPlayerItemProps) {
     const theme = useTheme();
     // account for division by zero
     const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
 
     return (
-        // <Link
-        //   to={{
-        //     params: {
-        //       id: "#",
-        //     },
-        //     screen: "rules",
-        //   }}
-        // >
         <TouchableOpacity
             disabled={!onPlayerPress}
             style={{
@@ -58,6 +52,7 @@ export default function LeaderboardPlayerItem({
                 opacity: unranked ? 0.5 : undefined,
             }}
             onPress={() => onPlayerPress?.(id)}
+            onLongPress={() => onPlayerLongPress?.(id)}
         >
             <ThemedText
                 style={{
@@ -104,6 +99,5 @@ export default function LeaderboardPlayerItem({
                 {averagePointsPerMatch}
             </ThemedText>
         </TouchableOpacity>
-        // </Link>
     );
 }

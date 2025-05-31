@@ -6,10 +6,6 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import {
-    LeaderboardScope,
-    useGetLeaderboardQuery,
-} from '@/api/calls/leaderboardHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
@@ -19,7 +15,6 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
-import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import Leaderboard from '@/components/Leaderboard';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
@@ -28,7 +23,6 @@ import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
-import { Components } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
