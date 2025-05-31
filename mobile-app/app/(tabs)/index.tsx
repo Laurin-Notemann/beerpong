@@ -1,11 +1,15 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
 
+import {
+    LeaderboardScope,
+    useGetLeaderboardQuery,
+} from '@/api/calls/leaderboardHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
@@ -15,12 +19,16 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
+import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import Leaderboard from '@/components/Leaderboard';
+import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useSwiper } from '@/components/Swiper';
+import Text from '@/components/Text';
+import { Components } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -31,7 +39,8 @@ export default function Page() {
     const nav = useNavigation();
     const { groupId, seasonId, group } = useGroup();
 
-    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
+    const { currentSeasonPlayers, alltimePlayers, dailyPlayers } =
+        useLeaderboardProps(groupId, seasonId ?? null);
 
     const [showSortModal, setShowSortModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -52,7 +61,9 @@ export default function Page() {
 
     const theme = useTheme();
 
-    const swiper = useSwiper();
+    const swiper = useSwiper({
+        initialPage: experiments.dailyLeaderboard ? 1 : 0,
+    });
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -105,7 +116,10 @@ export default function Page() {
                     </View>
                 )}
                 <Leaderboard
-                    players={players}
+                    ListEmptyComponent={
+                        <LeaderboardEmptyComponent message="No matches played yet this season." />
+                    }
+                    players={currentSeasonPlayers}
                     onPlayerPress={(id) => nav.navigate('player', { id })}
                     minMatchesRequiredToBeRanked={
                         group.data?.activeSeason?.seasonSettings
@@ -113,15 +127,15 @@ export default function Page() {
                     }
                 />
                 <Text
+                    color="secondary"
                     style={{
                         fontSize: 12,
-                        color: theme.color.text.secondary,
                         marginTop: 32,
                         marginBottom: 32,
                     }}
                 >
                     {group.data?.activeSeason?.startDate
-                        ? `Leaderboard started ${env.format.date.seasonStartAndEnd(
+                        ? `Season started ${env.format.date.seasonStartAndEnd(
                               dayjs(group.data.activeSeason.startDate)
                           )}`
                         : null}
@@ -139,12 +153,12 @@ export default function Page() {
                 contentContainerStyle={{
                     alignItems: 'center',
 
-                    paddingTop: insets.top,
-                    paddingBottom: insets.bottom,
+                    paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                    paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                <View
+                {/* <View
                     style={{
                         alignItems: 'center',
 
@@ -153,56 +167,64 @@ export default function Page() {
                         padding: 8,
                         marginHorizontal: 16,
                     }}
-                >
-                    <LeaderBoardSeasonInfo
-                        numPlayers={group.data?.numberOfPlayers ?? 0}
-                        numMatches={group.data?.numberOfMatches ?? 0}
-                        startDate={group.data?.activeSeason?.startDate!}
-                        isCurrentSeason
-                    />
-                    {experiments.eloAlgorithm && (
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                gap: 8,
-                                marginTop: 16,
-                            }}
-                        >
-                            <PillButton
-                                label="Sort"
-                                iconName="swap-vertical"
-                                onPress={() => setShowSortModal(true)}
-                            />
-                            <PillButton
-                                label="Invite"
-                                iconName="share-outline"
-                                onPress={() => setShowInviteModal(true)}
-                            />
-                        </View>
-                    )}
-                    <Leaderboard
-                        players={players}
-                        onPlayerPress={(id) => nav.navigate('player', { id })}
-                        minMatchesRequiredToBeRanked={
-                            group.data?.activeSeason?.seasonSettings
-                                ?.minMatchesToQualify ?? 1
-                        }
-                    />
-                    <Text
+                > */}
+                <LeaderBoardSeasonInfo
+                    numPlayers={group.data?.numberOfPlayers ?? 0}
+                    numMatches={group.data?.numberOfMatches ?? 0}
+                    startDate={group.data?.activeSeason?.startDate!}
+                    isCurrentSeason
+                />
+                {experiments.eloAlgorithm && (
+                    <View
                         style={{
-                            fontSize: 12,
-                            color: theme.color.text.secondary,
-                            marginTop: 32,
-                            marginBottom: 32,
+                            flexDirection: 'row',
+                            gap: 8,
+                            marginTop: 16,
                         }}
                     >
-                        {group.data?.activeSeason?.startDate
-                            ? `Leaderboard started ${env.format.date.seasonStartAndEnd(
-                                  dayjs(group.data.activeSeason.startDate)
-                              )}`
-                            : null}
+                        <PillButton
+                            label="Sort"
+                            iconName="swap-vertical"
+                            onPress={() => setShowSortModal(true)}
+                        />
+                        <PillButton
+                            label="Invite"
+                            iconName="share-outline"
+                            onPress={() => setShowInviteModal(true)}
+                        />
+                    </View>
+                )}
+                <Leaderboard
+                    ListEmptyComponent={
+                        <LeaderboardEmptyComponent message="No matches played yet today." />
+                    }
+                    players={dailyPlayers}
+                    onPlayerPress={(id) => nav.navigate('player', { id })}
+                    minMatchesRequiredToBeRanked={
+                        group.data?.activeSeason?.seasonSettings
+                            ?.minMatchesToQualify ?? 1
+                    }
+                />
+                <Text
+                    color="secondary"
+                    style={{
+                        fontSize: 12,
+                        marginTop: 32,
+                        marginBottom: 32,
+                    }}
+                    onPress={() => {
+                        nav.navigate('dailyLeaderboardSettings');
+                    }}
+                >
+                    {group.data?.activeSeason!.seasonSettings!
+                        .dailyLeaderboard === 'LAST_24_HOURS'
+                        ? `Day started yesterday at ${dayjs().subtract(24, 'hours').format('H:mm')}.`
+                        : `Day started at ${group.data?.activeSeason!.seasonSettings!.wakeTimeHour! + ':00'}.`}{' '}
+                    <Text color="link" style={{ fontSize: 13 }}>
+                        Learn more
                     </Text>
-                </View>
+                </Text>
+                {/* </View> */}
             </ScrollView>
         );
     }
@@ -216,8 +238,8 @@ export default function Page() {
                 contentContainerStyle={{
                     alignItems: 'center',
 
-                    paddingTop: insets.top,
-                    paddingBottom: insets.bottom,
+                    paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                    paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
@@ -248,7 +270,10 @@ export default function Page() {
                     </View>
                 )}
                 <Leaderboard
-                    players={players}
+                    ListEmptyComponent={
+                        <LeaderboardEmptyComponent message="No matches played yet in this group." />
+                    }
+                    players={alltimePlayers}
                     onPlayerPress={(id) => nav.navigate('player', { id })}
                     minMatchesRequiredToBeRanked={
                         group.data?.activeSeason?.seasonSettings
@@ -256,16 +281,16 @@ export default function Page() {
                     }
                 />
                 <Text
+                    color="secondary"
                     style={{
                         fontSize: 12,
-                        color: theme.color.text.secondary,
                         marginTop: 32,
                         marginBottom: 32,
                     }}
                 >
                     {group.data?.activeSeason?.startDate
-                        ? `Leaderboard started ${env.format.date.seasonStartAndEnd(
-                              dayjs(group.data.activeSeason.startDate)
+                        ? `Group created ${env.format.date.seasonStartAndEnd(
+                              dayjs(pastSeasons[0].startDate)
                           )}`
                         : null}
                 </Text>
@@ -335,8 +360,8 @@ export default function Page() {
                 isVisible={showInviteModal}
             />
             <Swiper {...swiper}>
-                <CurrentSeasonLeaderboard />
                 {experiments.dailyLeaderboard && <DailyLeaderboard />}
+                <CurrentSeasonLeaderboard />
                 {experiments.dailyLeaderboard && groupHasPastSeasons && (
                     <AllTimeLeaderboard />
                 )}

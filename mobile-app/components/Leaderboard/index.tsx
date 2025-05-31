@@ -6,8 +6,10 @@ import {
     Player,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
+import MenuItem from '@/components/Menu/MenuItem';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import { ThemedView } from '@/components/ThemedView';
@@ -28,6 +30,7 @@ export interface LeaderboardProps extends ViewProps {
         numMatches: number;
     };
     minMatchesRequiredToBeRanked: number;
+    ListEmptyComponent?: React.ReactNode;
 }
 
 export default function Leaderboard({
@@ -37,6 +40,7 @@ export default function Leaderboard({
     showUnranked = true,
     season,
     minMatchesRequiredToBeRanked,
+    ListEmptyComponent = <LeaderboardEmptyComponent />,
     ...rest
 }: LeaderboardProps) {
     const nav = useNavigation();
@@ -60,14 +64,17 @@ export default function Leaderboard({
             style={[rest.style, { width: '100%', alignItems: 'center' }]}
         >
             {season && <LeaderBoardSeasonInfo {...season} />}
-            {withPodium && (
-                <Podium
-                    firstPlace={rankedPlayers[0]}
-                    secondPlace={rankedPlayers[1]}
-                    thirdPlace={rankedPlayers[2]}
-                    onPlayerPress={onPlayerPress}
-                />
-            )}
+            {withPodium &&
+                (rankedPlayers[0] ? (
+                    <Podium
+                        firstPlace={rankedPlayers[0]}
+                        secondPlace={rankedPlayers[1]}
+                        thirdPlace={rankedPlayers[2]}
+                        onPlayerPress={onPlayerPress}
+                    />
+                ) : (
+                    ListEmptyComponent
+                ))}
             <ThemedView
                 style={{
                     alignSelf: 'stretch',

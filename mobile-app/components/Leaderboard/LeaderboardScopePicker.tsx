@@ -1,3 +1,4 @@
+import { BlurView } from 'expo-blur';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -60,16 +61,22 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
                     height: 48,
 
-                    backgroundColor: theme.panel.dark.bg, // '#141414'
+                    // backgroundColor: theme.panel.dark.bg, // '#141414'
 
                     borderRadius: 99,
+
+                    overflow: 'hidden',
                 },
                 active: {
                     position: 'absolute',
 
                     top: 8,
 
-                    backgroundColor: theme.panel.dark.active, // '#2E2E30'
+                    // backgroundColor: theme.panel.dark.active, // '#2E2E30'
+
+                    backgroundColor: 'white',
+
+                    opacity: 0.1,
 
                     borderRadius: 99,
 
@@ -90,25 +97,36 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     );
 
     return (
-        <View style={styles.container} ref={containerRef}>
-            <Animated.View style={[styles.active, animatedStyle]} />
-            {options.map((option) => (
-                <Pressable
-                    key={option.id}
-                    style={styles.tab}
-                    onPress={() => onChange(option.id)}
-                >
-                    <Text
-                        color="primary"
-                        style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                        }}
+        <View ref={containerRef} style={styles.container}>
+            <BlurView
+                intensity={100}
+                tint={theme.blur.tint}
+                style={{
+                    flexDirection: 'row',
+
+                    width: '100%',
+                    height: '100%',
+                }}
+            >
+                <Animated.View style={[styles.active, animatedStyle]} />
+                {options.map((option) => (
+                    <Pressable
+                        key={option.id}
+                        style={styles.tab}
+                        onPress={() => onChange(option.id)}
                     >
-                        {option.label}
-                    </Text>
-                </Pressable>
-            ))}
+                        <Text
+                            color="primary"
+                            style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                            }}
+                        >
+                            {option.label}
+                        </Text>
+                    </Pressable>
+                ))}
+            </BlurView>
         </View>
     );
 };
