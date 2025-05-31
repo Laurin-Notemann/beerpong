@@ -4,7 +4,7 @@ import { TextInput } from 'react-native';
 import { Player } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
-import { Swiper, useSwiper } from '@/components/Swiper';
+import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { Components } from '@/openapi/openapi';
 import { NewSeasonRulesInput } from '@/screens/SaveSeason/NewSeasonRulesInput';
 import { OldSeasonNameInput } from '@/screens/SaveSeason/OldSeasonNameInput';
@@ -48,7 +48,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const oldSeasonIsEmpty = numMatches < 1;
 
-    const swiper = useSwiper({ initialPage: 0 });
+    const swiper = useSwiperWithPageState({ initialPage: 0 });
 
     const hasValidName =
         oldSeasonIsEmpty || newSeasonDraft.oldSeasonName.length > 0;
