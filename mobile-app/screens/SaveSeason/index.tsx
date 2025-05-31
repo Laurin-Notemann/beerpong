@@ -105,10 +105,12 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 <NewSeasonRulesInput
                     moves={newSeasonDraft.newSeasonAllowedMoves}
                     onNewPress={() => {
+                        const newMoveId = Date.now().toString();
+
                         newSeasonDraft.actions.setNewSeasonAllowedMoves([
                             ...newSeasonDraft.newSeasonAllowedMoves,
                             {
-                                id: Date.now().toString(),
+                                id: newMoveId,
                                 name: 'New Move',
                                 finishingMove: false,
                                 pointsForScorer: 1,
@@ -116,7 +118,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                             },
                         ]);
                         nav.navigate('allowedMove', {
-                            id: newSeasonDraft.newSeasonAllowedMoves.length.toString(),
+                            id: newMoveId,
                         });
                     }}
                     onDelete={(id) =>

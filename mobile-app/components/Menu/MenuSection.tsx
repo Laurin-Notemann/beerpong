@@ -8,7 +8,10 @@ export function Heading({
     title,
     titleHeadIcon,
     titleTailIcon,
-}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'>) {
+    headingSubtitle,
+}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'> & {
+    headingSubtitle?: string;
+}) {
     const theme = useTheme();
     return (
         <View
