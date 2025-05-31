@@ -3,13 +3,13 @@
         "name": "Versus",
         "slug": "mobile-app",
         "version": "1.0.34",
-        "orientation": "portrait",
+        "orientation": "default",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
         "userInterfaceStyle": "automatic",
         "splash": {
             "image": "./assets/images/splash.png",
-            "resizeMode": "contain",
+            "resizeMode": "cover",
             "backgroundColor": "#000000"
         },
         "ios": {
@@ -21,6 +21,12 @@
             },
             "config": {
                 "usesNonExemptEncryption": false
+            },
+            "splash": {
+                "image": "./assets/images/splash.png",
+                "tabletImage": "./assets/ios-splash-tablet.png",
+                "resizeMode": "cover",
+                "backgroundColor": "#000000"
             }
         },
         "android": {
