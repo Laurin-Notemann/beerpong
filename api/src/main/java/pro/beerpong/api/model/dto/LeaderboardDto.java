@@ -10,5 +10,5 @@ public class LeaderboardDto {
     private long numPlayers;
     private long numMatches;
     private ZonedDateTime startedAt;
-    private List<LeaderboardEntryDto> entries;
+    private List<PlayerDto> entries;
 }

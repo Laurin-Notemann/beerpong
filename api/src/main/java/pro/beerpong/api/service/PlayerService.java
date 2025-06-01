@@ -3,14 +3,12 @@ package pro.beerpong.api.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
-import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dao.Player;
-import pro.beerpong.api.model.dao.Profile;
-import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.PlayerCreateDto;
 import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.repository.PlayerStatisticsRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -29,6 +27,7 @@ public class PlayerService {
     private final SeasonRepository seasonRepository;
     private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
+    private final PlayerStatisticsRepository playerStatisticsRepository;
 
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return this.getBySeasonId(seasonId, false);
@@ -38,7 +37,7 @@ public class PlayerService {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
                 .filter(player -> showInactive || player.isActiveThisSeason())
-                .map(this::createStatisticsEnrichedDto)
+                .map(this::mapPlayer)
                 .toList();
     }
 
@@ -48,33 +47,6 @@ public class PlayerService {
                 .sorted(Comparator.comparing(player -> player.getSeason().getStartDate()))
                 .toList()
                 .getLast();
-    }
-
-    public PlayerDto createPlayer(String seasonId, String profileId, PlayerCreateDto dto) {
-        return seasonRepository.findById(seasonId)
-                .map(season -> this.createPlayer(season, profileId, dto))
-                .orElse(null);
-    }
-
-    public PlayerDto createPlayer(Season season, String profileId, PlayerCreateDto dto) {
-        var optional = profileRepository.findById(profileId);
-
-        if (optional.isEmpty()) {
-            //create profile
-        }
-
-        var profile = optional.get();
-        var player = playerMapper.playerCreateDtoToPlayer(dto);
-
-        player.setSeason(season);
-        player.setProfile(profile);
-        player.setActiveThisSeason(true);
-
-        var enrichedDto = createStatisticsEnrichedDto(playerRepository.save(player));
-
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_CREATE, season.getGroupId(), enrichedDto));
-
-        return enrichedDto;
     }
 
     public boolean reactivatePlayer(PlayerDto dto) {
@@ -112,7 +84,7 @@ public class PlayerService {
 
             if (season.getEndDate() == null) {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, mapPlayer(player)));
 
                     player.setActiveThisSeason(false);
                     playerRepository.save(player);
@@ -127,30 +99,19 @@ public class PlayerService {
         return error.get();
     }
 
-    public void copyPlayersFromOldSeason(Season oldSeason, Season newSeason) {
-        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
-            return;
-        }
-
-        getBySeasonId(oldSeason.getId()).forEach(oldPlayerDto -> {
-            var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
-            player.setId(null);
-            player.setSeason(newSeason);
-
-            playerRepository.save(player);
-        });
-    }
-
     public PlayerDto createPlayer(Season season, Profile profile) {
         Player player = new Player();
         player.setProfile(profile);
         player.setSeason(season);
         player.setActiveThisSeason(true);
+        player.setStatistics(new PlayerStatistics());
+
+        playerStatisticsRepository.save(player.getStatistics());
+
         return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
-    private PlayerDto createStatisticsEnrichedDto(Player player) {
-        player.setStatistics(playerRepository.getStatisticsForPlayer(player.getId()));
+    private PlayerDto mapPlayer(Player player) {
         return playerMapper.playerToPlayerDto(player);
     }
 }

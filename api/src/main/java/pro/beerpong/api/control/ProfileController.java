@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ProfileCreateDto;
-import pro.beerpong.api.model.dto.ProfileDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.ProfileService;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -26,11 +23,15 @@ public class ProfileController {
     private final SubscriptionHandler subscriptionHandler;
 
     @PostMapping
-    public ResponseEntity<ResponseEnvelope<ProfileDto>> createProfile(@PathVariable String groupId, @RequestBody ProfileCreateDto profileCreateDto) {
+    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId, @RequestBody ProfileCreateDto profileCreateDto) {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
             var dto = profileService.createPlayer(groupId, profileCreateDto);
+
+            if (dto == null) {
+                return ResponseEnvelope.notOk(ErrorCodes.PROFILE_ALREADY_EXISTS);
+            }
 
             subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_CREATE, groupId, dto));
 
