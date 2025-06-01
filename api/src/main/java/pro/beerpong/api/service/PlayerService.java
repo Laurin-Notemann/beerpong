@@ -150,7 +150,7 @@ public class PlayerService {
     }
 
     private PlayerDto createStatisticsEnrichedDto(Player player) {
-        player.setStatistics(playerRepository.getStatisticsForPlayer(player.getId()));
+        //TODO calculate stats
         return playerMapper.playerToPlayerDto(player);
     }
 }
