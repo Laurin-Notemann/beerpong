@@ -27,6 +27,12 @@ import java.util.stream.Stream;
 public class MatchService {
     private static final long MINUTES_IN_DAY = 24 * 60;
 
+    /**
+     * Feature flag: discuss if this should be enabled in future
+     */
+    private static boolean USE_DAILY_MATCHES_FROM_PAST_SEASONS = false;
+
+
     private final SubscriptionHandler subscriptionHandler;
 
     private final MatchRepository matchRepository;
@@ -192,10 +198,18 @@ public class MatchService {
             case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
         };
 
-        return matchRepository.findBySeasonId(group.getActiveSeason().getId())
-                .stream()
-                .filter(predicate)
-                .map(this::matchToMatchDto);
+        if (USE_DAILY_MATCHES_FROM_PAST_SEASONS) {
+            //TODO implement: see comment
+            return matchRepository.findBySeasonId(group.getActiveSeason().getId())
+                    .stream()
+                    .filter(predicate)
+                    .map(this::matchToMatchDto);
+        } else {
+            return matchRepository.findBySeasonId(group.getActiveSeason().getId())
+                    .stream()
+                    .filter(predicate)
+                    .map(this::matchToMatchDto);
+        }
     }
 
     public ZonedDateTime getWakeTime(ZonedDateTime now, int wakeTimeHour) {

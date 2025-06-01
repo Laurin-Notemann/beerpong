@@ -36,6 +36,7 @@ public class SeasonService {
     private final PlayerRepository playerRepository;
     private final ProfileMapper profileMapper;
     private final PlayerStatisticsMapper playerStatisticsMapper;
+    private final GroupService groupService;
 
     @Autowired
     public SeasonService(SubscriptionHandler subscriptionHandler,
@@ -44,7 +45,7 @@ public class SeasonService {
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
                          RuleService ruleService,
-                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper) {
+                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
@@ -59,6 +60,7 @@ public class SeasonService {
         this.playerRepository = playerRepository;
         this.profileMapper = profileMapper;
         this.playerStatisticsMapper = playerStatisticsMapper;
+        this.groupService = groupService;
     }
 
     public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
@@ -129,6 +131,26 @@ public class SeasonService {
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.SEASON_START, groupId, eventDto));
 
         return newDto;
+    }
+
+    public List<PlayerDto> calcStatsForPlayersInSeason(String seasonId, boolean showInactive, boolean showStats) {
+        var players = playerService.getBySeasonId(seasonId, showInactive);
+        var season = seasonRepository.findById(seasonId).orElse(null);
+
+        if (showStats && season != null) {
+            return leaderboardService.generateLeaderboard(
+                    groupService.getRawGroupById(season.getGroupId()),
+                            "season",
+                            true,
+                            seasonId,
+                            players.stream()
+                    )
+                    .getEntries();
+        } else {
+            return players.stream()
+                    .peek(playerDto -> playerDto.setStatistics(null))
+                    .toList();
+        }
     }
 
     public SeasonDto updateSeason(Season season, SeasonUpdateDto dto) {

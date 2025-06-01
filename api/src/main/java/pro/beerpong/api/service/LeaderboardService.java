@@ -98,9 +98,6 @@ public class LeaderboardService {
                     return null;
                 }
 
-
-                //TODO feature flag: should this leaderboard also include matches today but from past seasons?
-
                 matches = matchService.streamAllMatchesToday(group, season);
 
                 if (players == null) {

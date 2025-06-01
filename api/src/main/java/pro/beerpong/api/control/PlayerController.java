@@ -8,6 +8,7 @@ import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.PlayerService;
+import pro.beerpong.api.service.SeasonService;
 
 import java.util.List;
 
@@ -15,16 +16,19 @@ import java.util.List;
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/players")
 public class PlayerController {
     private final PlayerService playerService;
+    private final SeasonService seasonService;
 
     @Autowired
-    public PlayerController(PlayerService playerService) {
+    public PlayerController(PlayerService playerService, SeasonService seasonService) {
         this.playerService = playerService;
+        this.seasonService = seasonService;
     }
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId,
                                                                         @PathVariable String seasonId,
-                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive,
+                                                                        @RequestParam(required = false, defaultValue = "false") boolean showStats) {
         if (groupId == null || groupId.trim().isEmpty()) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
@@ -33,7 +37,7 @@ public class PlayerController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
         }
 
-        var players = playerService.getBySeasonId(seasonId, showInactive);
+        var players = seasonService.calcStatsForPlayersInSeason(seasonId, showInactive, showStats);
 
         if (players != null) {
             return ResponseEnvelope.ok(players);
