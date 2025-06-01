@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import pro.beerpong.api.model.dao.Season;
 
+import java.time.ZonedDateTime;
+
 @Data
 public class GroupDto {
     private String id;
@@ -12,6 +14,7 @@ public class GroupDto {
     private Season activeSeason;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AssetMetadataDto wallpaperAsset;
+    private ZonedDateTime createdAt;
     private GroupPreset sportPreset;
     private String customSportName;
     private int numberOfPlayers;

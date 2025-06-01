@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import pro.beerpong.api.model.dto.GroupPreset;
 
+import java.time.ZonedDateTime;
+
 @Entity(name = "groups")
 @Data
 public class Group {
@@ -19,6 +21,7 @@ public class Group {
     @OneToOne
     @JoinColumn(name = "assetIdWallpaper")
     private Asset wallpaperAsset;
+    private ZonedDateTime createdAt;
     private String sportPreset;
     private String customSportName;
 }
