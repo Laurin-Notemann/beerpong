@@ -7,7 +7,7 @@ import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Map;
 
-@Entity(name = "assets")
+@Entity(name = "statistics")
 @Data
 public class PlayerStatistics {
     @Id
