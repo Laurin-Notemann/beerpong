@@ -66,6 +66,7 @@ public class CreateMatchTest {
         var group = envelope.getData();
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
+        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
 
         assertNotNull(group);
         assertNotNull(group.getName());

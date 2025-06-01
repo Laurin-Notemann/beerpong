@@ -7,6 +7,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.time.Duration;
@@ -26,30 +27,44 @@ public class LeaderboardService {
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
     private final PlayerRepository playerRepository;
+    private final SeasonService seasonService;
 
     @Autowired
-    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService, PlayerRepository playerRepository) {
+    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService, PlayerRepository playerRepository, SeasonService seasonService) {
         this.ruleMoveService = ruleMoveService;
         this.matchService = matchService;
         this.playerRepository = playerRepository;
+        this.seasonService = seasonService;
     }
 
     public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
         Stream<MatchDto> matches;
         Stream<PlayerDto> players;
 
+        ZonedDateTime startedAt;
+
         switch (scope) {
             case "all-time" -> {
                 matches = matchService.streamAllMatches(group);
                 players = matchService.streamAllPlayers(group);
+
+                startedAt = group.getCreatedAt();
             }
             case "season" -> {
                 if (seasonId == null) {
                     return null;
                 }
 
+                var season = seasonService.getSeasonById(seasonId);
+
+                if (season == null) {
+                    return null;
+                }
+
                 matches = matchService.streamAllMatchesInSeason(seasonId);
                 players = matchService.streamAllPlayersInSeason(seasonId);
+
+                startedAt = season.getStartDate();
             }
             case "today" -> {
                 var season = group.getActiveSeason();
@@ -60,19 +75,34 @@ public class LeaderboardService {
 
                 matches = matchService.streamAllMatchesToday(group, season);
                 players = matchService.streamAllPlayersInSeason(season.getId());
+
+                if (season.getSeasonSettings().getDailyLeaderboard() == DailyLeaderboard.LAST_24_HOURS) {
+                    startedAt = ZonedDateTime.now().minusHours(24);
+                } else if (season.getSeasonSettings().getDailyLeaderboard() == DailyLeaderboard.RESET_AT_MIDNIGHT) {
+                    startedAt = ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else {
+                    startedAt = matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTimeHour());
+                }
             }
             default -> {
                 matches = Stream.of();
                 players = Stream.of();
+                startedAt = ZonedDateTime.now();
             }
         }
 
         Map<String, LeaderboardEntryDto> entries = Maps.newHashMap();
         Map<String, String> memberToProfile = Maps.newHashMap();
 
+        AtomicInteger numPlayers = new AtomicInteger(0);
+        AtomicInteger numMatches = new AtomicInteger(0);
+
         // create dtos for all players
         players.forEach(playerDto -> {
             var dto = entries.getOrDefault(playerDto.getProfile().getId(), new LeaderboardEntryDto());
+
+            // increment the player count
+            numPlayers.incrementAndGet();
 
             // if no player is saved we set the player
             if (dto.getPlayerDto() == null) {
@@ -99,6 +129,9 @@ public class LeaderboardService {
             if (matchDto.getTeams().size() < 2) {
                 return;
             }
+
+            // increment the player count
+            numMatches.incrementAndGet();
 
             // go through all teams
             matchDto.getTeams().forEach(teamDto -> {
@@ -218,6 +251,9 @@ public class LeaderboardService {
 
         // create dto and set entries
         var dto = new LeaderboardDto();
+        dto.setNumMatches(numMatches.get());
+        dto.setNumPlayers(numPlayers.get());
+        dto.setStartedAt(startedAt);
         dto.setEntries(entries.values().stream()
                 .filter(leaderboardEntryDto -> leaderboardEntryDto.getPlayerDto().isActiveThisSeason())
                 .toList());
