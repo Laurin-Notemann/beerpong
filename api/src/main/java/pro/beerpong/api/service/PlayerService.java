@@ -3,14 +3,12 @@ package pro.beerpong.api.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
-import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dao.Player;
-import pro.beerpong.api.model.dao.Profile;
-import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.PlayerCreateDto;
 import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.repository.PlayerStatisticsRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -29,6 +27,7 @@ public class PlayerService {
     private final SeasonRepository seasonRepository;
     private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
+    private final PlayerStatisticsRepository playerStatisticsRepository;
 
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return this.getBySeasonId(seasonId, false);
@@ -38,7 +37,7 @@ public class PlayerService {
         return playerRepository.findAllBySeasonId(seasonId)
                 .stream()
                 .filter(player -> showInactive || player.isActiveThisSeason())
-                .map(this::createStatisticsEnrichedDto)
+                .map(this::mapPlayer)
                 .toList();
     }
 
@@ -69,8 +68,9 @@ public class PlayerService {
         player.setSeason(season);
         player.setProfile(profile);
         player.setActiveThisSeason(true);
+        player.setStatistics(new PlayerStatistics());
 
-        var enrichedDto = createStatisticsEnrichedDto(playerRepository.save(player));
+        var enrichedDto = mapPlayer(playerRepository.save(player));
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_CREATE, season.getGroupId(), enrichedDto));
 
@@ -112,7 +112,7 @@ public class PlayerService {
 
             if (season.getEndDate() == null) {
                 if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, createStatisticsEnrichedDto(player)));
+                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, mapPlayer(player)));
 
                     player.setActiveThisSeason(false);
                     playerRepository.save(player);
@@ -136,6 +136,8 @@ public class PlayerService {
             var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
             player.setId(null);
             player.setSeason(newSeason);
+            player.setActiveThisSeason(oldPlayerDto.isActiveThisSeason());
+            player.setStatistics(oldPlayerDto.getStatistics());
 
             playerRepository.save(player);
         });
@@ -146,11 +148,13 @@ public class PlayerService {
         player.setProfile(profile);
         player.setSeason(season);
         player.setActiveThisSeason(true);
+        player.setStatistics(new PlayerStatistics());
+        playerStatisticsRepository.save(player.getStatistics());
+
         return playerMapper.playerToPlayerDto(playerRepository.save(player));
     }
 
-    private PlayerDto createStatisticsEnrichedDto(Player player) {
-        //TODO calculate stats
+    private PlayerDto mapPlayer(Player player) {
         return playerMapper.playerToPlayerDto(player);
     }
 }

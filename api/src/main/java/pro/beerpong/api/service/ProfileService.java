@@ -50,7 +50,11 @@ public class ProfileService {
             if (existingPlayer.isPresent()) {
                 boolean success = playerService.reactivatePlayer(existingPlayer.get());
 
-                return new ProfileCreatedDto(existing, success, (success ? season.getId() : null));
+                if (!success) {
+                    return null;
+                }
+
+                return new ProfileCreatedDto(existing, true, season.getId());
             } else {
                 var lastPlayer = playerService.findLatestPlayer(existing.getId());
 

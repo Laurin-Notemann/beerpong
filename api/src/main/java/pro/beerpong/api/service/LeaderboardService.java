@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.model.dao.Player;
+import pro.beerpong.api.model.dao.PlayerStatistics;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.util.DailyLeaderboard;
@@ -140,7 +141,7 @@ public class LeaderboardService {
                                     ZonedDateTime.now(), dto.getSeason().getEndDate()
                             )) < 0) {
                 if (!allTime.get() || playerDto.getStatistics() == null) {
-                    playerDto.setStatistics(new PlayerStatisticsDto());
+                    playerDto.setStatistics(new PlayerStatistics());
                 }
 
                 entries.put(playerDto.getProfile().getId(), playerDto);
