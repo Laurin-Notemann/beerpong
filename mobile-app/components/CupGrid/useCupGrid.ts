@@ -146,7 +146,7 @@ export function useCupGrid({
 
                 runOnJS(setCups)(cups);
 
-                runOnJS(triggerHapticBump)('selection');
+                runOnJS(triggerHapticBump)('light');
             })
             .onEnd(() => {
                 draggedCup.value = null;

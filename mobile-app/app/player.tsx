@@ -70,7 +70,10 @@ export default function Page() {
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
+    const { currentSeasonPlayers } = useLeaderboardProps(
+        groupId,
+        seasonId ?? null
+    );
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -194,7 +197,7 @@ export default function Page() {
         }
     }
 
-    const sortedPlayers = players.sort(byDescendingAveragePoints);
+    const sortedPlayers = currentSeasonPlayers.sort(byDescendingAveragePoints);
 
     const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
 

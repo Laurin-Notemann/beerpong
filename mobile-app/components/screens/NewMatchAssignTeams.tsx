@@ -130,10 +130,14 @@ function PlayerItem({
 export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 
 export interface NewMatchAssignTeamsProps {
+    minTeamSize: number;
+    maxTeamSize: number;
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
 }
 export default function NewMatchAssignTeams({
+    minTeamSize,
+    maxTeamSize,
     players,
     setTeam,
 }: NewMatchAssignTeamsProps) {
@@ -144,6 +148,28 @@ export default function NewMatchAssignTeams({
     const { hasTappedToAssignPlayers } = useTutorials();
 
     const experiments = useLocalSettings();
+
+    const blueTeamSize = players.filter((i) => i.team === 'blue').length;
+    const redTeamSize = players.filter((i) => i.team === 'red').length;
+
+    const errorMessage = (() => {
+        if (blueTeamSize < minTeamSize && minTeamSize > 1) {
+            const needed = minTeamSize - blueTeamSize;
+            return `Blue team needs ${needed} more ${needed === 1 ? 'player' : 'players'}`;
+        }
+        if (redTeamSize < minTeamSize && minTeamSize > 1) {
+            const needed = minTeamSize - redTeamSize;
+            return `Red team needs ${needed} more ${needed === 1 ? 'player' : 'players'}`;
+        }
+        if (blueTeamSize > maxTeamSize) {
+            const extra = blueTeamSize - maxTeamSize;
+            return `Blue team has ${extra} ${extra === 1 ? 'player' : 'players'} too many`;
+        }
+        if (redTeamSize > maxTeamSize) {
+            const extra = redTeamSize - maxTeamSize;
+            return `Red team has ${extra} ${extra === 1 ? 'player' : 'players'} too many`;
+        }
+    })();
 
     return (
         <ScrollView
@@ -157,7 +183,24 @@ export default function NewMatchAssignTeams({
                 paddingBottom: insets.bottom + 24,
             }}
         >
-            <Heading />
+            <Heading
+                title={
+                    errorMessage ? (
+                        <Text
+                            color="negative"
+                            style={{
+                                fontSize: 16,
+                                fontWeight: 500,
+
+                                marginBottom: 32,
+                            }}
+                        >
+                            {errorMessage}
+                        </Text>
+                    ) : undefined
+                }
+            />
+
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
                     headIcon="account-plus-outline"

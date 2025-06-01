@@ -1,7 +1,7 @@
 {
     "name": "mobile-app",
     "main": "expo-router/entry",
-    "version": "1.0.32",
+    "version": "1.0.34",
     "scripts": {
         "prestart": "cp ../.env.example .env",
         "start": "expo start",
@@ -71,7 +71,8 @@
         "react-native-web": "~0.19.10",
         "text-encoding": "^0.7.0",
         "zustand": "^5.0.1",
-        "expo-blur": "~13.0.3"
+        "expo-blur": "~13.0.3",
+        "@react-native-community/datetimepicker": "8.0.1"
     },
     "devDependencies": {
         "@babel/core": "^7.20.0",

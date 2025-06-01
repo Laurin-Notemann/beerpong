@@ -84,6 +84,7 @@ export default function MatchVsHeader({
     highlightedId,
     ...rest
 }: MatchVsHeaderProps) {
+    const theme = useTheme();
     const winnerTeamId: TeamId = hasFinishMove(match.redTeam)
         ? 'red'
         : hasFinishMove(match.blueTeam)
@@ -188,7 +189,7 @@ function Team({
                           top: 0,
                       }
                     : {
-                          opacity: highlightedId == null ? 1 : 0.5,
+                          opacity: highlightedId == null ? 1 : 0.3,
                       },
                 {
                     flexDirection: 'row',
@@ -208,26 +209,32 @@ function Team({
                         />
                     );
                 })}
-            {displayedPlayers.map((i, index) => (
-                <Avatar
-                    key={index}
-                    url={i.avatarUrl}
-                    content={
-                        index === maxItems - 1 && players.length > maxItems
-                            ? '+' + (players.length - maxItems + 1)
-                            : undefined
-                    }
-                    name={i.name}
-                    borderColor={theme.color.team[color]}
-                    style={{
-                        marginRight: color === 'red' ? -16 : undefined,
-                        marginLeft: color === 'blue' ? -16 : undefined,
+            {displayedPlayers
+                .sort((a) => (a.id === highlightedId ? 1 : 0))
+                .map((i, index) => (
+                    <Avatar
+                        key={index}
+                        url={i.avatarUrl}
+                        content={
+                            index === maxItems - 1 && players.length > maxItems
+                                ? '+' + (players.length - maxItems + 1)
+                                : undefined
+                        }
+                        name={i.name}
+                        borderColor={theme.color.team[color]}
+                        style={{
+                            marginRight: color === 'red' ? -16 : undefined,
+                            marginLeft: color === 'blue' ? -16 : undefined,
 
-                        opacity: isCopy ? (i.id === highlightedId ? 1 : 0) : 1,
-                        zIndex: i.id === highlightedId ? 1 : undefined,
-                    }}
-                />
-            ))}
+                            opacity: isCopy
+                                ? i.id === highlightedId
+                                    ? 1
+                                    : 0
+                                : 1,
+                            zIndex: i.id === highlightedId ? 1 : undefined,
+                        }}
+                    />
+                ))}
             {color === 'red' &&
                 emptyAvatarsUsedForSpacing.map((_, index) => {
                     return (

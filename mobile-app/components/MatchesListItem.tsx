@@ -10,7 +10,8 @@ import { useTheme } from '@/theme';
 export const MatchesListItem: React.FC<{
     match: Match;
     onPress: () => void;
-}> = ({ match, onPress }) => {
+    highlightedId?: string;
+}> = ({ match, onPress, highlightedId }) => {
     const theme = useTheme();
 
     return (
@@ -27,7 +28,7 @@ export const MatchesListItem: React.FC<{
             onPress={onPress}
         >
             <>
-                <MatchVsHeader match={match} />
+                <MatchVsHeader match={match} highlightedId={highlightedId} />
                 <View style={{ flexDirection: 'row', gap: 16 }}>
                     <Text
                         style={{

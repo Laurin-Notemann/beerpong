@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import DraggableFlatList, {
+    RenderItemParams,
+} from 'react-native-draggable-flatlist';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -7,6 +10,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 import PillButton from '@/components/PillButton';
 import Text from '@/components/Text';
+import { triggerHapticBump } from '@/haptics';
 
 const formatStats = (move: Move): string => {
     const pointsForScorer = move.pointsForScorer
@@ -43,6 +47,7 @@ export interface AllowedMovesProps extends MenuSectionProps {
 
     onNewPress: () => void;
     onDelete?: (id: string) => void;
+    onReorder?: (moves: Move[]) => void;
 
     editable?: boolean;
 }
@@ -50,6 +55,7 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
     moves,
     onNewPress,
     onDelete,
+    onReorder,
     editable = true,
     ...rest
 }) => {
@@ -58,6 +64,26 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
     const modalItem = moves.find((i) => i.id === modalId);
 
     const nav = useNavigation();
+
+    const renderItem = ({ item, drag, isActive }: RenderItemParams<Move>) => {
+        return (
+            <MenuItem
+                title={item.name}
+                key={item.id}
+                subtitle={formatStats(item)}
+                onPress={
+                    editable
+                        ? () =>
+                              nav.navigate('allowedMove', {
+                                  id: item.id,
+                              })
+                        : undefined
+                }
+                headIcon="bullseye-arrow"
+                onDrag={editable ? drag : undefined}
+            />
+        );
+    };
 
     return (
         <>
@@ -92,44 +118,34 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
                 }
                 {...rest}
             >
-                {moves.length === 0 && (
-                    <View
-                        style={{
-                            height: 62,
-                            width: '100%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <Text
-                            color="secondary"
+                <DraggableFlatList
+                    data={moves}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id}
+                    onDragEnd={({ data }) => {
+                        triggerHapticBump('selection');
+                        onReorder?.(data);
+                    }}
+                    ListEmptyComponent={
+                        <View
                             style={{
-                                textAlign: 'center',
+                                height: 62,
+                                width: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                             }}
                         >
-                            No moves defined
-                        </Text>
-                    </View>
-                )}
-                {moves.map((move) => {
-                    return (
-                        <MenuItem
-                            title={move.name}
-                            key={move.id}
-                            subtitle={formatStats(move)}
-                            tailIconType={editable ? 'next' : undefined}
-                            onPress={
-                                editable
-                                    ? () =>
-                                          nav.navigate('allowedMove', {
-                                              id: move.id,
-                                          })
-                                    : undefined
-                            }
-                            headIcon="bullseye-arrow"
-                        />
-                    );
-                })}
+                            <Text
+                                color="secondary"
+                                style={{
+                                    textAlign: 'center',
+                                }}
+                            >
+                                No moves defined
+                            </Text>
+                        </View>
+                    }
+                />
             </MenuSection>
         </>
     );

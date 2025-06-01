@@ -30,6 +30,7 @@ declare namespace Components {
             inviteCode?: string;
             activeSeason?: Season;
             wallpaperAsset?: AssetMetadataDto;
+            createdAt?: string; // date-time
             sportPreset?: GroupPreset;
             customSportName?: string;
             numberOfPlayers?: number; // int32
@@ -42,6 +43,9 @@ declare namespace Components {
             imageUrl?: string;
         }
         export interface LeaderboardDto {
+            numPlayers?: number; // int64
+            numMatches?: number; // int64
+            startedAt?: string; // date-time
             entries?: LeaderboardEntryDto[];
         }
         export interface LeaderboardEntryDto {

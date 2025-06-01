@@ -18,6 +18,8 @@ import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
+const RENDER_AS_MENU_ITEM = false;
+
 export interface SidebarGroupItemProps {
     id: string;
     isActive: boolean;
@@ -57,6 +59,26 @@ export function SidebarGroupItem({
             useNativeDriver: false, // width property needs JS driver to animate
         }).start();
     }, [showDeleteButton]);
+
+    if (RENDER_AS_MENU_ITEM) {
+        return (
+            <MenuItem
+                title={data?.data?.name || 'Unknown'}
+                subtitle={
+                    isLoading
+                        ? ''
+                        : failedToLoad
+                          ? 'Failed to load'
+                          : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`
+                }
+                onPress={() => onPress(id)}
+                border={false}
+                active={isActive}
+                onDrag={showDeleteButton ? () => {} : undefined}
+                color="dark"
+            />
+        );
+    }
 
     return (
         <View

@@ -10,9 +10,12 @@ import { useGroupQuery } from '@/api/calls/groupHooks';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
+import { LeaderboardIcon } from '@/components/LeaderboardIcon';
 import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+
+const CUSTOM_LEADERBOARD_ICON = false;
 
 const GroupsButton = () => {
     const nav = useNavigation();
@@ -78,9 +81,12 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: 'Leaderboard',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="home" />
-                    ),
+                    tabBarIcon: ({ color }) =>
+                        CUSTOM_LEADERBOARD_ICON ? (
+                            <LeaderboardIcon color={color} size={32} />
+                        ) : (
+                            <Icon color={color} size={32} name="home" />
+                        ),
                     ...groupHeader,
                 }}
             />
