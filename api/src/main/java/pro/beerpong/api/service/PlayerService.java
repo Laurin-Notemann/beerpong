@@ -49,34 +49,6 @@ public class PlayerService {
                 .getLast();
     }
 
-    public PlayerDto createPlayer(String seasonId, String profileId, PlayerCreateDto dto) {
-        return seasonRepository.findById(seasonId)
-                .map(season -> this.createPlayer(season, profileId, dto))
-                .orElse(null);
-    }
-
-    public PlayerDto createPlayer(Season season, String profileId, PlayerCreateDto dto) {
-        var optional = profileRepository.findById(profileId);
-
-        if (optional.isEmpty()) {
-            //create profile
-        }
-
-        var profile = optional.get();
-        var player = playerMapper.playerCreateDtoToPlayer(dto);
-
-        player.setSeason(season);
-        player.setProfile(profile);
-        player.setActiveThisSeason(true);
-        player.setStatistics(new PlayerStatistics());
-
-        var enrichedDto = mapPlayer(playerRepository.save(player));
-
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_CREATE, season.getGroupId(), enrichedDto));
-
-        return enrichedDto;
-    }
-
     public boolean reactivatePlayer(PlayerDto dto) {
         if (dto.isActiveThisSeason()) {
             return false;
@@ -127,28 +99,13 @@ public class PlayerService {
         return error.get();
     }
 
-    public void copyPlayersFromOldSeason(Season oldSeason, Season newSeason) {
-        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
-            return;
-        }
-
-        getBySeasonId(oldSeason.getId()).forEach(oldPlayerDto -> {
-            var player = playerMapper.playerDtoToPlayer(oldPlayerDto);
-            player.setId(null);
-            player.setSeason(newSeason);
-            player.setActiveThisSeason(oldPlayerDto.isActiveThisSeason());
-            player.setStatistics(oldPlayerDto.getStatistics());
-
-            playerRepository.save(player);
-        });
-    }
-
     public PlayerDto createPlayer(Season season, Profile profile) {
         Player player = new Player();
         player.setProfile(profile);
         player.setSeason(season);
         player.setActiveThisSeason(true);
         player.setStatistics(new PlayerStatistics());
+
         playerStatisticsRepository.save(player.getStatistics());
 
         return playerMapper.playerToPlayerDto(playerRepository.save(player));

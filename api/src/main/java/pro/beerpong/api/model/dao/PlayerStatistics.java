@@ -2,13 +2,17 @@ package pro.beerpong.api.model.dao;
 
 import com.google.common.collect.Maps;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Map;
 
 @Entity(name = "statistics")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class PlayerStatistics {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,25 +26,4 @@ public class PlayerStatistics {
     private double elo = 100D;
     @Transient
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
-
-    public void addPoints(int amount) {
-        this.points += amount;
-    }
-
-    public void addMatch() {
-        this.matches++;
-    }
-
-    public void addMoves(int amount) {
-        this.moves += amount;
-    }
-
-    public void addTotalTeamSize(int amount) {
-        this.totalTeamSize += amount;
-    }
-
-    public void calculate() {
-        this.avgPointsPerMatch = matches > 0 ? (double) points / (double) matches : 0;
-        this.avgTeamSize = matches > 0 ? (double) totalTeamSize / (double) matches : 0;
-    }
 }

@@ -4,12 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.mapping.SeasonMapper;
-import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.dao.SeasonSettings;
+import pro.beerpong.api.mapping.*;
+import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.GroupRepository;
+import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.repository.PlayerStatisticsRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -29,6 +29,13 @@ public class SeasonService {
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
     private final SeasonMapper seasonMapper;
+    private final LeaderboardService leaderboardService;
+    private final GroupMapper groupMapper;
+    private final PlayerMapper playerMapper;
+    private final PlayerStatisticsRepository playerStatisticsRepository;
+    private final PlayerRepository playerRepository;
+    private final ProfileMapper profileMapper;
+    private final PlayerStatisticsMapper playerStatisticsMapper;
 
     @Autowired
     public SeasonService(SubscriptionHandler subscriptionHandler,
@@ -37,7 +44,7 @@ public class SeasonService {
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
                          RuleService ruleService,
-                         SeasonMapper seasonMapper) {
+                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
@@ -45,6 +52,13 @@ public class SeasonService {
         this.ruleMoveService = ruleMoveService;
         this.ruleService = ruleService;
         this.seasonMapper = seasonMapper;
+        this.leaderboardService = leaderboardService;
+        this.groupMapper = groupMapper;
+        this.playerMapper = playerMapper;
+        this.playerStatisticsRepository = playerStatisticsRepository;
+        this.playerRepository = playerRepository;
+        this.profileMapper = profileMapper;
+        this.playerStatisticsMapper = playerStatisticsMapper;
     }
 
     public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
@@ -55,23 +69,23 @@ public class SeasonService {
         }
 
         var group = groupOptional.get();
-        var season = new Season();
+        var newSeason = new Season();
         var oldSeason = group.getActiveSeason();
 
-        season.setStartDate(ZonedDateTime.now());
-        season.setGroupId(groupOptional.get().getId());
-        season.setSeasonSettings(new SeasonSettings());
+        newSeason.setStartDate(ZonedDateTime.now());
+        newSeason.setGroupId(groupOptional.get().getId());
+        newSeason.setSeasonSettings(new SeasonSettings());
 
         if (oldSeason != null && oldSeason.getSeasonSettings() != null) {
-            season.getSeasonSettings().setMaxTeamSize(oldSeason.getSeasonSettings().getMaxTeamSize());
-            season.getSeasonSettings().setMinTeamSize(oldSeason.getSeasonSettings().getMinTeamSize());
-            season.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
-            season.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
-            season.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
-            season.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
+            newSeason.getSeasonSettings().setMaxTeamSize(oldSeason.getSeasonSettings().getMaxTeamSize());
+            newSeason.getSeasonSettings().setMinTeamSize(oldSeason.getSeasonSettings().getMinTeamSize());
+            newSeason.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
+            newSeason.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
+            newSeason.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
+            newSeason.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
         }
 
-        season = seasonRepository.save(season);
+        var season = seasonRepository.save(newSeason);
 
         if (oldSeason != null) {
             oldSeason.setName(dto.getOldSeasonName());
@@ -79,7 +93,25 @@ public class SeasonService {
 
             oldSeason = seasonRepository.save(oldSeason);
 
-            playerService.copyPlayersFromOldSeason(oldSeason, season);
+            var leaderboard = leaderboardService.generateLeaderboard(groupMapper.groupToGroupDto(group), "season", true, oldSeason.getId());
+
+            leaderboard.getEntries().forEach(oldPlayerDto -> {
+                var player = new Player();
+                player.setId(null);
+                player.setProfile(profileMapper.profileDtoToProfile(oldPlayerDto.getProfile()));
+                player.setSeason(season);
+                player.setActiveThisSeason(oldPlayerDto.isActiveThisSeason());
+
+                var statistics = playerStatisticsMapper.playerStatisticsDtoToPlayerStatistics(oldPlayerDto.getStatistics());
+                statistics.setId(null);
+
+                statistics = playerStatisticsRepository.save(statistics);
+
+                player.setStatistics(statistics);
+
+                playerRepository.save(player);
+            });
+
             ruleService.copyRulesFromOldSeason(oldSeason, season);
         }
 

@@ -5,10 +5,12 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.PlayerStatistics;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
 
@@ -30,24 +32,29 @@ public class LeaderboardService {
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
     private final PlayerRepository playerRepository;
-    private final SeasonService seasonService;
+    private final SeasonRepository seasonRepository;
+    private final SeasonMapper seasonMapper;
 
     @Autowired
-    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService, PlayerRepository playerRepository, SeasonService seasonService) {
+    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService, PlayerRepository playerRepository, SeasonRepository seasonRepository, SeasonMapper seasonMapper) {
         this.ruleMoveService = ruleMoveService;
         this.matchService = matchService;
         this.playerRepository = playerRepository;
-        this.seasonService = seasonService;
+        this.seasonRepository = seasonRepository;
+        this.seasonMapper = seasonMapper;
     }
 
     public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
-        return this.generateLeaderboard(group, scope, seasonId, null);
+        return this.generateLeaderboard(group, scope, false, seasonId);
     }
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId, @Nullable Stream<PlayerDto> players) {
+    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId) {
+        return this.generateLeaderboard(group, scope, useOld, seasonId, null);
+    }
+
+    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId, @Nullable Stream<PlayerDto> players) {
         Stream<MatchDto> matches;
         ZonedDateTime startedAt;
-        AtomicBoolean allTime = new AtomicBoolean();
 
         switch (scope) {
             case "all-time" -> {
@@ -62,15 +69,15 @@ public class LeaderboardService {
                 }
 
                 startedAt = group.getCreatedAt();
-
-                allTime.set(true);
             }
             case "season" -> {
                 if (seasonId == null) {
                     return null;
                 }
 
-                var season = seasonService.getSeasonById(seasonId);
+                var season = seasonRepository.findById(seasonId)
+                        .map(seasonMapper::seasonToSeasonDto)
+                        .orElse(null);
 
                 if (season == null) {
                     return null;
@@ -90,6 +97,9 @@ public class LeaderboardService {
                 if (season == null) {
                     return null;
                 }
+
+
+                //TODO feature flag: should this leaderboard also include matches today but from past seasons?
 
                 matches = matchService.streamAllMatchesToday(group, season);
 
@@ -126,9 +136,6 @@ public class LeaderboardService {
         players.forEach(playerDto -> {
             var dto = entries.get(playerDto.getProfile().getId());
 
-            // increment the player count
-            numPlayers.incrementAndGet();
-
             // we always want to use the newest player of a profile (the player that played in the most recent season)
             // if no player is saved we set the player...
             if (dto == null ||
@@ -140,8 +147,14 @@ public class LeaderboardService {
                             .compareTo(Duration.between(
                                     ZonedDateTime.now(), dto.getSeason().getEndDate()
                             )) < 0) {
-                if (!allTime.get() || playerDto.getStatistics() == null) {
-                    playerDto.setStatistics(new PlayerStatistics());
+                if ((!scope.equals("all-time") && !useOld) || playerDto.getStatistics() == null) {
+                    playerDto.setStatistics(new PlayerStatisticsDto());
+                }
+
+                playerDto.getStatistics().setId(null);
+
+                if (!entries.containsKey(playerDto.getProfile().getId())) {
+                    numPlayers.incrementAndGet();
                 }
 
                 entries.put(playerDto.getProfile().getId(), playerDto);
@@ -279,7 +292,7 @@ public class LeaderboardService {
         dto.setNumPlayers(numPlayers.get());
         dto.setStartedAt(startedAt);
         dto.setEntries(entries.values().stream()
-                .filter(playerDto -> allTime.get() || playerDto.isActiveThisSeason())
+                .filter(playerDto -> scope.equals("all-time") || playerDto.isActiveThisSeason())
                 .toList());
 
         // calculate ranking for all possible algorithms
