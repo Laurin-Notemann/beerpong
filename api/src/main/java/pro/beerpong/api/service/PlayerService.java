@@ -1,15 +1,17 @@
 package pro.beerpong.api.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
+import pro.beerpong.api.model.dao.*;
+import pro.beerpong.api.mapping.PlayerStatisticsMapper;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.PlayerCreateDto;
 import pro.beerpong.api.model.dto.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.PlayerStatisticsRepository;
-import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -25,9 +27,9 @@ public class PlayerService {
     private final SubscriptionHandler subscriptionHandler;
     private final PlayerRepository playerRepository;
     private final SeasonRepository seasonRepository;
-    private final ProfileRepository profileRepository;
     private final PlayerMapper playerMapper;
     private final PlayerStatisticsRepository playerStatisticsRepository;
+    private final PlayerStatisticsMapper playerStatisticsMapper;
 
     public List<PlayerDto> getBySeasonId(String seasonId) {
         return this.getBySeasonId(seasonId, false);
@@ -99,12 +101,24 @@ public class PlayerService {
         return error.get();
     }
 
-    public PlayerDto createPlayer(Season season, Profile profile) {
+    public PlayerDto createPlayer(Season season, Profile profile, @Nullable Player lastPlayer) {
         Player player = new Player();
         player.setProfile(profile);
         player.setSeason(season);
         player.setActiveThisSeason(true);
         player.setStatistics(new PlayerStatistics());
+
+        playerStatisticsRepository.save(player.getStatistics());
+
+
+        if (lastPlayer != null) {
+            var stats = playerStatisticsMapper.playerStatisticsToPlayerStatisticsDto(lastPlayer.getStatistics());
+            stats.setId(null);
+
+            player.setStatistics(playerStatisticsMapper.playerStatisticsDtoToPlayerStatistics(stats));
+        } else {
+            player.setStatistics(new PlayerStatistics());
+        }
 
         playerStatisticsRepository.save(player.getStatistics());
 

@@ -58,7 +58,7 @@ public class ProfileService {
             } else {
                 var lastPlayer = playerService.findLatestPlayer(existing.getId());
 
-                playerService.createPlayer(season, profileMapper.profileDtoToProfile(existing));
+                playerService.createPlayer(season, profileMapper.profileDtoToProfile(existing), lastPlayer);
 
                 return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
             }
@@ -80,7 +80,7 @@ public class ProfileService {
         var savedProfile = profileRepository.save(profile);
 
         if (createPlayer) {
-            playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile);
+            playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile, null);
         }
 
         return profileMapper.profileToProfileDto(savedProfile);
