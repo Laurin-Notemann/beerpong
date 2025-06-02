@@ -3,6 +3,7 @@ package pro.beerpong.api.model.dto;
 import com.google.common.collect.Maps;
 import jakarta.persistence.Transient;
 import lombok.Data;
+import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Map;
@@ -16,7 +17,7 @@ public class PlayerStatisticsDto {
     private long totalTeamSize = 0;
     private double avgPointsPerMatch = 0.0D;
     private double avgTeamSize = 0.0D;
-    private double elo = 100D;
+    private double elo = EloAlgorithm.STARTING_ELO;
     @Transient
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
 

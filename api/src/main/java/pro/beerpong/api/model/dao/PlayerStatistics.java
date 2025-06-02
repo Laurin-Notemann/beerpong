@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Map;
@@ -23,7 +24,7 @@ public class PlayerStatistics {
     private long totalTeamSize = 0;
     private double avgPointsPerMatch = 0.0D;
     private double avgTeamSize = 0.0D;
-    private double elo = 100D;
+    private double elo = EloAlgorithm.STARTING_ELO;
     @Transient
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
 }

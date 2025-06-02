@@ -2,6 +2,7 @@ package pro.beerpong.api.model.dto;
 
 import com.google.common.collect.Maps;
 import lombok.Data;
+import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Map;
@@ -15,7 +16,7 @@ public class LeaderboardEntryDto {
     private int totalTeamSize = 0;
     private double averagePointsPerMatch = 0.0D;
     private double averageTeamSize = 0.0D;
-    private double elo = 100D;
+    private double elo = EloAlgorithm.STARTING_ELO;
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
 
     public void addTotalPoints(int amount) {
