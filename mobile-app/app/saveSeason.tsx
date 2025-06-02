@@ -5,6 +5,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import {
     byDescendingAveragePoints,
+    byDescendingElo,
     useLeaderboardProps,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -63,7 +64,11 @@ export default function Page() {
         seasonId ?? null
     );
 
-    const sortedPlayers = currentSeasonPlayers.sort(byDescendingAveragePoints);
+    const sortedPlayers = currentSeasonPlayers.sort(
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
+            ? byDescendingAveragePoints
+            : byDescendingElo
+    );
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked

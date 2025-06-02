@@ -4,6 +4,7 @@ import { Match } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import PlayerStats from '@/components/PlayerStats';
 import { useTheme } from '@/theme';
+import { formatElo } from '@/utils/format';
 
 export function PlayerPageHeadSection({
     avatarUrl,
@@ -19,6 +20,7 @@ export function PlayerPageHeadSection({
     isUnranked,
     editable,
     averagePointsPerMatch,
+    rankingAlgorithm,
 }: {
     avatarUrl?: string | null;
     placement: number;
@@ -33,6 +35,7 @@ export function PlayerPageHeadSection({
     isUnranked: boolean;
     editable: boolean;
     averagePointsPerMatch: string;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }) {
     const theme = useTheme();
 
@@ -54,7 +57,9 @@ export function PlayerPageHeadSection({
                     color: theme.color.text.secondary,
                 }}
             >
-                {averagePointsPerMatch}
+                {rankingAlgorithm === 'AVERAGE'
+                    ? averagePointsPerMatch
+                    : formatElo(elo)}
             </Text>
             <Text
                 style={{

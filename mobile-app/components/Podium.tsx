@@ -1,12 +1,12 @@
 import React from 'react';
 import { TouchableOpacity, ViewProps } from 'react-native';
 
-import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { Player } from '@/api/calls/seasonHooks';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { formatAverage, formatElo, formatPlacement } from '@/utils/format';
 
 const Description: React.FC<{
     detailed?: boolean;
@@ -73,6 +73,7 @@ export interface PodiumProps extends ViewProps {
 
     onPlayerPress?: (id: string) => void;
     onPlayerLongPress?: (id: string) => void;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export default function Podium({
     detailed = true,
@@ -82,19 +83,18 @@ export default function Podium({
 
     onPlayerPress,
     onPlayerLongPress,
+    rankingAlgorithm,
     ...rest
 }: PodiumProps) {
-    const firstPlaceAveragePointsPerMatch = firstPlace?.matches
-        ? (firstPlace?.points / firstPlace?.matches).toFixed(1)
-        : '--';
-
-    const secondPlaceAveragePointsPerMatch = secondPlace?.matches
-        ? (secondPlace?.points / secondPlace?.matches).toFixed(1)
-        : '--';
-
-    const thirdPlaceAveragePointsPerMatch = thirdPlace?.matches
-        ? (thirdPlace?.points / thirdPlace?.matches).toFixed(1)
-        : '--';
+    const firstPlaceAverage = firstPlace
+        ? firstPlace.points / firstPlace.matches
+        : undefined;
+    const secondPlaceAverage = secondPlace
+        ? secondPlace.points / secondPlace.matches
+        : undefined;
+    const thirdPlaceAverage = thirdPlace
+        ? thirdPlace.points / thirdPlace.matches
+        : undefined;
 
     const theme = useTheme();
 
@@ -142,7 +142,11 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={secondPlace}
-                    average={secondPlaceAveragePointsPerMatch}
+                    average={
+                        rankingAlgorithm === 'AVERAGE'
+                            ? formatAverage(secondPlaceAverage)
+                            : formatElo(secondPlace?.elo)
+                    }
                 />
             </TouchableOpacity>
             <TouchableOpacity
@@ -189,7 +193,11 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={firstPlace}
-                    average={firstPlaceAveragePointsPerMatch}
+                    average={
+                        rankingAlgorithm === 'AVERAGE'
+                            ? formatAverage(firstPlaceAverage)
+                            : formatElo(firstPlace?.elo)
+                    }
                 />
             </TouchableOpacity>
             <TouchableOpacity
@@ -223,7 +231,11 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={thirdPlace}
-                    average={thirdPlaceAveragePointsPerMatch}
+                    average={
+                        rankingAlgorithm === 'AVERAGE'
+                            ? formatAverage(thirdPlaceAverage)
+                            : formatElo(thirdPlace?.elo)
+                    }
                 />
             </TouchableOpacity>
         </ThemedView>

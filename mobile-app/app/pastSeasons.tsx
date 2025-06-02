@@ -88,6 +88,10 @@ export default function Page() {
                                     numMatches={season.item.numMatches!}
                                     // @ts-ignore TODO: type this properly
                                     players={season.item.players}
+                                    rankingAlgorithm={
+                                        season.item.seasonSettings
+                                            ?.rankingAlgorithm
+                                    }
                                 />
                             </ScrollView>
                         </SafeAreaView>

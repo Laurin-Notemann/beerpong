@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import {
     GestureHandlerRootView,
@@ -33,8 +33,14 @@ export default function Page() {
     const nav = useNavigation();
     const { groupId, seasonId, group } = useGroup();
 
-    const { currentSeasonPlayers, alltimePlayers, dailyPlayers } =
-        useLeaderboardProps(groupId, seasonId ?? null);
+    const {
+        currentSeasonPlayers,
+        alltimePlayers,
+        dailyPlayers,
+        dailyLeaderboard,
+        currentSeasonLeaderboard,
+        alltimeLeaderboard,
+    } = useLeaderboardProps(groupId, seasonId ?? null);
 
     const [showSortModal, setShowSortModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -42,6 +48,12 @@ export default function Page() {
     const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
         'ELO'
     );
+
+    useEffect(() => {
+        setSortingAlgorithm(
+            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm!
+        );
+    }, [group.data?.activeSeason?.seasonSettings?.rankingAlgorithm]);
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -84,9 +96,7 @@ export default function Page() {
                 refreshControl={<RefreshControl {...refresh} />}
             >
                 <LeaderBoardSeasonInfo
-                    numPlayers={group.data?.numberOfPlayers ?? 0}
-                    numMatches={group.data?.numberOfMatches ?? 0}
-                    startDate={group.data?.activeSeason?.startDate!}
+                    {...currentSeasonLeaderboard}
                     isCurrentSeason
                 />
                 {experiments.eloAlgorithm && (
@@ -110,6 +120,7 @@ export default function Page() {
                     </View>
                 )}
                 <Leaderboard
+                    rankingAlgorithm={sortingAlgorithm}
                     ListEmptyComponent={
                         <LeaderboardEmptyComponent message="No matches played yet this season." />
                     }
@@ -162,12 +173,7 @@ export default function Page() {
                         marginHorizontal: 16,
                     }}
                 > */}
-                <LeaderBoardSeasonInfo
-                    numPlayers={group.data?.numberOfPlayers ?? 0}
-                    numMatches={group.data?.numberOfMatches ?? 0}
-                    startDate={group.data?.activeSeason?.startDate!}
-                    isCurrentSeason
-                />
+                <LeaderBoardSeasonInfo {...dailyLeaderboard} isCurrentSeason />
                 {experiments.eloAlgorithm && (
                     <View
                         style={{
@@ -189,6 +195,7 @@ export default function Page() {
                     </View>
                 )}
                 <Leaderboard
+                    rankingAlgorithm={sortingAlgorithm}
                     ListEmptyComponent={
                         <LeaderboardEmptyComponent message="No matches played yet today." />
                     }
@@ -238,9 +245,7 @@ export default function Page() {
                 refreshControl={<RefreshControl {...refresh} />}
             >
                 <LeaderBoardSeasonInfo
-                    numPlayers={group.data?.numberOfPlayers ?? 0}
-                    numMatches={group.data?.numberOfMatches ?? 0}
-                    startDate={group.data?.activeSeason?.startDate!}
+                    {...alltimeLeaderboard}
                     isCurrentSeason
                 />
                 {experiments.eloAlgorithm && (
@@ -264,6 +269,7 @@ export default function Page() {
                     </View>
                 )}
                 <Leaderboard
+                    rankingAlgorithm={sortingAlgorithm}
                     ListEmptyComponent={
                         <LeaderboardEmptyComponent message="No matches played yet in this group." />
                     }

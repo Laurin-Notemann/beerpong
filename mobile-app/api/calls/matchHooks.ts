@@ -79,7 +79,6 @@ export const useCreateMatchMutation = () => {
         mutationFn: async (body) => {
             try {
                 const res = await (await api).createMatch(body, body);
-                throw new Error('');
                 return res?.data;
             } catch (err) {
                 writeLog('useCreateMatchMutation', body);

@@ -43,6 +43,7 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
     refresh: RefreshProps;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export default function PlayerScreen({
     minMatchesRequiredToBeRanked,
@@ -63,6 +64,7 @@ export default function PlayerScreen({
     onUploadAvatarPress,
     onDeleteAvatarPress,
     refresh,
+    rankingAlgorithm,
 }: PlayerScreenProps) {
     const theme = useTheme();
 
@@ -120,6 +122,7 @@ export default function PlayerScreen({
                                 averagePointsPerMatch={averagePointsPerMatch}
                                 onUploadAvatarPress={onUploadAvatarPress}
                                 matches={matches}
+                                rankingAlgorithm={rankingAlgorithm}
                             />
                             <View
                                 style={{
@@ -176,6 +179,7 @@ export default function PlayerScreen({
                         averagePointsPerMatch={averagePointsPerMatch}
                         onUploadAvatarPress={onUploadAvatarPress}
                         matches={matches}
+                        rankingAlgorithm={rankingAlgorithm}
                     />
                     <View
                         style={{

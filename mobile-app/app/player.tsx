@@ -6,13 +6,13 @@ import { useMatchesByPlayerQuery } from '@/api/calls/matchHooks';
 import {
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
-    usePlayersQuery,
     useUpdatePlayerAvatarMutation,
 } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import {
     byDescendingAveragePoints,
+    byDescendingElo,
     useLeaderboardProps,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
@@ -22,6 +22,7 @@ import {
     usePullToRefresh,
     useQueryInvalidation,
 } from '@/api/utils/reactQuery';
+import { eloAlgorithm } from '@/app/eloCalculation';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -33,9 +34,10 @@ import { ConsoleLogger } from '@/utils/logging';
 export default function Page() {
     const nav = useNavigation();
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
 
-    const playersQuery = usePlayersQuery(groupId, seasonId);
+    const { currentSeasonPlayers, rawCurrentSeasonPlayers } =
+        useLeaderboardProps(groupId, seasonId!);
 
     const deletePlayerMutation = useDeletePlayerMutation();
 
@@ -48,7 +50,7 @@ export default function Page() {
     const allowedMoves = movesQuery.data?.data ?? [];
 
     const matches = (matchesQuery.data?.data ?? []).map(
-        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        matchDtoToMatch(rawCurrentSeasonPlayers, allowedMoves)
     );
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
@@ -70,11 +72,6 @@ export default function Page() {
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-    const { currentSeasonPlayers } = useLeaderboardProps(
-        groupId,
-        seasonId ?? null
-    );
-
     const { invalidatePlayers } = useQueryInvalidation();
 
     const refresh = usePullToRefresh(() =>
@@ -83,9 +80,9 @@ export default function Page() {
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
-    const player = (playersQuery.data?.data ?? []).find((i) => i.id === id);
+    const player = currentSeasonPlayers.find((i) => i.id === id);
 
-    const playerName = player?.profile?.name || 'Unknown';
+    const playerName = player?.name || 'Unknown';
 
     async function onDelete() {
         if (!groupId || !seasonId) return;
@@ -104,18 +101,14 @@ export default function Page() {
         }
     }
 
-    const profileId = player?.profile?.id;
+    const profileId = player?.id;
 
     const isLoading =
-        playersQuery.isLoading ||
         matchesQuery.isLoading ||
         movesQuery.isLoading ||
         seasonsQuery.isLoading;
 
     if (isLoading) return <LoadingScreen />;
-
-    if (!playersQuery.data?.data)
-        return <ErrorScreen error={playersQuery.error} />;
 
     async function onUploadAvatarPress() {
         if (!groupId || !seasonId || !profileId) return;
@@ -197,7 +190,11 @@ export default function Page() {
         }
     }
 
-    const sortedPlayers = currentSeasonPlayers.sort(byDescendingAveragePoints);
+    const sortedPlayers = currentSeasonPlayers.sort(
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
+            ? byDescendingAveragePoints
+            : byDescendingElo
+    );
 
     const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
 
@@ -218,7 +215,7 @@ export default function Page() {
             id={id}
             placement={placement}
             name={playerName}
-            elo={216}
+            elo={player?.elo ?? eloAlgorithm.params.startingElo}
             matchesWon={
                 matches.filter(
                     (i) =>
@@ -231,16 +228,20 @@ export default function Page() {
                             ?.team
                 ).length
             }
-            points={player?.statistics?.points ?? 0}
+            points={player?.points ?? 0}
             cups={allTimeCups}
             hasPremium={false}
             pastSeasons={activeSeasons.length}
             matches={matches}
             onDelete={onDelete}
-            avatarUrl={player?.profile?.avatarAsset?.url}
+            avatarUrl={player?.avatarUrl}
             onUploadAvatarPress={onUploadAvatarPress}
             onDeleteAvatarPress={onDeleteAvatarPress}
             refresh={refresh}
+            rankingAlgorithm={
+                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
+                'AVERAGE'
+            }
         />
     );
 }

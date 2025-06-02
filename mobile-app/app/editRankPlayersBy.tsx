@@ -1,20 +1,36 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 
+import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
+import { showErrorToast } from '@/toast';
+import { ConsoleLogger } from '@/utils/logging';
 
 export default function Page() {
     const nav = useNavigation();
 
-    const [value, setValue] = useState('average');
+    const [rankingAlgorithm, setRankingAlgorithm] = useState<'AVERAGE' | 'ELO'>(
+        'AVERAGE'
+    );
 
-    async function onValueChange(newValue: string) {
-        setValue(newValue);
-    }
+    const { groupId, seasonId } = useGroup();
+
+    const { seasonSettings, updateSeasonSettingsMutation } = useSeasonSettings(
+        groupId!,
+        seasonId!
+    );
+
+    useEffect(() => {
+        if (seasonSettings) {
+            setRankingAlgorithm(seasonSettings.rankingAlgorithm);
+        }
+    }, [seasonSettings]);
+
+    const isDirty = rankingAlgorithm !== seasonSettings?.rankingAlgorithm;
 
     return (
         <>
@@ -27,8 +43,29 @@ export default function Page() {
                         </HeaderItem>
                     ),
                     headerRight: () => (
-                        <HeaderItem noMargin onPress={() => nav.goBack()}>
-                            Done
+                        <HeaderItem
+                            noMargin
+                            onPress={async () => {
+                                try {
+                                    if (isDirty) {
+                                        await updateSeasonSettingsMutation.mutateAsync(
+                                            {
+                                                rankingAlgorithm,
+                                            }
+                                        );
+                                    }
+                                    nav.goBack();
+                                } catch (err) {
+                                    ConsoleLogger.error(
+                                        'failed to update settings:',
+                                        err
+                                    );
+                                    showErrorToast('Failed to update settings');
+                                }
+                            }}
+                            isLoading={updateSeasonSettingsMutation.isPending}
+                        >
+                            Save
                         </HeaderItem>
                     ),
                 }}
@@ -37,20 +74,21 @@ export default function Page() {
                 <Select
                     items={[
                         {
-                            value: 'average',
+                            value: 'AVERAGE',
                             title: 'Average Points Scored',
                             subtitle:
                                 'Points scored divided by matches played.',
                         },
                         {
-                            value: 'elo',
+                            value: 'ELO',
                             title: 'Elo',
                             subtitle:
                                 'More balanced algorithm based on relative skill level.',
                         },
                     ]}
-                    value={value}
-                    onChange={onValueChange}
+                    value={rankingAlgorithm}
+                    // @ts-expect-error
+                    onChange={setRankingAlgorithm}
                     footer={
                         <Text
                             onPress={() => {

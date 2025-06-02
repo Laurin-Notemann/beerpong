@@ -197,7 +197,12 @@ export default function GroupSettingsScreen({
                                 title="Rank Players by"
                                 headIcon="division"
                                 tailIconType="next"
-                                tailContent="Average Points Scored"
+                                tailContent={
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.rankingAlgorithm === 'AVERAGE'
+                                        ? 'Average Points Scored'
+                                        : 'Elo'
+                                }
                                 onPress={() =>
                                     nav.navigate('editRankPlayersBy')
                                 }
