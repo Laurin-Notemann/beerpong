@@ -6,6 +6,7 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
+import { useLogging } from '@/utils/useLogging';
 
 export const useMatchQuery = (
     groupId: ApiId | null | undefined,
@@ -67,6 +68,9 @@ export const useMatchesByPlayerQuery = (
 
 export const useCreateMatchMutation = () => {
     const { api } = useApi();
+
+    const { writeLog } = useLogging();
+
     return useMutation<
         Paths.CreateMatch.Responses.$200 | null,
         Error,
@@ -75,8 +79,10 @@ export const useCreateMatchMutation = () => {
         mutationFn: async (body) => {
             try {
                 const res = await (await api).createMatch(body, body);
+                throw new Error('');
                 return res?.data;
             } catch (err) {
+                writeLog('useCreateMatchMutation', body);
                 Sentry.captureEvent({
                     message: 'Failed to create match',
                     level: 'error',

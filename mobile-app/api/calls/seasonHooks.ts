@@ -5,7 +5,7 @@ import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { Paths, SeasonSettings } from '@/openapi/openapi';
+import { Paths, PlayerDto, SeasonSettings } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export const useSeasonQuery = (
@@ -68,18 +68,7 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                     return {
                         ...season,
                         numMatches: matches.data.data?.length ?? 0,
-                        players: players.map((i) => {
-                            return {
-                                id: i.playerDto!.id!,
-                                name: i.playerDto!.profile!.name!,
-                                points: i.totalPoints!,
-                                matches: i.totalGames!,
-                                matchesWon: 0,
-                                elo: 0,
-                                avatarUrl:
-                                    i.playerDto!.profile!.avatarAsset?.url,
-                            };
-                        }),
+                        players: players.map(toPlayer),
                     };
                 })
             );
@@ -189,3 +178,25 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
         updateSeasonSettingsMutation,
     };
 }
+
+export interface Player {
+    id: string;
+    name: string;
+    points: number;
+    matches: number;
+    matchesWon: number;
+    elo: number;
+    avatarUrl?: string | null;
+}
+
+export const toPlayer = (i: PlayerDto): Player => {
+    return {
+        id: i!.id!,
+        elo: i.statistics?.elo!,
+        matches: i.statistics?.matches!,
+        points: i.statistics?.points!,
+        matchesWon: 0,
+        name: i.profile?.name!,
+        avatarUrl: i!.profile?.avatarAsset?.url,
+    };
+};
