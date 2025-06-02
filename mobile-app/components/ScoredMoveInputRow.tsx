@@ -106,7 +106,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
                 <TutorialBubble
                     text="Try pulling this to the right!"
                     left={12}
-                    top={12}
+                    top={-140}
                 />
             )}
             <GestureDetector

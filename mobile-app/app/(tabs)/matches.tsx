@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { SafeAreaView, View } from 'react-native';
 
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import { AppBackground } from '@/app/Background';
@@ -19,11 +19,7 @@ export default function Screen() {
     return (
         <>
             <AppBackground />
-            <View
-                style={{
-                    flex: 1,
-                }}
-            >
+            <SafeAreaView>
                 <MatchesList
                     contentContainerStyle={{
                         paddingTop: insets.top,
@@ -31,7 +27,7 @@ export default function Screen() {
                     }}
                     {...props}
                 />
-            </View>
+            </SafeAreaView>
         </>
     );
 }

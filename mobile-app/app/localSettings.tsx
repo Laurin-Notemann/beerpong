@@ -1,7 +1,8 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, Switch } from 'react-native';
 
+import { env } from '@/api/env';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
@@ -75,6 +76,27 @@ export default function Page() {
                             triggerHapticBump('toast:success');
                         }}
                     />
+                    <MenuItem
+                        title="Debug Logs"
+                        headIcon="dev-to"
+                        tailIconType="next"
+                        onPress={() => nav.navigate('debugLog')}
+                    />
+                    {env.isDev && (
+                        <>
+                            <MenuItem
+                                title="Go to Onboarding"
+                                headIcon="dev-to"
+                                tailIconType="next"
+                                onPress={() => nav.navigate('onboarding')}
+                            />
+                            <MenuItem
+                                title="Has Premium"
+                                headIcon="dev-to"
+                                tailContent={<Switch value={false} />}
+                            />
+                        </>
+                    )}
                 </MenuSection>
             </ScrollView>
         </>

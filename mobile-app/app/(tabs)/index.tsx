@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { SafeAreaView, View } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -360,8 +360,13 @@ export default function Page() {
                     <AllTimeLeaderboard />
                 )}
             </Swiper>
+            {/* <SafeAreaView
+                style={{
+                    backgroundColor: 'red',
+                }}
+            > */}
             {experiments.dailyLeaderboard && (
-                <View
+                <SafeAreaView
                     style={{
                         position: 'absolute',
 
@@ -390,8 +395,9 @@ export default function Page() {
                             });
                         }}
                     />
-                </View>
+                </SafeAreaView>
             )}
+            {/* </SafeAreaView> */}
         </GestureHandlerRootView>
     );
 }

@@ -99,7 +99,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     return (
         <View ref={containerRef} style={styles.container}>
             <BlurView
-                intensity={100}
+                intensity={70}
                 tint={theme.blur.tint}
                 style={{
                     flexDirection: 'row',
