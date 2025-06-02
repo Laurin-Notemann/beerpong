@@ -81,11 +81,11 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: 'Leaderboard',
-                    tabBarIcon: ({ color }) =>
+                    tabBarIcon: ({ color, size }) =>
                         CUSTOM_LEADERBOARD_ICON ? (
-                            <LeaderboardIcon color={color} size={32} />
+                            <LeaderboardIcon color={color} size={size} />
                         ) : (
-                            <Icon color={color} size={32} name="home" />
+                            <Icon color={color} size={size} name="home" />
                         ),
                     ...groupHeader,
                 }}
@@ -95,10 +95,10 @@ export default function TabLayout() {
                 options={{
                     title: 'Matches',
 
-                    tabBarIcon: ({ color }) => (
+                    tabBarIcon: ({ color, size }) => (
                         <Icon
                             color={color}
-                            size={32}
+                            size={size}
                             name="format-list-bulleted"
                         />
                     ),
@@ -109,8 +109,8 @@ export default function TabLayout() {
                 name="newMatch"
                 options={{
                     title: 'New Match',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="pencil-outline" />
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon color={color} size={size} name="pencil-outline" />
                     ),
                     ...groupHeader,
                 }}
@@ -119,8 +119,8 @@ export default function TabLayout() {
                 name="rules"
                 options={{
                     title: 'Rules',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="format-section" />
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon color={color} size={size} name="format-section" />
                     ),
                     ...groupHeader,
                     // hide tab in production
@@ -131,8 +131,8 @@ export default function TabLayout() {
                 name="settings"
                 options={{
                     title: 'Settings',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="cog-outline" />
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon color={color} size={size} name="cog-outline" />
                     ),
                     ...groupHeader,
                 }}

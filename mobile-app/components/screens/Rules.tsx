@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { SafeAreaView, Text, View } from 'react-native';
 import {
     NestableDraggableFlatList,
     NestableScrollContainer,
@@ -199,65 +199,70 @@ export default function Rules({
                 ]}
                 isVisible={showDeleteConfirmation}
             />
-
-            <NestableScrollContainer
-                refreshControl={<RefreshControl {...refresh} />}
-                contentContainerStyle={{
-                    paddingTop: insets.top + 16,
-                    paddingBottom: insets.bottom,
-                }}
-            >
-                <NestableDraggableFlatList
-                    data={rules}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
-                    onDragEnd={({ data }) => {
-                        triggerHapticBump('selection');
-                        onReorderRules(data);
+            <SafeAreaView>
+                <NestableScrollContainer
+                    refreshControl={<RefreshControl {...refresh} />}
+                    contentContainerStyle={{
+                        paddingTop: insets.top + 16,
+                        paddingBottom: insets.bottom,
                     }}
-                    ListEmptyComponent={
-                        <IconHead
-                            iconName="format-section"
-                            title="No Rules"
-                            style={{ paddingTop: 128 }}
-                            description={
-                                <Button
-                                    style={{
-                                        marginTop: 24,
-                                    }}
-                                    onPress={onResetRules}
-                                    title="Reset Rules"
-                                    variant="primary"
-                                />
-                            }
-                        />
-                    }
-                />
-                {rules.length > 0 && (
-                    <Text
-                        style={{
-                            fontSize: 12,
-                            color: theme.color.text.secondary,
-                            marginTop: 16,
-
-                            marginBottom:
-                                42 + 32 + (selectedIds.length > 0 ? 42 : 0),
-
-                            paddingHorizontal: 16,
-                            textAlign: 'center',
+                >
+                    <NestableDraggableFlatList
+                        data={rules}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id}
+                        onDragEnd={({ data }) => {
+                            triggerHapticBump('selection');
+                            onReorderRules(data);
                         }}
-                    >
-                        The default ruleset is based on the house rules of the
-                        student fraternity{' '}
+                        ListEmptyComponent={
+                            <IconHead
+                                iconName="format-section"
+                                title="No Rules"
+                                style={{ paddingTop: 128 }}
+                                description={
+                                    <Button
+                                        style={{
+                                            marginTop: 24,
+                                        }}
+                                        onPress={onResetRules}
+                                        title="Reset Rules"
+                                        variant="primary"
+                                    />
+                                }
+                            />
+                        }
+                    />
+                    {rules.length > 0 && (
                         <Text
-                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                            style={{
+                                fontSize: 12,
+                                color: theme.color.text.secondary,
+                                marginTop: 16,
+
+                                marginBottom:
+                                    42 + 32 + (selectedIds.length > 0 ? 42 : 0),
+
+                                paddingHorizontal: 16,
+                                textAlign: 'center',
+                            }}
                         >
-                            VDSt Straßburg-Hamburg-Rostock
+                            The default ruleset is based on the house rules of
+                            the student fraternity{' '}
+                            <Text
+                                style={{
+                                    fontWeight: 'bold',
+                                    fontStyle: 'italic',
+                                }}
+                            >
+                                VDSt Straßburg-Hamburg-Rostock
+                            </Text>
+                            .
                         </Text>
-                        .
-                    </Text>
-                )}
-            </NestableScrollContainer>
+                    )}
+                </NestableScrollContainer>
+            </SafeAreaView>
+
             {isEditing && (
                 <View
                     style={{

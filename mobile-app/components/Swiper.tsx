@@ -65,8 +65,33 @@ Swiper.displayName = 'Swiper';
 
 /**
  * @returns swiperProgress - float representing the interpolated page idx (e.g. 1.5 if the user if halfway between page 2 and 3)
+ *
+ * if you need to rerender when the page has changed, use `useSwiperWithPageState` instead.
  */
 export function useSwiper(options?: { initialPage?: number }) {
+    const initialPage = options?.initialPage ?? 0;
+
+    const swiperProgress = useSharedValue(initialPage);
+
+    const ref = useRef<ICarouselInstance>(null);
+
+    useEffect(() => {
+        ref.current?.scrollTo({ index: initialPage, animated: false });
+    }, [initialPage]);
+
+    return {
+        swiperProgress,
+        ref,
+    };
+}
+
+/**
+ * @returns swiperProgress - float representing the interpolated page idx (e.g. 1.5 if the user if halfway between page 2 and 3)
+ *
+ * if you don't need to rerender when the page has changed, use `useSwiper` instead.
+ * for example, if you're swiping multiple scroll views, their scroll progress might glitch back to the top after swiping.
+ */
+export function useSwiperWithPageState(options?: { initialPage?: number }) {
     const initialPage = options?.initialPage ?? 0;
 
     const swiperProgress = useSharedValue(initialPage);
