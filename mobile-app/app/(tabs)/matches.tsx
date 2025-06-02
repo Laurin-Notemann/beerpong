@@ -19,7 +19,11 @@ export default function Screen() {
     return (
         <>
             <AppBackground />
-            <SafeAreaView>
+            <SafeAreaView
+                style={{
+                    flex: 1,
+                }}
+            >
                 <MatchesList
                     contentContainerStyle={{
                         paddingTop: insets.top,
