@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
+    useDerivedValue,
     withSpring,
 } from 'react-native-reanimated';
 
@@ -29,27 +30,17 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const segmentWidth = (containerWidth - sidePadding * 2) / options.length;
 
-    const animatedStyle = useAnimatedStyle(() => ({
-        transform: [
-            {
-                translateX: withSpring(
-                    swiperProgress.value * segmentWidth + sidePadding,
-                    {
-                        duration: 100,
-                    }
-                ),
-            },
-        ],
-    }));
+    const targetX = useDerivedValue(
+        () =>
+            withSpring(swiperProgress.value * segmentWidth + sidePadding, {
+                duration: 100,
+            }),
+        [swiperProgress, segmentWidth]
+    );
 
-    useEffect(() => {
-        // timeout of 0ms to ensure the ref has rendered once before measuring
-        setTimeout(() => {
-            containerRef.current?.measure((x, y, width, height) => {
-                setContainerWidth(width);
-            });
-        }, 0);
-    }, [containerRef]);
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: targetX.value }],
+    }));
 
     const theme = useTheme();
 
@@ -97,7 +88,15 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     );
 
     return (
-        <View ref={containerRef} style={styles.container}>
+        <View
+            ref={containerRef}
+            style={styles.container}
+            onLayout={() => {
+                containerRef.current?.measure((x, y, width, height) => {
+                    setContainerWidth(width);
+                });
+            }}
+        >
             <BlurView
                 intensity={70}
                 tint={theme.blur.tint}

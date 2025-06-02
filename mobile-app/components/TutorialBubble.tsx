@@ -51,6 +51,7 @@ export const TutorialBubble: React.FC<{
 
     useEffect(() => {
         setTimeout(() => {
+            // TODO: can we attach a parentRef onLayout listener here instead?
             parentRef.current?.measureInWindow((x, y) => setCoords({ x, y }));
         }, 0);
     }, []);
