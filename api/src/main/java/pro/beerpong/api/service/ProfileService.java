@@ -50,11 +50,15 @@ public class ProfileService {
             if (existingPlayer.isPresent()) {
                 boolean success = playerService.reactivatePlayer(existingPlayer.get());
 
-                return new ProfileCreatedDto(existing, success, (success ? season.getId() : null));
+                if (!success) {
+                    return null;
+                }
+
+                return new ProfileCreatedDto(existing, true, season.getId());
             } else {
                 var lastPlayer = playerService.findLatestPlayer(existing.getId());
 
-                playerService.createPlayer(season, profileMapper.profileDtoToProfile(existing));
+                playerService.createPlayer(season, profileMapper.profileDtoToProfile(existing), lastPlayer);
 
                 return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
             }
@@ -76,7 +80,7 @@ public class ProfileService {
         var savedProfile = profileRepository.save(profile);
 
         if (createPlayer) {
-            playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile);
+            playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile, null);
         }
 
         return profileMapper.profileToProfileDto(savedProfile);

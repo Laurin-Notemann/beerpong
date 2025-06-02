@@ -20,7 +20,8 @@ public class Player {
     @JoinColumn(name = "season_id")
     private Season season;
 
-    @Transient
+    @OneToOne
+    @JoinColumn(name = "statistics_id")
     private PlayerStatistics statistics;
 
     @Column(nullable = false, columnDefinition = "boolean default true")

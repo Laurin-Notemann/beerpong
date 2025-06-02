@@ -44,6 +44,7 @@ public enum ErrorCodes {
     INVALID_PLAYER_ID(HttpStatus.BAD_REQUEST, "invalidPlayerId", "Player id must be non-null and non-empty!"),
     /* PROFILES */
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "profileNotFound", "The requested profile could not be found!"),
+    PROFILE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "profileAlreadyExists", "There already exists a profile with the provided name and an active player in the current season!"),
     /* ASSETS */
     ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "assetNotFound", "The requested asset could not be found!"),
     /* LEADERBOARDS */

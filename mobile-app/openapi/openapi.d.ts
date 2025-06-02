@@ -30,6 +30,7 @@ declare namespace Components {
             inviteCode?: string;
             activeSeason?: Season;
             wallpaperAsset?: AssetMetadataDto;
+            createdAt?: string; // date-time
             sportPreset?: GroupPreset;
             customSportName?: string;
             numberOfPlayers?: number; // int32
@@ -42,20 +43,10 @@ declare namespace Components {
             imageUrl?: string;
         }
         export interface LeaderboardDto {
-            entries?: LeaderboardEntryDto[];
-        }
-        export interface LeaderboardEntryDto {
-            playerDto?: PlayerDto;
-            totalPoints?: number; // int32
-            totalGames?: number; // int32
-            totalMoves?: number; // int32
-            totalTeamSize?: number; // int32
-            averagePointsPerMatch?: number; // double
-            averageTeamSize?: number; // double
-            elo?: number; // double
-            rankBy?: {
-                [name: string]: number; // int32
-            };
+            numPlayers?: number; // int64
+            numMatches?: number; // int64
+            startedAt?: string; // date-time
+            entries?: PlayerDto[];
         }
         export interface MatchCreateDto {
             teams?: TeamCreateDto[];
@@ -102,11 +93,28 @@ declare namespace Components {
             statistics?: PlayerStatisticsDto;
         }
         export interface PlayerStatisticsDto {
+            id?: string;
             points?: number; // int64
             matches?: number; // int64
+            moves?: number; // int64
+            totalTeamSize?: number; // int64
+            avgPointsPerMatch?: number; // double
+            avgTeamSize?: number; // double
+            elo?: number; // double
+            rankBy?: {
+                [name: string]: number; // int32
+            };
         }
         export interface ProfileCreateDto {
             name?: string;
+        }
+        export interface ProfileCreatedDto {
+            id?: string;
+            name?: string;
+            avatarAsset?: AssetMetadataDto;
+            groupId?: string;
+            reactivated?: boolean;
+            lastActiveSeasonId?: string;
         }
         export interface ProfileDto {
             id?: string;
@@ -190,6 +198,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: MatchOverviewDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeProfileCreatedDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: ProfileCreatedDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeProfileDto {
@@ -323,7 +337,8 @@ declare namespace Paths {
         }
         export type RequestBody = Components.Schemas.ProfileCreateDto;
         namespace Responses {
-            export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeProfileCreatedDto;
         }
     }
     namespace CreateRuleMove {
@@ -526,6 +541,7 @@ declare namespace Paths {
             export type GroupId = string;
             export type SeasonId = string;
             export type ShowInactive = boolean;
+            export type ShowStats = boolean;
         }
         export interface PathParameters {
             groupId: Parameters.GroupId;
@@ -533,6 +549,7 @@ declare namespace Paths {
         }
         export interface QueryParameters {
             showInactive?: Parameters.ShowInactive;
+            showStats?: Parameters.ShowStats;
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeListPlayerDto;
@@ -1321,7 +1338,6 @@ export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
 export type LeaderboardDto = Components.Schemas.LeaderboardDto;
-export type LeaderboardEntryDto = Components.Schemas.LeaderboardEntryDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
@@ -1333,6 +1349,7 @@ export type MatchOverviewTeamMemberDto =
 export type PlayerDto = Components.Schemas.PlayerDto;
 export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
+export type ProfileCreatedDto = Components.Schemas.ProfileCreatedDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeAssetMetadataDto =
     Components.Schemas.ResponseEnvelopeAssetMetadataDto;
@@ -1360,6 +1377,8 @@ export type ResponseEnvelopeMatchDto =
     Components.Schemas.ResponseEnvelopeMatchDto;
 export type ResponseEnvelopeMatchOverviewDto =
     Components.Schemas.ResponseEnvelopeMatchOverviewDto;
+export type ResponseEnvelopeProfileCreatedDto =
+    Components.Schemas.ResponseEnvelopeProfileCreatedDto;
 export type ResponseEnvelopeProfileDto =
     Components.Schemas.ResponseEnvelopeProfileDto;
 export type ResponseEnvelopeRuleMoveDto =

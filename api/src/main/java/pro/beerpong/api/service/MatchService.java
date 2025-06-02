@@ -25,6 +25,14 @@ import java.util.stream.Stream;
 
 @Service
 public class MatchService {
+    private static final long MINUTES_IN_DAY = 24 * 60;
+
+    /**
+     * Feature flag: discuss if this should be enabled in future
+     */
+    private static boolean USE_DAILY_MATCHES_FROM_PAST_SEASONS = false;
+
+
     private final SubscriptionHandler subscriptionHandler;
 
     private final MatchRepository matchRepository;
@@ -186,17 +194,25 @@ public class MatchService {
 
         Predicate<Match> predicate = switch (season.getSeasonSettings().getDailyLeaderboard()) {
             case WAKE_TIME -> match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTimeHour()));
-            case LAST_24_HOURS -> (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toHours() < 24;
+            case LAST_24_HOURS -> (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
             case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
         };
 
-        return matchRepository.findBySeasonId(group.getActiveSeason().getId())
-                .stream()
-                .filter(predicate)
-                .map(this::matchToMatchDto);
+        if (USE_DAILY_MATCHES_FROM_PAST_SEASONS) {
+            //TODO implement: see comment
+            return matchRepository.findBySeasonId(group.getActiveSeason().getId())
+                    .stream()
+                    .filter(predicate)
+                    .map(this::matchToMatchDto);
+        } else {
+            return matchRepository.findBySeasonId(group.getActiveSeason().getId())
+                    .stream()
+                    .filter(predicate)
+                    .map(this::matchToMatchDto);
+        }
     }
 
-    private ZonedDateTime getWakeTime(ZonedDateTime now, int wakeTimeHour) {
+    public ZonedDateTime getWakeTime(ZonedDateTime now, int wakeTimeHour) {
         var wakeTimeToday = now.withHour(wakeTimeHour).withMinute(0).withSecond(0).withNano(0);
 
         if (now.isBefore(wakeTimeToday)) {
