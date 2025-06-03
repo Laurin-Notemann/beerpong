@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import Text from '@/components/Text';
+import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 
 export interface LeaderboardScopePickerProps {
@@ -112,7 +113,10 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                     <Pressable
                         key={option.id}
                         style={styles.tab}
-                        onPress={() => onChange(option.id)}
+                        onPress={() => {
+                            triggerHapticBump('selection');
+                            onChange(option.id);
+                        }}
                     >
                         <Text
                             color="primary"

@@ -1,4 +1,4 @@
-import { Image, View } from 'react-native';
+import { Image, ScrollView, View } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
@@ -13,16 +13,22 @@ export default function OnboardingModal({}: OnboardingModalProps) {
     const theme = useTheme();
 
     return (
-        <View
+        <ScrollView
             style={{
+                backgroundColor: theme.panel.dark.bg,
+
+                flex: 1,
+            }}
+            contentContainerStyle={{
                 alignItems: 'center',
                 gap: 32,
 
-                flex: 1,
                 paddingHorizontal: 16,
-                paddingTop: 128,
+                paddingVertical: 32,
 
-                backgroundColor: theme.panel.dark.bg,
+                justifyContent: 'center',
+
+                minHeight: '100%',
             }}
         >
             <Text
@@ -31,7 +37,7 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                 bold
                 style={{
                     textAlign: 'center',
-                    marginBottom: 96,
+                    marginBottom: 32,
                     fontSize: 16 * 2,
                 }}
             >
@@ -105,6 +111,6 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                     onPress={() => navigation.navigate('createGroup')}
                 />
             </View>
-        </View>
+        </ScrollView>
     );
 }

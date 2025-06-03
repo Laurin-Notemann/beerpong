@@ -13,8 +13,6 @@ import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
 const paddingHorizontal = 16;
 const gap = 12;
 const numCols = 2;
@@ -70,6 +68,17 @@ export const CreateGroupSetGame: React.FC<{
                     },
                 }}
             />
+            <Text
+                color="secondary"
+                style={{
+                    textAlign: 'center',
+                    marginBottom: 32,
+                    paddingTop: 48,
+                    paddingHorizontal,
+                }}
+            >
+                What game would you like to track in this group?
+            </Text>
             <View
                 style={{
                     flexDirection: 'row',
@@ -77,16 +86,8 @@ export const CreateGroupSetGame: React.FC<{
 
                     paddingHorizontal,
                     gap,
-
-                    paddingTop: 48,
                 }}
             >
-                <Text
-                    color="secondary"
-                    style={{ textAlign: 'center', marginBottom: 32 }}
-                >
-                    What game would you like to track in this group?
-                </Text>
                 {games.map((game) => (
                     <Item
                         key={game.id}
@@ -122,8 +123,11 @@ function Item({
     onPress: () => void;
     selected?: boolean;
 }) {
+    const SCREEN_WIDTH = Dimensions.get('window').width;
+
     const size = Math.floor(
-        (SCREEN_WIDTH - paddingHorizontal * 2 - (gap * numCols - 1)) / numCols
+        (SCREEN_WIDTH - paddingHorizontal * 2 - (gap * numCols - 1)) / numCols +
+            5
     );
     const theme = useTheme();
 

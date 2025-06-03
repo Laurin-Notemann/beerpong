@@ -6,7 +6,6 @@ import { useMatchesByPlayerQuery } from '@/api/calls/matchHooks';
 import {
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
-    useUpdatePlayerAvatarMutation,
 } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
@@ -30,6 +29,17 @@ import PlayerScreen from '@/components/screens/Player';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
+
+function uint8ToBase64(bytes: Uint8Array): string {
+    const CHUNK_SIZE = 0x8000; // ~32KB
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+        const slice = bytes.subarray(i, i + CHUNK_SIZE);
+        // @ts-expect-error: Using apply on chunk avoids spread
+        binary += String.fromCharCode.apply(null, slice);
+    }
+    return btoa(binary);
+}
 
 export default function Page() {
     const nav = useNavigation();
@@ -66,8 +76,6 @@ export default function Page() {
     // TODO: this should only be the seasons where this specific player was active
     const activeSeasons = pastSeasons;
 
-    const uploadAvatarMutation = useUpdatePlayerAvatarMutation();
-
     const deleteAvatarMutation = useDeletePlayerAvatarMutation();
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -80,9 +88,9 @@ export default function Page() {
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
-    const player = currentSeasonPlayers.find((i) => i.id === id);
+    const player = rawCurrentSeasonPlayers.find((i) => i.id === id);
 
-    const playerName = player?.name || 'Unknown';
+    const playerName = player?.profile?.name || 'Unknown';
 
     async function onDelete() {
         if (!groupId || !seasonId) return;
@@ -101,7 +109,7 @@ export default function Page() {
         }
     }
 
-    const profileId = player?.id;
+    const profileId = player?.profile?.id;
 
     const isLoading =
         matchesQuery.isLoading ||
@@ -136,26 +144,14 @@ export default function Page() {
         }
 
         try {
-            await uploadAvatarMutation.mutateAsync({
-                groupId,
-                seasonId,
-                profileId,
-                byteArray,
-                mimeType,
-            });
-            await qc.invalidateQueries({
-                predicate: replaceWildcards([
-                    QK.group,
-                    groupId,
-                    QK.season,
-                    '*',
-                    QK.players,
-                ]),
-            });
-            showSuccessToast('Player avatar updated.');
+            const base64 = uint8ToBase64(byteArray);
+
+            const uri = `data:${result.type};base64,${base64}`;
+
+            nav.navigate('cropAvatar', { uri, profileId });
         } catch (err) {
-            ConsoleLogger.error('failed to upload player avatar:', err);
-            showErrorToast('Failed to upload player avatar.');
+            ConsoleLogger.error('failed to process image:', err);
+            showErrorToast('Failed to process image.');
         } finally {
             setIsUploadingAvatar(false);
         }
@@ -215,7 +211,7 @@ export default function Page() {
             id={id}
             placement={placement}
             name={playerName}
-            elo={player?.elo ?? eloAlgorithm.params.startingElo}
+            elo={player?.statistics?.elo ?? eloAlgorithm.params.startingElo}
             matchesWon={
                 matches.filter(
                     (i) =>
@@ -228,13 +224,13 @@ export default function Page() {
                             ?.team
                 ).length
             }
-            points={player?.points ?? 0}
+            points={player?.statistics?.points ?? 0}
             cups={allTimeCups}
             hasPremium={false}
             pastSeasons={activeSeasons.length}
             matches={matches}
             onDelete={onDelete}
-            avatarUrl={player?.avatarUrl}
+            avatarUrl={player?.profile?.avatarAsset?.url}
             onUploadAvatarPress={onUploadAvatarPress}
             onDeleteAvatarPress={onDeleteAvatarPress}
             refresh={refresh}

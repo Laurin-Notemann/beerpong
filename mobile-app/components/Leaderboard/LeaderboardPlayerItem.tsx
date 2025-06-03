@@ -4,7 +4,7 @@ import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { formatElo, formatPlacement } from '@/utils/format';
 
 export interface LeaderboardPlayerItemProps {
     id: string;
@@ -101,7 +101,7 @@ export default function LeaderboardPlayerItem({
             >
                 {rankingAlgorithm === 'AVERAGE'
                     ? averagePointsPerMatch
-                    : elo.toFixed()}
+                    : formatElo(elo)}
             </ThemedText>
         </TouchableOpacity>
     );

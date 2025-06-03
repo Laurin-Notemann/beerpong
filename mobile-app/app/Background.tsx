@@ -4,9 +4,9 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
-const { width, height } = Dimensions.get('window');
-
 export const AppBackground: React.FC<{}> = () => {
+    const { width, height } = Dimensions.get('window');
+
     const { group } = useGroup();
 
     const settings = useLocalSettings();
