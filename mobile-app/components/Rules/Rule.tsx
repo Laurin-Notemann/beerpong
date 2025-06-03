@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
@@ -48,15 +48,6 @@ export const Rule: React.FC<RuleProps> = ({
     const descriptionTextRef = useRef<Text>(null);
 
     const [descriptionTextHeight, setDescriptionTextHeight] = useState(0);
-
-    useEffect(() => {
-        // timeout of 0ms to ensure the ref has rendered once before measuring
-        setTimeout(() => {
-            descriptionTextRef.current?.measure((x, y, width, height) => {
-                setDescriptionTextHeight(height);
-            });
-        }, 0);
-    }, [descriptionTextRef]);
 
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -206,6 +197,13 @@ export const Rule: React.FC<RuleProps> = ({
             {/* this is not actually rendered, we only use it to measure the height that the description text takes up */}
             <Text
                 ref={descriptionTextRef}
+                onLayout={() => {
+                    descriptionTextRef.current?.measure(
+                        (x, y, width, height) => {
+                            setDescriptionTextHeight(height);
+                        }
+                    );
+                }}
                 style={{
                     position: 'absolute',
                     pointerEvents: 'none',

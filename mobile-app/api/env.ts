@@ -5,15 +5,6 @@ import packageJson from '@/package.json';
 /** the spaced format of group invite codes. `[3, 4, 3]` => `"xxx xxxx xxx"` */
 const groupCodeFormat = [3, 3, 3];
 
-const assertEnvString = (name: string): string => {
-    const value = process.env?.[name];
-
-    if (typeof value !== 'string')
-        throw new Error('Missing string value process.env.' + name);
-
-    return value;
-};
-
 const groupCodeSeperatorIndices = groupCodeFormat.slice(1).map((_, idx) => {
     return groupCodeFormat.slice(0, idx + 1).reduce((sum, i) => sum + i, 0) - 1;
 });

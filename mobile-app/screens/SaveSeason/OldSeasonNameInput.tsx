@@ -5,7 +5,7 @@ import {
     View,
 } from 'react-native';
 
-import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { Player } from '@/api/calls/seasonHooks';
 import { useInsets } from '@/app/useInsets';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import Podium from '@/components/Podium';
@@ -17,6 +17,7 @@ export const OldSeasonNameInput: React.FC<{
     numPlayers: number;
     startDate: string;
     rankedPlayers: Player[];
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 
     onChangeName: (name: string) => void;
 }> = ({
@@ -26,6 +27,7 @@ export const OldSeasonNameInput: React.FC<{
     rankedPlayers,
     onChangeName,
     oldSeasonNameInputRef,
+    rankingAlgorithm,
 }) => {
     const insets = useInsets(true);
 
@@ -57,6 +59,7 @@ export const OldSeasonNameInput: React.FC<{
                 firstPlace={rankedPlayers[0]}
                 secondPlace={rankedPlayers[1]}
                 thirdPlace={rankedPlayers[2]}
+                rankingAlgorithm={rankingAlgorithm}
             />
             <View style={{ height: 16 }} />
             <TextInput

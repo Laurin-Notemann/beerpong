@@ -6,13 +6,12 @@ import { useMatchesByPlayerQuery } from '@/api/calls/matchHooks';
 import {
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
-    usePlayersQuery,
-    useUpdatePlayerAvatarMutation,
 } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import {
     byDescendingAveragePoints,
+    byDescendingElo,
     useLeaderboardProps,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
@@ -22,6 +21,7 @@ import {
     usePullToRefresh,
     useQueryInvalidation,
 } from '@/api/utils/reactQuery';
+import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -30,12 +30,24 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 
+function uint8ToBase64(bytes: Uint8Array): string {
+    const CHUNK_SIZE = 0x8000; // ~32KB
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+        const slice = bytes.subarray(i, i + CHUNK_SIZE);
+        // @ts-expect-error: Using apply on chunk avoids spread
+        binary += String.fromCharCode.apply(null, slice);
+    }
+    return btoa(binary);
+}
+
 export default function Page() {
     const nav = useNavigation();
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
 
-    const playersQuery = usePlayersQuery(groupId, seasonId);
+    const { currentSeasonPlayers, rawCurrentSeasonPlayers } =
+        useLeaderboardProps(groupId, seasonId!);
 
     const deletePlayerMutation = useDeletePlayerMutation();
 
@@ -48,7 +60,7 @@ export default function Page() {
     const allowedMoves = movesQuery.data?.data ?? [];
 
     const matches = (matchesQuery.data?.data ?? []).map(
-        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        matchDtoToMatch(rawCurrentSeasonPlayers, allowedMoves)
     );
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
@@ -56,7 +68,7 @@ export default function Page() {
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-ignore TODO: type this properly
+            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const qc = useQueryClient();
@@ -64,16 +76,9 @@ export default function Page() {
     // TODO: this should only be the seasons where this specific player was active
     const activeSeasons = pastSeasons;
 
-    const uploadAvatarMutation = useUpdatePlayerAvatarMutation();
-
     const deleteAvatarMutation = useDeletePlayerAvatarMutation();
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-
-    const { currentSeasonPlayers } = useLeaderboardProps(
-        groupId,
-        seasonId ?? null
-    );
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -83,7 +88,7 @@ export default function Page() {
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
-    const player = (playersQuery.data?.data ?? []).find((i) => i.id === id);
+    const player = rawCurrentSeasonPlayers.find((i) => i.id === id);
 
     const playerName = player?.profile?.name || 'Unknown';
 
@@ -107,15 +112,11 @@ export default function Page() {
     const profileId = player?.profile?.id;
 
     const isLoading =
-        playersQuery.isLoading ||
         matchesQuery.isLoading ||
         movesQuery.isLoading ||
         seasonsQuery.isLoading;
 
     if (isLoading) return <LoadingScreen />;
-
-    if (!playersQuery.data?.data)
-        return <ErrorScreen error={playersQuery.error} />;
 
     async function onUploadAvatarPress() {
         if (!groupId || !seasonId || !profileId) return;
@@ -143,26 +144,14 @@ export default function Page() {
         }
 
         try {
-            await uploadAvatarMutation.mutateAsync({
-                groupId,
-                seasonId,
-                profileId,
-                byteArray,
-                mimeType,
-            });
-            await qc.invalidateQueries({
-                predicate: replaceWildcards([
-                    QK.group,
-                    groupId,
-                    QK.season,
-                    '*',
-                    QK.players,
-                ]),
-            });
-            showSuccessToast('Player avatar updated.');
+            const base64 = uint8ToBase64(byteArray);
+
+            const uri = `data:${result.type};base64,${base64}`;
+
+            nav.navigate('cropAvatar', { uri, profileId });
         } catch (err) {
-            ConsoleLogger.error('failed to upload player avatar:', err);
-            showErrorToast('Failed to upload player avatar.');
+            ConsoleLogger.error('failed to process image:', err);
+            showErrorToast('Failed to process image.');
         } finally {
             setIsUploadingAvatar(false);
         }
@@ -197,7 +186,11 @@ export default function Page() {
         }
     }
 
-    const sortedPlayers = currentSeasonPlayers.sort(byDescendingAveragePoints);
+    const sortedPlayers = currentSeasonPlayers.sort(
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
+            ? byDescendingAveragePoints
+            : byDescendingElo
+    );
 
     const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
 
@@ -218,7 +211,7 @@ export default function Page() {
             id={id}
             placement={placement}
             name={playerName}
-            elo={216}
+            elo={player?.statistics?.elo ?? eloAlgorithm.params.startingElo}
             matchesWon={
                 matches.filter(
                     (i) =>
@@ -241,6 +234,10 @@ export default function Page() {
             onUploadAvatarPress={onUploadAvatarPress}
             onDeleteAvatarPress={onDeleteAvatarPress}
             refresh={refresh}
+            rankingAlgorithm={
+                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
+                'AVERAGE'
+            }
         />
     );
 }

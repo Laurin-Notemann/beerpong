@@ -122,6 +122,7 @@ export function useRules() {
                 seasonId: seasonId!,
                 rules,
             });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
             showErrorToast('Failed to update rules.');
         }

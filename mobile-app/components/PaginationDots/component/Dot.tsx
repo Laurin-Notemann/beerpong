@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated } from 'react-native';
 
@@ -56,7 +57,7 @@ const getDotStyle = ({
     maxPage,
 }: getDotStylePayload): IDotStyle => {
     let type = EnumDotType.SMALL;
-    let currentPage = typeof curPage === 'number' ? curPage : 0; // Default to 0 if not a number
+    const currentPage = typeof curPage === 'number' ? curPage : 0; // Default to 0 if not a number
 
     if (maxPage < 5) {
         return DotStyle[
@@ -189,6 +190,7 @@ const Dot: React.FC<{
     }, [props.curPage]);
 
     const style = useMemo(() => {
+        // @ts-expect-error this file is unused and just for reference for a future feature
         const size = props.curPage.interpolate({
             inputRange: [0, 1],
             outputRange: [
@@ -197,6 +199,7 @@ const Dot: React.FC<{
             ],
         });
 
+        // @ts-expect-error this file is unused and just for reference for a future feature
         const backgroundColor = props.curPage.interpolate({
             inputRange: [0, 1],
             outputRange: [prevDotColor ?? props.activeColor, dotColor],
@@ -206,6 +209,7 @@ const Dot: React.FC<{
             width: size,
             height: size,
             backgroundColor,
+            // @ts-expect-error this file is unused and just for reference for a future feature
             borderRadius: props.curPage.interpolate({
                 inputRange: [0, 1],
                 outputRange: [
@@ -213,6 +217,7 @@ const Dot: React.FC<{
                     type.size * props.sizeRatio * 0.5,
                 ],
             }),
+            // @ts-expect-error this file is unused and just for reference for a future feature
             opacity: props.curPage.interpolate({
                 inputRange: [0, 1],
                 outputRange: [prevType?.opacity || 0.2, type.opacity],
@@ -277,6 +282,7 @@ const Dot: React.FC<{
     if (typeof props.curPage === 'number') {
         curPageNumber = props.curPage;
     } else if (props.curPage instanceof Animated.Value) {
+        // @ts-expect-error this file is unused and just for reference for a future feature
         curPageNumber = props.curPage.__getValue();
     } else {
         const inputRange = Array.from({ length: props.maxPage }, (_, i) => i);

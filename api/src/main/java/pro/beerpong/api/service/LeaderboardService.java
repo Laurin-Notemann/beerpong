@@ -12,6 +12,7 @@ import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.util.DailyLeaderboard;
+import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.time.Duration;
@@ -226,52 +227,24 @@ public class LeaderboardService {
                 // clear members cache
                 teamMembers.clear();
             });
+            var blueTeamId = matchDto.getTeams().getFirst().getId();
+            var redTeamId = matchDto.getTeams().get(1).getId();
 
-            // find the move that ended the game -> to find the winning team
-            var winningMove = matchDto.getMatchMoves().stream()
-                    .filter(dtoComplete -> ruleMoveService.isFinish(dtoComplete.getMoveId()))
-                    .findFirst()
-                    .orElse(null);
+            var blueTeamMembers = matchDto.getTeamMembers().stream()
+                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId))
+                    .collect(Collectors.toList());
+            var blueTeamMemberStatistics = blueTeamMembers.stream()
+                    .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
+                    .collect(Collectors.toList());
 
-            if (winningMove == null) {
-                // no winning move? weird...
-                return;
-            }
+            var redTeamMembers = matchDto.getTeamMembers().stream()
+                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeamId))
+                    .collect(Collectors.toList());
+            var redTeamMemberStatistics = redTeamMembers.stream()
+                    .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
+                    .collect(Collectors.toList());
 
-            // find the player which made the winning move
-            var winningPlayer = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getId().equals(winningMove.getTeamMemberId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (winningPlayer == null) {
-                // no winning player? weird...
-                return;
-            }
-
-            // save the winner and looser team
-            var winningTeam = (winningPlayer.getTeamId().equals(matchDto.getTeams().getFirst().getId()) ? matchDto.getTeams().getFirst() : matchDto.getTeams().get(1));
-            var loosingTeam = matchDto.getTeams().getFirst().getId().equals(winningTeam.getId()) ? matchDto.getTeams().get(1) : matchDto.getTeams().getFirst();
-
-            // calculate team elo averages
-            var winnerEloAvg = calcTeamEloAverage(entries, memberToProfile, matchDto, winningTeam);
-            var looserEloAvg = calcTeamEloAverage(entries, memberToProfile, matchDto, loosingTeam);
-
-            // calculate elo for all team members
-            matchDto.getTeamMembers().forEach(teamMemberDto -> {
-                if (!memberToProfile.containsKey(teamMemberDto.getId())) {
-                    return;
-                }
-
-                var entry = entries.get(memberToProfile.get(teamMemberDto.getId()));
-
-                // win: 1.0, loss: 0.0, no draw possible
-                var score = teamMemberDto.getTeamId().equals(winningTeam.getId()) ? 1.0D : 0.0D;
-                var oppenentElo = teamMemberDto.getTeamId().equals(winningTeam.getId()) ? looserEloAvg : winnerEloAvg;
-
-                // calculate elo (source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system)
-                entry.getStatistics().setElo(entry.getStatistics().getElo() + K_FACTOR * (score - expectedScore(entry.getStatistics().getElo(), oppenentElo)));
-            });
+            EloAlgorithm.calculateElo(blueTeamMemberStatistics, redTeamMemberStatistics);
         });
 
         // calculate averages for all entries

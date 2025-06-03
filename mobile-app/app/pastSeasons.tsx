@@ -30,7 +30,7 @@ export default function Page() {
     const seasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-ignore TODO: type this properly
+            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     if (seasonsQuery.isLoading) return <LoadingScreen />;
@@ -84,10 +84,14 @@ export default function Page() {
                                         startDate: season.item.startDate!,
                                         endDate: season.item.endDate!,
                                     }}
-                                    // @ts-ignore TODO: type this properly
+                                    // @ts-expect-error TODO: type this properly
                                     numMatches={season.item.numMatches!}
-                                    // @ts-ignore TODO: type this properly
+                                    // @ts-expect-error TODO: type this properly
                                     players={season.item.players}
+                                    rankingAlgorithm={
+                                        season.item.seasonSettings
+                                            ?.rankingAlgorithm
+                                    }
                                 />
                             </ScrollView>
                         </SafeAreaView>

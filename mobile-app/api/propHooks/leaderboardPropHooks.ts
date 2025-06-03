@@ -2,7 +2,6 @@ import {
     LeaderboardScope,
     useGetLeaderboardQuery,
 } from '@/api/calls/leaderboardHooks';
-import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { Player, toPlayer } from '@/api/calls/seasonHooks';
 import { ApiId } from '@/api/types';
 
@@ -14,8 +13,6 @@ export const useLeaderboardProps = (
     groupId: ApiId | null,
     seasonId: ApiId | null
 ) => {
-    const oldSeasonLeaderboardQuery = usePlayersQuery(groupId, seasonId);
-
     const dailyLeaderboardQuery = useGetLeaderboardQuery(
         groupId,
         seasonId,
@@ -41,15 +38,27 @@ export const useLeaderboardProps = (
     const alltimePlayers: Player[] =
         alltimeLeaderboardQuery.data?.data?.entries!.map(toPlayer) ?? [];
 
-    const oldCurrentSeasonPlayers: Player[] =
-        oldSeasonLeaderboardQuery.data?.data
-            ?.filter((i) => i.activeThisSeason)
-            .map(toPlayer) ?? [];
-
     return {
-        currentSeasonPlayers: oldCurrentSeasonPlayers,
+        rawCurrentSeasonPlayers:
+            seasonLeaderboardQuery.data?.data?.entries ?? [],
+        currentSeasonPlayers,
         alltimePlayers,
         dailyPlayers,
+        dailyLeaderboard: {
+            numMatches: dailyLeaderboardQuery.data?.data?.numMatches ?? 0,
+            numPlayers: dailyLeaderboardQuery.data?.data?.numPlayers ?? 0,
+            startDate: dailyLeaderboardQuery.data?.data?.startedAt!,
+        },
+        currentSeasonLeaderboard: {
+            numMatches: seasonLeaderboardQuery.data?.data?.numMatches ?? 0,
+            numPlayers: seasonLeaderboardQuery.data?.data?.numPlayers ?? 0,
+            startDate: seasonLeaderboardQuery.data?.data?.startedAt!,
+        },
+        alltimeLeaderboard: {
+            numMatches: alltimeLeaderboardQuery.data?.data?.numMatches ?? 0,
+            numPlayers: alltimeLeaderboardQuery.data?.data?.numPlayers ?? 0,
+            startDate: alltimeLeaderboardQuery.data?.data?.startedAt!,
+        },
     };
 };
 
@@ -59,3 +68,5 @@ export const useLeaderboardProps = (
 export const byDescendingAveragePoints = (a: Player, b: Player) =>
     (b.matches ? b.points / b.matches : 0) -
     (a.matches ? a.points / a.matches : 0);
+
+export const byDescendingElo = (a: Player, b: Player) => b.elo - a.elo;

@@ -207,7 +207,8 @@ export default function NewMatchScreen() {
         i.change = getInfluenceOfMatchOnAveragePoints(
             matches.concat([matchObj as Match]),
             i.id,
-            '#'
+            '#',
+            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm
         );
     }
 

@@ -15,13 +15,6 @@ export const QK = {
     groupCode: 'groupCode',
 };
 
-const areArraysIdentical = <T>(arr1: T[], arr2: T[]): boolean => {
-    if (arr1.length !== arr2.length) {
-        return false;
-    }
-    return arr1.every((value, index) => value === arr2[index]);
-};
-
 /**
  * a query like `[QK.group, groupId, QK.season, seasonId, QK.players]` will be matched by `[QK.group, groupId, QK.season, "*", QK.players]`
  */
@@ -88,7 +81,26 @@ export function useQueryInvalidation() {
             ]),
         });
     }
-    return { invalidateMatches, invalidatePlayers, invalidateRules };
+    function invalidateLeaderboard(groupId: string) {
+        ConsoleLogger.info('useQueryInvalidation.invalidateLeaderboard');
+
+        qc.invalidateQueries({
+            predicate: replaceWildcards([
+                QK.group,
+                groupId,
+                QK.season,
+                '*',
+                QK.players,
+                '*',
+            ]),
+        });
+    }
+    return {
+        invalidateMatches,
+        invalidatePlayers,
+        invalidateRules,
+        invalidateLeaderboard,
+    };
 }
 
 /**
@@ -106,6 +118,7 @@ export function usePullToRefresh(func: () => void): RefreshProps {
         setRefreshing(true);
         try {
             await func();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {}
         setRefreshing(false);
     };

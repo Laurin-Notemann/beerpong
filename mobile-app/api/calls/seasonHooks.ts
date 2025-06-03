@@ -192,7 +192,7 @@ export interface Player {
 export const toPlayer = (i: PlayerDto): Player => {
     return {
         id: i!.id!,
-        elo: i.statistics?.elo!,
+        elo: i.statistics?.elo ?? 0, // actually nullable from the backend
         matches: i.statistics?.matches!,
         points: i.statistics?.points!,
         matchesWon: 0,

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Pressable, View, ViewProps } from 'react-native';
 
+import { Player } from '@/api/calls/seasonHooks';
 import {
     byDescendingAveragePoints,
-    Player,
+    byDescendingElo,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
@@ -37,6 +38,7 @@ export interface LeaderboardProps extends ViewProps {
     };
     minMatchesRequiredToBeRanked: number;
     ListEmptyComponent?: React.ReactNode;
+    rankingAlgorithm?: 'AVERAGE' | 'ELO';
 }
 
 export default function Leaderboard({
@@ -47,6 +49,7 @@ export default function Leaderboard({
     season,
     minMatchesRequiredToBeRanked,
     ListEmptyComponent = <LeaderboardEmptyComponent />,
+    rankingAlgorithm = 'AVERAGE',
     ...rest
 }: LeaderboardProps) {
     const [playerPreviewModalId, setPlayerPreviewModalId] = useState<
@@ -57,7 +60,10 @@ export default function Leaderboard({
 
     const nav = useNavigation();
 
-    const sortedPlayers = players.sort(byDescendingAveragePoints);
+    const sortedPlayers =
+        rankingAlgorithm === 'AVERAGE'
+            ? players.sort(byDescendingAveragePoints)
+            : players.sort(byDescendingElo);
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked
@@ -100,6 +106,7 @@ export default function Leaderboard({
                             averagePointsPerMatch={'0.0'} // TODO
                             onUploadAvatarPress={() => {}}
                             matches={[]}
+                            rankingAlgorithm={rankingAlgorithm}
                         />
                     }
                 />
@@ -117,6 +124,7 @@ export default function Leaderboard({
                                 ? (id) => setPlayerPreviewModalId(id)
                                 : undefined
                         }
+                        rankingAlgorithm={rankingAlgorithm}
                     />
                 ) : (
                     ListEmptyComponent
@@ -144,6 +152,7 @@ export default function Leaderboard({
                                 ? (id) => setPlayerPreviewModalId(id)
                                 : undefined
                         }
+                        rankingAlgorithm={rankingAlgorithm}
                     />
                 ))}
                 {showUnranked && unrankedPlayers.length ? (
@@ -214,6 +223,7 @@ export default function Leaderboard({
                                     ? (id) => setPlayerPreviewModalId(id)
                                     : undefined
                             }
+                            rankingAlgorithm={rankingAlgorithm}
                         />
                     ))}
                 {players.length < 1 && (

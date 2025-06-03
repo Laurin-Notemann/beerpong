@@ -4,6 +4,7 @@ import { Text } from 'react-native';
 import { env } from '@/api/env';
 import { HighestChip, LowestChip } from '@/components/Chip';
 import { useTheme } from '@/theme';
+import { formatElo } from '@/utils/format';
 
 export function Stat({
     value,
@@ -100,8 +101,7 @@ export default function PlayerStats({
                 }
                 isHighest={env.isDev}
             />
-            {/* TODO: implement elo */}
-            {/* <Stat title="Elo" value={elo} /> */}
+            <Stat title="Elo" value={formatElo(elo)} />
         </TouchableOpacity>
     );
 }

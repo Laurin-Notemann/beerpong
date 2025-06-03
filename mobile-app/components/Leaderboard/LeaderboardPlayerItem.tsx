@@ -4,7 +4,7 @@ import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useTheme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { formatElo, formatPlacement } from '@/utils/format';
 
 export interface LeaderboardPlayerItemProps {
     id: string;
@@ -21,6 +21,8 @@ export interface LeaderboardPlayerItemProps {
 
     onPlayerPress?: (id: string) => void;
     onPlayerLongPress?: (id: string) => void;
+
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -34,6 +36,7 @@ export default function LeaderboardPlayerItem({
     unranked = false,
     onPlayerPress,
     onPlayerLongPress,
+    rankingAlgorithm,
 }: LeaderboardPlayerItemProps) {
     const theme = useTheme();
     // account for division by zero
@@ -96,7 +99,9 @@ export default function LeaderboardPlayerItem({
                     color: theme.color.text.secondary,
                 }}
             >
-                {averagePointsPerMatch}
+                {rankingAlgorithm === 'AVERAGE'
+                    ? averagePointsPerMatch
+                    : formatElo(elo)}
             </ThemedText>
         </TouchableOpacity>
     );

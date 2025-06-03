@@ -46,7 +46,7 @@ export default function Page() {
 
     const [isEditing, setIsEditing] = useState(false);
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -345,7 +345,9 @@ export default function Page() {
                                       )
                                     : matches,
                                 i.id!,
-                                match?.id!
+                                match?.id!,
+                                group.data?.activeSeason?.seasonSettings
+                                    ?.rankingAlgorithm
                             ),
                             moves: i.moves,
                             name: i.name,
