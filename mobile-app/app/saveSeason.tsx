@@ -87,6 +87,10 @@ export default function Page() {
             oldSeasonStartDate={group.data?.activeSeason?.startDate!}
             onCancel={() => nav.goBack()}
             isCreating={newSeasonMutation.isPending}
+            rankingAlgorithm={
+                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
+                'AVERAGE'
+            }
         />
     );
 }

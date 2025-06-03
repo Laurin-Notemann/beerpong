@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,

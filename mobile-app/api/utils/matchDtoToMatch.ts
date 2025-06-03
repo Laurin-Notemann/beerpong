@@ -100,15 +100,15 @@ export const getInfluenceOfMatchOnAveragePoints = (
         const sortedMatches = [...matches].sort(
             (a, b) => a.date.getTime() - b.date.getTime()
         );
-        let ratings: Record<string, number> = {};
+        const ratings: Record<string, number> = {};
 
         for (const match of sortedMatches) {
             for (const player of match.blueTeam.concat(match.redTeam)) {
-                // @ts-expect-error
+                // @ts-expect-error TODO: type elo field
                 player.elo =
                     ratings[player.id] ?? eloAlgorithm.params.startingElo;
                 if (!ratings[player.id]) {
-                    // @ts-expect-error
+                    // @ts-expect-error TODO: type elo field
                     ratings[player.id] = player.elo;
                 }
             }
@@ -116,18 +116,18 @@ export const getInfluenceOfMatchOnAveragePoints = (
             const previousElo =
                 match.blueTeam
                     .concat(match.redTeam)
-                    // @ts-expect-error
+                    // @ts-expect-error TODO: type elo field
                     .find((p) => p.id === playerId)?.elo ??
                 eloAlgorithm.params.startingElo;
 
-            // @ts-expect-error
+            // @ts-expect-error TODO: type elo field
             eloAlgorithm.calculateElo(match);
 
             if (match.id === matchId) {
                 const newElo =
                     match.blueTeam
                         .concat(match.redTeam)
-                        // @ts-expect-error
+                        // @ts-expect-error TODO: type elo field
                         .find((p) => p.id === playerId)?.elo ?? 0;
 
                 return previousElo - newElo;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Player from '@/components/MatchPlayers/Player';
@@ -16,8 +16,6 @@ export default function MatchPlayers({
     setMoveCount,
     onPlayerPress,
 }: MatchPlayersProps) {
-    const [expandedId, setExpandedId] = useState<number | null>(null);
-
     const redTeam = players.filter((i) => i.team === 'red');
     const blueTeam = players.filter((i) => i.team === 'blue');
 
@@ -38,9 +36,7 @@ export default function MatchPlayers({
                         key={idx}
                         player={i}
                         expanded={false}
-                        setIsExpanded={(value) =>
-                            setExpandedId(value ? idx : null)
-                        }
+                        setIsExpanded={() => {}} // unused, the items used to be expandable
                         onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
@@ -54,9 +50,7 @@ export default function MatchPlayers({
                         key={idx}
                         player={i}
                         expanded={false}
-                        setIsExpanded={(value) =>
-                            setExpandedId(value ? idx : null)
-                        }
+                        setIsExpanded={() => {}} // unused, the items used to be expandable
                         onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}

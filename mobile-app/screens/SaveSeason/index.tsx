@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { TextInput } from 'react-native';
 
-import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { Player } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
@@ -21,6 +21,7 @@ export interface SaveSeasonScreenProps {
     oldSeasonStartDate: string;
     onCancel: () => void;
     isCreating: boolean;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     onStartNewSeason,
@@ -30,6 +31,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     oldSeasonStartDate,
     onCancel,
     isCreating,
+    rankingAlgorithm,
 }) => {
     const newSeasonDraft = useNewSeasonDraft();
 
@@ -100,6 +102,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                         onChangeName={(name) => {
                             newSeasonDraft.actions.setOldSeasonName(name);
                         }}
+                        rankingAlgorithm={rankingAlgorithm}
                     />
                 )}
                 <NewSeasonRulesInput

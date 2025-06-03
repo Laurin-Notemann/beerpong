@@ -84,7 +84,6 @@ export default function MatchVsHeader({
     highlightedId,
     ...rest
 }: MatchVsHeaderProps) {
-    const theme = useTheme();
     const winnerTeamId: TeamId = hasFinishMove(match.redTeam)
         ? 'red'
         : hasFinishMove(match.blueTeam)

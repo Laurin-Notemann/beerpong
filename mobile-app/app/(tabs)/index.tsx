@@ -23,7 +23,6 @@ import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
-import { useTheme } from '@/theme';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -65,8 +64,6 @@ export default function Page() {
 
     const insets = useInsets(true, true);
 
-    const theme = useTheme();
-
     const swiper = useSwiper({
         initialPage: experiments.dailyLeaderboard ? 1 : 0,
     });
@@ -76,7 +73,7 @@ export default function Page() {
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-ignore TODO: type this properly
+            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const groupHasPastSeasons = pastSeasons.length > 0;

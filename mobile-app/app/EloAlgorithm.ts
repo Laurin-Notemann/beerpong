@@ -22,7 +22,7 @@ class EloAlgorithm {
 
     public static calculateElo(match: Match): Record<string, number> {
         const getRating = (p: ArrayElement<Match['redTeam']>) =>
-            // @ts-expect-error
+            // @ts-expect-error TODO: type elo field
             p.elo ?? this.params.startingElo;
 
         const blueElos = match.blueTeam.map((p) => getRating(p));
@@ -66,7 +66,7 @@ class EloAlgorithm {
 
             const newElo = getRating(p) + ratingChange;
 
-            // @ts-expect-error
+            // @ts-expect-error TODO: type elo field
             p.elo = newElo;
 
             deltaMap[p.id] = -ratingChange;
@@ -81,7 +81,7 @@ class EloAlgorithm {
 
             const newElo = getRating(p) + ratingChange;
 
-            // @ts-expect-error
+            // @ts-expect-error TODO: type elo field
             p.elo = newElo;
 
             deltaMap[p.id] = -ratingChange;

@@ -1,4 +1,5 @@
 import { Text, View } from 'react-native';
+// @ts-expect-error this file is unused and just for reference for a future feature
 import PaginationDot from 'react-native-insta-pagination-dots';
 
 export interface SwiperHeaderProps {

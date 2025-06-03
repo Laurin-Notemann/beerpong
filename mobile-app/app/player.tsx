@@ -58,7 +58,7 @@ export default function Page() {
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-ignore TODO: type this properly
+            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const qc = useQueryClient();

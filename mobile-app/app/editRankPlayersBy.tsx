@@ -87,7 +87,7 @@ export default function Page() {
                         },
                     ]}
                     value={rankingAlgorithm}
-                    // @ts-expect-error
+                    // @ts-expect-error damn union types
                     onChange={setRankingAlgorithm}
                     footer={
                         <Text

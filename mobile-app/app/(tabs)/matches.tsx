@@ -1,4 +1,4 @@
-import { SafeAreaView, View } from 'react-native';
+import { SafeAreaView } from 'react-native';
 
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import { AppBackground } from '@/app/Background';
