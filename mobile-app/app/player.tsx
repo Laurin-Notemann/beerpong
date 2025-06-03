@@ -22,7 +22,7 @@ import {
     usePullToRefresh,
     useQueryInvalidation,
 } from '@/api/utils/reactQuery';
-import { eloAlgorithm } from '@/app/eloCalculation';
+import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';

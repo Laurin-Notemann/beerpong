@@ -27,6 +27,7 @@ class EloAlgorithm {
 
         const blueElos = match.blueTeam.map((p) => getRating(p));
         const redElos = match.redTeam.map((p) => getRating(p));
+
         const avgBlue =
             blueElos.reduce((sum, r) => sum + r, 0) / blueElos.length;
         const avgRed = redElos.reduce((sum, r) => sum + r, 0) / redElos.length;
@@ -44,6 +45,7 @@ class EloAlgorithm {
         );
 
         let actualBlue: number, actualRed: number;
+
         if (totalBluePoints === totalRedPoints) {
             actualBlue = actualRed = 0.5;
         } else if (totalBluePoints > totalRedPoints) {
@@ -57,27 +59,33 @@ class EloAlgorithm {
         const deltaMap: Record<string, number> = {};
 
         for (const p of match.blueTeam) {
-            const proportion =
+            const usefulness =
                 totalBluePoints === 0 ? 0 : p.points / totalBluePoints;
-            const delta =
-                this.params.kFactor * (actualBlue - expectedBlue) * proportion;
-            deltaMap[p.id] = delta;
+            const ratingChange =
+                this.params.kFactor * (actualBlue - expectedBlue) * usefulness;
+
+            const newElo = getRating(p) + ratingChange;
+
+            // @ts-expect-error
+            p.elo = newElo;
+
+            deltaMap[p.id] = -ratingChange;
         }
 
         for (const p of match.redTeam) {
-            const proportion =
+            const usefulness =
                 totalRedPoints === 0 ? 0 : p.points / totalRedPoints;
-            const delta =
-                this.params.kFactor * (actualRed - expectedRed) * proportion;
-            deltaMap[p.id] = delta;
-        }
 
-        for (const p of match.blueTeam.concat(match.redTeam)) {
-            const current = getRating(p);
+            const ratingChange =
+                this.params.kFactor * (actualRed - expectedRed) * usefulness;
+
+            const newElo = getRating(p) + ratingChange;
+
             // @ts-expect-error
-            p.elo = current + (deltaMap[p.id] ?? 0);
-        }
+            p.elo = newElo;
 
+            deltaMap[p.id] = -ratingChange;
+        }
         return deltaMap;
     }
 }

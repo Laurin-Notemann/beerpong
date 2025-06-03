@@ -1,5 +1,5 @@
 import { MatchImpl } from '@/api/entities';
-import { eloAlgorithm } from '@/app/eloCalculation';
+import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { Components } from '@/openapi/openapi';
 
