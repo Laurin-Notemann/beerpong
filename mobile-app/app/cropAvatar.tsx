@@ -26,7 +26,7 @@ import Avatar from '@/components/Avatar';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-const DEBUG = true;
+const DEBUG = false;
 
 export default function Page() {
     const { uri, profileId } = useLocalSearchParams<{
@@ -97,8 +97,8 @@ export default function Page() {
             const circleScreenY = (imgHeight - circleDiameter) / 2;
 
             // d) find where that bounding‐square sits *relative to the zoomed‐image top‐left*:
-            const overlapX_zoomed = circleScreenX - imgLeft;
-            const overlapY_zoomed = circleScreenY - imgTop;
+            const overlapX_zoomed = circleScreenX;
+            const overlapY_zoomed = circleScreenY;
 
             // e) convert that “zoomed‐image offset” back to “original image pixels”:
             //    1) dividing by zoomLevel takes us from “zoomed display px” → “display px”
@@ -120,10 +120,12 @@ export default function Page() {
             const clamp = (val: number, min: number, max: number) =>
                 Math.max(min, Math.min(val, max));
 
-            const cropX = clamp(originX_px, 0, imgRawWidth - 1);
-            const cropY = clamp(originY_px, 0, imgRawHeight - 1);
-            const cropW = clamp(cropW_px, 0, imgRawWidth - cropX);
-            const cropH = clamp(cropH_px, 0, imgRawHeight - cropY);
+            const originX = clamp(originX_px, 0, imgRawWidth - 1);
+            const originY = clamp(originY_px, 0, imgRawHeight - 1);
+            const cropW = clamp(cropW_px, 0, imgRawWidth - originX);
+            const cropH = clamp(cropH_px, 0, imgRawHeight - originY);
+
+            const circleDiameterOnImg = imgRawHeight / zoomLevel;
 
             const { uri: rawCroppedUri } =
                 await ImageManipulator.manipulateAsync(
@@ -131,8 +133,14 @@ export default function Page() {
                     [
                         {
                             crop: {
-                                originX: cropX,
-                                originY: cropY,
+                                originX,
+                                // originX:
+                                //     (imgRawWidth - circleDiameterOnImg) / 2 -
+                                //     (offsetX * factorX) / zoomLevel,
+                                originY,
+                                // originY:
+                                //     (imgRawHeight - circleDiameterOnImg) / 2 -
+                                //     (offsetY * factorY) / zoomLevel,
                                 width: cropW,
                                 height: cropH,
                             },
@@ -174,6 +182,10 @@ export default function Page() {
             setIsLoading(false);
         }
     }
+    const minZoom: number =
+        imgWidth == null || imgHeight == null
+            ? 1
+            : Math.max(circleDiameter / imgWidth, circleDiameter / imgHeight);
 
     useEffect(() => {
         Image.getSize(
@@ -221,16 +233,20 @@ export default function Page() {
             />
             <ReactNativeZoomableView
                 ref={ref}
-                // minZoom={Math.min(width / imgWidth, height / imgHeight)}
+                minZoom={minZoom}
                 maxZoom={3}
                 zoomStep={0.5}
                 bindToBorders={true}
                 onTransform={setTransform}
-                // initialZoom={1 / 1.3}
-                // initialZoom={((imgHeight ?? 0) / circleDiameter) * 3}
-                style={{ width, height }} // ← full‐screen height (same as your SVG mask)
-                contentWidth={imgWidth!} // ← the rendered image’s width
-                contentHeight={imgHeight!}
+                style={{ width, height }}
+                contentWidth={
+                    imgWidth! +
+                    (width - circleDiameter) / (transform?.zoomLevel ?? 1)
+                }
+                contentHeight={
+                    imgHeight! +
+                    (height - circleDiameter) / (transform?.zoomLevel ?? 1)
+                }
             >
                 <Image
                     source={{ uri }}
@@ -269,7 +285,7 @@ export default function Page() {
                     <Rect
                         width="100%"
                         height="100%"
-                        fill="rgba(0, 0, 0, 0.8)"
+                        fill="rgba(0, 0, 0, 0.7)"
                         mask="url(#holeMask)"
                     />
                 </Svg>

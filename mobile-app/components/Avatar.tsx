@@ -7,6 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
+const borderRadius = 999;
+
 function Badge({
     children,
     circular = true,
@@ -30,7 +32,7 @@ function Badge({
 
                 backgroundColor: theme.avatar.badge.bg,
 
-                borderRadius: circular ? 99 : 4,
+                borderRadius: circular ? borderRadius : 4,
 
                 shadowOffset: {
                     width: 0,
@@ -89,7 +91,7 @@ export default function Avatar({
         >
             <View
                 style={{
-                    borderRadius: 99,
+                    borderRadius: borderRadius,
                     overflow: 'hidden',
                 }}
             >
@@ -112,7 +114,7 @@ export default function Avatar({
                         width: size,
                         height: size,
 
-                        borderRadius: 99,
+                        borderRadius: borderRadius,
 
                         backgroundColor: !!theme.blur?.intensity
                             ? undefined
@@ -131,7 +133,7 @@ export default function Avatar({
 
                                 width: size,
                                 height: size,
-                                borderRadius: 99,
+                                borderRadius: borderRadius,
 
                                 borderWidth: borderColor ? 2 : undefined,
                                 borderColor,
