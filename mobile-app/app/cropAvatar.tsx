@@ -97,8 +97,8 @@ export default function Page() {
             const circleScreenY = (imgHeight - circleDiameter) / 2;
 
             // d) find where that bounding‐square sits *relative to the zoomed‐image top‐left*:
-            const overlapX_zoomed = circleScreenX - imgLeft;
-            const overlapY_zoomed = circleScreenY - imgTop;
+            const overlapX_zoomed = circleScreenX;
+            const overlapY_zoomed = circleScreenY;
 
             // e) convert that “zoomed‐image offset” back to “original image pixels”:
             //    1) dividing by zoomLevel takes us from “zoomed display px” → “display px”
@@ -120,10 +120,12 @@ export default function Page() {
             const clamp = (val: number, min: number, max: number) =>
                 Math.max(min, Math.min(val, max));
 
-            const cropX = clamp(originX_px, 0, imgRawWidth - 1);
-            const cropY = clamp(originY_px, 0, imgRawHeight - 1);
-            const cropW = clamp(cropW_px, 0, imgRawWidth - cropX);
-            const cropH = clamp(cropH_px, 0, imgRawHeight - cropY);
+            const originX = clamp(originX_px, 0, imgRawWidth - 1);
+            const originY = clamp(originY_px, 0, imgRawHeight - 1);
+            const cropW = clamp(cropW_px, 0, imgRawWidth - originX);
+            const cropH = clamp(cropH_px, 0, imgRawHeight - originY);
+
+            const circleDiameterOnImg = imgRawHeight / zoomLevel;
 
             const { uri: rawCroppedUri } =
                 await ImageManipulator.manipulateAsync(
@@ -131,8 +133,14 @@ export default function Page() {
                     [
                         {
                             crop: {
-                                originX: cropX,
-                                originY: cropY,
+                                originX,
+                                // originX:
+                                //     (imgRawWidth - circleDiameterOnImg) / 2 -
+                                //     (offsetX * factorX) / zoomLevel,
+                                originY,
+                                // originY:
+                                //     (imgRawHeight - circleDiameterOnImg) / 2 -
+                                //     (offsetY * factorY) / zoomLevel,
                                 width: cropW,
                                 height: cropH,
                             },
@@ -277,7 +285,7 @@ export default function Page() {
                     <Rect
                         width="100%"
                         height="100%"
-                        fill="rgba(0, 0, 0, 0.5)"
+                        fill="rgba(0, 0, 0, 0.7)"
                         mask="url(#holeMask)"
                     />
                 </Svg>
