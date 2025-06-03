@@ -174,6 +174,10 @@ export default function Page() {
             setIsLoading(false);
         }
     }
+    const minZoom: number =
+        imgWidth == null || imgHeight == null
+            ? 1
+            : Math.max(circleDiameter / imgWidth, circleDiameter / imgHeight);
 
     useEffect(() => {
         Image.getSize(
@@ -221,6 +225,7 @@ export default function Page() {
             />
             <ReactNativeZoomableView
                 ref={ref}
+                minZoom={minZoom}
                 maxZoom={3}
                 zoomStep={0.5}
                 bindToBorders={true}
