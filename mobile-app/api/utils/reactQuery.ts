@@ -88,7 +88,26 @@ export function useQueryInvalidation() {
             ]),
         });
     }
-    return { invalidateMatches, invalidatePlayers, invalidateRules };
+    function invalidateLeaderboard(groupId: string) {
+        ConsoleLogger.info('useQueryInvalidation.invalidateLeaderboard');
+
+        qc.invalidateQueries({
+            predicate: replaceWildcards([
+                QK.group,
+                groupId,
+                QK.season,
+                '*',
+                QK.players,
+                '*',
+            ]),
+        });
+    }
+    return {
+        invalidateMatches,
+        invalidatePlayers,
+        invalidateRules,
+        invalidateLeaderboard,
+    };
 }
 
 /**
