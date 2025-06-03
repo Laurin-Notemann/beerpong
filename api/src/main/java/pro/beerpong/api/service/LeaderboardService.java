@@ -126,7 +126,6 @@ public class LeaderboardService {
         Map<String, PlayerDto> entries = Maps.newHashMap();
         Map<String, String> memberToProfile = Maps.newHashMap();
 
-        AtomicInteger numPlayers = new AtomicInteger(0);
         AtomicInteger numMatches = new AtomicInteger(0);
 
         // create dtos for all players
@@ -149,11 +148,6 @@ public class LeaderboardService {
                 }
 
                 playerDto.getStatistics().setId(null);
-
-                if (!entries.containsKey(playerDto.getProfile().getId())) {
-                    numPlayers.incrementAndGet();
-                }
-
                 entries.put(playerDto.getProfile().getId(), playerDto);
             }
         });
@@ -285,12 +279,12 @@ public class LeaderboardService {
 
         // create dto and set entries
         var dto = new LeaderboardDto();
-        dto.setNumMatches(numMatches.get());
-        dto.setNumPlayers(numPlayers.get());
-        dto.setStartedAt(startedAt);
         dto.setEntries(entries.values().stream()
                 .filter(playerDto -> scope.equals("all-time") || playerDto.isActiveThisSeason())
                 .toList());
+        dto.setStartedAt(startedAt);
+        dto.setNumMatches(numMatches.get() + (scope.equals("all-time") ? matchService.numOfMatchesInPastSeasons(group) : 0L));
+        dto.setNumPlayers(dto.getEntries().size());
 
         // calculate ranking for all possible algorithms
         for (RankingAlgorithm value : RankingAlgorithm.values()) {

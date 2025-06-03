@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface MatchRepository extends JpaRepository<Match, String> {
     List<Match> findBySeasonId(String seasonId);
+
+    long countBySeasonId(String seasonId);
 }
