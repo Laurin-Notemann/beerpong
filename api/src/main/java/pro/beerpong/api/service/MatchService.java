@@ -30,7 +30,7 @@ public class MatchService {
     /**
      * Feature flag: discuss if this should be enabled in future
      */
-    private static boolean USE_DAILY_MATCHES_FROM_PAST_SEASONS = false;
+    private static final boolean USE_DAILY_MATCHES_FROM_PAST_SEASONS = false;
 
 
     private final SubscriptionHandler subscriptionHandler;
@@ -187,6 +187,13 @@ public class MatchService {
     public Stream<PlayerDto> streamAllPlayersInSeason(String seasonId) {
         return playerRepository.findAllBySeasonId(seasonId).stream()
                 .map(playerMapper::playerToPlayerDto);
+    }
+
+    public long numOfMatchesInPastSeasons(GroupDto group) {
+        return seasonRepository.findByGroupId(group.getId()).stream()
+                .filter(season -> season.getEndDate() != null)
+                .map(season -> matchRepository.countBySeasonId(season.getId()))
+                .reduce(0L, Long::sum);
     }
 
     public Stream<MatchDto> streamAllMatchesToday(GroupDto group, Season season) {
