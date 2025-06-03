@@ -1,17 +1,28 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    Animated,
+    Dimensions,
+    Modal,
+    SafeAreaView,
+    TouchableHighlight,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
+import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
+import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -19,7 +30,10 @@ import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import { useTheme } from '@/theme';
 
+const CLOSE_BUTTON = false;
 const SHOW_PAST_SEASONS = false;
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export interface PlayerScreenProps {
     minMatchesRequiredToBeRanked: number;
@@ -80,6 +94,44 @@ export default function PlayerScreen({
 
     const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
+    const fade = useRef(new Animated.Value(0)).current;
+    const scale = useRef(new Animated.Value(0)).current;
+
+    const [inspectAvatar, setInspectAvatar] = useState(false);
+
+    const [show, setShow] = useState(false);
+
+    useEffect(() => {
+        if (inspectAvatar) {
+            setShow(true);
+            Animated.parallel([
+                Animated.timing(fade, {
+                    toValue: 1,
+                    duration: 100,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scale, {
+                    duration: 100,
+                    toValue: 1,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        } else {
+            Animated.parallel([
+                Animated.timing(fade, {
+                    toValue: 0,
+                    duration: 100,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scale, {
+                    toValue: 0,
+                    duration: 100,
+                    useNativeDriver: true,
+                }),
+            ]).start(() => setShow(false));
+        }
+    }, [inspectAvatar, fade, scale]);
+
     return (
         <GestureHandlerRootView
             style={{ backgroundColor: theme.color.bg, flex: 1 }}
@@ -109,21 +161,27 @@ export default function PlayerScreen({
                     }}
                     ListHeaderComponent={
                         <>
-                            <PlayerPageHeadSection
-                                avatarUrl={avatarUrl}
-                                placement={placement}
-                                name={name}
-                                elo={elo}
-                                matchesWon={matchesWon}
-                                points={points}
-                                cups={cups}
-                                isUnranked={isUnranked}
-                                editable={editable}
-                                averagePointsPerMatch={averagePointsPerMatch}
-                                onUploadAvatarPress={onUploadAvatarPress}
-                                matches={matches}
-                                rankingAlgorithm={rankingAlgorithm}
-                            />
+                            <TouchableHighlight
+                                onPress={() => setInspectAvatar(true)}
+                            >
+                                <PlayerPageHeadSection
+                                    avatarUrl={avatarUrl}
+                                    placement={placement}
+                                    name={name}
+                                    elo={elo}
+                                    matchesWon={matchesWon}
+                                    points={points}
+                                    cups={cups}
+                                    isUnranked={isUnranked}
+                                    editable={editable}
+                                    averagePointsPerMatch={
+                                        averagePointsPerMatch
+                                    }
+                                    onUploadAvatarPress={onUploadAvatarPress}
+                                    matches={matches}
+                                    rankingAlgorithm={rankingAlgorithm}
+                                />
+                            </TouchableHighlight>
                             <View
                                 style={{
                                     width: '100%',
@@ -223,6 +281,45 @@ export default function PlayerScreen({
                     </View>
                 </ScrollView>
             )}
+            <Modal
+                transparent
+                visible={show}
+                animationType="none"
+                onRequestClose={() => setInspectAvatar(false)}
+            >
+                <BlurredBackdrop
+                    opacity={fade}
+                    onPress={() => setInspectAvatar(false)}
+                />
+                {CLOSE_BUTTON && (
+                    <SafeAreaView>
+                        <Animated.View
+                            style={[{ transform: [{ scale }], opacity: scale }]}
+                        >
+                            <TouchableOpacity
+                                onPress={() => setInspectAvatar(false)}
+                            >
+                                <Icon
+                                    color={theme.color.text.primary}
+                                    name="close"
+                                    size={32}
+                                />
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </SafeAreaView>
+                )}
+                <Animated.View
+                    style={[
+                        {
+                            marginVertical: 'auto',
+                            alignItems: 'center',
+                        },
+                        { transform: [{ scale }], opacity: scale },
+                    ]}
+                >
+                    <Avatar url={avatarUrl} size={screenWidth - 64} />
+                </Animated.View>
+            </Modal>
         </GestureHandlerRootView>
     );
 }
