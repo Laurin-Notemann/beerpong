@@ -26,7 +26,7 @@ import Avatar from '@/components/Avatar';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
-const DEBUG = true;
+const DEBUG = false;
 
 export default function Page() {
     const { uri, profileId } = useLocalSearchParams<{
@@ -221,16 +221,19 @@ export default function Page() {
             />
             <ReactNativeZoomableView
                 ref={ref}
-                // minZoom={Math.min(width / imgWidth, height / imgHeight)}
                 maxZoom={3}
                 zoomStep={0.5}
                 bindToBorders={true}
                 onTransform={setTransform}
-                // initialZoom={1 / 1.3}
-                // initialZoom={((imgHeight ?? 0) / circleDiameter) * 3}
-                style={{ width, height }} // ← full‐screen height (same as your SVG mask)
-                contentWidth={imgWidth!} // ← the rendered image’s width
-                contentHeight={imgHeight!}
+                style={{ width, height }}
+                contentWidth={
+                    imgWidth! +
+                    (width - circleDiameter) / (transform?.zoomLevel ?? 1)
+                }
+                contentHeight={
+                    imgHeight! +
+                    (height - circleDiameter) / (transform?.zoomLevel ?? 1)
+                }
             >
                 <Image
                     source={{ uri }}
@@ -269,7 +272,7 @@ export default function Page() {
                     <Rect
                         width="100%"
                         height="100%"
-                        fill="rgba(0, 0, 0, 0.8)"
+                        fill="rgba(0, 0, 0, 0.5)"
                         mask="url(#holeMask)"
                     />
                 </Svg>
