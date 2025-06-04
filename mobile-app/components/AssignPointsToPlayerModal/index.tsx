@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Host as PortalProvider } from 'react-native-portalize';
-import Swiper from 'react-native-swiper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
@@ -11,6 +10,7 @@ import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScore
 import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
+import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
@@ -18,23 +18,19 @@ import { useTutorials } from '@/zustand/tutorialStore';
 const showVsHeader = false;
 
 export interface AssignPointsToPlayerModalProps {
-    isVisible?: boolean;
     onClose?: () => void;
 
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
     match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
 
-    pageIdx: number | null;
-    setPageIdx: (idx: number) => void;
+    initialPageIdx: number | null;
 }
 export default function AssignPointsToPlayerModal({
     match,
-    isVisible = false,
     onClose,
     setMoveCount,
-    pageIdx,
-    setPageIdx,
+    initialPageIdx,
 }: AssignPointsToPlayerModalProps) {
     const experiments = useLocalSettings();
 
@@ -42,14 +38,14 @@ export default function AssignPointsToPlayerModal({
 
     const players = match.blueTeam.concat(match.redTeam);
 
-    const swiperRef = useRef<Swiper>(null);
+    const swiper = useSwiperWithPageState({ initialPage: initialPageIdx });
 
     // used for a scuffed hack to prevent the modal from reopening when clicking outside of it
-    const playerIdxRef = useRef(pageIdx);
+    const playerIdxRef = useRef(swiper.swiperPage);
 
     useEffect(() => {
-        playerIdxRef.current = pageIdx;
-    }, [pageIdx]);
+        playerIdxRef.current = swiper.swiperPage;
+    }, [swiper.swiperPage]);
 
     const [finisherId, setFinisherId] = useState<string | null>(null);
 
@@ -59,8 +55,8 @@ export default function AssignPointsToPlayerModal({
 
     const finishMove = finisher?.moves.find((i) => i.isFinish && i.count > 0);
 
-    const isAssignFinisherPage = pageIdx === players.length;
-    const isAssignFinishMovePage = pageIdx === players.length + 1;
+    const isAssignFinisherPage = swiper.swiperPage === players.length;
+    const isAssignFinishMovePage = swiper.swiperPage === players.length + 1;
 
     async function onSetFinishMove(move: PerformedMove) {
         if (finisher) {
@@ -79,7 +75,10 @@ export default function AssignPointsToPlayerModal({
 
         setFinisherId(player.id);
         // timeout of 0 is necessary because the next page isn't even rendered yet
-        setTimeout(() => swiperRef.current?.scrollBy(1), 0);
+        setTimeout(
+            () => swiper.ref.current?.scrollTo({ index: 1, animated: true }),
+            0
+        );
     }
     const theme = useTheme();
 
@@ -89,14 +88,12 @@ export default function AssignPointsToPlayerModal({
                 options={{
                     headerTitle: '',
                     headerLeft:
-                        pageIdx === 0
+                        swiper.swiperPage === 0
                             ? undefined
                             : () => (
                                   <HeaderItem
                                       noMargin
-                                      onPress={() =>
-                                          swiperRef.current?.scrollBy(-1)
-                                      }
+                                      onPress={() => swiper.ref.current?.prev()}
                                   >
                                       <Icon name="chevron-left" size={32} />
                                   </HeaderItem>
@@ -121,7 +118,7 @@ export default function AssignPointsToPlayerModal({
                                     <HeaderItem
                                         noMargin
                                         onPress={() =>
-                                            swiperRef.current?.scrollBy(1)
+                                            swiper.ref.current?.next()
                                         }
                                     >
                                         <Icon name="chevron-right" size={32} />
@@ -140,27 +137,11 @@ export default function AssignPointsToPlayerModal({
                     {showVsHeader && (
                         <MatchVsHeader
                             match={match}
-                            highlightedId={players[pageIdx!]?.id}
+                            highlightedId={players[swiper.swiperPage!]?.id}
                         />
                     )}
 
-                    <Swiper
-                        ref={swiperRef}
-                        showsPagination={false}
-                        loop={false}
-                        index={pageIdx!}
-                        onIndexChanged={(value) => {
-                            setTimeout(() => {
-                                // for some reason, onIndexChanged gets fired with 0 when dismissing the modal by clicking outside of it, leading to the modal opening again
-                                // at this point, the component hasn't rerendered yet, so playerIdx will still be a non-null value, so we can't check against that.
-                                // to work around this, we wait 0ms (which actually translates to a short wait) for the playerIdx to change to null.
-                                // we have to use a ref for the playerIdx because we're inside a callback, and the value of playerIdx will be the same as when the callback was created (so non-null).
-                                if (playerIdxRef.current != null)
-                                    setPageIdx(value);
-                            }, 0);
-                        }}
-                        style={{ height: 0 }}
-                    >
+                    <Swiper {...swiper}>
                         {[...players, null, null].map((i, idx) => {
                             if (idx < players.length)
                                 return (
