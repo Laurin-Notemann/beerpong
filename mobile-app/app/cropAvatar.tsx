@@ -47,7 +47,10 @@ export default function Page() {
         nav.goBack();
     }
 
-    const [transform, setTransform] = useState<ZoomableViewEvent | null>(null);
+    const [zoomLevel, setZoomLevel] = useState(1);
+
+    // we're not using useState here as that would rerender the entire page every time a user pans.
+    const transformRef = useRef<ZoomableViewEvent | null>(null);
 
     const { groupId, seasonId } = useGroup();
 
@@ -77,7 +80,7 @@ export default function Page() {
         setIsLoading(true);
 
         try {
-            const { offsetX = 0, offsetY = 0, zoomLevel = 1 } = transform ?? {};
+            const { offsetX = 0, offsetY = 0 } = transformRef.current ?? {};
 
             const dispZoomW = imgWidth * zoomLevel;
             const dispZoomH = imgHeight * zoomLevel;
@@ -237,15 +240,11 @@ export default function Page() {
                 maxZoom={3}
                 zoomStep={0.5}
                 bindToBorders={true}
-                onTransform={setTransform}
+                onTransform={(e) => setZoomLevel(e.zoomLevel)}
                 style={{ width, height }}
-                contentWidth={
-                    imgWidth! +
-                    (width - circleDiameter) / (transform?.zoomLevel ?? 1)
-                }
+                contentWidth={imgWidth! + (width - circleDiameter) / zoomLevel}
                 contentHeight={
-                    imgHeight! +
-                    (height - circleDiameter) / (transform?.zoomLevel ?? 1)
+                    imgHeight! + (height - circleDiameter) / zoomLevel
                 }
             >
                 <Image
