@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -16,8 +16,6 @@ export default function Page() {
     }>();
 
     const nav = useNavigation();
-
-    const [pageIdx, setPageIdx] = useState(parseInt(initialPageIdx));
 
     const matchDraft = useMatchDraftStore();
 
@@ -85,10 +83,8 @@ export default function Page() {
     return (
         <AssignPointsToPlayerModal
             onClose={nav.goBack}
-            pageIdx={pageIdx}
-            setPageIdx={setPageIdx}
+            initialPageIdx={parseInt(initialPageIdx)}
             match={match}
-            isVisible={pageIdx != null}
             setMoveCount={matchDraft.actions.setMoveCount}
         />
     );
