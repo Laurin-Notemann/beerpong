@@ -10,10 +10,6 @@ public class EloAlgorithm {
     public static final int K_FACTOR = 32;
     public static final int ELO_DIVIDER = 400;
 
-    public static double expectedScore(double elo1, double elo2) {
-        return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
-    }
-
     public static void calculateElo(List<PlayerStatisticsDto> blueTeam, List<PlayerStatisticsDto> redTeam) {
         // sum of elos of the team divided by team members
         var avgBlue = blueTeam.stream()
@@ -25,7 +21,7 @@ public class EloAlgorithm {
                 .average()
                 .orElse(STARTING_ELO);
 
-        var expectedBlue = EloAlgorithm.expectedScore(avgBlue, avgRed);
+        var expectedBlue = expectedScore(avgBlue, avgRed);
         var expectedRed = 1 - expectedBlue;
 
         // sum of points scored by the team members
@@ -36,41 +32,38 @@ public class EloAlgorithm {
                 .mapToLong(PlayerStatisticsDto::getPoints)
                 .sum();
 
-        double actualBlue, actualRed;
+        // save result for both teams: 1=win, 0.5=draw, 0=loose
+        double resultBlue, resultRed;
 
         if (totalBluePoints == totalRedPoints) {
-            actualBlue = actualRed = 0.5;
+            resultBlue = resultRed = 0.5;
         } else if (totalBluePoints > totalRedPoints) {
-            actualBlue = 1.0;
-            actualRed = 0.0;
+            resultBlue = 1.0;
+            resultRed = 0.0;
         } else {
-            actualBlue = 0.0;
-            actualRed = 1.0;
+            resultBlue = 0.0;
+            resultRed = 1.0;
         }
 
-        blueTeam.forEach(player -> {
-            // how much the player contributed to their team's score
-            // if the team scored 0 points, usefulness is 0 to avoid division by zero
-            double usefulness = (totalBluePoints == 0) ? 0.0 : ((double) player.getPoints() / totalBluePoints);
-
-            double ratingChange = EloAlgorithm.K_FACTOR * (actualBlue - expectedBlue) * usefulness;
-
-            double newElo = player.getElo() + ratingChange;
-
-            player.setElo(newElo);
-
-        });
-
-        redTeam.forEach(player -> {
-            double usefulness = (totalRedPoints == 0) ? 0.0 : ((double) player.getPoints() / totalRedPoints);
-
-            double ratingChange = EloAlgorithm.K_FACTOR * (actualRed - expectedRed) * usefulness;
-
-            double newElo = player.getElo() + ratingChange;
-
-            player.setElo(newElo);
-
-        });
+        // calculate the elo for every player of both teams
+        calcElo(blueTeam, expectedBlue, totalBluePoints, resultBlue);
+        calcElo(redTeam, expectedRed, totalRedPoints, resultRed);
     }
 
+    private static double expectedScore(double elo1, double elo2) {
+        // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
+        return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
+    }
+
+    private static void calcElo(List<PlayerStatisticsDto> team, double exp, long totalPoints, double gameResult) {
+        team.forEach(player -> {
+            // how much the player contributed to their team's score
+            // if the team scored 0 points, usefulness is 0 to avoid division by zero
+            double usefulness = (totalPoints == 0) ? 0.0 : ((double) player.getPoints() / totalPoints);
+            // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
+            double eloChange = K_FACTOR * (gameResult - exp) * usefulness;
+
+            player.setElo(player.getElo() + eloChange);
+        });
+    }
 }

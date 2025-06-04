@@ -227,23 +227,29 @@ public class LeaderboardService {
                 // clear members cache
                 teamMembers.clear();
             });
+
             var blueTeamId = matchDto.getTeams().getFirst().getId();
             var redTeamId = matchDto.getTeams().get(1).getId();
 
             var blueTeamMembers = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId))
-                    .collect(Collectors.toList());
+                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId) &&
+                            memberToProfile.containsKey(teamMemberDto.getId()) &&
+                            entries.containsKey(memberToProfile.get(teamMemberDto.getId())))
+                    .toList();
             var blueTeamMemberStatistics = blueTeamMembers.stream()
                     .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
-                    .collect(Collectors.toList());
+                    .toList();
 
             var redTeamMembers = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeamId))
-                    .collect(Collectors.toList());
+                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeamId) &&
+                            memberToProfile.containsKey(teamMemberDto.getId()) &&
+                            entries.containsKey(memberToProfile.get(teamMemberDto.getId())))
+                    .toList();
             var redTeamMemberStatistics = redTeamMembers.stream()
                     .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
-                    .collect(Collectors.toList());
+                    .toList();
 
+            // calculate elo for both teams
             EloAlgorithm.calculateElo(blueTeamMemberStatistics, redTeamMemberStatistics);
         });
 
@@ -282,23 +288,5 @@ public class LeaderboardService {
         memberToProfile.clear();
 
         return dto;
-    }
-
-    private double calcTeamEloAverage(Map<String, PlayerDto> entries, Map<String, String> memberToProfile, MatchDto matchDto, TeamDto teamDto) {
-        return matchDto.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()) &&
-                        memberToProfile.containsKey(teamMemberDto.getId()) &&
-                        entries.containsKey(memberToProfile.get(teamMemberDto.getId())))
-                .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics().getElo())
-                .reduce(Double::sum)
-                .orElse(0D) /
-                matchDto.getTeamMembers().stream()
-                        .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
-                        .count();
-    }
-
-    private double expectedScore(double elo1, double elo2) {
-        // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
-        return 1.0 / (1 + Math.pow(10, (elo2 - elo1) / ELO_DIVIDER));
     }
 }
