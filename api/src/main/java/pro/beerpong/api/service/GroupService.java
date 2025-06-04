@@ -8,10 +8,7 @@ import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ProfileCreateDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -125,14 +122,14 @@ public class GroupService {
     }
 
     @Transactional
-    public AssetMetadataDto storeWallpaper(GroupDto groupDto) {
+    public AssetMetadataDto storeWallpaper(GroupDto groupDto, @Nullable AssetCropDto assetCropDto) {
         String oldWallpaperAssetId = null;
 
         if (groupDto.getWallpaperAsset() != null) {
             oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
         }
 
-        var assetMetadataDto = assetService.storeAsset(AssetType.GROUP_WALLPAPER);
+        var assetMetadataDto = assetService.storeAsset(AssetType.GROUP_WALLPAPER, assetCropDto);
 
         groupDto.setWallpaperAsset(assetMetadataDto);
 

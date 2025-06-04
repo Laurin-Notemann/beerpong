@@ -2,15 +2,13 @@ package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ProfileCreateDto;
-import pro.beerpong.api.model.dto.ProfileCreatedDto;
-import pro.beerpong.api.model.dto.ProfileDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.util.AssetType;
@@ -147,14 +145,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileDto storeProfilePicture(ProfileDto profileDto) {
+    public ProfileDto storeProfilePicture(ProfileDto profileDto, @Nullable AssetCropDto assetCropDto) {
         String oldProfilePictureAssetId = null;
 
         if (profileDto.getAvatarAsset() != null) {
             oldProfilePictureAssetId = profileDto.getAvatarAsset().getId();
         }
 
-        var assetMetadataDto = assetService.storeAsset(AssetType.PROFILE_AVATAR);
+        var assetMetadataDto = assetService.storeAsset(AssetType.PROFILE_AVATAR, assetCropDto);
 
         profileDto.setAvatarAsset(assetMetadataDto);
 

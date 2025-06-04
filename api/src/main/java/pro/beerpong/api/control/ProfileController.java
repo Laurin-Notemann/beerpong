@@ -91,7 +91,9 @@ public class ProfileController {
     }
 
     @PutMapping("/{id}/avatar")
-    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId, @PathVariable String id) {
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId,
+                                                                  @PathVariable String id,
+                                                                  @RequestBody(required = false) AssetCropDto assetCropDto) {
         var group = groupService.getGroupById(groupId);
 
         if (group == null) {
@@ -104,7 +106,11 @@ public class ProfileController {
             return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
         }
 
-        var dto = profileService.storeProfilePicture(profile);
+        if (assetCropDto != null && !assetCropDto.validate()) {
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_VALIDATION_FAILED);
+        }
+
+        var dto = profileService.storeProfilePicture(profile, assetCropDto);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
 

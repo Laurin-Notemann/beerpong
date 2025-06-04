@@ -17,4 +17,7 @@ public class Asset {
     private String id;
     private AssetType type;
     private ZonedDateTime uploadedAt;
+    private double offsetX;
+    private double offsetY;
+    private double zoom;
 }

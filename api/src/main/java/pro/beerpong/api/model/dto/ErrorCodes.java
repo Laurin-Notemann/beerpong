@@ -54,6 +54,7 @@ public enum ErrorCodes {
     PROFILE_HAS_NO_AVATAR(HttpStatus.NOT_FOUND, "profileHasNoAvatar", "The provided profiles does not have an avatar saved!")
     /* ASSETS */,
     ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "assetNotFound", "The requested asset could not be found!"),
+    ASSET_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "assetValidationFailed", "The provided asset offsets or zoom have to be >= 0!"),
     /* LEADERBOARDS */
     LEADERBOARD_SCOPE_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"),
     LEADERBOARD_SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!");

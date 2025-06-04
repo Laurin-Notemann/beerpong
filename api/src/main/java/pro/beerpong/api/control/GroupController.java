@@ -93,14 +93,19 @@ public class GroupController {
     }
 
     @PutMapping("/{id}/wallpaper")
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String id) {
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String id,
+                                                                           @RequestBody(required = false) AssetCropDto assetCropDto) {
         var group = groupService.getGroupById(id);
 
         if (group == null) {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
-        var dto = groupService.storeWallpaper(group);
+        if (assetCropDto != null && !assetCropDto.validate()) {
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_VALIDATION_FAILED);
+        }
+
+        var dto = groupService.storeWallpaper(group, assetCropDto);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_SET, id, dto));
 
