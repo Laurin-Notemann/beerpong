@@ -25,6 +25,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { useDebounce } from '@/utils/useDebounce';
 
 const DEBUG = false;
 
@@ -48,6 +49,11 @@ export default function Page() {
     }
 
     const [zoomLevel, setZoomLevel] = useState(1);
+
+    // debounce so we don't continuously rerender while the user is zooming, only once when they're done
+    const onZoomChange = useDebounce((v: number) => {
+        setZoomLevel(v);
+    }, 10);
 
     // we're not using useState here as that would rerender the entire page every time a user pans.
     const transformRef = useRef<ZoomableViewEvent | null>(null);
@@ -240,7 +246,10 @@ export default function Page() {
                 maxZoom={3}
                 zoomStep={0.5}
                 bindToBorders={true}
-                onTransform={(e) => setZoomLevel(e.zoomLevel)}
+                onTransform={(e) => {
+                    transformRef.current = e;
+                    onZoomChange(e.zoomLevel);
+                }}
                 style={{ width, height }}
                 contentWidth={imgWidth! + (width - circleDiameter) / zoomLevel}
                 contentHeight={
