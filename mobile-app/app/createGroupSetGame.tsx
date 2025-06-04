@@ -11,6 +11,7 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
     const nav = useNavigation();
@@ -18,6 +19,7 @@ export default function Page() {
     const createGroupMutation = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
     const presetsQuery = useGroupPresetsQuery();
+    const matchDraft = useMatchDraftStore();
 
     const presets =
         presetsQuery.data?.data?.map((i) => ({
@@ -45,6 +47,8 @@ export default function Page() {
                 throw new Error('invalid create group response');
             }
             addGroup(data.data.id);
+
+            matchDraft.actions.clear();
 
             showSuccessToast(`You created "${name}"`);
 
