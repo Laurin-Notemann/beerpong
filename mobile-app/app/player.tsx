@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
@@ -15,12 +14,7 @@ import {
     useLeaderboardProps,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import {
-    QK,
-    replaceWildcards,
-    usePullToRefresh,
-    useQueryInvalidation,
-} from '@/api/utils/reactQuery';
+import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
@@ -70,8 +64,6 @@ export default function Page() {
             ?.filter((i) => i.endDate != null)
             // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
-
-    const qc = useQueryClient();
 
     // TODO: this should only be the seasons where this specific player was active
     const activeSeasons = pastSeasons;
@@ -167,15 +159,6 @@ export default function Page() {
                 groupId,
                 seasonId,
                 profileId,
-            });
-            await qc.invalidateQueries({
-                predicate: replaceWildcards([
-                    QK.group,
-                    groupId,
-                    QK.season,
-                    '*',
-                    QK.players,
-                ]),
             });
             showSuccessToast('Player avatar deleted.');
         } catch (err) {

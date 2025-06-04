@@ -120,6 +120,7 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'PROFILES':
+                invalidateLeaderboard(e.groupId);
                 // refetch because apparently the create player event is for profile?
                 refetchGroup(e.groupId);
 
@@ -158,6 +159,13 @@ export function useRealtimeConnection() {
                         QK.players,
                     ]),
                 });
+                break;
+
+            case 'ASSETS':
+                client.current.logger.info('refetching assets');
+
+                invalidateLeaderboard(e.groupId);
+
                 break;
         }
     };

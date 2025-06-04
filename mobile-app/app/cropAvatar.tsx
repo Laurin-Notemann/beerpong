@@ -3,7 +3,6 @@ import {
     ReactNativeZoomableView,
     ZoomableViewEvent,
 } from '@openspacelabs/react-native-zoomable-view';
-import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -19,7 +18,6 @@ import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
 
 import { useUpdatePlayerAvatarMutation } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { QK, replaceWildcards } from '@/api/utils/reactQuery';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
@@ -61,8 +59,6 @@ export default function Page() {
     const { groupId, seasonId } = useGroup();
 
     const uploadAvatarMutation = useUpdatePlayerAvatarMutation();
-
-    const qc = useQueryClient();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -174,15 +170,6 @@ export default function Page() {
                 mimeType: 'image/png',
             });
 
-            await qc.invalidateQueries({
-                predicate: replaceWildcards([
-                    QK.group,
-                    groupId,
-                    QK.season,
-                    '*',
-                    QK.players,
-                ]),
-            });
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to upload player avatar:', err);
