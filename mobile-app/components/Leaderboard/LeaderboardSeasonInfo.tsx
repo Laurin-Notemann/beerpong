@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { env } from '@/api/env';
 import { ThemedText } from '@/components/ThemedText';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface LeaderboardSeasonInfoProps {
     /**
@@ -29,6 +29,7 @@ export const LeaderBoardSeasonInfo = ({
     numPlayers,
     numMatches,
 }: LeaderboardSeasonInfoProps) => {
+    const theme = useTheme();
     return (
         <View style={{ alignItems: 'center' }}>
             {!isCurrentSeason && (

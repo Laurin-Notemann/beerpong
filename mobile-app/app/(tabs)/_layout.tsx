@@ -1,15 +1,21 @@
+import { BottomTabBar } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { LeaderboardIcon } from '@/components/LeaderboardIcon';
+import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+
+const CUSTOM_LEADERBOARD_ICON = false;
 
 const GroupsButton = () => {
     const nav = useNavigation();
@@ -21,13 +27,15 @@ const GroupsButton = () => {
 export default function TabLayout() {
     const nav = useNavigation();
 
-    const colorScheme = useColorScheme();
-
     const { selectedGroupId } = useGroupStore();
 
     const selectedGroup = useGroupQuery(selectedGroupId);
 
     const experiments = useLocalSettings();
+
+    const navStyles = useNavStyles();
+
+    const theme = useTheme();
 
     const headerTitleIfGroupIsLoading = '';
     const headerTitleIfGroupCantBeFound = '';
@@ -48,18 +56,37 @@ export default function TabLayout() {
 
     return (
         <Tabs
-            screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-                headerShown: false,
+            tabBar={(props) => {
+                return (
+                    <View
+                        style={{
+                            position: 'absolute',
+
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                        }}
+                    >
+                        <BlurView
+                            intensity={theme.blur?.intensity || 50}
+                            tint={theme.blur?.tint}
+                            style={StyleSheet.absoluteFill}
+                        />
+                        <BottomTabBar {...props} />
+                    </View>
+                );
             }}
         >
             <Tabs.Screen
                 name="index"
                 options={{
                     title: 'Leaderboard',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="home" />
-                    ),
+                    tabBarIcon: ({ color, size }) =>
+                        CUSTOM_LEADERBOARD_ICON ? (
+                            <LeaderboardIcon color={color} size={size} />
+                        ) : (
+                            <Icon color={color} size={size} name="home" />
+                        ),
                     ...groupHeader,
                 }}
             />
@@ -68,10 +95,10 @@ export default function TabLayout() {
                 options={{
                     title: 'Matches',
 
-                    tabBarIcon: ({ color }) => (
+                    tabBarIcon: ({ color, size }) => (
                         <Icon
                             color={color}
-                            size={32}
+                            size={size}
                             name="format-list-bulleted"
                         />
                     ),
@@ -82,8 +109,8 @@ export default function TabLayout() {
                 name="newMatch"
                 options={{
                     title: 'New Match',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="pencil-outline" />
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon color={color} size={size} name="pencil-outline" />
                     ),
                     ...groupHeader,
                 }}
@@ -92,8 +119,8 @@ export default function TabLayout() {
                 name="rules"
                 options={{
                     title: 'Rules',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="format-section" />
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon color={color} size={size} name="format-section" />
                     ),
                     ...groupHeader,
                     // hide tab in production
@@ -104,8 +131,8 @@ export default function TabLayout() {
                 name="settings"
                 options={{
                     title: 'Settings',
-                    tabBarIcon: ({ color }) => (
-                        <Icon color={color} size={32} name="cog-outline" />
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon color={color} size={size} name="cog-outline" />
                     ),
                     ...groupHeader,
                 }}

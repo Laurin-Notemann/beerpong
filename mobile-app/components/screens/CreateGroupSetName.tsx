@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HeaderItem } from '@/components/HeaderItem';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface CreateGroupSetNameProps {
     isPending: boolean;
@@ -17,6 +17,8 @@ export default function CreateGroupSetName({
     onSubmit,
 }: CreateGroupSetNameProps) {
     const [name, setName] = useState('');
+
+    const theme = useTheme();
 
     return (
         <GestureHandlerRootView>
@@ -36,10 +38,10 @@ export default function CreateGroupSetName({
                         headerTitle: 'Set Group Name',
                         headerBackTitleVisible: false,
                         headerBackVisible: true,
-                        headerTintColor: '#fff',
+                        headerTintColor: theme.color.text.primary,
 
                         headerStyle: {
-                            backgroundColor: '#000',
+                            backgroundColor: theme.color.topNav,
                         },
                         headerTitleStyle: {
                             color: theme.color.text.primary,
@@ -48,7 +50,7 @@ export default function CreateGroupSetName({
                 />
                 <View
                     style={{
-                        backgroundColor: 'black',
+                        backgroundColor: theme.color.bg,
                         flex: 1,
 
                         padding: 16,

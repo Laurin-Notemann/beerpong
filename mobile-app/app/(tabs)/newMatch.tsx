@@ -18,6 +18,7 @@ import {
     matchDtoToMatch,
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Cups from '@/app/startLiveMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
@@ -26,7 +27,6 @@ import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -47,7 +47,12 @@ export default function NewMatchScreen() {
 
     const nav = useNavigation();
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
+
+    const minTeamSize =
+        group.data?.activeSeason?.seasonSettings?.minTeamSize ?? 1;
+    const maxTeamSize =
+        group.data?.activeSeason?.seasonSettings?.maxTeamSize ?? 10;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -66,8 +71,10 @@ export default function NewMatchScreen() {
         }));
 
     const hasValidTeams =
-        matchDraft.redTeam.teamMembers.length &&
-        matchDraft.blueTeam.teamMembers.length;
+        matchDraft.redTeam.teamMembers.length >= minTeamSize &&
+        matchDraft.blueTeam.teamMembers.length >= minTeamSize &&
+        matchDraft.redTeam.teamMembers.length <= maxTeamSize &&
+        matchDraft.blueTeam.teamMembers.length <= maxTeamSize;
 
     const movesQuery = useMoves(groupId, seasonId);
 
@@ -200,12 +207,14 @@ export default function NewMatchScreen() {
         i.change = getInfluenceOfMatchOnAveragePoints(
             matches.concat([matchObj as Match]),
             i.id,
-            '#'
+            '#',
+            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm
         );
     }
 
     return (
         <GestureHandlerRootView>
+            <AppBackground />
             <NewMatchStack
                 animationProgress={animationProgress}
                 match={matchObj}
@@ -232,9 +241,6 @@ export default function NewMatchScreen() {
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
                 key={groupId + ':' + seasonId}
                 ref={carouselRef}
-                style={{
-                    backgroundColor: theme.color.bg,
-                }}
                 onProgressChange={(relativeOffset) => {
                     scrollX.value = relativeOffset * width;
                 }}
@@ -255,6 +261,8 @@ export default function NewMatchScreen() {
                     if (item.index === 0) {
                         return (
                             <NewMatchAssignTeams
+                                minTeamSize={minTeamSize}
+                                maxTeamSize={maxTeamSize}
                                 players={profiles}
                                 setTeam={matchDraft.actions.setPlayerTeam}
                             />

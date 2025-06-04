@@ -6,11 +6,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useApi } from '@/api/utils/create-api';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import copyToClipboard from '@/components/copyToClipboard';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 
@@ -35,17 +36,21 @@ export default function Page() {
 
     const { realtime } = useApi();
 
+    const insets = useInsets(true);
+
     useEffect(() => {
         // we need to keep this in state because `realtime` is a ref and will not cause a rerender if it changes,
         // so the indicator could be misleading
         setIsRealtimeOpen(realtime.isOpen);
     }, [realtime.isOpen]);
 
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Debug Logs',
                 }}
             />
@@ -58,7 +63,8 @@ export default function Page() {
                 contentContainerStyle={{
                     paddingHorizontal: 16,
 
-                    paddingBottom: 128,
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom + 128,
                 }}
             >
                 <Heading

@@ -16,65 +16,84 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import Button from '@/components/Button';
+import { HeaderItem } from '@/components/HeaderItem';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 
-const seperatorDash = (
-    <Text
-        style={{
-            lineHeight: 38,
+const SeperatorDash = () => {
+    const theme = useTheme();
 
-            fontSize: 22,
+    return (
+        <Text
+            style={{
+                lineHeight: 38,
 
-            color: theme.color.text.tertiary,
-        }}
-    >
-        -
-    </Text>
-);
+                fontSize: 22,
+
+                color: theme.color.text.tertiary,
+            }}
+        >
+            -
+        </Text>
+    );
+};
 
 export interface JoinGroupProps {
+    joinGroupError?: Error | null;
     isLoading?: boolean;
     isNotFound?: boolean;
 
     onSubmit: (code: string) => void;
 }
 export default function JoinGroup({
+    joinGroupError,
     onSubmit,
     isLoading = false,
     isNotFound = false,
 }: JoinGroupProps) {
     const [code, setCode] = useState('');
-    const [codeFromClipboard, setCodeFromClipboard] = useState('');
 
-    const ref = useBlurOnFulfill({
+    // auto-submits the code when the user types it in
+    function onCodeChange(value: string, isFromClipboard = false) {
+        const cleanedValue = value
+            .replace(nonAlphaNumericChars, '')
+            .toUpperCase();
+        setCode(cleanedValue);
+
+        // don't auto-submit if the code is being filled from clipboard, which might confuse the user
+        if (isFromClipboard) {
+            return;
+        }
+        const isValidCode = cleanedValue.length === env.groupCode.length;
+
+        if (isValidCode) {
+            onSubmit(cleanedValue);
+        }
+    }
+    function onResetCode() {
+        codeInputRef.current?.focus();
+        onCodeChange('');
+    }
+
+    const codeInputRef = useBlurOnFulfill({
         value: code,
         cellCount: env.groupCode.length,
     });
-    useAutoFocus(ref);
+    useAutoFocus(codeInputRef);
 
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value: code,
-        setValue: (value) => setCode(value.toUpperCase()),
+        setValue: onCodeChange,
     });
 
-    useEffect(() => {
-        // auto submit when the user has entered the full code
-        if (
-            code.length === env.groupCode.length &&
-            code !== codeFromClipboard
-        ) {
-            onSubmit(code);
-        }
-    }, [code, onSubmit]);
-
-    const handlePaste = async () => {
+    const attemptPasteFromClipboard = async () => {
+        // will ask for confirmation to access clipboard
         const clipboardContents = await Clipboard.getStringAsync();
         const withoutWhitespace = clipboardContents
-            .replace(/\s/g, '')
+            .replace(nonAlphaNumericChars, '')
             .toUpperCase();
         if (
             withoutWhitespace.length !== env.groupCode.length ||
@@ -82,15 +101,16 @@ export default function JoinGroup({
         ) {
             return;
         }
-        setCodeFromClipboard(withoutWhitespace);
-        setCode(withoutWhitespace);
+        onCodeChange(withoutWhitespace, true);
 
         showSuccessToast('Filled in from clipboard');
     };
 
     useEffect(() => {
-        handlePaste();
+        attemptPasteFromClipboard();
     }, []);
+
+    const theme = useTheme();
 
     return (
         <>
@@ -99,15 +119,18 @@ export default function JoinGroup({
                     headerTitle: 'Join Group',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#000',
+                        backgroundColor: theme.color.topNav,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,
                     },
                     headerShown: true,
+                    headerRight: isLoading
+                        ? () => <HeaderItem isLoading>awer</HeaderItem>
+                        : undefined,
                 }}
             />
             <SafeAreaView
@@ -122,16 +145,10 @@ export default function JoinGroup({
             >
                 <KeyboardAvoidingView>
                     <CodeField
-                        ref={ref}
+                        ref={codeInputRef}
                         {...props}
                         value={code}
-                        onChangeText={(value) =>
-                            setCode(
-                                value
-                                    .replace(nonAlphaNumericChars, '')
-                                    .toUpperCase()
-                            )
-                        }
+                        onChangeText={(value) => onCodeChange(value)}
                         cellCount={env.groupCode.length}
                         textContentType="oneTimeCode"
                         rootStyle={{
@@ -166,12 +183,12 @@ export default function JoinGroup({
                                 </Text>
                                 {env.groupCode.seperatorIndices.includes(
                                     index
-                                ) && seperatorDash}
+                                ) && <SeperatorDash />}
                             </Fragment>
                         )}
                     />
                     <TouchableOpacity
-                        onPress={() => setCode('')}
+                        onPress={onResetCode}
                         style={{
                             paddingTop: 16,
                         }}
@@ -191,7 +208,7 @@ export default function JoinGroup({
                             Clear
                         </Text>
                     </TouchableOpacity>
-                    {isNotFound && (
+                    {joinGroupError && (
                         <Text
                             style={{
                                 color: theme.color.text.negative,
@@ -202,7 +219,11 @@ export default function JoinGroup({
                                 marginBottom: 32,
                             }}
                         >
-                            Group not found
+                            {isNotFound
+                                ? 'Group not found'
+                                : 'Error: ' +
+                                  (joinGroupError.message ||
+                                      'An unknown error occured')}
                         </Text>
                     )}
                     <Button
@@ -211,7 +232,15 @@ export default function JoinGroup({
                         }
                         variant="primary"
                         size="large"
-                        title={isLoading ? <ActivityIndicator /> : 'Join'}
+                        title={
+                            isLoading ? (
+                                <ActivityIndicator />
+                            ) : isNotFound ? (
+                                'Retry'
+                            ) : (
+                                'Join Group'
+                            )
+                        }
                         onPress={() => onSubmit(code)}
                     />
                 </KeyboardAvoidingView>

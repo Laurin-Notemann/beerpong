@@ -1,67 +1,77 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import CupGrid from '@/components/CupGrid';
 import { Formation } from '@/components/CupGrid/Formation';
 import { HeaderItem } from '@/components/HeaderItem';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function EditFormation() {
     const [cups, setCups] = useState(Formation.Pyramid_10);
 
     const nav = useNavigation();
 
+    const theme = useTheme();
+
+    const insets = useInsets(true);
+
     return (
         <>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Edit Formation',
                     headerRight: () => <HeaderItem>Done</HeaderItem>,
                 }}
             />
-            <View
+            <ScrollView
                 style={{
                     backgroundColor: theme.color.bg,
 
                     flex: 1,
-                    alignItems: 'center',
-
-                    width: '100%',
+                }}
+                contentContainerStyle={{
+                    paddingTop: insets.top + 16,
+                    paddingHorizontal: 16,
+                    paddingBottom: 16,
                 }}
             >
                 <GestureHandlerRootView
                     style={{
-                        backgroundColor: theme.color.bg,
-
                         flex: 1,
-                        alignItems: 'center',
                     }}
                 >
-                    <Text
+                    <View
                         style={{
-                            color: theme.color.text.secondary,
-                            fontSize: 13,
-                            textAlign: 'center',
-
-                            marginTop: 16,
-                            marginBottom: 32,
+                            alignItems: 'center',
                         }}
                     >
-                        Tap to add or remove cups, or move them by dragging
-                    </Text>
-                    <CupGrid
-                        width={300}
-                        canEdit
-                        formation={cups}
-                        onChange={setCups}
-                    />
+                        <Text
+                            style={{
+                                color: theme.color.text.secondary,
+                                fontSize: 13,
+                                textAlign: 'center',
+
+                                marginTop: 16,
+                                marginBottom: 32,
+                            }}
+                        >
+                            Tap to add or remove cups, or move them by dragging
+                        </Text>
+                        <CupGrid
+                            width={300}
+                            canEdit
+                            formation={cups}
+                            onChange={setCups}
+                        />
+                    </View>
                     <MenuSection
                         style={{
                             marginTop: 48,
@@ -88,7 +98,7 @@ export default function EditFormation() {
                         />
                     </MenuSection>
                 </GestureHandlerRootView>
-            </View>
+            </ScrollView>
         </>
     );
 }

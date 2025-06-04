@@ -5,6 +5,7 @@ import { Animated } from 'react-native';
 import { Portal } from 'react-native-portalize';
 import Svg, { Path } from 'react-native-svg';
 
+// this doesn't work at all lol
 function useIsOnScreen() {
     const nav = useNavigation();
 
@@ -50,6 +51,7 @@ export const TutorialBubble: React.FC<{
 
     useEffect(() => {
         setTimeout(() => {
+            // TODO: can we attach a parentRef onLayout listener here instead?
             parentRef.current?.measureInWindow((x, y) => setCoords({ x, y }));
         }, 0);
     }, []);
@@ -70,6 +72,8 @@ export const TutorialBubble: React.FC<{
 
     const isOnScreen = useIsOnScreen();
 
+    const isOffScreen = coords.x === 0 && coords.y === 0;
+
     return (
         <View
             ref={parentRef}
@@ -79,7 +83,7 @@ export const TutorialBubble: React.FC<{
                 top: 0,
             }}
         >
-            {isOnScreen && (
+            {isOnScreen && !isOffScreen && (
                 <Portal>
                     <Animated.View
                         style={{

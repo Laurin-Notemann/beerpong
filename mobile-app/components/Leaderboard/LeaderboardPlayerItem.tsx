@@ -3,8 +3,8 @@ import { TouchableOpacity } from 'react-native';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { theme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { useTheme } from '@/theme';
+import { formatElo, formatPlacement } from '@/utils/format';
 
 export interface LeaderboardPlayerItemProps {
     id: string;
@@ -20,6 +20,9 @@ export interface LeaderboardPlayerItemProps {
     unranked?: boolean;
 
     onPlayerPress?: (id: string) => void;
+    onPlayerLongPress?: (id: string) => void;
+
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -32,19 +35,14 @@ export default function LeaderboardPlayerItem({
     elo,
     unranked = false,
     onPlayerPress,
+    onPlayerLongPress,
+    rankingAlgorithm,
 }: LeaderboardPlayerItemProps) {
+    const theme = useTheme();
     // account for division by zero
     const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
 
     return (
-        // <Link
-        //   to={{
-        //     params: {
-        //       id: "#",
-        //     },
-        //     screen: "rules",
-        //   }}
-        // >
         <TouchableOpacity
             disabled={!onPlayerPress}
             style={{
@@ -57,6 +55,7 @@ export default function LeaderboardPlayerItem({
                 opacity: unranked ? 0.5 : undefined,
             }}
             onPress={() => onPlayerPress?.(id)}
+            onLongPress={() => onPlayerLongPress?.(id)}
         >
             <ThemedText
                 style={{
@@ -100,9 +99,10 @@ export default function LeaderboardPlayerItem({
                     color: theme.color.text.secondary,
                 }}
             >
-                {averagePointsPerMatch}
+                {rankingAlgorithm === 'AVERAGE'
+                    ? averagePointsPerMatch
+                    : formatElo(elo)}
             </ThemedText>
         </TouchableOpacity>
-        // </Link>
     );
 }

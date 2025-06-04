@@ -10,6 +10,9 @@ interface LocalSettingsStore {
     eloAlgorithm: boolean;
     premiumVersion: boolean;
     matchPhotos: boolean;
+    themeId: string;
+    showWallpaper: boolean;
+    dailyLeaderboard: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -19,6 +22,9 @@ interface LocalSettingsStore {
         toggleEloAlgorithm: () => void;
         togglePremiumVersion: () => void;
         toggleMatchPhotos: () => void;
+        setTheme: (themeId: string) => void;
+        toggleShowWallpaper: () => void;
+        toggleDailyLeaderboard: () => void;
     };
 }
 
@@ -32,6 +38,9 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             eloAlgorithm: false,
             premiumVersion: false,
             matchPhotos: false,
+            themeId: 'dark',
+            showWallpaper: false,
+            dailyLeaderboard: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -69,6 +78,21 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         matchPhotos: !get().matchPhotos,
                     }));
                 },
+                setTheme: (themeId: string) => {
+                    set(() => ({
+                        themeId,
+                    }));
+                },
+                toggleShowWallpaper: () => {
+                    set(() => ({
+                        showWallpaper: !get().showWallpaper,
+                    }));
+                },
+                toggleDailyLeaderboard: () => {
+                    set(() => ({
+                        dailyLeaderboard: !get().dailyLeaderboard,
+                    }));
+                },
             },
         }),
         {
@@ -82,6 +106,9 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 eloAlgorithm: state.eloAlgorithm,
                 premiumVersion: state.premiumVersion,
                 matchPhotos: state.matchPhotos,
+                themeId: state.themeId,
+                showWallpaper: state.showWallpaper,
+                dailyLeaderboard: state.dailyLeaderboard,
             }),
         }
     )

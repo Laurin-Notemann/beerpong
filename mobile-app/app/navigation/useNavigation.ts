@@ -2,6 +2,7 @@ import { NavigationProp } from '@react-navigation/native';
 import { useNavigation as useRawNavigation } from 'expo-router';
 
 export type RootStackParamList = {
+    cropAvatar: { uri: string; profileId: string };
     index: undefined;
     formations: undefined;
     createGroupSetName: undefined;
@@ -12,10 +13,12 @@ export type RootStackParamList = {
     pastSeasons: undefined;
     editPlayerName: { id: string };
     editGroupName: { id: string };
-    newMatchPoints: undefined;
     createNewPlayer: undefined;
     onboarding: undefined;
     editRankPlayersBy: undefined;
+    dailyLeaderboardSettings: undefined;
+    teamSizeSettings: undefined;
+    minMatchesToQualifySettings: undefined;
     saveSeason: undefined;
     startLiveMatch: undefined;
     player: { id: string };

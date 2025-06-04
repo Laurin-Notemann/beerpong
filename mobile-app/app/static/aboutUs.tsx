@@ -2,15 +2,19 @@ import { Stack } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
-import { theme } from '@/theme';
+import { useNavStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
+import { useTheme } from '@/theme';
 
 export default function Page() {
+    const insets = useInsets(true);
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'About Us',
                 }}
             />
@@ -21,12 +25,13 @@ export default function Page() {
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
+                    paddingTop: insets.top,
                     paddingHorizontal: 16,
 
                     paddingBottom: 128,
                 }}
             >
-                <Text style={{ color: 'white' }}>
+                <Text style={{ color: theme.color.text.primary }}>
                     Did you expect this app to be the product of a soulless
                     corporation? Far from it! We are a group of eight german
                     university students. While on vacation, we got the idea of

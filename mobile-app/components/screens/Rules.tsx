@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { SafeAreaView, Text, View } from 'react-native';
 import {
     NestableDraggableFlatList,
     NestableScrollContainer,
@@ -10,7 +10,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
@@ -19,7 +21,7 @@ import IconHead from '@/components/IconHead';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 
 export type RuleRenderItem = {
@@ -42,6 +44,7 @@ export default function Rules({
     onResetRules,
     onUpdateRule,
 }: RulesProps) {
+    const theme = useTheme();
     const [isEditing, setIsEditing] = useState(false);
 
     const [modalId, setModalId] = useState<string | null>(null);
@@ -49,6 +52,8 @@ export default function Rules({
     const modalItem = rules.find((i) => i.id === modalId);
 
     const nav = useNavigation();
+
+    const insets = useInsets(true, true);
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -79,6 +84,7 @@ export default function Rules({
                 description={item.description}
                 onDragToReorder={drag}
                 onSelect={() => {
+                    triggerHapticBump('selection');
                     if (selectedIds.includes(item.id)) {
                         setSelectedIds((prev) =>
                             prev.filter((i) => i !== item.id)
@@ -103,6 +109,7 @@ export default function Rules({
 
     return (
         <GestureHandlerRootView>
+            <AppBackground />
             <Stack.Screen
                 options={{
                     headerRight: () => (
@@ -192,63 +199,70 @@ export default function Rules({
                 ]}
                 isVisible={showDeleteConfirmation}
             />
-
-            <NestableScrollContainer
-                refreshControl={<RefreshControl {...refresh} />}
-                style={{
-                    backgroundColor: theme.color.bg,
-                }}
-            >
-                <NestableDraggableFlatList
-                    data={rules}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
-                    onDragEnd={({ data }) => {
-                        onReorderRules(data);
+            <SafeAreaView>
+                <NestableScrollContainer
+                    refreshControl={<RefreshControl {...refresh} />}
+                    contentContainerStyle={{
+                        paddingTop: insets.top + 16,
+                        paddingBottom: insets.bottom,
                     }}
-                    ListEmptyComponent={
-                        <IconHead
-                            iconName="format-section"
-                            title="No Rules"
-                            style={{ paddingTop: 128 }}
-                            description={
-                                <Button
-                                    style={{
-                                        marginTop: 24,
-                                    }}
-                                    onPress={onResetRules}
-                                    title="Reset Rules"
-                                    variant="primary"
-                                />
-                            }
-                        />
-                    }
-                />
-                {rules.length > 0 && (
-                    <Text
-                        style={{
-                            fontSize: 12,
-                            color: theme.color.text.secondary,
-                            marginTop: 16,
-
-                            marginBottom:
-                                42 + 32 + (selectedIds.length > 0 ? 42 : 0),
-
-                            paddingHorizontal: 16,
-                            textAlign: 'center',
+                >
+                    <NestableDraggableFlatList
+                        data={rules}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id}
+                        onDragEnd={({ data }) => {
+                            triggerHapticBump('selection');
+                            onReorderRules(data);
                         }}
-                    >
-                        The default ruleset is based on the house rules of the
-                        student fraternity{' '}
+                        ListEmptyComponent={
+                            <IconHead
+                                iconName="format-section"
+                                title="No Rules"
+                                style={{ paddingTop: 128 }}
+                                description={
+                                    <Button
+                                        style={{
+                                            marginTop: 24,
+                                        }}
+                                        onPress={onResetRules}
+                                        title="Reset Rules"
+                                        variant="primary"
+                                    />
+                                }
+                            />
+                        }
+                    />
+                    {rules.length > 0 && (
                         <Text
-                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                            style={{
+                                fontSize: 12,
+                                color: theme.color.text.secondary,
+                                marginTop: 16,
+
+                                marginBottom:
+                                    42 + 32 + (selectedIds.length > 0 ? 42 : 0),
+
+                                paddingHorizontal: 16,
+                                textAlign: 'center',
+                            }}
                         >
-                            VDSt Straßburg-Hamburg-Rostock
+                            The default ruleset is based on the house rules of
+                            the student fraternity{' '}
+                            <Text
+                                style={{
+                                    fontWeight: 'bold',
+                                    fontStyle: 'italic',
+                                }}
+                            >
+                                VDSt Straßburg-Hamburg-Rostock
+                            </Text>
+                            .
                         </Text>
-                        .
-                    </Text>
-                )}
-            </NestableScrollContainer>
+                    )}
+                </NestableScrollContainer>
+            </SafeAreaView>
+
             {isEditing && (
                 <View
                     style={{
@@ -260,7 +274,7 @@ export default function Rules({
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        paddingBottom: 16,
+                        paddingBottom: insets.bottom + 16,
                         paddingHorizontal: 16,
                     }}
                 >

@@ -5,17 +5,19 @@ import { TouchableHighlight } from 'react-native-gesture-handler';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import MatchVsHeader from '@/components/MatchVsHeader';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export const MatchesListItem: React.FC<{
     match: Match;
     onPress: () => void;
-}> = ({ match, onPress }) => {
+    highlightedId?: string;
+}> = ({ match, onPress, highlightedId }) => {
+    const theme = useTheme();
+
     return (
         <TouchableHighlight
             underlayColor={theme.panel.light.active}
             style={{
-                backgroundColor: theme.panel.light.bg,
                 gap: 4,
                 paddingHorizontal: 16,
                 paddingVertical: 7,
@@ -26,7 +28,7 @@ export const MatchesListItem: React.FC<{
             onPress={onPress}
         >
             <>
-                <MatchVsHeader match={match} />
+                <MatchVsHeader match={match} highlightedId={highlightedId} />
                 <View style={{ flexDirection: 'row', gap: 16 }}>
                     <Text
                         style={{

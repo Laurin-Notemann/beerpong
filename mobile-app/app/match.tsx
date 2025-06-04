@@ -18,8 +18,9 @@ import {
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
@@ -27,7 +28,7 @@ import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
@@ -41,9 +42,11 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 const USE_MATCH_QUERY = false;
 
 export default function Page() {
+    const theme = useTheme();
+
     const [isEditing, setIsEditing] = useState(false);
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId, seasonId, group } = useGroup();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -69,6 +72,8 @@ export default function Page() {
     const deleteMatchMutation = useDeleteMatchMutation();
 
     const nav = useNavigation();
+
+    const insets = useInsets();
 
     const match = USE_MATCH_QUERY
         ? matchQuery.data?.data
@@ -186,6 +191,7 @@ export default function Page() {
     const refresh = usePullToRefresh(() =>
         invalidateMatches(groupId!, seasonId!)
     );
+    const navStyles = useNavStyles();
 
     const updateMatchMutation = useUpdateMatchMutation();
 
@@ -308,7 +314,7 @@ export default function Page() {
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,
-                    paddingTop: 32,
+                    paddingTop: insets.top + 32,
                     paddingBottom: 32,
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
@@ -339,7 +345,9 @@ export default function Page() {
                                       )
                                     : matches,
                                 i.id!,
-                                match?.id!
+                                match?.id!,
+                                group.data?.activeSeason?.seasonSettings
+                                    ?.rankingAlgorithm
                             ),
                             moves: i.moves,
                             name: i.name,

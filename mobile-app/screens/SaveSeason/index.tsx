@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { TextInput } from 'react-native';
 
-import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { Player } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
-import { Swiper, useSwiper } from '@/components/Swiper';
+import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { Components } from '@/openapi/openapi';
 import { NewSeasonRulesInput } from '@/screens/SaveSeason/NewSeasonRulesInput';
 import { OldSeasonNameInput } from '@/screens/SaveSeason/OldSeasonNameInput';
@@ -21,6 +21,7 @@ export interface SaveSeasonScreenProps {
     oldSeasonStartDate: string;
     onCancel: () => void;
     isCreating: boolean;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     onStartNewSeason,
@@ -30,6 +31,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     oldSeasonStartDate,
     onCancel,
     isCreating,
+    rankingAlgorithm,
 }) => {
     const newSeasonDraft = useNewSeasonDraft();
 
@@ -48,7 +50,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const oldSeasonIsEmpty = numMatches < 1;
 
-    const swiper = useSwiper({ initialPage: 0 });
+    const swiper = useSwiperWithPageState({ initialPage: 0 });
 
     const hasValidName =
         oldSeasonIsEmpty || newSeasonDraft.oldSeasonName.length > 0;
@@ -100,14 +102,18 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                         onChangeName={(name) => {
                             newSeasonDraft.actions.setOldSeasonName(name);
                         }}
+                        rankingAlgorithm={rankingAlgorithm}
                     />
                 )}
                 <NewSeasonRulesInput
                     moves={newSeasonDraft.newSeasonAllowedMoves}
                     onNewPress={() => {
+                        const newMoveId = Date.now().toString();
+
                         newSeasonDraft.actions.setNewSeasonAllowedMoves([
                             ...newSeasonDraft.newSeasonAllowedMoves,
                             {
+                                id: newMoveId,
                                 name: 'New Move',
                                 finishingMove: false,
                                 pointsForScorer: 1,
@@ -115,7 +121,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                             },
                         ]);
                         nav.navigate('allowedMove', {
-                            id: newSeasonDraft.newSeasonAllowedMoves.length.toString(),
+                            id: newMoveId,
                         });
                     }}
                     onDelete={(id) =>
@@ -125,6 +131,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                             )
                         )
                     }
+                    onReorder={newSeasonDraft.actions.setNewSeasonAllowedMoves}
                 />
             </Swiper>
         </>

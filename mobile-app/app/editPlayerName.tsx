@@ -10,7 +10,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
@@ -30,6 +30,8 @@ export default function Page() {
     const [value, setValue] = useState(player?.profile?.name || '');
 
     const updatePlayerMutation = useUpdatePlayerMutation();
+
+    const theme = useTheme();
 
     async function onSubmit() {
         if (!groupId || !seasonId || !profileId) return;
@@ -66,10 +68,10 @@ export default function Page() {
                     headerTitle: 'Player Name',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#1B1B1B',
+                        backgroundColor: theme.panel.dark.bg,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,

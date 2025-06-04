@@ -45,11 +45,18 @@ export default function MatchesList({
 
     return (
         <FlatList
-            contentContainerStyle={{ paddingBottom: 32 }}
-            style={{
-                alignSelf: 'stretch',
-                paddingHorizontal: 16,
-            }}
+            {...rest}
+            contentContainerStyle={[
+                { paddingBottom: 32 },
+                rest.contentContainerStyle,
+            ]}
+            style={[
+                {
+                    alignSelf: 'stretch',
+                    paddingHorizontal: 16,
+                },
+                rest.style,
+            ]}
             data={days}
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item, index }) => (
@@ -61,12 +68,12 @@ export default function MatchesList({
                             onPress={() =>
                                 nav.navigate('match', { id: match.id })
                             }
+                            highlightedId={forPlayer?.id}
                         />
                     ))}
                 </MenuSection>
             )}
             ListEmptyComponent={<NoMatchesPlayedYet />}
-            {...rest}
         />
     );
 }

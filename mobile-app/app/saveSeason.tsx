@@ -5,6 +5,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import {
     byDescendingAveragePoints,
+    byDescendingElo,
     useLeaderboardProps,
 } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -58,9 +59,16 @@ export default function Page() {
 
     const minMatchesRequiredToBeRanked = 1;
 
-    const { players } = useLeaderboardProps(groupId, seasonId ?? null);
+    const { currentSeasonPlayers } = useLeaderboardProps(
+        groupId,
+        seasonId ?? null
+    );
 
-    const sortedPlayers = players.sort(byDescendingAveragePoints);
+    const sortedPlayers = currentSeasonPlayers.sort(
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
+            ? byDescendingAveragePoints
+            : byDescendingElo
+    );
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked
@@ -79,6 +87,10 @@ export default function Page() {
             oldSeasonStartDate={group.data?.activeSeason?.startDate!}
             onCancel={() => nav.goBack()}
             isCreating={newSeasonMutation.isPending}
+            rankingAlgorithm={
+                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
+                'AVERAGE'
+            }
         />
     );
 }

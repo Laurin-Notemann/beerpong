@@ -17,7 +17,7 @@ import TextInput from '@/components/TextInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
 
 const MIN_GROUP_MEMBERS = 2;
@@ -57,6 +57,7 @@ export default function CreateGroupAddMembers({
         setMembers((prev) => prev.filter((_, index) => index !== idx));
         triggerHapticBump('selection');
     }
+    const theme = useTheme();
 
     return (
         <GestureHandlerRootView>
@@ -82,10 +83,10 @@ export default function CreateGroupAddMembers({
                     headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#000',
+                        backgroundColor: theme.color.topNav,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,

@@ -14,9 +14,11 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
+
+const RENDER_AS_MENU_ITEM = false;
 
 export interface SidebarGroupItemProps {
     id: string;
@@ -57,6 +59,26 @@ export function SidebarGroupItem({
             useNativeDriver: false, // width property needs JS driver to animate
         }).start();
     }, [showDeleteButton]);
+
+    if (RENDER_AS_MENU_ITEM) {
+        return (
+            <MenuItem
+                title={data?.data?.name || 'Unknown'}
+                subtitle={
+                    isLoading
+                        ? ''
+                        : failedToLoad
+                          ? 'Failed to load'
+                          : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`
+                }
+                onPress={() => onPress(id)}
+                border={false}
+                active={isActive}
+                onDrag={showDeleteButton ? () => {} : undefined}
+                color="dark"
+            />
+        );
+    }
 
     return (
         <View
@@ -156,6 +178,8 @@ export function Sidebar({}: SidebarProps) {
 
     const matchDraft = useMatchDraftStore((store) => store.actions);
 
+    const theme = useTheme();
+
     return (
         <SafeAreaView
             style={{
@@ -166,113 +190,111 @@ export function Sidebar({}: SidebarProps) {
                 gap: 20,
             }}
         >
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
+            <MenuSection color="dark" noFlex>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
 
-                    height: 50,
-                    paddingHorizontal: 16,
-
-                    backgroundColor: theme.panel.dark.bg,
-                    borderRadius: 10,
-                }}
-            >
-                <>
-                    <TouchableOpacity
-                        onPress={() => setIsEditMode(!isEditMode)}
-                        style={{ marginRight: 'auto' }}
-                    >
-                        <Text
-                            color="primary"
-                            style={{
-                                fontWeight: 500,
-                            }}
+                        height: 50,
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    <>
+                        <TouchableOpacity
+                            onPress={() => setIsEditMode(!isEditMode)}
+                            style={{ marginRight: 'auto' }}
                         >
-                            {isEditMode ? 'Done' : 'Edit'}
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setShowAddGroupModal(true)}
-                        style={{ marginLeft: 'auto' }}
-                    >
-                        <Icon
-                            name="plus"
-                            size={24}
-                            color={theme.color.text.primary}
-                        />
-                    </TouchableOpacity>
-                </>
-            </View>
+                            <Text
+                                color="primary"
+                                style={{
+                                    fontWeight: 500,
+                                }}
+                            >
+                                {isEditMode ? 'Done' : 'Edit'}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setShowAddGroupModal(true)}
+                            style={{ marginLeft: 'auto' }}
+                        >
+                            <Icon
+                                name="plus"
+                                size={24}
+                                color={theme.color.text.primary}
+                            />
+                        </TouchableOpacity>
+                    </>
+                </View>
+            </MenuSection>
 
-            <ScrollView
+            <MenuSection
+                color="dark"
                 style={{
-                    backgroundColor: theme.panel.dark.bg,
-
-                    borderRadius: 10,
-
                     flex: 1,
                 }}
             >
-                {groupIds.map((id) => (
-                    <SidebarGroupItem
-                        key={id}
-                        id={id}
-                        isActive={id === selectedGroupId}
-                        onPress={() => {
-                            selectGroup(id);
-                            matchDraft.clear();
+                <ScrollView>
+                    {groupIds.map((id) => (
+                        <SidebarGroupItem
+                            key={id}
+                            id={id}
+                            isActive={id === selectedGroupId}
+                            onPress={() => {
+                                selectGroup(id);
+                                matchDraft.clear();
 
-                            while (nav.canGoBack()) {
-                                nav.goBack();
-                            }
+                                while (nav.canGoBack()) {
+                                    nav.goBack();
+                                }
 
-                            // eslint-disable-next-line
-                            console.log(Object.keys(nav));
-                            // nav.closeDrawer();
-                        }}
-                        showDeleteButton={isEditMode}
-                        onDelete={setGroupIdToBeDeleted}
-                    />
-                ))}
-                {groupIds.length < 1 && (
-                    <Text
-                        color="secondary"
-                        style={{
-                            textAlign: 'center',
-                            // paddingTop: 64,
-                            // lineHeight: 26,
-
-                            flex: 1,
-
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
-                        No groups to display. {'\n'}
-                        <Link
-                            to="/joinGroup"
+                                // eslint-disable-next-line
+                                console.log(Object.keys(nav));
+                                // nav.closeDrawer();
+                            }}
+                            showDeleteButton={isEditMode}
+                            onDelete={setGroupIdToBeDeleted}
+                        />
+                    ))}
+                    {groupIds.length < 1 && (
+                        <Text
+                            color="secondary"
                             style={{
-                                color: theme.color.text.primary,
-                                fontWeight: 500,
+                                textAlign: 'center',
+                                // paddingTop: 64,
+                                // lineHeight: 26,
+
+                                flex: 1,
+
+                                display: 'flex',
+                                alignItems: 'center',
                             }}
                         >
-                            Join
-                        </Link>{' '}
-                        or{' '}
-                        <Link
-                            to="/createGroup"
-                            style={{
-                                color: theme.color.text.primary,
-                                fontWeight: 500,
-                            }}
-                        >
-                            Create
-                        </Link>{' '}
-                        one.
-                    </Text>
-                )}
-            </ScrollView>
+                            No groups to display. {'\n'}
+                            <Link
+                                to="/joinGroup"
+                                style={{
+                                    color: theme.color.text.primary,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Join
+                            </Link>{' '}
+                            or{' '}
+                            <Link
+                                to="/createGroup"
+                                style={{
+                                    color: theme.color.text.primary,
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Create
+                            </Link>{' '}
+                            one.
+                        </Text>
+                    )}
+                </ScrollView>
+            </MenuSection>
             <View
                 style={{
                     height: 200, // this is not really pixel perfect lol, this needs to have an explicit height in order for the layout to autosize correctly

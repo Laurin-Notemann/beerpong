@@ -937,7 +937,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileCreatedDto"
                                 }
                             }
                         }
@@ -1008,6 +1008,12 @@
                     },
                     {
                         "name": "showInactive",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "boolean", "default": false }
+                    },
+                    {
+                        "name": "showStats",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "boolean", "default": false }
@@ -1265,6 +1271,7 @@
                     "wallpaperAsset": {
                         "$ref": "#/components/schemas/AssetMetadataDto"
                     },
+                    "createdAt": { "type": "string", "format": "date-time" },
                     "sportPreset": {
                         "$ref": "#/components/schemas/GroupPreset"
                     },
@@ -1572,6 +1579,30 @@
                     }
                 }
             },
+            "ProfileCreatedDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "avatarAsset": {
+                        "$ref": "#/components/schemas/AssetMetadataDto"
+                    },
+                    "groupId": { "type": "string" },
+                    "reactivated": { "type": "boolean" },
+                    "lastActiveSeasonId": { "type": "string" }
+                }
+            },
+            "ResponseEnvelopeProfileCreatedDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "$ref": "#/components/schemas/ProfileCreatedDto"
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
             "ResponseEnvelopeString": {
                 "type": "object",
                 "properties": {
@@ -1620,8 +1651,24 @@
             "PlayerStatisticsDto": {
                 "type": "object",
                 "properties": {
+                    "id": { "type": "string" },
                     "points": { "type": "integer", "format": "int64" },
-                    "matches": { "type": "integer", "format": "int64" }
+                    "matches": { "type": "integer", "format": "int64" },
+                    "moves": { "type": "integer", "format": "int64" },
+                    "totalTeamSize": { "type": "integer", "format": "int64" },
+                    "avgPointsPerMatch": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "avgTeamSize": { "type": "number", "format": "double" },
+                    "elo": { "type": "number", "format": "double" },
+                    "rankBy": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
                 }
             },
             "ResponseEnvelopeListPlayerDto": {
@@ -1723,34 +1770,12 @@
             "LeaderboardDto": {
                 "type": "object",
                 "properties": {
+                    "numPlayers": { "type": "integer", "format": "int64" },
+                    "numMatches": { "type": "integer", "format": "int64" },
+                    "startedAt": { "type": "string", "format": "date-time" },
                     "entries": {
                         "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/LeaderboardEntryDto"
-                        }
-                    }
-                }
-            },
-            "LeaderboardEntryDto": {
-                "type": "object",
-                "properties": {
-                    "playerDto": { "$ref": "#/components/schemas/PlayerDto" },
-                    "totalPoints": { "type": "integer", "format": "int32" },
-                    "totalGames": { "type": "integer", "format": "int32" },
-                    "totalMoves": { "type": "integer", "format": "int32" },
-                    "totalTeamSize": { "type": "integer", "format": "int32" },
-                    "averagePointsPerMatch": {
-                        "type": "number",
-                        "format": "double"
-                    },
-                    "averageTeamSize": { "type": "number", "format": "double" },
-                    "elo": { "type": "number", "format": "double" },
-                    "rankBy": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
+                        "items": { "$ref": "#/components/schemas/PlayerDto" }
                     }
                 }
             },

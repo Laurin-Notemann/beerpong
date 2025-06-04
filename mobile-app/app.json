@@ -2,25 +2,31 @@
     "expo": {
         "name": "Versus",
         "slug": "mobile-app",
-        "version": "1.0.28",
-        "orientation": "portrait",
+        "version": "1.0.37",
+        "orientation": "default",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
         "userInterfaceStyle": "automatic",
         "splash": {
             "image": "./assets/images/splash.png",
-            "resizeMode": "contain",
+            "resizeMode": "cover",
             "backgroundColor": "#000000"
         },
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "com.linusbolls.mobileapp",
-            "buildNumber": "28",
+            "buildNumber": "37",
             "infoPlist": {
                 "NSPhotoLibraryUsageDescription": true
             },
             "config": {
                 "usesNonExemptEncryption": false
+            },
+            "splash": {
+                "image": "./assets/images/splash.png",
+                "tabletImage": "./assets/ios-splash-tablet.png",
+                "resizeMode": "cover",
+                "backgroundColor": "#000000"
             }
         },
         "android": {

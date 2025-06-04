@@ -2,20 +2,25 @@ import { Stack } from 'expo-router';
 import { ScrollView, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import { Heading } from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 function P({ children }: any) {
-    return <Text style={{ color: 'white' }}>{children}</Text>;
+    const theme = useTheme();
+    return <Text style={{ color: theme.color.text.primary }}>{children}</Text>;
 }
 
 export default function Page() {
+    const insets = useInsets(true);
+    const theme = useTheme();
+
     return (
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: 'Privacy Policy',
                 }}
             />
@@ -28,6 +33,7 @@ export default function Page() {
                 contentContainerStyle={{
                     paddingHorizontal: 16,
 
+                    paddingTop: insets.top,
                     paddingBottom: 128,
                 }}
             >

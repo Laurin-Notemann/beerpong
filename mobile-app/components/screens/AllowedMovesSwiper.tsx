@@ -1,20 +1,16 @@
 import { Stack, useNavigation } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import {
-    TextInput as ReactNativeTextInput,
-    ScrollView,
-    Switch,
-    View,
-} from 'react-native';
+import React from 'react';
+import { ScrollView, Switch, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
+import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';
 import MenuSection from '@/components/Menu/MenuSection';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import {
     NewSeasonMoveInput,
     useNewSeasonDraft,
@@ -30,6 +26,7 @@ export default function AllowedMovesSwiper({
     initialId,
 }: AllowedMovesSwiperProps) {
     const nav = useNavigation();
+    const theme = useTheme();
 
     const swiper = useSwiper({
         initialPage: allowedMoves.findIndex((i) => i.id === initialId),
@@ -120,55 +117,6 @@ export default function AllowedMovesSwiper({
     );
 }
 
-const NumberInput: React.FC<{
-    defaultValue: number;
-    onChange: (value: number) => void;
-}> = ({ defaultValue, onChange }) => {
-    const ref = useRef<ReactNativeTextInput>(null);
-
-    function selectEverything() {
-        setTimeout(() => {
-            ref.current?.setNativeProps({
-                selection: {
-                    start: 0,
-                    end: defaultValue.toString().length,
-                },
-            });
-        }, 0);
-    }
-
-    return (
-        <ReactNativeTextInput
-            keyboardAppearance={theme.keyboardAppearance}
-            ref={ref}
-            style={{
-                color: theme.color.text.secondary,
-
-                fontSize: 17,
-                lineHeight: 22,
-                fontWeight: 400,
-
-                textAlign: 'right',
-
-                width: 16 * 3.5,
-            }}
-            cursorColor={theme.color.text.primary}
-            placeholderTextColor={theme.icon.secondary}
-            selectionColor={theme.color.text.primary}
-            placeholder={defaultValue.toString()}
-            defaultValue={defaultValue.toString()}
-            keyboardType="numeric"
-            onChangeText={(text) => {
-                const value = parseInt(text);
-                if (!isNaN(value)) {
-                    onChange(value);
-                }
-            }}
-            onFocus={selectEverything}
-        />
-    );
-};
-
 const AllowedMovePage: React.FC<{
     move: NewSeasonMoveInput;
     onChangeName: (name: string) => void;
@@ -184,6 +132,8 @@ const AllowedMovePage: React.FC<{
     onChangeIsFinish,
     onDelete,
 }) => {
+    const theme = useTheme();
+
     return (
         <ScrollView contentContainerStyle={{ paddingBottom: 32 }} key={move.id}>
             <InputModal>
@@ -211,28 +161,18 @@ const AllowedMovePage: React.FC<{
                     />
 
                     <MenuSection>
-                        <MenuItem
+                        <MenuItemNumberInput
                             title="Points for Scorer"
                             headIcon="account-outline"
-                            tailContent={
-                                <NumberInput
-                                    defaultValue={move.pointsForScorer}
-                                    onChange={onChangePointsForScorer}
-                                />
-                            }
-                            tailIconType="next"
+                            defaultValue={move.pointsForScorer}
+                            onChange={onChangePointsForScorer}
                         />
-                        <MenuItem
+                        <MenuItemNumberInput
                             title="Points for Team"
                             subtitle="The scorer will get these as well"
                             headIcon="account-group-outline"
-                            tailContent={
-                                <NumberInput
-                                    defaultValue={move.pointsForTeam}
-                                    onChange={onChangePointsForTeam}
-                                />
-                            }
-                            tailIconType="next"
+                            defaultValue={move.pointsForTeam}
+                            onChange={onChangePointsForTeam}
                         />
                         <MenuItem
                             title="Finish Move"

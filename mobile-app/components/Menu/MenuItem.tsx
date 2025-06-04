@@ -1,10 +1,10 @@
 import React from 'react';
-import { Text, TouchableHighlight, View } from 'react-native';
+import { Pressable, Text, TouchableHighlight, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import ConfirmationModal from '@/components/ConfirmationModal';
 import useBoolean from '@/components/useBoolean';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface MenuItemProps {
     title: string;
@@ -13,7 +13,7 @@ export interface MenuItemProps {
     type?: 'default' | 'danger';
 
     headIcon?: string | React.ReactElement;
-    tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked';
+    tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked' | 'draghandle';
     onPress?: () => void;
 
     tailContent?: JSX.Element | string | number;
@@ -28,6 +28,9 @@ export interface MenuItemProps {
 
         type?: 'confirmBlue' | 'dangerRed';
     };
+    active?: boolean;
+    border?: boolean;
+    onDrag?: () => void;
 }
 export default function MenuItem({
     title,
@@ -44,8 +47,13 @@ export default function MenuItem({
     color = 'light',
 
     confirmationPrompt,
+    active = false,
+    border = true,
+    onDrag,
 }: MenuItemProps) {
     const [isPromptShown, showPrompt, hidePrompt] = useBoolean(false);
+
+    const theme = useTheme();
 
     return (
         <>
@@ -83,10 +91,16 @@ export default function MenuItem({
                     height: subtitle ? undefined : 50,
 
                     paddingLeft: 16,
-                    paddingRight: 9,
+                    paddingRight: onDrag ? undefined : 9,
 
-                    borderTopWidth: 0.5,
+                    borderTopWidth: border ? 0.5 : undefined,
                     borderTopColor: theme.panel[color].dividers,
+
+                    backgroundColor: active
+                        ? theme.panel[color].active
+                        : onDrag
+                          ? theme.panel[color].bg
+                          : undefined,
                 }}
                 underlayColor={theme.panel[color].active}
                 onPress={confirmationPrompt ? showPrompt : onPress}
@@ -161,7 +175,7 @@ export default function MenuItem({
 
                                 marginRight: 'auto',
 
-                                flex: 1,
+                                flexGrow: 1,
                             }}
                             numberOfLines={1}
                         >
@@ -176,7 +190,7 @@ export default function MenuItem({
                                 fontWeight: 400,
                                 color: theme.color.text.secondary,
 
-                                flex: 1,
+                                flexShrink: 1,
 
                                 textAlign: 'right',
                             }}
@@ -201,9 +215,29 @@ export default function MenuItem({
                                     copy: 'content-copy',
                                     checked: 'circle-slice-8', // "check",
                                     unchecked: 'circle-outline',
+                                    draghandle: 'drag-horizontal-variant',
                                 }[tailIconType]
                             }
                         />
+                    )}
+                    {onDrag && (
+                        <Pressable
+                            onPressIn={onDrag}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+
+                                width: 24 + 9 + 9,
+                                height: '100%',
+                            }}
+                        >
+                            <Icon
+                                name="drag-horizontal-variant"
+                                size={24}
+                                color={theme.color.text.secondary}
+                            />
+                        </Pressable>
                     )}
                 </>
             </TouchableHighlight>

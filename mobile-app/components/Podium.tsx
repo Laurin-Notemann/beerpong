@@ -1,18 +1,20 @@
 import React from 'react';
 import { TouchableOpacity, ViewProps } from 'react-native';
 
-import { Player } from '@/api/propHooks/leaderboardPropHooks';
+import { Player } from '@/api/calls/seasonHooks';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { theme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { useTheme } from '@/theme';
+import { formatAverage, formatElo, formatPlacement } from '@/utils/format';
 
 const Description: React.FC<{
     detailed?: boolean;
     player?: { name: string; points: number; matches: number };
     average: string;
 }> = ({ detailed, player, average }) => {
+    const theme = useTheme();
+
     return (
         <>
             <ThemedText
@@ -70,6 +72,8 @@ export interface PodiumProps extends ViewProps {
     thirdPlace?: Player;
 
     onPlayerPress?: (id: string) => void;
+    onPlayerLongPress?: (id: string) => void;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
 }
 export default function Podium({
     detailed = true,
@@ -78,19 +82,21 @@ export default function Podium({
     thirdPlace,
 
     onPlayerPress,
+    onPlayerLongPress,
+    rankingAlgorithm,
     ...rest
 }: PodiumProps) {
-    const firstPlaceAveragePointsPerMatch = firstPlace?.matches
-        ? (firstPlace?.points / firstPlace?.matches).toFixed(1)
-        : '--';
+    const firstPlaceAverage = firstPlace
+        ? firstPlace.points / firstPlace.matches
+        : undefined;
+    const secondPlaceAverage = secondPlace
+        ? secondPlace.points / secondPlace.matches
+        : undefined;
+    const thirdPlaceAverage = thirdPlace
+        ? thirdPlace.points / thirdPlace.matches
+        : undefined;
 
-    const secondPlaceAveragePointsPerMatch = secondPlace?.matches
-        ? (secondPlace?.points / secondPlace?.matches).toFixed(1)
-        : '--';
-
-    const thirdPlaceAveragePointsPerMatch = thirdPlace?.matches
-        ? (thirdPlace?.points / thirdPlace?.matches).toFixed(1)
-        : '--';
+    const theme = useTheme();
 
     return (
         <ThemedView
@@ -115,6 +121,9 @@ export default function Podium({
                     opacity: secondPlace ? 1 : 0.2,
                 }}
                 onPress={() => secondPlace && onPlayerPress?.(secondPlace?.id)}
+                onLongPress={() =>
+                    secondPlace && onPlayerLongPress?.(secondPlace?.id)
+                }
             >
                 <ThemedText
                     style={{
@@ -133,13 +142,20 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={secondPlace}
-                    average={secondPlaceAveragePointsPerMatch}
+                    average={
+                        rankingAlgorithm === 'AVERAGE'
+                            ? formatAverage(secondPlaceAverage)
+                            : formatElo(secondPlace?.elo)
+                    }
                 />
             </TouchableOpacity>
             <TouchableOpacity
                 disabled={firstPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
                 onPress={() => firstPlace && onPlayerPress?.(firstPlace?.id)}
+                onLongPress={() =>
+                    firstPlace && onPlayerLongPress?.(firstPlace?.id)
+                }
                 style={{
                     alignItems: 'center',
 
@@ -177,7 +193,11 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={firstPlace}
-                    average={firstPlaceAveragePointsPerMatch}
+                    average={
+                        rankingAlgorithm === 'AVERAGE'
+                            ? formatAverage(firstPlaceAverage)
+                            : formatElo(firstPlace?.elo)
+                    }
                 />
             </TouchableOpacity>
             <TouchableOpacity
@@ -190,6 +210,9 @@ export default function Podium({
                     opacity: thirdPlace ? 1 : 0.2,
                 }}
                 onPress={() => thirdPlace && onPlayerPress?.(thirdPlace?.id)}
+                onLongPress={() =>
+                    thirdPlace && onPlayerLongPress?.(thirdPlace?.id)
+                }
             >
                 <ThemedText
                     style={{
@@ -208,7 +231,11 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={thirdPlace}
-                    average={thirdPlaceAveragePointsPerMatch}
+                    average={
+                        rankingAlgorithm === 'AVERAGE'
+                            ? formatAverage(thirdPlaceAverage)
+                            : formatElo(thirdPlace?.elo)
+                    }
                 />
             </TouchableOpacity>
         </ThemedView>

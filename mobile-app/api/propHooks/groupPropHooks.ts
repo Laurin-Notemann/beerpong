@@ -29,7 +29,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-ignore TODO: type this properly
+            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const { data, ...screenState } = useGroupQuery(groupId);

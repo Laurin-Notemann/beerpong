@@ -7,7 +7,7 @@ import Avatar from '@/components/Avatar';
 import { ScoredMoveInputRow } from '@/components/ScoredMoveInputRow';
 import Stepper from '@/components/Stepper';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function PlayerPage({
     hasSwipeTutorial = false,
@@ -20,6 +20,7 @@ export default function PlayerPage({
     player: TeamMember;
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 }) {
+    const theme = useTheme();
     const nav = useNavigation();
 
     return (

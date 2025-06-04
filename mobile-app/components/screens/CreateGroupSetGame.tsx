@@ -10,10 +10,8 @@ import {
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const paddingHorizontal = 16;
 const gap = 12;
@@ -23,7 +21,7 @@ export interface GameOption {
     id: string;
     title: string;
 
-    icon: string; // currently unused, but we might want to use icons for disciplines e.g. in the group list in the sidebar?
+    icon?: string; // currently unused, but we might want to use icons for disciplines e.g. in the group list in the sidebar?
     imageUrl: string;
 }
 
@@ -40,6 +38,8 @@ export const CreateGroupSetGame: React.FC<{
     const nav = useNavigation();
 
     const { sport, setSport } = useCreateGroupStore();
+
+    const theme = useTheme();
 
     return (
         <ScrollView style={{ flex: 1, backgroundColor: theme.color.bg }}>
@@ -58,16 +58,27 @@ export const CreateGroupSetGame: React.FC<{
                     headerTitle: 'Create Group',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#000',
+                        backgroundColor: theme.color.topNav,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,
                     },
                 }}
             />
+            <Text
+                color="secondary"
+                style={{
+                    textAlign: 'center',
+                    marginBottom: 32,
+                    paddingTop: 48,
+                    paddingHorizontal,
+                }}
+            >
+                What game would you like to track in this group?
+            </Text>
             <View
                 style={{
                     flexDirection: 'row',
@@ -75,16 +86,8 @@ export const CreateGroupSetGame: React.FC<{
 
                     paddingHorizontal,
                     gap,
-
-                    paddingTop: 48,
                 }}
             >
-                <Text
-                    color="secondary"
-                    style={{ textAlign: 'center', marginBottom: 32 }}
-                >
-                    What game would you like to track in this group?
-                </Text>
                 {games.map((game) => (
                     <Item
                         key={game.id}
@@ -120,9 +123,13 @@ function Item({
     onPress: () => void;
     selected?: boolean;
 }) {
+    const SCREEN_WIDTH = Dimensions.get('window').width;
+
     const size = Math.floor(
-        (SCREEN_WIDTH - paddingHorizontal * 2 - (gap * numCols - 1)) / numCols
+        (SCREEN_WIDTH - paddingHorizontal * 2 - (gap * numCols - 1)) / numCols +
+            5
     );
+    const theme = useTheme();
 
     return (
         <TouchableHighlight
@@ -136,7 +143,7 @@ function Item({
 
                     borderRadius: 16, // ios app icon would be size / 4.5 and gap would be size / 2
 
-                    backgroundColor: '#2E2E2E',
+                    backgroundColor: theme.panel.light.bg,
 
                     overflow: 'hidden',
                 },
@@ -145,7 +152,7 @@ function Item({
                     borderWidth: 2,
                 },
             ]}
-            underlayColor="#3B3B3B"
+            underlayColor={theme.panel.light.dividers}
             onPress={onPress}
         >
             <>
@@ -189,6 +196,8 @@ function Item({
                         fontWeight: 'bold',
 
                         textAlign: 'center',
+
+                        color: imageUrl ? '#fff' : theme.color.text.primary,
                     }}
                 >
                     {title}

@@ -2,10 +2,13 @@ import { SeasonCardProps } from '@/screens/PastSeasonsEmptyScreen';
 
 export const mockSeasons: SeasonCardProps[] = [
     {
+        minMatchesRequiredToBeRanked: 0,
         season: {
             name: 'Vacation Kroatia',
             startDate: '',
             endDate: '',
+            numMatches: 0,
+            numPlayers: 0,
         },
         players: [
             {
@@ -47,6 +50,7 @@ export const mockSeasons: SeasonCardProps[] = [
         numMatches: 0,
     },
     {
+        minMatchesRequiredToBeRanked: 0,
         season: {
             name: 'Winter Semester',
             startDate: '',
@@ -92,6 +96,7 @@ export const mockSeasons: SeasonCardProps[] = [
         numMatches: 0,
     },
     {
+        minMatchesRequiredToBeRanked: 0,
         season: {
             name: 'Vacation Bochum',
             startDate: '',

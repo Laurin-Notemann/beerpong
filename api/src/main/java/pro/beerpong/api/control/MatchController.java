@@ -44,6 +44,8 @@ public class MatchController {
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+                subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, groupId, match));
+
                 return ResponseEnvelope.ok(match);
             } else {
                 return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);

@@ -1,9 +1,12 @@
+import * as Sentry from '@sentry/react-native';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
+import { useLogging } from '@/utils/useLogging';
 
 export const useMatchQuery = (
     groupId: ApiId | null | undefined,
@@ -65,14 +68,31 @@ export const useMatchesByPlayerQuery = (
 
 export const useCreateMatchMutation = () => {
     const { api } = useApi();
+
+    const { writeLog } = useLogging();
+
     return useMutation<
         Paths.CreateMatch.Responses.$200 | null,
         Error,
         Paths.CreateMatch.RequestBody & { groupId: ApiId; seasonId: ApiId }
     >({
         mutationFn: async (body) => {
-            const res = await (await api).createMatch(body, body);
-            return res?.data;
+            try {
+                const res = await (await api).createMatch(body, body);
+                return res?.data;
+            } catch (err) {
+                writeLog('useCreateMatchMutation', body);
+                Sentry.captureEvent({
+                    message: 'Failed to create match',
+                    level: 'error',
+                    extra: {
+                        body,
+                        response: (err as AxiosError).response?.data,
+                        status: (err as AxiosError).response?.status,
+                    },
+                });
+                throw err;
+            }
         },
     });
 };

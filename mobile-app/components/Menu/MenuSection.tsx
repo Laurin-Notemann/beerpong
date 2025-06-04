@@ -1,13 +1,18 @@
+import { BlurView } from 'expo-blur';
 import React, { PropsWithChildren } from 'react';
 import { Text, View } from 'react-native';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export function Heading({
     title,
     titleHeadIcon,
     titleTailIcon,
-}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'>) {
+    headingSubtitle,
+}: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'> & {
+    headingSubtitle?: string;
+}) {
+    const theme = useTheme();
     return (
         <View
             style={{
@@ -50,6 +55,8 @@ export interface MenuSectionProps extends PropsWithChildren {
     footer?: string | JSX.Element;
 
     color?: 'light' | 'dark'; // | "transparent";
+
+    noFlex?: boolean;
 }
 export default function MenuSection({
     title,
@@ -65,9 +72,13 @@ export default function MenuSection({
     footer,
 
     color = 'light',
+
+    noFlex = false,
 }: MenuSectionProps) {
+    const theme = useTheme();
+
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: noFlex ? undefined : 1 }}>
             {title && (
                 <Heading
                     title={title}
@@ -75,14 +86,16 @@ export default function MenuSection({
                     titleTailIcon={titleTailIcon}
                 />
             )}
-            <View
+            <BlurView
+                intensity={theme.blur?.intensity ?? 0}
+                tint={theme.blur?.tint}
                 style={{
                     alignItems: 'stretch',
                     overflow: 'hidden',
-                    borderRadius: 10,
+                    borderRadius: theme.borderRadius.card,
 
                     backgroundColor:
-                        background === false
+                        background === false || !!theme.blur?.intensity
                             ? undefined
                             : theme.panel[color].bg,
 
@@ -90,7 +103,7 @@ export default function MenuSection({
                 }}
             >
                 {children}
-            </View>
+            </BlurView>
             {typeof footer === 'string' ? (
                 <View
                     style={{

@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { View } from 'react-native';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface InputModalProps extends PropsWithChildren {
     isDark?: boolean;
@@ -10,6 +10,7 @@ export default function InputModal({
     children,
     isDark = false,
 }: InputModalProps) {
+    const theme = useTheme();
     return (
         <View
             style={{

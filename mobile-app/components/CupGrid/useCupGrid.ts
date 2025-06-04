@@ -2,6 +2,7 @@ import { Gesture } from 'react-native-gesture-handler';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
 import { FormationCup } from '@/components/CupGrid/Formation';
+import { triggerHapticBump } from '@/haptics';
 
 import { CupFormationProps } from '.';
 
@@ -144,6 +145,8 @@ export function useCupGrid({
                 stateCup.pos.y = closestGridPoint.y;
 
                 runOnJS(setCups)(cups);
+
+                runOnJS(triggerHapticBump)('light');
             })
             .onEnd(() => {
                 draggedCup.value = null;
@@ -154,6 +157,8 @@ export function useCupGrid({
             if (!canEdit || !canAddOrRemoveCups) return;
 
             runOnJS(setCups)(cups.filter((i) => i.id !== cup.id));
+
+            runOnJS(triggerHapticBump)('selection');
         });
 
     const containerTapGesture = Gesture.Tap().onEnd((event) => {
@@ -190,6 +195,8 @@ export function useCupGrid({
                 pos: closestGridPoint,
             };
             runOnJS(setCups)(cups.concat([newCup]));
+
+            runOnJS(triggerHapticBump)('selection');
         }
     });
 

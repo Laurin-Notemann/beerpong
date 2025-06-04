@@ -4,7 +4,7 @@ import {
     TouchableHighlightProps,
 } from 'react-native';
 
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface ButtonProps extends TouchableHighlightProps {
     title: JSX.Element | string;
@@ -27,6 +27,8 @@ export default function Button({
 
     ...rest
 }: ButtonProps) {
+    const theme = useTheme();
+
     const style = (
         {
             default: {
@@ -61,7 +63,7 @@ export default function Button({
                     height: size === 'large' ? 52 : 42,
 
                     borderRadius: size === 'large' ? 5 : 10,
-                    backgroundColor: disabled ? '#666' : style.backgroundColor,
+                    backgroundColor: disabled ? '#222' : style.backgroundColor,
 
                     alignSelf: 'stretch',
 
@@ -76,9 +78,7 @@ export default function Button({
                         fontSize: 17,
                         fontWeight: 600,
 
-                        color: disabled
-                            ? theme.color.text.secondary
-                            : style.color,
+                        color: disabled ? '#444' : style.color,
                     }}
                 >
                     {title}

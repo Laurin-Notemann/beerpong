@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function Page() {
     const [value, setValue] = useState('');
+
+    const theme = useTheme();
 
     return (
         <>
@@ -18,10 +20,10 @@ export default function Page() {
                     headerTitle: 'Formation Name',
                     headerBackTitleVisible: false,
                     headerBackVisible: true,
-                    headerTintColor: '#fff',
+                    headerTintColor: theme.color.text.primary,
 
                     headerStyle: {
-                        backgroundColor: '#1B1B1B',
+                        backgroundColor: theme.panel.dark.bg,
                     },
                     headerTitleStyle: {
                         color: theme.color.text.primary,

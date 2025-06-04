@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface HeaderItemProps extends TouchableOpacityProps {
     children: React.ReactNode;
@@ -22,6 +22,8 @@ export interface HeaderItemProps extends TouchableOpacityProps {
 }
 
 export const HeaderTitle: React.FC<{ title: string }> = ({ title }) => {
+    const theme = useTheme();
+
     const defaultTextStyle: TextStyle = {
         fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
         fontSize: Platform.OS === 'ios' ? 17 : 20,
@@ -44,6 +46,8 @@ export function HeaderItem({
     isLoading = false,
     ...rest
 }: HeaderItemProps) {
+    const theme = useTheme();
+
     return (
         <>
             <TouchableOpacity

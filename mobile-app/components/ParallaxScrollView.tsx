@@ -8,7 +8,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/ThemedView';
-import { theme } from '@/theme';
 
 const HEADER_HEIGHT = 250;
 
@@ -69,7 +68,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
 
-        backgroundColor: theme.color.bg,
+        backgroundColor: '#000',
     },
     header: {
         height: 250,

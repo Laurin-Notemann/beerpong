@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAnimatedSideActionStyle } from '@/components/Rules/useAnimatedSideActionStyle';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export interface RuleProps {
     title: string;
@@ -49,15 +49,6 @@ export const Rule: React.FC<RuleProps> = ({
 
     const [descriptionTextHeight, setDescriptionTextHeight] = useState(0);
 
-    useEffect(() => {
-        // timeout of 0ms to ensure the ref has rendered once before measuring
-        setTimeout(() => {
-            descriptionTextRef.current?.measure((x, y, width, height) => {
-                setDescriptionTextHeight(height);
-            });
-        }, 0);
-    }, [descriptionTextRef]);
-
     const [isExpanded, setIsExpanded] = useState(false);
 
     // height of the description container
@@ -82,6 +73,29 @@ export const Rule: React.FC<RuleProps> = ({
     };
 
     const selectIconStyle = useAnimatedSideActionStyle(editMode);
+
+    const theme = useTheme();
+
+    const styles = useMemo(
+        () =>
+            StyleSheet.create({
+                rowItem: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+
+                    height: 50,
+
+                    paddingLeft: 12,
+                },
+                text: {
+                    color: theme.color.text.primary,
+                    fontSize: 16,
+
+                    flex: 1,
+                },
+            }),
+        [theme]
+    );
 
     return (
         <>
@@ -183,6 +197,13 @@ export const Rule: React.FC<RuleProps> = ({
             {/* this is not actually rendered, we only use it to measure the height that the description text takes up */}
             <Text
                 ref={descriptionTextRef}
+                onLayout={() => {
+                    descriptionTextRef.current?.measure(
+                        (x, y, width, height) => {
+                            setDescriptionTextHeight(height);
+                        }
+                    );
+                }}
                 style={{
                     position: 'absolute',
                     pointerEvents: 'none',
@@ -203,20 +224,3 @@ export const Rule: React.FC<RuleProps> = ({
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    rowItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-
-        height: 50,
-
-        paddingLeft: 12,
-    },
-    text: {
-        color: theme.color.text.primary,
-        fontSize: 16,
-
-        flex: 1,
-    },
-});

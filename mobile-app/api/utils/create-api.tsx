@@ -91,7 +91,9 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     const realtime = useRealtimeConnection();
     const { writeLog } = useLogging();
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isLoading, setIsLoading] = useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [error, setError] = useState<Error | null>(null);
 
     const contextValue: ApiContextType = {

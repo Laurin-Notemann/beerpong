@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import Animated from 'react-native-reanimated';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { SwipeButtons } from '@/components/SwipeButtons';
@@ -37,7 +37,7 @@ export const NewMatchStack: React.FC<{
     return (
         <Stack.Screen
             options={{
-                ...navStyles,
+                ...useNavStyles(),
                 headerLeft: () => (
                     <SwipeButtons
                         animationProgress={animationProgress}

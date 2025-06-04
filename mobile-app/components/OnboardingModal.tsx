@@ -1,35 +1,55 @@
-import { Image, View } from 'react-native';
+import { Image, ScrollView, View } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import Text from '@/components/Text';
+import { useTheme } from '@/theme';
 
 export interface OnboardingModalProps {}
 // eslint-disable-next-line no-empty-pattern
 export default function OnboardingModal({}: OnboardingModalProps) {
     const navigation = useNavigation();
 
+    const theme = useTheme();
+
     return (
-        <View
+        <ScrollView
             style={{
+                backgroundColor: theme.panel.dark.bg,
+
+                flex: 1,
+            }}
+            contentContainerStyle={{
                 alignItems: 'center',
                 gap: 32,
 
-                flex: 1,
                 paddingHorizontal: 16,
-                paddingTop: 128,
+                paddingVertical: 32,
 
-                backgroundColor: '#1B1B1B',
+                justifyContent: 'center',
+
+                minHeight: '100%',
             }}
         >
             <Text
                 variant="h3"
                 color="primary"
                 bold
-                style={{ textAlign: 'center', marginBottom: 96 }}
+                style={{
+                    textAlign: 'center',
+                    marginBottom: 32,
+                    fontSize: 16 * 2,
+                }}
             >
                 Welcome to{' '}
-                <Text variant="h3" color="branding" bold>
+                <Text
+                    variant="h3"
+                    color="branding"
+                    bold
+                    style={{
+                        fontSize: 16 * 2,
+                    }}
+                >
                     Versus
                 </Text>
                 , the leaderboard app!
@@ -50,7 +70,8 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                         height: 100 * 2.1741293532,
                         resizeMode: 'contain',
 
-                        transform: [{ rotateY: '45deg' }],
+                        // transform: [{ rotateY: '45deg' }],
+                        transform: [{ scale: 0.9 }],
                     }}
                 />
                 <Image
@@ -68,7 +89,8 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                         height: 100 * 2.1741293532,
                         resizeMode: 'contain',
 
-                        transform: [{ rotateY: '-45deg' }],
+                        // transform: [{ rotateY: '-45deg' }],
+                        transform: [{ scale: 0.9 }],
                     }}
                 />
             </View>
@@ -89,6 +111,6 @@ export default function OnboardingModal({}: OnboardingModalProps) {
                     onPress={() => navigation.navigate('createGroup')}
                 />
             </View>
-        </View>
+        </ScrollView>
     );
 }

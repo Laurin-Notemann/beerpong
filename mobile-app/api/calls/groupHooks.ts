@@ -1,10 +1,21 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
-import { env } from '@/api/env';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
+
+export const useGroupPresetsQuery = () => {
+    const { api } = useApi();
+
+    return useQuery<Paths.GetPresets.Responses.$200 | null>({
+        queryKey: [],
+        queryFn: async () => {
+            const res = await (await api).getPresets();
+            return res?.data;
+        },
+    });
+};
 
 export const useGroupQuery = (id: ApiId | null) => {
     const { api } = useApi();
@@ -21,16 +32,14 @@ export const useGroupQuery = (id: ApiId | null) => {
     });
 };
 
-export const useFindGroupByInviteCode = (inviteCode: string | null) => {
+export const useJoinGroupMutation = () => {
     const { api } = useApi();
-
-    return useQuery<Paths.FindGroupByInviteCode.Responses.$200 | null>({
-        queryKey: [QK.groupCode, inviteCode],
-        queryFn: async () => {
-            if (!inviteCode || inviteCode.length < env.groupCode.length) {
-                return null;
-            }
-
+    return useMutation<
+        Paths.FindGroupByInviteCode.Responses.$200 | null,
+        Error,
+        string
+    >({
+        mutationFn: async (inviteCode) => {
             const res = await (await api).findGroupByInviteCode({ inviteCode });
             return res?.data;
         },

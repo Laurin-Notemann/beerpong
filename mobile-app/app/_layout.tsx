@@ -10,6 +10,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { StatusBar } from 'react-native';
 import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
@@ -18,10 +19,11 @@ import { env } from '@/api/env';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
-import { modalStyles } from '@/app/navigation/modalStyles';
+import { useModalStyles } from '@/app/navigation/modalStyles';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/theme';
 import { LoggingProvider } from '@/utils/useLogging';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
@@ -33,6 +35,7 @@ const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
 
 function Everything() {
+    const modalStyles = useModalStyles();
     return (
         <Stack initialRouteName="(tabs)">
             <Stack.Screen
@@ -51,6 +54,15 @@ function Everything() {
             <Stack.Screen name="allowedMove" options={modalStyles} />
 
             <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
+            <Stack.Screen
+                name="dailyLeaderboardSettings"
+                options={modalStyles}
+            />
+            <Stack.Screen name="teamSizeSettings" options={modalStyles} />
+            <Stack.Screen
+                name="minMatchesToQualifySettings"
+                options={modalStyles}
+            />
 
             <Stack.Screen
                 name="createGroupCustomGameModal"
@@ -67,6 +79,7 @@ function Everything() {
 }
 
 export default function RootLayout() {
+    const theme = useTheme();
     const appTheme = useColorScheme() === 'dark' ? DarkTheme : DefaultTheme;
 
     const [fontLoaded] = useFonts({
@@ -94,6 +107,7 @@ export default function RootLayout() {
                     <ThemeProvider value={appTheme}>
                         <PortalProvider>
                             <RootSiblingParent>
+                                <StatusBar barStyle={theme.barStyle} />
                                 <Drawer.Navigator
                                     screenOptions={{
                                         drawerStyle: {

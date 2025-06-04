@@ -6,6 +6,7 @@ import {
     QK,
     queryKeyStartsWith,
     replaceWildcards,
+    useQueryInvalidation,
 } from '@/api/utils/reactQuery';
 import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
@@ -25,6 +26,7 @@ export function useRealtimeConnection() {
     function writeLogs(...data: Logs) {
         writeLog(...data);
     }
+    const { invalidateLeaderboard } = useQueryInvalidation();
 
     const hoher: RealtimeEventHandler = (e) => {
         switch (e.eventType) {
@@ -33,6 +35,8 @@ export function useRealtimeConnection() {
                 refetchGroup(e.groupId);
                 break;
             case 'MATCHES':
+                invalidateLeaderboard(e.groupId);
+
                 // refetch because of GroupDto.numberOfMatches
                 refetchGroup(e.groupId);
 
@@ -57,6 +61,7 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'SEASONS':
+                invalidateLeaderboard(e.groupId);
                 // refetch because of GroupDto.numberOfSeasons
                 refetchGroup(e.groupId);
 
@@ -90,6 +95,7 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'PLAYERS':
+                invalidateLeaderboard(e.groupId);
                 // refetch because of GroupDto.numberOfPlayers
                 refetchGroup(e.groupId);
 

@@ -1,9 +1,11 @@
 import { ActivityIndicator, View } from 'react-native';
 
 import Text from '@/components/Text';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export default function LoadingScreen() {
+    const theme = useTheme();
+
     return (
         <View
             style={{

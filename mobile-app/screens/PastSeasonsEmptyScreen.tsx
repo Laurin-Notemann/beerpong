@@ -1,13 +1,22 @@
 import { ScrollView, Text, View, ViewProps } from 'react-native';
 
+import { useInsets } from '@/app/useInsets';
 import Leaderboard from '@/components/Leaderboard';
 import { ThemedView } from '@/components/ThemedView';
 import { mockSeasons } from '@/screens/mockSeasons';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 export const PastSeasonsEmptyScreen: React.FC = () => {
+    const insets = useInsets(true);
+    const theme = useTheme();
+
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: theme.color.bg }}>
+        <ScrollView
+            style={{ flex: 1, backgroundColor: theme.color.bg }}
+            contentContainerStyle={{
+                paddingTop: insets.top,
+            }}
+        >
             <View
                 style={{
                     position: 'relative',
@@ -117,6 +126,8 @@ const DecorativeSeasonCard: React.FC<ViewProps & SeasonCardProps> = ({
     numMatches,
     ...props
 }) => {
+    const theme = useTheme();
+
     return (
         <View
             style={[
@@ -143,6 +154,7 @@ const DecorativeSeasonCard: React.FC<ViewProps & SeasonCardProps> = ({
                 season={season}
                 players={players}
                 numMatches={numMatches}
+                minMatchesRequiredToBeRanked={1}
             />
         </View>
     );
@@ -158,11 +170,15 @@ export interface SeasonCardProps {
     };
     players: any[];
     numMatches: number;
+    minMatchesRequiredToBeRanked: number;
+    rankingAlgorithm?: 'AVERAGE' | 'ELO';
 }
 export const SeasonCard: React.FC<SeasonCardProps> = ({
     season,
     players,
     numMatches,
+    minMatchesRequiredToBeRanked,
+    rankingAlgorithm = 'AVERAGE',
 }) => {
     return (
         <ThemedView
@@ -176,6 +192,8 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 players={players}
                 showUnranked={false}
                 season={{ ...season, numPlayers: players.length, numMatches }}
+                minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
+                rankingAlgorithm={rankingAlgorithm}
             />
         </ThemedView>
     );

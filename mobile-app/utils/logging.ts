@@ -22,7 +22,7 @@ export const ConsoleLogger: Logger = {
 
 type Handler = (...args: Logs) => void;
 
-export type Logs = any[];
+export type Logs = unknown[];
 
 export class ScopedLogger implements Logger {
     private prefixes: string[];

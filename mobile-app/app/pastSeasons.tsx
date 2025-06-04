@@ -4,15 +4,14 @@ import { Dimensions, SafeAreaView, ScrollView, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import { navStyles } from '@/app/navigation/navStyles';
-import { useNavigation } from '@/app/navigation/useNavigation';
+import { useNavStyles } from '@/app/navigation/navStyles';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import {
     PastSeasonsEmptyScreen,
     SeasonCard,
 } from '@/screens/PastSeasonsEmptyScreen';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,16 +19,18 @@ const { width, height } = Dimensions.get('window');
  * <Carousel /> intercepts touch events, so we can't wrap it inside a scrollview. instead, we have to put each item inside a scrollview.
  */
 export default function Page() {
-    const nav = useNavigation();
+    const theme = useTheme();
 
     const { groupId } = useGroup();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
+    const navStyles = useNavStyles();
+
     const seasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-ignore TODO: type this properly
+            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     if (seasonsQuery.isLoading) return <LoadingScreen />;
@@ -74,15 +75,23 @@ export default function Page() {
                                 }}
                             >
                                 <SeasonCard
+                                    minMatchesRequiredToBeRanked={
+                                        season.item.seasonSettings
+                                            ?.minMatchesToQualify ?? 0
+                                    }
                                     season={{
                                         name: season.item.name!,
                                         startDate: season.item.startDate!,
                                         endDate: season.item.endDate!,
                                     }}
-                                    // @ts-ignore TODO: type this properly
+                                    // @ts-expect-error TODO: type this properly
                                     numMatches={season.item.numMatches!}
-                                    // @ts-ignore TODO: type this properly
+                                    // @ts-expect-error TODO: type this properly
                                     players={season.item.players}
+                                    rankingAlgorithm={
+                                        season.item.seasonSettings
+                                            ?.rankingAlgorithm
+                                    }
                                 />
                             </ScrollView>
                         </SafeAreaView>

@@ -1,13 +1,20 @@
 import { ScrollView } from 'react-native';
 
+import { useInsets } from '@/app/useInsets';
 import { AllowedMoves, AllowedMovesProps } from '@/components/AllowedMoves';
 import InputModal from '@/components/InputModal';
 import Text from '@/components/Text';
 
 export const NewSeasonRulesInput: React.FC<AllowedMovesProps> = (props) => {
+    const insets = useInsets(true);
     return (
         <InputModal isDark>
-            <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+            <ScrollView
+                contentContainerStyle={{
+                    paddingTop: insets.top,
+                    paddingBottom: 32,
+                }}
+            >
                 <Text
                     color="secondary"
                     style={{

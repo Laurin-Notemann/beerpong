@@ -1,15 +1,19 @@
+import { BlurView } from 'expo-blur';
 import { PropsWithChildren } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ThemedText } from '@/components/ThemedText';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
+
+const borderRadius = 999;
 
 function Badge({
     children,
     circular = true,
 }: PropsWithChildren & { circular?: boolean }) {
+    const theme = useTheme();
     return (
         <View
             style={{
@@ -28,7 +32,7 @@ function Badge({
 
                 backgroundColor: theme.avatar.badge.bg,
 
-                borderRadius: circular ? 99 : 4,
+                borderRadius: circular ? borderRadius : 4,
 
                 shadowOffset: {
                     width: 0,
@@ -72,6 +76,7 @@ export default function Avatar({
 
     onPress,
 }: AvatarProps) {
+    const theme = useTheme();
     return (
         <Pressable
             style={{
@@ -86,58 +91,78 @@ export default function Avatar({
         >
             <View
                 style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-
-                    width: size,
-                    height: size,
-
-                    borderRadius: 99,
-
-                    backgroundColor: theme.avatar.bg,
-
-                    borderWidth: borderColor ? 2 : undefined,
-                    borderColor,
+                    borderRadius: borderRadius,
+                    overflow: 'hidden',
                 }}
             >
-                {url && !content && (
-                    <Image
-                        source={{ uri: url }}
-                        style={{
-                            position: 'absolute',
-                            zIndex: 1,
-
-                            width: size,
-                            height: size,
-                            borderRadius: 99,
-
-                            borderWidth: borderColor ? 2 : undefined,
-                            borderColor,
-                        }}
-                        resizeMode="cover"
-                    />
-                )}
-
-                <ThemedText
+                <BlurView
+                    intensity={theme.blur?.intensity ?? 0}
+                    tint={theme.blur?.tint}
                     style={{
-                        lineHeight: size,
-                        fontSize: size / 2.7,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: size,
+                        height: size,
+                    }}
+                />
+                <View
+                    style={{
+                        alignItems: 'center',
+                        justifyContent: 'center',
 
-                        fontWeight: 500,
+                        width: size,
+                        height: size,
 
-                        color: theme.avatar.text,
+                        borderRadius: borderRadius,
 
-                        bottom: borderColor ? 2 : 0,
+                        backgroundColor: !!theme.blur?.intensity
+                            ? undefined
+                            : theme.avatar.bg,
+
+                        borderWidth: borderColor ? 2 : undefined,
+                        borderColor,
                     }}
                 >
-                    {content || name?.[0] || (
-                        <Icon
-                            color={theme.avatar.text}
-                            size={size / 1.6}
-                            name="account-outline"
+                    {url && !content && (
+                        <Image
+                            source={{ uri: url }}
+                            style={{
+                                position: 'absolute',
+                                zIndex: 1,
+
+                                width: size,
+                                height: size,
+                                borderRadius: borderRadius,
+
+                                borderWidth: borderColor ? 2 : undefined,
+                                borderColor,
+                            }}
+                            resizeMode="cover"
                         />
                     )}
-                </ThemedText>
+
+                    <ThemedText
+                        style={{
+                            lineHeight: size,
+                            fontSize: size / 2.7,
+
+                            fontWeight: 500,
+
+                            color: theme.avatar.text,
+
+                            bottom: borderColor ? 2 : 0,
+                        }}
+                    >
+                        {content || name?.[0] || (
+                            <Icon
+                                color={theme.avatar.text}
+                                size={size / 1.6}
+                                name="account-outline"
+                            />
+                        )}
+                    </ThemedText>
+                </View>
             </View>
             {canUpload && (
                 <Badge>

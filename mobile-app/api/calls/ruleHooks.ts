@@ -109,6 +109,9 @@ export function useRules() {
     async function _setRules(
         rules: { id: string; title: string; description: string }[]
     ) {
+        const hasChanges = JSON.stringify(rules) !== JSON.stringify(localRules);
+        if (!hasChanges) return;
+
         setLocalRules(rules);
         qc.setQueryData([QK.group, groupId, QK.season, seasonId, QK.rules], {
             data: rules,
@@ -119,6 +122,7 @@ export function useRules() {
                 seasonId: seasonId!,
                 rules,
             });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
             showErrorToast('Failed to update rules.');
         }
@@ -170,7 +174,7 @@ export function useRules() {
         isMutationPending: setRulesMutation.isPending,
         ...rulesQuery,
         setRules: _setRules,
-        rules: localRules,
+        rules: useMemo(() => localRules, [localRules]),
         reorderRules,
         createRulesMutation,
         setDefaultRules,

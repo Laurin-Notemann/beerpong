@@ -45,6 +45,7 @@ public class GroupService {
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setInviteCode(generateRandomString(GROUP_INVITE_CODE_LENGTH));
+        group.setCreatedAt(ZonedDateTime.now());
 
         if (group.getSportPreset() != null && group.getCustomSportName() != null) {
             group.setCustomSportName(null);

@@ -55,7 +55,7 @@ public class RuleService {
     public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
         ruleRepository.deleteBySeasonId(season.getId());
 
-        var dtos = rules.stream()
+        return rules.stream()
                 .map(dto -> {
                     var rule = ruleMapper.ruleCreateDtoToRule(dto);
                     rule.setSeason(season);
@@ -65,10 +65,6 @@ public class RuleService {
                         dto.getSeason().getGroupId().equals(groupId))
                 .map(rule -> ruleMapper.ruleToRuleDto(ruleRepository.save(rule)))
                 .toList();
-
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, dtos.toArray(new RuleDto[0])));
-
-        return dtos;
     }
 
     public void copyRulesFromOldSeason(Season oldSeason, Season newSeason) {

@@ -4,13 +4,14 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
@@ -33,6 +34,8 @@ function PlayerItem({
     const isBlueTeam = player.team === 'blue';
 
     const { setHasTappedToAssignPlayers } = useTutorials();
+
+    const theme = useTheme();
 
     return (
         <TouchableHighlight
@@ -127,33 +130,77 @@ function PlayerItem({
 export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 
 export interface NewMatchAssignTeamsProps {
+    minTeamSize: number;
+    maxTeamSize: number;
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
 }
 export default function NewMatchAssignTeams({
+    minTeamSize,
+    maxTeamSize,
     players,
     setTeam,
 }: NewMatchAssignTeamsProps) {
+    const insets = useInsets(true, true);
+
     const nav = useNavigation();
 
     const { hasTappedToAssignPlayers } = useTutorials();
 
     const experiments = useLocalSettings();
 
+    const blueTeamSize = players.filter((i) => i.team === 'blue').length;
+    const redTeamSize = players.filter((i) => i.team === 'red').length;
+
+    const errorMessage = (() => {
+        if (blueTeamSize < minTeamSize && minTeamSize > 1) {
+            const needed = minTeamSize - blueTeamSize;
+            return `Blue team needs ${needed} more ${needed === 1 ? 'player' : 'players'}`;
+        }
+        if (redTeamSize < minTeamSize && minTeamSize > 1) {
+            const needed = minTeamSize - redTeamSize;
+            return `Red team needs ${needed} more ${needed === 1 ? 'player' : 'players'}`;
+        }
+        if (blueTeamSize > maxTeamSize) {
+            const extra = blueTeamSize - maxTeamSize;
+            return `Blue team has ${extra} ${extra === 1 ? 'player' : 'players'} too many`;
+        }
+        if (redTeamSize > maxTeamSize) {
+            const extra = redTeamSize - maxTeamSize;
+            return `Red team has ${extra} ${extra === 1 ? 'player' : 'players'} too many`;
+        }
+    })();
+
     return (
         <ScrollView
             style={{
                 flex: 1,
-
-                backgroundColor: theme.color.bg,
             }}
             contentContainerStyle={{
+                paddingTop: insets.top,
                 paddingHorizontal: 16,
 
-                paddingBottom: 24,
+                paddingBottom: insets.bottom + 24,
             }}
         >
-            <Heading />
+            <Heading
+                title={
+                    errorMessage ? (
+                        <Text
+                            color="negative"
+                            style={{
+                                fontSize: 16,
+                                fontWeight: 500,
+
+                                marginBottom: 32,
+                            }}
+                        >
+                            {errorMessage}
+                        </Text>
+                    ) : undefined
+                }
+            />
+
             <MenuSection style={{ marginBottom: 20 }}>
                 <MenuItem
                     headIcon="account-plus-outline"

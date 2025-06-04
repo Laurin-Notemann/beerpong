@@ -2,10 +2,11 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView, Switch } from 'react-native';
 
-import { navStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/app/navigation/navStyles';
+import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { theme } from '@/theme';
+import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
@@ -22,13 +23,19 @@ export default function Page() {
         toggleRulesTab,
         matchPhotos,
         toggleMatchPhotos,
+        showWallpaper,
+        toggleShowWallpaper,
+        dailyLeaderboard,
+        toggleDailyLeaderboard,
     } = useLocalSettings();
+
+    const theme = useTheme();
 
     return (
         <>
             <Stack.Screen
                 options={{
-                    ...navStyles,
+                    ...useNavStyles(),
                     headerTitle: '',
                 }}
             />
@@ -39,6 +46,7 @@ export default function Page() {
                     backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
+                    paddingTop: useInsets(true).top,
                     paddingHorizontal: 16,
 
                     paddingBottom: 128,
@@ -96,6 +104,24 @@ export default function Page() {
                             <Switch
                                 value={matchPhotos}
                                 onChange={toggleMatchPhotos}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Group Wallpaper"
+                        tailContent={
+                            <Switch
+                                value={showWallpaper}
+                                onChange={toggleShowWallpaper}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Daily Leaderboard"
+                        tailContent={
+                            <Switch
+                                value={dailyLeaderboard}
+                                onChange={toggleDailyLeaderboard}
                             />
                         }
                     />

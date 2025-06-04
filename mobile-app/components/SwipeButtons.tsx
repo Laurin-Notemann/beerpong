@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
     interpolate,
@@ -45,24 +45,6 @@ export const SwipeButtons: React.FC<{
     const [outRefWidth, setOutRefWidth] = useState(0);
     const [inRefWidth, setInRefWidth] = useState(0);
 
-    useEffect(() => {
-        // timeout of 0ms to ensure the ref has rendered once before measuring
-        setTimeout(() => {
-            outRef.current?.measure((x, y, width, height) => {
-                setOutRefWidth(width);
-            });
-        }, 0);
-    }, [outRef]);
-
-    useEffect(() => {
-        // timeout of 0ms to ensure the ref has rendered once before measuring
-        setTimeout(() => {
-            inRef.current?.measure((x, y, width, height) => {
-                setInRefWidth(width);
-            });
-        }, 0);
-    }, [inRef]);
-
     const width = Math.max(outRefWidth, inRefWidth);
 
     return (
@@ -78,6 +60,11 @@ export const SwipeButtons: React.FC<{
         >
             <Animated.View
                 ref={outRef}
+                onLayout={() => {
+                    outRef.current?.measure((x, y, width, height) => {
+                        setOutRefWidth(width);
+                    });
+                }}
                 style={[
                     {
                         position: 'absolute',
@@ -89,6 +76,11 @@ export const SwipeButtons: React.FC<{
             </Animated.View>
             <Animated.View
                 ref={inRef}
+                onLayout={() => {
+                    inRef.current?.measure((x, y, width, height) => {
+                        setInRefWidth(width);
+                    });
+                }}
                 style={[
                     {
                         position: 'absolute',
