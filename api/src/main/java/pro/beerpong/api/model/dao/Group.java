@@ -24,4 +24,7 @@ public class Group {
     private ZonedDateTime createdAt;
     private String sportPreset;
     private String customSportName;
+    @OneToOne
+    @JoinColumn
+    private GroupMember createdBy;
 }
