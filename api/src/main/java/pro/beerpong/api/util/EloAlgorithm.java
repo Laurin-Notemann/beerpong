@@ -79,7 +79,6 @@ public class EloAlgorithm {
                     pointRatio = Math.max(0.0, Math.min(1.0, pointRatio));
                     usefulness = POINT_IMPACT_FLOOR + (1 - POINT_IMPACT_FLOOR) * pointRatio;
                 } else {
-                    pointRatio = 1.0D;
                     usefulness = 1.0D;
                 }
             } else {
