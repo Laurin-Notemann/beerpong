@@ -1,12 +1,14 @@
 package pro.beerpong.api.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.sockets.LocalTimeAdapter;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -94,7 +96,15 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
-        if (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23) {
+        LocalTime wakeTime;
+
+        try {
+            wakeTime = LocalTime.parse(dto.getSeasonSettings().getWakeTime(), LocalTimeAdapter.FORMATTER);
+        } catch (DateTimeParseException e) {
+            wakeTime = null;
+        }
+
+        if (wakeTime == null) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TIME_FORMAT);
         } else if (dto.getSeasonSettings().getMinTeamSize() > dto.getSeasonSettings().getMaxTeamSize()) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TEAM_SIZES);

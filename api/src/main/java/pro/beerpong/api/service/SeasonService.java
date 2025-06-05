@@ -1,7 +1,6 @@
 package pro.beerpong.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.*;
@@ -11,11 +10,13 @@ import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.PlayerStatisticsRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.LocalTimeAdapter;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.NullablePair;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ public class SeasonService {
     private final ProfileMapper profileMapper;
     private final PlayerStatisticsMapper playerStatisticsMapper;
     private final GroupService groupService;
+    private final SeasonSettingsMapper seasonSettingsMapper;
 
     @Autowired
     public SeasonService(SubscriptionHandler subscriptionHandler,
@@ -45,7 +47,7 @@ public class SeasonService {
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
                          RuleService ruleService,
-                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService) {
+                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService, SeasonSettingsMapper seasonSettingsMapper) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
@@ -61,6 +63,7 @@ public class SeasonService {
         this.profileMapper = profileMapper;
         this.playerStatisticsMapper = playerStatisticsMapper;
         this.groupService = groupService;
+        this.seasonSettingsMapper = seasonSettingsMapper;
     }
 
     public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
@@ -84,7 +87,7 @@ public class SeasonService {
             newSeason.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
             newSeason.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
             newSeason.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
-            newSeason.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
+            newSeason.getSeasonSettings().setWakeTime(oldSeason.getSeasonSettings().getWakeTime());
         }
 
         var season = seasonRepository.save(newSeason);
@@ -157,15 +160,17 @@ public class SeasonService {
         return Optional.ofNullable(season)
                 .map(existingSeason -> {
                     if (existingSeason.getSeasonSettings() == null) {
-                        dto.getSeasonSettings().setId(null);
-                        existingSeason.setSeasonSettings(dto.getSeasonSettings());
+                        var seasonSettings = seasonSettingsMapper.seasonSettingsDtoToSeasonSettings(dto.getSeasonSettings());
+
+                        seasonSettings.setId(null);
+                        existingSeason.setSeasonSettings(seasonSettings);
                     } else {
                         existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
                         existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
                         existingSeason.getSeasonSettings().setMinMatchesToQualify(dto.getSeasonSettings().getMinMatchesToQualify());
                         existingSeason.getSeasonSettings().setRankingAlgorithm(dto.getSeasonSettings().getRankingAlgorithm());
                         existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
-                        existingSeason.getSeasonSettings().setWakeTimeHour(dto.getSeasonSettings().getWakeTimeHour());
+                        existingSeason.getSeasonSettings().setWakeTime(LocalTime.parse(dto.getSeasonSettings().getWakeTime(), LocalTimeAdapter.FORMATTER));
                     }
 
                     var seasonDto = seasonMapper.seasonToSeasonDto(seasonRepository.save(existingSeason));

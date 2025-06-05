@@ -1,24 +1,15 @@
-package pro.beerpong.api.model.dao;
+package pro.beerpong.api.model.dto;
 
-import jakarta.persistence.*;
 import lombok.Data;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
 
-import java.time.LocalTime;
-
-@Entity(name = "season_settings")
 @Data
-public class SeasonSettings {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-
+public class SeasonSettingsDto {
     private int minMatchesToQualify = 1;
     private int minTeamSize = 1;
     private int maxTeamSize = 10;
     private RankingAlgorithm rankingAlgorithm = RankingAlgorithm.AVERAGE;
     private DailyLeaderboard dailyLeaderboard = DailyLeaderboard.WAKE_TIME;
-    @Column(columnDefinition = "time default '00:00:00'")
-    private LocalTime wakeTime = LocalTime.of(0, 0);
+    private String wakeTime = "00:00";
 }
