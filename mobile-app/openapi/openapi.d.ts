@@ -48,6 +48,12 @@ declare namespace Components {
             startedAt?: string; // date-time
             entries?: PlayerDto[];
         }
+        export interface LocalTime {
+            hour?: number; // int32
+            minute?: number; // int32
+            second?: number; // int32
+            nano?: number; // int32
+        }
         export interface MatchCreateDto {
             teams?: TeamCreateDto[];
         }
@@ -284,10 +290,21 @@ declare namespace Components {
                 | 'RESET_AT_MIDNIGHT'
                 | 'WAKE_TIME'
                 | 'LAST_24_HOURS';
-            wakeTimeHour?: number; // int32
+            wakeTime?: LocalTime;
+        }
+        export interface SeasonSettingsDto {
+            minMatchesToQualify?: number; // int32
+            minTeamSize?: number; // int32
+            maxTeamSize?: number; // int32
+            rankingAlgorithm?: 'AVERAGE' | 'ELO';
+            dailyLeaderboard?:
+                | 'RESET_AT_MIDNIGHT'
+                | 'WAKE_TIME'
+                | 'LAST_24_HOURS';
+            wakeTime?: string;
         }
         export interface SeasonUpdateDto {
-            seasonSettings: SeasonSettings;
+            seasonSettings: SeasonSettingsDto;
         }
         export interface TeamCreateDto {
             teamMembers?: TeamMemberCreateDto[];
@@ -1338,6 +1355,7 @@ export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
 export type LeaderboardDto = Components.Schemas.LeaderboardDto;
+export type LocalTime = Components.Schemas.LocalTime;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
@@ -1394,6 +1412,7 @@ export type Season = Components.Schemas.Season;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
 export type SeasonSettings = Components.Schemas.SeasonSettings;
+export type SeasonSettingsDto = Components.Schemas.SeasonSettingsDto;
 export type SeasonUpdateDto = Components.Schemas.SeasonUpdateDto;
 export type TeamCreateDto = Components.Schemas.TeamCreateDto;
 export type TeamDto = Components.Schemas.TeamDto;

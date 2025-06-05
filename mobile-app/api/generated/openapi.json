@@ -1182,6 +1182,15 @@
                     "imageUrl": { "type": "string" }
                 }
             },
+            "LocalTime": {
+                "type": "object",
+                "properties": {
+                    "hour": { "type": "integer", "format": "int32" },
+                    "minute": { "type": "integer", "format": "int32" },
+                    "second": { "type": "integer", "format": "int32" },
+                    "nano": { "type": "integer", "format": "int32" }
+                }
+            },
             "ResponseEnvelopeGroupDto": {
                 "type": "object",
                 "properties": {
@@ -1226,7 +1235,7 @@
                             "LAST_24_HOURS"
                         ]
                     },
-                    "wakeTimeHour": { "type": "integer", "format": "int32" }
+                    "wakeTime": { "$ref": "#/components/schemas/LocalTime" }
                 }
             },
             "ResponseEnvelopeAssetMetadataDto": {
@@ -1391,12 +1400,36 @@
                     "playerId": { "type": "string" }
                 }
             },
+            "SeasonSettingsDto": {
+                "type": "object",
+                "properties": {
+                    "minMatchesToQualify": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "minTeamSize": { "type": "integer", "format": "int32" },
+                    "maxTeamSize": { "type": "integer", "format": "int32" },
+                    "rankingAlgorithm": {
+                        "type": "string",
+                        "enum": ["AVERAGE", "ELO"]
+                    },
+                    "dailyLeaderboard": {
+                        "type": "string",
+                        "enum": [
+                            "RESET_AT_MIDNIGHT",
+                            "WAKE_TIME",
+                            "LAST_24_HOURS"
+                        ]
+                    },
+                    "wakeTime": { "type": "string" }
+                }
+            },
             "SeasonUpdateDto": {
                 "required": ["seasonSettings"],
                 "type": "object",
                 "properties": {
                     "seasonSettings": {
-                        "$ref": "#/components/schemas/SeasonSettings"
+                        "$ref": "#/components/schemas/SeasonSettingsDto"
                     }
                 }
             },
