@@ -13,6 +13,7 @@ public class PlayerStatisticsDto {
     private String id;
     private long points = 0;
     private long matches = 0;
+    private long wins = 0;
     private long moves = 0;
     private long totalTeamSize = 0;
     private double avgPointsPerMatch = 0.0D;
@@ -27,6 +28,10 @@ public class PlayerStatisticsDto {
 
     public void addMatch() {
         this.matches++;
+    }
+
+    public void addWin() {
+        this.wins++;
     }
 
     public void addMoves(int amount) {
