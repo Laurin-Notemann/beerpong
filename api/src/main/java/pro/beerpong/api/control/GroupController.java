@@ -13,6 +13,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
+    public static final String USER_GROUPS_ENDPOINT = "user";
+
     private final GroupService groupService;
 
     @Autowired
@@ -39,7 +41,7 @@ public class GroupController {
         return ResponseEnvelope.ok(group);
     }
 
-    @GetMapping("/user")
+    @GetMapping(USER_GROUPS_ENDPOINT)
     public ResponseEntity<ResponseEnvelope<List<GroupDto>>> findUserGroups(@AuthenticationPrincipal UserDto user) {
         if (user == null) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);

@@ -9,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import pro.beerpong.api.control.GroupController;
 import pro.beerpong.api.service.AuthService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         var groupId = extractGroupId(req);
 
-        if (!groupId.equals("user") && !authService.hasAccessToGroup(user, groupId)) {
+        if (!groupId.equals(GroupController.USER_GROUPS_ENDPOINT) && !authService.hasAccessToGroup(user, groupId)) {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.getWriter().write("No access to this group!");
             return;
