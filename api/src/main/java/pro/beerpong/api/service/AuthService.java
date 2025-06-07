@@ -5,7 +5,8 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.auth.JwtTokenProvider;
 import pro.beerpong.api.model.dao.Device;
 import pro.beerpong.api.model.dao.User;
-import pro.beerpong.api.model.dto.AuthRegisterDto;
+import pro.beerpong.api.model.dto.AuthRefreshDto;
+import pro.beerpong.api.model.dto.AuthSignupDto;
 import pro.beerpong.api.model.dto.AuthTokenDto;
 import pro.beerpong.api.repository.DeviceRepository;
 import pro.beerpong.api.repository.UserRepository;
@@ -18,8 +19,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
 
-    public AuthTokenDto registerDevice(AuthRegisterDto dto) {
-        if (dto.getDeviceId() == null || dto.getDeviceId().isEmpty() || dto.getInstallationType() == null) {
+    public AuthTokenDto registerDevice(AuthSignupDto dto) {
+        if (dto.getDeviceId() == null || dto.getDeviceId().trim().isEmpty() || dto.getInstallationType() == null) {
             return null;
         }
 
@@ -34,11 +35,54 @@ public class AuthService {
 
         deviceRepository.save(device);
 
-        var token = tokenProvider.createRefreshToken(user.getId());
+        var refreshToken = tokenProvider.createRefreshToken(user.getId());
+
+        return this.buildDto(refreshToken, TokenType.REFRESH);
+    }
+
+    public AuthTokenDto refreshAuth(AuthRefreshDto dto) {
+        if (dto.getRefreshToken() == null || dto.getRefreshToken().trim().isEmpty()) {
+            return null;
+        }
+
+        var claims = tokenProvider.validateToken(dto.getRefreshToken(), "refresh");
+
+        if (claims == null) {
+            return null;
+        }
+
+        var userId = claims.getSubject();
+
+        if (!userRepository.existsById(userId)) {
+            return null;
+        }
+
+        var accessToken = tokenProvider.createAccessToken(userId);
+
+        return this.buildDto(accessToken, TokenType.ACCESS);
+    }
+
+    public User userFromAccessToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
+
+        var claims = tokenProvider.validateToken(token, "access");
+
+        if (claims == null) {
+            return null;
+        }
+
+        var userId = claims.getSubject();
+
+        return userRepository.findById(userId).orElse(null);
+    }
+
+    private AuthTokenDto buildDto(String token, TokenType type) {
         var result = new AuthTokenDto();
 
         result.setToken(token);
-        result.setType(TokenType.REFRESH);
+        result.setType(type);
 
         return result;
     }

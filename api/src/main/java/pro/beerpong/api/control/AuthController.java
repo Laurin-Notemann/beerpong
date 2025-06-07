@@ -6,10 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pro.beerpong.api.model.dto.AuthRegisterDto;
-import pro.beerpong.api.model.dto.AuthTokenDto;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.AuthService;
 
 @RestController
@@ -19,8 +16,8 @@ public class AuthController {
     private final AuthService authService;
 
     @GetMapping("signup")
-    public ResponseEntity<ResponseEnvelope<AuthTokenDto>> signup(@RequestBody AuthRegisterDto authRegisterDto) {
-        var result = authService.registerDevice(authRegisterDto);
+    public ResponseEntity<ResponseEnvelope<AuthTokenDto>> signup(@RequestBody AuthSignupDto authSignupDto) {
+        var result = authService.registerDevice(authSignupDto);
 
         if (result == null) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_REGISTER_INVALID_DTO);
@@ -30,7 +27,17 @@ public class AuthController {
     }
 
     @GetMapping("refresh")
-    public ResponseEntity<ResponseEnvelope<AuthTokenDto>> refreshAuth() {
-        return ResponseEnvelope.ok(null);
+    public ResponseEntity<ResponseEnvelope<AuthTokenDto>> refreshAuth(@RequestBody AuthRefreshDto dto) {
+        if (dto.getRefreshToken() == null || dto.getRefreshToken().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_REFRESH_INVALID_DTO);
+        }
+
+        var result = authService.refreshAuth(dto);
+
+        if (result == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_REFRESH_INVALID_TOKEN);
+        }
+
+        return ResponseEnvelope.ok(result);
     }
 }

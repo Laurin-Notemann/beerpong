@@ -1,9 +1,6 @@
 package pro.beerpong.api.auth;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,6 +48,20 @@ public class JwtTokenProvider {
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token);
+    }
+
+    public Claims validateToken(String token, String type) {
+        try {
+            var claims = parseToken(token).getBody();
+
+            if (!claims.get("type", String.class).equals(type)) {
+                return null;
+            }
+
+            return claims;
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
     }
 }
 
