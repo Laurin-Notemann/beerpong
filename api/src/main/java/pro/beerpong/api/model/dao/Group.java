@@ -24,6 +24,9 @@ public class Group {
     private Asset wallpaperAsset;
     @OneToMany(mappedBy = "group")
     private List<GroupMember> members;
+    @OneToOne
+    @JoinColumn(name = "createdBy")
+    private GroupMember createdBy;
     private ZonedDateTime createdAt;
     private String sportPreset;
     private String customSportName;

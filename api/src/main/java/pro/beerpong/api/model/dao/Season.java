@@ -23,4 +23,8 @@ public class Season {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn
     private SeasonSettings seasonSettings;
+
+    @OneToOne
+    @JoinColumn(name = "createdBy")
+    private GroupMember createdBy;
 }

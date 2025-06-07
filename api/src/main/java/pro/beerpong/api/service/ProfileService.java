@@ -10,6 +10,7 @@ import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.model.dto.ProfileCreatedDto;
 import pro.beerpong.api.model.dto.ProfileDto;
+import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 
@@ -25,8 +26,9 @@ public class ProfileService {
     private final GroupMapper groupMapper;
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
+    private final AuthService authService;
 
-    public ProfileCreatedDto createPlayer(String groupId, ProfileCreateDto dto) {
+    public ProfileCreatedDto createPlayer(String groupId, ProfileCreateDto dto, UserDto user) {
         var existing = this.getProfileByName(groupId, dto.getName());
 
         if (existing != null) {
@@ -63,19 +65,20 @@ public class ProfileService {
                 return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
             }
         } else {
-            return new ProfileCreatedDto(this.createProfile(groupId, dto), false, null);
+            return new ProfileCreatedDto(this.createProfile(groupId, dto, user), false, null);
         }
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto) {
-        return this.createProfile(groupId, profileCreateDto, true);
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, UserDto user) {
+        return this.createProfile(groupId, profileCreateDto, true, user);
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer) {
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer, UserDto user) {
         var groupOptional = groupRepository.findById(groupId);
 
         var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
         profile.setGroup(groupOptional.orElseThrow());
+        profile.setCreatedBy(authService.memberByUser(user, groupId));
 
         var savedProfile = profileRepository.save(profile);
 

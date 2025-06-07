@@ -1,6 +1,7 @@
 package pro.beerpong.api.model.dto;
 
 import lombok.Data;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 
 import java.time.ZonedDateTime;
@@ -11,6 +12,7 @@ public class MatchDto {
     private String id;
     private ZonedDateTime date;
     private Season season;
+    private GroupMember createdBy;
     private List<TeamDto> teams;
     private List<TeamMemberDto> teamMembers;
     private List<MatchMoveDtoComplete> matchMoves;

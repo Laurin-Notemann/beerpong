@@ -2,6 +2,7 @@ package pro.beerpong.api.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
+import pro.beerpong.api.model.dao.GroupMember;
 
 @Data
 public class ProfileDto {
@@ -10,4 +11,5 @@ public class ProfileDto {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AssetMetadataDto avatarAsset;
     private String groupId;
+    private GroupMember createdBy;
 }

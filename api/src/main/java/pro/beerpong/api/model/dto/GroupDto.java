@@ -2,6 +2,7 @@ package pro.beerpong.api.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 
 import java.time.ZonedDateTime;
@@ -14,6 +15,7 @@ public class GroupDto {
     private Season activeSeason;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AssetMetadataDto wallpaperAsset;
+    private GroupMember createdBy;
     private ZonedDateTime createdAt;
     private GroupPreset sportPreset;
     private String customSportName;

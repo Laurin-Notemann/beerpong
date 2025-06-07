@@ -49,6 +49,7 @@ public class MatchService {
     private final TeamService teamService;
     private final RuleMoveService ruleMoveService;
     private final PlayerMapper playerMapper;
+    private final AuthService authService;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -61,7 +62,7 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper) {
+                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper, AuthService authService) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -78,6 +79,7 @@ public class MatchService {
         this.teamService = teamService;
         this.ruleMoveService = ruleMoveService;
         this.playerMapper = playerMapper;
+        this.authService = authService;
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -103,7 +105,7 @@ public class MatchService {
     }
 
     @Transactional
-    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto) {
+    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto, UserDto user) {
         if (!group.getActiveSeason().getId().equals(season.getId()) ||
                 invalidCreateDto(group.getId(), season.getId(), matchCreateDto)) {
             return null;
@@ -113,6 +115,7 @@ public class MatchService {
 
         match.setDate(ZonedDateTime.now());
         match.setSeason(season);
+        match.setCreatedBy(authService.memberByUser(user, group.getId()));
 
         match = matchRepository.save(match);
 

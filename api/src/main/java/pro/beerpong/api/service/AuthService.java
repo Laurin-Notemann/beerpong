@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.auth.JwtTokenProvider;
 import pro.beerpong.api.mapping.UserMapper;
 import pro.beerpong.api.model.dao.Device;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.User;
 import pro.beerpong.api.model.dto.AuthRefreshDto;
 import pro.beerpong.api.model.dto.AuthSignupDto;
@@ -88,6 +89,10 @@ public class AuthService {
 
     public boolean hasAccessToGroup(UserDto user, String groupId) {
         return groupMemberRepository.existsByUserIdAndGroupId(user.getId(), groupId);
+    }
+
+    public GroupMember memberByUser(UserDto user, String groupId) {
+        return groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
     }
 
     @Transactional
