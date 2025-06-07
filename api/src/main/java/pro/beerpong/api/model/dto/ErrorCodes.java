@@ -53,6 +53,7 @@ public enum ErrorCodes {
     /* AUTH */
     AUTH_REGISTER_INVALID_DTO(HttpStatus.BAD_REQUEST, "authRegisterInvalidDto", "The installationType or deviceId is invalid!"),
     AUTH_REFRESH_INVALID_DTO(HttpStatus.BAD_REQUEST, "authRefreshInvalidDto", "The refreshToken has to be non-null and non-empty!"),
+    AUTH_INVALID_USER(HttpStatus.UNAUTHORIZED, "authInvalidUser", "The user from the access token has to be non-null!"),
     AUTH_REFRESH_INVALID_TOKEN(HttpStatus.BAD_REQUEST, "authRefreshInvalidToken", "The refreshToken is no refresh-token, invalid or the subject-userId is invalid!");
 
     private final HttpStatus httpStatus;

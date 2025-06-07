@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         var groupId = extractGroupId(req);
 
-        if (!authService.hasAccessToGroup(user, groupId)) {
+        if (!groupId.equals("user") && !authService.hasAccessToGroup(user, groupId)) {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.getWriter().write("No access to this group!");
             return;

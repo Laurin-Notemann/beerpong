@@ -3,12 +3,12 @@ package pro.beerpong.api.control;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/groups")
@@ -37,6 +37,17 @@ public class GroupController {
         }
 
         return ResponseEnvelope.ok(group);
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<ResponseEnvelope<List<GroupDto>>> findUserGroups(@AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
+        var groups = groupService.findGroupsByUser(user);
+
+        return ResponseEnvelope.ok(groups);
     }
 
     @GetMapping

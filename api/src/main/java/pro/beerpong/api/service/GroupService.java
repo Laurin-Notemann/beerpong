@@ -8,10 +8,8 @@ import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ProfileCreateDto;
+import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.repository.GroupMemberRepository;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -21,6 +19,7 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
@@ -40,6 +39,7 @@ public class GroupService {
     private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
+    private final GroupMemberRepository groupMemberRepository;
 
     public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
@@ -74,6 +74,15 @@ public class GroupService {
         ruleService.createDefaultRules(season);
 
         return withStats(groupMapper.groupToGroupDto(group));
+    }
+
+    public List<GroupDto> findGroupsByUser(UserDto user) {
+        return groupMemberRepository.findByUserId(user.getId()).stream()
+                .map(groupMember -> withStats(groupRepository.findById(groupMember.getGroup().getId())
+                        .map(groupMapper::groupToGroupDto)
+                        .orElse(null)))
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
