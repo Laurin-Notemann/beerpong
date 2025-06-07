@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.auth.JwtTokenProvider;
@@ -87,6 +88,11 @@ public class AuthService {
 
     public boolean hasAccessToGroup(UserDto user, String groupId) {
         return groupMemberRepository.existsByUserIdAndGroupId(user.getId(), groupId);
+    }
+
+    @Transactional
+    public void leaveGroup(UserDto user, String groupId) {
+        groupMemberRepository.deleteByUserIdAndGroupId(user.getId(), groupId);
     }
 
     private AuthTokenDto buildDto(String token, TokenType type) {

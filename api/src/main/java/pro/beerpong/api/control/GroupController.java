@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.service.AuthService;
 import pro.beerpong.api.service.GroupService;
 
 import java.util.List;
@@ -16,10 +17,12 @@ public class GroupController {
     public static final String USER_GROUPS_ENDPOINT = "user";
 
     private final GroupService groupService;
+    private final AuthService authService;
 
     @Autowired
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, AuthService authService) {
         this.groupService = groupService;
+        this.authService = authService;
     }
 
     @PostMapping
@@ -98,5 +101,20 @@ public class GroupController {
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
+    }
+
+    @PostMapping("/{id}/leave-group")
+    public ResponseEntity<ResponseEnvelope<String>> leaveGroup(@PathVariable String id, @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        authService.leaveGroup(user, id);
+
+        return ResponseEnvelope.ok("OK");
     }
 }
