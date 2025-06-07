@@ -103,7 +103,7 @@ public class GroupController {
         }
     }
 
-    @PostMapping("/{id}/leave-group")
+    @PostMapping("/{id}/leave")
     public ResponseEntity<ResponseEnvelope<String>> leaveGroup(@PathVariable String id, @AuthenticationPrincipal UserDto user) {
         if (user == null) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
