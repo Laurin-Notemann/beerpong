@@ -49,7 +49,9 @@ public enum ErrorCodes {
     ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "assetNotFound", "The requested asset could not be found!"),
     /* LEADERBOARDS */
     LEADERBOARD_SCOPE_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"),
-    LEADERBOARD_SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!");
+    LEADERBOARD_SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!"),
+    /* AUTH */
+    AUTH_REGISTER_INVALID_DTO(HttpStatus.BAD_REQUEST, "authRegisterInvalidDto", "The installationType or deviceId is invalid!"),;
 
     private final HttpStatus httpStatus;
     private final String code;

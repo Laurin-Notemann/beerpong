@@ -1,9 +1,6 @@
 package pro.beerpong.api.model.dao;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import pro.beerpong.api.util.InstallationType;
 
@@ -16,4 +13,7 @@ public class Device {
     private InstallationType type;
     private String deviceId;
     private String pushNotificationToken;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

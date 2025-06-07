@@ -11,5 +11,10 @@ public class GroupMember {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String groupId;
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }
