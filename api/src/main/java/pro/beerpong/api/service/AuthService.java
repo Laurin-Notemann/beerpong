@@ -3,12 +3,15 @@ package pro.beerpong.api.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.auth.JwtTokenProvider;
+import pro.beerpong.api.mapping.UserMapper;
 import pro.beerpong.api.model.dao.Device;
 import pro.beerpong.api.model.dao.User;
 import pro.beerpong.api.model.dto.AuthRefreshDto;
 import pro.beerpong.api.model.dto.AuthSignupDto;
 import pro.beerpong.api.model.dto.AuthTokenDto;
+import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.DeviceRepository;
+import pro.beerpong.api.repository.GroupMemberRepository;
 import pro.beerpong.api.repository.UserRepository;
 import pro.beerpong.api.util.TokenType;
 
@@ -18,6 +21,8 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
+    private final UserMapper userMapper;
+    private final GroupMemberRepository groupMemberRepository;
 
     public AuthTokenDto registerDevice(AuthSignupDto dto) {
         if (dto.getDeviceId() == null || dto.getDeviceId().trim().isEmpty() || dto.getInstallationType() == null) {
@@ -62,7 +67,7 @@ public class AuthService {
         return this.buildDto(accessToken, TokenType.ACCESS);
     }
 
-    public User userFromAccessToken(String token) {
+    public UserDto userFromAccessToken(String token) {
         if (token == null || token.trim().isEmpty()) {
             return null;
         }
@@ -75,7 +80,13 @@ public class AuthService {
 
         var userId = claims.getSubject();
 
-        return userRepository.findById(userId).orElse(null);
+        return userRepository.findById(userId)
+                .map(userMapper::userToUserDto)
+                .orElse(null);
+    }
+
+    public boolean hasAccessToGroup(UserDto user, String groupId) {
+        return groupMemberRepository.existsByUserIdAndGroupId(user.getId(), groupId);
     }
 
     private AuthTokenDto buildDto(String token, TokenType type) {
