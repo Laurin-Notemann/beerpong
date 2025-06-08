@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.mapping.GroupMemberMapper;
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.*;
@@ -50,6 +51,7 @@ public class MatchService {
     private final RuleMoveService ruleMoveService;
     private final PlayerMapper playerMapper;
     private final AuthService authService;
+    private final GroupMemberMapper groupMemberMapper;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -62,7 +64,7 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper, AuthService authService) {
+                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper, AuthService authService, GroupMemberMapper groupMemberMapper) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -80,6 +82,7 @@ public class MatchService {
         this.ruleMoveService = ruleMoveService;
         this.playerMapper = playerMapper;
         this.authService = authService;
+        this.groupMemberMapper = groupMemberMapper;
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -364,6 +367,7 @@ public class MatchService {
         dto.setId(match.getId());
         dto.setDate(match.getDate());
         dto.setSeason(match.getSeason());
+        dto.setCreatedBy(groupMemberMapper.groupMemberToGroupMemberDto(match.getCreatedBy()));
 
         return dto;
     }
@@ -374,6 +378,7 @@ public class MatchService {
         dto.setId(match.getId());
         dto.setDate(match.getDate());
         dto.setSeason(match.getSeason());
+        dto.setCreatedBy(groupMemberMapper.groupMemberToGroupMemberDto(match.getCreatedBy()));
 
         loadMatchInfo(match, dto);
 
