@@ -15,6 +15,7 @@ import java.util.List;
 @RequestMapping("/groups")
 public class GroupController {
     public static final String USER_GROUPS_ENDPOINT = "user";
+    public static final String JOIN_GROUP_ENDPOINT = "join";
 
     private final GroupService groupService;
     private final AuthService authService;
@@ -105,6 +106,25 @@ public class GroupController {
             return ResponseEnvelope.ok(updatedGroup);
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/{id}/" + JOIN_GROUP_ENDPOINT)
+    public ResponseEntity<ResponseEnvelope<String>> joinGroup(@PathVariable String id, @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        var groupMember = authService.joinGroup(user, id);
+
+        if (groupMember != null) {
+            return ResponseEnvelope.ok("OK");
+        } else {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_ALREADY_IN_GROUP);
         }
     }
 

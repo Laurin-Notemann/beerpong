@@ -23,7 +23,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String GROUP_ID_PATTERN = "/groups/{groupId}/**";
     private static final List<String> NO_VALIDATION_ENDPOINTS = List.of(
             "/groups",
-            "/groups/" + GroupController.USER_GROUPS_ENDPOINT
+            "/groups/" + GroupController.USER_GROUPS_ENDPOINT,
+            "/groups/{groupId}/" + GroupController.JOIN_GROUP_ENDPOINT
     );
 
     private final AuthService authService;
