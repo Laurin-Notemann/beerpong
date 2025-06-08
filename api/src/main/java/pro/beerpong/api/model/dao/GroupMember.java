@@ -11,6 +11,7 @@ public class GroupMember {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+    private boolean active;
     @ManyToOne
     @JoinColumn(name = "group_id")
     private Group group;

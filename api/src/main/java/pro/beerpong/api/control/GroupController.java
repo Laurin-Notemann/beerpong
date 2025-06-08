@@ -118,8 +118,10 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
-        authService.leaveGroup(user, id);
-
-        return ResponseEnvelope.ok("OK");
+        if (authService.leaveGroup(user, id)) {
+            return ResponseEnvelope.ok("OK");
+        } else {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_USER_NOT_IN_GROUP);
+        }
     }
 }

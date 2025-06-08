@@ -91,7 +91,9 @@ public class AuthService {
     }
 
     public boolean hasAccessToGroup(UserDto user, String groupId) {
-        return groupMemberRepository.existsByUserIdAndGroupId(user.getId(), groupId);
+        var existing = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+
+        return existing != null && existing.isActive();
     }
 
     public GroupMember memberByUser(UserDto user, String groupId) {
@@ -102,15 +104,29 @@ public class AuthService {
     public GroupMember buildFirstGroupMember(UserDto user) {
         var groupMember = new GroupMember();
         groupMember.setUser(userMapper.userDtoToUser(user));
+        groupMember.setActive(true);
 
         return groupMember;
     }
 
     @Transactional
     public GroupMember joinGroup(UserDto user, String groupId) {
+        var existing = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+
+        if (existing != null) {
+            if (existing.isActive()) {
+                return null;
+            } else {
+                existing.setActive(true);
+
+                return groupMemberRepository.save(existing);
+            }
+        }
+
         var groupMember = new GroupMember();
         groupMember.setUser(userMapper.userDtoToUser(user));
         groupMember.setGroup(groupRepository.findById(groupId).orElse(null));
+        groupMember.setActive(true);
 
         saveMember(groupMember);
 
@@ -122,8 +138,16 @@ public class AuthService {
     }
 
     @Transactional
-    public void leaveGroup(UserDto user, String groupId) {
-        groupMemberRepository.deleteByUserIdAndGroupId(user.getId(), groupId);
+    public boolean leaveGroup(UserDto user, String groupId) {
+        var groupMember = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+
+        if (groupMember != null) {
+            groupMember.setActive(false);
+
+            saveMember(groupMember);
+            return true;
+        }
+        return false;
     }
 
     private AuthTokenDto buildDto(String token, TokenType type) {
