@@ -37,6 +37,7 @@ public class SeasonService {
     private final ProfileMapper profileMapper;
     private final PlayerStatisticsMapper playerStatisticsMapper;
     private final GroupService groupService;
+    private final AuthService authService;
 
     @Autowired
     public SeasonService(SubscriptionHandler subscriptionHandler,
@@ -45,7 +46,7 @@ public class SeasonService {
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
                          RuleService ruleService,
-                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService) {
+                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService, AuthService authService) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
@@ -61,9 +62,10 @@ public class SeasonService {
         this.profileMapper = profileMapper;
         this.playerStatisticsMapper = playerStatisticsMapper;
         this.groupService = groupService;
+        this.authService = authService;
     }
 
-    public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId) {
+    public SeasonDto startNewSeason(SeasonCreateDto dto, String groupId, UserDto user) {
         var groupOptional = groupRepository.findById(groupId);
 
         if (groupOptional.isEmpty()) {
@@ -77,6 +79,7 @@ public class SeasonService {
         newSeason.setStartDate(ZonedDateTime.now());
         newSeason.setGroupId(groupOptional.get().getId());
         newSeason.setSeasonSettings(new SeasonSettings());
+        newSeason.setCreatedBy(authService.memberByUser(user, groupId));
 
         if (oldSeason != null && oldSeason.getSeasonSettings() != null) {
             newSeason.getSeasonSettings().setMaxTeamSize(oldSeason.getSeasonSettings().getMaxTeamSize());

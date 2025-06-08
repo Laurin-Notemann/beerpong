@@ -3,6 +3,7 @@ package pro.beerpong.api.control;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.SeasonService;
@@ -20,7 +21,13 @@ public class SeasonController {
     }
 
     @PutMapping("/active-season")
-    public ResponseEntity<ResponseEnvelope<SeasonDto>> startNewSeason(@PathVariable String groupId, @RequestBody SeasonCreateDto dto) {
+    public ResponseEntity<ResponseEnvelope<SeasonDto>> startNewSeason(@PathVariable String groupId,
+                                                                      @RequestBody SeasonCreateDto dto,
+                                                                      @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         if (groupId == null || groupId.trim().isEmpty()) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
@@ -33,7 +40,7 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_RULE_MOVES);
         }
 
-        var season = seasonService.startNewSeason(dto, groupId);
+        var season = seasonService.startNewSeason(dto, groupId, user);
 
         if (season != null) {
             return ResponseEnvelope.ok(season);
