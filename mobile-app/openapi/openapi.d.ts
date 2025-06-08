@@ -14,6 +14,17 @@ declare namespace Components {
             mediaType?: string;
             uploadedAt?: string; // date-time
         }
+        export interface AuthRefreshDto {
+            refreshToken?: string;
+        }
+        export interface AuthSignupDto {
+            installationType?: 'IOS' | 'ANDROID';
+            deviceId?: string;
+        }
+        export interface AuthTokenDto {
+            token?: string;
+            type?: 'ACCESS' | 'REFRESH';
+        }
         export interface ErrorDetails {
             code?: string;
             description?: string;
@@ -28,14 +39,21 @@ declare namespace Components {
             id?: string;
             name?: string;
             inviteCode?: string;
-            activeSeason?: Season;
+            activeSeason?: SeasonDto;
             wallpaperAsset?: AssetMetadataDto;
+            createdBy?: GroupMemberDto;
             createdAt?: string; // date-time
             sportPreset?: GroupPreset;
             customSportName?: string;
             numberOfPlayers?: number; // int32
             numberOfMatches?: number; // int32
             numberOfSeasons?: number; // int32
+        }
+        export interface GroupMemberDto {
+            id?: string;
+            active?: boolean;
+            groupId?: string;
+            userId?: string;
         }
         export interface GroupPreset {
             id?: string;
@@ -54,7 +72,8 @@ declare namespace Components {
         export interface MatchDto {
             id?: string;
             date?: string; // date-time
-            season?: Season;
+            season?: SeasonDto;
+            createdBy?: GroupMemberDto;
             teams?: TeamDto[];
             teamMembers?: TeamMemberDto[];
             matchMoves?: MatchMoveDtoComplete[];
@@ -72,7 +91,7 @@ declare namespace Components {
         export interface MatchOverviewDto {
             id?: string;
             date?: string; // date-time
-            season?: Season;
+            season?: SeasonDto;
             blueTeam?: MatchOverviewTeamDto;
             redTeam?: MatchOverviewTeamDto;
         }
@@ -114,6 +133,7 @@ declare namespace Components {
             name?: string;
             avatarAsset?: AssetMetadataDto;
             groupId?: string;
+            createdBy?: GroupMemberDto;
             reactivated?: boolean;
             lastActiveSeasonId?: string;
         }
@@ -122,11 +142,18 @@ declare namespace Components {
             name?: string;
             avatarAsset?: AssetMetadataDto;
             groupId?: string;
+            createdBy?: GroupMemberDto;
         }
         export interface ResponseEnvelopeAssetMetadataDto {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: AssetMetadataDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeAuthTokenDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: AuthTokenDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeGroupDto {
@@ -139,6 +166,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: LeaderboardDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeListGroupDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: GroupDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListGroupPreset {
@@ -239,7 +272,8 @@ declare namespace Components {
             id?: string;
             title?: string;
             description?: string;
-            season?: Season;
+            season?: SeasonDto;
+            createdBy?: GroupMemberDto;
         }
         export interface RuleMoveCreateDto {
             name?: string;
@@ -253,15 +287,7 @@ declare namespace Components {
             pointsForTeam?: number; // int32
             pointsForScorer?: number; // int32
             finishingMove?: boolean;
-            season?: Season;
-        }
-        export interface Season {
-            id?: string;
-            name?: string;
-            startDate?: string; // date-time
-            endDate?: string; // date-time
-            groupId?: string;
-            seasonSettings?: SeasonSettings;
+            season?: SeasonDto;
         }
         export interface SeasonCreateDto {
             oldSeasonName?: string;
@@ -274,6 +300,7 @@ declare namespace Components {
             endDate?: string; // date-time
             groupId?: string;
             seasonSettings?: SeasonSettings;
+            createdBy?: GroupMemberDto;
         }
         export interface SeasonSettings {
             id?: string;
@@ -406,6 +433,11 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
+        }
+    }
+    namespace FindUserGroups {
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeListGroupDto;
         }
     }
     namespace GetAllMatchOverviews {
@@ -601,6 +633,28 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeSeasonDto;
         }
     }
+    namespace JoinGroup {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
+    namespace LeaveGroup {
+        namespace Parameters {
+            export type Id = string;
+        }
+        export interface PathParameters {
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
     namespace ListAllProfiles {
         namespace Parameters {
             export type GroupId = string;
@@ -611,6 +665,12 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeListProfileDto;
+        }
+    }
+    namespace RefreshAuth {
+        export type RequestBody = Components.Schemas.AuthRefreshDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeAuthTokenDto;
         }
     }
     namespace SetAvatar {
@@ -638,6 +698,12 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+        }
+    }
+    namespace Signup {
+        export type RequestBody = Components.Schemas.AuthSignupDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeAuthTokenDto;
         }
     }
     namespace StartNewSeason {
@@ -878,6 +944,22 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.CreateGroup.Responses.$200>;
     /**
+     * leaveGroup
+     */
+    'leaveGroup'(
+        parameters?: Parameters<Paths.LeaveGroup.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.LeaveGroup.Responses.$200>;
+    /**
+     * joinGroup
+     */
+    'joinGroup'(
+        parameters?: Parameters<Paths.JoinGroup.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.JoinGroup.Responses.$200>;
+    /**
      * getAllRuleMoves
      */
     'getAllRuleMoves'(
@@ -925,6 +1007,22 @@ export interface OperationMethods {
         data?: Paths.CreateProfile.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.CreateProfile.Responses.$200>;
+    /**
+     * signup
+     */
+    'signup'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: Paths.Signup.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.Signup.Responses.$200>;
+    /**
+     * refreshAuth
+     */
+    'refreshAuth'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: Paths.RefreshAuth.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.RefreshAuth.Responses.$200>;
     /**
      * getHealthcheck
      */
@@ -978,6 +1076,14 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
+    /**
+     * findUserGroups
+     */
+    'findUserGroups'(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.FindUserGroups.Responses.$200>;
     /**
      * getPresets
      */
@@ -1169,6 +1275,26 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateGroup.Responses.$200>;
     };
+    ['/groups/{id}/leave']: {
+        /**
+         * leaveGroup
+         */
+        'post'(
+            parameters?: Parameters<Paths.LeaveGroup.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.LeaveGroup.Responses.$200>;
+    };
+    ['/groups/{id}/join']: {
+        /**
+         * joinGroup
+         */
+        'post'(
+            parameters?: Parameters<Paths.JoinGroup.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.JoinGroup.Responses.$200>;
+    };
     ['/groups/{groupId}/seasons/{seasonId}/rule-moves']: {
         /**
          * getAllRuleMoves
@@ -1222,6 +1348,26 @@ export interface PathsDictionary {
             data?: Paths.CreateProfile.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.CreateProfile.Responses.$200>;
+    };
+    ['/auth/signup']: {
+        /**
+         * signup
+         */
+        'post'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: Paths.Signup.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.Signup.Responses.$200>;
+    };
+    ['/auth/refresh']: {
+        /**
+         * refreshAuth
+         */
+        'post'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: Paths.RefreshAuth.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.RefreshAuth.Responses.$200>;
     };
     ['/healthcheck']: {
         /**
@@ -1289,6 +1435,16 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
     };
+    ['/groups/user']: {
+        /**
+         * findUserGroups
+         */
+        'get'(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.FindUserGroups.Responses.$200>;
+    };
     ['/group-presets']: {
         /**
          * getPresets
@@ -1334,9 +1490,13 @@ export interface PathsDictionary {
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
 export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
+export type AuthRefreshDto = Components.Schemas.AuthRefreshDto;
+export type AuthSignupDto = Components.Schemas.AuthSignupDto;
+export type AuthTokenDto = Components.Schemas.AuthTokenDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
+export type GroupMemberDto = Components.Schemas.GroupMemberDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
 export type LeaderboardDto = Components.Schemas.LeaderboardDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
@@ -1354,10 +1514,14 @@ export type ProfileCreatedDto = Components.Schemas.ProfileCreatedDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
 export type ResponseEnvelopeAssetMetadataDto =
     Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+export type ResponseEnvelopeAuthTokenDto =
+    Components.Schemas.ResponseEnvelopeAuthTokenDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
 export type ResponseEnvelopeLeaderboardDto =
     Components.Schemas.ResponseEnvelopeLeaderboardDto;
+export type ResponseEnvelopeListGroupDto =
+    Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListGroupPreset =
     Components.Schemas.ResponseEnvelopeListGroupPreset;
 export type ResponseEnvelopeListMatchDto =
@@ -1391,7 +1555,6 @@ export type RuleCreateDto = Components.Schemas.RuleCreateDto;
 export type RuleDto = Components.Schemas.RuleDto;
 export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
 export type RuleMoveDto = Components.Schemas.RuleMoveDto;
-export type Season = Components.Schemas.Season;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
 export type SeasonSettings = Components.Schemas.SeasonSettings;
