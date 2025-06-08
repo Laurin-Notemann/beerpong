@@ -19,7 +19,7 @@ public class Profile {
     @JoinColumn(name = "groupId")
     private Group group;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "createdBy")
     private GroupMember createdBy;
 }

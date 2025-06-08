@@ -19,7 +19,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String GROUPS_PATTERN = "/groups/{groupId}/**";
+    private static final String GROUPS_PATTERN = "/groups/**";
+    private static final String GROUP_ID_PATTERN = "/groups/{groupId}/**";
+    private static final List<String> NO_VALIDATION_ENDPOINTS = List.of(
+            "/groups",
+            "/groups/" + GroupController.USER_GROUPS_ENDPOINT
+    );
 
     private final AuthService authService;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
@@ -45,9 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        var groupId = extractGroupId(req);
-
-        if (!groupId.equals(GroupController.USER_GROUPS_ENDPOINT) && !authService.hasAccessToGroup(user, groupId)) {
+        if (!isExcludedFromValidation(req) && !authService.hasAccessToGroup(user, extractGroupId(req))) {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             res.getWriter().write("No access to this group!");
             return;
@@ -64,8 +67,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return !pathMatcher.match(GROUPS_PATTERN, request.getRequestURI());
     }
 
+    private boolean isExcludedFromValidation(HttpServletRequest request) {
+        return NO_VALIDATION_ENDPOINTS.stream().anyMatch(s -> pathMatcher.match(s, request.getRequestURI()));
+    }
+
     private String extractGroupId(HttpServletRequest request) {
-        return pathMatcher.extractUriTemplateVariables(GROUPS_PATTERN, request.getRequestURI())
-                .get("groupId");
+        return (pathMatcher.match(GROUP_ID_PATTERN, request.getRequestURI()) ?
+                pathMatcher.extractUriTemplateVariables(GROUP_ID_PATTERN, request.getRequestURI()).get("groupId") :
+                "");
     }
 }

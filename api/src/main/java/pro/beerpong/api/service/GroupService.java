@@ -67,7 +67,8 @@ public class GroupService {
         groupCreateDto.getProfileNames().forEach(s -> {
             var profileDto = new ProfileCreateDto();
             profileDto.setName(s);
-            profileService.createProfile(finalGroup.getId(), profileDto);
+            //TODO use user here instead of null
+            profileService.createProfile(finalGroup.getId(), profileDto, null);
         });
 
         ruleMoveService.createDefaultRuleMoves(group, season);

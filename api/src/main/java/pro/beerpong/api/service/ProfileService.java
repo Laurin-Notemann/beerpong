@@ -78,7 +78,11 @@ public class ProfileService {
 
         var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
         profile.setGroup(groupOptional.orElseThrow());
-        profile.setCreatedBy(authService.memberByUser(user, groupId));
+
+        //TODO user should be non-null. waiting for createdBy at group creation!
+        if (user != null) {
+            profile.setCreatedBy(authService.memberByUser(user, groupId));
+        }
 
         var savedProfile = profileRepository.save(profile);
 
