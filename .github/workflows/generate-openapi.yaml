@@ -125,3 +125,4 @@ jobs:
         if: steps.check_authors.outputs.has_bot_author != 'true'
         with:
           commit_message: "chore: update openapi types"
+          skip_checkout: true
