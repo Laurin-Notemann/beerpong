@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.RuleMapper;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.RuleCreateDto;
@@ -79,13 +80,14 @@ public class RuleService {
         }
 
         ruleRepository.findBySeasonId(oldSeason.getId()).forEach(oldRule -> {
-            var ruleMove = new Rule();
+            var rule = new Rule();
 
-            ruleMove.setTitle(oldRule.getTitle());
-            ruleMove.setDescription(oldRule.getDescription());
-            ruleMove.setSeason(newSeason);
+            rule.setTitle(oldRule.getTitle());
+            rule.setDescription(oldRule.getDescription());
+            rule.setSeason(newSeason);
+            rule.setCreatedBy(oldRule.getCreatedBy());
 
-            ruleRepository.save(ruleMove);
+            ruleRepository.save(rule);
         });
     }
 
@@ -96,11 +98,12 @@ public class RuleService {
                 .toList();
     }
 
-    public void createDefaultRules(Season season) {
+    public void createDefaultRules(Season season, GroupMember createdBy) {
         DEFAULT_RULES.stream()
                 .map(rule -> {
                     var rle = rule.clone();
                     rle.setSeason(season);
+                    rule.setCreatedBy(createdBy);
                     return rle;
                 })
                 .forEach(ruleRepository::save);
