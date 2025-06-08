@@ -8,6 +8,7 @@ import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
+import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.RuleRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -43,22 +44,27 @@ public class RuleService {
     private final RuleRepository ruleRepository;
 
     private final RuleMapper ruleMapper;
+    private final AuthService authService;
 
     @Autowired
-    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper) {
+    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper, AuthService authService) {
         this.subscriptionHandler = subscriptionHandler;
         this.ruleRepository = matchRepository;
         this.ruleMapper = ruleMapper;
+        this.authService = authService;
     }
 
     @Transactional
-    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
+    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules, UserDto user) {
         ruleRepository.deleteBySeasonId(season.getId());
+
+        var createdBy = authService.memberByUser(user, groupId);
 
         return rules.stream()
                 .map(dto -> {
                     var rule = ruleMapper.ruleCreateDtoToRule(dto);
                     rule.setSeason(season);
+                    rule.setCreatedBy(createdBy);
                     return rule;
                 })
                 .filter(dto -> dto.getSeason().getId().equals(season.getId()) &&
