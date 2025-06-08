@@ -103,7 +103,7 @@ public class RuleService {
                 .map(rule -> {
                     var rle = rule.clone();
                     rle.setSeason(season);
-                    rule.setCreatedBy(createdBy);
+                    rle.setCreatedBy(createdBy);
                     return rle;
                 })
                 .forEach(ruleRepository::save);

@@ -24,7 +24,7 @@ public class Season {
     @JoinColumn
     private SeasonSettings seasonSettings;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "createdBy")
     private GroupMember createdBy;
 }

@@ -20,7 +20,7 @@ public class Rule implements Cloneable {
     @JoinColumn(name = "seasonId")
     private Season season;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "createdBy")
     private GroupMember createdBy;
 
