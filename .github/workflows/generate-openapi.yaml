@@ -93,7 +93,7 @@ jobs:
           POSTGRES_PASSWORD: user
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
-          JWT_SECRET: justforthisrunnerthishasnovalue
+          JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
         working-directory: api
 
       # replace all occurences of "*/*" with "application/json" in the openapi.json file
