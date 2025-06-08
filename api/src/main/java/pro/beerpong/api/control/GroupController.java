@@ -26,7 +26,12 @@ public class GroupController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto) {
+    public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto,
+                                                                  @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         if (groupCreateDto.invalidName()) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_NAME);
         }
@@ -35,7 +40,7 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
         }
 
-        var group = groupService.createGroup(groupCreateDto);
+        var group = groupService.createGroup(groupCreateDto, user);
 
         if (group == null) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_SPORT);

@@ -1,7 +1,6 @@
 package pro.beerpong.api.model.dto;
 
 import lombok.Data;
-import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 
 @Data
@@ -10,5 +9,5 @@ public class RuleDto {
     private String title;
     private String description;
     private Season season;
-    private GroupMember createdBy;
+    private GroupMemberDto createdBy;
 }

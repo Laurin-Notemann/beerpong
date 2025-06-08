@@ -6,6 +6,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.*;
@@ -40,8 +41,9 @@ public class GroupService {
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
     private final GroupMemberRepository groupMemberRepository;
+    private final AuthService authService;
 
-    public GroupDto createGroup(GroupCreateDto groupCreateDto) {
+    public GroupDto createGroup(GroupCreateDto groupCreateDto, UserDto user) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setInviteCode(generateRandomString(GROUP_INVITE_CODE_LENGTH));
         group.setCreatedAt(ZonedDateTime.now());
@@ -53,6 +55,8 @@ public class GroupService {
             return null;
         }
 
+        var groupMember = authService.buildFirstGroupMember(user);
+
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
         season.setSeasonSettings(new SeasonSettings());
@@ -60,15 +64,23 @@ public class GroupService {
         group.setActiveSeason(season);
         group = groupRepository.save(group);
 
+        groupMember.setGroup(group);
+
+        groupMember = authService.saveMember(groupMember);
+
+        group.setCreatedBy(groupMember);
+        group = groupRepository.save(group);
+
+        season.setCreatedBy(groupMember);
         season.setGroupId(group.getId());
         seasonRepository.save(season);
 
         Group finalGroup = group;
+        GroupMember finalGroupMember = groupMember;
         groupCreateDto.getProfileNames().forEach(s -> {
             var profileDto = new ProfileCreateDto();
             profileDto.setName(s);
-            //TODO use user here instead of null
-            profileService.createProfile(finalGroup.getId(), profileDto, null);
+            profileService.createProfile(finalGroup.getId(), profileDto, finalGroupMember);
         });
 
         ruleMoveService.createDefaultRuleMoves(group, season);
@@ -107,6 +119,10 @@ public class GroupService {
         return groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
                 .orElse(null);
+    }
+
+    public Group getDaoById(String id) {
+        return groupRepository.findById(id).orElse(null);
     }
 
     public GroupDto updateGroup(String id, GroupCreateDto groupCreateDto) {

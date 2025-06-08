@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.auth.JwtTokenProvider;
 import pro.beerpong.api.mapping.UserMapper;
 import pro.beerpong.api.model.dao.Device;
+import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.User;
 import pro.beerpong.api.model.dto.AuthRefreshDto;
@@ -14,6 +15,7 @@ import pro.beerpong.api.model.dto.AuthTokenDto;
 import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.DeviceRepository;
 import pro.beerpong.api.repository.GroupMemberRepository;
+import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.UserRepository;
 import pro.beerpong.api.util.TokenType;
 
@@ -25,6 +27,7 @@ public class AuthService {
     private final DeviceRepository deviceRepository;
     private final UserMapper userMapper;
     private final GroupMemberRepository groupMemberRepository;
+    private final GroupRepository groupRepository;
 
     public AuthTokenDto registerDevice(AuthSignupDto dto) {
         if (dto.getDeviceId() == null || dto.getDeviceId().trim().isEmpty() || dto.getInstallationType() == null) {
@@ -93,6 +96,29 @@ public class AuthService {
 
     public GroupMember memberByUser(UserDto user, String groupId) {
         return groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+    }
+
+    @Transactional
+    public GroupMember buildFirstGroupMember(UserDto user) {
+        var groupMember = new GroupMember();
+        groupMember.setUser(userMapper.userDtoToUser(user));
+
+        return groupMember;
+    }
+
+    @Transactional
+    public GroupMember joinGroup(UserDto user, String groupId) {
+        var groupMember = new GroupMember();
+        groupMember.setUser(userMapper.userDtoToUser(user));
+        groupMember.setGroup(groupRepository.findById(groupId).orElse(null));
+
+        saveMember(groupMember);
+
+        return groupMember;
+    }
+
+    public GroupMember saveMember(GroupMember groupMember) {
+        return groupMemberRepository.save(groupMember);
     }
 
     @Transactional

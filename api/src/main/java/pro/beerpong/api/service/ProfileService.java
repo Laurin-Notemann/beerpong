@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
@@ -65,24 +66,20 @@ public class ProfileService {
                 return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
             }
         } else {
-            return new ProfileCreatedDto(this.createProfile(groupId, dto, user), false, null);
+            return new ProfileCreatedDto(this.createProfile(groupId, dto, authService.memberByUser(user, groupId)), false, null);
         }
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, UserDto user) {
-        return this.createProfile(groupId, profileCreateDto, true, user);
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, GroupMember groupMember) {
+        return this.createProfile(groupId, profileCreateDto, true, groupMember);
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer, UserDto user) {
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer, GroupMember groupMember) {
         var groupOptional = groupRepository.findById(groupId);
 
         var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
         profile.setGroup(groupOptional.orElseThrow());
-
-        //TODO user should be non-null. waiting for createdBy at group creation!
-        if (user != null) {
-            profile.setCreatedBy(authService.memberByUser(user, groupId));
-        }
+        profile.setCreatedBy(groupMember);
 
         var savedProfile = profileRepository.save(profile);
 
