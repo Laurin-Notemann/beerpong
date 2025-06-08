@@ -12,6 +12,7 @@ public enum ErrorCodes {
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "groupNotFound", "The requested group could not be found!"),
     GROUP_INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "groupInviteNotFound", "No group with the provided invite code could be found!"),
     GROUP_INVITE_CODE_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "groupInviteCodeNotProvided", "The invite code needs to be provided!"),
+    GROUP_ALREADY_IN_GROUP(HttpStatus.FORBIDDEN, "groupAlreadyInGroup", "The user is already a member of this group!"),
     INVALID_GROUP_NAME(HttpStatus.BAD_REQUEST, "invalidGroupName", "Group name must be non-null, non-empty and between 2 and 50 characters!"),
     INVALID_GROUP_PROFILE_NAMES(HttpStatus.BAD_REQUEST, "invalidGroupProfileNames", "Group profileNames must be non-null and non-empty!"),
     INVALID_GROUP_SPORT(HttpStatus.BAD_REQUEST, "invalidGroupSport", "Either a valid preset-id has to be set to 'sportPreset' or a non-null, non-empty 'customSportName' has to be supplied!"),
@@ -49,7 +50,13 @@ public enum ErrorCodes {
     ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "assetNotFound", "The requested asset could not be found!"),
     /* LEADERBOARDS */
     LEADERBOARD_SCOPE_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"),
-    LEADERBOARD_SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!");
+    LEADERBOARD_SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!"),
+    /* AUTH */
+    AUTH_REGISTER_INVALID_DTO(HttpStatus.BAD_REQUEST, "authRegisterInvalidDto", "The installationType or deviceId is invalid!"),
+    AUTH_REFRESH_INVALID_DTO(HttpStatus.BAD_REQUEST, "authRefreshInvalidDto", "The refreshToken has to be non-null and non-empty!"),
+    AUTH_INVALID_USER(HttpStatus.UNAUTHORIZED, "authInvalidUser", "The user from the access token has to be non-null!"),
+    AUTH_USER_NOT_IN_GROUP(HttpStatus.UNAUTHORIZED, "authUserNotInGroup", "The user is not in this group!"),
+    AUTH_REFRESH_INVALID_TOKEN(HttpStatus.BAD_REQUEST, "authRefreshInvalidToken", "The refreshToken is no refresh-token, invalid or the subject-userId is invalid!");
 
     private final HttpStatus httpStatus;
     private final String code;

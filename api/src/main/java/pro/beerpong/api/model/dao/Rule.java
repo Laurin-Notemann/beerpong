@@ -20,6 +20,10 @@ public class Rule implements Cloneable {
     @JoinColumn(name = "seasonId")
     private Season season;
 
+    @ManyToOne
+    @JoinColumn(name = "createdBy")
+    private GroupMember createdBy;
+
     @Override
     @SneakyThrows
     public Rule clone() {

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
@@ -23,11 +24,17 @@ public class ProfileController {
     private final SubscriptionHandler subscriptionHandler;
 
     @PostMapping
-    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId, @RequestBody ProfileCreateDto profileCreateDto) {
+    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId,
+                                                                             @RequestBody ProfileCreateDto profileCreateDto,
+                                                                             @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var dto = profileService.createPlayer(groupId, profileCreateDto);
+            var dto = profileService.createPlayer(groupId, profileCreateDto, user);
 
             if (dto == null) {
                 return ResponseEnvelope.notOk(ErrorCodes.PROFILE_ALREADY_EXISTS);

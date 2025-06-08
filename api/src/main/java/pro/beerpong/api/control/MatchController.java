@@ -3,6 +3,7 @@ package pro.beerpong.api.control;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
@@ -29,7 +30,12 @@ public class MatchController {
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
-                                                                  @RequestBody MatchCreateDto matchCreateDto) {
+                                                                  @RequestBody MatchCreateDto matchCreateDto,
+                                                                  @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
         var error = seasonService.validateActiveSeason(MatchDto.class, pair);
 
@@ -41,7 +47,7 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
-        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto);
+        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto, user);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {

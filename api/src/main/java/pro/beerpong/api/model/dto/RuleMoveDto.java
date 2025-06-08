@@ -10,5 +10,5 @@ public class RuleMoveDto {
     private int pointsForTeam;
     private int pointsForScorer;
     private boolean finishingMove;
-    private Season season;
+    private SeasonDto season;
 }

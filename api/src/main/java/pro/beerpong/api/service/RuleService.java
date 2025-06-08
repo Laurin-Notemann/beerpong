@@ -4,10 +4,12 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.RuleMapper;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
+import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.RuleRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -43,22 +45,27 @@ public class RuleService {
     private final RuleRepository ruleRepository;
 
     private final RuleMapper ruleMapper;
+    private final AuthService authService;
 
     @Autowired
-    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper) {
+    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper, AuthService authService) {
         this.subscriptionHandler = subscriptionHandler;
         this.ruleRepository = matchRepository;
         this.ruleMapper = ruleMapper;
+        this.authService = authService;
     }
 
     @Transactional
-    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
+    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules, UserDto user) {
         ruleRepository.deleteBySeasonId(season.getId());
+
+        var createdBy = authService.memberByUser(user, groupId);
 
         return rules.stream()
                 .map(dto -> {
                     var rule = ruleMapper.ruleCreateDtoToRule(dto);
                     rule.setSeason(season);
+                    rule.setCreatedBy(createdBy);
                     return rule;
                 })
                 .filter(dto -> dto.getSeason().getId().equals(season.getId()) &&
@@ -73,13 +80,14 @@ public class RuleService {
         }
 
         ruleRepository.findBySeasonId(oldSeason.getId()).forEach(oldRule -> {
-            var ruleMove = new Rule();
+            var rule = new Rule();
 
-            ruleMove.setTitle(oldRule.getTitle());
-            ruleMove.setDescription(oldRule.getDescription());
-            ruleMove.setSeason(newSeason);
+            rule.setTitle(oldRule.getTitle());
+            rule.setDescription(oldRule.getDescription());
+            rule.setSeason(newSeason);
+            rule.setCreatedBy(oldRule.getCreatedBy());
 
-            ruleRepository.save(ruleMove);
+            ruleRepository.save(rule);
         });
     }
 
@@ -90,11 +98,12 @@ public class RuleService {
                 .toList();
     }
 
-    public void createDefaultRules(Season season) {
+    public void createDefaultRules(Season season, GroupMember createdBy) {
         DEFAULT_RULES.stream()
                 .map(rule -> {
                     var rle = rule.clone();
                     rle.setSeason(season);
+                    rle.setCreatedBy(createdBy);
                     return rle;
                 })
                 .forEach(ruleRepository::save);
