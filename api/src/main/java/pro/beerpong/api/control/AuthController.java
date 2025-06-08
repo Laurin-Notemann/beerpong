@@ -2,10 +2,7 @@ package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.AuthService;
 
@@ -15,7 +12,7 @@ import pro.beerpong.api.service.AuthService;
 public class AuthController {
     private final AuthService authService;
 
-    @GetMapping("signup")
+    @PostMapping("signup")
     public ResponseEntity<ResponseEnvelope<AuthTokenDto>> signup(@RequestBody AuthSignupDto authSignupDto) {
         var result = authService.registerDevice(authSignupDto);
 
@@ -26,7 +23,7 @@ public class AuthController {
         return ResponseEnvelope.ok(result);
     }
 
-    @GetMapping("refresh")
+    @PostMapping("refresh")
     public ResponseEntity<ResponseEnvelope<AuthTokenDto>> refreshAuth(@RequestBody AuthRefreshDto dto) {
         if (dto.getRefreshToken() == null || dto.getRefreshToken().isEmpty()) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_REFRESH_INVALID_DTO);
