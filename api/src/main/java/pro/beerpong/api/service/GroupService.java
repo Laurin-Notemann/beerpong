@@ -68,6 +68,7 @@ public class GroupService {
 
         groupMember = authService.saveMember(groupMember);
 
+        // TODO maybe find way to prevent double group saving. but not that big of a deal
         group.setCreatedBy(groupMember);
         group = groupRepository.save(group);
 
