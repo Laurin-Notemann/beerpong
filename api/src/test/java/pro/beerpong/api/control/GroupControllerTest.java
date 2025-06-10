@@ -12,6 +12,7 @@ import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -154,50 +155,53 @@ public class GroupControllerTest {
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
-    public void whenPassingGroupInviteCodeToFindGroupByInviteCode_ThenIsSuccessful() {
+    public void group_userGroups() {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
         createDto.setSportPreset("beerpong");
 
         var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
 
-        assertNotNull(prerequisiteResponse);
-        assertEquals(200, prerequisiteResponse.getStatusCode().value());
+        var response = testUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
+        var groups = (List<GroupDto>) testUtils.assertSuccess(response, ArrayList.class);
 
-        ResponseEnvelope<GroupDto> prerequisiteEnvelope = (ResponseEnvelope<GroupDto>) prerequisiteResponse.getBody();
-        assertNotNull(prerequisiteEnvelope);
-        assertEquals(ResponseEnvelope.Status.OK, prerequisiteEnvelope.getStatus());
-        assertNull(prerequisiteEnvelope.getError());
-        assertEquals(200, prerequisiteEnvelope.getHttpCode());
 
-        var prerequisiteGroup = prerequisiteEnvelope.getData();
+
+        assertFalse(groups.isEmpty());
+        assertTrue(groups.stream().anyMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
+    }
+
+    @Test
+    @Transactional
+    public void group_findByInviteCode_success() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
 
         var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-
-        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
-        assertNotNull(envelope);
-        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
-        assertNull(envelope.getError());
-        assertEquals(200, envelope.getHttpCode());
-
-        var group = envelope.getData();
+        var group = testUtils.assertSuccess(response, GroupDto.class);
 
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
         group.setCreatedAt(prerequisiteGroup.getCreatedAt());
 
         assertNotNull(group);
-        assertNotNull(group.getName());
         assertEquals(prerequisiteGroup, group);
-        assertNotNull(group.getId());
-        assertNotNull(group.getInviteCode());
-        assertNotNull(group.getActiveSeason());
-        assertNotNull(group.getActiveSeason().getId());
-        assertEquals(group.getActiveSeason().getGroupId(), group.getId());
-        assertEquals(group.getSportPreset(), prerequisiteGroup.getSportPreset());
+    }
+
+    @Test
+    @Transactional
+    public void group_findByInviteCode_invalidInviteCode() {
+        var response = testUtils.performGet(port, "/groups?inviteCode= ", GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_INVITE_CODE);
+
+        response = testUtils.performGet(port, "/groups?inviteCode=someIdThatNotExists", GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.GROUP_INVITE_NOT_FOUND);
     }
 }

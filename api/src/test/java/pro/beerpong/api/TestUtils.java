@@ -168,11 +168,12 @@ public class TestUtils {
         return ResponseEntity.status(exchange.getStatusCode()).body(responseEnvelope);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T assertSuccess(ResponseEntity<Object> response, Class<T> tClass) {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
 
-        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        ResponseEnvelope<Object> envelope = (ResponseEnvelope<Object>) response.getBody();
         assertNotNull(envelope);
         assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
         assertEquals(200, envelope.getHttpCode());
@@ -183,11 +184,12 @@ public class TestUtils {
         return tClass.cast(envelope.getData());
     }
 
+    @SuppressWarnings("unchecked")
     public void assertFailure(ResponseEntity<Object> response, ErrorCodes error) {
         assertNotNull(response);
         assertEquals(error.getHttpStatus().value(), response.getStatusCode().value());
 
-        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        ResponseEnvelope<Object> envelope = (ResponseEnvelope<Object>) response.getBody();
         assertNotNull(envelope);
         assertEquals(ResponseEnvelope.Status.ERROR, envelope.getStatus());
         assertEquals(error.getHttpStatus().value(), envelope.getHttpCode());
