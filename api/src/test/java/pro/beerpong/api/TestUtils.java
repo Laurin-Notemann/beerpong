@@ -22,6 +22,7 @@ public class TestUtils {
     private static List<String> GROUP_ACCESS = Lists.newArrayList();
     private static String REFRESH_TOKEN;
     private static String AUTH_TOKEN;
+    private static boolean RESET_FOR_NEXT_REQUEST = false;
 
     private final TestRestTemplate restTemplate;
 
@@ -45,9 +46,21 @@ public class TestUtils {
         return performCall(true, port, path, HttpMethod.DELETE, body, firstClazz, classes);
     }
 
+    public void resetAuthForNextRequest() {
+        RESET_FOR_NEXT_REQUEST = true;
+    }
+
+    public void resetAuth() {
+        REFRESH_TOKEN = null;
+        AUTH_TOKEN = null;
+        GROUP_ACCESS.clear();
+    }
+
     @SuppressWarnings("unchecked")
-    private String generateAuthToken(int port) {
-        if (REFRESH_TOKEN == null) {
+    private String generateAuthToken(int port, boolean force) {
+        String tempRefresh = REFRESH_TOKEN;
+
+        if (force || REFRESH_TOKEN == null) {
             var signupDto = new AuthSignupDto();
             signupDto.setDeviceId("test");
             signupDto.setInstallationType(InstallationType.IOS);
@@ -68,12 +81,19 @@ public class TestUtils {
             assertEquals(TokenType.REFRESH, signupTokenDto.getType());
             assertNotNull(signupTokenDto.getToken());
 
-            REFRESH_TOKEN = signupTokenDto.getToken();
+            tempRefresh = signupTokenDto.getToken();
+
+            if (!force) {
+                REFRESH_TOKEN = tempRefresh;
+            }
+
         }
 
-        if (AUTH_TOKEN == null) {
+        var tempAuth = AUTH_TOKEN;
+
+        if (force || AUTH_TOKEN == null) {
             var refreshDto = new AuthRefreshDto();
-            refreshDto.setRefreshToken(REFRESH_TOKEN);
+            refreshDto.setRefreshToken(tempRefresh);
 
             var refreshResponse = this.performCall(false, port, "/auth/refresh", HttpMethod.POST, refreshDto, AuthTokenDto.class);
             var refreshEnvelope = (ResponseEnvelope<AuthTokenDto>) refreshResponse.getBody();
@@ -91,21 +111,26 @@ public class TestUtils {
             assertEquals(TokenType.ACCESS, refreshTokenDto.getType());
             assertNotNull(refreshTokenDto.getToken());
 
-            AUTH_TOKEN = refreshTokenDto.getToken();
+            tempAuth = refreshTokenDto.getToken();
+
+            if (!force) {
+                AUTH_TOKEN = tempAuth;
+            }
         }
 
-        return AUTH_TOKEN;
+        return tempAuth;
     }
 
     public ResponseEntity<Object> performCall(boolean withAuth, int port, String path, HttpMethod method, Object body, Class<?> firstClazz, Class<?>... classes) {
         HttpHeaders headers = new HttpHeaders();
 
         if (withAuth) {
-            headers.setBearerAuth(generateAuthToken(port));
+            headers.setBearerAuth(generateAuthToken(port, RESET_FOR_NEXT_REQUEST));
         }
 
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        RESET_FOR_NEXT_REQUEST = false;
 
+        headers.setContentType(MediaType.APPLICATION_JSON);
         System.out.println(headers.get("Authorization"));
 
         var entity = (body == null ? new HttpEntity<>(headers) : new HttpEntity<>(body, headers));

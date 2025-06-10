@@ -283,4 +283,37 @@ public class GroupControllerTest {
         var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
     }
+
+    @Test
+    @Transactional
+    public void group_join_success() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+
+        testUtils.resetAuthForNextRequest();
+
+        var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
+        var ok = testUtils.assertSuccess(response, String.class);
+
+        assertEquals("OK", ok);
+    }
+
+    @Test
+    public void group_join_alreadyMember() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+
+        var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
+        testUtils.assertFailure(response, ErrorCodes.GROUP_ALREADY_IN_GROUP);
+    }
 }
