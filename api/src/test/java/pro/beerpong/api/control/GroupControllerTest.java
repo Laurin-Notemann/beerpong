@@ -26,35 +26,45 @@ public class GroupControllerTest {
 
     @Test
     @Transactional
-    @SuppressWarnings("unchecked")
-    public void whenPassingValidGroupToCreatingGroup_ThenIsSuccessful() {
+    public void group_create() {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
         createDto.setSportPreset("beerpong");
 
         var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-
-        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
-        assertNotNull(envelope);
-        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
-        assertNull(envelope.getError());
-        assertEquals(200, envelope.getHttpCode());
-
-        var group = envelope.getData();
+        var group = testUtils.assertSuccess(response, GroupDto.class);
 
         assertNotNull(group);
+        assertNotNull(group.getId());
         assertNotNull(group.getName());
         assertEquals(createDto.getName(), group.getName());
-        assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
+        assertNotNull(group.getCreatedAt());
+        assertNull(group.getWallpaperAsset());
+        assertNull(group.getCustomSportName());
+        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
+
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
+        assertNull(group.getActiveSeason().getName());
+        assertNotNull(group.getActiveSeason().getStartDate());
+        assertNull(group.getActiveSeason().getEndDate());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
-        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
+        assertNotNull(group.getActiveSeason().getSeasonSettings());
+        assertEquals(group.getCreatedBy(), group.getActiveSeason().getCreatedBy());
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setCustomSportName("test123");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        group = testUtils.assertSuccess(response, GroupDto.class);
+
+        assertNotNull(group);
+        assertEquals("test123", group.getCustomSportName());
+        assertNull(group.getSportPreset());
     }
 
     @Test

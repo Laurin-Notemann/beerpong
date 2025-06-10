@@ -178,6 +178,7 @@ public class TestUtils {
         assertEquals(200, envelope.getHttpCode());
         assertNull(envelope.getError());
         assertNotNull(envelope.getData());
+        assertEquals(tClass, envelope.getData().getClass());
 
         return tClass.cast(envelope.getData());
     }
