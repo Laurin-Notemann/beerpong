@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.ErrorCodes;
@@ -203,5 +204,83 @@ public class GroupControllerTest {
 
         response = testUtils.performGet(port, "/groups?inviteCode=someIdThatNotExists", GroupDto.class);
         testUtils.assertFailure(response, ErrorCodes.GROUP_INVITE_NOT_FOUND);
+    }
+
+    @Test
+    @Transactional
+    public void group_findById_success() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+
+        var response = testUtils.performGet(port, "/groups/" + prerequisiteGroup.getId(), GroupDto.class);
+        var group = testUtils.assertSuccess(response, GroupDto.class);
+
+        // if this is not here, the startDate millis are rounded and this test fails
+        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
+        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
+
+        assertNotNull(group);
+        assertEquals(prerequisiteGroup, group);
+    }
+
+    @Test
+    public void group_findById_invalidId() {
+        var response = testUtils.performGet(port, "/groups/someIdThatNotExists", GroupDto.class);
+        testUtils.assertFailure(response, HttpStatus.UNAUTHORIZED, "No access to this group!");
+    }
+
+    @Test
+    @Transactional
+    public void group_update_success() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+
+        createDto.setName("test123");
+        createDto.setCustomSportName("beerpong");
+        createDto.setProfileNames(List.of());
+
+        var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
+        var group = testUtils.assertSuccess(response, GroupDto.class);
+
+        // if this is not here, the startDate millis are rounded and this test fails
+        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
+        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
+
+        assertNotNull(prerequisiteGroup);
+        assertNotNull(group);
+        assertEquals(prerequisiteGroup.getId(), group.getId());
+        assertEquals(createDto.getName(), group.getName());
+        assertEquals(prerequisiteGroup.getInviteCode(), group.getInviteCode());
+        assertEquals(prerequisiteGroup.getCreatedAt(), group.getCreatedAt());
+        assertEquals(prerequisiteGroup.getWallpaperAsset(), group.getWallpaperAsset());
+        assertEquals(prerequisiteGroup.getCustomSportName(), group.getCustomSportName());
+        assertEquals(prerequisiteGroup.getSportPreset(), group.getSportPreset());
+        assertEquals(prerequisiteGroup.getActiveSeason(), group.getActiveSeason());
+    }
+
+    @Test
+    public void group_update_invalidName() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test123");
+        createDto.setSportPreset("beerpong");
+
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+
+        createDto.setName("  ");
+
+        var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
     }
 }

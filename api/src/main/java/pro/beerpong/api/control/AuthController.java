@@ -25,7 +25,7 @@ public class AuthController {
 
     @PostMapping("refresh")
     public ResponseEntity<ResponseEnvelope<AuthTokenDto>> refreshAuth(@RequestBody AuthRefreshDto dto) {
-        if (dto.getRefreshToken() == null || dto.getRefreshToken().isEmpty()) {
+        if (dto.getRefreshToken() == null || dto.getRefreshToken().trim().isEmpty()) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_REFRESH_INVALID_DTO);
         }
 

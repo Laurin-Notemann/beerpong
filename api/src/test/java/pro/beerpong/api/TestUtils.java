@@ -18,13 +18,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Component
-@RequiredArgsConstructor
 public class TestUtils {
     private static List<String> GROUP_ACCESS = Lists.newArrayList();
     private static String REFRESH_TOKEN;
     private static String AUTH_TOKEN;
 
     private final TestRestTemplate restTemplate;
+
+    public TestUtils(TestRestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public ResponseEntity<Object> performGet(int port, String path, Class<?> firstClazz, Class<?>... classes) {
         return performCall(true, port, path, HttpMethod.GET, null, firstClazz, classes);
@@ -103,6 +106,8 @@ public class TestUtils {
 
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        System.out.println(headers.get("Authorization"));
+
         var entity = (body == null ? new HttpEntity<>(headers) : new HttpEntity<>(body, headers));
         var exchange = restTemplate.exchange("http://localhost:" + port + path, method, entity, String.class);
 
@@ -157,6 +162,10 @@ public class TestUtils {
             return ResponseEntity.status(exchange.getStatusCode()).build();
         }
 
+        if (!responseBody.startsWith("{") && !responseBody.startsWith("[")) {
+            return ResponseEntity.status(exchange.getStatusCode()).body(responseBody);
+        }
+
         Object responseEnvelope;
 
         try {
@@ -197,5 +206,14 @@ public class TestUtils {
         assertEquals(error.getCode(), envelope.getError().getCode());
         assertEquals(error.getDescription(), envelope.getError().getDescription());
         assertNull(envelope.getData());
+    }
+
+    public void assertFailure(ResponseEntity<Object> response, HttpStatus status, String message) {
+        assertNotNull(response);
+        assertEquals(status.value(), response.getStatusCode().value());
+
+        String result = (String) response.getBody();
+        assertNotNull(result);
+        assertEquals(message, result);
     }
 }

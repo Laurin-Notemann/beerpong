@@ -16,7 +16,7 @@ public class GroupCreateDto {
     private String customSportName;
 
     public boolean invalidName() {
-        return this.name == null || this.name.isEmpty() ||
+        return this.name == null || this.name.trim().isEmpty() ||
                 this.name.length() < GROUP_NAME_MIN_LENGTH || this.name.length() > GROUP_NAME_MAX_LENGTH;
     }
 
