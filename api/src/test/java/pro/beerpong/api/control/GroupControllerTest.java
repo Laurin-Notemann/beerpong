@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.TestUtils;
+import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
@@ -26,7 +27,7 @@ public class GroupControllerTest {
 
     @Test
     @Transactional
-    public void group_create() {
+    public void group_create_success() {
         var createDto = new GroupCreateDto();
         createDto.setProfileNames(List.of("player1", "player2"));
         createDto.setName("test");
@@ -65,6 +66,89 @@ public class GroupControllerTest {
         assertNotNull(group);
         assertEquals("test123", group.getCustomSportName());
         assertNull(group.getSportPreset());
+    }
+
+    @Test
+    @Transactional
+    public void group_create_invalidName() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("");
+        createDto.setSportPreset("beerpong");
+
+        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName(null);
+        createDto.setSportPreset("beerpong");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("a");
+        createDto.setSportPreset("beerpong");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        createDto.setSportPreset("beerpong");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+    }
+
+    @Test
+    @Transactional
+    public void group_create_invalidProfiles() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of());
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(null);
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+    }
+
+    @Test
+    @Transactional
+    public void group_create_invalidSport() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("notExisting");
+
+        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
+
+        createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setCustomSportName("    ");
+
+        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
     }
 
     @Test
