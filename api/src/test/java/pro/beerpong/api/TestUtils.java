@@ -167,4 +167,32 @@ public class TestUtils {
 
         return ResponseEntity.status(exchange.getStatusCode()).body(responseEnvelope);
     }
+
+    public <T> T assertSuccess(ResponseEntity<Object> response, Class<T> tClass) {
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
+        assertEquals(200, envelope.getHttpCode());
+        assertNull(envelope.getError());
+        assertNotNull(envelope.getData());
+
+        return tClass.cast(envelope.getData());
+    }
+
+    public void assertFailure(ResponseEntity<Object> response, ErrorCodes error) {
+        assertNotNull(response);
+        assertEquals(error.getHttpStatus().value(), response.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.ERROR, envelope.getStatus());
+        assertEquals(error.getHttpStatus().value(), envelope.getHttpCode());
+        assertNotNull(envelope.getError());
+        assertEquals(error.getCode(), envelope.getError().getCode());
+        assertEquals(error.getDescription(), envelope.getError().getDescription());
+        assertNull(envelope.getData());
+    }
 }
