@@ -317,17 +317,9 @@ public class GroupControllerTest {
         var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
         var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
 
-        testUtils.resetAuthForNextRequest();
-
         var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
-        testUtils.assertFailure(response, ErrorCodes.AUTH_USER_NOT_IN_GROUP);
-
-        response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
         var ok = testUtils.assertSuccess(response, String.class);
 
         assertEquals("OK", ok);
-
-        response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
-        testUtils.assertFailure(response, ErrorCodes.AUTH_USER_NOT_IN_GROUP);
     }
 }

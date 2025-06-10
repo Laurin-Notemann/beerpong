@@ -131,8 +131,7 @@ public class TestUtils {
         RESET_FOR_NEXT_REQUEST = false;
 
         headers.setContentType(MediaType.APPLICATION_JSON);
-        System.out.println(headers.get("Authorization"));
-
+        
         var entity = (body == null ? new HttpEntity<>(headers) : new HttpEntity<>(body, headers));
         var exchange = restTemplate.exchange("http://localhost:" + port + path, method, entity, String.class);
 
