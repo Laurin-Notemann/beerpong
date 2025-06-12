@@ -31,6 +31,48 @@ public class PlayerControllerTest {
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
+    public void players_copy_seasonStart() {
+        var profileNames = List.of("player1", "player2", "player3");
+        var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
+        var oldSeason = prerequisiteGroup.getActiveSeason();
+
+        var profilesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", List.class, ProfileDto.class);
+        var profiles = (List<ProfileDto>) requestUtils.assertSuccess(profilesResponse, ArrayList.class);
+
+        var oldPlayersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        var oldPlayers = (List<PlayerDto>) requestUtils.assertSuccess(oldPlayersResponse, ArrayList.class);
+
+        var deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players/" + oldPlayers.getFirst().getId(), null, String.class);
+        var result = requestUtils.assertSuccess(deleteResponse, String.class);
+
+        assertEquals("OK",  result);
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName("testing");
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var seasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        var newSeason = requestUtils.assertSuccess(seasonResponse, SeasonDto.class);
+
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(response, ArrayList.class);
+
+        assertEquals(profileNames.size(), profiles.size());
+        assertEquals(profiles.size(), oldPlayers.size());
+        assertEquals(oldPlayers.size() - 1, players.size());
+        assertTrue(oldPlayers.stream().allMatch(playerDto -> profiles.stream().anyMatch(profileDto -> profileDto.getId().equals(playerDto.getProfile().getId()))));
+        assertTrue(players.stream().allMatch(playerDto -> playerDto.isActiveThisSeason() &&
+                playerDto.getStatistics() != null &&
+                playerDto.getSeason().getId().equals(newSeason.getId()) &&
+                profiles.stream().anyMatch(profileDto -> profileDto.getId().equals(playerDto.getProfile().getId()))));
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
     public void players_findAll_success() {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
