@@ -61,6 +61,8 @@ public class GroupControllerTest {
         assertEquals(RankingAlgorithm.AVERAGE, group.getActiveSeason().getSeasonSettings().getRankingAlgorithm());
         assertEquals(DailyLeaderboard.WAKE_TIME, group.getActiveSeason().getSeasonSettings().getDailyLeaderboard());
         assertEquals(LocalTime.of(0, 0), group.getActiveSeason().getSeasonSettings().getWakeTime());
+        assertEquals(requestUtils.currentUserId(), group.getCreatedBy().getUserId());
+        assertEquals(group.getId(), group.getCreatedBy().getGroupId());
         assertEquals(group.getCreatedBy(), group.getActiveSeason().getCreatedBy());
 
         group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), null, "test123");
@@ -68,6 +70,14 @@ public class GroupControllerTest {
         assertNotNull(group);
         assertEquals("test123", group.getCustomSportName());
         assertNull(group.getSportPreset());
+
+        group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), "kicker", "test123");
+
+        assertNotNull(group);
+        assertNull(group.getCustomSportName());
+        assertEquals(GroupPresetsController.KICKER.getId(), group.getSportPreset().getId());
+
+        //TODO test
     }
 
     @Test

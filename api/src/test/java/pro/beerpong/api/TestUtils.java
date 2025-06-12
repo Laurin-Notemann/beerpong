@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Component
 public class TestUtils {
-    //TODO leaderboard, match, player, assets (needs s3 files), profile, rules, rulemoves, seasons
+    //TODO leaderboard, match, player, assets (needs s3 files), profile, rules, rulemoves
     //TODO test realtime events
 
     @Autowired
@@ -76,7 +76,18 @@ public class TestUtils {
         return ruleMove;
     }
 
-    public void assertRuleMoveEquals(RuleMoveCreateDto createDto, RuleMoveDto actual) {
+    public void assertRuleMovesEquals(List<RuleMoveDto> expected, List<RuleMoveDto> actual) {
+
+    }
+
+    public void assertRuleMoveEquals(RuleMoveDto expected, RuleMoveDto actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.isFinishingMove(), actual.isFinishingMove());
+        assertEquals(expected.getPointsForScorer(), actual.getPointsForScorer());
+        assertEquals(expected.getPointsForTeam(), actual.getPointsForTeam());
+    }
+
+    public void assertCreatedRuleMoveEquals(RuleMoveCreateDto createDto, RuleMoveDto actual) {
         assertEquals(createDto.getName(), actual.getName());
         assertEquals(createDto.isFinishingMove(), actual.isFinishingMove());
         assertEquals(createDto.getPointsForScorer(), actual.getPointsForScorer());

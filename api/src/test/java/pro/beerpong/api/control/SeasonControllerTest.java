@@ -85,6 +85,7 @@ public class SeasonControllerTest {
         assertNull(newSeason.getName());
         assertEquals(newSeason.getGroupId(), prerequisteGroup.getId());
         assertEquals(newSeason.getCreatedBy(), oldSeason.getCreatedBy());
+        assertEquals(requestUtils.currentUserId(), newSeason.getCreatedBy().getUserId());
         assertNotNull(newSeason.getStartDate());
         assertNull(newSeason.getEndDate());
 
@@ -263,6 +264,7 @@ public class SeasonControllerTest {
 
         // test that rest of group is the same
         assertEquals(oldSeason.getCreatedBy(), season.getCreatedBy());
+        assertEquals(requestUtils.currentUserId(), season.getCreatedBy().getUserId());
         assertEquals(oldSeason.getEndDate(), season.getEndDate());
         assertEquals(oldSeason.getName(), season.getName());
         assertEquals(oldSeason.getGroupId(), season.getGroupId());

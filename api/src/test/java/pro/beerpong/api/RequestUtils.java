@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import pro.beerpong.api.auth.JwtTokenProvider;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.util.InstallationType;
 import pro.beerpong.api.util.TokenType;
@@ -27,9 +28,11 @@ public class RequestUtils {
     private static boolean RESET_FOR_NEXT_REQUEST = false;
 
     private final TestRestTemplate restTemplate;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public RequestUtils(TestRestTemplate restTemplate) {
+    public RequestUtils(TestRestTemplate restTemplate, JwtTokenProvider jwtTokenProvider) {
         this.restTemplate = restTemplate;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public ResponseEntity<Object> performGet(int port, String path, Class<?> firstClazz, Class<?>... classes) {
@@ -242,5 +245,19 @@ public class RequestUtils {
         String result = (String) response.getBody();
         assertNotNull(result);
         assertEquals(message, result);
+    }
+
+    public String currentUserId() {
+        if (REFRESH_TOKEN == null || REFRESH_TOKEN.trim().isEmpty()) {
+            return null;
+        }
+
+        var claims = jwtTokenProvider.validateToken(REFRESH_TOKEN, "refresh");
+
+        if (claims == null) {
+            return null;
+        }
+
+        return claims.getSubject();
     }
 }
