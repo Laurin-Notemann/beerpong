@@ -253,12 +253,12 @@ public class SeasonControllerTest {
         var prerequisteGroup = testUtils.createTestGroup(port);
         var oldSeason = prerequisteGroup.getActiveSeason();
 
-        var seaonDto = buildUpdateDto(seasonSettings -> {
+        var seasonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setDailyLeaderboard(DailyLeaderboard.LAST_24_HOURS);
             seasonSettings.setMinTeamSize(3);
         });
 
-        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seasonDto, SeasonDto.class);
         var season = requestUtils.assertSuccess(response, SeasonDto.class);
 
         // test that rest of group is the same
@@ -274,11 +274,11 @@ public class SeasonControllerTest {
         assertEquals(oldSeason.getSeasonSettings().getMinMatchesToQualify(), season.getSeasonSettings().getMinMatchesToQualify());
         assertEquals(oldSeason.getSeasonSettings().getWakeTime(), season.getSeasonSettings().getWakeTime());
 
-        seaonDto = buildUpdateDto(seasonSettings -> {
+        seasonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setMaxTeamSize(5);
         });
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seasonDto, SeasonDto.class);
         season = requestUtils.assertSuccess(response, SeasonDto.class);
 
         assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
@@ -288,12 +288,12 @@ public class SeasonControllerTest {
         assertEquals(oldSeason.getSeasonSettings().getMinMatchesToQualify(), season.getSeasonSettings().getMinMatchesToQualify());
         assertEquals(oldSeason.getSeasonSettings().getWakeTime(), season.getSeasonSettings().getWakeTime());
 
-        seaonDto = buildUpdateDto(seasonSettings -> {
+        seasonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setMinMatchesToQualify(7);
             seasonSettings.setMaxTeamSize(5);
         });
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seasonDto, SeasonDto.class);
         season = requestUtils.assertSuccess(response, SeasonDto.class);
 
         assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
@@ -303,12 +303,12 @@ public class SeasonControllerTest {
         assertEquals(7, season.getSeasonSettings().getMinMatchesToQualify());
         assertEquals(oldSeason.getSeasonSettings().getWakeTime(), season.getSeasonSettings().getWakeTime());
 
-        seaonDto = buildUpdateDto(seasonSettings -> {
+        seasonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setRankingAlgorithm(RankingAlgorithm.ELO);
             seasonSettings.setWakeTime("09:33");
         });
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seasonDto, SeasonDto.class);
         season = requestUtils.assertSuccess(response, SeasonDto.class);
 
         assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
@@ -319,13 +319,125 @@ public class SeasonControllerTest {
         assertEquals(LocalTime.of(9, 33), season.getSeasonSettings().getWakeTime());
     }
 
+    @Test
+    @Transactional
+    public void season_update_invalidDto() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+
+        var seasonDto = new SeasonUpdateDto();
+
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_SEASON_DTO);
+    }
+
+    @Test
+    @Transactional
+    public void season_update_invalidSeason() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+        var oldSeason = prerequisteGroup.getActiveSeason();
+
+        var seasonDto = this.buildUpdateDto(seasonSettings -> {});
+
+        // test season id that not exists
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/someIdThatNotExists", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+
+        var prerequisteGroup2 = testUtils.createTestGroup(port);
+
+        // test season id from other group than in path
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup2.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
+
+        var seasonCreateDto = new SeasonCreateDto();
+        seasonCreateDto.setOldSeasonName("testing");
+        seasonCreateDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        // test season id from already ended season
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
+        requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
+    }
+
+    @Test
+    @Transactional
+    public void season_update_invalidWakeTimeFormat() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+
+        var seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setWakeTime(""));
+
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setWakeTime("-1"));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setWakeTime("XX:xx"));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setWakeTime("-02:00"));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setWakeTime("25:35"));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setWakeTime("14:61"));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TIME_FORMAT);
+    }
+
+    @Test
+    @Transactional
+    public void season_update_invalidTeamSizes() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+
+        var seasonDto = this.buildUpdateDto(seasonSettings -> {
+            seasonSettings.setMinTeamSize(3);
+            seasonSettings.setMaxTeamSize(7);
+        });
+
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertSuccess(response, SeasonDto.class);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setMaxTeamSize(2));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> seasonSettings.setMinTeamSize(8));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
+
+        seasonDto = this.buildUpdateDto(seasonSettings -> {
+            seasonSettings.setMinTeamSize(8);
+            seasonSettings.setMaxTeamSize(7);
+        });
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_WRONG_TEAM_SIZES);
+    }
+
     private SeasonUpdateDto buildUpdateDto(Consumer<SeasonSettingsDto> consumer) {
-        var seaonDto = new SeasonUpdateDto();
+        var seasonDto = new SeasonUpdateDto();
         var seasonSettings = new SeasonSettingsDto();
 
         consumer.accept(seasonSettings);
-        seaonDto.setSeasonSettings(seasonSettings);
+        seasonDto.setSeasonSettings(seasonSettings);
 
-        return seaonDto;
+        return seasonDto;
     }
 }

@@ -176,7 +176,7 @@ public class SeasonService {
                     if (dto.getSeasonSettings().getMaxTeamSize() != null)
                         existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
                     if (dto.getSeasonSettings().getWakeTime() != null)
-                        existingSeason.getSeasonSettings().setWakeTime(LocalTime.parse(dto.getSeasonSettings().getWakeTime()));
+                        existingSeason.getSeasonSettings().setWakeTime(LocalTime.parse(dto.getSeasonSettings().getWakeTime(), LocalTimeAdapter.FORMATTER));
                     if (dto.getSeasonSettings().getDailyLeaderboard() != null)
                         existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
                     if (dto.getSeasonSettings().getRankingAlgorithm() != null)
