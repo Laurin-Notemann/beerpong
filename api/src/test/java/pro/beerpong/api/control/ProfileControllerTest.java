@@ -8,10 +8,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ProfileCreateDto;
-import pro.beerpong.api.model.dto.ProfileCreatedDto;
-import pro.beerpong.api.model.dto.ProfileDto;
+import pro.beerpong.api.model.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +41,13 @@ public class ProfileControllerTest {
 
     @Test
     @Transactional
+    @SuppressWarnings("unchecked")
     public void profiles_create_success() {
-        var prerequisiteGroup = testUtils.createTestGroup(port);
+        var profileNames = List.of("player1", "player2", "player3");
+        var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
+        var oldSeason = prerequisiteGroup.getActiveSeason();
 
+        // test creation of profile with a non existing name
         var profileDto = new ProfileCreateDto();
         profileDto.setName("testing");
 
@@ -61,7 +62,59 @@ public class ProfileControllerTest {
         assertFalse(result.isReactivated());
         assertNull(result.getLastActiveSeasonId());
 
-        //TODO test with deletion of players + new season start
+        // test reactivating of players when player is deleted
+        var playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playersResponse, ArrayList.class);
+        var player = players.getFirst();
+
+        assertTrue(profileNames.stream().anyMatch(s -> player.getProfile().getName().equals(s)));
+
+        var deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players/" + player.getId(), null, String.class);
+        var deleteResult = requestUtils.assertSuccess(deleteResponse, String.class);
+
+        assertEquals("OK",  deleteResult);
+
+        profileDto.setName(player.getProfile().getName());
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
+        result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);
+
+        assertEquals(profileDto.getName(), result.getName());
+        assertEquals(prerequisiteGroup.getId(), result.getGroupId());
+
+        assertTrue(result.isReactivated());
+        assertEquals(result.getLastActiveSeasonId(), oldSeason.getId());
+
+        // test linking to old profile if no player exists in the current season
+        playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        players = (List<PlayerDto>) requestUtils.assertSuccess(playersResponse, ArrayList.class);
+        var first = players.getFirst();
+
+        deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players/" + first.getId(), null, String.class);
+        deleteResult = requestUtils.assertSuccess(deleteResponse, String.class);
+
+        assertEquals("OK",  deleteResult);
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName("testing");
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var seasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertSuccess(seasonResponse, SeasonDto.class);
+
+        profileDto.setName(first.getProfile().getName());
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
+        result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);
+
+        assertEquals(profileDto.getName(), result.getName());
+        assertEquals(prerequisiteGroup.getId(), result.getGroupId());
+
+        assertFalse(result.isReactivated());
+        assertEquals(result.getLastActiveSeasonId(), oldSeason.getId());
     }
 
     @Test
@@ -74,8 +127,6 @@ public class ProfileControllerTest {
 
         var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
         requestUtils.assertFailure(response, ErrorCodes.PROFILE_ALREADY_EXISTS);
-
-        //TODO test with deletion of players + new season start
     }
 
     @Test

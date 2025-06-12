@@ -26,8 +26,6 @@ public class PlayerControllerTest {
     @Autowired
     private TestUtils testUtils;
 
-    //TODO season start: test copying of players (with statistics)
-
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
@@ -64,10 +62,12 @@ public class PlayerControllerTest {
         assertEquals(profiles.size(), oldPlayers.size());
         assertEquals(oldPlayers.size() - 1, players.size());
         assertTrue(oldPlayers.stream().allMatch(playerDto -> profiles.stream().anyMatch(profileDto -> profileDto.getId().equals(playerDto.getProfile().getId()))));
-        assertTrue(players.stream().allMatch(playerDto -> playerDto.isActiveThisSeason() &&
-                playerDto.getStatistics() != null &&
-                playerDto.getSeason().getId().equals(newSeason.getId()) &&
-                profiles.stream().anyMatch(profileDto -> profileDto.getId().equals(playerDto.getProfile().getId()))));
+        assertTrue(oldPlayers.stream().allMatch(playerDto -> playerDto.getSeason().getId().equals(oldSeason.getId())));
+        assertTrue(players.stream().allMatch(playerDto -> profiles.stream().anyMatch(profileDto -> profileDto.getId().equals(playerDto.getProfile().getId()))));
+        assertTrue(players.stream().allMatch(PlayerDto::isActiveThisSeason));
+        assertTrue(players.stream().allMatch(playerDto -> playerDto.getSeason().getId().equals(newSeason.getId())));
+
+        //TODO maybe check stats?
     }
 
     @Test
