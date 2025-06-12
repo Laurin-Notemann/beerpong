@@ -42,7 +42,7 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_RULE_MOVES);
         }
 
-        var season = seasonService.startNewSeason(dto, groupId);
+        var season = seasonService.startNewSeason(dto, groupId, user);
 
         if (season != null) {
             return ResponseEnvelope.ok(season);
@@ -103,17 +103,18 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
-        var wakeTimeHour = (dto.getSeasonSettings().getWakeTimeHour() != null ? dto.getSeasonSettings().getWakeTimeHour() : season.get().getSeasonSettings().getWakeTimeHour());
         var minMatches = (dto.getSeasonSettings().getMinMatchesToQualify() != null ? dto.getSeasonSettings().getMinMatchesToQualify() : season.get().getSeasonSettings().getMinMatchesToQualify());
         var minTeamSize = (dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : season.get().getSeasonSettings().getMinTeamSize());
         var maxTeamSize = (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : season.get().getSeasonSettings().getMaxTeamSize());
 
         LocalTime wakeTime = season.get().getSeasonSettings().getWakeTime();
 
-        try {
-            wakeTime = LocalTime.parse(dto.getSeasonSettings().getWakeTime(), LocalTimeAdapter.FORMATTER);
-        } catch (DateTimeParseException e) {
-            wakeTime = null;
+        if (dto.getSeasonSettings().getWakeTime() != null) {
+            try {
+                wakeTime = LocalTime.parse(dto.getSeasonSettings().getWakeTime(), LocalTimeAdapter.FORMATTER);
+            } catch (DateTimeParseException e) {
+                wakeTime = null;
+            }
         }
 
         if (wakeTime == null) {

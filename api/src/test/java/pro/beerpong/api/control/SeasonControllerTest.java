@@ -13,6 +13,7 @@ import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -93,8 +94,7 @@ public class SeasonControllerTest {
         assertEquals(newSeason.getSeasonSettings().getMinMatchesToQualify(), updatedOldSeason.getSeasonSettings().getMinMatchesToQualify());
         assertEquals(newSeason.getSeasonSettings().getRankingAlgorithm(), updatedOldSeason.getSeasonSettings().getRankingAlgorithm());
         assertEquals(newSeason.getSeasonSettings().getDailyLeaderboard(), updatedOldSeason.getSeasonSettings().getDailyLeaderboard());
-        //TODO adjust for new wakeTime
-        assertEquals(newSeason.getSeasonSettings().getWakeTimeHour(), updatedOldSeason.getSeasonSettings().getWakeTimeHour());
+        assertEquals(newSeason.getSeasonSettings().getWakeTime(), updatedOldSeason.getSeasonSettings().getWakeTime());
 
         // test changes to old season
         assertNotNull(updatedOldSeason.getName());
@@ -272,7 +272,7 @@ public class SeasonControllerTest {
         assertEquals(3, season.getSeasonSettings().getMinTeamSize());
         assertEquals(oldSeason.getSeasonSettings().getMaxTeamSize(), season.getSeasonSettings().getMaxTeamSize());
         assertEquals(oldSeason.getSeasonSettings().getMinMatchesToQualify(), season.getSeasonSettings().getMinMatchesToQualify());
-        assertEquals(oldSeason.getSeasonSettings().getWakeTimeHour(), season.getSeasonSettings().getWakeTimeHour());
+        assertEquals(oldSeason.getSeasonSettings().getWakeTime(), season.getSeasonSettings().getWakeTime());
 
         seaonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setMaxTeamSize(5);
@@ -286,7 +286,7 @@ public class SeasonControllerTest {
         assertEquals(3, season.getSeasonSettings().getMinTeamSize());
         assertEquals(5, season.getSeasonSettings().getMaxTeamSize());
         assertEquals(oldSeason.getSeasonSettings().getMinMatchesToQualify(), season.getSeasonSettings().getMinMatchesToQualify());
-        assertEquals(oldSeason.getSeasonSettings().getWakeTimeHour(), season.getSeasonSettings().getWakeTimeHour());
+        assertEquals(oldSeason.getSeasonSettings().getWakeTime(), season.getSeasonSettings().getWakeTime());
 
         seaonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setMinMatchesToQualify(7);
@@ -301,12 +301,12 @@ public class SeasonControllerTest {
         assertEquals(3, season.getSeasonSettings().getMinTeamSize());
         assertEquals(5, season.getSeasonSettings().getMaxTeamSize());
         assertEquals(7, season.getSeasonSettings().getMinMatchesToQualify());
-        assertEquals(oldSeason.getSeasonSettings().getWakeTimeHour(), season.getSeasonSettings().getWakeTimeHour());
+        assertEquals(oldSeason.getSeasonSettings().getWakeTime(), season.getSeasonSettings().getWakeTime());
 
         seaonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setRankingAlgorithm(RankingAlgorithm.ELO);
             //TODO adjust for new wakeTime
-            seasonSettings.setWakeTimeHour(9);
+            seasonSettings.setWakeTime("09:33");
         });
 
         response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
@@ -317,7 +317,7 @@ public class SeasonControllerTest {
         assertEquals(3, season.getSeasonSettings().getMinTeamSize());
         assertEquals(5, season.getSeasonSettings().getMaxTeamSize());
         assertEquals(7, season.getSeasonSettings().getMinMatchesToQualify());
-        assertEquals(9, season.getSeasonSettings().getWakeTimeHour());
+        assertEquals(LocalTime.of(9, 33), season.getSeasonSettings().getWakeTime());
     }
 
     private SeasonUpdateDto buildUpdateDto(Consumer<SeasonSettingsDto> consumer) {
