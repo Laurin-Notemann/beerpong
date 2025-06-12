@@ -3,14 +3,11 @@ package pro.beerpong.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.RuleMoveCreateDto;
-import pro.beerpong.api.model.dto.RuleMoveDto;
+import pro.beerpong.api.model.dto.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Component
 public class TestUtils {
@@ -21,6 +18,19 @@ public class TestUtils {
     private RequestUtils requestUtils;
 
     /* GROUPS */
+    public void assertGroupEquals(GroupDto expected, GroupDto actual) {
+        if (expected == null || actual == null) {
+            assertNull(expected);
+            assertNull(actual);
+            return;
+        }
+
+        actual.setCreatedAt(expected.getCreatedAt());
+        actual.getActiveSeason().setStartDate(expected.getActiveSeason().getStartDate());
+
+        assertEquals(expected, actual);
+    }
+
     public GroupDto createTestGroup(int port) {
         return this.createTestGroup(port, "test");
     }
@@ -71,5 +81,18 @@ public class TestUtils {
         assertEquals(createDto.isFinishingMove(), actual.isFinishingMove());
         assertEquals(createDto.getPointsForScorer(), actual.getPointsForScorer());
         assertEquals(createDto.getPointsForTeam(), actual.getPointsForTeam());
+    }
+
+    /* SEASONS */
+    public void assertSeasonEquals(SeasonDto expected, SeasonDto actual) {
+        if (expected == null || actual == null) {
+            assertNull(expected);
+            assertNull(actual);
+            return;
+        }
+
+        actual.setStartDate(expected.getStartDate());
+
+        assertEquals(expected, actual);
     }
 }

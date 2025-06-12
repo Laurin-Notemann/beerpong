@@ -10,6 +10,7 @@ import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.model.dto.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,9 +33,7 @@ public class SeasonControllerTest {
         var response = requestUtils.performGet(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId(), SeasonDto.class);
         var season = requestUtils.assertSuccess(response, SeasonDto.class);
 
-        season.setStartDate(prerequisteGroup.getActiveSeason().getStartDate());
-
-        assertEquals(prerequisteGroup.getActiveSeason(), season);
+        testUtils.assertSeasonEquals(prerequisteGroup.getActiveSeason(), season);
     }
 
     @Test
@@ -74,7 +73,7 @@ public class SeasonControllerTest {
         var updatedOldSeason = requestUtils.assertSuccess(oldSeasonResponse, SeasonDto.class);
 
         // test active season in group
-        assertEquals(updatedGroup.getActiveSeason(), newSeason);
+        testUtils.assertSeasonEquals(updatedGroup.getActiveSeason(), newSeason);
         assertNotEquals(oldSeason.getId(), newSeason.getId());
 
         // test new season
@@ -101,5 +100,146 @@ public class SeasonControllerTest {
         //TODO test creation of players (with statistics)
         //TODO test creation of rules
         //TODO test creation of rule moves
+    }
+
+    @Test
+    public void season_start_invalidName() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName(null);
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_SEASON_NAME);
+
+        seasonDto.setOldSeasonName("");
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_SEASON_NAME);
+
+        seasonDto.setOldSeasonName("   ");
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_SEASON_NAME);
+
+        seasonDto.setOldSeasonName("a");
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_SEASON_NAME);
+
+        seasonDto.setOldSeasonName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_SEASON_NAME);
+    }
+
+    @Test
+    public void season_start_invalidRuleMoves() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName("testing");
+        seasonDto.setRuleMoves(null);
+
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of());
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Finish", true, 1, 0)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove(null, true, 1, 0)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("", true, 1, 0)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("     ", true, 1, 0)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("test", true, -1, 0)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("test", true, 0, -1)
+        ));
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_RULE_MOVES);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void season_findAll() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+
+        var response = requestUtils.performGet(port, "/groups/" + prerequisteGroup.getId() + "/seasons", List.class, SeasonDto.class);
+        var seasons = (List<SeasonDto>) requestUtils.assertSuccess(response, ArrayList.class);
+
+        assertEquals(1, seasons.size());
+
+        var firstSeason = seasons.getFirst();
+
+        testUtils.assertSeasonEquals(firstSeason, prerequisteGroup.getActiveSeason());
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName("testing");
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        var oldSeasonResponse = requestUtils.performGet(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + firstSeason.getId(), SeasonDto.class);
+        var updatedOldSeason = requestUtils.assertSuccess(oldSeasonResponse, SeasonDto.class);
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisteGroup.getId() + "/seasons", List.class, SeasonDto.class);
+        seasons = (List<SeasonDto>) requestUtils.assertSuccess(response, ArrayList.class);
+
+        assertEquals(2, seasons.size());
+        testUtils.assertSeasonEquals(newSeason, seasons.stream().filter(toCheck -> toCheck.getId().equals(newSeason.getId())).findFirst().orElse(null));
+        testUtils.assertSeasonEquals(updatedOldSeason, seasons.stream().filter(toCheck -> toCheck.getId().equals(firstSeason.getId())).findFirst().orElse(null));
     }
 }

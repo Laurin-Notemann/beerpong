@@ -121,12 +121,8 @@ public class GroupControllerTest {
         var response = requestUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
         var group = requestUtils.assertSuccess(response, GroupDto.class);
 
-        // if this is not here, the startDate millis are rounded and this test fails
-        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
-        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
-
         assertNotNull(group);
-        assertEquals(prerequisiteGroup, group);
+        testUtils.assertGroupEquals(prerequisiteGroup, group);
     }
 
     @Test
@@ -147,12 +143,8 @@ public class GroupControllerTest {
         var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId(), GroupDto.class);
         var group = requestUtils.assertSuccess(response, GroupDto.class);
 
-        // if this is not here, the startDate millis are rounded and this test fails
-        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
-        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
-
         assertNotNull(group);
-        assertEquals(prerequisiteGroup, group);
+        testUtils.assertGroupEquals(prerequisiteGroup, group);
     }
 
     @Test
@@ -174,20 +166,16 @@ public class GroupControllerTest {
         var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
         var group = requestUtils.assertSuccess(response, GroupDto.class);
 
-        // if this is not here, the startDate millis are rounded and this test fails
-        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
-        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
-
         assertNotNull(prerequisiteGroup);
         assertNotNull(group);
         assertEquals(prerequisiteGroup.getId(), group.getId());
         assertEquals(createDto.getName(), group.getName());
         assertEquals(prerequisiteGroup.getInviteCode(), group.getInviteCode());
-        assertEquals(prerequisiteGroup.getCreatedAt(), group.getCreatedAt());
+        assertEquals(prerequisiteGroup.getCreatedBy(), group.getCreatedBy());
         assertEquals(prerequisiteGroup.getWallpaperAsset(), group.getWallpaperAsset());
         assertEquals(prerequisiteGroup.getCustomSportName(), group.getCustomSportName());
         assertEquals(prerequisiteGroup.getSportPreset(), group.getSportPreset());
-        assertEquals(prerequisiteGroup.getActiveSeason(), group.getActiveSeason());
+        testUtils.assertSeasonEquals(prerequisiteGroup.getActiveSeason(), group.getActiveSeason());
     }
 
     @Test
