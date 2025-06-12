@@ -101,8 +101,6 @@ public class SeasonControllerTest {
         assertNotNull(updatedOldSeason.getName());
         assertNotNull(updatedOldSeason.getEndDate());
         assertEquals(seasonDto.getOldSeasonName(), updatedOldSeason.getName());
-
-        //TODO test copying of players (with statistics)
     }
 
     @Test

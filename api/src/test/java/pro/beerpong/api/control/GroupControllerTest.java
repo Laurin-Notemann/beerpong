@@ -102,6 +102,9 @@ public class GroupControllerTest {
 
         response = testUtils.postGroup(port, "test", null, "beerpong");
         requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+
+        response = testUtils.postGroup(port, "test", List.of("player1", "player2", "player2"), "beerpong");
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
     }
 
     @Test
