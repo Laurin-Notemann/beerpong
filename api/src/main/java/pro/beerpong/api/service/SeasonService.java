@@ -142,16 +142,15 @@ public class SeasonService {
         return newDto;
     }
 
-    public List<PlayerDto> calcStatsForPlayersInSeason(String seasonId, boolean showInactive, boolean showStats) {
-        var players = playerService.getBySeasonId(seasonId, showInactive);
-        var season = seasonRepository.findById(seasonId).orElse(null);
+    public List<PlayerDto> calcStatsForPlayersInSeason(SeasonDto season, boolean showInactive, boolean showStats) {
+        var players = playerService.getBySeasonId(season.getId(), showInactive);
 
-        if (showStats && season != null) {
+        if (showStats) {
             return leaderboardService.generateLeaderboard(
                             groupService.getRawGroupById(season.getGroupId()),
                             "season",
                             true,
-                            seasonId,
+                            season.getId(),
                             players.stream()
                     )
                     .getEntries();

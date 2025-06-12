@@ -8,7 +8,8 @@ import pro.beerpong.api.service.GroupService;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCodes {
-    /* GROUPS */
+    ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "error", "An internal error occurred!")
+    /* GROUPS */,
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "groupNotFound", "The requested group could not be found!"),
     GROUP_INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "groupInviteNotFound", "No group with the provided invite code could be found!"),
     GROUP_INVITE_CODE_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "groupInviteCodeNotProvided", "The invite code needs to be provided!"),
