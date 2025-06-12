@@ -355,7 +355,7 @@ public class MatchService {
 
                     matchRepository.deleteById(id);
                 } else {
-                    error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
+                    error.set(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
                 }
             } else {
                 error.set(ErrorCodes.SEASON_ALREADY_ENDED);
