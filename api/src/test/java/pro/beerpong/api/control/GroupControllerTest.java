@@ -12,6 +12,8 @@ import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
+import pro.beerpong.api.util.DailyLeaderboard;
+import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,12 @@ public class GroupControllerTest {
         assertNull(group.getActiveSeason().getEndDate());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
         assertNotNull(group.getActiveSeason().getSeasonSettings());
+        assertEquals(1, group.getActiveSeason().getSeasonSettings().getMinMatchesToQualify());
+        assertEquals(1, group.getActiveSeason().getSeasonSettings().getMinTeamSize());
+        assertEquals(10, group.getActiveSeason().getSeasonSettings().getMaxTeamSize());
+        assertEquals(RankingAlgorithm.AVERAGE, group.getActiveSeason().getSeasonSettings().getRankingAlgorithm());
+        assertEquals(DailyLeaderboard.WAKE_TIME, group.getActiveSeason().getSeasonSettings().getDailyLeaderboard());
+        assertEquals(0, group.getActiveSeason().getSeasonSettings().getWakeTimeHour());
         assertEquals(group.getCreatedBy(), group.getActiveSeason().getCreatedBy());
 
         group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), null, "test123");

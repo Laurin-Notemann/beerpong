@@ -8,10 +8,14 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.RequestUtils;
+import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.util.DailyLeaderboard;
+import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -241,5 +245,88 @@ public class SeasonControllerTest {
         assertEquals(2, seasons.size());
         testUtils.assertSeasonEquals(newSeason, seasons.stream().filter(toCheck -> toCheck.getId().equals(newSeason.getId())).findFirst().orElse(null));
         testUtils.assertSeasonEquals(updatedOldSeason, seasons.stream().filter(toCheck -> toCheck.getId().equals(firstSeason.getId())).findFirst().orElse(null));
+    }
+
+    @Test
+    @Transactional
+    public void season_update_success() {
+        var prerequisteGroup = testUtils.createTestGroup(port);
+        var oldSeason = prerequisteGroup.getActiveSeason();
+
+        var seaonDto = buildUpdateDto(seasonSettings -> {
+            seasonSettings.setDailyLeaderboard(DailyLeaderboard.LAST_24_HOURS);
+            seasonSettings.setMinTeamSize(3);
+        });
+
+        var response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        var season = requestUtils.assertSuccess(response, SeasonDto.class);
+
+        // test that rest of group is the same
+        assertEquals(oldSeason.getCreatedBy(), season.getCreatedBy());
+        assertEquals(oldSeason.getEndDate(), season.getEndDate());
+        assertEquals(oldSeason.getName(), season.getName());
+        assertEquals(oldSeason.getGroupId(), season.getGroupId());
+
+        assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
+        assertEquals(oldSeason.getSeasonSettings().getRankingAlgorithm(), season.getSeasonSettings().getRankingAlgorithm());
+        assertEquals(3, season.getSeasonSettings().getMinTeamSize());
+        assertEquals(oldSeason.getSeasonSettings().getMaxTeamSize(), season.getSeasonSettings().getMaxTeamSize());
+        assertEquals(oldSeason.getSeasonSettings().getMinMatchesToQualify(), season.getSeasonSettings().getMinMatchesToQualify());
+        assertEquals(oldSeason.getSeasonSettings().getWakeTimeHour(), season.getSeasonSettings().getWakeTimeHour());
+
+        seaonDto = buildUpdateDto(seasonSettings -> {
+            seasonSettings.setMaxTeamSize(5);
+        });
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        season = requestUtils.assertSuccess(response, SeasonDto.class);
+
+        assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
+        assertEquals(oldSeason.getSeasonSettings().getRankingAlgorithm(), season.getSeasonSettings().getRankingAlgorithm());
+        assertEquals(3, season.getSeasonSettings().getMinTeamSize());
+        assertEquals(5, season.getSeasonSettings().getMaxTeamSize());
+        assertEquals(oldSeason.getSeasonSettings().getMinMatchesToQualify(), season.getSeasonSettings().getMinMatchesToQualify());
+        assertEquals(oldSeason.getSeasonSettings().getWakeTimeHour(), season.getSeasonSettings().getWakeTimeHour());
+
+        seaonDto = buildUpdateDto(seasonSettings -> {
+            seasonSettings.setMinMatchesToQualify(7);
+            seasonSettings.setMaxTeamSize(5);
+        });
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        season = requestUtils.assertSuccess(response, SeasonDto.class);
+
+        assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
+        assertEquals(oldSeason.getSeasonSettings().getRankingAlgorithm(), season.getSeasonSettings().getRankingAlgorithm());
+        assertEquals(3, season.getSeasonSettings().getMinTeamSize());
+        assertEquals(5, season.getSeasonSettings().getMaxTeamSize());
+        assertEquals(7, season.getSeasonSettings().getMinMatchesToQualify());
+        assertEquals(oldSeason.getSeasonSettings().getWakeTimeHour(), season.getSeasonSettings().getWakeTimeHour());
+
+        seaonDto = buildUpdateDto(seasonSettings -> {
+            seasonSettings.setRankingAlgorithm(RankingAlgorithm.ELO);
+            //TODO adjust for new wakeTime
+            seasonSettings.setWakeTimeHour(9);
+        });
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + oldSeason.getId(), seaonDto, SeasonDto.class);
+        season = requestUtils.assertSuccess(response, SeasonDto.class);
+
+        assertEquals(DailyLeaderboard.LAST_24_HOURS, season.getSeasonSettings().getDailyLeaderboard());
+        assertEquals(RankingAlgorithm.ELO, season.getSeasonSettings().getRankingAlgorithm());
+        assertEquals(3, season.getSeasonSettings().getMinTeamSize());
+        assertEquals(5, season.getSeasonSettings().getMaxTeamSize());
+        assertEquals(7, season.getSeasonSettings().getMinMatchesToQualify());
+        assertEquals(9, season.getSeasonSettings().getWakeTimeHour());
+    }
+
+    private SeasonUpdateDto buildUpdateDto(Consumer<SeasonSettingsDto> consumer) {
+        var seaonDto = new SeasonUpdateDto();
+        var seasonSettings = new SeasonSettingsDto();
+
+        consumer.accept(seasonSettings);
+        seaonDto.setSeasonSettings(seasonSettings);
+
+        return seaonDto;
     }
 }

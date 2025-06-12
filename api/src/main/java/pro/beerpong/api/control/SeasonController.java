@@ -101,9 +101,11 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
-        if (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23) {
+        if (dto.getSeasonSettings().getWakeTimeHour() != null &&
+                (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TIME_FORMAT);
-        } else if (dto.getSeasonSettings().getMinTeamSize() > dto.getSeasonSettings().getMaxTeamSize()) {
+        } else if ((dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : season.get().getSeasonSettings().getMinTeamSize()) >
+                (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : season.get().getSeasonSettings().getMaxTeamSize())) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TEAM_SIZES);
         }
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.util.Lists;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -12,10 +13,12 @@ import pro.beerpong.api.util.InstallationType;
 import pro.beerpong.api.util.TokenType;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Log4j2
 @Component
 public class RequestUtils {
     private static final List<String> GROUP_ACCESS = Lists.newArrayList();
@@ -194,6 +197,7 @@ public class RequestUtils {
         try {
             responseEnvelope = objectMapper.readValue(responseBody, valueType);
         } catch (JsonProcessingException e) {
+            log.error("Error whilst parsing body '{}'!", responseBody);
             throw new RuntimeException(e);
         }
 

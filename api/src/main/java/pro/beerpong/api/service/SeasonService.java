@@ -1,11 +1,13 @@
 package pro.beerpong.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.*;
-import pro.beerpong.api.model.dao.*;
+import pro.beerpong.api.model.dao.Group;
+import pro.beerpong.api.model.dao.Player;
+import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.PlayerRepository;
@@ -78,7 +80,7 @@ public class SeasonService {
 
         newSeason.setStartDate(ZonedDateTime.now());
         newSeason.setGroupId(groupOptional.get().getId());
-        newSeason.setSeasonSettings(new SeasonSettings());
+        newSeason.setSeasonSettings(SeasonSettings.createDefault());
         newSeason.setCreatedBy(authService.memberByUser(user, groupId));
 
         if (oldSeason != null && oldSeason.getSeasonSettings() != null) {
@@ -142,7 +144,7 @@ public class SeasonService {
 
         if (showStats && season != null) {
             return leaderboardService.generateLeaderboard(
-                    groupService.getRawGroupById(season.getGroupId()),
+                            groupService.getRawGroupById(season.getGroupId()),
                             "season",
                             true,
                             seasonId,
@@ -160,16 +162,21 @@ public class SeasonService {
         return Optional.ofNullable(season)
                 .map(existingSeason -> {
                     if (existingSeason.getSeasonSettings() == null) {
-                        dto.getSeasonSettings().setId(null);
-                        existingSeason.setSeasonSettings(dto.getSeasonSettings());
-                    } else {
-                        existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
-                        existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
-                        existingSeason.getSeasonSettings().setMinMatchesToQualify(dto.getSeasonSettings().getMinMatchesToQualify());
-                        existingSeason.getSeasonSettings().setRankingAlgorithm(dto.getSeasonSettings().getRankingAlgorithm());
-                        existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
-                        existingSeason.getSeasonSettings().setWakeTimeHour(dto.getSeasonSettings().getWakeTimeHour());
+                        existingSeason.setSeasonSettings(SeasonSettings.createDefault());
                     }
+
+                    if (dto.getSeasonSettings().getMinMatchesToQualify() != null)
+                        existingSeason.getSeasonSettings().setMinMatchesToQualify(dto.getSeasonSettings().getMinMatchesToQualify());
+                    if (dto.getSeasonSettings().getMinTeamSize() != null)
+                        existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
+                    if (dto.getSeasonSettings().getMaxTeamSize() != null)
+                        existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
+                    if (dto.getSeasonSettings().getWakeTimeHour() != null)
+                        existingSeason.getSeasonSettings().setWakeTimeHour(dto.getSeasonSettings().getWakeTimeHour());
+                    if (dto.getSeasonSettings().getDailyLeaderboard() != null)
+                        existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
+                    if (dto.getSeasonSettings().getRankingAlgorithm() != null)
+                        existingSeason.getSeasonSettings().setRankingAlgorithm(dto.getSeasonSettings().getRankingAlgorithm());
 
                     var seasonDto = seasonMapper.seasonToSeasonDto(seasonRepository.save(existingSeason));
 
