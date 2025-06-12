@@ -101,17 +101,20 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
-        if (dto.getSeasonSettings().getWakeTimeHour() != null &&
-                (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23)) {
+        var wakeTimeHour = (dto.getSeasonSettings().getWakeTimeHour() != null ? dto.getSeasonSettings().getWakeTimeHour() : season.get().getSeasonSettings().getWakeTimeHour());
+        var minMatches = (dto.getSeasonSettings().getMinMatchesToQualify() != null ? dto.getSeasonSettings().getMinMatchesToQualify() : season.get().getSeasonSettings().getMinMatchesToQualify());
+        var minTeamSize = (dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : season.get().getSeasonSettings().getMinTeamSize());
+        var maxTeamSize = (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : season.get().getSeasonSettings().getMaxTeamSize());
+
+        if (wakeTimeHour < 0 || wakeTimeHour > 23) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TIME_FORMAT);
-        } else if ((dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : season.get().getSeasonSettings().getMinTeamSize()) >
-                (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : season.get().getSeasonSettings().getMaxTeamSize())) {
+        } else if (minTeamSize > maxTeamSize) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TEAM_SIZES);
         }
 
-        dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 0), 1000));
-        dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMinTeamSize(), 1), 10));
-        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMaxTeamSize(), 1), 10));
+        dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(minMatches, 0), 1000));
+        dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(minTeamSize, 1), 10));
+        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(maxTeamSize, 1), 10));
 
         SeasonDto updatedSeason = seasonService.updateSeason(season.get(), dto);
         if (updatedSeason != null) {
