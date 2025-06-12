@@ -103,7 +103,6 @@ public class SeasonControllerTest {
         assertEquals(seasonDto.getOldSeasonName(), updatedOldSeason.getName());
 
         //TODO test copying of players (with statistics)
-        //TODO test copying of rules
     }
 
     @Test

@@ -96,10 +96,6 @@ public class TestUtils {
         }
     }
 
-    public void assertRuleMoveEquals(RuleMoveDto expected, RuleMoveDto actual) {
-        assertRuleMoveEquals(expected, actual, false);
-    }
-
     public void assertRuleMoveEquals(RuleMoveDto expected, RuleMoveDto actual, boolean full) {
         if (full) {
             assertEquals(expected.getId(), actual.getId());
@@ -124,6 +120,29 @@ public class TestUtils {
         assertEquals(createDto.isFinishingMove(), actual.isFinishingMove());
         assertEquals(createDto.getPointsForScorer(), actual.getPointsForScorer());
         assertEquals(createDto.getPointsForTeam(), actual.getPointsForTeam());
+    }
+
+    /* RULES */
+    public void assertRulesEquals(List<RuleDto> expected, List<RuleDto> actual) {
+        assertRulesEquals(expected, actual, false);
+    }
+
+    public void assertRulesEquals(List<RuleDto> expected, List<RuleDto> actual, boolean full) {
+        assertEquals(expected.size(), actual.size());
+
+        for (int i = 0; i < expected.size(); i++) {
+            assertRuleEquals(expected.get(i), actual.get(i), full);
+        }
+    }
+
+    public void assertRuleEquals(RuleDto expected, RuleDto actual, boolean full) {
+        if (full) {
+            assertEquals(expected.getId(), actual.getId());
+            assertEquals(expected.getSeason().getId(), actual.getSeason().getId());
+            assertEquals(expected.getCreatedBy().getUserId(), actual.getCreatedBy().getGroupId());
+        }
+        assertEquals(expected.getTitle(), actual.getTitle());
+        assertEquals(expected.getDescription(), actual.getDescription());
     }
 
     /* SEASONS */

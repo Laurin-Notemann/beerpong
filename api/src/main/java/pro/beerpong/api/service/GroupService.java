@@ -85,7 +85,7 @@ public class GroupService {
         });
 
         ruleMoveService.createDefaultRuleMoves(group, season);
-        ruleService.createDefaultRules(season, groupMember);
+        ruleService.createDefaultRules(season, groupCreateDto.getSportPreset(), groupMember);
 
         return withStats(groupMapper.groupToGroupDto(group));
     }
