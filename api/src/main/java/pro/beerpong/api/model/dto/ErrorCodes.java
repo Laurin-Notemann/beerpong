@@ -39,6 +39,8 @@ public enum ErrorCodes {
     RULE_MOVE_VALIDATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"),
     RULE_MOVE_INVALID_DTO(HttpStatus.BAD_REQUEST, "ruleMoveInvalidDto", "The name has to be non-null and non-empty and pointsForScorer and pointsForTeam have to be >= 0!"),
     RULE_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)"),
+    /* RULES */
+    RULE_INVALID_DTO(HttpStatus.BAD_REQUEST, "ruleInvalidDto", "Every rule name and description has to be non-null and non-empty!"),
     /* PLAYERS */
     PLAYER_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "playerNotFound", "The requested player could not be found!"),

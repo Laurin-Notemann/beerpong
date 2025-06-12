@@ -145,6 +145,19 @@ public class TestUtils {
         assertEquals(expected.getDescription(), actual.getDescription());
     }
 
+    public void assertCreatedRulesEquals(List<RuleCreateDto> created, List<RuleDto> actual) {
+        assertEquals(created.size(), actual.size());
+
+        for (int i = 0; i < created.size(); i++) {
+            assertCreatedRuleEquals(created.get(i), actual.get(i));
+        }
+    }
+
+    public void assertCreatedRuleEquals(RuleCreateDto createDto, RuleDto actual) {
+        assertEquals(createDto.getDescription(), actual.getDescription());
+        assertEquals(createDto.getTitle(), actual.getTitle());
+    }
+
     /* SEASONS */
     public void assertSeasonEquals(SeasonDto expected, SeasonDto actual) {
         if (expected == null || actual == null) {
