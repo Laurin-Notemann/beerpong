@@ -1,5 +1,6 @@
 package pro.beerpong.api.control;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,6 +10,7 @@ import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.ProfileCreateDto;
+import pro.beerpong.api.model.dto.ProfileCreatedDto;
 import pro.beerpong.api.model.dto.ProfileDto;
 
 import java.util.ArrayList;
@@ -38,6 +40,42 @@ public class ProfileControllerTest {
 
         assertEquals(profileNames.size(), profiles.size());
         assertTrue(profileNames.stream().allMatch(s -> profiles.stream().anyMatch(profileDto -> profileDto.getName().equals(s))));
+    }
+
+    @Test
+    @Transactional
+    public void profiles_create_success() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+
+        var profileDto = new ProfileCreateDto();
+        profileDto.setName("testing");
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
+        var result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);
+
+        assertEquals(profileDto.getName(), result.getName());
+        assertEquals(prerequisiteGroup.getId(), result.getGroupId());
+        assertEquals(prerequisiteGroup.getCreatedBy(), result.getCreatedBy());
+        assertNull(result.getAvatarAsset());
+
+        assertFalse(result.isReactivated());
+        assertNull(result.getLastActiveSeasonId());
+
+        //TODO test with deletion of players + new season start
+    }
+
+    @Test
+    @Transactional
+    public void profiles_create_alreadyExists() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+
+        var profileDto = new ProfileCreateDto();
+        profileDto.setName("player1");
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.PROFILE_ALREADY_EXISTS);
+
+        //TODO test with deletion of players + new season start
     }
 
     @Test
