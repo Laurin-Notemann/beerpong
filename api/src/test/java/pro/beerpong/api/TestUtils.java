@@ -19,7 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Component
 public class TestUtils {
-    private static List<String> GROUP_ACCESS = Lists.newArrayList();
+    //TODO leaderboard, match, player, assets (needs s3 files), profile, rules, rulemoves, seasons
+
+    private static final List<String> GROUP_ACCESS = Lists.newArrayList();
     private static String REFRESH_TOKEN;
     private static String AUTH_TOKEN;
     private static boolean RESET_FOR_NEXT_REQUEST = false;
@@ -131,7 +133,7 @@ public class TestUtils {
         RESET_FOR_NEXT_REQUEST = false;
 
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
         var entity = (body == null ? new HttpEntity<>(headers) : new HttpEntity<>(body, headers));
         var exchange = restTemplate.exchange("http://localhost:" + port + path, method, entity, String.class);
 
@@ -239,5 +241,40 @@ public class TestUtils {
         String result = (String) response.getBody();
         assertNotNull(result);
         assertEquals(message, result);
+    }
+
+    public GroupDto createTestGroup(int port) {
+        return this.createTestGroup(port, "test");
+    }
+
+    public GroupDto createTestGroup(int port, String name) {
+        return this.createTestGroup(port, name, List.of("player1", "player2"));
+    }
+
+    public GroupDto createTestGroup(int port, List<String> profileNames) {
+        return this.createTestGroup(port, "test", profileNames);
+    }
+
+    public GroupDto createTestGroup(int port, String name, List<String> profileNames) {
+        return this.createTestGroup(port, name, profileNames, "beerpong", null);
+    }
+
+    public GroupDto createTestGroup(int port, String name, List<String> profileNames, String preset, String customSportName) {
+        var response = postGroup(port, name, profileNames, preset, customSportName);
+        return assertSuccess(response, GroupDto.class);
+    }
+
+    public ResponseEntity<Object> postGroup(int port, String name, List<String> profileNames, String preset) {
+        return this.postGroup(port, name, profileNames, preset, null);
+    }
+
+    public ResponseEntity<Object> postGroup(int port, String name, List<String> profileNames, String preset, String customSportName) {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(profileNames);
+        createDto.setName(name);
+        createDto.setSportPreset(preset);
+        createDto.setCustomSportName(customSportName);
+
+        return performPost(port, "/groups", createDto, GroupDto.class);
     }
 }

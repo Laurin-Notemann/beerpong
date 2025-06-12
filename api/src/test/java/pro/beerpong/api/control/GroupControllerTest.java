@@ -30,18 +30,13 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_create_success() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var group = testUtils.assertSuccess(response, GroupDto.class);
+        var name = "test";
+        var group = testUtils.createTestGroup(port, name);
 
         assertNotNull(group);
         assertNotNull(group.getId());
         assertNotNull(group.getName());
-        assertEquals(createDto.getName(), group.getName());
+        assertEquals(name, group.getName());
         assertNotNull(group.getInviteCode());
         assertNotNull(group.getCreatedAt());
         assertNull(group.getWallpaperAsset());
@@ -57,13 +52,7 @@ public class GroupControllerTest {
         assertNotNull(group.getActiveSeason().getSeasonSettings());
         assertEquals(group.getCreatedBy(), group.getActiveSeason().getCreatedBy());
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setCustomSportName("test123");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        group = testUtils.assertSuccess(response, GroupDto.class);
+        group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), null, "test123");
 
         assertNotNull(group);
         assertEquals("test123", group.getCustomSportName());
@@ -73,83 +62,39 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_create_invalidName() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("");
-        createDto.setSportPreset("beerpong");
-
-        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var response = testUtils.postGroup(port, "", List.of("player1", "player2"), "beerpong");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName(null);
-        createDto.setSportPreset("beerpong");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        response = testUtils.postGroup(port, null, List.of("player1", "player2"), "beerpong");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("a");
-        createDto.setSportPreset("beerpong");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        response = testUtils.postGroup(port, "a", List.of("player1", "player2"), "beerpong");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-        createDto.setSportPreset("beerpong");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        response = testUtils.postGroup(port, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", List.of("player1", "player2"), "beerpong");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
     }
 
     @Test
     @Transactional
     public void group_create_invalidProfiles() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of());
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var response = testUtils.postGroup(port, "test", List.of(), "beerpong");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(null);
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        response = testUtils.postGroup(port, "test", null, "beerpong");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
     }
 
     @Test
     @Transactional
     public void group_create_invalidSport() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("notExisting");
-
-        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        var response = testUtils.postGroup(port, "test", List.of("player1", "player2"), "notExisting");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        response = testUtils.postGroup(port, "test", List.of("player1", "player2"), null);
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
 
-        createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setCustomSportName("    ");
-
-        response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+        response = testUtils.postGroup(port, "test", List.of("player1", "player2"), null, "      ");
         testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
     }
 
@@ -157,18 +102,10 @@ public class GroupControllerTest {
     @Transactional
     @SuppressWarnings("unchecked")
     public void group_userGroups() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+        var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = testUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
         var groups = (List<GroupDto>) testUtils.assertSuccess(response, ArrayList.class);
-
-
 
         assertFalse(groups.isEmpty());
         assertTrue(groups.stream().anyMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
@@ -177,13 +114,7 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_findByInviteCode_success() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+        var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
         var group = testUtils.assertSuccess(response, GroupDto.class);
@@ -209,13 +140,7 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_findById_success() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+        var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = testUtils.performGet(port, "/groups/" + prerequisiteGroup.getId(), GroupDto.class);
         var group = testUtils.assertSuccess(response, GroupDto.class);
@@ -237,17 +162,12 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_update_success() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+
         var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
-
         createDto.setName("test123");
-        createDto.setCustomSportName("beerpong");
-        createDto.setProfileNames(List.of());
+        createDto.setCustomSportName("kicker");
+        createDto.setProfileNames(List.of("player3", "player4", "player1"));
 
         var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
         var group = testUtils.assertSuccess(response, GroupDto.class);
@@ -270,14 +190,9 @@ public class GroupControllerTest {
 
     @Test
     public void group_update_invalidName() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+
         var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test123");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
-
         createDto.setName("  ");
 
         var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
@@ -287,13 +202,7 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_join_success() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+        var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
         testUtils.assertFailure(response, ErrorCodes.GROUP_ALREADY_IN_GROUP);
@@ -309,13 +218,7 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_leave() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
-
-        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var prerequisiteGroup = testUtils.assertSuccess(prerequisiteResponse, GroupDto.class);
+        var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
         var ok = testUtils.assertSuccess(response, String.class);
