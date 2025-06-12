@@ -305,7 +305,6 @@ public class SeasonControllerTest {
 
         seaonDto = buildUpdateDto(seasonSettings -> {
             seasonSettings.setRankingAlgorithm(RankingAlgorithm.ELO);
-            //TODO adjust for new wakeTime
             seasonSettings.setWakeTime("09:33");
         });
 
