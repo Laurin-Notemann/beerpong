@@ -30,7 +30,7 @@ public class RuleMoveControllerTest {
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
-    public void ruleMoves_findAll_groupCreationCorrectMoves() {
+    public void ruleMoves_create_groupCreation() {
         var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
 
         var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
@@ -51,6 +51,36 @@ public class RuleMoveControllerTest {
         ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void ruleMoves_create_seasonStart() {
+        var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
+
+        var oldResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(oldResponse, ArrayList.class);
+
+        var createRuleMoves = List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        );
+
+        assertNotEquals(oldRuleMoves.size(), createRuleMoves.size());
+
+        var seasonCreateDto = new SeasonCreateDto();
+        seasonCreateDto.setOldSeasonName("testing");
+        seasonCreateDto.setRuleMoves(createRuleMoves);
+
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
+        var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        var newResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var newRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(newResponse, ArrayList.class);
+
+        assertNotEquals(oldRuleMoves.size(), newRuleMoves.size());
+        testUtils.assertCreatedRuleMovesEquals(createRuleMoves, newRuleMoves);
     }
 
     @Test

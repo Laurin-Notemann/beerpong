@@ -104,7 +104,6 @@ public class SeasonControllerTest {
 
         //TODO test copying of players (with statistics)
         //TODO test copying of rules
-        //TODO test copying of rule moves
     }
 
     @Test
