@@ -8,10 +8,10 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.TestUtils;
+import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +24,8 @@ public class GroupControllerTest {
     @LocalServerPort
     private int port;
 
+    @Autowired
+    private RequestUtils requestUtils;
     @Autowired
     private TestUtils testUtils;
 
@@ -63,39 +65,39 @@ public class GroupControllerTest {
     @Transactional
     public void group_create_invalidName() {
         var response = testUtils.postGroup(port, "", List.of("player1", "player2"), "beerpong");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
 
         response = testUtils.postGroup(port, null, List.of("player1", "player2"), "beerpong");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
 
         response = testUtils.postGroup(port, "a", List.of("player1", "player2"), "beerpong");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
 
         response = testUtils.postGroup(port, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", List.of("player1", "player2"), "beerpong");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
     }
 
     @Test
     @Transactional
     public void group_create_invalidProfiles() {
         var response = testUtils.postGroup(port, "test", List.of(), "beerpong");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
 
         response = testUtils.postGroup(port, "test", null, "beerpong");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
     }
 
     @Test
     @Transactional
     public void group_create_invalidSport() {
         var response = testUtils.postGroup(port, "test", List.of("player1", "player2"), "notExisting");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
 
         response = testUtils.postGroup(port, "test", List.of("player1", "player2"), null);
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
 
         response = testUtils.postGroup(port, "test", List.of("player1", "player2"), null, "      ");
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
     }
 
     @Test
@@ -104,8 +106,8 @@ public class GroupControllerTest {
     public void group_userGroups() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = testUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
-        var groups = (List<GroupDto>) testUtils.assertSuccess(response, ArrayList.class);
+        var response = requestUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
+        var groups = (List<GroupDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         assertFalse(groups.isEmpty());
         assertTrue(groups.stream().anyMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
@@ -116,8 +118,8 @@ public class GroupControllerTest {
     public void group_findByInviteCode_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
-        var group = testUtils.assertSuccess(response, GroupDto.class);
+        var response = requestUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
+        var group = requestUtils.assertSuccess(response, GroupDto.class);
 
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
@@ -130,11 +132,11 @@ public class GroupControllerTest {
     @Test
     @Transactional
     public void group_findByInviteCode_invalidInviteCode() {
-        var response = testUtils.performGet(port, "/groups?inviteCode= ", GroupDto.class);
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_INVITE_CODE);
+        var response = requestUtils.performGet(port, "/groups?inviteCode= ", GroupDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_INVITE_CODE);
 
-        response = testUtils.performGet(port, "/groups?inviteCode=someIdThatNotExists", GroupDto.class);
-        testUtils.assertFailure(response, ErrorCodes.GROUP_INVITE_NOT_FOUND);
+        response = requestUtils.performGet(port, "/groups?inviteCode=someIdThatNotExists", GroupDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.GROUP_INVITE_NOT_FOUND);
     }
 
     @Test
@@ -142,8 +144,8 @@ public class GroupControllerTest {
     public void group_findById_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = testUtils.performGet(port, "/groups/" + prerequisiteGroup.getId(), GroupDto.class);
-        var group = testUtils.assertSuccess(response, GroupDto.class);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId(), GroupDto.class);
+        var group = requestUtils.assertSuccess(response, GroupDto.class);
 
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
@@ -155,8 +157,8 @@ public class GroupControllerTest {
 
     @Test
     public void group_findById_invalidId() {
-        var response = testUtils.performGet(port, "/groups/someIdThatNotExists", GroupDto.class);
-        testUtils.assertFailure(response, HttpStatus.UNAUTHORIZED, "No access to this group!");
+        var response = requestUtils.performGet(port, "/groups/someIdThatNotExists", GroupDto.class);
+        requestUtils.assertFailure(response, HttpStatus.UNAUTHORIZED, "No access to this group!");
     }
 
     @Test
@@ -169,8 +171,8 @@ public class GroupControllerTest {
         createDto.setCustomSportName("kicker");
         createDto.setProfileNames(List.of("player3", "player4", "player1"));
 
-        var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
-        var group = testUtils.assertSuccess(response, GroupDto.class);
+        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
+        var group = requestUtils.assertSuccess(response, GroupDto.class);
 
         // if this is not here, the startDate millis are rounded and this test fails
         group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
@@ -195,8 +197,8 @@ public class GroupControllerTest {
         var createDto = new GroupCreateDto();
         createDto.setName("  ");
 
-        var response = testUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
-        testUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
+        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
     }
 
     @Test
@@ -204,13 +206,13 @@ public class GroupControllerTest {
     public void group_join_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
-        testUtils.assertFailure(response, ErrorCodes.GROUP_ALREADY_IN_GROUP);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.GROUP_ALREADY_IN_GROUP);
 
-        testUtils.resetAuthForNextRequest();
+        requestUtils.resetAuthForNextRequest();
 
-        response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
-        var ok = testUtils.assertSuccess(response, String.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
+        var ok = requestUtils.assertSuccess(response, String.class);
 
         assertEquals("OK", ok);
     }
@@ -220,8 +222,8 @@ public class GroupControllerTest {
     public void group_leave() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = testUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
-        var ok = testUtils.assertSuccess(response, String.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
+        var ok = requestUtils.assertSuccess(response, String.class);
 
         assertEquals("OK", ok);
     }

@@ -1,25 +1,7 @@
 package pro.beerpong.api.control;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
-import pro.beerpong.api.TestUtils;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
-
-import java.time.Duration;
-import java.time.ZonedDateTime;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

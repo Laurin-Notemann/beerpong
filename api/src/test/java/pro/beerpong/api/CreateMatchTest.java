@@ -19,7 +19,7 @@ public class CreateMatchTest {
     private int port;
 
     @Autowired
-    private TestUtils testUtils;
+    private RequestUtils requestUtils;
 
 //    @BeforeEach
 //    void setUp() {
@@ -39,7 +39,7 @@ public class CreateMatchTest {
         createGroupDto.setName("test");
         createGroupDto.setSportPreset("beerpong");
 
-        var prerequisiteGroupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
+        var prerequisiteGroupResponse = requestUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
 
         assertNotNull(prerequisiteGroupResponse);
         assertEquals(200, prerequisiteGroupResponse.getStatusCode().value());
@@ -52,7 +52,7 @@ public class CreateMatchTest {
 
         var prerequisiteGroup = prerequisiteEnvelope.getData();
         assertEquals(GroupPresetsController.BEERPONG.getId(), prerequisiteGroup.getSportPreset().getId());
-        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
+        var response = requestUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -79,7 +79,7 @@ public class CreateMatchTest {
 
         var season = group.getActiveSeason();
 
-        var playersResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
+        var playersResponse = requestUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
 
         assertNotNull(playersResponse);
         assertEquals(200, playersResponse.getStatusCode().value());
@@ -103,8 +103,8 @@ public class CreateMatchTest {
         createRulemMoveDto1.setPointsForTeam(1);
         createRulemMoveDto1.setPointsForScorer(1);
 
-        var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto, RuleMoveDto.class);
-        var ruleMoveResponse1 = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto1, RuleMoveDto.class);
+        var ruleMoveResponse = requestUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto, RuleMoveDto.class);
+        var ruleMoveResponse1 = requestUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRulemMoveDto1, RuleMoveDto.class);
 
         assertNotNull(ruleMoveResponse);
         assertNotNull(ruleMoveResponse1);
@@ -186,7 +186,7 @@ public class CreateMatchTest {
 
         matchCreateDto.setTeams(List.of(team1, team2));
 
-        var createMatchResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", matchCreateDto, MatchDto.class);
+        var createMatchResponse = requestUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", matchCreateDto, MatchDto.class);
 
         assertNotNull(createMatchResponse);
         assertEquals(200, createMatchResponse.getStatusCode().value());
@@ -207,13 +207,13 @@ public class CreateMatchTest {
         createGroupDto.setName("test-update");
         createGroupDto.setSportPreset("beerpong");
 
-        var groupResponse = testUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
+        var groupResponse = requestUtils.performPost(port, "/groups", createGroupDto, GroupDto.class);
         ResponseEnvelope<GroupDto> groupEnvelope = (ResponseEnvelope<GroupDto>) groupResponse.getBody();
         var group = groupEnvelope.getData();
 
         var season = group.getActiveSeason();
 
-        var playersResponse = testUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
+        var playersResponse = requestUtils.performGet(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/players", List.class, PlayerDto.class);
         ResponseEnvelope<List<PlayerDto>> playersEnvelope = (ResponseEnvelope<List<PlayerDto>>) playersResponse.getBody();
         var players = playersEnvelope.getData();
 
@@ -224,8 +224,8 @@ public class CreateMatchTest {
         createRuleMoveDto1.setName("UpdateRuleMove");
         createRuleMoveDto1.setFinishingMove(true);
 
-        var ruleMoveResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto, RuleMoveDto.class);
-        var ruleMoveResponse1 = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto1, RuleMoveDto.class);
+        var ruleMoveResponse = requestUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto, RuleMoveDto.class);
+        var ruleMoveResponse1 = requestUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/rule-moves", createRuleMoveDto1, RuleMoveDto.class);
         ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse.getBody();
         ResponseEnvelope<RuleMoveDto> ruleMoveEnvelope1 = (ResponseEnvelope<RuleMoveDto>) ruleMoveResponse1.getBody();
         var ruleMove = ruleMoveEnvelope.getData();
@@ -257,7 +257,7 @@ public class CreateMatchTest {
         matchCreateDto.setTeams(List.of(team1, team2));
 
         // Step 4: Create the match
-        var createMatchResponse = testUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", matchCreateDto, MatchDto.class);
+        var createMatchResponse = requestUtils.performPost(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches", matchCreateDto, MatchDto.class);
         ResponseEnvelope<MatchDto> matchEnvelope = (ResponseEnvelope<MatchDto>) createMatchResponse.getBody();
         assert matchEnvelope != null;
         var match = matchEnvelope.getData();
@@ -266,7 +266,7 @@ public class CreateMatchTest {
         matchCreateDto.setTeams(List.of(team1, team2));
 
         // Step 5: Update the match
-        var updateResponse = testUtils.performPut(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches/" + match.getId(), matchCreateDto, MatchDto.class);
+        var updateResponse = requestUtils.performPut(port, "/groups/" + group.getId() + "/seasons/" + season.getId() + "/matches/" + match.getId(), matchCreateDto, MatchDto.class);
         ResponseEnvelope<MatchDto> updateEnvelope = (ResponseEnvelope<MatchDto>) updateResponse.getBody();
 
         // Assertions
