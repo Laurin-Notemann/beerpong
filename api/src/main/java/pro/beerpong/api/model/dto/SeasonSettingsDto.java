@@ -11,6 +11,5 @@ public class SeasonSettingsDto {
     private Integer maxTeamSize;
     private RankingAlgorithm rankingAlgorithm;
     private DailyLeaderboard dailyLeaderboard;
-    //TODO adjust for new wakeTime
-    private Integer wakeTimeHour;
+    private String wakeTime = "00:00";
 }

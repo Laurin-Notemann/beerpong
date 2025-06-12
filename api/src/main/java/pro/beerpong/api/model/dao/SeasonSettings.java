@@ -1,12 +1,11 @@
 package pro.beerpong.api.model.dao;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
+
+import java.time.LocalTime;
 
 @Entity(name = "season_settings")
 @Data
@@ -20,7 +19,8 @@ public class SeasonSettings {
     private int maxTeamSize;
     private RankingAlgorithm rankingAlgorithm;
     private DailyLeaderboard dailyLeaderboard;
-    private int wakeTimeHour;
+    @Column(columnDefinition = "time default '00:00:00'")
+    private LocalTime wakeTime;
 
     public static SeasonSettings createDefault() {
         var seasonSettings = new SeasonSettings();
@@ -30,7 +30,7 @@ public class SeasonSettings {
         seasonSettings.setMaxTeamSize(10);
         seasonSettings.setRankingAlgorithm(RankingAlgorithm.AVERAGE);
         seasonSettings.setDailyLeaderboard(DailyLeaderboard.WAKE_TIME);
-        seasonSettings.setWakeTimeHour(0);
+        seasonSettings.setWakeTime(LocalTime.of(0, 0));
 
         return seasonSettings;
     }

@@ -16,6 +16,7 @@ import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -209,7 +210,7 @@ public class MatchService {
         var now = ZonedDateTime.now();
 
         Predicate<Match> predicate = switch (season.getSeasonSettings().getDailyLeaderboard()) {
-            case WAKE_TIME -> match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTimeHour()));
+            case WAKE_TIME -> match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTime()));
             case LAST_24_HOURS -> (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
             case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
         };
@@ -228,8 +229,8 @@ public class MatchService {
         }
     }
 
-    public ZonedDateTime getWakeTime(ZonedDateTime now, int wakeTimeHour) {
-        var wakeTimeToday = now.withHour(wakeTimeHour).withMinute(0).withSecond(0).withNano(0);
+    public ZonedDateTime getWakeTime(ZonedDateTime now, LocalTime wakeTime) {
+        var wakeTimeToday = now.withHour(wakeTime.getHour()).withMinute(wakeTime.getMinute()).withSecond(0).withNano(0);
 
         if (now.isBefore(wakeTimeToday)) {
             wakeTimeToday = wakeTimeToday.minusDays(1);

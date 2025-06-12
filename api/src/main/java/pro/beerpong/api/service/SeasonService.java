@@ -13,11 +13,13 @@ import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.PlayerStatisticsRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.LocalTimeAdapter;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.NullablePair;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +41,7 @@ public class SeasonService {
     private final ProfileMapper profileMapper;
     private final PlayerStatisticsMapper playerStatisticsMapper;
     private final GroupService groupService;
+    private final SeasonSettingsMapper seasonSettingsMapper;
     private final AuthService authService;
 
     @Autowired
@@ -48,7 +51,7 @@ public class SeasonService {
                          PlayerService playerService,
                          RuleMoveService ruleMoveService,
                          RuleService ruleService,
-                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService, AuthService authService) {
+                         SeasonMapper seasonMapper, LeaderboardService leaderboardService, GroupMapper groupMapper, PlayerMapper playerMapper, PlayerStatisticsRepository playerStatisticsRepository, PlayerRepository playerRepository, ProfileMapper profileMapper, PlayerStatisticsMapper playerStatisticsMapper, GroupService groupService, SeasonSettingsMapper seasonSettingsMapper, AuthService authService) {
         this.subscriptionHandler = subscriptionHandler;
         this.seasonRepository = seasonRepository;
         this.groupRepository = groupRepository;
@@ -64,6 +67,7 @@ public class SeasonService {
         this.profileMapper = profileMapper;
         this.playerStatisticsMapper = playerStatisticsMapper;
         this.groupService = groupService;
+        this.seasonSettingsMapper = seasonSettingsMapper;
         this.authService = authService;
     }
 
@@ -89,7 +93,7 @@ public class SeasonService {
             newSeason.getSeasonSettings().setMinMatchesToQualify(oldSeason.getSeasonSettings().getMinMatchesToQualify());
             newSeason.getSeasonSettings().setRankingAlgorithm(oldSeason.getSeasonSettings().getRankingAlgorithm());
             newSeason.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
-            newSeason.getSeasonSettings().setWakeTimeHour(oldSeason.getSeasonSettings().getWakeTimeHour());
+            newSeason.getSeasonSettings().setWakeTime(oldSeason.getSeasonSettings().getWakeTime());
         }
 
         var season = seasonRepository.save(newSeason);
@@ -171,8 +175,8 @@ public class SeasonService {
                         existingSeason.getSeasonSettings().setMinTeamSize(dto.getSeasonSettings().getMinTeamSize());
                     if (dto.getSeasonSettings().getMaxTeamSize() != null)
                         existingSeason.getSeasonSettings().setMaxTeamSize(dto.getSeasonSettings().getMaxTeamSize());
-                    if (dto.getSeasonSettings().getWakeTimeHour() != null)
-                        existingSeason.getSeasonSettings().setWakeTimeHour(dto.getSeasonSettings().getWakeTimeHour());
+                    if (dto.getSeasonSettings().getWakeTime() != null)
+                        existingSeason.getSeasonSettings().setWakeTime(LocalTime.parse(dto.getSeasonSettings().getWakeTime()));
                     if (dto.getSeasonSettings().getDailyLeaderboard() != null)
                         existingSeason.getSeasonSettings().setDailyLeaderboard(dto.getSeasonSettings().getDailyLeaderboard());
                     if (dto.getSeasonSettings().getRankingAlgorithm() != null)

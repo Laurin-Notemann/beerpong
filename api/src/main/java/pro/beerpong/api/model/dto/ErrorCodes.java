@@ -21,7 +21,7 @@ public enum ErrorCodes {
     /* SEASONS */
     SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "seasonNotFound", "The requested season could not be found!"),
     SEASON_ALREADY_ENDED(HttpStatus.FORBIDDEN, "seasonAlreadyEnded", "Past seasons are immutable!"),
-    SEASON_WRONG_TIME_FORMAT(HttpStatus.BAD_REQUEST, "seasonWrongTimeFormat", "The wake time hour has to be between 0 and 23!"),
+    SEASON_WRONG_TIME_FORMAT(HttpStatus.BAD_REQUEST, "seasonWrongTimeFormat", "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"),
     SEASON_WRONG_TEAM_SIZES(HttpStatus.BAD_REQUEST, "seasonWrongTeamSizes", "The min team size has to be less then or equal to the max team size!"),
     SEASON_NOT_OF_GROUP(HttpStatus.FORBIDDEN, "seasonHasDifferentGroup", "The season does not match the provided group id!"),
     SEASON_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "seasonValidationFailed", "The validation of the created season has failed (invalid group id)"),

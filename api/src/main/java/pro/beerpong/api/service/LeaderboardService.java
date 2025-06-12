@@ -110,7 +110,7 @@ public class LeaderboardService {
                 } else if (season.getSeasonSettings().getDailyLeaderboard() == DailyLeaderboard.RESET_AT_MIDNIGHT) {
                     startedAt = ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
                 } else {
-                    startedAt = matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTimeHour());
+                    startedAt = matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTime());
                 }
             }
             default -> {
