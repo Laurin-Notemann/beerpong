@@ -1,5 +1,6 @@
 package pro.beerpong.api.control;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.service.RuleMoveService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,13 +26,29 @@ public class RuleMoveControllerTest {
     private TestUtils testUtils;
 
     @Test
-    public void ruleMoves_findAll() {
-        var prerequisteGroup = testUtils.createTestGroup(port);
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void ruleMoves_groupCreation_corretMoves() {
+        var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
 
-        var response = requestUtils.performGet(port, "/groups/" + prerequisteGroup.getId() + "/seasons/" + prerequisteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
-        var ruleMoves = requestUtils.assertSuccess(response, ArrayList.class);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
+        testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_BEERPONG_MOVES, ruleMoves);
 
+        prerequisiteGroup = testUtils.createTestGroup(port, "test", "kicker");
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
+
+        testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
+
+        prerequisiteGroup = testUtils.createTestGroup(port, "test", null, "test123");
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
+
+        testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
     }
 
     @Test

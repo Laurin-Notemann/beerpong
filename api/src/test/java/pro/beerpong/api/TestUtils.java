@@ -47,6 +47,14 @@ public class TestUtils {
         return this.createTestGroup(port, name, profileNames, "beerpong", null);
     }
 
+    public GroupDto createTestGroup(int port, String name, String preset) {
+        return createTestGroup(port, name, preset, null);
+    }
+
+    public GroupDto createTestGroup(int port, String name, String preset, String customSportName) {
+        return createTestGroup(port, name, List.of("player1", "player2"), preset, customSportName);
+    }
+
     public GroupDto createTestGroup(int port, String name, List<String> profileNames, String preset, String customSportName) {
         var response = postGroup(port, name, profileNames, preset, customSportName);
         return requestUtils.assertSuccess(response, GroupDto.class);
@@ -77,10 +85,26 @@ public class TestUtils {
     }
 
     public void assertRuleMovesEquals(List<RuleMoveDto> expected, List<RuleMoveDto> actual) {
+        assertRuleMovesEquals(expected, actual, false);
+    }
 
+    public void assertRuleMovesEquals(List<RuleMoveDto> expected, List<RuleMoveDto> actual, boolean full) {
+        assertEquals(expected.size(), actual.size());
+
+        for (int i = 0; i < expected.size(); i++) {
+            assertRuleMoveEquals(expected.get(i), actual.get(i), full);
+        }
     }
 
     public void assertRuleMoveEquals(RuleMoveDto expected, RuleMoveDto actual) {
+        assertRuleMoveEquals(expected, actual, false);
+    }
+
+    public void assertRuleMoveEquals(RuleMoveDto expected, RuleMoveDto actual, boolean full) {
+        if (full) {
+            assertEquals(expected.getId(), actual.getId());
+            assertEquals(expected.getSeason().getId(), actual.getSeason().getId());
+        }
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.isFinishingMove(), actual.isFinishingMove());
         assertEquals(expected.getPointsForScorer(), actual.getPointsForScorer());

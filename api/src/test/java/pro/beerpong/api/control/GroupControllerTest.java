@@ -77,7 +77,8 @@ public class GroupControllerTest {
         assertNull(group.getCustomSportName());
         assertEquals(GroupPresetsController.KICKER.getId(), group.getSportPreset().getId());
 
-        //TODO test
+        //TODO test creation of profiles
+        //TODO test creation of rules
     }
 
     @Test
