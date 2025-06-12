@@ -9,7 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.*;
-import pro.beerpong.api.service.RuleMoveService;
 import pro.beerpong.api.service.RuleService;
 
 import java.util.ArrayList;
@@ -71,29 +70,25 @@ public class RuleControllerTest {
     @Transactional
     @SuppressWarnings("unchecked")
     public void ruleMoves_copy_seasonStart() {
-        var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
+        var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var oldResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
-        var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(oldResponse, ArrayList.class);
-
-        var createRuleMoves = List.of(
-                testUtils.buildRuleMove("Normal", false, 1, 0),
-                testUtils.buildRuleMove("Finish", true, 1, 3)
-        );
-
-        assertNotEquals(oldRuleMoves.size(), createRuleMoves.size());
+        var oldResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rules", List.class, RuleDto.class);
+        var oldRules = (List<RuleDto>) requestUtils.assertSuccess(oldResponse, ArrayList.class);
 
         var seasonCreateDto = new SeasonCreateDto();
         seasonCreateDto.setOldSeasonName("testing");
-        seasonCreateDto.setRuleMoves(createRuleMoves);
+        seasonCreateDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
 
         var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
-        var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+        requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
-        var newResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/rule-moves", List.class, RuleMoveDto.class);
-        var newRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(newResponse, ArrayList.class);
+        var newResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rules", List.class, RuleDto.class);
+        var newRules = (List<RuleDto>) requestUtils.assertSuccess(newResponse, ArrayList.class);
 
-        assertNotEquals(oldRuleMoves.size(), newRuleMoves.size());
-        testUtils.assertCreatedRuleMovesEquals(createRuleMoves, newRuleMoves);
+        assertEquals(oldRules.size(), newRules.size());
+        testUtils.assertRulesEquals(oldRules, newRules);
     }
 }
