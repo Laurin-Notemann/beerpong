@@ -1046,7 +1046,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test invalid player id
@@ -1060,7 +1060,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test player from other season
@@ -1074,7 +1074,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test player from other season
@@ -1088,7 +1088,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test player from other group
@@ -1102,7 +1102,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test player from other group
@@ -1116,7 +1116,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
     }
 
@@ -1211,7 +1211,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test invalid move id
@@ -1235,7 +1235,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test move from other season
@@ -1259,7 +1259,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test move from other season
@@ -1283,7 +1283,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test finish move from other season
@@ -1307,7 +1307,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test move from other season
@@ -1330,7 +1330,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test move from other group
@@ -1354,7 +1354,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test move from other group
@@ -1378,7 +1378,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test finish move from other group
@@ -1402,7 +1402,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test move from other group
@@ -1425,7 +1425,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
     }
 
