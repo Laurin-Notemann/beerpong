@@ -33,6 +33,10 @@ public class MatchMoveService {
 
     public void createMatchMoves(TeamMember teamMember, List<MatchMoveDto> moves) {
         for (MatchMoveDto moveDto : moves) {
+            if (moveDto.getCount() < 1) {
+                continue;
+            }
+
             RuleMove ruleMove = ruleMoveRepository.findById(moveDto.getMoveId())
                     .orElseThrow(() -> new IllegalArgumentException("RuleMove not found: " + moveDto.getMoveId()));
             if (!Objects.equals(ruleMove.getSeason().getId(), teamMember.getTeam().getMatch().getSeason().getId())) {

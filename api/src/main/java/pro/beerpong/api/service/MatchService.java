@@ -21,8 +21,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -97,27 +97,26 @@ public class MatchService {
         var finishMoves = dto.getTeams().stream()
                 .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
                 .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
-                .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()))
+                .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()) && matchMoveDto.getCount() > 0)
                 .toList();
 
-        //TODO should team amount be forced to 2?
         return playerIds.stream().distinct().count() != playerIds.size() ||
                 finishMoves.size() != 1 ||
                 finishMoves.getFirst().getCount() != 1 ||
                 !dto.getTeams().stream().allMatch(teamCreateDto ->
-                teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
-                    var player = playerRepository.findById(memberDto.getPlayerId());
+                        teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
+                            var player = playerRepository.findById(memberDto.getPlayerId());
 
-                    if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
-                        return false;
-                    }
+                            if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
+                                return false;
+                            }
 
-                    return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
-                        var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
+                            return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
+                                var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
 
-                        return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
-                    });
-                }));
+                                return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
+                            });
+                        }));
     }
 
     @Transactional
@@ -219,8 +218,10 @@ public class MatchService {
         var now = ZonedDateTime.now();
 
         Predicate<Match> predicate = switch (season.getSeasonSettings().getDailyLeaderboard()) {
-            case WAKE_TIME -> match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTime()));
-            case LAST_24_HOURS -> (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
+            case WAKE_TIME ->
+                    match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTime()));
+            case LAST_24_HOURS ->
+                    (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
             case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
         };
 
