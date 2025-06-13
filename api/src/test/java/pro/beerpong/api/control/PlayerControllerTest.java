@@ -66,8 +66,6 @@ public class PlayerControllerTest {
         assertTrue(players.stream().allMatch(playerDto -> profiles.stream().anyMatch(profileDto -> profileDto.getId().equals(playerDto.getProfile().getId()))));
         assertTrue(players.stream().allMatch(PlayerDto::isActiveThisSeason));
         assertTrue(players.stream().allMatch(playerDto -> playerDto.getSeason().getId().equals(newSeason.getId())));
-
-        //TODO maybe check stats?
     }
 
     @Test
@@ -98,7 +96,6 @@ public class PlayerControllerTest {
         for (PlayerDto playerDto : players) {
             assertTrue(profileNames.stream().anyMatch(s -> playerDto.getProfile().getName().equals(s)));
             assertTrue(playerDto.isActiveThisSeason());
-            //TODO maybe check stats?
             assertNotNull(playerDto.getStatistics());
             assertEquals(season.getId(), playerDto.getSeason().getId());
         }
@@ -123,7 +120,6 @@ public class PlayerControllerTest {
         for (PlayerDto playerDto : players) {
             assertTrue(profileNames.stream().anyMatch(s -> playerDto.getProfile().getName().equals(s)));
             assertTrue(playerDto.isActiveThisSeason());
-            //TODO maybe check stats?
             assertNotNull(playerDto.getStatistics());
             assertEquals(season.getId(), playerDto.getSeason().getId());
         }

@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Component
 public class TestUtils {
-    //TODO tests for: realtime events, assets (needs s3 files), leaderboard, match
+    //TODO tests for: realtime events, assets (needs s3 files), leaderboard (+stats)
     //TODO add descr to every test case
 
     @Autowired
