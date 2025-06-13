@@ -507,15 +507,237 @@ public class MatchControllerTest {
     }
 
     @Test
-    public void matches_create_invalidSeason() {
-        var prerequisiteGroup = testUtils.createTestGroup(port);
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void matches_create_success_onlyFinish() {
+        var profileNames = List.of("player1", "player2", "player3", "player4");
+        var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertEquals(profileNames.size(), players.size());
+
+        var player1 = players.getFirst();
+        var player2 = players.get(1);
+        var player3 = players.get(2);
+        var player4 = players.get(3);
+
+        assertNotNull(player1);
+        assertNotNull(player2);
+        assertNotNull(player3);
+        assertNotNull(player4);
+
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
+
+        assertTrue(ruleMoves.size() >= 2);
+
+        var finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        assertNotNull(finishMove);
+        assertTrue(finishMove.isFinishingMove());
+
+        var matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(finishMove.getId(), 1)
+                        ),
+                        buildMember(
+                                player2.getId()
+                        )
+                ),
+                buildTeam(
+                        buildMember(
+                                player3.getId()
+                        ),
+                        buildMember(
+                                player4.getId()
+                        )
+                )
+        );
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var match = requestUtils.assertSuccess(response, MatchDto.class);
+
+        assertNotNull(match.getId());
+        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
+        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
+        assertNotNull(match.getDate());
+
+        assertEquals(2, match.getTeams().size());
+
+        var team1 = match.getTeams().getFirst();
+        var team2 = match.getTeams().getLast();
+
+        assertNotNull(team1);
+        assertNotNull(team1.getId());
+        assertEquals(match.getId(), team1.getMatchId());
+        assertNotNull(team2);
+        assertNotNull(team2.getId());
+        assertEquals(match.getId(), team2.getMatchId());
+
+        var teamMembers1 = match.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
+                .toList();
+        var teamMembers2 = match.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
+                .toList();
+
+        assertEquals(2, teamMembers1.size());
+        assertEquals(2, teamMembers2.size());
+
+        var teamMember1 = teamMembers1.getFirst();
+        var teamMember2 = teamMembers1.getLast();
+        var teamMember3 = teamMembers2.getFirst();
+        var teamMember4 = teamMembers2.getLast();
+
+        assertNotNull(teamMember1);
+        assertNotNull(teamMember1.getId());
+        assertEquals(team1.getId(), teamMember1.getTeamId());
+        assertEquals(player1.getId(), teamMember1.getPlayerId());
+
+        assertNotNull(teamMember2);
+        assertNotNull(teamMember2.getId());
+        assertEquals(team1.getId(), teamMember2.getTeamId());
+        assertEquals(player2.getId(), teamMember2.getPlayerId());
+
+        assertNotNull(teamMember3);
+        assertNotNull(teamMember3.getId());
+        assertEquals(team2.getId(), teamMember3.getTeamId());
+        assertEquals(player3.getId(), teamMember3.getPlayerId());
+
+        assertNotNull(teamMember4);
+        assertNotNull(teamMember4.getId());
+        assertEquals(team2.getId(), teamMember4.getTeamId());
+        assertEquals(player4.getId(), teamMember4.getPlayerId());
+
+        var matchMoves1 = match.getMatchMoves().stream()
+                .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
+                .toList();
+
+        assertEquals(1, matchMoves1.size());
+
+        var finishMove1 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(finishMove.getId())).findFirst().orElseThrow();
+
+        assertNotNull(finishMove1);
+        assertNotNull(finishMove1.getId());
+        assertEquals(teamMember1.getId(), finishMove1.getTeamMemberId());
+        assertEquals(finishMove.getId(), finishMove1.getMoveId());
+        assertEquals(1, finishMove1.getValue());
     }
 
     @Test
-    public void matches_create_invalidTeamSizes() {
+    @Transactional
+    public void matches_create_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
+        var oldSeason = prerequisiteGroup.getActiveSeason();
 
+        var matchDto = buildDto();
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+
+        var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
+
+        var seasonCreateDto = new SeasonCreateDto();
+        seasonCreateDto.setOldSeasonName("testing");
+        seasonCreateDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
+        requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void matches_create_invalidTeams() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+        var oldSeason = prerequisiteGroup.getActiveSeason();
+        var minTeamSize = oldSeason.getSeasonSettings().getMinTeamSize();
+        var maxTeamSize = oldSeason.getSeasonSettings().getMaxTeamSize();
+
+        assertEquals(1, minTeamSize);
+        assertEquals(10, maxTeamSize);
+
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertEquals(2, players.size());
+
+        var player1 = players.getFirst();
+        var player2 = players.getLast();
+
+        var matchDto = buildDto(
+                buildTeam(
+                        buildMember(player1.getId())
+                ),
+                buildTeam(
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId()),
+                        buildMember(player2.getId())
+                )
+        );
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+
+        matchDto = buildDto(
+                buildTeam(
+                        buildMember(player1.getId())
+                ),
+                buildTeam()
+        );
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+
+        matchDto = buildDto(
+                buildTeam(
+                        buildMember(player1.getId())
+                ),
+                buildTeam(
+                        buildMember(player2.getId())
+                ),
+                buildTeam(
+                        buildMember(player2.getId())
+                )
+        );
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
+
+        matchDto = buildDto(
+                buildTeam(
+                        buildMember(player1.getId())
+                )
+        );
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
+
+        matchDto = buildDto();
+
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
     }
 
     @Test
