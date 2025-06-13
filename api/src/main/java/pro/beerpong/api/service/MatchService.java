@@ -90,7 +90,21 @@ public class MatchService {
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
-        return !dto.getTeams().stream().allMatch(teamCreateDto ->
+        var playerIds = dto.getTeams().stream()
+                .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream().map(TeamMemberCreateDto::getPlayerId))
+                .toList();
+
+        var finishMoves = dto.getTeams().stream()
+                .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
+                .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
+                .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()))
+                .toList();
+
+        //TODO should team amount be forced to 2?
+        return playerIds.stream().distinct().count() != playerIds.size() ||
+                finishMoves.size() != 1 ||
+                finishMoves.getFirst().getCount() != 1 ||
+                !dto.getTeams().stream().allMatch(teamCreateDto ->
                 teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
                     var player = playerRepository.findById(memberDto.getPlayerId());
 
@@ -103,12 +117,7 @@ public class MatchService {
 
                         return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
                     });
-                })) ||
-                dto.getTeams().stream()
-                        .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
-                        .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
-                        .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()) && matchMoveDto.getCount() == 1)
-                        .count() != 1;
+                }));
     }
 
     @Transactional
