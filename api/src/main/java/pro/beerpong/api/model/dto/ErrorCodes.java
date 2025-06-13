@@ -36,6 +36,7 @@ public enum ErrorCodes {
     MATCH_CREATE_DTO_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "matchCreateDtoValidationFailed", "The team sizes are not in the boundaries of the season settings!"),
     MATCH_WRONG_AMOUNT_OF_TEAMS(HttpStatus.BAD_REQUEST, "matchWrongAmountOfTeams", "The amount of teams has to be exactly 2!"),
     MATCH_DTO_VALIDATION_FAILED(HttpStatus.FORBIDDEN, "matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"),
+    MATCH_NOT_OF_GROUP(HttpStatus.BAD_REQUEST, "matchNotOfGroup", "The provided match id does not match the provided season or group!"),
     /* RULE MOVES */
     RULE_MOVE_NOT_FOUND(HttpStatus.NOT_FOUND, "ruleMoveNotFound", "The requested ruleMove could not be found!"),
     RULE_MOVE_VALIDATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"),
