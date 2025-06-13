@@ -459,8 +459,8 @@ public class MatchControllerTest {
         var normalMove12 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(scndNormalMove.getId())).findFirst().orElseThrow();
         var finishMove1 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(finishMove.getId())).findFirst().orElseThrow();
         var normalMove21 = matchMoves2.getFirst();
-        var normalMove31 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(frstNormalMove.getId())).findFirst().orElseThrow();
-        var normalMove32 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(scndNormalMove.getId())).findFirst().orElseThrow();
+        var normalMove31 = matchMoves3.stream().filter(dto -> dto.getMoveId().equals(frstNormalMove.getId())).findFirst().orElseThrow();
+        var normalMove32 = matchMoves3.stream().filter(dto -> dto.getMoveId().equals(scndNormalMove.getId())).findFirst().orElseThrow();
         var normalMove42 = matchMoves4.getFirst();
 
         assertNotNull(normalMove11);
