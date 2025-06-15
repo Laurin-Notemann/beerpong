@@ -3013,10 +3013,147 @@ public class MatchControllerTest {
     }
 
     @Test
-    public void matches_delete_invalidArgs() {
+    @SuppressWarnings("unchecked")
+    public void matches_delete_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
+        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        //TODO
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertTrue(players.size() >= 2);
+
+        var player1 = players.getFirst();
+        var player2 = players.getLast();
+
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
+
+        assertTrue(ruleMoves.size() >= 2);
+
+        var finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        var matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(finishMove.getId(), 1)
+                        )
+                ),
+                buildTeam(buildMember(player2.getId()))
+        );
+
+        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var match = requestUtils.assertSuccess(matchResponse, MatchDto.class);
+
+        var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches/" + match.getId(), null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+
+        var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
+
+        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches/" + match.getId(), null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
+
+        var seasonCreateDto = new SeasonCreateDto();
+        seasonCreateDto.setOldSeasonName("testing");
+        seasonCreateDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
+        requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void matches_delete_invalidMatch() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+        var oldSeason = prerequisiteGroup.getActiveSeason();
+
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertTrue(players.size() >= 2);
+
+        var player1 = players.getFirst();
+        var player2 = players.getLast();
+
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
+
+        assertTrue(ruleMoves.size() >= 2);
+
+        var finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        var matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(finishMove.getId(), 1)
+                        )
+                ),
+                buildTeam(buildMember(player2.getId()))
+        );
+
+        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var oldMatch = requestUtils.assertSuccess(matchResponse, MatchDto.class);
+
+        // test invalid match id (not existing)
+        var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/someIdThatNotExists", null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
+
+        // test invalid match id (other season than provided)
+        var seasonCreateDto = new SeasonCreateDto();
+        seasonCreateDto.setOldSeasonName("testing");
+        seasonCreateDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
+        var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + oldMatch.getId(), null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+
+        // test invalid match id (other group than provided)
+        var prerequisiteGroup1 = testUtils.createTestGroup(port);
+
+        playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertTrue(players.size() >= 2);
+
+        player1 = players.getFirst();
+        player2 = players.getLast();
+
+        movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
+
+        assertTrue(ruleMoves.size() >= 2);
+
+        finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(finishMove.getId(), 1)
+                        )
+                ),
+                buildTeam(buildMember(player2.getId()))
+        );
+
+        matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var otherGroupMatch = requestUtils.assertSuccess(matchResponse, MatchDto.class);
+
+        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + otherGroupMatch.getId(), null, String.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
     }
 
     private MatchCreateDto buildDto(TeamCreateDto... teams) {
