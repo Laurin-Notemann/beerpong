@@ -35,7 +35,7 @@ public class LeaderboardControllerTest {
     @Test
     @Transactional
     public void leaderboard_get_success() {
-        
+
     }
 
     @Test

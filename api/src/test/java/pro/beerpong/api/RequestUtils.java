@@ -62,10 +62,10 @@ public class RequestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private String generateAuthToken(int port, boolean force) {
+    private String generateAuthToken(int port) {
         String tempRefresh = REFRESH_TOKEN;
 
-        if (force || REFRESH_TOKEN == null) {
+        if (RESET_FOR_NEXT_REQUEST || REFRESH_TOKEN == null) {
             var signupDto = new AuthSignupDto();
             signupDto.setDeviceId("test");
             signupDto.setInstallationType(InstallationType.IOS);
@@ -88,7 +88,7 @@ public class RequestUtils {
 
             tempRefresh = signupTokenDto.getToken();
 
-            if (!force) {
+            if (!RESET_FOR_NEXT_REQUEST) {
                 REFRESH_TOKEN = tempRefresh;
             }
 
@@ -96,7 +96,7 @@ public class RequestUtils {
 
         var tempAuth = AUTH_TOKEN;
 
-        if (force || AUTH_TOKEN == null) {
+        if (RESET_FOR_NEXT_REQUEST || AUTH_TOKEN == null) {
             var refreshDto = new AuthRefreshDto();
             refreshDto.setRefreshToken(tempRefresh);
 
@@ -118,7 +118,7 @@ public class RequestUtils {
 
             tempAuth = refreshTokenDto.getToken();
 
-            if (!force) {
+            if (!RESET_FOR_NEXT_REQUEST) {
                 AUTH_TOKEN = tempAuth;
             }
         }
@@ -130,7 +130,7 @@ public class RequestUtils {
         HttpHeaders headers = new HttpHeaders();
 
         if (withAuth) {
-            headers.setBearerAuth(generateAuthToken(port, RESET_FOR_NEXT_REQUEST));
+            headers.setBearerAuth(generateAuthToken(port));
         }
 
         RESET_FOR_NEXT_REQUEST = false;
