@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
 public class MatchController {
+    // currently we only support games played with exactly 2 teams
     private static final int MIN_TEAM_AMOUNT = 2;
     private static final int MAX_TEAM_AMOUNT = 2;
 
@@ -137,6 +138,10 @@ public class MatchController {
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        }
+
+        if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
         }
 
         var match = matchService.getRawMatchById(id);
