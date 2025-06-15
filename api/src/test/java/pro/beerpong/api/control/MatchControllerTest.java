@@ -1706,9 +1706,16 @@ public class MatchControllerTest {
     }
 
     @Test
-    public void matches_overviewAll_invalidArgs() {
+    public void matches_overviewAll_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches/overview", List.class, MatchOverviewDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+
+        var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches/overview", List.class, MatchOverviewDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
     }
 
     @Test
@@ -1820,9 +1827,75 @@ public class MatchControllerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void matches_overviewById_invalidArgs() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
+        var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertTrue(players.size() >= 2);
+
+        var player1 = players.getFirst();
+        var player2 = players.getLast();
+
+        assertNotNull(player1);
+        assertNotNull(player2);
+        assertNotEquals(player1, player2);
+
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
+
+        assertTrue(ruleMoves.size() >= 2);
+
+        var normalMove = ruleMoves.stream().filter(ruleMoveDto -> !ruleMoveDto.isFinishingMove()).findFirst().orElseThrow();
+        var finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        assertNotNull(normalMove);
+        assertFalse(normalMove.isFinishingMove());
+        assertNotNull(finishMove);
+        assertTrue(finishMove.isFinishingMove());
+
+        var matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(normalMove.getId(), 5),
+                                buildMove(finishMove.getId(), 1)
+                        )
+                ),
+                buildTeam(
+                        buildMember(
+                                player2.getId(),
+                                buildMove(normalMove.getId(), 3)
+                        )
+                )
+        );
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var match = requestUtils.assertSuccess(response, MatchDto.class);
+
+        assertNotNull(match);
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/someIdThatNotExists/overview", MatchOverviewDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName("testing");
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+
+        var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
+        var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
     }
 
     @Test
