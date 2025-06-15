@@ -2015,10 +2015,160 @@ public class MatchControllerTest {
 
     @Test
     @Transactional
+    @SuppressWarnings("unchecked")
     public void matches_update_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        //TODO
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
+        assertTrue(players.size() >= 2);
+
+        var player1 = players.getFirst();
+        var player2 = players.getLast();
+
+        assertNotNull(player1);
+        assertNotNull(player2);
+        assertNotEquals(player1, player2);
+
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
+
+        assertTrue(ruleMoves.size() >= 2);
+
+        var normalMove = ruleMoves.stream().filter(ruleMoveDto -> !ruleMoveDto.isFinishingMove()).findFirst().orElseThrow();
+        var finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        assertNotNull(normalMove);
+        assertFalse(normalMove.isFinishingMove());
+        assertNotNull(finishMove);
+        assertTrue(finishMove.isFinishingMove());
+
+        var matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(finishMove.getId(), 1)
+                        )
+                ),
+                buildTeam(buildMember(player2.getId()))
+        );
+
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var oldMatch = requestUtils.assertSuccess(response, MatchDto.class);
+
+        assertNotNull(oldMatch);
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + oldMatch.getId(), MatchDto.class);
+        var fetched = requestUtils.assertSuccess(response, MatchDto.class);
+
+        assertNotNull(fetched);
+
+        oldMatch.setDate(fetched.getDate());
+        assertEquals(oldMatch, fetched);
+
+        matchDto = buildDto(
+                buildTeam(
+                        buildMember(
+                                player1.getId(),
+                                buildMove(normalMove.getId(), 5),
+                                buildMove(finishMove.getId(), 1)
+                        )
+                ),
+                buildTeam(
+                        buildMember(
+                                player2.getId(),
+                                buildMove(normalMove.getId(), 3)
+                        )
+                )
+        );
+
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + oldMatch.getId(), matchDto, MatchDto.class);
+        var match = requestUtils.assertSuccess(response, MatchDto.class);
+
+        assertEquals(oldMatch.getId(), match.getId());
+        assertEquals(oldMatch.getDate(), match.getDate());
+        assertEquals(oldMatch.getSeason(), match.getSeason());
+        assertEquals(oldMatch.getCreatedBy(), match.getCreatedBy());
+
+        assertNotNull(match.getId());
+        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
+        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
+        assertNotNull(match.getDate());
+
+        assertEquals(2, match.getTeams().size());
+
+        var team1 = match.getTeams().getFirst();
+        var team2 = match.getTeams().getLast();
+
+        assertNotNull(team1);
+        assertNotNull(team1.getId());
+        assertEquals(match.getId(), team1.getMatchId());
+        assertNotNull(team2);
+        assertNotNull(team2.getId());
+        assertEquals(match.getId(), team2.getMatchId());
+
+        var teamMembers1 = match.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
+                .toList();
+        var teamMembers2 = match.getTeamMembers().stream()
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
+                .toList();
+
+        assertEquals(1, teamMembers1.size());
+        assertEquals(1, teamMembers2.size());
+
+        var teamMember1 = teamMembers1.getFirst();
+        var teamMember2 = teamMembers2.getFirst();
+
+        assertNotNull(teamMember1);
+        assertNotNull(teamMember1.getId());
+        assertEquals(team1.getId(), teamMember1.getTeamId());
+        assertEquals(player1.getId(), teamMember1.getPlayerId());
+        assertNotNull(teamMember2);
+        assertNotNull(teamMember2.getId());
+        assertEquals(team2.getId(), teamMember2.getTeamId());
+        assertEquals(player2.getId(), teamMember2.getPlayerId());
+
+        var matchMoves1 = match.getMatchMoves().stream()
+                .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
+                .toList();
+        var matchMoves2 = match.getMatchMoves().stream()
+                .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember2.getId()))
+                .toList();
+
+        assertEquals(2, matchMoves1.size());
+        assertEquals(1, matchMoves2.size());
+
+        var normalMove1 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(normalMove.getId())).findFirst().orElseThrow();
+        var finishMove1 = matchMoves1.stream().filter(dto -> dto.getMoveId().equals(finishMove.getId())).findFirst().orElseThrow();
+        var normalMove2 = matchMoves2.getFirst();
+
+        assertNotNull(normalMove1);
+        assertNotNull(normalMove1.getId());
+        assertEquals(teamMember1.getId(), normalMove1.getTeamMemberId());
+        assertEquals(normalMove.getId(), normalMove1.getMoveId());
+        assertEquals(5, normalMove1.getValue());
+
+        assertNotNull(finishMove1);
+        assertNotNull(finishMove1.getId());
+        assertEquals(teamMember1.getId(), finishMove1.getTeamMemberId());
+        assertEquals(finishMove.getId(), finishMove1.getMoveId());
+        assertEquals(1, finishMove1.getValue());
+
+        assertNotNull(normalMove2);
+        assertNotNull(normalMove2.getId());
+        assertEquals(teamMember2.getId(), normalMove2.getTeamMemberId());
+        assertEquals(normalMove.getId(), normalMove2.getMoveId());
+        assertEquals(3, normalMove2.getValue());
+
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), MatchDto.class);
+        var newFetched = requestUtils.assertSuccess(response, MatchDto.class);
+
+        assertNotNull(newFetched);
+
+        match.setDate(newFetched.getDate());
+        assertEquals(match, newFetched);
     }
 
     @Test
