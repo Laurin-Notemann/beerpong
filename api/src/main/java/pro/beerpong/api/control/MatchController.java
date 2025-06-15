@@ -118,7 +118,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_OF_GROUP);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
