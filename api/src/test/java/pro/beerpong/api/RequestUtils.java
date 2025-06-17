@@ -123,6 +123,8 @@ public class RequestUtils {
             }
         }
 
+        RESET_FOR_NEXT_REQUEST = false;
+
         return tempAuth;
     }
 
@@ -132,8 +134,6 @@ public class RequestUtils {
         if (withAuth) {
             headers.setBearerAuth(generateAuthToken(port));
         }
-
-        RESET_FOR_NEXT_REQUEST = false;
 
         headers.setContentType(MediaType.APPLICATION_JSON);
 
