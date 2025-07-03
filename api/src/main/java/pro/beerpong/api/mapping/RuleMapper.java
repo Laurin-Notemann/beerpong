@@ -5,7 +5,7 @@ import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = AssetAuthMapper.class)
 public interface RuleMapper {
     Rule ruleCreateDtoToRule(RuleCreateDto dto);
 

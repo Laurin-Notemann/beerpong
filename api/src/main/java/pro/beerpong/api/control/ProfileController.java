@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
@@ -23,11 +24,17 @@ public class ProfileController {
     private final SubscriptionHandler subscriptionHandler;
 
     @PostMapping
-    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId, @RequestBody ProfileCreateDto profileCreateDto) {
+    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId,
+                                                                             @RequestBody ProfileCreateDto profileCreateDto,
+                                                                             @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var dto = profileService.createPlayer(groupId, profileCreateDto);
+            var dto = profileService.createPlayer(groupId, profileCreateDto, user);
 
             if (dto == null) {
                 return ResponseEnvelope.notOk(ErrorCodes.PROFILE_ALREADY_EXISTS);
@@ -60,7 +67,11 @@ public class ProfileController {
             var profile = profileService.getProfileById(id);
 
             if (profile != null) {
-                return ResponseEnvelope.ok(profile);
+                if (profile.getGroupId().equals(groupId)) {
+                    return ResponseEnvelope.ok(profile);
+                } else {
+                    return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_OF_GROUP);
+                }
             } else {
                 return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
             }
@@ -74,7 +85,7 @@ public class ProfileController {
         var group = groupService.getGroupById(groupId);
 
         if (group != null) {
-            var updatedProfile = profileService.updateProfile(id, profileCreateDto);
+            var updatedProfile = profileService.updateProfile(id, groupId, profileCreateDto);
 
             if (updatedProfile != null) {
                 subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_UPDATE, groupId, updatedProfile));

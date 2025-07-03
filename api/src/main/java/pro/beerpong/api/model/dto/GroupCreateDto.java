@@ -16,11 +16,12 @@ public class GroupCreateDto {
     private String customSportName;
 
     public boolean invalidName() {
-        return this.name == null || this.name.isEmpty() ||
+        return this.name == null || this.name.trim().isEmpty() ||
                 this.name.length() < GROUP_NAME_MIN_LENGTH || this.name.length() > GROUP_NAME_MAX_LENGTH;
     }
 
     public boolean invalidProfileName() {
-        return this.profileNames == null || this.profileNames.isEmpty();
+        return this.profileNames == null || this.profileNames.isEmpty() ||
+                this.profileNames.stream().anyMatch(s -> this.profileNames.stream().filter(s1 -> s1.equals(s)).count() > 1);
     }
 }
