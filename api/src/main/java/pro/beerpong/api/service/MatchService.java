@@ -404,7 +404,7 @@ public class MatchService {
                         return IntStream.range(0, moveDto.getCount())
                                 .mapToObj(i -> ruleMove);
                     } else {
-                        return IntStream.empty().mapToObj(i -> null);
+                        return IntStream.empty().mapToObj(i -> (RuleMove) null);
                     }
                 })
                 .filter(Objects::nonNull)

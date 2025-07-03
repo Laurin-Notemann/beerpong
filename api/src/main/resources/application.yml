@@ -6,3 +6,5 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+server:
+  max-http-request-header-size: 64KB
