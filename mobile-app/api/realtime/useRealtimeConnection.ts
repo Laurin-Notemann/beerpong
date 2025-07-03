@@ -10,16 +10,13 @@ import {
 } from '@/api/utils/reactQuery';
 import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 import { RealtimeClient, RealtimeEventHandler } from '.';
 
 export function useRealtimeConnection() {
-    const { groupIds } = useGroupStore();
-
     const qc = useQueryClient();
 
-    const client = useRef(new RealtimeClient(env.realtimeBaseUrl, groupIds));
+    const client = useRef<RealtimeClient | null>(null);
 
     const { writeLog } = useLogging();
 
@@ -28,7 +25,11 @@ export function useRealtimeConnection() {
     }
     const { invalidateLeaderboard } = useQueryInvalidation();
 
-    const hoher: RealtimeEventHandler = (e) => {
+    const onRealtimeEvent: RealtimeEventHandler = (e) => {
+        if (!client.current) return;
+
+        console.log('received event');
+
         switch (e.eventType) {
             case 'GROUPS':
                 client.current.logger.info('refetching groups');
@@ -174,16 +175,15 @@ export function useRealtimeConnection() {
         if (client.current) {
             client.current.logger.addEventListener('*', writeLogs);
 
-            client.current.on.event(hoher);
+            client.current.on.event(onRealtimeEvent);
 
-            return () =>
-                client.current.logger.removeEventListener('*', writeLogs);
+            return () => {
+                if (client.current) {
+                    client.current.logger.removeEventListener('*', writeLogs);
+                }
+            };
         }
     }, [client.current]);
-
-    useEffect(() => {
-        client.current.subscribeToGroups(groupIds);
-    }, [groupIds]);
 
     function refetchGroup(groupId: string) {
         qc.invalidateQueries({
@@ -191,6 +191,9 @@ export function useRealtimeConnection() {
             exact: true,
         });
     }
+    function connectRealtime(groupIds: string[]) {
+        client.current = new RealtimeClient(env.realtimeBaseUrl, groupIds);
+    }
 
-    return client.current;
+    return { realtime: client.current, connectRealtime };
 }

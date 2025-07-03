@@ -40,11 +40,6 @@ export default function TabLayout() {
     const headerTitleIfGroupIsLoading = '';
     const headerTitleIfGroupCantBeFound = '';
 
-    if (!selectedGroupId) {
-        nav.navigate('onboarding');
-        return;
-    }
-
     const groupHeader = {
         ...navStyles,
         headerTitle: selectedGroup.isLoading

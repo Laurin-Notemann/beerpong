@@ -34,6 +34,7 @@ export const useGroupQuery = (id: ApiId | null) => {
 
 export const useJoinGroupMutation = () => {
     const { api } = useApi();
+
     return useMutation<
         Paths.FindGroupByInviteCode.Responses.$200 | null,
         Error,
@@ -41,13 +42,43 @@ export const useJoinGroupMutation = () => {
     >({
         mutationFn: async (inviteCode) => {
             const res = await (await api).findGroupByInviteCode({ inviteCode });
+
+            if (res.data.data) {
+                await (await api).joinGroup({ id: res.data.data.id! }, {});
+            }
             return res?.data;
         },
     });
 };
 
+export const useLeaveGroupMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<Paths.LeaveGroup.Responses.$200 | null, Error, string>({
+        mutationFn: async (id) => {
+            const res = await (await api).leaveGroup({ id });
+
+            return res?.data;
+        },
+    });
+};
+
+export const useGetMyGroupsQuery = () => {
+    const { api } = useApi();
+
+    return useQuery<Paths.FindUserGroups.Responses.$200 | null, Error>({
+        queryFn: async () => {
+            const res = await (await api).findUserGroups();
+
+            return res?.data;
+        },
+        queryKey: [QK.group, 'myGroups'],
+    });
+};
+
 export const useCreateGroupMutation = () => {
     const { api } = useApi();
+
     return useMutation<
         Paths.CreateGroup.Responses.$200 | null,
         Error,

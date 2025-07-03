@@ -58,7 +58,8 @@
                     "photosPermission": "The app accesses your photos to let you choose a picture",
                     "cameraPermission": "The app accesses your photos to let take a pic"
                 }
-            ]
+            ],
+            "expo-secure-store"
         ],
         "experiments": {
             "typedRoutes": true

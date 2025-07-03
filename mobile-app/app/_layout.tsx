@@ -16,6 +16,7 @@ import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { env } from '@/api/env';
+import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
@@ -25,6 +26,7 @@ import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/theme';
 import { LoggingProvider } from '@/utils/useLogging';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
 Sentry.init(env.sentry);
@@ -35,6 +37,14 @@ const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
 
 function Everything() {
+    const { connectRealtime } = useRealtimeConnection();
+
+    const { groupIds } = useGroupStore();
+
+    useEffect(() => {
+        connectRealtime(groupIds);
+    }, [groupIds]);
+
     const modalStyles = useModalStyles();
     return (
         <Stack initialRouteName="(tabs)">
