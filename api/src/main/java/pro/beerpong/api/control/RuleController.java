@@ -62,6 +62,8 @@ public class RuleController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         } else if (pair.getSecond().getEndDate() != null) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
+        } else if (rules.stream().anyMatch(RuleCreateDto::invalidDto)) {
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_INVALID_DTO);
         }
 
         var ruleDtos = ruleService.writeRules(groupId, pair.getSecond(), rules, user);

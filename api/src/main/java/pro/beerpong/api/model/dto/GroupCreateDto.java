@@ -21,6 +21,7 @@ public class GroupCreateDto {
     }
 
     public boolean invalidProfileName() {
-        return this.profileNames == null || this.profileNames.isEmpty();
+        return this.profileNames == null || this.profileNames.isEmpty() ||
+                this.profileNames.stream().anyMatch(s -> this.profileNames.stream().filter(s1 -> s1.equals(s)).count() > 1);
     }
 }

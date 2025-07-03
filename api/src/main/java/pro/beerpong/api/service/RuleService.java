@@ -3,6 +3,7 @@ package pro.beerpong.api.service;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMapper;
 import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Rule;
@@ -19,7 +20,7 @@ import java.util.List;
 
 @Service
 public class RuleService {
-    private static final List<Rule> DEFAULT_RULES = List.of(
+    public static final List<RuleDto> DEFAULT_RULES = List.of(
             buildRule("Teams", "The two teams can have any size, and they don't have to have the same number of players."),
             buildRule("Cup Setup", "Ten cups per side are to be arranged in a pyramid pointing towards the opponent. The back row must be no further from the table edge than one cup diameter. All cups are to be filled with the same amount of liquid, preferably halfway full."),
             buildRule("Number of Balls", "Each side throws at least two balls. If there are three or more players per side, increase the ball count by one per extra player."),
@@ -98,19 +99,23 @@ public class RuleService {
                 .toList();
     }
 
-    public void createDefaultRules(Season season, GroupMember createdBy) {
-        DEFAULT_RULES.stream()
-                .map(rule -> {
-                    var rle = rule.clone();
-                    rle.setSeason(season);
-                    rle.setCreatedBy(createdBy);
-                    return rle;
-                })
-                .forEach(ruleRepository::save);
+    public void createDefaultRules(Season season, String sportPreset, GroupMember createdBy) {
+        if (sportPreset != null && sportPreset.equals(GroupPresetsController.BEERPONG.getId())) {
+            DEFAULT_RULES.stream()
+                    .map(rule -> {
+                        var rle = new Rule();
+                        rle.setTitle(rule.getTitle());
+                        rle.setDescription(rule.getDescription());
+                        rle.setSeason(season);
+                        rle.setCreatedBy(createdBy);
+                        return rle;
+                    })
+                    .forEach(ruleRepository::save);
+        }
     }
 
-    private static Rule buildRule(String title, String description) {
-        var rule = new Rule();
+    private static RuleDto buildRule(String title, String description) {
+        var rule = new RuleDto();
 
         rule.setTitle(title);
         rule.setDescription(description);

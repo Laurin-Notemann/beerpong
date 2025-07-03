@@ -37,12 +37,22 @@ public class PlayerController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
         }
 
-        var players = seasonService.calcStatsForPlayersInSeason(seasonId, showInactive, showStats);
+        var season = seasonService.getSeasonById(seasonId);
+
+        if (season == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
+        }
+
+        if (!season.getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        var players = seasonService.calcStatsForPlayersInSeason(season, showInactive, showStats);
 
         if (players != null) {
             return ResponseEnvelope.ok(players);
         } else {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.ERROR);
         }
     }
 

@@ -41,7 +41,6 @@ public class AuthService {
         device.setUser(user);
         device.setDeviceId(dto.getDeviceId());
         device.setType(dto.getInstallationType());
-        //TODO set pushNotifyToken?
 
         deviceRepository.save(device);
 

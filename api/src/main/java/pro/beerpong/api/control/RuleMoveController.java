@@ -34,6 +34,10 @@ public class RuleMoveController {
             return error;
         }
 
+        if (dto.invalidDto()) {
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_INVALID_DTO);
+        }
+
         var move = moveService.createRuleMove(pair.getFirst(), pair.getSecond(), dto, true);
 
         if (move != null) {
@@ -50,6 +54,10 @@ public class RuleMoveController {
 
         if (error != null) {
             return error;
+        }
+
+        if (dto.invalidDto()) {
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_MOVE_INVALID_DTO);
         }
 
         var move = moveService.getById(ruleMoveId);

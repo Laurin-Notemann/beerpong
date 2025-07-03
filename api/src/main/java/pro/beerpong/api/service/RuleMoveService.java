@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 @Service
 public class RuleMoveService {
-    private static final List<RuleMove> DEFAULT_BEERPONG_MOVES = List.of(
+    public static final List<RuleMoveDto> DEFAULT_BEERPONG_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Bomb", 2, 0, false),
             buildRuleMove("Bouncer", 2, 0, false),
@@ -31,7 +31,7 @@ public class RuleMoveService {
             buildRuleMove("Finish - Ring of fire", 1, 10, true)
     );
 
-    private static final List<RuleMove> DEFAULT_MOVES = List.of(
+    public static final List<RuleMoveDto> DEFAULT_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Finish - Normal", 1, 3, true)
     );
@@ -129,7 +129,7 @@ public class RuleMoveService {
     }
 
     public void createDefaultRuleMoves(Group group, Season season) {
-        Stream<RuleMove> ruleMoves;
+        Stream<RuleMoveDto> ruleMoves;
 
         if (group.getSportPreset() != null && group.getSportPreset().equals(GroupPresetsController.BEERPONG.getId())) {
             ruleMoves = DEFAULT_BEERPONG_MOVES.stream();
@@ -138,15 +138,19 @@ public class RuleMoveService {
         }
 
         ruleMoves.map(ruleMove -> {
-                    var move = ruleMove.clone();
+                    var move = new RuleMove();
+                    move.setName(ruleMove.getName());
+                    move.setFinishingMove(ruleMove.isFinishingMove());
+                    move.setPointsForScorer(ruleMove.getPointsForScorer());
+                    move.setPointsForTeam(ruleMove.getPointsForTeam());
                     move.setSeason(season);
                     return move;
                 })
                 .forEach(moveRepository::save);
     }
 
-    private static RuleMove buildRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {
-        var ruleMove = new RuleMove();
+    private static RuleMoveDto buildRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {
+        var ruleMove = new RuleMoveDto();
 
         ruleMove.setName(name);
         ruleMove.setPointsForScorer(pointsForScorer);

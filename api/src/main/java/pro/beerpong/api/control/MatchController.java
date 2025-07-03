@@ -17,6 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
 public class MatchController {
+    // currently we only support games played with exactly 2 teams
+    private static final int MIN_TEAM_AMOUNT = 2;
+    private static final int MAX_TEAM_AMOUNT = 2;
+
     private final MatchService matchService;
     private final SeasonService seasonService;
     private final SubscriptionHandler subscriptionHandler;
@@ -47,6 +51,10 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
+        if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
+        }
+
         var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto, user);
 
         if (match != null) {
@@ -55,7 +63,7 @@ public class MatchController {
 
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.ERROR);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
@@ -83,7 +91,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_OF_GROUP);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
@@ -111,7 +119,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_OF_GROUP);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
@@ -130,6 +138,10 @@ public class MatchController {
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        }
+
+        if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
         }
 
         var match = matchService.getRawMatchById(id);

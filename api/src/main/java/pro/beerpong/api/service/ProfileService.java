@@ -129,10 +129,10 @@ public class ProfileService {
         return false;
     }
 
-    public ProfileDto updateProfile(String id, ProfileCreateDto profileCreateDto) {
+    public ProfileDto updateProfile(String id, String groupId, ProfileCreateDto profileCreateDto) {
         var profile = getRawProfileById(id);
 
-        if (profile == null) {
+        if (profile == null || !profile.getGroup().getId().equals(groupId)) {
             return null;
         }
 

@@ -59,7 +59,7 @@ public class GroupService {
 
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
-        season.setSeasonSettings(new SeasonSettings());
+        season.setSeasonSettings(SeasonSettings.createDefault());
 
         group.setActiveSeason(season);
         group = groupRepository.save(group);
@@ -85,7 +85,7 @@ public class GroupService {
         });
 
         ruleMoveService.createDefaultRuleMoves(group, season);
-        ruleService.createDefaultRules(season, groupMember);
+        ruleService.createDefaultRules(season, groupCreateDto.getSportPreset(), groupMember);
 
         return withStats(groupMapper.groupToGroupDto(group));
     }

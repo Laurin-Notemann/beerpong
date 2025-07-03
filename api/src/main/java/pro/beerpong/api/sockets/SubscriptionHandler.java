@@ -30,6 +30,7 @@ public class SubscriptionHandler extends TextWebSocketHandler {
     private static final Gson GSON = new GsonBuilder()
             .serializeNulls()
             .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter())
+            .registerTypeAdapter(LocalTimeAdapter.class, new LocalTimeAdapter())
             .create();
 
     private final Map<String, Set<String>> userGroups = new ConcurrentHashMap<>();
