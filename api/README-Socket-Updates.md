@@ -93,9 +93,9 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **groupUpdate:** When a group is update
 
-#### Matches (body: MatchDto)
+#### Matches (body: MatchDto, MatchId)
 
-* **matchCreate:** When a match is created
+* **matchCreate:** When a match is created (only sends matchId)
 * **matchUpdate:** When a match is updated
 * **matchDelete:** When a match is delete
 
