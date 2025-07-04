@@ -361,9 +361,6 @@ public class MatchService {
 
                     // Step 6: Delete all teams
                     teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
-
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, match));
-
                     matchRepository.deleteById(id);
                 } else {
                     error.set(ErrorCodes.MATCH_NOT_OF_GROUP);
