@@ -318,6 +318,7 @@ public class MatchService {
         return matchRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
