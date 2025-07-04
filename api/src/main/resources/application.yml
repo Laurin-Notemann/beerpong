@@ -8,3 +8,6 @@ spring:
       ddl-auto: update
 server:
   max-http-request-header-size: 64KB
+sentry:
+  dsn: ${SENTRY_DSN}
+  debug: false
