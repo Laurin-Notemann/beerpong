@@ -9,5 +9,6 @@ spring:
 server:
   max-http-request-header-size: 64KB
 sentry:
-  dsn: ${SENTRY_DSN}
+  dsn: https://9118bf204e5738ecdfdc11a83507d8d3@o4508333440892928.ingest.de.sentry.io/4509607635058768
+  #TODO dsn: ${SENTRY_DSN}
   debug: false
