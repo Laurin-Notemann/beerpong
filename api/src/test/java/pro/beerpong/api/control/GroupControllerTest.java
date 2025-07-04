@@ -135,20 +135,6 @@ public class GroupControllerTest {
 
     @Test
     @Transactional
-    @SuppressWarnings("unchecked")
-    public void group_userGroups() {
-        var prerequisiteGroup = testUtils.createTestGroup(port);
-
-        var response = requestUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
-        var groups = (List<GroupDto>) requestUtils.assertSuccess(response, ArrayList.class);
-
-        // test groups a user has access to
-        assertFalse(groups.isEmpty());
-        assertTrue(groups.stream().anyMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
-    }
-
-    @Test
-    @Transactional
     public void group_findByInviteCode_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
@@ -268,6 +254,7 @@ public class GroupControllerTest {
 
     @Test
     @Transactional
+    @SuppressWarnings("unchecked")
     public void group_leave() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
@@ -276,5 +263,19 @@ public class GroupControllerTest {
 
         // test group leave
         assertEquals("OK", ok);
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public void group_userGroups() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+
+        var response = requestUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
+        var groups = (List<GroupDto>) requestUtils.assertSuccess(response, ArrayList.class);
+
+        // test groups a user has access to
+        assertFalse(groups.isEmpty());
+        assertTrue(groups.stream().anyMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
     }
 }
