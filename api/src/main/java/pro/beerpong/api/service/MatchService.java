@@ -4,10 +4,8 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.mapping.GroupMemberMapper;
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.mapping.PlayerMapper;
-import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.*;
@@ -16,13 +14,12 @@ import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.Duration;
-import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -52,9 +49,6 @@ public class MatchService {
     private final TeamService teamService;
     private final RuleMoveService ruleMoveService;
     private final PlayerMapper playerMapper;
-    private final AuthService authService;
-    private final GroupMemberMapper groupMemberMapper;
-    private final SeasonMapper seasonMapper;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -67,7 +61,7 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper, AuthService authService, GroupMemberMapper groupMemberMapper, SeasonMapper seasonMapper) {
+                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -84,43 +78,32 @@ public class MatchService {
         this.teamService = teamService;
         this.ruleMoveService = ruleMoveService;
         this.playerMapper = playerMapper;
-        this.authService = authService;
-        this.groupMemberMapper = groupMemberMapper;
-        this.seasonMapper = seasonMapper;
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
-        var playerIds = dto.getTeams().stream()
-                .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream().map(TeamMemberCreateDto::getPlayerId))
-                .toList();
+        return !dto.getTeams().stream().allMatch(teamCreateDto ->
+                teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
+                    var player = playerRepository.findById(memberDto.getPlayerId());
 
-        var finishMoves = dto.getTeams().stream()
-                .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
-                .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
-                .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()) && matchMoveDto.getCount() > 0)
-                .toList();
+                    if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
+                        return false;
+                    }
 
-        return playerIds.stream().distinct().count() != playerIds.size() ||
-                finishMoves.size() != 1 ||
-                finishMoves.getFirst().getCount() != 1 ||
-                !dto.getTeams().stream().allMatch(teamCreateDto ->
-                        teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
-                            var player = playerRepository.findById(memberDto.getPlayerId());
+                    return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
+                        var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
 
-                            if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
-                                return false;
-                            }
-
-                            return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
-                                var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
-
-                                return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
-                            });
-                        }));
+                        return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
+                    });
+                })) ||
+                dto.getTeams().stream()
+                        .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
+                        .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
+                        .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()) && matchMoveDto.getCount() == 1)
+                        .count() != 1;
     }
 
     @Transactional
-    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto, UserDto user) {
+    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto) {
         if (!group.getActiveSeason().getId().equals(season.getId()) ||
                 invalidCreateDto(group.getId(), season.getId(), matchCreateDto)) {
             return null;
@@ -130,7 +113,6 @@ public class MatchService {
 
         match.setDate(ZonedDateTime.now());
         match.setSeason(season);
-        match.setCreatedBy(authService.memberByUser(user, group.getId()));
 
         match = matchRepository.save(match);
 
@@ -214,14 +196,12 @@ public class MatchService {
                 .reduce(0L, Long::sum);
     }
 
-    public Stream<MatchDto> streamAllMatchesToday(GroupDto group, SeasonDto season) {
+    public Stream<MatchDto> streamAllMatchesToday(GroupDto group, Season season) {
         var now = ZonedDateTime.now();
 
         Predicate<Match> predicate = switch (season.getSeasonSettings().getDailyLeaderboard()) {
-            case WAKE_TIME ->
-                    match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTime()));
-            case LAST_24_HOURS ->
-                    (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
+            case WAKE_TIME -> match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTimeHour()));
+            case LAST_24_HOURS -> (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
             case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
         };
 
@@ -239,8 +219,8 @@ public class MatchService {
         }
     }
 
-    public ZonedDateTime getWakeTime(ZonedDateTime now, LocalTime wakeTime) {
-        var wakeTimeToday = now.withHour(wakeTime.getHour()).withMinute(wakeTime.getMinute()).withSecond(0).withNano(0);
+    public ZonedDateTime getWakeTime(ZonedDateTime now, int wakeTimeHour) {
+        var wakeTimeToday = now.withHour(wakeTimeHour).withMinute(0).withSecond(0).withNano(0);
 
         if (now.isBefore(wakeTimeToday)) {
             wakeTimeToday = wakeTimeToday.minusDays(1);
@@ -363,7 +343,7 @@ public class MatchService {
                     teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
                     matchRepository.deleteById(id);
                 } else {
-                    error.set(ErrorCodes.MATCH_NOT_OF_GROUP);
+                    error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
                 }
             } else {
                 error.set(ErrorCodes.SEASON_ALREADY_ENDED);
@@ -378,8 +358,7 @@ public class MatchService {
 
         dto.setId(match.getId());
         dto.setDate(match.getDate());
-        dto.setSeason(seasonMapper.seasonToSeasonDto(match.getSeason()));
-        dto.setCreatedBy(groupMemberMapper.groupMemberToGroupMemberDto(match.getCreatedBy()));
+        dto.setSeason(match.getSeason());
 
         return dto;
     }
@@ -389,8 +368,7 @@ public class MatchService {
 
         dto.setId(match.getId());
         dto.setDate(match.getDate());
-        dto.setSeason(seasonMapper.seasonToSeasonDto(match.getSeason()));
-        dto.setCreatedBy(groupMemberMapper.groupMemberToGroupMemberDto(match.getCreatedBy()));
+        dto.setSeason(match.getSeason());
 
         loadMatchInfo(match, dto);
 

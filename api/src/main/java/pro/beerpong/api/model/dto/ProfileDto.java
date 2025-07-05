@@ -10,5 +10,4 @@ public class ProfileDto {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AssetMetadataDto avatarAsset;
     private String groupId;
-    private GroupMemberDto createdBy;
 }

@@ -13,7 +13,7 @@ public class SeasonCreateDto {
     private List<RuleMoveCreateDto> ruleMoves;
 
     public boolean invalidName() {
-        return this.oldSeasonName == null || this.oldSeasonName.trim().isEmpty() ||
+        return this.oldSeasonName == null || this.oldSeasonName.isEmpty() ||
                 this.oldSeasonName.length() < SEASON_NAME_MIN_LENGTH ||
                 this.oldSeasonName.length() > SEASON_NAME_MAX_LENGTH;
     }

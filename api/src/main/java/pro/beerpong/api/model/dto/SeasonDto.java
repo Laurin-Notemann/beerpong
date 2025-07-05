@@ -13,5 +13,4 @@ public class SeasonDto {
     private ZonedDateTime endDate;
     private String groupId;
     private SeasonSettings seasonSettings;
-    private GroupMemberDto createdBy;
 }

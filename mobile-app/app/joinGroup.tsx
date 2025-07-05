@@ -1,8 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import React from 'react';
 
-import { QK } from '@/api/utils/reactQuery';
+import { useJoinGroupMutation } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import JoinGroup from '@/components/screens/JoinGroup';
 import { showSuccessToast } from '@/toast';
@@ -12,20 +11,17 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 export default function Page() {
     const nav = useNavigation();
 
-    const { joinGroupMutation, selectGroup } = useGroupStore();
+    const joinGroupMutation = useJoinGroupMutation();
 
-    const queryClient = useQueryClient();
+    const { addGroup, selectGroup } = useGroupStore();
 
     async function onSubmit(code: string) {
         try {
             const data = await joinGroupMutation.mutateAsync(code);
 
             if (data?.data?.id) {
+                addGroup(data.data.id);
                 selectGroup(data.data.id);
-
-                await queryClient.invalidateQueries({
-                    queryKey: [QK.group, 'myGroups'],
-                });
 
                 nav.navigate('index');
 
