@@ -26,12 +26,14 @@ public class AuthController {
     @PostMapping("refresh")
     public ResponseEntity<ResponseEnvelope<AuthTokenDto>> refreshAuth(@RequestBody AuthRefreshDto dto) {
         if (dto.getRefreshToken() == null || dto.getRefreshToken().trim().isEmpty()) {
+            System.out.println("[auth-debug] token is empty: " + dto.getRefreshToken());
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_REFRESH_INVALID_DTO);
         }
 
         var result = authService.refreshAuth(dto);
 
         if (result == null) {
+            System.out.println("[auth-debug] token is invalid: " + dto.getRefreshToken());
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_REFRESH_INVALID_TOKEN);
         }
 
