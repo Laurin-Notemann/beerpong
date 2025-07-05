@@ -1,26 +1,25 @@
-import { useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 
 import {
     useCreateGroupMutation,
     useGroupPresetsQuery,
 } from '@/api/calls/groupHooks';
-import { QK } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import LoadingScreen from '@/components/LoadingScreen';
 import { CreateGroupSetGame } from '@/components/screens/CreateGroupSetGame';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
     const nav = useNavigation();
     const { members, name } = useCreateGroupStore();
     const createGroupMutation = useCreateGroupMutation();
+    const { addGroup } = useGroupStore();
     const presetsQuery = useGroupPresetsQuery();
     const matchDraft = useMatchDraftStore();
-    const queryClient = useQueryClient();
 
     const presets =
         presetsQuery.data?.data?.map((i) => ({
@@ -47,9 +46,8 @@ export default function Page() {
             if (!data?.data?.id) {
                 throw new Error('invalid create group response');
             }
-            await queryClient.invalidateQueries({
-                queryKey: [QK.group, 'myGroups'],
-            });
+            addGroup(data.data.id);
+
             matchDraft.actions.clear();
 
             showSuccessToast(`You created "${name}"`);

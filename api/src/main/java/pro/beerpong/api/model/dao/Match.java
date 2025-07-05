@@ -21,8 +21,4 @@ public class Match {
 
     @OneToMany(mappedBy = "match")
     private List<Team> teams;
-
-    @ManyToOne
-    @JoinColumn(name = "createdBy")
-    private GroupMember createdBy;
 }

@@ -1,5 +1,4 @@
 import { Link } from '@react-navigation/native';
-import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
@@ -10,7 +9,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { env } from '@/api/env';
-import { QK } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -165,7 +163,7 @@ export interface SidebarProps {}
 
 // eslint-disable-next-line no-empty-pattern
 export function Sidebar({}: SidebarProps) {
-    const { groupIds, selectedGroupId, selectGroup, leaveGroupMutation } =
+    const { groupIds, selectedGroupId, selectGroup, removeGroup } =
         useGroupStore();
 
     const nav = useNavigation();
@@ -181,8 +179,6 @@ export function Sidebar({}: SidebarProps) {
     const matchDraft = useMatchDraftStore((store) => store.actions);
 
     const theme = useTheme();
-
-    const queryClient = useQueryClient();
 
     return (
         <SafeAreaView
@@ -368,14 +364,9 @@ export function Sidebar({}: SidebarProps) {
                                 title: 'Leave',
                                 type: 'danger',
 
-                                onPress: async () => {
+                                onPress: () => {
                                     if (groupIdToBeDeleted) {
-                                        await leaveGroupMutation.mutateAsync(
-                                            groupIdToBeDeleted
-                                        );
-                                        await queryClient.invalidateQueries({
-                                            queryKey: [QK.group, 'myGroups'],
-                                        });
+                                        removeGroup(groupIdToBeDeleted);
                                     }
                                     setGroupIdToBeDeleted(null);
                                 },

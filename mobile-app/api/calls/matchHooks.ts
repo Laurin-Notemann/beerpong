@@ -21,7 +21,6 @@ export const useMatchQuery = (
             if (!groupId || !seasonId || !matchId) {
                 return null;
             }
-
             const res = await (
                 await api
             ).getMatchById({ groupId, seasonId, id: matchId });

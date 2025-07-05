@@ -1,14 +1,27 @@
 package pro.beerpong.api.control;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import pro.beerpong.api.TestUtils;
+import pro.beerpong.api.model.dto.AssetMetadataDto;
+import pro.beerpong.api.model.dto.ResponseEnvelope;
+
+import java.time.Duration;
+import java.time.ZonedDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class AssetControllerTest {
-    /*
-    TODO needs s3 files
-    @LocalServerPort
+    /*@LocalServerPort
     private int port;
 
     @Autowired
@@ -27,16 +40,26 @@ public class AssetControllerTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void assets_groupWallpaper_success() {
-        var createDto = new GroupCreateDto();
-        createDto.setProfileNames(List.of("player1", "player2"));
-        createDto.setName("test");
-        createDto.setSportPreset("beerpong");
+    public void whenUploadingAsset_ThenIsSuccessful() {
+        var response = testUtils.performPost(port, "/assets", new byte[] {-128, 0, 127, 0}, AssetMetadataDto.class);
 
-        var groupResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
-        var group = testUtils.assertSuccess(groupResponse, GroupDto.class);
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
 
-        var response = testUtils.performPut(port, "/groups/" + group.getId(), group, AssetMetadataDto.class);
+        var envelope = (ResponseEnvelope<AssetMetadataDto>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
+        assertNull(envelope.getError());
+        assertEquals(200, envelope.getHttpCode());
+
+        var assetMetadata = envelope.getData();
+
+        assertNotNull(assetMetadata);
+        assertNotNull(assetMetadata.getId());
+        assertNotNull(assetMetadata.getMediaType());
+        assertEquals("application/octet-stream", assetMetadata.getMediaType());
+        assertNotNull(assetMetadata.getUploadedAt());
+        assertTrue(60 > Duration.between(ZonedDateTime.now(),assetMetadata.getUploadedAt()).getSeconds());
     }
 
     @Test

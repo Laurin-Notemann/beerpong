@@ -18,8 +18,4 @@ public class Profile {
     @ManyToOne
     @JoinColumn(name = "groupId")
     private Group group;
-
-    @ManyToOne
-    @JoinColumn(name = "createdBy")
-    private GroupMember createdBy;
 }

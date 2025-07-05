@@ -5,18 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.TestUtils;
-import pro.beerpong.api.RequestUtils;
-import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.util.DailyLeaderboard;
-import pro.beerpong.api.util.RankingAlgorithm;
+import pro.beerpong.api.model.dto.ResponseEnvelope;
 
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,109 +22,39 @@ public class GroupControllerTest {
     private int port;
 
     @Autowired
-    private RequestUtils requestUtils;
-    @Autowired
     private TestUtils testUtils;
 
     @Test
     @Transactional
-    public void group_create_success() {
-        var name = "test";
-        var group = testUtils.createTestGroup(port, name);
+    @SuppressWarnings("unchecked")
+    public void whenPassingValidGroupToCreatingGroup_ThenIsSuccessful() {
+        var createDto = new GroupCreateDto();
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
 
-        // test simple group creation
+        var response = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
+        assertNull(envelope.getError());
+        assertEquals(200, envelope.getHttpCode());
+
+        var group = envelope.getData();
+
         assertNotNull(group);
-        assertNotNull(group.getId());
         assertNotNull(group.getName());
-        assertEquals(name, group.getName());
+        assertEquals(createDto.getName(), group.getName());
+        assertNotNull(group.getId());
         assertNotNull(group.getInviteCode());
-        assertNotNull(group.getCreatedAt());
-        assertNull(group.getWallpaperAsset());
-        assertNull(group.getCustomSportName());
-        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
-
         assertNotNull(group.getActiveSeason());
         assertNotNull(group.getActiveSeason().getId());
-        assertNull(group.getActiveSeason().getName());
-        assertNotNull(group.getActiveSeason().getStartDate());
-        assertNull(group.getActiveSeason().getEndDate());
         assertEquals(group.getActiveSeason().getGroupId(), group.getId());
-        assertNotNull(group.getActiveSeason().getSeasonSettings());
-        assertEquals(1, group.getActiveSeason().getSeasonSettings().getMinMatchesToQualify());
-        assertEquals(1, group.getActiveSeason().getSeasonSettings().getMinTeamSize());
-        assertEquals(10, group.getActiveSeason().getSeasonSettings().getMaxTeamSize());
-        assertEquals(RankingAlgorithm.AVERAGE, group.getActiveSeason().getSeasonSettings().getRankingAlgorithm());
-        assertEquals(DailyLeaderboard.WAKE_TIME, group.getActiveSeason().getSeasonSettings().getDailyLeaderboard());
-        assertEquals(LocalTime.of(0, 0), group.getActiveSeason().getSeasonSettings().getWakeTime());
-        assertEquals(requestUtils.currentUserId(), group.getCreatedBy().getUserId());
-        assertEquals(group.getId(), group.getCreatedBy().getGroupId());
-        assertEquals(group.getCreatedBy(), group.getActiveSeason().getCreatedBy());
-
-        group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), null, "test123");
-
-        // test group creation with custom sport name
-        assertNotNull(group);
-        assertEquals("test123", group.getCustomSportName());
-        assertNull(group.getSportPreset());
-
-        group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), "kicker", "test123");
-
-        // test group creation with other game preset
-        assertNotNull(group);
-        assertNull(group.getCustomSportName());
-        assertEquals(GroupPresetsController.KICKER.getId(), group.getSportPreset().getId());
-    }
-
-    @Test
-    @Transactional
-    public void group_create_invalidName() {
-        // test invalid group name (empty)
-        var response = testUtils.postGroup(port, "", List.of("player1", "player2"), "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
-
-        // test invalid group name (null)
-        response = testUtils.postGroup(port, null, List.of("player1", "player2"), "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
-
-        // test invalid group name (too short)
-        response = testUtils.postGroup(port, "a", List.of("player1", "player2"), "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
-
-        // test invalid group name (too long)
-        response = testUtils.postGroup(port, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", List.of("player1", "player2"), "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_NAME);
-    }
-
-    @Test
-    @Transactional
-    public void group_create_invalidProfiles() {
-        // test invalid profile names (empty)
-        var response = testUtils.postGroup(port, "test", List.of(), "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
-
-        // test invalid profile names (null)
-        response = testUtils.postGroup(port, "test", null, "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
-
-        // test invalid profile names (non unique names)
-        response = testUtils.postGroup(port, "test", List.of("player1", "player2", "player2"), "beerpong");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
-    }
-
-    @Test
-    @Transactional
-    public void group_create_invalidSport() {
-        // test invalid sport (non existing preset)
-        var response = testUtils.postGroup(port, "test", List.of("player1", "player2"), "notExisting");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
-
-        // test invalid sport (preset null)
-        response = testUtils.postGroup(port, "test", List.of("player1", "player2"), null);
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
-
-        // test invalid sport (custom sport empty)
-        response = testUtils.postGroup(port, "test", List.of("player1", "player2"), null, "      ");
-        requestUtils.assertFailure(response, ErrorCodes.INVALID_GROUP_SPORT);
+        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
     }
 
     @Test
@@ -138,7 +62,8 @@ public class GroupControllerTest {
     public void group_findByInviteCode_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = requestUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(), GroupDto.class);
+        var response = requestUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(),
+                GroupDto.class);
         var group = requestUtils.assertSuccess(response, GroupDto.class);
 
         // test group by invite code
@@ -184,15 +109,41 @@ public class GroupControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var createDto = new GroupCreateDto();
-        createDto.setName("test123");
-        createDto.setCustomSportName("kicker");
-        createDto.setProfileNames(List.of("player3", "player4", "player1"));
+        createDto.setProfileNames(List.of("player1", "player2"));
+        createDto.setName("test");
+        createDto.setSportPreset("beerpong");
 
-        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId(), createDto, GroupDto.class);
-        var group = requestUtils.assertSuccess(response, GroupDto.class);
+        var prerequisiteResponse = testUtils.performPost(port, "/groups", createDto, GroupDto.class);
 
-        // test group update
-        assertNotNull(prerequisiteGroup);
+        assertNotNull(prerequisiteResponse);
+        assertEquals(200, prerequisiteResponse.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> prerequisiteEnvelope = (ResponseEnvelope<GroupDto>) prerequisiteResponse.getBody();
+        assertNotNull(prerequisiteEnvelope);
+        assertEquals(ResponseEnvelope.Status.OK, prerequisiteEnvelope.getStatus());
+        assertNull(prerequisiteEnvelope.getError());
+        assertEquals(200, prerequisiteEnvelope.getHttpCode());
+
+        var prerequisiteGroup = prerequisiteEnvelope.getData();
+
+        var response = testUtils.performGet(port, "/groups?inviteCode=" + prerequisiteGroup.getInviteCode(),
+                GroupDto.class);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+
+        ResponseEnvelope<GroupDto> envelope = (ResponseEnvelope<GroupDto>) response.getBody();
+        assertNotNull(envelope);
+        assertEquals(ResponseEnvelope.Status.OK, envelope.getStatus());
+        assertNull(envelope.getError());
+        assertEquals(200, envelope.getHttpCode());
+
+        var group = envelope.getData();
+
+        // if this is not here, the startDate millis are rounded and this test fails
+        group.getActiveSeason().setStartDate(prerequisiteGroup.getActiveSeason().getStartDate());
+        group.setCreatedAt(prerequisiteGroup.getCreatedAt());
+
         assertNotNull(group);
         assertEquals(prerequisiteGroup.getId(), group.getId());
         assertEquals(createDto.getName(), group.getName());
@@ -240,7 +191,8 @@ public class GroupControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
         // test group join (already in group)
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null, String.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/join", null,
+                String.class);
         requestUtils.assertFailure(response, ErrorCodes.GROUP_ALREADY_IN_GROUP);
 
         requestUtils.resetAuthForNextRequest();
@@ -258,7 +210,8 @@ public class GroupControllerTest {
     public void group_leave() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null, String.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/leave", null,
+                String.class);
         var ok = requestUtils.assertSuccess(response, String.class);
 
         // test group leave

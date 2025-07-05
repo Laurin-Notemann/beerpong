@@ -8,5 +8,5 @@ import java.util.List;
 
 @Data
 public class SeasonUpdateDto {
-    private @NotNull SeasonSettingsDto seasonSettings;
+    private @NotNull SeasonSettings seasonSettings;
 }
