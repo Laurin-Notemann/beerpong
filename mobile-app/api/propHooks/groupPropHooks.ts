@@ -1,5 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
-
 import {
     useGroupQuery,
     useUpdateGroupWallpaperMutation,
@@ -17,12 +15,10 @@ import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
-import { QK } from '../utils/reactQuery';
-
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const { groupId, group } = useGroup();
 
-    const { leaveGroupMutation } = useGroupStore();
+    const { removeGroup } = useGroupStore();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -72,30 +68,18 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
         }
     }
 
-    const queryClient = useQueryClient();
-
-    async function onLeaveGroup() {
+    function onLeaveGroup() {
         if (!groupId) return;
 
-        try {
-            // TODO: i can't get this to actually show up
-            setTimeout(
-                () =>
-                    showYouLeftGroupToast(group.data?.name ?? 'Unknown Group'),
-                3000
-            );
+        // TODO: i can't get this to actually show up
+        setTimeout(
+            () => showYouLeftGroupToast(group.data?.name ?? 'Unknown Group'),
+            3000
+        );
 
-            await leaveGroupMutation.mutateAsync(groupId);
+        removeGroup(groupId);
 
-            await queryClient.invalidateQueries({
-                queryKey: [QK.group, 'myGroups'],
-            });
-
-            nav.navigate('index');
-        } catch (err) {
-            ConsoleLogger.error('failed to leave group:', err);
-            showErrorToast('Failed to leave group.');
-        }
+        nav.navigate('index');
     }
 
     const props: GroupSettingsProps | null = data?.data

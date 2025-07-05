@@ -12,12 +12,11 @@ import { env } from '@/api/env';
 import beerpongDefinition from '@/api/generated/openapi.json';
 import { RealtimeClient } from '@/api/realtime';
 import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
-import { useAuth } from '@/app/auth/useAuth';
 import { Client as BeerPongClient } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
 type ApiContextType = {
-    realtime: RealtimeClient | null;
+    realtime: RealtimeClient;
     api: Promise<BeerPongClient>;
     isLoading: boolean;
     error: Error | null;
@@ -33,22 +32,11 @@ const openApi = new OpenAPIClientAxios({
 });
 
 export function ApiProvider({ children }: { children: ReactNode }) {
-    const auth = useAuth();
-
     const api = useRef(
         new Promise<BeerPongClient>(async (resolve) => {
-            const client = await openApi.init<BeerPongClient>();
+            const awaitedApi = await openApi.getClient<BeerPongClient>();
 
-            const { accessToken } = await auth.getAccessToken(client);
-
-            client.interceptors.request.use((config) => {
-                config.headers.Authorization = 'Bearer ' + accessToken;
-                console.log(
-                    'using request interceptor:',
-                    config.headers.Authorization
-                );
-                return config;
-            });
+            const client = await openApi.init();
 
             client.interceptors.response.use(
                 (res) => {
@@ -96,12 +84,11 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                     return Promise.reject(err);
                 }
             );
-            // without this, the auth interceptor will not get fired
-            setTimeout(() => resolve(client), 0);
+            resolve(awaitedApi);
         })
     );
 
-    const { realtime } = useRealtimeConnection();
+    const realtime = useRealtimeConnection();
     const { writeLog } = useLogging();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

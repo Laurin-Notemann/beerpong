@@ -8,7 +8,6 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
 public class ZonedDateTimeAdapter extends TypeAdapter<ZonedDateTime> {
 
@@ -30,11 +29,7 @@ public class ZonedDateTimeAdapter extends TypeAdapter<ZonedDateTime> {
             return null;
         } else {
             String dateTimeString = in.nextString();
-            try {
-                return ZonedDateTime.parse(dateTimeString, formatter);
-            } catch (DateTimeParseException e) {
-                return null;
-            }
+            return ZonedDateTime.parse(dateTimeString, formatter);
         }
     }
 }

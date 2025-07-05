@@ -6,11 +6,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
-import pro.beerpong.api.model.dto.*;
-import pro.beerpong.api.repository.GroupMemberRepository;
+import pro.beerpong.api.model.dto.AssetMetadataDto;
+import pro.beerpong.api.model.dto.GroupCreateDto;
+import pro.beerpong.api.model.dto.GroupDto;
+import pro.beerpong.api.model.dto.ProfileCreateDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -20,7 +21,6 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
@@ -40,10 +40,8 @@ public class GroupService {
     private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
-    private final GroupMemberRepository groupMemberRepository;
-    private final AuthService authService;
 
-    public GroupDto createGroup(GroupCreateDto groupCreateDto, UserDto user) {
+    public GroupDto createGroup(GroupCreateDto groupCreateDto) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
         group.setInviteCode(generateRandomString(GROUP_INVITE_CODE_LENGTH));
         group.setCreatedAt(ZonedDateTime.now());
@@ -55,49 +53,27 @@ public class GroupService {
             return null;
         }
 
-        var groupMember = authService.buildFirstGroupMember(user);
-
         var season = new Season();
         season.setStartDate(ZonedDateTime.now());
-        season.setSeasonSettings(SeasonSettings.createDefault());
+        season.setSeasonSettings(new SeasonSettings());
 
         group.setActiveSeason(season);
         group = groupRepository.save(group);
 
-        groupMember.setGroup(group);
-
-        groupMember = authService.saveMember(groupMember);
-
-        // TODO maybe find way to prevent double group saving. but not that big of a deal
-        group.setCreatedBy(groupMember);
-        group = groupRepository.save(group);
-
-        season.setCreatedBy(groupMember);
         season.setGroupId(group.getId());
         seasonRepository.save(season);
 
         Group finalGroup = group;
-        GroupMember finalGroupMember = groupMember;
         groupCreateDto.getProfileNames().forEach(s -> {
             var profileDto = new ProfileCreateDto();
             profileDto.setName(s);
-            profileService.createProfile(finalGroup.getId(), profileDto, finalGroupMember);
+            profileService.createProfile(finalGroup.getId(), profileDto);
         });
 
         ruleMoveService.createDefaultRuleMoves(group, season);
-        ruleService.createDefaultRules(season, groupCreateDto.getSportPreset(), groupMember);
+        ruleService.createDefaultRules(season);
 
         return withStats(groupMapper.groupToGroupDto(group));
-    }
-
-    public List<GroupDto> findGroupsByUser(UserDto user) {
-        return groupMemberRepository.findByUserId(user.getId()).stream()
-                .filter(GroupMember::isActive)
-                .map(groupMember -> withStats(groupRepository.findById(groupMember.getGroup().getId())
-                        .map(groupMapper::groupToGroupDto)
-                        .orElse(null)))
-                .filter(Objects::nonNull)
-                .toList();
     }
 
     public GroupDto findGroupsByInviteCode(String inviteCode) {
@@ -121,10 +97,6 @@ public class GroupService {
         return groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
                 .orElse(null);
-    }
-
-    public Group getDaoById(String id) {
-        return groupRepository.findById(id).orElse(null);
     }
 
     public GroupDto updateGroup(String id, GroupCreateDto groupCreateDto) {

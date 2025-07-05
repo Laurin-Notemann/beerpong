@@ -93,7 +93,6 @@ jobs:
           POSTGRES_PASSWORD: user
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
-          JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
         working-directory: api
 
       # replace all occurences of "*/*" with "application/json" in the openapi.json file
@@ -125,4 +124,3 @@ jobs:
         if: steps.check_authors.outputs.has_bot_author != 'true'
         with:
           commit_message: "chore: update openapi types"
-          skip_checkout: true

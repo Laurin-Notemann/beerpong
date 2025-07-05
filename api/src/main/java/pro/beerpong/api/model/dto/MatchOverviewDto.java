@@ -10,7 +10,7 @@ import java.util.List;
 public class MatchOverviewDto {
     private String id;
     private ZonedDateTime date;
-    private SeasonDto season;
+    private Season season;
 
     private MatchOverviewTeamDto blueTeam;
     private MatchOverviewTeamDto redTeam;

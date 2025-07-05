@@ -2,7 +2,7 @@ package pro.beerpong.api.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.mapping.AssetAuthMapper;
+import pro.beerpong.api.mapping.AssetMapper;
 import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.repository.AssetRepository;
@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 @Service
 @RequiredArgsConstructor
 public class AssetService {
-    private final AssetAuthMapper assetAuthMapper;
+    private final AssetMapper assetMapper;
     private final AssetRepository assetRepository;
 
     public boolean assetExists(String assetId) {
@@ -34,7 +34,7 @@ public class AssetService {
     }
 
     public AssetMetadataDto getAssetMetadata(String assetId) {
-        return assetAuthMapper.assetToAssetMetadataDto(assetRepository.findById(assetId).orElse(null));
+        return assetMapper.assetToAssetMetadataDto(assetRepository.findById(assetId).orElse(null));
     }
 
     public AssetMetadataDto storeAsset(byte[] assetBinary, String mediaType) {
@@ -43,6 +43,6 @@ public class AssetService {
         asset.setMediaType(mediaType);
         asset.setUploadedAt(ZonedDateTime.now());
 
-        return assetAuthMapper.assetToAssetMetadataDto(assetRepository.save(asset));
+        return assetMapper.assetToAssetMetadataDto(assetRepository.save(asset));
     }
 }

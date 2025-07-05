@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity(name = "rule_moves")
 @Data
-public class RuleMove {
+public class RuleMove implements Cloneable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -27,4 +27,10 @@ public class RuleMove {
 
     @OneToMany(mappedBy = "move")
     private List<MatchMove> matchMoves;
+
+    @Override
+    @SneakyThrows
+    public RuleMove clone() {
+        return (RuleMove) super.clone();
+    }
 }
