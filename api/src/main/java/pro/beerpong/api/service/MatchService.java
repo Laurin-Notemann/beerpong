@@ -318,6 +318,7 @@ public class MatchService {
         return matchRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
@@ -360,9 +361,6 @@ public class MatchService {
 
                     // Step 6: Delete all teams
                     teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
-
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, match));
-
                     matchRepository.deleteById(id);
                 } else {
                     error.set(ErrorCodes.MATCH_NOT_OF_GROUP);

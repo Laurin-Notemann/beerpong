@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import * as Application from 'expo-application';
 import * as Notifications from 'expo-notifications';
 import * as Permissions from 'expo-permissions';
@@ -85,10 +86,12 @@ async function getRefreshToken(api: BeerPongClient): Promise<string> {
         return refreshToken;
     } catch (err) {
         ConsoleLogger.error('Failed to get refresh token:', err);
-        throw new Error(
+
+        (err as Error).message =
             'Failed to get refresh token: ' +
-                (err instanceof Error ? err.message : 'Unknown error')
-        );
+            (err instanceof Error ? err.message : 'Unknown error');
+
+        throw err;
     }
 }
 
@@ -100,8 +103,9 @@ interface GetAccessTokenResult {
 async function getAccessToken(
     api: BeerPongClient
 ): Promise<GetAccessTokenResult> {
+    let refreshToken: string | null = null;
     try {
-        const refreshToken = await getRefreshToken(api);
+        refreshToken = await getRefreshToken(api);
 
         const accessTokenRes = await api.refreshAuth({}, { refreshToken });
 
@@ -121,11 +125,23 @@ async function getAccessToken(
             );
         }
     } catch (err) {
-        ConsoleLogger.error('Failed to get access token:', err);
-        throw new Error(
-            'Failed to get access token: ' +
-                (err instanceof Error ? err.message : 'Unknown error')
+        ConsoleLogger.error(
+            'Failed to get access token:',
+            err,
+            'with refreshToken',
+            refreshToken
         );
+        (err as Error).message =
+            'Failed to get access token: ' +
+            (err instanceof Error ? err.message : 'Unknown error');
+
+        Sentry.captureException(err, {
+            extra: {
+                refreshToken,
+                installationId: getInstallationId(),
+            },
+        });
+        throw err;
     }
 }
 
@@ -168,7 +184,10 @@ export function useAuth() {
                     err
                 );
                 setFetchingPromise(null);
-                throw new Error('Failed to get access token: ' + err);
+                (err as Error).message =
+                    'Failed to retrieve access token: ' +
+                    (err instanceof Error ? err.message : 'Unknown error');
+                throw err;
             }
         },
     };
