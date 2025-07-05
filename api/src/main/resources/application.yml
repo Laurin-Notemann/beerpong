@@ -3,6 +3,10 @@ spring:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+    hikari:
+      maximum-pool-size: 30
+      idle-timeout: 30000
+      connection-timeout: 30000
   jpa:
     hibernate:
       ddl-auto: update
