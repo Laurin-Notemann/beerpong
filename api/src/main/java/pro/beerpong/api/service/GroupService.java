@@ -76,16 +76,6 @@ public class GroupService {
         return withStats(groupMapper.groupToGroupDto(group));
     }
 
-    public List<GroupDto> findGroupsByUser(UserDto user) {
-        return groupMemberRepository.findByUserId(user.getId()).stream()
-                .filter(GroupMember::isActive)
-                .map(groupMember -> withStats(groupRepository.findById(groupMember.getGroup().getId())
-                        .map(groupMapper::groupToGroupDto)
-                        .orElse(null)))
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
     public GroupDto findGroupsByInviteCode(String inviteCode) {
         return withStats(groupRepository.findByInviteCode(inviteCode)
                 .map(groupMapper::groupToGroupDto)
