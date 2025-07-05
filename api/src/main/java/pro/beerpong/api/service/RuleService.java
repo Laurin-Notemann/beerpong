@@ -3,11 +3,14 @@ package pro.beerpong.api.service;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMapper;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.RuleCreateDto;
 import pro.beerpong.api.model.dto.RuleDto;
+import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.RuleRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -17,7 +20,7 @@ import java.util.List;
 
 @Service
 public class RuleService {
-    private static final List<Rule> DEFAULT_RULES = List.of(
+    public static final List<RuleDto> DEFAULT_RULES = List.of(
             buildRule("Teams", "The two teams can have any size, and they don't have to have the same number of players."),
             buildRule("Cup Setup", "Ten cups per side are to be arranged in a pyramid pointing towards the opponent. The back row must be no further from the table edge than one cup diameter. All cups are to be filled with the same amount of liquid, preferably halfway full."),
             buildRule("Number of Balls", "Each side throws at least two balls. If there are three or more players per side, increase the ball count by one per extra player."),
@@ -43,22 +46,27 @@ public class RuleService {
     private final RuleRepository ruleRepository;
 
     private final RuleMapper ruleMapper;
+    private final AuthService authService;
 
     @Autowired
-    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper) {
+    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper, AuthService authService) {
         this.subscriptionHandler = subscriptionHandler;
         this.ruleRepository = matchRepository;
         this.ruleMapper = ruleMapper;
+        this.authService = authService;
     }
 
     @Transactional
-    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules) {
+    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules, UserDto user) {
         ruleRepository.deleteBySeasonId(season.getId());
+
+        var createdBy = authService.memberByUser(user, groupId);
 
         return rules.stream()
                 .map(dto -> {
                     var rule = ruleMapper.ruleCreateDtoToRule(dto);
                     rule.setSeason(season);
+                    rule.setCreatedBy(createdBy);
                     return rule;
                 })
                 .filter(dto -> dto.getSeason().getId().equals(season.getId()) &&
@@ -73,13 +81,14 @@ public class RuleService {
         }
 
         ruleRepository.findBySeasonId(oldSeason.getId()).forEach(oldRule -> {
-            var ruleMove = new Rule();
+            var rule = new Rule();
 
-            ruleMove.setTitle(oldRule.getTitle());
-            ruleMove.setDescription(oldRule.getDescription());
-            ruleMove.setSeason(newSeason);
+            rule.setTitle(oldRule.getTitle());
+            rule.setDescription(oldRule.getDescription());
+            rule.setSeason(newSeason);
+            rule.setCreatedBy(oldRule.getCreatedBy());
 
-            ruleRepository.save(ruleMove);
+            ruleRepository.save(rule);
         });
     }
 
@@ -90,18 +99,23 @@ public class RuleService {
                 .toList();
     }
 
-    public void createDefaultRules(Season season) {
-        DEFAULT_RULES.stream()
-                .map(rule -> {
-                    var rle = rule.clone();
-                    rle.setSeason(season);
-                    return rle;
-                })
-                .forEach(ruleRepository::save);
+    public void createDefaultRules(Season season, String sportPreset, GroupMember createdBy) {
+        if (sportPreset != null && sportPreset.equals(GroupPresetsController.BEERPONG.getId())) {
+            DEFAULT_RULES.stream()
+                    .map(rule -> {
+                        var rle = new Rule();
+                        rle.setTitle(rule.getTitle());
+                        rle.setDescription(rule.getDescription());
+                        rle.setSeason(season);
+                        rle.setCreatedBy(createdBy);
+                        return rle;
+                    })
+                    .forEach(ruleRepository::save);
+        }
     }
 
-    private static Rule buildRule(String title, String description) {
-        var rule = new Rule();
+    private static RuleDto buildRule(String title, String description) {
+        var rule = new RuleDto();
 
         rule.setTitle(title);
         rule.setDescription(description);

@@ -19,6 +19,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_URL: jdbc:postgresql://database:5432/${POSTGRES_DB_NAME}
       API_BASE_URL: ${API_BASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - backend
 volumes:

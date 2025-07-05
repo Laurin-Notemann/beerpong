@@ -3,11 +3,9 @@ package pro.beerpong.api.control;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
-import pro.beerpong.api.model.dto.RuleCreateDto;
-import pro.beerpong.api.model.dto.RuleDto;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.RuleService;
 import pro.beerpong.api.service.SeasonService;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -46,7 +44,14 @@ public class RuleController {
     }
 
     @PutMapping
-    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> writeRules(@PathVariable String groupId, @PathVariable String seasonId, @RequestBody List<RuleCreateDto> rules) {
+    public ResponseEntity<ResponseEnvelope<List<RuleDto>>> writeRules(@PathVariable String groupId,
+                                                                      @PathVariable String seasonId,
+                                                                      @RequestBody List<RuleCreateDto> rules,
+                                                                      @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
 
         if (pair.getFirst() == null) {
@@ -57,9 +62,11 @@ public class RuleController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         } else if (pair.getSecond().getEndDate() != null) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
+        } else if (rules.stream().anyMatch(RuleCreateDto::invalidDto)) {
+            return ResponseEnvelope.notOk(ErrorCodes.RULE_INVALID_DTO);
         }
 
-        var ruleDtos = ruleService.writeRules(groupId, pair.getSecond(), rules);
+        var ruleDtos = ruleService.writeRules(groupId, pair.getSecond(), rules, user);
 
         if (ruleDtos != null) {
             subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULES_WRITE, groupId, ruleDtos.toArray(new RuleDto[0])));

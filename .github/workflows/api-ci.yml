@@ -49,4 +49,5 @@ jobs:
           POSTGRES_PASSWORD: user
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
+          JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
         working-directory: api

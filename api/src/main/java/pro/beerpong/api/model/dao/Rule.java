@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 
 @Entity(name = "rules")
 @Data
-public class Rule implements Cloneable {
+public class Rule {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -20,9 +20,7 @@ public class Rule implements Cloneable {
     @JoinColumn(name = "seasonId")
     private Season season;
 
-    @Override
-    @SneakyThrows
-    public Rule clone() {
-        return (Rule) super.clone();
-    }
+    @ManyToOne
+    @JoinColumn(name = "createdBy")
+    private GroupMember createdBy;
 }

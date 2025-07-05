@@ -11,9 +11,10 @@ public class GroupDto {
     private String id;
     private String name;
     private String inviteCode;
-    private Season activeSeason;
+    private SeasonDto activeSeason;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AssetMetadataDto wallpaperAsset;
+    private GroupMemberDto createdBy;
     private ZonedDateTime createdAt;
     private GroupPreset sportPreset;
     private String customSportName;
