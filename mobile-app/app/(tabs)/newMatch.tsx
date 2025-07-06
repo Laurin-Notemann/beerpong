@@ -212,10 +212,47 @@ export default function NewMatchScreen() {
         );
     }
 
+    const [randomTeamsMode, setRandomTeamsMode] = useState<{
+        players: string[];
+    } | null>(null);
+
     return (
         <GestureHandlerRootView>
             <AppBackground />
             <NewMatchStack
+                onCreateRandomTeams={() => {
+                    const playersToRandomize = randomTeamsMode?.players ?? [];
+
+                    if (playersToRandomize.length === 0) {
+                        showErrorToast('Select players to randomize teams.');
+                        return;
+                    }
+                    if (playersToRandomize.length < minTeamSize * 2) {
+                        showErrorToast(
+                            `Select at least ${minTeamSize * 2} players to randomize teams.`
+                        );
+                        return;
+                    }
+                    if (
+                        playersToRandomize.length % 2 !== 0 &&
+                        !beerpongProMode
+                    ) {
+                        showErrorToast(
+                            'You must select an even number of players to randomize teams.'
+                        );
+                        return;
+                    }
+                    const shuffledPlayers = playersToRandomize
+                        .map((i) => ({ id: i }))
+                        .sort(() => Math.random() - 0.5);
+                    const half = Math.floor(shuffledPlayers.length / 2);
+                    const blueTeam = shuffledPlayers.slice(0, half);
+                    const redTeam = shuffledPlayers.slice(half);
+
+                    matchDraft.actions.setTeams(blueTeam, redTeam);
+                }}
+                randomTeamsMode={randomTeamsMode}
+                onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
                 animationProgress={animationProgress}
                 match={matchObj}
                 onClear={() => {
@@ -261,6 +298,21 @@ export default function NewMatchScreen() {
                     if (item.index === 0) {
                         return (
                             <NewMatchAssignTeams
+                                onRandomTeamSelect={(playerId) =>
+                                    setRandomTeamsMode((prev) => ({
+                                        players: prev!.players.includes(
+                                            playerId
+                                        )
+                                            ? prev!.players.filter(
+                                                  (p) => p !== playerId
+                                              )
+                                            : [...prev!.players, playerId],
+                                    }))
+                                }
+                                randomTeamsMode={randomTeamsMode}
+                                onRandomTeamsPress={() =>
+                                    setRandomTeamsMode({ players: [] })
+                                }
                                 minTeamSize={minTeamSize}
                                 maxTeamSize={maxTeamSize}
                                 players={profiles}

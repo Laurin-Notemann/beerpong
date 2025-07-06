@@ -47,6 +47,10 @@ interface MatchDraftStore {
             playerId: string,
             moveId: string
         ) => void;
+        setTeams: (
+            redTeam: { id: string }[],
+            blueTeam: { id: string }[]
+        ) => void;
     };
 }
 
@@ -210,6 +214,30 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                     blueTeam: updateTeam(state.blueTeam),
                 };
             });
+        },
+        setTeams: (redTeam, blueTeam) => {
+            set(() => ({
+                redTeam: {
+                    teamMembers: redTeam.map((i) => ({
+                        playerId: i.id,
+                        moves: [],
+                    })),
+                    cups: {
+                        initialFormation: Formation.Pyramid_10,
+                        currentFormation: Formation.Pyramid_10,
+                    },
+                },
+                blueTeam: {
+                    teamMembers: blueTeam.map((i) => ({
+                        playerId: i.id,
+                        moves: [],
+                    })),
+                    cups: {
+                        initialFormation: Formation.Pyramid_10,
+                        currentFormation: Formation.Pyramid_10,
+                    },
+                },
+            }));
         },
     },
 }));
