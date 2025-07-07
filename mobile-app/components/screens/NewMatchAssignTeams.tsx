@@ -146,8 +146,8 @@ function PlayerItem({
                             height: 50,
                         }}
                         onPress={() => {
-                            onRandomTeamSelect(player.id);
                             triggerHapticBump('selection');
+                            onRandomTeamSelect(player.id);
                         }}
                     >
                         <Icon

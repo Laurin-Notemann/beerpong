@@ -34,6 +34,17 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 const { width } = Dimensions.get('window');
 
+function getRandomPlayers(ids: string[]) {
+    const shuffledPlayers = ids
+        .map((i) => ({ id: i }))
+        .sort(() => Math.random() - 0.5);
+    const half = Math.floor(shuffledPlayers.length / 2);
+    const blueTeam = shuffledPlayers.slice(0, half);
+    const redTeam = shuffledPlayers.slice(half);
+
+    return [blueTeam, redTeam];
+}
+
 export default function NewMatchScreen() {
     const { beerpongProMode } = useLocalSettings();
 
@@ -233,23 +244,14 @@ export default function NewMatchScreen() {
                         );
                         return;
                     }
-                    if (
-                        playersToRandomize.length % 2 !== 0 &&
-                        !beerpongProMode
-                    ) {
-                        showErrorToast(
-                            'You must select an even number of players to randomize teams.'
-                        );
-                        return;
-                    }
-                    const shuffledPlayers = playersToRandomize
-                        .map((i) => ({ id: i }))
-                        .sort(() => Math.random() - 0.5);
-                    const half = Math.floor(shuffledPlayers.length / 2);
-                    const blueTeam = shuffledPlayers.slice(0, half);
-                    const redTeam = shuffledPlayers.slice(half);
+                    const [blueTeam, redTeam] =
+                        getRandomPlayers(playersToRandomize);
 
                     matchDraft.actions.setTeams(blueTeam, redTeam);
+
+                    triggerHapticBump('toast:success');
+
+                    setRandomTeamsMode(null);
                 }}
                 randomTeamsMode={randomTeamsMode}
                 onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
@@ -310,9 +312,37 @@ export default function NewMatchScreen() {
                                     }))
                                 }
                                 randomTeamsMode={randomTeamsMode}
-                                onRandomTeamsPress={() =>
-                                    setRandomTeamsMode({ players: [] })
-                                }
+                                onRandomTeamsPress={() => {
+                                    const playersToRandomize =
+                                        matchDraft.blueTeam.teamMembers
+                                            .map((i) => i.playerId)
+                                            .concat(
+                                                matchDraft.redTeam.teamMembers.map(
+                                                    (i) => i.playerId
+                                                )
+                                            );
+                                    if (playersToRandomize.length === 0) {
+                                        setRandomTeamsMode({ players: [] });
+
+                                        return;
+                                    }
+                                    if (
+                                        playersToRandomize.length <
+                                        minTeamSize * 2
+                                    ) {
+                                        showErrorToast(
+                                            `Select at least ${minTeamSize * 2} players to randomize teams.`
+                                        );
+                                        return;
+                                    }
+                                    const [blueTeam, redTeam] =
+                                        getRandomPlayers(playersToRandomize);
+
+                                    matchDraft.actions.setTeams(
+                                        blueTeam,
+                                        redTeam
+                                    );
+                                }}
                                 minTeamSize={minTeamSize}
                                 maxTeamSize={maxTeamSize}
                                 players={profiles}
