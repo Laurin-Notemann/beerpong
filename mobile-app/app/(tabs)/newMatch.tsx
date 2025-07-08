@@ -34,6 +34,40 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 const { width } = Dimensions.get('window');
 
+function getRandomPlayers(ids: string[]) {
+    const shuffledPlayers = ids
+        .map((i) => ({ id: i }))
+        .sort(() => Math.random() - 0.5);
+    const half = Math.floor(shuffledPlayers.length / 2);
+    const blueTeam = shuffledPlayers.slice(0, half);
+    const redTeam = shuffledPlayers.slice(half);
+
+    return [blueTeam, redTeam];
+}
+
+/**
+ * whether the teams are equal. also true if teams are equal with switched colors, except for if there are only two players.
+ */
+const areTeamsEqual = (
+    teams1: { red: string[]; blue: string[] },
+    teams2: { red: string[]; blue: string[] }
+) => {
+    const isSame =
+        teams1.red.join(':') === teams2.red.join(':') &&
+        teams1.blue.join(':') === teams2.blue.join(':');
+
+    const isSameWithSwitchedColors =
+        teams1.blue.join(':') === teams2.red.join(':') &&
+        teams1.red.join(':') === teams2.blue.join(':');
+
+    const anythingButColorSwitchPossible =
+        teams1.red.length + teams2.blue.length > 2;
+
+    return (
+        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible)
+    );
+};
+
 export default function NewMatchScreen() {
     const { beerpongProMode } = useLocalSettings();
 
@@ -216,6 +250,40 @@ export default function NewMatchScreen() {
         players: string[];
     } | null>(null);
 
+    function randomize(playersToRandomize: string[]) {
+        if (playersToRandomize.length < minTeamSize * 2) {
+            showErrorToast(
+                `Select at least ${minTeamSize * 2} players to randomize teams.`
+            );
+            return;
+        }
+
+        let newTeams: { red: string[]; blue: string[] } | null = null;
+
+        while (
+            !newTeams ||
+            areTeamsEqual(newTeams, {
+                blue: matchDraft.blueTeam.teamMembers.map((i) => i.playerId),
+                red: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
+            })
+        ) {
+            const [blueTeam, redTeam] = getRandomPlayers(playersToRandomize);
+
+            newTeams = {
+                blue: blueTeam.map((i) => i.id),
+                red: redTeam.map((i) => i.id),
+            };
+        }
+
+        matchDraft.actions.setTeams(
+            newTeams.blue.map((id) => ({ id })),
+            newTeams.red.map((id) => ({ id }))
+        );
+        triggerHapticBump('toast:success');
+
+        setRandomTeamsMode(null);
+    }
+
     return (
         <GestureHandlerRootView>
             <AppBackground />
@@ -227,29 +295,7 @@ export default function NewMatchScreen() {
                         showErrorToast('Select players to randomize teams.');
                         return;
                     }
-                    if (playersToRandomize.length < minTeamSize * 2) {
-                        showErrorToast(
-                            `Select at least ${minTeamSize * 2} players to randomize teams.`
-                        );
-                        return;
-                    }
-                    if (
-                        playersToRandomize.length % 2 !== 0 &&
-                        !beerpongProMode
-                    ) {
-                        showErrorToast(
-                            'You must select an even number of players to randomize teams.'
-                        );
-                        return;
-                    }
-                    const shuffledPlayers = playersToRandomize
-                        .map((i) => ({ id: i }))
-                        .sort(() => Math.random() - 0.5);
-                    const half = Math.floor(shuffledPlayers.length / 2);
-                    const blueTeam = shuffledPlayers.slice(0, half);
-                    const redTeam = shuffledPlayers.slice(half);
-
-                    matchDraft.actions.setTeams(blueTeam, redTeam);
+                    randomize(playersToRandomize);
                 }}
                 randomTeamsMode={randomTeamsMode}
                 onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
@@ -310,9 +356,22 @@ export default function NewMatchScreen() {
                                     }))
                                 }
                                 randomTeamsMode={randomTeamsMode}
-                                onRandomTeamsPress={() =>
-                                    setRandomTeamsMode({ players: [] })
-                                }
+                                onRandomTeamsPress={() => {
+                                    const playersToRandomize =
+                                        matchDraft.blueTeam.teamMembers
+                                            .map((i) => i.playerId)
+                                            .concat(
+                                                matchDraft.redTeam.teamMembers.map(
+                                                    (i) => i.playerId
+                                                )
+                                            );
+                                    if (playersToRandomize.length === 0) {
+                                        setRandomTeamsMode({ players: [] });
+
+                                        return;
+                                    }
+                                    randomize(playersToRandomize);
+                                }}
                                 minTeamSize={minTeamSize}
                                 maxTeamSize={maxTeamSize}
                                 players={profiles}

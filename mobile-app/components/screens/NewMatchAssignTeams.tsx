@@ -48,6 +48,7 @@ function PlayerItem({
             onPress={() => {
                 if (randomTeamsMode != null) {
                     onRandomTeamSelect(player.id);
+                    triggerHapticBump('selection');
                     return;
                 }
                 if (player.team === null) onSelectTeam('blue');
@@ -137,17 +138,13 @@ function PlayerItem({
                         </Pressable>
                     </>
                 ) : (
-                    <Pressable
+                    <View
                         style={{
                             alignItems: 'center',
                             justifyContent: 'center',
 
                             width: 50,
                             height: 50,
-                        }}
-                        onPress={() => {
-                            onRandomTeamSelect(player.id);
-                            triggerHapticBump('selection');
                         }}
                     >
                         <Icon
@@ -160,7 +157,7 @@ function PlayerItem({
                             }
                             style={{ opacity: isRedTeam ? 1 : 0.7 }}
                         />
-                    </Pressable>
+                    </View>
                 )}
                 {hasTutorial && (
                     <TutorialBubble
