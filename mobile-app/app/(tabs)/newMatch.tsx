@@ -45,6 +45,29 @@ function getRandomPlayers(ids: string[]) {
     return [blueTeam, redTeam];
 }
 
+/**
+ * whether the teams are equal. also true if teams are equal with switched colors, except for if there are only two players.
+ */
+const areTeamsEqual = (
+    teams1: { red: string[]; blue: string[] },
+    teams2: { red: string[]; blue: string[] }
+) => {
+    const isSame =
+        teams1.red.join(':') === teams2.red.join(':') &&
+        teams1.blue.join(':') === teams2.blue.join(':');
+
+    const isSameWithSwitchedColors =
+        teams1.blue.join(':') === teams2.red.join(':') &&
+        teams1.red.join(':') === teams2.blue.join(':');
+
+    const anythingButColorSwitchPossible =
+        teams1.red.length + teams2.blue.length > 2;
+
+    return (
+        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible)
+    );
+};
+
 export default function NewMatchScreen() {
     const { beerpongProMode } = useLocalSettings();
 
@@ -227,6 +250,40 @@ export default function NewMatchScreen() {
         players: string[];
     } | null>(null);
 
+    function randomize(playersToRandomize: string[]) {
+        if (playersToRandomize.length < minTeamSize * 2) {
+            showErrorToast(
+                `Select at least ${minTeamSize * 2} players to randomize teams.`
+            );
+            return;
+        }
+
+        let newTeams: { red: string[]; blue: string[] } | null = null;
+
+        while (
+            !newTeams ||
+            areTeamsEqual(newTeams, {
+                blue: matchDraft.blueTeam.teamMembers.map((i) => i.playerId),
+                red: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
+            })
+        ) {
+            const [blueTeam, redTeam] = getRandomPlayers(playersToRandomize);
+
+            newTeams = {
+                blue: blueTeam.map((i) => i.id),
+                red: redTeam.map((i) => i.id),
+            };
+        }
+
+        matchDraft.actions.setTeams(
+            newTeams.blue.map((id) => ({ id })),
+            newTeams.red.map((id) => ({ id }))
+        );
+        triggerHapticBump('toast:success');
+
+        setRandomTeamsMode(null);
+    }
+
     return (
         <GestureHandlerRootView>
             <AppBackground />
@@ -238,20 +295,7 @@ export default function NewMatchScreen() {
                         showErrorToast('Select players to randomize teams.');
                         return;
                     }
-                    if (playersToRandomize.length < minTeamSize * 2) {
-                        showErrorToast(
-                            `Select at least ${minTeamSize * 2} players to randomize teams.`
-                        );
-                        return;
-                    }
-                    const [blueTeam, redTeam] =
-                        getRandomPlayers(playersToRandomize);
-
-                    matchDraft.actions.setTeams(blueTeam, redTeam);
-
-                    triggerHapticBump('toast:success');
-
-                    setRandomTeamsMode(null);
+                    randomize(playersToRandomize);
                 }}
                 randomTeamsMode={randomTeamsMode}
                 onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
@@ -326,22 +370,7 @@ export default function NewMatchScreen() {
 
                                         return;
                                     }
-                                    if (
-                                        playersToRandomize.length <
-                                        minTeamSize * 2
-                                    ) {
-                                        showErrorToast(
-                                            `Select at least ${minTeamSize * 2} players to randomize teams.`
-                                        );
-                                        return;
-                                    }
-                                    const [blueTeam, redTeam] =
-                                        getRandomPlayers(playersToRandomize);
-
-                                    matchDraft.actions.setTeams(
-                                        blueTeam,
-                                        redTeam
-                                    );
+                                    randomize(playersToRandomize);
                                 }}
                                 minTeamSize={minTeamSize}
                                 maxTeamSize={maxTeamSize}
