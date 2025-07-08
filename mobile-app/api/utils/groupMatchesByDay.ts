@@ -31,5 +31,10 @@ export const groupMatchesByDay = (matches: Match[]) => {
 
     days.sort((a, b) => (dayjs(a.date).isAfter(dayjs(b.date)) ? -1 : 1));
 
+    for (const day of days) {
+        day.matches.sort((a, b) =>
+            dayjs(a.date).isAfter(dayjs(b.date)) ? -1 : 1
+        );
+    }
     return days;
 };
