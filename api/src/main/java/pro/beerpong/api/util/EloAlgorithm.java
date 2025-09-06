@@ -47,8 +47,8 @@ public class EloAlgorithm {
         }
 
         // calculate the elo for every player of both teams
-        calcElo(blueTeam, expectedBlue, totalBluePoints, totalRedPoints, resultBlue);
-        calcElo(redTeam, expectedRed, totalRedPoints, totalBluePoints, resultRed);
+        calcElo(blueTeam, avgBlue, avgRed, totalBluePoints, totalRedPoints, resultBlue);
+        calcElo(redTeam, avgRed, avgBlue, totalRedPoints, totalBluePoints, resultRed);
     }
 
     private static double expectedScore(double elo1, double elo2) {
@@ -57,39 +57,36 @@ public class EloAlgorithm {
     }
 
     private static void calcElo(List<PlayerStatisticsDto> team,
-                                double expectedTeamScore,
+                                double teamAvgElo,
+                                double opponentAvgElo,
                                 long teamPoints,
                                 long opponentPoints,
-                                double gameResult) {
-        if (team == null || team.isEmpty()) {
-            return;
-        }
+                                double gameResult) { // 1.0 win, 0.0 loss, 0.5 draw
+        if (team == null || team.isEmpty()) return;
 
         final int n = team.size();
-        final double BASE = POINT_IMPACT_FLOOR;
 
-        if (gameResult == 1.0D) {
+        final double BASE = POINT_IMPACT_FLOOR;      // e.g., 0.5
+        double mov = 1.0;
+        if (gameResult == 1.0 || gameResult == 0.0) {
+            long margin = Math.abs(teamPoints - opponentPoints);
+            long denom  = Math.max(1L, Math.max(teamPoints, opponentPoints));
+            double r = Math.min(1.0, Math.max(0.0, (double) margin / denom));
+            mov = BASE + (1.0 - BASE) * r;
+        }
+
+        double expectedTeam = 1.0 / (1.0 + Math.pow(10.0, (opponentAvgElo - teamAvgElo) / 400.0));
+
+        double teamDelta = K_FACTOR * mov * (gameResult - expectedTeam);
+        double perPlayer = teamDelta / n;
+
+        if (gameResult == 1.0) {
             team.forEach(PlayerStatisticsDto::addWin);
         }
-
-        double mov = 1.0D;
-
-        if (gameResult == 1.0D || gameResult == 0.0D) {
-            long margin = Math.abs(teamPoints - opponentPoints);
-            long denom = Math.max(1L, Math.max(teamPoints, opponentPoints));
-
-            double ratio = Math.min(1.0D, Math.max(0.0D, (double) margin / denom));
-
-            mov = BASE + (1.0D - BASE) * ratio;
-        }
-
-        double teamDelta = K_FACTOR * mov * (gameResult - expectedTeamScore);
-
-        double perPlayerDelta = teamDelta / n;
-
-        for (PlayerStatisticsDto p : team) {
-            p.setElo(p.getElo() + perPlayerDelta);
+        for (var p : team) {
+            p.setElo(p.getElo() + perPlayer);
         }
     }
+
 
 }
