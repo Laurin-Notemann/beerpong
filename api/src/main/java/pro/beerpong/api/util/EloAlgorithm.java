@@ -56,53 +56,40 @@ public class EloAlgorithm {
         return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
     }
 
-    private static void calcElo(List<PlayerStatisticsDto> team, double exp, long teamPoints, long opponentPoints, double gameResult) {
-        team.forEach(player -> {
-            double pointRatio;
-            double usefulness;
+    private static void calcElo(List<PlayerStatisticsDto> team,
+                                double expectedTeamScore,
+                                long teamPoints,
+                                long opponentPoints,
+                                double gameResult) {
+        if (team == null || team.isEmpty()) {
+            return;
+        }
 
-            if (gameResult == 1.0D) {
-                player.addWin();
-            }
+        final int n = team.size();
+        final double BASE = POINT_IMPACT_FLOOR;
 
-            // if you play solo you receive more elo when you win with a higher point difference
-            if (team.size() == 1) {
-                if (gameResult == 1.0D || gameResult == 0.0D) {
-                    // calc margin between team points and opponentPoints
-                    long margin = Math.abs(teamPoints - opponentPoints);
-                    // divide the margin with the bigger one of the two points.
-                    // if you win you receive more elo if you win with a bigger difference
-                    // if you loose you receive more minus elo if you loose with a bigger difference
-                    pointRatio = margin / (double) Math.max(teamPoints, opponentPoints);
+        if (gameResult == 1.0D) {
+            team.forEach(PlayerStatisticsDto::addWin);
+        }
 
-                    // clip pointRatio between 0.0 and 1.0
-                    pointRatio = Math.max(0.0, Math.min(1.0, pointRatio));
-                    usefulness = POINT_IMPACT_FLOOR + (1 - POINT_IMPACT_FLOOR) * pointRatio;
-                } else {
-                    usefulness = 1.0D;
-                }
-            } else {
-                // if you play in a team you receive more elo when you contribute to your teams total points
-                pointRatio = (teamPoints == 0) ? 0.0 : ((double) player.getPoints() / teamPoints);
+        double mov = 1.0D;
 
-                // if the team has won: the higher usefulness, the higher the elo gain
-                if (gameResult == 1.0D) {
-                    // you receive at least 50% of your elo. you receive the other 50% based on how much you contributed to your team
-                    usefulness = POINT_IMPACT_FLOOR + (1 - POINT_IMPACT_FLOOR) * pointRatio;
-                    // if the team lost: the lower usefulness, the less elo you loose
-                } else if (gameResult == 0.0D) {
-                    // you loose at least 50% of your minus elo. you receive more of the 50% the less you contributed to the team
-                    usefulness = POINT_IMPACT_FLOOR + (1 - POINT_IMPACT_FLOOR) * (1.0D - pointRatio);
-                } else {
-                    // everything else: you just receive your (minus-)elo
-                    usefulness = 1.0D;
-                }
-            }
+        if (gameResult == 1.0D || gameResult == 0.0D) {
+            long margin = Math.abs(teamPoints - opponentPoints);
+            long denom = Math.max(1L, Math.max(teamPoints, opponentPoints));
 
-            // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
-            double eloChange = K_FACTOR * (gameResult - exp) * usefulness;
+            double ratio = Math.min(1.0D, Math.max(0.0D, (double) margin / denom));
 
-            player.setElo(player.getElo() + eloChange);
-        });
+            mov = BASE + (1.0D - BASE) * ratio;
+        }
+
+        double teamDelta = K_FACTOR * mov * (gameResult - expectedTeamScore);
+
+        double perPlayerDelta = teamDelta / n;
+
+        for (PlayerStatisticsDto p : team) {
+            p.setElo(p.getElo() + perPlayerDelta);
+        }
     }
+
 }
