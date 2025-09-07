@@ -39,8 +39,8 @@ public class EloAlgorithm {
         }
 
         // calculate the elo for every player of both teams
-        calcElo(blueTeam, expectedBlue, resultBlue);
-        calcElo(redTeam, expectedRed, resultRed);
+        calcElo(blueTeam, avgRed, resultBlue);
+        calcElo(redTeam, avgBlue, resultRed);
     }
 
     private static double expectedScore(double elo1, double elo2) {
