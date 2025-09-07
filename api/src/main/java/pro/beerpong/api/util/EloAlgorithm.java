@@ -42,7 +42,12 @@ public class EloAlgorithm {
         calcElo(blueTeam, expectedBlue, resultBlue);
         calcElo(redTeam, expectedRed, resultRed);
     }
-  
+
+    private static double expectedScore(double elo1, double elo2) {
+        // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
+        return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
+    }
+
     private static void calcElo(List<PlayerStatisticsDto> team, double opponentAvg, double gameResult) {
         team.forEach(player -> {
             // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
