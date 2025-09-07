@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -162,12 +163,19 @@ public class LeaderboardService {
             // increment the player count
             numMatches.incrementAndGet();
 
+            var blueTeamId = matchDto.getTeams().getFirst().getId();
+            var redTeamId = matchDto.getTeams().get(1).getId();
+
+            var blueTeamPoints = new AtomicLong();
+            var redTeamPoints = new AtomicLong();
+
             // go through all teams
             matchDto.getTeams().forEach(teamDto -> {
                 // collect team members
                 var teamMembers = matchDto.getTeamMembers().stream()
                         .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
                         .collect(Collectors.toCollection(Lists::newArrayList));
+                var toAdd = teamDto.getId().equals(blueTeamId) ? blueTeamPoints : redTeamPoints;
 
                 // go through all team members
                 teamMembers.forEach(teamMemberDto -> {
@@ -210,6 +218,8 @@ public class LeaderboardService {
                             entry.getStatistics().addMoves(dto.getValue());
                             entry.getStatistics().addPoints(points.getFirst() * dto.getValue());
 
+                            toAdd.addAndGet((long) points.getFirst() * dto.getValue());
+
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
                                 teamMembers.forEach(teamMemberDto -> {
@@ -227,9 +237,6 @@ public class LeaderboardService {
                 // clear members cache
                 teamMembers.clear();
             });
-
-            var blueTeamId = matchDto.getTeams().getFirst().getId();
-            var redTeamId = matchDto.getTeams().get(1).getId();
 
             var blueTeamMembers = matchDto.getTeamMembers().stream()
                     .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId) &&
@@ -250,7 +257,7 @@ public class LeaderboardService {
                     .toList();
 
             // calculate elo for both teams
-            EloAlgorithm.calculateElo(blueTeamMemberStatistics, redTeamMemberStatistics);
+            EloAlgorithm.calculateElo(blueTeamMemberStatistics, redTeamMemberStatistics, blueTeamPoints.get(), redTeamPoints.get());
         });
 
         // calculate averages for all entries
