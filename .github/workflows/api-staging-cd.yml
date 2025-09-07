@@ -93,13 +93,13 @@ jobs:
             gcloud auth activate-service-account --key-file=$FILE_PATH
             gcloud auth configure-docker europe-west10-docker.pkg.dev
 
-            # Update the image in the docker-compose.yml file
-            sed -i 's|image: .*|image: $DOCKER_IMAGE|' docker-compose.yml
+            # Update ONLY the beerpong-api-staging image in docker-compose.yml
+            sed -i '/beerpong-api-staging:/,/image:/ s|image: .*|image: '"$DOCKER_IMAGE"'|' docker-compose.yml
 
             # Pull the latest image
-            docker compose pull
+            docker compose pull beerpong-api-staging
 
-            # Restart the service
+            # Restart only the API service
             docker compose up -d --force-recreate beerpong-api-staging
 
             # Clean up old images
