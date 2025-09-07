@@ -2,6 +2,7 @@ package pro.beerpong.api.util;
 
 import pro.beerpong.api.model.dto.PlayerStatisticsDto;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class EloAlgorithm {
@@ -9,7 +10,7 @@ public class EloAlgorithm {
     public static final int STARTING_ELO = 1500;
     public static final int K_FACTOR = 32;
     public static final int ELO_DIVIDER = 400;
-
+  
     public static void calculateElo(List<PlayerStatisticsDto> blueTeam, List<PlayerStatisticsDto> redTeam, long blueTeamPoints, long redTeamPoints) {
         // sum of elos of the team divided by team members
         var avgBlue = blueTeam.stream()
@@ -41,12 +42,7 @@ public class EloAlgorithm {
         calcElo(blueTeam, expectedBlue, resultBlue);
         calcElo(redTeam, expectedRed, resultRed);
     }
-
-    private static double expectedScore(double elo1, double elo2) {
-        // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
-        return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
-    }
-
+  
     private static void calcElo(List<PlayerStatisticsDto> team, double opponentAvg, double gameResult) {
         team.forEach(player -> {
             // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
