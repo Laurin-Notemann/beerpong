@@ -12,7 +12,7 @@ public class EloAlgorithm {
     public static final int STARTING_ELO = 1500;
     public static final int ELO_DIVIDER = 400;
 
-    public static final double K_TEAM = 24.0;   // Wertung von Ergebnis-Upsets
+    public static final double K_TEAM = 48.0;   // Wertung von Ergebnis-Upsets
     public static final double K_PERF = 12.0;   // individuelle Über/Unterperformance
     public static final double ALPHA = 0.5;    // Blend: 1/n vs. Softmax(Elo)
     public static final double BETA = 0.004;  // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
