@@ -1,6 +1,5 @@
 package pro.beerpong.api.util;
 
-import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.model.dto.PlayerStatisticsDto;
 
 import java.util.HashMap;
@@ -19,13 +18,10 @@ public class EloAlgorithm {
     public static final double EPS = 0.25;   // Glättung für tatsächliche Anteile
     public static final double CAP_PER_PLAYER = 40.0;   // Max Elo gain pro Spiel
 
-    public static final double SOFTMAX_CLAMP_FLOOR = 0.1;
+    public static final double SOFTMAX_CLAMP_FLOOR = 0.05;
     public static final double SOFTMAX_CLAMP_CEIL = 0.9;
 
-    public static void calculateEloFair(
-            MatchDto match,
-            String blueTeamId,
-            String redTeamId,
+    public static void calculateElo(
             long teamBluePoints,
             long teamRedPoints,
             List<PlayerStatisticsDto> blueTeamStats,
@@ -105,8 +101,12 @@ public class EloAlgorithm {
             List<PlayerStatisticsDto> players,
             Map<PlayerStatisticsDto, Double> out
     ) {
+        if (players.isEmpty()) {
+            return;
+        }
+
         // Amount of players
-        int n = Math.max(1, players.size());
+        int n = players.size();
 
         // Softmax(Elo)
         double[] logits = new double[n];
@@ -127,6 +127,9 @@ public class EloAlgorithm {
         for (int i = 0; i < n; i++) {
             double soft = logits[i] / (sumExp > 0 ? sumExp : 1.0);
             double blended = (1.0 - ALPHA) * (1.0 / n) + ALPHA * soft;
+            //TODO maybe change floor/ceil based on team sizes
+//            double floor = Math.max(0.02, 0.25 / n);
+//            double ceil  = Math.min(0.90, 1.0 - (n - 1) * floor);
 
             blended = Math.max(SOFTMAX_CLAMP_FLOOR, Math.min(SOFTMAX_CLAMP_CEIL, blended));
 

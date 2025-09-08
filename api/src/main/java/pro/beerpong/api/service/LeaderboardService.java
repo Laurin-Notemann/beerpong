@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
-import pro.beerpong.api.model.dao.Player;
-import pro.beerpong.api.model.dao.PlayerStatistics;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -19,9 +17,7 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -178,6 +174,7 @@ public class LeaderboardService {
                 var teamMembers = matchDto.getTeamMembers().stream()
                         .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
                         .collect(Collectors.toCollection(Lists::newArrayList));
+                var toAdd = (teamDto.getId().equals(blueTeamId) ? blueTeamPoints : redTeamPoints);
 
                 // go through all team members
                 teamMembers.forEach(teamMemberDto -> {
@@ -224,6 +221,7 @@ public class LeaderboardService {
 
                             //TODO should team points count here as well?
                             playerPoints.merge(entry.getStatistics(), (long) ownPoints, Long::sum);
+                            toAdd.addAndGet(ownPoints);
 
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
@@ -262,10 +260,7 @@ public class LeaderboardService {
                     .toList();
 
             // calculate elo for both teams
-            EloAlgorithm.calculateEloFair(
-                    matchDto,
-                    blueTeamId,
-                    redTeamId,
+            EloAlgorithm.calculateElo(
                     blueTeamPoints.get(),
                     redTeamPoints.get(),
                     blueTeamMemberStatistics,
