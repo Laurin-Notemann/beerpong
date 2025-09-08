@@ -19,7 +19,7 @@ public class EloAlgorithm {
     public static final double EPS = 0.25;   // Glättung für tatsächliche Anteile
     public static final double CAP_PER_PLAYER = 40.0;   // Max Elo gain pro Spiel
 
-    public static final double SOFTMAX_CLAMP_FLOOR = 0.1;
+    public static final double SOFTMAX_CLAMP_FLOOR = 0.05;
     public static final double SOFTMAX_CLAMP_CEIL = 0.9;
 
     public static void calculateElo(
