@@ -18,6 +18,7 @@ import pro.beerpong.api.util.RankingAlgorithm;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -169,13 +170,14 @@ public class LeaderboardService {
             var blueTeamPoints = new AtomicLong();
             var redTeamPoints = new AtomicLong();
 
+            var playerPoints = new HashMap<PlayerStatisticsDto, Long>();
+
             // go through all teams
             matchDto.getTeams().forEach(teamDto -> {
                 // collect team members
                 var teamMembers = matchDto.getTeamMembers().stream()
                         .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
                         .collect(Collectors.toCollection(Lists::newArrayList));
-                var toAdd = teamDto.getId().equals(blueTeamId) ? blueTeamPoints : redTeamPoints;
 
                 // go through all team members
                 teamMembers.forEach(teamMemberDto -> {
@@ -214,11 +216,14 @@ public class LeaderboardService {
                                 return;
                             }
 
+                            var ownPoints = points.getFirst() * dto.getValue();
+
                             // add total moves and gained points to the scorers entry
                             entry.getStatistics().addMoves(dto.getValue());
-                            entry.getStatistics().addPoints(points.getFirst() * dto.getValue());
+                            entry.getStatistics().addPoints(ownPoints);
 
-                            toAdd.addAndGet((long) points.getFirst() * dto.getValue());
+                            //TODO should team points count here as well?
+                            playerPoints.merge(entry.getStatistics(), (long) ownPoints, Long::sum);
 
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
@@ -257,7 +262,18 @@ public class LeaderboardService {
                     .toList();
 
             // calculate elo for both teams
-            EloAlgorithm.calculateElo(blueTeamMemberStatistics, redTeamMemberStatistics, blueTeamPoints.get(), redTeamPoints.get());
+            EloAlgorithm.calculateEloFair(
+                    matchDto,
+                    blueTeamId,
+                    redTeamId,
+                    blueTeamPoints.get(),
+                    redTeamPoints.get(),
+                    blueTeamMemberStatistics,
+                    redTeamMemberStatistics,
+                    playerPoints
+            );
+
+            playerPoints.clear();
         });
 
         // calculate averages for all entries
