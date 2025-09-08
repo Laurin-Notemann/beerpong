@@ -29,9 +29,6 @@ import java.util.stream.Stream;
 
 @Service
 public class LeaderboardService {
-    private static final double K_FACTOR = 10D;
-    private static final int ELO_DIVIDER = 400;
-
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
     private final PlayerRepository playerRepository;
@@ -178,6 +175,7 @@ public class LeaderboardService {
                 var teamMembers = matchDto.getTeamMembers().stream()
                         .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
                         .collect(Collectors.toCollection(Lists::newArrayList));
+                var toAdd = (teamDto.getId().equals(blueTeamId) ? blueTeamPoints : redTeamPoints);
 
                 // go through all team members
                 teamMembers.forEach(teamMemberDto -> {
@@ -224,6 +222,7 @@ public class LeaderboardService {
 
                             //TODO should team points count here as well?
                             playerPoints.merge(entry.getStatistics(), (long) ownPoints, Long::sum);
+                            toAdd.addAndGet(ownPoints);
 
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
@@ -262,10 +261,7 @@ public class LeaderboardService {
                     .toList();
 
             // calculate elo for both teams
-            EloAlgorithm.calculateEloFair(
-                    matchDto,
-                    blueTeamId,
-                    redTeamId,
+            EloAlgorithm.calculateElo(
                     blueTeamPoints.get(),
                     redTeamPoints.get(),
                     blueTeamMemberStatistics,
