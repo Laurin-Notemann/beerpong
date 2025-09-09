@@ -14,7 +14,7 @@ public class EloAlgorithm {
     public static final double K_TEAM = 48.0; // Wertung von Ergebnis-Upsets
     public static final double K_PERF = 12.0; // individuelle Über/Unterperformance
     public static final double ALPHA = 0.5; // Blend: 1/n vs. Softmax(Elo)
-    public static final double BETA = 0.004; // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
+    public static final double BETA = 0.015; // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
     public static final double EPS = 0.25; // Glättung für tatsächliche Anteile
     public static final double CAP_PER_PLAYER = 40.0; // Max Elo gain pro Spiel
 
@@ -26,7 +26,7 @@ public class EloAlgorithm {
             long teamRedPoints,
             List<PlayerStatisticsDto> blueTeamStats,
             List<PlayerStatisticsDto> redTeamStats,
-            Map<PlayerStatisticsDto, Long> playerPoints
+            Map<String, Long> playerPoints
     ) {
         // Game-Result berechnen
         double resultBlue = teamBluePoints == teamRedPoints ? 0.5 : (teamBluePoints > teamRedPoints ? 1.0 : 0.0);
@@ -41,12 +41,12 @@ public class EloAlgorithm {
         double expectedRed = 1.0 - expectedBlue;
 
         // Expected Shares an den Teampunkten berechnen
-        Map<PlayerStatisticsDto, Double> expShare = new HashMap<>();
+        Map<String, Double> expShare = new HashMap<>();
         expectedShare(blueTeamStats, expShare);
         expectedShare(redTeamStats, expShare);
 
         // Tatsächliche Anteile an den Teampunkten
-        Map<PlayerStatisticsDto, Double> actShare = new HashMap<>();
+        Map<String, Double> actShare = new HashMap<>();
         actualShare(blueTeamStats, playerPoints, teamBluePoints, actShare);
         actualShare(redTeamStats, playerPoints, teamRedPoints, actShare);
 
@@ -60,20 +60,20 @@ public class EloAlgorithm {
         double scaleBlue = (0.5 + Math.abs(resultBlue - expectedBlue));
         double scaleRed = (0.5 + Math.abs(resultRed - expectedRed));
 
-        Map<PlayerStatisticsDto, Double> delta = new HashMap<>();
+        Map<String, Double> delta = new HashMap<>();
 
         // Sieger: + (act - exp); Verlierer: - (act - exp); Unentschieden: 0
         double signBlue = resultBlue == 1.0 ? +1.0 : (resultBlue == 0.0 ? -1.0 : 0.0);
         double signRed = -signBlue;
 
         for (PlayerStatisticsDto p : blueTeamStats) {
-            double d = (actShare.getOrDefault(p, 0.0) - expShare.getOrDefault(p, 0.0));
-            delta.put(p, K_PERF * scaleBlue * signBlue * d);
+            double d = (actShare.getOrDefault(p.getId(), 0.0) - expShare.getOrDefault(p.getId(), 0.0));
+            delta.put(p.getId(), K_PERF * scaleBlue * signBlue * d);
         }
 
         for (PlayerStatisticsDto p : redTeamStats) {
-            double d = (actShare.getOrDefault(p, 0.0) - expShare.getOrDefault(p, 0.0));
-            delta.put(p, K_PERF * scaleRed * signRed * d);
+            double d = (actShare.getOrDefault(p.getId(), 0.0) - expShare.getOrDefault(p.getId(), 0.0));
+            delta.put(p.getId(), K_PERF * scaleRed * signRed * d);
         }
 
         // Performance des Teams auf 0 renormieren
@@ -99,7 +99,7 @@ public class EloAlgorithm {
 
     static void expectedShare(
             List<PlayerStatisticsDto> players,
-            Map<PlayerStatisticsDto, Double> out
+            Map<String, Double> out
     ) {
         if (players.isEmpty()) return;
 
@@ -137,54 +137,45 @@ public class EloAlgorithm {
 
         // renorm auf 1
         for (int i = 0; i < n; i++) {
-            out.put(players.get(i), shares[i] / sum);
+            out.put(players.get(i).getId(), shares[i] / sum);
         }
     }
 
     static void actualShare(
             List<PlayerStatisticsDto> players,
-            Map<PlayerStatisticsDto, Long> playerPoints,
+            Map<String, Long> playerPoints,
             long teamPoints,
-            Map<PlayerStatisticsDto, Double> out
+            Map<String, Double> out
     ) {
-        if (players.isEmpty()) return;
-
-        // Anzahl an Spielern
-        int n = players.size();
-
-        // Spieler-Punkte mit Glättung, damit man immer etwas plus/minus bekommt
-        double denom = teamPoints + n * EPS;
-
         for (PlayerStatisticsDto p : players) {
-            double pts = playerPoints.getOrDefault(p, 0L) + EPS;
+            double pts = playerPoints.getOrDefault(p.getId(), 0L);
 
-            // Tatsächlichen Anteil berechnen inkl. minimaler Glättung
-            out.put(p, pts / denom);
+            out.put(p.getId(), pts / teamPoints);
         }
     }
 
-    private static void renormToZero(List<PlayerStatisticsDto> players, Map<PlayerStatisticsDto, Double> deltas) {
+    private static void renormToZero(List<PlayerStatisticsDto> players, Map<String, Double> deltas) {
         if (players.isEmpty()) {
             return;
         }
 
-        double sum = players.stream().mapToDouble(p -> deltas.getOrDefault(p, 0.0)).sum();
+        double sum = players.stream().mapToDouble(p -> deltas.getOrDefault(p.getId(), 0.0)).sum();
         double mean = sum / players.size();
 
         for (PlayerStatisticsDto p : players) {
-            deltas.put(p, deltas.getOrDefault(p, 0.0) - mean);
+            deltas.put(p.getId(), deltas.getOrDefault(p.getId(), 0.0) - mean);
         }
     }
 
     private static void applyDeltas(
             List<PlayerStatisticsDto> players,
-            Map<PlayerStatisticsDto, Double> expShare,
+            Map<String, Double> expShare,
             double deltaTeam,
-            Map<PlayerStatisticsDto, Double> deltaPerf
+            Map<String, Double> deltaPerf
     ) {
         for (PlayerStatisticsDto p : players) {
-            double dt = deltaTeam * expShare.getOrDefault(p, 0.0);
-            double dp = deltaPerf.getOrDefault(p, 0.0);
+            double dt = deltaTeam * expShare.getOrDefault(p.getId(), 0.0);
+            double dp = deltaPerf.getOrDefault(p.getId(), 0.0);
 
             double d = dt + dp;
 
@@ -199,5 +190,4 @@ public class EloAlgorithm {
             p.setElo(p.getElo() + d);
         }
     }
-
 }

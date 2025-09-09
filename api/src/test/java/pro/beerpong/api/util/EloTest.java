@@ -6,14 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -28,78 +22,6 @@ import pro.beerpong.api.model.dto.PlayerStatisticsDto;
 
 public class EloTest {
   private static final Gson GSON = new GsonBuilder().create();
-
-  public static void printTable(List<Map<String, Object>> rows) {
-    if (rows == null || rows.isEmpty()) {
-      System.out.println("(keine Daten)");
-      return;
-    }
-
-    // Alle Spaltennamen sammeln
-    Set<String> headers = new LinkedHashSet<>();
-    for (Map<String, Object> row : rows) {
-      headers.addAll(row.keySet());
-    }
-
-    // Spaltenbreiten berechnen
-    Map<String, Integer> colWidths = new HashMap<>();
-    for (String header : headers) {
-      int max = header.length();
-      for (Map<String, Object> row : rows) {
-        Object value = row.get(header);
-        if (value != null) {
-          max = Math.max(max, value.toString().length());
-        }
-      }
-      colWidths.put(header, max);
-    }
-
-    // Kopfzeile
-    printSeparator(colWidths, headers);
-    printRow(colWidths, headers, headers);
-    printSeparator(colWidths, headers);
-
-    // Datenzeilen
-    for (Map<String, Object> row : rows) {
-      List<String> values = new ArrayList<>();
-      for (String header : headers) {
-        Object value = row.get(header);
-        values.add(value == null ? "" : value.toString());
-      }
-      printRow(colWidths, headers, values);
-    }
-
-    printSeparator(colWidths, headers);
-  }
-
-  private static void printRow(Map<String, Integer> colWidths, Set<String> headers, Collection<String> values) {
-    Iterator<String> headerIter = headers.iterator();
-    Iterator<String> valueIter = values.iterator();
-    StringBuilder sb = new StringBuilder("|");
-    while (headerIter.hasNext() && valueIter.hasNext()) {
-      String header = headerIter.next();
-      String value = valueIter.next();
-      int width = colWidths.get(header);
-      sb.append(" ").append(padRight(value, width)).append(" |");
-    }
-    System.out.println(sb.toString());
-  }
-
-  private static void printSeparator(Map<String, Integer> colWidths, Set<String> headers) {
-    StringBuilder sb = new StringBuilder("+");
-    for (String header : headers) {
-      int width = colWidths.get(header);
-      sb.append("-".repeat(width + 2)).append("+");
-    }
-    System.out.println(sb.toString());
-  }
-
-  private static String padRight(String text, int length) {
-    if (text.length() >= length) {
-      return text;
-    }
-    return text + " ".repeat(length - text.length());
-  }
 
   @Test
   public void testElo() {
@@ -142,7 +64,7 @@ public class EloTest {
 
         var playerPoints = game.getTeams().stream()
                 .flatMap(testGameTeam -> testGameTeam.getPlayers().stream())
-                .collect(Collectors.toMap(testGamePlayer -> playerStats.get(testGamePlayer.getPlayerName()),
+                .collect(Collectors.toMap(testGamePlayer -> playerStats.get(testGamePlayer.getPlayerName()).getId(),
                         o -> (long) o.getPoints(), Long::sum));
 
         var teamBluePlayers = game.getTeams().getFirst().getPlayers().stream()
@@ -178,19 +100,12 @@ public class EloTest {
                 playerPoints
         );
 
-        EloAlgorithm.calculateElo(
-                totalPointsBlue,
-                totalPointsRed,
-                teamBluePlayers,
-                teamRedPlayers,
-                playerPoints
-        );
-
-        var expShare = new HashMap<PlayerStatisticsDto, Double>();
-        var actShare = new HashMap<PlayerStatisticsDto, Double>();
+        var expShare = new HashMap<String, Double>();
+        var actShare = new HashMap<String, Double>();
 
         EloAlgorithm.expectedShare(teamBluePlayers, expShare);
         EloAlgorithm.expectedShare(teamRedPlayers, expShare);
+        System.out.println("--");
         EloAlgorithm.actualShare(teamBluePlayers, playerPoints, totalPointsBlue, actShare);
         EloAlgorithm.actualShare(teamRedPlayers, playerPoints, totalPointsRed, actShare);
 
@@ -209,8 +124,8 @@ public class EloTest {
                   " elo before: " + round(eloBefore.get(player.getPlayerName())) +
                   " elo after: " + round(stats.getElo()) +
                   " elo " + (eloDiff >= 0 ? "gain: +" : "loss: ") + round(eloDiff) +
-                  " exp share: " + round(expShare.get(stats)) +
-                  " act share: " + round(actShare.get(stats)));
+                  " exp share: " + round(expShare.get(stats.getId())) +
+                  " act share: " + round(actShare.get(stats.getId())));
         }
 
         System.out.println();
@@ -227,8 +142,8 @@ public class EloTest {
                   " elo before: " + round(eloBefore.get(player.getPlayerName())) +
                   " elo after: " + round(stats.getElo()) +
                   " elo " + (eloDiff >= 0 ? "gain: +" : "loss: ") + round(eloDiff) +
-                  " exp share: " + round(expShare.get(stats)) +
-                  " act share: " + round(actShare.get(stats)));
+                  " exp share: " + round(expShare.get(stats.getId())) +
+                  " act share: " + round(actShare.get(stats.getId())));
         }
       }
     } catch (IOException e) {
