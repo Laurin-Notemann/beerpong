@@ -68,12 +68,12 @@ public class EloAlgorithm {
 
         for (PlayerStatisticsDto p : blueTeamStats) {
             double d = (actShare.getOrDefault(p.getId(), 0.0) - expShare.getOrDefault(p.getId(), 0.0));
-            delta.put(p.getId(), K_PERF * scaleBlue * signBlue * d);
+            delta.put(p.getId(), K_PERF * scaleBlue * d);
         }
 
         for (PlayerStatisticsDto p : redTeamStats) {
             double d = (actShare.getOrDefault(p.getId(), 0.0) - expShare.getOrDefault(p.getId(), 0.0));
-            delta.put(p.getId(), K_PERF * scaleRed * signRed * d);
+            delta.put(p.getId(), K_PERF * scaleRed * d);
         }
 
         // Performance des Teams auf 0 renormieren
