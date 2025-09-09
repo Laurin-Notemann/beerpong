@@ -105,7 +105,6 @@ public class EloTest {
 
         EloAlgorithm.expectedShare(teamBluePlayers, expShare);
         EloAlgorithm.expectedShare(teamRedPlayers, expShare);
-        System.out.println("--");
         EloAlgorithm.actualShare(teamBluePlayers, playerPoints, totalPointsBlue, actShare);
         EloAlgorithm.actualShare(teamRedPlayers, playerPoints, totalPointsRed, actShare);
 

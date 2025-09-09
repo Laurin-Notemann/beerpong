@@ -12,10 +12,10 @@ public class EloAlgorithm {
     public static final int ELO_DIVIDER = 400;
 
     public static final double K_TEAM = 48.0; // Wertung von Ergebnis-Upsets
-    public static final double K_PERF = 12.0; // individuelle Über/Unterperformance
+    public static final double K_PERF = 18.0; // individuelle Über/Unterperformance
+
     public static final double ALPHA = 0.5; // Blend: 1/n vs. Softmax(Elo)
-    public static final double BETA = 0.015; // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
-    public static final double EPS = 0.25; // Glättung für tatsächliche Anteile
+    public static final double BETA = 0.02; // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
     public static final double CAP_PER_PLAYER = 40.0; // Max Elo gain pro Spiel
 
     public static final double SOFTMAX_CLAMP_FLOOR = 0.05;
@@ -36,10 +36,6 @@ public class EloAlgorithm {
         double eloAvgBlue = averageElo(blueTeamStats);
         double eloAvgRed = averageElo(redTeamStats);
 
-        // Expected-Results
-        double expectedBlue = expectedScore(eloAvgBlue, eloAvgRed);
-        double expectedRed = 1.0 - expectedBlue;
-
         // Expected Shares an den Teampunkten berechnen
         Map<String, Double> expShare = new HashMap<>();
         expectedShare(blueTeamStats, expShare);
@@ -50,39 +46,28 @@ public class EloAlgorithm {
         actualShare(blueTeamStats, playerPoints, teamBluePoints, actShare);
         actualShare(redTeamStats, playerPoints, teamRedPoints, actShare);
 
-        // Ergebnis-Upsets (wie ein Team entsprechend zu ihrem erwarteten Ergebnis performt hat)
-        // Positiv -> besser als erwartet, Negativ -> schlechter als erwartet, Null -> genau wie erwartet
-        double deltaTeamBlue = K_TEAM * (resultBlue - expectedBlue);
-        double deltaTeamRed = K_TEAM * (resultRed - expectedRed);
+        // Deltas anwenden und Elo berechnen
+        applyDeltas(blueTeamStats, resultBlue, eloAvgRed, expShare, actShare);
+        applyDeltas(redTeamStats, resultRed, eloAvgBlue, expShare, actShare);
+    }
 
-        // Über/Unterperformance des Teams (wie ungewöhnlich das Math-Ergebnis war)
-        // Überperformances in solchen Upset-Spielen werden stärker belohnt
-        double scaleBlue = (0.5 + Math.abs(resultBlue - expectedBlue));
-        double scaleRed = (0.5 + Math.abs(resultRed - expectedRed));
+    private static void applyDeltas(List<PlayerStatisticsDto> players,
+                                    double result,
+                                    double eloAvgOpp,
+                                    Map<String, Double> expShare,
+                                    Map<String, Double> actShare) {
+        for (PlayerStatisticsDto p : players) {
+            double expVsOpp = expectedScore(p.getElo(), eloAvgOpp);
+            double deltaTeam = K_TEAM * (result - expVsOpp);
 
-        Map<String, Double> delta = new HashMap<>();
+            double dShare = (actShare.getOrDefault(p.getId(), 0.0)
+                    - expShare.getOrDefault(p.getId(), 0.0));
+            double deltaPerformance = K_PERF * dShare;
 
-        // Sieger: + (act - exp); Verlierer: - (act - exp); Unentschieden: 0
-        double signBlue = resultBlue == 1.0 ? +1.0 : (resultBlue == 0.0 ? -1.0 : 0.0);
-        double signRed = -signBlue;
+            double eloChange = Math.max(-CAP_PER_PLAYER, Math.min(CAP_PER_PLAYER, deltaTeam + deltaPerformance));
 
-        for (PlayerStatisticsDto p : blueTeamStats) {
-            double d = (actShare.getOrDefault(p.getId(), 0.0) - expShare.getOrDefault(p.getId(), 0.0));
-            delta.put(p.getId(), K_PERF * scaleBlue * d);
+            p.setElo(p.getElo() + eloChange);
         }
-
-        for (PlayerStatisticsDto p : redTeamStats) {
-            double d = (actShare.getOrDefault(p.getId(), 0.0) - expShare.getOrDefault(p.getId(), 0.0));
-            delta.put(p.getId(), K_PERF * scaleRed * d);
-        }
-
-        // Performance des Teams auf 0 renormieren
-        renormToZero(blueTeamStats, delta);
-        renormToZero(redTeamStats, delta);
-
-        // Delta anwenden: Elo nach expShare verteilen + Performance-Term addieren
-        applyDeltas(blueTeamStats, expShare, deltaTeamBlue, delta);
-        applyDeltas(redTeamStats, expShare, deltaTeamRed, delta);
     }
 
     private static double averageElo(List<PlayerStatisticsDto> players) {
@@ -151,43 +136,6 @@ public class EloAlgorithm {
             double pts = playerPoints.getOrDefault(p.getId(), 0L);
 
             out.put(p.getId(), pts / teamPoints);
-        }
-    }
-
-    private static void renormToZero(List<PlayerStatisticsDto> players, Map<String, Double> deltas) {
-        if (players.isEmpty()) {
-            return;
-        }
-
-        double sum = players.stream().mapToDouble(p -> deltas.getOrDefault(p.getId(), 0.0)).sum();
-        double mean = sum / players.size();
-
-        for (PlayerStatisticsDto p : players) {
-            deltas.put(p.getId(), deltas.getOrDefault(p.getId(), 0.0) - mean);
-        }
-    }
-
-    private static void applyDeltas(
-            List<PlayerStatisticsDto> players,
-            Map<String, Double> expShare,
-            double deltaTeam,
-            Map<String, Double> deltaPerf
-    ) {
-        for (PlayerStatisticsDto p : players) {
-            double dt = deltaTeam * expShare.getOrDefault(p.getId(), 0.0);
-            double dp = deltaPerf.getOrDefault(p.getId(), 0.0);
-
-            double d = dt + dp;
-
-            // Ergebnis cappen, um komplette Blowouts zu vermeiden
-            if (d > CAP_PER_PLAYER) {
-                d = CAP_PER_PLAYER;
-            }
-            if (d < -CAP_PER_PLAYER) {
-                d = -CAP_PER_PLAYER;
-            }
-
-            p.setElo(p.getElo() + d);
         }
     }
 }
