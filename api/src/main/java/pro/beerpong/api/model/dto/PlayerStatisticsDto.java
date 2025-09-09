@@ -3,12 +3,14 @@ package pro.beerpong.api.model.dto;
 import com.google.common.collect.Maps;
 import jakarta.persistence.Transient;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
 
 import java.util.Map;
 
 @Data
+@EqualsAndHashCode
 public class PlayerStatisticsDto {
     private String id;
     private long points = 0;

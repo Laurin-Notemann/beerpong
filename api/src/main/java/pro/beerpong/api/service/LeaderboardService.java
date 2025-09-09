@@ -167,7 +167,7 @@ public class LeaderboardService {
             var blueTeamPoints = new AtomicLong();
             var redTeamPoints = new AtomicLong();
 
-            var playerPoints = new HashMap<PlayerStatisticsDto, Long>();
+            var playerPoints = new HashMap<String, Long>();
 
             // go through all teams
             matchDto.getTeams().forEach(teamDto -> {
@@ -221,7 +221,7 @@ public class LeaderboardService {
                             entry.getStatistics().addPoints(ownPoints);
 
                             //TODO should team points count here as well?
-                            playerPoints.merge(entry.getStatistics(), (long) ownPoints, Long::sum);
+                            playerPoints.merge(entry.getStatistics().getId(), (long) ownPoints, Long::sum);
                             toAdd.addAndGet(ownPoints);
 
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
