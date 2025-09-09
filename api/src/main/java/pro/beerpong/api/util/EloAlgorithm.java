@@ -1,6 +1,5 @@
 package pro.beerpong.api.util;
 
-import pro.beerpong.api.model.dto.MatchDto;
 import pro.beerpong.api.model.dto.PlayerStatisticsDto;
 
 import java.util.HashMap;
@@ -12,12 +11,12 @@ public class EloAlgorithm {
     public static final int STARTING_ELO = 1500;
     public static final int ELO_DIVIDER = 400;
 
-    public static final double K_TEAM = 48.0;   // Wertung von Ergebnis-Upsets
-    public static final double K_PERF = 12.0;   // individuelle Über/Unterperformance
-    public static final double ALPHA = 0.5;    // Blend: 1/n vs. Softmax(Elo)
-    public static final double BETA = 0.004;  // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
-    public static final double EPS = 0.25;   // Glättung für tatsächliche Anteile
-    public static final double CAP_PER_PLAYER = 40.0;   // Max Elo gain pro Spiel
+    public static final double K_TEAM = 48.0; // Wertung von Ergebnis-Upsets
+    public static final double K_PERF = 12.0; // individuelle Über/Unterperformance
+    public static final double ALPHA = 0.5; // Blend: 1/n vs. Softmax(Elo)
+    public static final double BETA = 0.004; // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
+    public static final double EPS = 0.25; // Glättung für tatsächliche Anteile
+    public static final double CAP_PER_PLAYER = 40.0; // Max Elo gain pro Spiel
 
     public static final double SOFTMAX_CLAMP_FLOOR = 0.05;
     public static final double SOFTMAX_CLAMP_CEIL = 0.9;
@@ -93,12 +92,12 @@ public class EloAlgorithm {
                 .orElse(STARTING_ELO);
     }
 
-    private static double expectedScore(double elo1, double elo2) {
+    static double expectedScore(double elo1, double elo2) {
         // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
         return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
     }
 
-    private static void expectedShare(
+    static void expectedShare(
             List<PlayerStatisticsDto> players,
             Map<PlayerStatisticsDto, Double> out
     ) {
@@ -142,7 +141,7 @@ public class EloAlgorithm {
         }
     }
 
-    private static void actualShare(
+    static void actualShare(
             List<PlayerStatisticsDto> players,
             Map<PlayerStatisticsDto, Long> playerPoints,
             long teamPoints,
