@@ -105,6 +105,7 @@ declare namespace Components {
             rankBy?: {
                 [name: string]: number; // int32
             };
+            playerId?: string;
         }
         export interface ProfileCreateDto {
             name?: string;
