@@ -1,18 +1,12 @@
 package pro.beerpong.api.util;
 
 import pro.beerpong.api.model.dto.PlayerStatisticsDto;
-import pro.beerpong.api.service.LeaderboardService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class EloAlgorithm {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EloAlgorithm.class);
-
     public static final int STARTING_ELO = 1500;
     public static final int ELO_DIVIDER = 400;
 
