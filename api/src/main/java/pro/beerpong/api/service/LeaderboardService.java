@@ -261,13 +261,13 @@ public class LeaderboardService {
                     .toList();
 
             // calculate elo for both teams
-            EloAlgorithm.calculateElo(
-                    blueTeamPoints.get(),
-                    redTeamPoints.get(),
-                    blueTeamMemberStatistics,
-                    redTeamMemberStatistics,
-                    playerPoints
-            );
+//            EloAlgorithm.calculateElo(
+//                    blueTeamPoints.get(),
+//                    redTeamPoints.get(),
+//                    blueTeamMemberStatistics,
+//                    redTeamMemberStatistics,
+//                    playerPoints
+//            );
 
             playerPoints.clear();
         });
