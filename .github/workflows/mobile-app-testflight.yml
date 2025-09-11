@@ -26,7 +26,7 @@ jobs:
         with:
           # Use 16.4 for iOS 18.5 SDK (matches your logs).
           # To try the newest toolchain, set this to '26.0'.
-          xcode-version: '26.0.0'
+          xcode-version: '16.4.0'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
