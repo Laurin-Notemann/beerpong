@@ -7,17 +7,64 @@ import java.util.List;
 import java.util.Map;
 
 public class EloAlgorithm {
+    // Standard-Elo
     public static final int STARTING_ELO = 1500;
+    // Elo-Teiler
+    // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
     public static final int ELO_DIVIDER = 400;
 
-    public static final double K_TEAM = 48.0; // Wertung von Ergebnis-Upsets
-    public static final double K_PERF = 18.0; // individuelle Über/Unterperformance
+    /**
+     * Wieviel zählt das Match-Ergebnis (Überraschungssiege)
+     * Kleine Werte (bspw. 16) -> Ergebnis ist wenig relevant, Elo bewegt sich langsamer
+     * Große Werte (bspw. 50) -> Große Relevanz, Überraschungen führen zu hohen Sprüngen
+     */
+    public static final double K_TEAM = 25.0;
+    /**
+     * Wertung der individuellen Performance von Spielern (exp vs act)
+     * Kleine Werte (bspw. 4) -> Performance ist nicht so wichtig, Ergebnis macht den größten Teil aus
+     * Große Werte (bspw. 40) -> Performance ist sehr wichtig, eine Niederlage trotz guter Performance ist wenig problematisch
+     */
+    public static final double K_PERF = 40.0;
 
-    public static final double ALPHA = 0.5; // Blend: 1/n vs. Softmax(Elo)
-    public static final double BETA = 0.02; // Softmax-Schärfe. Wieviel wird von besseren Spielern mehr erwartet
-    public static final double CAP_PER_PLAYER = 40.0; // Max Elo gain pro Spiel
+    /**
+     * Wie stark hängt die Erwartung der Punkteverteilung (exp vs act) vom Elo ab
+     * Kleine Werte (bspw. 0.2) -> Erwartung ist fast gleichmäßig verteilt, Elo-Stärken im Team spielen kaum Rolle.
+     * Große Werte (bspw. 0.8) -> Erwartung richtet sich stark nach Elo, die besten Spieler müssen immer sehr gut spielen
+     */
+    public static final double ALPHA = 0.5;
+    /**
+     * Softmax-Schärfe. Wie stark schwankt das Elo zwischen unterschiedlich guten Spielern
+     * Kleine Werte (bspw. 0.005) -> auch von schwächeren Spielern wird fast gleich viel erwartet
+     * Große Werte (bspw. 0.05) -> schon kleine Elo-Unterschiede führen zu großen Erwartungs-Änderungen
+     */
+    public static final double BETA = 0.02;
 
+    /**
+     * Pseudo-Punkte für die Glättung der act. Performances.
+     * Erst wenn mehr Punkte erzielt werden, werden die richtigen Punkte relevant
+     * Kleine Werte (bspw. 2) -> schon bei wenig Punkten werden die Ausschläge extrem
+     * Große Werte (bspw. 8) -> viel Glättung. Selbst wenn mehr Punkte fallen bleiben die Shares ähnlich
+     */
+    public static final double PSEUDO_POINTS_SMOOTHING = 3.0;
+    /**
+     * Wie schnell die wirkliche Performance relevanter wird
+     * Zu Beginn (mit wenig Punkten) sind die Shares der Performance aller Spieler immernoch ähnlich
+     * Kleine Werte (bspw. 3) -> schon nach 3 Punkten wird die Performance wichtig
+     * Große Werte (bspw. 15) -> erst nach 15 Punkten wird die Performance wirklich relvant
+     */
+    public static final double PERF_POINTS_SCALE_C = 3.0;
+    /**
+     * Mindestgewichtung der Performance. Damit die Performance nie komplett egal ist
+     * Kleine Werte (bspw. 0.1) -> bei Spielen mit wenig Punkten hat die Performance wenig Einfluss (10%)
+     * Große Werte (bspw. 0.3) -> selbst mit keinen Punkten zählt die Performance zu 30%
+     */
+    public static final double PERF_WEIGHT_FLOOR = 0.35;
+
+    // Max Elo-Gain pro Spiel, um komplette Outbreaks zu vermeiden
+    public static final double CAP_PER_PLAYER = 40.0;
+    // Mindest-Anforderung an Spieler (5% der Punkte)
     public static final double SOFTMAX_CLAMP_FLOOR = 0.05;
+    // Maximal-Anforderung an Spieler (90% der Punkte)
     public static final double SOFTMAX_CLAMP_CEIL = 0.9;
 
     public static void calculateElo(
@@ -46,25 +93,37 @@ public class EloAlgorithm {
         actualShare(redTeamStats, playerPoints, teamRedPoints, actShare);
 
         // Deltas anwenden und Elo berechnen
-        applyDeltas(blueTeamStats, resultBlue, eloAvgRed, expShare, actShare);
-        applyDeltas(redTeamStats, resultRed, eloAvgBlue, expShare, actShare);
+        applyDeltas(blueTeamStats, resultBlue, eloAvgRed, expShare, actShare, teamBluePoints, teamRedPoints);
+        applyDeltas(redTeamStats,  resultRed,  eloAvgBlue, expShare, actShare, teamRedPoints, teamBluePoints);
     }
 
-    private static void applyDeltas(List<PlayerStatisticsDto> players,
-                                    double result,
-                                    double eloAvgOpp,
-                                    Map<String, Double> expShare,
-                                    Map<String, Double> actShare) {
+    private static void applyDeltas(
+            List<PlayerStatisticsDto> players,
+            double result,
+            double eloAvgOpp,
+            Map<String, Double> expShare,
+            Map<String, Double> actShare,
+            long teamPoints,
+            long oppPoints
+    ) {
+        long m = Math.max(0, teamPoints + oppPoints);
+
+        double wPoints = m / (m + PERF_POINTS_SCALE_C);
+        double wRatio  = (teamPoints + oppPoints) > 0
+                ? (double) teamPoints / (teamPoints + oppPoints)
+                : 0.5;
+
+        double wPerf = Math.max(PERF_WEIGHT_FLOOR, Math.sqrt(wPoints) * Math.sqrt(wRatio));
+
         for (PlayerStatisticsDto p : players) {
             double expVsOpp = expectedScore(p.getElo(), eloAvgOpp);
             double deltaTeam = K_TEAM * (result - expVsOpp);
 
             double dShare = (actShare.getOrDefault(p.getPlayerId(), 0.0)
                     - expShare.getOrDefault(p.getPlayerId(), 0.0));
-            double deltaPerformance = K_PERF * dShare;
 
+            double deltaPerformance = (K_PERF * wPerf) * dShare;
             double eloChange = Math.max(-CAP_PER_PLAYER, Math.min(CAP_PER_PLAYER, deltaTeam + deltaPerformance));
-
             p.setElo(p.getElo() + eloChange);
         }
     }
@@ -135,14 +194,21 @@ public class EloAlgorithm {
             long teamPoints,
             Map<String, Double> out
     ) {
+        int n = players.size();
+
+        double denom = teamPoints + PSEUDO_POINTS_SMOOTHING;
+        double perPlayerPrior = (n > 0 ? PSEUDO_POINTS_SMOOTHING / n : 0.0);
+
+        if (denom <= 0) {
+            double uniform = 1.0 / Math.max(1, n);
+            for (PlayerStatisticsDto p : players) out.put(p.getPlayerId(), uniform);
+            return;
+        }
+
         for (PlayerStatisticsDto p : players) {
             double pts = playerPoints.getOrDefault(p.getPlayerId(), 0L);
-
-            if (teamPoints == 0) {
-                out.put(p.getPlayerId(), 0D);
-            } else {
-                out.put(p.getPlayerId(), pts / teamPoints);
-            }
+            double share = (pts + perPlayerPrior) / denom;
+            out.put(p.getPlayerId(), share);
         }
     }
 }
