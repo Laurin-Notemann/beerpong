@@ -2,15 +2,20 @@ package pro.beerpong.api.service;
 
 import com.google.api.client.util.Lists;
 import com.google.common.collect.Maps;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.PlayerStatistics;
+import pro.beerpong.api.model.dao.TeamMember;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
@@ -29,6 +34,8 @@ import java.util.stream.Stream;
 
 @Service
 public class LeaderboardService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeaderboardService.class);
+
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
     private final PlayerRepository playerRepository;
@@ -148,6 +155,7 @@ public class LeaderboardService {
                 }
 
                 playerDto.getStatistics().setId(null);
+                playerDto.getStatistics().setPlayerId(playerDto.getId());
                 entries.put(playerDto.getProfile().getId(), playerDto);
             }
         });
@@ -234,7 +242,12 @@ public class LeaderboardService {
                             }
 
                             // add gained points to the total team points
-                            playerPoints.merge(entry.getStatistics().getId(), (long) ownPoints, Long::sum);
+                            if (playerPoints.containsKey(entry.getStatistics().getPlayerId())) {
+                                playerPoints.put(entry.getStatistics().getPlayerId(),
+                                        playerPoints.get(entry.getStatistics().getPlayerId()) + ownPoints);
+                            } else {
+                                playerPoints.put(entry.getStatistics().getPlayerId(), (long) ownPoints);
+                            }
                             toAdd.addAndGet(ownPoints);
                         });
 
@@ -260,14 +273,77 @@ public class LeaderboardService {
                     .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
                     .toList();
 
+            //TODO remove
+            var teamBlueAvg = blueTeamMemberStatistics.stream()
+                    .mapToDouble(PlayerStatisticsDto::getElo)
+                    .average()
+                    .orElse(EloAlgorithm.STARTING_ELO);
+            var teamRedAvg = redTeamMemberStatistics.stream()
+                    .mapToDouble(PlayerStatisticsDto::getElo)
+                    .average()
+                    .orElse(EloAlgorithm.STARTING_ELO);
+
+            double expectedBlue = EloAlgorithm.expectedScore(teamBlueAvg, teamRedAvg);
+            double expectedRed = 1.0 - expectedBlue;
+            double resultBlue = blueTeamPoints.get() == redTeamPoints.get() ? 0.5 : (blueTeamPoints.get() > redTeamPoints.get() ? 1.0 : 0.0);
+            double resultRed = 1.0 - resultBlue;
+
+            var eloBefore = new HashMap<String, Double>();
+
+            blueTeamMemberStatistics.forEach(playerStatisticsDto ->
+                    eloBefore.put(playerStatisticsDto.getPlayerId(), playerStatisticsDto.getElo()));
+            redTeamMemberStatistics.forEach(playerStatisticsDto ->
+                    eloBefore.put(playerStatisticsDto.getPlayerId(), playerStatisticsDto.getElo()));
+
             // calculate elo for both teams
-//            EloAlgorithm.calculateElo(
-//                    blueTeamPoints.get(),
-//                    redTeamPoints.get(),
-//                    blueTeamMemberStatistics,
-//                    redTeamMemberStatistics,
-//                    playerPoints
-//            );
+            EloAlgorithm.calculateElo(
+                    blueTeamPoints.get(),
+                    redTeamPoints.get(),
+                    blueTeamMemberStatistics,
+                    redTeamMemberStatistics,
+                    playerPoints
+            );
+
+            var expShare = new HashMap<String, Double>();
+            var actShare = new HashMap<String, Double>();
+
+            EloAlgorithm.expectedShare(blueTeamMemberStatistics, expShare);
+            EloAlgorithm.expectedShare(redTeamMemberStatistics, expShare);
+            EloAlgorithm.actualShare(blueTeamMemberStatistics, playerPoints, blueTeamPoints.get(), actShare);
+            EloAlgorithm.actualShare(redTeamMemberStatistics, playerPoints, redTeamPoints.get(), actShare);
+
+            if (scope.equals("season")) {
+                LOGGER.info("----------------");
+                LOGGER.info("game: " + matchDto.getId());
+                LOGGER.info("");
+                LOGGER.info("team blue (points: " + blueTeamPoints.get() + " avg: " + teamBlueAvg + " exp: " + round(expectedBlue) + " act: " + resultBlue + ")");
+
+                for (TeamMemberDto member : blueTeamMembers) {
+                    var stats = entries.get(memberToProfile.get(member.getId())).getStatistics();
+                    var eloDiff = stats.getElo() - eloBefore.get(stats.getPlayerId());
+
+                    LOGGER.info("  points: " + playerPoints.get(stats.getPlayerId()) +
+                            " elo before: " + round(eloBefore.get(stats.getPlayerId())) +
+                            " elo after: " + round(stats.getElo()) +
+                            " elo " + (eloDiff >= 0 ? "gain: +" : "loss: ") + round(eloDiff) +
+                            " exp share: " + round(expShare.get(stats.getPlayerId())) +
+                            " act share: " + round(actShare.get(stats.getPlayerId())));
+                }
+
+                LOGGER.info("team red (points: " + redTeamPoints.get() + " avg: " + teamRedAvg + " exp: " + round(expectedRed) + " act: " + resultRed + ")");
+
+                for (TeamMemberDto member : redTeamMembers) {
+                    var stats = entries.get(memberToProfile.get(member.getId())).getStatistics();
+                    var eloDiff = stats.getElo() - eloBefore.get(stats.getPlayerId());
+
+                    LOGGER.info("  points: " + playerPoints.get(stats.getPlayerId()) +
+                            " elo before: " + round(eloBefore.get(stats.getPlayerId())) +
+                            " elo after: " + round(stats.getElo()) +
+                            " elo " + (eloDiff >= 0 ? "gain: +" : "loss: ") + round(eloDiff) +
+                            " exp share: " + round(expShare.get(stats.getPlayerId())) +
+                            " act share: " + round(actShare.get(stats.getPlayerId())));
+                }
+            }
 
             playerPoints.clear();
         });
@@ -307,5 +383,10 @@ public class LeaderboardService {
         memberToProfile.clear();
 
         return dto;
+    }
+
+    //TODO remove
+    private double round(double d) {
+        return Math.round(d * 100.0) / 100.0;
     }
 }

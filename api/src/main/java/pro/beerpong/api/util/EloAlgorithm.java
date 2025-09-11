@@ -1,12 +1,17 @@
 package pro.beerpong.api.util;
 
 import pro.beerpong.api.model.dto.PlayerStatisticsDto;
+import pro.beerpong.api.service.LeaderboardService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class EloAlgorithm {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EloAlgorithm.class);
 
     public static final int STARTING_ELO = 1500;
     public static final int ELO_DIVIDER = 400;
@@ -60,8 +65,8 @@ public class EloAlgorithm {
             double expVsOpp = expectedScore(p.getElo(), eloAvgOpp);
             double deltaTeam = K_TEAM * (result - expVsOpp);
 
-            double dShare = (actShare.getOrDefault(p.getId(), 0.0)
-                    - expShare.getOrDefault(p.getId(), 0.0));
+            double dShare = (actShare.getOrDefault(p.getPlayerId(), 0.0)
+                    - expShare.getOrDefault(p.getPlayerId(), 0.0));
             double deltaPerformance = K_PERF * dShare;
 
             double eloChange = Math.max(-CAP_PER_PLAYER, Math.min(CAP_PER_PLAYER, deltaTeam + deltaPerformance));
@@ -77,12 +82,12 @@ public class EloAlgorithm {
                 .orElse(STARTING_ELO);
     }
 
-    static double expectedScore(double elo1, double elo2) {
+    public static double expectedScore(double elo1, double elo2) {
         // source: https://www.omnicalculator.com/sports/elo#what-is-the-elo-rating-system
         return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
     }
 
-    static void expectedShare(
+    public static void expectedShare(
             List<PlayerStatisticsDto> players,
             Map<String, Double> out
     ) {
@@ -123,26 +128,26 @@ public class EloAlgorithm {
         // renorm auf 1
         for (int i = 0; i < n; i++) {
             if (sum == 0) {
-                out.put(players.get(i).getId(), 0D);
+                out.put(players.get(i).getPlayerId(), 0D);
             } else {
-                out.put(players.get(i).getId(), shares[i] / sum);
+                out.put(players.get(i).getPlayerId(), shares[i] / sum);
             }
         }
     }
 
-    static void actualShare(
+    public static void actualShare(
             List<PlayerStatisticsDto> players,
             Map<String, Long> playerPoints,
             long teamPoints,
             Map<String, Double> out
     ) {
         for (PlayerStatisticsDto p : players) {
-            double pts = playerPoints.getOrDefault(p.getId(), 0L);
+            double pts = playerPoints.getOrDefault(p.getPlayerId(), 0L);
 
             if (teamPoints == 0) {
-                out.put(p.getId(), 0D);
+                out.put(p.getPlayerId(), 0D);
             } else {
-                out.put(p.getId(), pts / teamPoints);
+                out.put(p.getPlayerId(), pts / teamPoints);
             }
         }
     }

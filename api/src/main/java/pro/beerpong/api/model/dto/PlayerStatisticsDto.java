@@ -23,6 +23,8 @@ public class PlayerStatisticsDto {
     private double elo = EloAlgorithm.STARTING_ELO;
     @Transient
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
+    @Transient
+    private String playerId;
 
     public void addPoints(int amount) {
         this.points += amount;
