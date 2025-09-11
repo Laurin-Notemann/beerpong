@@ -18,7 +18,7 @@ public class EloAlgorithm {
      * Kleine Werte (bspw. 16) -> Ergebnis ist wenig relevant, Elo bewegt sich langsamer
      * Große Werte (bspw. 50) -> Große Relevanz, Überraschungen führen zu hohen Sprüngen
      */
-    public static final double K_TEAM = 30.0;
+    public static final double K_TEAM = 25.0;
     /**
      * Wertung der individuellen Performance von Spielern (exp vs act)
      * Kleine Werte (bspw. 4) -> Performance ist nicht so wichtig, Ergebnis macht den größten Teil aus
