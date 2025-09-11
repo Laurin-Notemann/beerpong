@@ -1548,7 +1548,8 @@
                             "type": "integer",
                             "format": "int32"
                         }
-                    }
+                    },
+                    "playerId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeListPlayerDto": {
