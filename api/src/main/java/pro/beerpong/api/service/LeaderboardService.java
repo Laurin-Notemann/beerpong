@@ -2,15 +2,20 @@ package pro.beerpong.api.service;
 
 import com.google.api.client.util.Lists;
 import com.google.common.collect.Maps;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.PlayerStatistics;
+import pro.beerpong.api.model.dao.TeamMember;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
@@ -148,6 +153,7 @@ public class LeaderboardService {
                 }
 
                 playerDto.getStatistics().setId(null);
+                playerDto.getStatistics().setPlayerId(playerDto.getId());
                 entries.put(playerDto.getProfile().getId(), playerDto);
             }
         });
@@ -234,7 +240,7 @@ public class LeaderboardService {
                             }
 
                             // add gained points to the total team points
-                            playerPoints.merge(entry.getStatistics().getId(), (long) ownPoints, Long::sum);
+                            playerPoints.merge(entry.getStatistics().getPlayerId(), (long) ownPoints, Long::sum);
                             toAdd.addAndGet(ownPoints);
                         });
 
@@ -261,13 +267,13 @@ public class LeaderboardService {
                     .toList();
 
             // calculate elo for both teams
-//            EloAlgorithm.calculateElo(
-//                    blueTeamPoints.get(),
-//                    redTeamPoints.get(),
-//                    blueTeamMemberStatistics,
-//                    redTeamMemberStatistics,
-//                    playerPoints
-//            );
+            EloAlgorithm.calculateElo(
+                    blueTeamPoints.get(),
+                    redTeamPoints.get(),
+                    blueTeamMemberStatistics,
+                    redTeamMemberStatistics,
+                    playerPoints
+            );
 
             playerPoints.clear();
         });

@@ -67,7 +67,7 @@ public class EloTest {
 
         var playerPoints = game.getTeams().stream()
                 .flatMap(testGameTeam -> testGameTeam.getPlayers().stream())
-                .collect(Collectors.toMap(testGamePlayer -> playerStats.get(testGamePlayer.getPlayerName()).getId(),
+                .collect(Collectors.toMap(testGamePlayer -> playerStats.get(testGamePlayer.getPlayerName()).getPlayerId(),
                         o -> (long) o.getPoints(), Long::sum));
 
         var teamBluePlayers = game.getTeams().getFirst().getPlayers().stream()
@@ -132,8 +132,8 @@ public class EloTest {
                   " elo before: " + round(eloBefore.get(player.getPlayerName())) +
                   " elo after: " + round(stats.getElo()) +
                   " elo " + (eloDiff >= 0 ? "gain: +" : "loss: ") + round(eloDiff) +
-                  " exp share: " + round(expShare.get(stats.getId())) +
-                  " act share: " + round(actShare.get(stats.getId())));
+                  " exp share: " + round(expShare.get(stats.getPlayerId())) +
+                  " act share: " + round(actShare.get(stats.getPlayerId())));
         }
 
         System.out.println();
@@ -156,8 +156,8 @@ public class EloTest {
                   " elo before: " + round(eloBefore.get(player.getPlayerName())) +
                   " elo after: " + round(stats.getElo()) +
                   " elo " + (eloDiff >= 0 ? "gain: +" : "loss: ") + round(eloDiff) +
-                  " exp share: " + round(expShare.get(stats.getId())) +
-                  " act share: " + round(actShare.get(stats.getId())));
+                  " exp share: " + round(expShare.get(stats.getPlayerId())) +
+                  " act share: " + round(actShare.get(stats.getPlayerId())));
         }
       }
 
@@ -173,7 +173,7 @@ public class EloTest {
 
       for (int i = 0; i < sorted.size(); i++) {
         var stats = sorted.get(i);
-        System.out.println("  " + (i + 1) + ". " + stats.getId() + " elo: " + round(stats.getElo()) + " games: " + stats.getMatches() + " wins: " + stats.getWins());
+        System.out.println("  " + (i + 1) + ". " + stats.getPlayerId() + " elo: " + round(stats.getElo()) + " games: " + stats.getMatches() + " wins: " + stats.getWins());
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -186,7 +186,7 @@ public class EloTest {
 
   private PlayerStatisticsDto buildTestDto(String playerName) {
     PlayerStatisticsDto dto = new PlayerStatisticsDto();
-    dto.setId(playerName);
+    dto.setPlayerId(playerName);
     return dto;
   }
 }
