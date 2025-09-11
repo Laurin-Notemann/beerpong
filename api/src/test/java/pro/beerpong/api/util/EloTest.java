@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,7 +30,7 @@ public class EloTest {
   public void testElo() {
     var classLoader = getClass().getClassLoader();
 
-    try (InputStream inputStream = classLoader.getResourceAsStream("testcases.json")) {
+    try (InputStream inputStream = classLoader.getResourceAsStream("elo-testcases.json")) {
       assertNotNull(inputStream, "Resource not found!");
       String content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
       List<TestGameData> games = Lists.newArrayList();
@@ -36,7 +39,7 @@ public class EloTest {
         games.add(GSON.fromJson(jsonElement.getAsJsonObject(), TestGameData.class));
       }
 
-      assertEquals(26, games.size());
+      assertEquals(62, games.size());
 
       var players = games.stream()
               .flatMap(gameData -> gameData.getTeams().stream())
@@ -118,6 +121,12 @@ public class EloTest {
           var points = player.getPoints();
           var eloDiff = stats.getElo() - eloBefore.get(player.getPlayerName());
 
+          stats.addMatch();
+
+          if (eloDiff >= 0) {
+            stats.addWin();
+          }
+
           System.out.println("  " + player.getPlayerName() + ":" +
                   " points: " + points +
                   " elo before: " + round(eloBefore.get(player.getPlayerName())) +
@@ -136,6 +145,12 @@ public class EloTest {
           var points = player.getPoints();
           var eloDiff = stats.getElo() - eloBefore.get(player.getPlayerName());
 
+          stats.addMatch();
+
+          if (eloDiff >= 0) {
+            stats.addWin();
+          }
+
           System.out.println("  " + player.getPlayerName() + ":" +
                   " points: " + points +
                   " elo before: " + round(eloBefore.get(player.getPlayerName())) +
@@ -144,6 +159,21 @@ public class EloTest {
                   " exp share: " + round(expShare.get(stats.getId())) +
                   " act share: " + round(actShare.get(stats.getId())));
         }
+      }
+
+      var sorted = new ArrayList<>(playerStats.values().stream()
+              .sorted(Comparator.comparingDouble(PlayerStatisticsDto::getElo))
+              .toList());
+
+      Collections.reverse(sorted);
+
+      System.out.println();
+      System.out.println();
+      System.out.println("final standings:");
+
+      for (int i = 0; i < sorted.size(); i++) {
+        var stats = sorted.get(i);
+        System.out.println("  " + (i + 1) + ". " + stats.getId() + " elo: " + round(stats.getElo()) + " games: " + stats.getMatches() + " wins: " + stats.getWins());
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

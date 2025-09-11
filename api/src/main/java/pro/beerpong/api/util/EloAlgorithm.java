@@ -122,7 +122,11 @@ public class EloAlgorithm {
 
         // renorm auf 1
         for (int i = 0; i < n; i++) {
-            out.put(players.get(i).getId(), shares[i] / sum);
+            if (sum == 0) {
+                out.put(players.get(i).getId(), 0D);
+            } else {
+                out.put(players.get(i).getId(), shares[i] / sum);
+            }
         }
     }
 
@@ -135,7 +139,11 @@ public class EloAlgorithm {
         for (PlayerStatisticsDto p : players) {
             double pts = playerPoints.getOrDefault(p.getId(), 0L);
 
-            out.put(p.getId(), pts / teamPoints);
+            if (teamPoints == 0) {
+                out.put(p.getId(), 0D);
+            } else {
+                out.put(p.getId(), pts / teamPoints);
+            }
         }
     }
 }
