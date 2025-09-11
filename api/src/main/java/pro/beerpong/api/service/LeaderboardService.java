@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -175,6 +176,8 @@ public class LeaderboardService {
 
             var playerPoints = new HashMap<String, Long>();
 
+            var winningTeam = new AtomicReference<String>();
+
             // go through all teams
             matchDto.getTeams().forEach(teamDto -> {
                 // collect team members
@@ -213,11 +216,20 @@ public class LeaderboardService {
                             }
 
                             // get entry and points for this move
+                            var member = teamMembers.stream()
+                                    .filter(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId()))
+                                    .findFirst()
+                                    .orElse(null);
                             var entry = entries.get(memberToProfile.get(dto.getTeamMemberId()));
                             var points = ruleMoveService.getPointsById(dto.getMoveId());
 
-                            if (points == null) {
+                            if (points == null || member == null) {
                                 return;
+                            }
+
+                            // save winning team
+                            if (ruleMoveService.isFinish(dto.getMoveId())) {
+                                winningTeam.set(member.getTeamId());
                             }
 
                             var ownPoints = points.getFirst() * dto.getValue();
@@ -266,8 +278,23 @@ public class LeaderboardService {
                     .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
                     .toList();
 
+            List<PlayerStatisticsDto> winners;
+
+            // add wins to winner team
+            if (winningTeam.get() == null) {
+                return;
+            } else if (winningTeam.get().equals(blueTeamId)) {
+                winners = blueTeamMemberStatistics;
+            } else {
+                winners = redTeamMemberStatistics;
+            }
+
+            winners.forEach(PlayerStatisticsDto::addWin);
+
             // calculate elo for both teams
             EloAlgorithm.calculateElo(
+                    winningTeam.get(),
+                    blueTeamId,
                     blueTeamPoints.get(),
                     redTeamPoints.get(),
                     blueTeamMemberStatistics,

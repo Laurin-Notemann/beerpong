@@ -68,6 +68,8 @@ public class EloAlgorithm {
     public static final double SOFTMAX_CLAMP_CEIL = 0.9;
 
     public static void calculateElo(
+            String winningTeamId,
+            String blueTeamId,
             long teamBluePoints,
             long teamRedPoints,
             List<PlayerStatisticsDto> blueTeamStats,
@@ -75,7 +77,7 @@ public class EloAlgorithm {
             Map<String, Long> playerPoints
     ) {
         // Game-Result berechnen
-        double resultBlue = teamBluePoints == teamRedPoints ? 0.5 : (teamBluePoints > teamRedPoints ? 1.0 : 0.0);
+        double resultBlue = winningTeamId.equals(blueTeamId) ? 1.0 : 0.0;
         double resultRed = 1.0 - resultBlue;
 
         // Elo-Durchschnitte

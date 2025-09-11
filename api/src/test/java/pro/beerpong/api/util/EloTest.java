@@ -58,6 +58,9 @@ public class EloTest {
           continue;
         }
 
+        var blueTeamId = game.getTeams().getFirst().getTeamId();
+        var redTeamId = game.getTeams().get(1).getTeamId();
+
         var totalPointsBlue = game.getTeams().getFirst().getPlayers().stream()
                 .mapToInt(TestGamePlayer::getPoints)
                 .sum();
@@ -96,6 +99,8 @@ public class EloTest {
                 .collect(Collectors.toMap(TestGamePlayer::getPlayerName, o -> playerStats.get(o.getPlayerName()).getElo()));
 
         EloAlgorithm.calculateElo(
+                (resultBlue == 1.0D ? blueTeamId : redTeamId),
+                blueTeamId,
                 totalPointsBlue,
                 totalPointsRed,
                 teamBluePlayers,
