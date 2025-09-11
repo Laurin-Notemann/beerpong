@@ -220,10 +220,6 @@ public class LeaderboardService {
                             entry.getStatistics().addMoves(dto.getValue());
                             entry.getStatistics().addPoints(ownPoints);
 
-                            //TODO should team points count here as well?
-                            playerPoints.merge(entry.getStatistics().getId(), (long) ownPoints, Long::sum);
-                            toAdd.addAndGet(ownPoints);
-
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
                                 teamMembers.forEach(teamMemberDto -> {
@@ -236,6 +232,10 @@ public class LeaderboardService {
                                     }
                                 });
                             }
+
+                            // add gained points to the total team points
+                            playerPoints.merge(entry.getStatistics().getId(), (long) ownPoints, Long::sum);
+                            toAdd.addAndGet(ownPoints);
                         });
 
                 // clear members cache
