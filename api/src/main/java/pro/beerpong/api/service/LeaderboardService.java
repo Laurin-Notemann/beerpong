@@ -240,12 +240,7 @@ public class LeaderboardService {
                             }
 
                             // add gained points to the total team points
-                            if (playerPoints.containsKey(entry.getStatistics().getPlayerId())) {
-                                playerPoints.put(entry.getStatistics().getPlayerId(),
-                                        playerPoints.get(entry.getStatistics().getPlayerId()) + ownPoints);
-                            } else {
-                                playerPoints.put(entry.getStatistics().getPlayerId(), (long) ownPoints);
-                            }
+                            playerPoints.merge(entry.getStatistics().getPlayerId(), (long) ownPoints, Long::sum);
                             toAdd.addAndGet(ownPoints);
                         });
 
