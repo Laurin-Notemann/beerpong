@@ -58,12 +58,14 @@ export const useMatchesByPlayerQuery = (
 
     if (!matchesQuery.data?.data) return matchesQuery;
 
-    const matches = matchesQuery.data.data;
-
-    matchesQuery.data.data = matches.filter((i) =>
-        i.teamMembers?.find((j) => j.playerId === playerId)
+    const matchesForPlayer = matchesQuery.data.data.filter((i) =>
+        i.teamMembers!.find((j) => j.playerId === playerId)
     );
-    return matchesQuery;
+
+    return {
+        ...matchesQuery,
+        data: matchesForPlayer,
+    };
 };
 
 export const useCreateMatchMutation = () => {
