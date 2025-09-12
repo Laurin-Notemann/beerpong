@@ -34,7 +34,7 @@
     "@tanstack/react-query-persist-client": "^5.60.5",
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",
-    "eas-cli": "^12.5.1",
+    "eas-cli": "^16.18.1",
     "expo": "^54.0.2",
     "expo-application": "~7.0.7",
     "expo-blur": "~15.0.7",
