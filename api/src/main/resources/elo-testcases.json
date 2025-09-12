@@ -2018,5 +2018,1001 @@
         ]
       }
     ]
+  },
+  {
+    "matchId": "88b1f46d-2f31-46c9-9313-53769cc147e6",
+    "matchDate": "2025-09-11T12:29:24.635152+00:00",
+    "teams": [
+      {
+        "teamId": "8a4842a2-c289-4020-9818-231a837434d9",
+        "players": [
+          {
+            "playerName": "Das Institut",
+            "points": 4
+          },
+          {
+            "playerName": "Schicke",
+            "points": 4
+          },
+          {
+            "playerName": "Luzius",
+            "points": 1
+          }
+        ]
+      },
+      {
+        "teamId": "8b458bd7-bbf5-49ec-9d07-512cd7e758d3",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Robert",
+            "points": 4
+          },
+          {
+            "playerName": "Bolls",
+            "points": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "78afb1d1-7e5a-47d7-8746-cb875b6bfd1a",
+    "matchDate": "2025-09-11T12:34:23.549163+00:00",
+    "teams": [
+      {
+        "teamId": "2bf34d50-4692-4603-8459-1d97718d00c4",
+        "players": [
+          {
+            "playerName": "Moritz",
+            "points": 5
+          },
+          {
+            "playerName": "Elina",
+            "points": 3
+          },
+          {
+            "playerName": "Robert",
+            "points": 3
+          }
+        ]
+      },
+      {
+        "teamId": "8e3e61ac-01b9-414e-bbc8-0dd434ce05b9",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Bolls",
+            "points": 2
+          },
+          {
+            "playerName": "Thies",
+            "points": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "ba0ab8e4-18c5-45ba-9f3b-dd134fc4d4a0",
+    "matchDate": "2025-09-11T12:35:47.291416+00:00",
+    "teams": [
+      {
+        "teamId": "06f133d9-eaa3-4497-8765-f01fdd92a280",
+        "players": [
+          {
+            "playerName": "Robert",
+            "points": 6
+          },
+          {
+            "playerName": "Ole",
+            "points": 3
+          }
+        ]
+      },
+      {
+        "teamId": "ba7b3dbb-eaef-4c57-8b68-9fc4d57ac504",
+        "players": [
+          {
+            "playerName": "Moritz",
+            "points": 6
+          },
+          {
+            "playerName": "Elina",
+            "points": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "e11487b5-6472-4cb6-af54-a7ba46c76377",
+    "matchDate": "2025-09-11T12:40:09.534207+00:00",
+    "teams": [
+      {
+        "teamId": "cc7636f0-6d51-42f4-8d0c-94128f9f843f",
+        "players": [
+          {
+            "playerName": "Timon",
+            "points": 5
+          },
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Bolls",
+            "points": 3
+          },
+          {
+            "playerName": "Josi",
+            "points": 1
+          },
+          {
+            "playerName": "Luzius",
+            "points": 1
+          }
+        ]
+      },
+      {
+        "teamId": "cd4c13e9-da0b-4edd-bf38-d4d01d812554",
+        "players": [
+          {
+            "playerName": "Robert",
+            "points": 7
+          },
+          {
+            "playerName": "Thies",
+            "points": 4
+          },
+          {
+            "playerName": "Moritz",
+            "points": 3
+          },
+          {
+            "playerName": "Elina",
+            "points": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "72a2cd41-651a-4581-9358-190921439f89",
+    "matchDate": "2025-09-11T12:41:29.307863+00:00",
+    "teams": [
+      {
+        "teamId": "38fb02fd-6518-4cfc-9d0e-39f946e0d893",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 4
+          },
+          {
+            "playerName": "Adriana",
+            "points": 3
+          },
+          {
+            "playerName": "Bolls",
+            "points": 2
+          }
+        ]
+      },
+      {
+        "teamId": "7d9eb3f1-742c-4f50-9822-74229ba84802",
+        "players": [
+          {
+            "playerName": "Thies",
+            "points": 5
+          },
+          {
+            "playerName": "Elina",
+            "points": 4
+          },
+          {
+            "playerName": "Moritz",
+            "points": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "aa78383e-f23c-492a-9d39-480717bb612f",
+    "matchDate": "2025-09-11T12:42:46.174861+00:00",
+    "teams": [
+      {
+        "teamId": "cb17f0cf-0af4-4dde-aba8-228f26f136fb",
+        "players": [
+          {
+            "playerName": "Elina",
+            "points": 9
+          }
+        ]
+      },
+      {
+        "teamId": "f33c3976-62e9-4a94-b451-6d35d63604e3",
+        "players": [
+          {
+            "playerName": "Thies",
+            "points": 11
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "555eafbb-48d1-43b2-9b02-ce254daf0d5c",
+    "matchDate": "2025-09-11T12:44:52.128119+00:00",
+    "teams": [
+      {
+        "teamId": "7274245f-f9ae-4462-a709-bf669d96b03f",
+        "players": [
+          {
+            "playerName": "Luzius",
+            "points": 11
+          }
+        ]
+      },
+      {
+        "teamId": "b2492cae-073c-4658-b05e-d80413bca17d",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "8b901be7-d56e-47f1-91e3-dbde3c124dca",
+    "matchDate": "2025-09-11T12:49:04.660116+00:00",
+    "teams": [
+      {
+        "teamId": "3c3271cd-8345-414d-b22f-61f066514826",
+        "players": [
+          {
+            "playerName": "Josi",
+            "points": 4
+          },
+          {
+            "playerName": "Elina",
+            "points": 3
+          },
+          {
+            "playerName": "Ole",
+            "points": 2
+          },
+          {
+            "playerName": "Schicke",
+            "points": 2
+          }
+        ]
+      },
+      {
+        "teamId": "bf9b9ae8-4e80-4b83-8818-0d83b0a77bed",
+        "players": [
+          {
+            "playerName": "Bolls",
+            "points": 2
+          },
+          {
+            "playerName": "Timon",
+            "points": 2
+          },
+          {
+            "playerName": "Thies",
+            "points": 1
+          },
+          {
+            "playerName": "Luzius",
+            "points": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "599500fa-c868-44a0-ba3e-9bef743b4926",
+    "matchDate": "2025-09-11T13:04:35.994598+00:00",
+    "teams": [
+      {
+        "teamId": "34b04d15-0448-487e-9d1d-bb07aff9d087",
+        "players": [
+          {
+            "playerName": "Robert",
+            "points": 4
+          },
+          {
+            "playerName": "Thies",
+            "points": 3
+          },
+          {
+            "playerName": "Timon",
+            "points": 3
+          },
+          {
+            "playerName": "Bolls",
+            "points": 1
+          }
+        ]
+      },
+      {
+        "teamId": "6f37506a-b790-492c-8e7d-75607a9d00a9",
+        "players": [
+          {
+            "playerName": "Josi",
+            "points": 4
+          },
+          {
+            "playerName": "Elina",
+            "points": 3
+          },
+          {
+            "playerName": "Ole",
+            "points": 2
+          },
+          {
+            "playerName": "Schicke",
+            "points": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "fc014b9f-095f-48d3-bb39-02bdd31f84a5",
+    "matchDate": "2025-09-11T13:13:53.559832+00:00",
+    "teams": [
+      {
+        "teamId": "751999c0-765e-4483-b5f1-45058e74f080",
+        "players": [
+          {
+            "playerName": "Timon",
+            "points": 11
+          }
+        ]
+      },
+      {
+        "teamId": "bd50cf5c-2fa6-4d87-a86e-f6107da5ca66",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "64574d12-75ca-4b2c-bcb1-015f7d80e188",
+    "matchDate": "2025-09-11T13:32:55.650564+00:00",
+    "teams": [
+      {
+        "teamId": "8306d75e-2175-46e2-bbe8-c7919ae250bd",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Schicke",
+            "points": 3
+          },
+          {
+            "playerName": "Thies",
+            "points": 1
+          }
+        ]
+      },
+      {
+        "teamId": "f8bdb59d-5856-4375-8ca1-6e125511010a",
+        "players": [
+          {
+            "playerName": "Das Institut",
+            "points": 6
+          },
+          {
+            "playerName": "Timon",
+            "points": 5
+          },
+          {
+            "playerName": "Elina",
+            "points": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "0cd93df1-1fd9-4987-9000-311fc9a24f00",
+    "matchDate": "2025-09-11T18:06:00.451778+00:00",
+    "teams": [
+      {
+        "teamId": "59e0599d-dc58-4ad6-b353-5a618e93c0c1",
+        "players": [
+          {
+            "playerName": "Bolls",
+            "points": 2
+          },
+          {
+            "playerName": "Josi",
+            "points": 2
+          }
+        ]
+      },
+      {
+        "teamId": "e4077f53-bd29-4756-beb0-6b3cb174a785",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Schicke",
+            "points": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "67b6c0df-bceb-44fb-8a31-d6ac3e10e5c8",
+    "matchDate": "2025-09-11T18:06:41.327954+00:00",
+    "teams": [
+      {
+        "teamId": "40d60863-cac3-4688-af0e-9ff5b8ea17f7",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 2
+          },
+          {
+            "playerName": "Ole",
+            "points": 1
+          }
+        ]
+      },
+      {
+        "teamId": "fe22069a-cba1-4521-a769-4945578011d1",
+        "players": [
+          {
+            "playerName": "Josi",
+            "points": 7
+          },
+          {
+            "playerName": "Bolls",
+            "points": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "b1b8d26d-1867-4ab2-811f-854273da4936",
+    "matchDate": "2025-09-11T18:25:04.996815+00:00",
+    "teams": [
+      {
+        "teamId": "07c50079-5530-4bd4-a883-92f15018a078",
+        "players": [
+          {
+            "playerName": "Bolls",
+            "points": 5
+          },
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Schicke",
+            "points": 2
+          }
+        ]
+      },
+      {
+        "teamId": "db74633c-a20b-4129-a8fd-06a5c125608d",
+        "players": [
+          {
+            "playerName": "Josi",
+            "points": 3
+          },
+          {
+            "playerName": "Adriana",
+            "points": 2
+          },
+          {
+            "playerName": "Luzius",
+            "points": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "80a5f425-a8bd-46ab-aeac-fa3b59f6b603",
+    "matchDate": "2025-09-11T18:52:08.017759+00:00",
+    "teams": [
+      {
+        "teamId": "184cc307-e3dc-4f55-8f94-3cca6264598e",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 5
+          },
+          {
+            "playerName": "Bolls",
+            "points": 4
+          }
+        ]
+      },
+      {
+        "teamId": "ea834b6b-7008-461d-801d-bad2b3c9c71b",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 7
+          },
+          {
+            "playerName": "Adriana",
+            "points": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "93f84d4b-a52e-4caf-ac97-1c8d5af38d64",
+    "matchDate": "2025-09-11T19:04:42.015967+00:00",
+    "teams": [
+      {
+        "teamId": "3fd7b589-19ec-44b5-99d3-139dc2c74c36",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 3
+          },
+          {
+            "playerName": "Adriana",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "teamId": "65e28d9d-a9a8-42ff-aa0b-12998f8a31c0",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 7
+          },
+          {
+            "playerName": "Bolls",
+            "points": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "03246742-8b7f-44ac-9cea-e41670ff62c9",
+    "matchDate": "2025-09-11T19:20:36.5909+00:00",
+    "teams": [
+      {
+        "teamId": "0ecccc4e-6693-451b-a764-8231af9eae65",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 4
+          },
+          {
+            "playerName": "Adriana",
+            "points": 3
+          }
+        ]
+      },
+      {
+        "teamId": "db7c4274-73fe-4340-acbc-79c893afbf56",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 5
+          },
+          {
+            "playerName": "Bolls",
+            "points": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "8b8c4c85-d07c-4cc2-ad58-a39a4d2fa04b",
+    "matchDate": "2025-09-11T19:39:01.602068+00:00",
+    "teams": [
+      {
+        "teamId": "9661501a-fb3c-45c1-a3b7-9ccd1f03cdbb",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 8
+          },
+          {
+            "playerName": "Adriana",
+            "points": 3
+          }
+        ]
+      },
+      {
+        "teamId": "cd806772-9012-4350-9852-19d29382c87f",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 5
+          },
+          {
+            "playerName": "Bolls",
+            "points": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "3b0dc1aa-346d-4788-a06f-b89b26b9ca41",
+    "matchDate": "2025-09-11T21:28:43.524513+00:00",
+    "teams": [
+      {
+        "teamId": "38c91d69-01e6-49c6-a1f9-f0f9559c25f9",
+        "players": [
+          {
+            "playerName": "Timon",
+            "points": 6
+          },
+          {
+            "playerName": "Elina",
+            "points": 5
+          }
+        ]
+      },
+      {
+        "teamId": "59dc0c70-74a1-48f1-8d37-d6540ade5eb8",
+        "players": [
+          {
+            "playerName": "Das Institut",
+            "points": 4
+          },
+          {
+            "playerName": "Thies",
+            "points": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "c4945e72-be9c-44de-bead-75cd9a4262f3",
+    "matchDate": "2025-09-11T21:46:57.859007+00:00",
+    "teams": [
+      {
+        "teamId": "3497644c-0ca1-43c6-859c-3e43e35939e5",
+        "players": [
+          {
+            "playerName": "Timon",
+            "points": 7
+          },
+          {
+            "playerName": "Thies",
+            "points": 4
+          }
+        ]
+      },
+      {
+        "teamId": "8c8e6ea0-928f-44a9-b00e-760f4ef39cd9",
+        "players": [
+          {
+            "playerName": "Elina",
+            "points": 6
+          },
+          {
+            "playerName": "Das Institut",
+            "points": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "3598a241-de60-4b96-805b-284ed418c7c4",
+    "matchDate": "2025-09-11T22:04:58.891111+00:00",
+    "teams": [
+      {
+        "teamId": "0c19904f-c0ad-4f1f-9e97-23dc90a701ec",
+        "players": [
+          {
+            "playerName": "Timon",
+            "points": 6
+          },
+          {
+            "playerName": "Elina",
+            "points": 3
+          },
+          {
+            "playerName": "Thies",
+            "points": 2
+          }
+        ]
+      },
+      {
+        "teamId": "c0e31e80-1a22-4cff-a070-68f393ce0ec2",
+        "players": [
+          {
+            "playerName": "Laurin",
+            "points": 4
+          },
+          {
+            "playerName": "Bolls",
+            "points": 2
+          },
+          {
+            "playerName": "Schicke",
+            "points": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "ddc75389-bd85-4b13-a28d-e41733ba4ad4",
+    "matchDate": "2025-09-11T22:22:20.730035+00:00",
+    "teams": [
+      {
+        "teamId": "b04cf5d1-11eb-407b-b87e-e1e6ff028d44",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 4
+          },
+          {
+            "playerName": "Bolls",
+            "points": 5
+          },
+          {
+            "playerName": "Laurin",
+            "points": 2
+          },
+          {
+            "playerName": "Adriana",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "teamId": "b9bb5a18-4091-4c48-9e07-da60ffce376d",
+        "players": [
+          {
+            "playerName": "Timon",
+            "points": 5
+          },
+          {
+            "playerName": "Elina",
+            "points": 4
+          },
+          {
+            "playerName": "Robert",
+            "points": 1
+          },
+          {
+            "playerName": "Thies",
+            "points": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "d3662e1d-72ee-4f62-91a2-855e9f1b9812",
+    "matchDate": "2025-09-11T22:40:23.009404+00:00",
+    "teams": [
+      {
+        "teamId": "749ffaee-792f-428e-bbd5-d9fe38c3addb",
+        "players": [
+          {
+            "playerName": "Robert",
+            "points": 7
+          },
+          {
+            "playerName": "Adriana",
+            "points": 3
+          },
+          {
+            "playerName": "Elina",
+            "points": 2
+          },
+          {
+            "playerName": "Thies",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "teamId": "b7c739dc-6825-484e-ad9f-4e2cc956f267",
+        "players": [
+          {
+            "playerName": "Laurin",
+            "points": 5
+          },
+          {
+            "playerName": "Schicke",
+            "points": 3
+          },
+          {
+            "playerName": "Bolls",
+            "points": 2
+          },
+          {
+            "playerName": "Ole",
+            "points": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "c011a27a-59d2-4e4c-9c1a-24e320ee43d6",
+    "matchDate": "2025-09-11T23:02:16.993474+00:00",
+    "teams": [
+      {
+        "teamId": "77458bca-ca18-4f78-bd05-f2723aba9aa8",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 4
+          },
+          {
+            "playerName": "Elina",
+            "points": 2
+          },
+          {
+            "playerName": "Adriana",
+            "points": 1
+          },
+          {
+            "playerName": "Ole",
+            "points": 0
+          }
+        ]
+      },
+      {
+        "teamId": "e84985e3-5fc5-4d3e-a8ef-1f366f7b72c5",
+        "players": [
+          {
+            "playerName": "Josi",
+            "points": 5
+          },
+          {
+            "playerName": "Robert",
+            "points": 4
+          },
+          {
+            "playerName": "Bolls",
+            "points": 2
+          },
+          {
+            "playerName": "Laurin",
+            "points": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "ca6d4f22-af43-459a-831c-9bcc6169d1d7",
+    "matchDate": "2025-09-11T23:29:12.701125+00:00",
+    "teams": [
+      {
+        "teamId": "410e6e09-0382-46d2-9a78-bb3fd6037aaa",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 6
+          },
+          {
+            "playerName": "Adriana",
+            "points": 4
+          }
+        ]
+      },
+      {
+        "teamId": "f1c60825-6950-4ecf-bb2a-8ffd6775c768",
+        "players": [
+          {
+            "playerName": "Bolls",
+            "points": 7
+          },
+          {
+            "playerName": "Ole",
+            "points": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "54037260-f759-4706-8aec-3e1707b52dfe",
+    "matchDate": "2025-09-12T10:14:15.147742+00:00",
+    "teams": [
+      {
+        "teamId": "d64d1f8d-3543-4af7-ac49-d07cd410475d",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 8
+          },
+          {
+            "playerName": "Adriana",
+            "points": 3
+          }
+        ]
+      },
+      {
+        "teamId": "eb2e4be0-3160-44e3-9839-527b5bea90c7",
+        "players": [
+          {
+            "playerName": "Schicke",
+            "points": 4
+          },
+          {
+            "playerName": "Luzius",
+            "points": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "matchId": "579fa4f9-e0fb-490e-a917-4ed362de36de",
+    "matchDate": "2025-09-12T10:33:21.389016+00:00",
+    "teams": [
+      {
+        "teamId": "2c60e58b-1936-460e-a7ac-cd359d5b829c",
+        "players": [
+          {
+            "playerName": "Ole",
+            "points": 8
+          },
+          {
+            "playerName": "Schicke",
+            "points": 7
+          },
+          {
+            "playerName": "Bolls",
+            "points": 3
+          }
+        ]
+      },
+      {
+        "teamId": "ec213b74-480f-4f28-94cf-09cfc172acc0",
+        "players": [
+          {
+            "playerName": "Adriana",
+            "points": 11
+          },
+          {
+            "playerName": "Robert",
+            "points": 6
+          },
+          {
+            "playerName": "Luzius",
+            "points": 3
+          }
+        ]
+      }
+    ]
   }
 ]

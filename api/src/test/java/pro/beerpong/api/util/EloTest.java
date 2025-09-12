@@ -39,7 +39,7 @@ public class EloTest {
         games.add(GSON.fromJson(jsonElement.getAsJsonObject(), TestGameData.class));
       }
 
-      assertEquals(62, games.size());
+      assertEquals(89, games.size());
 
       var players = games.stream()
               .flatMap(gameData -> gameData.getTeams().stream())

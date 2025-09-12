@@ -1,9 +1,10 @@
 package pro.beerpong.api.service;
 
-import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.mapping.PlayerMapper;
 import pro.beerpong.api.model.dao.*;
@@ -179,9 +180,20 @@ public class MatchService {
                 .map(playerMapper::playerToPlayerDto);
     }
 
+    @Transactional(readOnly = true)
     public Stream<MatchDto> streamAllMatchesInSeason(String seasonId) {
-        return matchRepository.findBySeasonId(seasonId).stream()
-                .map(this::matchToMatchDto);
+        List<Match> matches = matchRepository.findBySeason_Id(seasonId);
+
+        List<String> tmIds = matches.stream()
+                .flatMap(m -> m.getTeams().stream())
+                .flatMap(t -> t.getTeamMembers().stream())
+                .map(TeamMember::getId)
+                .toList();
+
+        Map<String, List<MatchMove>> movesByTm = moveRepo.findAllByTeamMemberIds(tmIds)
+                .stream().collect(groupingBy(mm -> mm.getTeamMember().getId()));
+
+        return matches.stream().map(m -> toDto(m, movesByTm));
     }
 
     public Stream<PlayerDto> streamAllPlayersInSeason(String seasonId) {
