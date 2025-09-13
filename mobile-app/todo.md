@@ -5,10 +5,10 @@ fix: nested virtual lists
 
 advanced backend stuff
 
-- pagination
-- idempotency key
-- rate limiting
-- database constraints, cascades
+-   pagination
+-   idempotency key
+-   rate limiting
+-   database constraints, cascades
 
 at commit https://github.com/Laurin-Notemann/beerpong/commit/61c507083ba297f7964ce779cb792a8da06127e5, we had an implementation using sockjs and stompjs, this now switched to https://github.com/Laurin-Notemann/beerpong/commit/21873119603a01ea73587c260ee1a433fa952c2f
 
