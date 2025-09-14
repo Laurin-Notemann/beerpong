@@ -5,9 +5,8 @@ import Button from '@/components/Button';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
-export interface OnboardingModalProps {}
 // eslint-disable-next-line no-empty-pattern
-export default function OnboardingModal({}: OnboardingModalProps) {
+export default function OnboardingModal() {
     const navigation = useNavigation();
 
     const theme = useTheme();

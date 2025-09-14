@@ -159,10 +159,8 @@ export interface SidebarGroup {
     matchesCount: number;
 }
 
-export interface SidebarProps {}
-
 // eslint-disable-next-line no-empty-pattern
-export function Sidebar({}: SidebarProps) {
+export function Sidebar() {
     const { groupIds, selectedGroupId, selectGroup, removeGroup } =
         useGroupStore();
 
