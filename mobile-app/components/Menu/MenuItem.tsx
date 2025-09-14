@@ -105,7 +105,13 @@ export default function MenuItem({
                 underlayColor={theme.panel[color].active}
                 onPress={confirmationPrompt ? showPrompt : onPress}
             >
-                <>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                    }}
+                >
                     {headIcon &&
                         (typeof headIcon === 'string' ? (
                             <Icon
@@ -239,7 +245,7 @@ export default function MenuItem({
                             />
                         </Pressable>
                     )}
-                </>
+                </View>
             </TouchableHighlight>
         </>
     );
