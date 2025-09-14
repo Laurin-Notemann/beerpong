@@ -95,17 +95,19 @@ export default function Avatar({
                     overflow: 'hidden',
                 }}
             >
-                <BlurView
-                    intensity={theme.blur?.intensity ?? 0}
-                    tint={theme.blur?.tint}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: size,
-                        height: size,
-                    }}
-                />
+                {(theme.blur?.intensity ?? 0) !== 0 && (
+                    <BlurView
+                        intensity={theme.blur?.intensity ?? 0}
+                        tint={theme.blur?.tint}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: size,
+                            height: size,
+                        }}
+                    />
+                )}
                 <View
                     style={{
                         alignItems: 'center',

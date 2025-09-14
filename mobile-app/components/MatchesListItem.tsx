@@ -6,7 +6,6 @@ import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { useTheme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export const MatchesListItem: React.FC<{
     match: Match;
@@ -14,10 +13,6 @@ export const MatchesListItem: React.FC<{
     highlightedId?: string;
 }> = ({ match, onPress, highlightedId }) => {
     const theme = useTheme();
-
-    const { matchPhotos } = useLocalSettings();
-
-    const DEBUG = matchPhotos;
 
     return (
         <TouchableHighlight
@@ -33,14 +28,8 @@ export const MatchesListItem: React.FC<{
             onPress={onPress}
         >
             <>
-                {DEBUG ? (
-                    <View style={{ height: 36 }} />
-                ) : (
-                    <MatchVsHeader
-                        match={match}
-                        highlightedId={highlightedId}
-                    />
-                )}
+                <MatchVsHeader match={match} highlightedId={highlightedId} />
+
                 <View style={{ flexDirection: 'row', gap: 16 }}>
                     <Text
                         style={{
