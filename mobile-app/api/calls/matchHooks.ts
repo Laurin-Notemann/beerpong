@@ -64,7 +64,7 @@ export const useMatchesByPlayerQuery = (
 
     return {
         ...matchesQuery,
-        data: matchesForPlayer,
+        data: { data: matchesForPlayer },
     };
 };
 
