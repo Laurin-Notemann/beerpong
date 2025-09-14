@@ -5,8 +5,14 @@ import { Player } from '@/api/calls/seasonHooks';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatAverage, formatElo, formatPlacement } from '@/utils/format';
+import {
+    formatAverage,
+    formatElo,
+    formatPlacement,
+    formatWinRate,
+} from '@/utils/format';
 
 const Description: React.FC<{
     detailed?: boolean;
@@ -73,7 +79,7 @@ export interface PodiumProps extends ViewProps {
 
     onPlayerPress?: (id: string) => void;
     onPlayerLongPress?: (id: string) => void;
-    rankingAlgorithm: 'AVERAGE' | 'ELO';
+    rankingAlgorithm: RankingAlgorithm;
 }
 export default function Podium({
     detailed = true,
@@ -145,7 +151,12 @@ export default function Podium({
                     average={
                         rankingAlgorithm === 'AVERAGE'
                             ? formatAverage(secondPlaceAverage)
-                            : formatElo(secondPlace?.elo)
+                            : rankingAlgorithm === 'ELO'
+                              ? formatElo(secondPlace?.elo)
+                              : formatWinRate(
+                                    secondPlace?.matches,
+                                    secondPlace?.matchesWon
+                                )
                     }
                 />
             </TouchableOpacity>
@@ -196,7 +207,12 @@ export default function Podium({
                     average={
                         rankingAlgorithm === 'AVERAGE'
                             ? formatAverage(firstPlaceAverage)
-                            : formatElo(firstPlace?.elo)
+                            : rankingAlgorithm === 'ELO'
+                              ? formatElo(firstPlace?.elo)
+                              : formatWinRate(
+                                    firstPlace?.matches,
+                                    firstPlace?.matchesWon
+                                )
                     }
                 />
             </TouchableOpacity>
@@ -234,7 +250,12 @@ export default function Podium({
                     average={
                         rankingAlgorithm === 'AVERAGE'
                             ? formatAverage(thirdPlaceAverage)
-                            : formatElo(thirdPlace?.elo)
+                            : rankingAlgorithm === 'ELO'
+                              ? formatElo(thirdPlace?.elo)
+                              : formatWinRate(
+                                    thirdPlace?.matches,
+                                    thirdPlace?.matchesWon
+                                )
                     }
                 />
             </TouchableOpacity>

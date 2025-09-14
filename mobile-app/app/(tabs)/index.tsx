@@ -23,6 +23,7 @@ import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -44,9 +45,8 @@ export default function Page() {
     const [showSortModal, setShowSortModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
 
-    const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
-        'ELO'
-    );
+    const [sortingAlgorithm, setSortingAlgorithm] =
+        useState<RankingAlgorithm>('ELO');
 
     useEffect(() => {
         setSortingAlgorithm(
@@ -110,6 +110,14 @@ export default function Page() {
 
                             onPress: () => {
                                 setSortingAlgorithm('AVERAGE');
+                                setShowSortModal(false);
+                            },
+                        },
+                        {
+                            title: 'Winrate',
+
+                            onPress: () => {
+                                setSortingAlgorithm('MATCHES_WON');
                                 setShowSortModal(false);
                             },
                         },

@@ -3,8 +3,9 @@ import { TouchableOpacity } from 'react-native';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatElo, formatPlacement } from '@/utils/format';
+import { formatElo, formatPlacement, formatWinRate } from '@/utils/format';
 
 export interface LeaderboardPlayerItemProps {
     id: string;
@@ -22,7 +23,7 @@ export interface LeaderboardPlayerItemProps {
     onPlayerPress?: (id: string) => void;
     onPlayerLongPress?: (id: string) => void;
 
-    rankingAlgorithm: 'AVERAGE' | 'ELO';
+    rankingAlgorithm: RankingAlgorithm;
 }
 export default function LeaderboardPlayerItem({
     id,
@@ -101,7 +102,9 @@ export default function LeaderboardPlayerItem({
             >
                 {rankingAlgorithm === 'AVERAGE'
                     ? averagePointsPerMatch
-                    : formatElo(elo)}
+                    : rankingAlgorithm === 'ELO'
+                      ? formatElo(elo)
+                      : formatWinRate(matches, matchesWon)}
             </ThemedText>
         </TouchableOpacity>
     );

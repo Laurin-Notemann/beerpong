@@ -3,8 +3,9 @@ import { Text, View } from 'react-native';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import PlayerStats from '@/components/PlayerStats';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatElo } from '@/utils/format';
+import { formatElo, formatWinRate } from '@/utils/format';
 
 export function PlayerPageHeadSection({
     avatarUrl,
@@ -35,7 +36,7 @@ export function PlayerPageHeadSection({
     isUnranked: boolean;
     editable: boolean;
     averagePointsPerMatch: string;
-    rankingAlgorithm: 'AVERAGE' | 'ELO';
+    rankingAlgorithm: RankingAlgorithm;
 }) {
     const theme = useTheme();
 
@@ -59,7 +60,9 @@ export function PlayerPageHeadSection({
             >
                 {rankingAlgorithm === 'AVERAGE'
                     ? averagePointsPerMatch
-                    : formatElo(elo)}
+                    : rankingAlgorithm === 'ELO'
+                      ? formatElo(elo)
+                      : formatWinRate(matches.length, matchesWon)}
             </Text>
             <Text
                 style={{
