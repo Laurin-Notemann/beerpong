@@ -50,7 +50,6 @@ export interface ScopeInfo {
     cups: number;
     elo: number;
     rankingAlgorithm: 'AVERAGE' | 'ELO';
-    averagePointsPerMatch: string;
     isUnranked: boolean;
     name: string;
 }
@@ -110,10 +109,6 @@ export default function PlayerScreen({
     const [editable, setEditable] = useState(false);
 
     const insets = useInsets(true);
-
-    // account for division by zero
-    const averagePointsPerMatch =
-        matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
 
     const isUnranked = matches.length < minMatchesRequiredToBeRanked;
 
@@ -465,7 +460,6 @@ export default function PlayerScreen({
                         cups={cups}
                         isUnranked={isUnranked}
                         editable={editable}
-                        averagePointsPerMatch={averagePointsPerMatch}
                         onUploadAvatarPress={onUploadAvatarPress}
                         matches={matches}
                         rankingAlgorithm={rankingAlgorithm}

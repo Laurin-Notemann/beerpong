@@ -3,9 +3,11 @@ import { Text, View } from 'react-native';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import PlayerStats from '@/components/PlayerStats';
-import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
+import {
+    getRankingAlgorithm,
+    type RankingAlgorithm,
+} from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatElo, formatWinRate } from '@/utils/format';
 
 export function PlayerPageHeadSection({
     avatarUrl,
@@ -20,7 +22,6 @@ export function PlayerPageHeadSection({
 
     isUnranked,
     editable,
-    averagePointsPerMatch,
     rankingAlgorithm,
 }: {
     avatarUrl?: string | null;
@@ -35,10 +36,19 @@ export function PlayerPageHeadSection({
 
     isUnranked: boolean;
     editable: boolean;
-    averagePointsPerMatch: string;
     rankingAlgorithm: RankingAlgorithm;
 }) {
     const theme = useTheme();
+
+    const player = {
+        avatarUrl,
+        name,
+        cups,
+        matchesWon,
+        matches: matches.length,
+        elo,
+        points,
+    };
 
     return (
         <View style={{ alignItems: 'center' }}>
@@ -58,11 +68,7 @@ export function PlayerPageHeadSection({
                     color: theme.color.text.secondary,
                 }}
             >
-                {rankingAlgorithm === 'AVERAGE'
-                    ? averagePointsPerMatch
-                    : rankingAlgorithm === 'ELO'
-                      ? formatElo(elo)
-                      : formatWinRate(matches.length, matchesWon)}
+                {getRankingAlgorithm(rankingAlgorithm).getDisplayValue(player)}
             </Text>
             <Text
                 style={{
@@ -79,13 +85,7 @@ export function PlayerPageHeadSection({
                 {name}
             </Text>
 
-            <PlayerStats
-                totalCups={cups}
-                totalPoints={points}
-                matchesWonCount={matchesWon}
-                matchesPlayedCount={matches.length}
-                elo={elo}
-            />
+            <PlayerStats player={player} />
         </View>
     );
 }
