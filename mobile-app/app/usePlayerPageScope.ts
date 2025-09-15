@@ -1,4 +1,8 @@
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    useAllSeasonsQuery,
+    useGroup,
+    useSeasonSettings,
+} from '@/api/calls/seasonHooks';
 import {
     byDescendingAveragePoints,
     byDescendingElo,
@@ -7,7 +11,6 @@ import {
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 
-// TODO: cutoff for today leaderboard
 // TODO: additional seasons
 // TODO: minMatchesRequiredToBeRanked, placement, elo, points, rankingAlgorithm
 
@@ -38,19 +41,43 @@ export function usePlayerPageScope(playerId: string) {
 
     const currentSeasonMatches =
         activeSeason?.ruleMoves && activeSeason?.rawPlayers
-            ? (activeSeason?.matches.map(
-                  matchDtoToMatch(
-                      activeSeason?.rawPlayers,
-                      activeSeason?.ruleMoves
+            ? (activeSeason?.matches
+                  .filter((i) =>
+                      i.teamMembers!.find((j) => j.playerId === playerId)
                   )
-              ) ?? [])
+                  .map(
+                      matchDtoToMatch(
+                          activeSeason?.rawPlayers,
+                          activeSeason?.ruleMoves
+                      )
+                  ) ?? [])
             : [];
 
-    const todayMatches = currentSeasonMatches;
+    const { seasonSettings } = useSeasonSettings(groupId!, seasonId!);
+
+    const todayMatches = currentSeasonMatches.filter((i) => {
+        const wakeTime = seasonSettings?.wakeTimeHour ?? 0;
+
+        const matchDate = new Date(i.date);
+        const now = new Date();
+        if (now.getHours() < wakeTime) {
+            now.setDate(now.getDate() - 1);
+        }
+        now.setHours(wakeTime, 0, 0, 0);
+        if (matchDate.getHours() < wakeTime) {
+            matchDate.setDate(matchDate.getDate() - 1);
+        }
+        matchDate.setHours(wakeTime, 0, 0, 0);
+        return matchDate.getTime() === now.getTime();
+    });
 
     const allTimeMatches = (seasonsQuery.data?.data ?? []).flatMap((i) =>
         i.ruleMoves && i.rawPlayers
-            ? i.matches.map(matchDtoToMatch(i.rawPlayers, i.ruleMoves))
+            ? i.matches
+                  .filter((i) =>
+                      i.teamMembers!.find((j) => j.playerId === playerId)
+                  )
+                  .map(matchDtoToMatch(i.rawPlayers, i.ruleMoves))
             : []
     );
 
