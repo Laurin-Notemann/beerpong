@@ -4,14 +4,11 @@ import {
     useGroup,
     useSeasonSettings,
 } from '@/api/calls/seasonHooks';
-import {
-    byDescendingAveragePoints,
-    byDescendingElo,
-    useLeaderboardProps,
-} from '@/api/propHooks/leaderboardPropHooks';
+import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { ScopeInfo } from '@/components/screens/Player';
+import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { SeasonSettings } from '@/openapi/openapi';
 
 // TODO: additional seasons
@@ -164,10 +161,10 @@ const getScope = (
     seasonPlayers: Player[],
     name: string
 ): ScopeInfo => {
+    const rankingAlgorithm = seasonSettings?.rankingAlgorithm;
+
     const sortedPlayers = seasonPlayers.sort(
-        seasonSettings?.rankingAlgorithm === 'AVERAGE'
-            ? byDescendingAveragePoints
-            : byDescendingElo
+        getRankingAlgorithm(rankingAlgorithm).sortFunc
     );
 
     const placement =
@@ -185,10 +182,6 @@ const getScope = (
         matches: matches,
         rankingAlgorithm: seasonSettings?.rankingAlgorithm ?? 'AVERAGE',
         isUnranked: matches.length < (seasonSettings?.minMatchesToQualify ?? 0),
-        averagePointsPerMatch:
-            matches.length > 0
-                ? ((player?.points ?? 0) / matches.length).toFixed(1)
-                : '--',
 
         name,
     };

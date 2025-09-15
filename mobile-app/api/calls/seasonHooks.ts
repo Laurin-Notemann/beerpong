@@ -216,6 +216,7 @@ export interface Player {
     elo: number;
     avatarUrl?: string | null;
     profileId: string;
+    cups: number;
 }
 
 export const toPlayer = (i: PlayerDto): Player => {
@@ -228,5 +229,6 @@ export const toPlayer = (i: PlayerDto): Player => {
         name: i.profile?.name!,
         avatarUrl: i!.profile?.avatarAsset?.url,
         profileId: i!.profile?.id!,
+        cups: i.statistics?.moves ?? 0,
     };
 };

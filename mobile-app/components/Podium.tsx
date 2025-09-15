@@ -5,14 +5,12 @@ import { Player } from '@/api/calls/seasonHooks';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
-import { useTheme } from '@/theme';
 import {
-    formatAverage,
-    formatElo,
-    formatPlacement,
-    formatWinRate,
-} from '@/utils/format';
+    getRankingAlgorithm,
+    type RankingAlgorithm,
+} from '@/constants/rankingAlgorithms';
+import { useTheme } from '@/theme';
+import { formatPlacement } from '@/utils/format';
 
 const Description: React.FC<{
     detailed?: boolean;
@@ -92,16 +90,6 @@ export default function Podium({
     rankingAlgorithm,
     ...rest
 }: PodiumProps) {
-    const firstPlaceAverage = firstPlace
-        ? firstPlace.points / firstPlace.matches
-        : undefined;
-    const secondPlaceAverage = secondPlace
-        ? secondPlace.points / secondPlace.matches
-        : undefined;
-    const thirdPlaceAverage = thirdPlace
-        ? thirdPlace.points / thirdPlace.matches
-        : undefined;
-
     const theme = useTheme();
 
     return (
@@ -148,16 +136,9 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={secondPlace}
-                    average={
-                        rankingAlgorithm === 'AVERAGE'
-                            ? formatAverage(secondPlaceAverage)
-                            : rankingAlgorithm === 'ELO'
-                              ? formatElo(secondPlace?.elo)
-                              : formatWinRate(
-                                    secondPlace?.matches,
-                                    secondPlace?.matchesWon
-                                )
-                    }
+                    average={getRankingAlgorithm(
+                        rankingAlgorithm
+                    ).getDisplayValue(secondPlace)}
                 />
             </TouchableOpacity>
             <TouchableOpacity
@@ -204,16 +185,9 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={firstPlace}
-                    average={
-                        rankingAlgorithm === 'AVERAGE'
-                            ? formatAverage(firstPlaceAverage)
-                            : rankingAlgorithm === 'ELO'
-                              ? formatElo(firstPlace?.elo)
-                              : formatWinRate(
-                                    firstPlace?.matches,
-                                    firstPlace?.matchesWon
-                                )
-                    }
+                    average={getRankingAlgorithm(
+                        rankingAlgorithm
+                    ).getDisplayValue(firstPlace)}
                 />
             </TouchableOpacity>
             <TouchableOpacity
@@ -247,16 +221,9 @@ export default function Podium({
                 <Description
                     detailed={detailed}
                     player={thirdPlace}
-                    average={
-                        rankingAlgorithm === 'AVERAGE'
-                            ? formatAverage(thirdPlaceAverage)
-                            : rankingAlgorithm === 'ELO'
-                              ? formatElo(thirdPlace?.elo)
-                              : formatWinRate(
-                                    thirdPlace?.matches,
-                                    thirdPlace?.matchesWon
-                                )
-                    }
+                    average={getRankingAlgorithm(
+                        rankingAlgorithm
+                    ).getDisplayValue(thirdPlace)}
                 />
             </TouchableOpacity>
         </ThemedView>

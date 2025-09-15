@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import {
@@ -24,7 +25,10 @@ import { RefreshControl } from '@/components/RefreshControl';
 import Select from '@/components/Select';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
-import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
+import {
+    type RankingAlgorithm,
+    rankingAlgorithms,
+} from '@/constants/rankingAlgorithms';
 import { triggerHapticBump } from '@/haptics';
 import { formatGroupCode } from '@/utils/groupCode';
 
@@ -51,13 +55,23 @@ export default function Page() {
     const groupRankingAlgorithm =
         group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
 
+    const localSearchParams = useLocalSearchParams<{
+        sortBy?: RankingAlgorithm;
+    }>();
+
+    const sortByParam = localSearchParams.sortBy;
+
     const [sortingAlgorithm, setSortingAlgorithm] = useState<RankingAlgorithm>(
-        groupRankingAlgorithm
+        sortByParam ?? groupRankingAlgorithm
     );
 
     useEffect(() => {
-        setSortingAlgorithm(groupRankingAlgorithm);
-    }, [groupRankingAlgorithm]);
+        if (sortByParam) {
+            setSortingAlgorithm(sortByParam as RankingAlgorithm);
+        } else {
+            setSortingAlgorithm(groupRankingAlgorithm);
+        }
+    }, [groupRankingAlgorithm, sortByParam]);
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -81,32 +95,17 @@ export default function Page() {
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 
-    const sortOptions = [
-        {
-            value: 'ELO',
-            title:
-                'Elo' +
-                (groupRankingAlgorithm === 'ELO' ? ' (Group Default)' : ''),
-            buttonTitle: 'Elo',
-        },
-        {
-            value: 'AVERAGE',
-            title:
-                'Average Points Scored' +
-                (groupRankingAlgorithm === 'AVERAGE' ? ' (Group Default)' : ''),
-            buttonTitle: 'Average',
-        },
-        {
-            value: 'MATCHES',
-            title: 'Matches Played',
-            buttonTitle: 'Matches',
-        },
-        {
-            value: 'MATCHES_WON',
-            title: 'Matches Won',
-            buttonTitle: 'Matches Won',
-        },
-    ];
+    const sortOptions = Object.entries(rankingAlgorithms)
+        .filter((i) => i[1].showInSelect)
+        .map(([id, i]) => {
+            return {
+                value: id,
+                title:
+                    i.name +
+                    (groupRankingAlgorithm === id ? ' (Group Default)' : ''),
+                buttonTitle: i.shortName,
+            };
+        });
 
     return (
         <GestureHandlerRootView>
@@ -128,32 +127,15 @@ export default function Page() {
                 actions={
                     USE_SELECT_FOR_SORT
                         ? undefined
-                        : ([
-                              {
-                                  title: 'Elo (Group Default)',
-
-                                  onPress: () => {
-                                      setSortingAlgorithm('ELO');
-                                      setShowSortModal(false);
-                                  },
+                        : sortOptions.map((i) => ({
+                              title: i.title,
+                              onPress: () => {
+                                  setSortingAlgorithm(
+                                      i.value as RankingAlgorithm
+                                  );
+                                  setShowSortModal(false);
                               },
-                              {
-                                  title: 'Average Points Scored',
-
-                                  onPress: () => {
-                                      setSortingAlgorithm('AVERAGE');
-                                      setShowSortModal(false);
-                                  },
-                              },
-                              {
-                                  title: 'Matches Won',
-
-                                  onPress: () => {
-                                      setSortingAlgorithm('MATCHES_WON');
-                                      setShowSortModal(false);
-                                  },
-                              },
-                          ] as const)
+                          }))
                 }
                 content={
                     USE_SELECT_FOR_SORT ? (

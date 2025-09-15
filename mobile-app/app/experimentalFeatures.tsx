@@ -19,8 +19,6 @@ export default function Page() {
         toggleMatchPhotos,
         showWallpaper,
         toggleShowWallpaper,
-        scopedPlayerPage,
-        toggleScopedPlayerPage,
     } = useLocalSettings();
 
     const theme = useTheme();
@@ -80,15 +78,6 @@ export default function Page() {
                             <Switch
                                 value={showWallpaper}
                                 onChange={toggleShowWallpaper}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Player Pages for All Time and Today"
-                        tailContent={
-                            <Switch
-                                value={scopedPlayerPage}
-                                onChange={toggleScopedPlayerPage}
                             />
                         }
                     />
