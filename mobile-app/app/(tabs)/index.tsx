@@ -29,6 +29,8 @@ import { triggerHapticBump } from '@/haptics';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
+const USE_SELECT_FOR_SORT = false;
+
 const swiperAtTop = false;
 
 export default function Page() {
@@ -127,47 +129,51 @@ export default function Page() {
                 onClose={() => setShowSortModal(false)}
                 title="Sort Players By"
                 actions={
-                    [
-                        {
-                            title: 'Elo (Group Default)',
+                    USE_SELECT_FOR_SORT
+                        ? undefined
+                        : ([
+                              {
+                                  title: 'Elo (Group Default)',
 
-                            onPress: () => {
-                                setSortingAlgorithm('ELO');
-                                setShowSortModal(false);
-                            },
-                        },
-                        {
-                            title: 'Average Points Scored',
+                                  onPress: () => {
+                                      setSortingAlgorithm('ELO');
+                                      setShowSortModal(false);
+                                  },
+                              },
+                              {
+                                  title: 'Average Points Scored',
 
-                            onPress: () => {
-                                setSortingAlgorithm('AVERAGE');
-                                setShowSortModal(false);
-                            },
-                        },
-                        {
-                            title: 'Matches Won',
+                                  onPress: () => {
+                                      setSortingAlgorithm('AVERAGE');
+                                      setShowSortModal(false);
+                                  },
+                              },
+                              {
+                                  title: 'Matches Won',
 
-                            onPress: () => {
-                                setSortingAlgorithm('MATCHES_WON');
-                                setShowSortModal(false);
-                            },
-                        },
-                    ] as const
+                                  onPress: () => {
+                                      setSortingAlgorithm('MATCHES_WON');
+                                      setShowSortModal(false);
+                                  },
+                              },
+                          ] as const)
                 }
-                // content={
-                //     <Select
-                //         color="light"
-                //         value={sortingAlgorithm}
-                //         style={{
-                //             marginHorizontal: 16,
-                //         }}
-                //         onChange={(id) => {
-                //             setSortingAlgorithm(id as any);
-                //             setShowSortModal(false);
-                //         }}
-                //         items={sortOptions}
-                //     />
-                // }
+                content={
+                    USE_SELECT_FOR_SORT ? (
+                        <Select
+                            color="light"
+                            value={sortingAlgorithm}
+                            style={{
+                                marginHorizontal: 16,
+                            }}
+                            onChange={(id) => {
+                                setSortingAlgorithm(id as any);
+                                setShowSortModal(false);
+                            }}
+                            items={sortOptions}
+                        />
+                    ) : undefined
+                }
                 isVisible={showSortModal}
             />
             <ConfirmationModal

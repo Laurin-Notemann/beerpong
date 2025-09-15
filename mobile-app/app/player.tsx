@@ -1,22 +1,15 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
-import { useMatchesByPlayerQuery } from '@/api/calls/matchHooks';
 import {
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
 } from '@/api/calls/playerHooks';
-import { useMoves } from '@/api/calls/ruleHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import {
-    byDescendingAveragePoints,
-    byDescendingElo,
-    useLeaderboardProps,
-} from '@/api/propHooks/leaderboardPropHooks';
-import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { usePlayerPageScope } from '@/app/usePlayerPageScope';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import PlayerScreen from '@/components/screens/Player';
@@ -40,22 +33,11 @@ export default function Page() {
 
     const { id, scope } = useLocalSearchParams<{ id: string; scope: string }>();
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, seasonId } = useGroup();
 
-    const { currentSeasonPlayers, rawCurrentSeasonPlayers } =
-        useLeaderboardProps(groupId, seasonId!);
+    const { rawCurrentSeasonPlayers } = useLeaderboardProps(groupId, seasonId!);
 
     const deletePlayerMutation = useDeletePlayerMutation();
-
-    const matchesQuery = useMatchesByPlayerQuery(groupId, seasonId, id);
-
-    const movesQuery = useMoves(groupId, seasonId);
-
-    const allowedMoves = movesQuery.data?.data ?? [];
-
-    const matches = (matchesQuery.data?.data ?? []).map(
-        matchDtoToMatch(rawCurrentSeasonPlayers, allowedMoves)
-    );
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -77,6 +59,7 @@ export default function Page() {
     const refresh = usePullToRefresh(() =>
         invalidatePlayers(groupId!, seasonId!)
     );
+    const { currentSeason, today, allTime } = usePlayerPageScope(id);
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
@@ -103,10 +86,7 @@ export default function Page() {
 
     const profileId = player?.profile?.id;
 
-    const isLoading =
-        matchesQuery.isLoading ||
-        movesQuery.isLoading ||
-        seasonsQuery.isLoading;
+    const isLoading = seasonsQuery.isLoading;
 
     if (isLoading) return <LoadingScreen />;
 
@@ -169,50 +149,12 @@ export default function Page() {
         }
     }
 
-    const sortedPlayers = currentSeasonPlayers.sort(
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
-            ? byDescendingAveragePoints
-            : byDescendingElo
-    );
-
-    const placement = sortedPlayers.findIndex((i) => i.id === id) + 1;
-
-    const minMatchesRequiredToBeRanked = 1;
-
-    const allTimeCups = matches.reduce((sum, i) => {
-        const player = i.blueTeam.concat(i.redTeam).find((i) => i.id === id);
-
-        if (!player) return sum;
-
-        return sum + player.moves.reduce((sum, i) => sum + i.count, 0);
-    }, 0);
-
-    const currentSeason = {
-        minMatchesRequiredToBeRanked,
-        placement,
-        elo: player?.statistics?.elo ?? eloAlgorithm.params.startingElo,
-        matchesWon: matches.filter(
-            (i) =>
-                i.redTeam
-                    .concat(i.blueTeam)
-                    .find((j) => j.moves.some((k) => k.isFinish && k.count > 0))
-                    ?.team ===
-                i.redTeam.concat(i.blueTeam).find((j) => j.id === id)?.team
-        ).length,
-        points: player?.statistics?.points ?? 0,
-        cups: allTimeCups,
-        matches: matches,
-        rankingAlgorithm:
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-            'AVERAGE',
-    };
-
     return (
         <>
             <PlayerScreen
                 currentSeason={currentSeason}
-                today={currentSeason}
-                allTime={currentSeason}
+                today={today}
+                allTime={allTime}
                 name={playerName}
                 isPending={isUploadingAvatar || deletePlayerMutation.isPending}
                 id={id}

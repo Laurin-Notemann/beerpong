@@ -48,9 +48,9 @@ export default function Page() {
 
     const { groupId, seasonId, group } = useGroup();
 
-    const { id, scope } = useLocalSearchParams<{ id: string; scope: string }>();
+    const { id } = useLocalSearchParams<{ id: string; scope: string }>();
 
-    const isCurrentSeason = scope === seasonId;
+    // const isCurrentSeason = useLocalSearchParams().scope === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 

@@ -27,6 +27,8 @@ export default function Page() {
         toggleShowWallpaper,
         dailyLeaderboard,
         toggleDailyLeaderboard,
+        scopedPlayerPage,
+        toggleScopedPlayerPage,
     } = useLocalSettings();
 
     const theme = useTheme();
@@ -122,6 +124,15 @@ export default function Page() {
                             <Switch
                                 value={dailyLeaderboard}
                                 onChange={toggleDailyLeaderboard}
+                            />
+                        }
+                    />
+                    <MenuItem
+                        title="Player Pages for All Time and Today"
+                        tailContent={
+                            <Switch
+                                value={scopedPlayerPage}
+                                onChange={toggleScopedPlayerPage}
                             />
                         }
                     />
