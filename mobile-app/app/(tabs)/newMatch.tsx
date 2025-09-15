@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -79,6 +80,7 @@ const areTeamsEqual = (
 };
 
 export default function NewMatchScreen() {
+    const router = useRouter();
     const { beerpongProMode } = useLocalSettings();
 
     const scrollX = useSharedValue(0);
@@ -220,7 +222,9 @@ export default function NewMatchScreen() {
             });
             matchDraft.actions.clear();
             showSuccessToast('Created match.');
-            nav.navigate('index');
+
+            router.dismissAll();
+            router.replace('/');
             swiperRef.current?.scrollBy(-1);
             carouselRef.current?.prev();
         } catch (err) {
