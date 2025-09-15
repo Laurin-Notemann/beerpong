@@ -290,8 +290,8 @@ export default function NewMatchScreen() {
         }
 
         matchDraft.actions.setTeams(
-            newTeams.blue.map((id) => ({ id })),
-            newTeams.red.map((id) => ({ id }))
+            newTeams.red.map((id) => ({ id })),
+            newTeams.blue.map((id) => ({ id }))
         );
         triggerHapticBump('toast:success');
 
