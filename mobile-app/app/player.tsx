@@ -38,14 +38,14 @@ function uint8ToBase64(bytes: Uint8Array): string {
 export default function Page() {
     const nav = useNavigation();
 
+    const { id, scope } = useLocalSearchParams<{ id: string; scope: string }>();
+
     const { groupId, seasonId, group } = useGroup();
 
     const { currentSeasonPlayers, rawCurrentSeasonPlayers } =
         useLeaderboardProps(groupId, seasonId!);
 
     const deletePlayerMutation = useDeletePlayerMutation();
-
-    const { id } = useLocalSearchParams<{ id: string }>();
 
     const matchesQuery = useMatchesByPlayerQuery(groupId, seasonId, id);
 
@@ -187,40 +187,44 @@ export default function Page() {
         return sum + player.moves.reduce((sum, i) => sum + i.count, 0);
     }, 0);
 
+    const currentSeason = {
+        minMatchesRequiredToBeRanked,
+        placement,
+        elo: player?.statistics?.elo ?? eloAlgorithm.params.startingElo,
+        matchesWon: matches.filter(
+            (i) =>
+                i.redTeam
+                    .concat(i.blueTeam)
+                    .find((j) => j.moves.some((k) => k.isFinish && k.count > 0))
+                    ?.team ===
+                i.redTeam.concat(i.blueTeam).find((j) => j.id === id)?.team
+        ).length,
+        points: player?.statistics?.points ?? 0,
+        cups: allTimeCups,
+        matches: matches,
+        rankingAlgorithm:
+            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
+            'AVERAGE',
+    };
+
     return (
-        <PlayerScreen
-            minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
-            isPending={isUploadingAvatar || deletePlayerMutation.isPending}
-            id={id}
-            placement={placement}
-            name={playerName}
-            elo={player?.statistics?.elo ?? eloAlgorithm.params.startingElo}
-            matchesWon={
-                matches.filter(
-                    (i) =>
-                        i.redTeam
-                            .concat(i.blueTeam)
-                            .find((j) =>
-                                j.moves.some((k) => k.isFinish && k.count > 0)
-                            )?.team ===
-                        i.redTeam.concat(i.blueTeam).find((j) => j.id === id)
-                            ?.team
-                ).length
-            }
-            points={player?.statistics?.points ?? 0}
-            cups={allTimeCups}
-            hasPremium={false}
-            pastSeasons={activeSeasons.length}
-            matches={matches}
-            onDelete={onDelete}
-            avatarUrl={player?.profile?.avatarAsset?.url}
-            onUploadAvatarPress={onUploadAvatarPress}
-            onDeleteAvatarPress={onDeleteAvatarPress}
-            refresh={refresh}
-            rankingAlgorithm={
-                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-                'AVERAGE'
-            }
-        />
+        <>
+            <PlayerScreen
+                currentSeason={currentSeason}
+                today={currentSeason}
+                allTime={currentSeason}
+                name={playerName}
+                isPending={isUploadingAvatar || deletePlayerMutation.isPending}
+                id={id}
+                hasPremium={false}
+                pastSeasons={activeSeasons.length}
+                onDelete={onDelete}
+                avatarUrl={player?.profile?.avatarAsset?.url}
+                onUploadAvatarPress={onUploadAvatarPress}
+                onDeleteAvatarPress={onDeleteAvatarPress}
+                refresh={refresh}
+                initialScope={scope}
+            />
+        </>
     );
 }

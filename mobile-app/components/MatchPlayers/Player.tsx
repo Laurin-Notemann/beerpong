@@ -10,7 +10,6 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
@@ -84,6 +83,7 @@ export default function Player({
 }: PlayerProps) {
     const animation = useRef(new Animated.Value(0)).current; // start with height 0
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toggleCollapse = () => {
         // Animate the height when toggling
         Animated.timing(animation, {
@@ -101,8 +101,6 @@ export default function Player({
         outputRange: [0, 44 * moves.length], // customize the height range based on your content
     });
 
-    const nav = useNavigation();
-
     const performedMoves = moves.filter((i) => i.count > 0);
 
     const theme = useTheme();
@@ -119,12 +117,7 @@ export default function Player({
                     borderTopWidth: 0.5,
                     borderTopColor: theme.panel.light.active,
                 }}
-                onPress={
-                    onPress ??
-                    (editable
-                        ? toggleCollapse
-                        : () => nav.navigate('player', { id }))
-                }
+                onPress={onPress}
                 underlayColor={theme.panel.light.active}
             >
                 <>

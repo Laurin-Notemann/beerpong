@@ -21,8 +21,10 @@ import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScop
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
+import Select from '@/components/Select';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
+import { triggerHapticBump } from '@/haptics';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -44,15 +46,16 @@ export default function Page() {
     const [showSortModal, setShowSortModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
 
-    const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
-        'ELO'
+    const groupRankingAlgorithm =
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
+
+    const [sortingAlgorithm, setSortingAlgorithm] = useState(
+        groupRankingAlgorithm
     );
 
     useEffect(() => {
-        setSortingAlgorithm(
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm!
-        );
-    }, [group.data?.activeSeason?.seasonSettings?.rankingAlgorithm]);
+        setSortingAlgorithm(groupRankingAlgorithm);
+    }, [groupRankingAlgorithm]);
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -78,6 +81,33 @@ export default function Page() {
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 
+    const sortOptions = [
+        {
+            value: 'ELO',
+            title:
+                'Elo' +
+                (groupRankingAlgorithm === 'ELO' ? ' (Group Default)' : ''),
+            buttonTitle: 'Elo',
+        },
+        {
+            value: 'AVERAGE',
+            title:
+                'Average Points Scored' +
+                (groupRankingAlgorithm === 'AVERAGE' ? ' (Group Default)' : ''),
+            buttonTitle: 'Average',
+        },
+        // {
+        //     value: 'MATCHES',
+        //     title: 'Matches Played',
+        //     buttonTitle: 'Matches',
+        // },
+        // {
+        //     value: 'MATCHES_WON',
+        //     title: 'Matches Won',
+        //     buttonTitle: 'Matches Won',
+        // },
+    ];
+
     return (
         <GestureHandlerRootView>
             {/* <Stack.Screen
@@ -95,25 +125,19 @@ export default function Page() {
             <ConfirmationModal
                 onClose={() => setShowSortModal(false)}
                 title="Sort Players By"
-                actions={
-                    [
-                        {
-                            title: 'Elo (Group Default)',
-
-                            onPress: () => {
-                                setSortingAlgorithm('ELO');
-                                setShowSortModal(false);
-                            },
-                        },
-                        {
-                            title: 'Average Points Scored',
-
-                            onPress: () => {
-                                setSortingAlgorithm('AVERAGE');
-                                setShowSortModal(false);
-                            },
-                        },
-                    ] as const
+                content={
+                    <Select
+                        color="light"
+                        value={sortingAlgorithm}
+                        style={{
+                            marginHorizontal: 16,
+                        }}
+                        onChange={(id) => {
+                            setSortingAlgorithm(id as any);
+                            setShowSortModal(false);
+                        }}
+                        items={sortOptions}
+                    />
                 }
                 isVisible={showSortModal}
             />
@@ -139,7 +163,7 @@ export default function Page() {
                 }
                 isVisible={showInviteModal}
             />
-            <Swiper {...swiper}>
+            <Swiper {...swiper} key={groupId + ':' + seasonId}>
                 {experiments.dailyLeaderboard && (
                     <ScrollView
                         style={{
@@ -167,9 +191,22 @@ export default function Page() {
                                 }}
                             >
                                 <PillButton
-                                    label="Sort"
+                                    label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
                                     iconName="swap-vertical"
                                     onPress={() => setShowSortModal(true)}
+                                    onRemove={
+                                        sortingAlgorithm ===
+                                        groupRankingAlgorithm
+                                            ? undefined
+                                            : () => {
+                                                  setSortingAlgorithm(
+                                                      groupRankingAlgorithm
+                                                  );
+                                                  triggerHapticBump(
+                                                      'toast:success'
+                                                  );
+                                              }
+                                    }
                                 />
                                 <PillButton
                                     label="Invite"
@@ -185,7 +222,7 @@ export default function Page() {
                             }
                             players={dailyPlayers}
                             onPlayerPress={(id) =>
-                                nav.navigate('player', { id })
+                                nav.navigate('player', { id, scope: 'today' })
                             }
                             minMatchesRequiredToBeRanked={
                                 group.data?.activeSeason?.seasonSettings
@@ -238,9 +275,17 @@ export default function Page() {
                             }}
                         >
                             <PillButton
-                                label="Sort"
+                                label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
                                 iconName="swap-vertical"
                                 onPress={() => setShowSortModal(true)}
+                                onRemove={
+                                    sortingAlgorithm === groupRankingAlgorithm
+                                        ? undefined
+                                        : () =>
+                                              setSortingAlgorithm(
+                                                  groupRankingAlgorithm
+                                              )
+                                }
                             />
                             <PillButton
                                 label="Invite"
@@ -255,7 +300,9 @@ export default function Page() {
                             <LeaderboardEmptyComponent message="No matches played yet this season." />
                         }
                         players={currentSeasonPlayers}
-                        onPlayerPress={(id) => nav.navigate('player', { id })}
+                        onPlayerPress={(id) =>
+                            nav.navigate('player', { id, scope: seasonId! })
+                        }
                         minMatchesRequiredToBeRanked={
                             group.data?.activeSeason?.seasonSettings
                                 ?.minMatchesToQualify ?? 1
@@ -303,9 +350,18 @@ export default function Page() {
                                 }}
                             >
                                 <PillButton
-                                    label="Sort"
+                                    label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
                                     iconName="swap-vertical"
                                     onPress={() => setShowSortModal(true)}
+                                    onRemove={
+                                        sortingAlgorithm ===
+                                        groupRankingAlgorithm
+                                            ? undefined
+                                            : () =>
+                                                  setSortingAlgorithm(
+                                                      groupRankingAlgorithm
+                                                  )
+                                    }
                                 />
                                 <PillButton
                                     label="Invite"
@@ -321,7 +377,10 @@ export default function Page() {
                             }
                             players={alltimePlayers}
                             onPlayerPress={(id) =>
-                                nav.navigate('player', { id })
+                                nav.navigate('player', {
+                                    id,
+                                    scope: 'all-time',
+                                })
                             }
                             minMatchesRequiredToBeRanked={
                                 group.data?.activeSeason?.seasonSettings

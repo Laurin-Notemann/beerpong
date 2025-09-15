@@ -4,7 +4,6 @@ import { FlatList, FlatListProps } from 'react-native';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -31,16 +30,16 @@ export interface MatchesListProps
     forPlayer?: {
         id: string;
     };
+    onMatchPress: (match: Match) => void;
 }
 export default function MatchesList({
     matches,
     refresh,
     forPlayer,
+    onMatchPress,
 
     ...rest
 }: MatchesListProps) {
-    const nav = useNavigation();
-
     const days = groupMatchesByDay(matches);
 
     return (
@@ -65,9 +64,7 @@ export default function MatchesList({
                         <MatchesListItem
                             key={idx}
                             match={match}
-                            onPress={() =>
-                                nav.navigate('match', { id: match.id })
-                            }
+                            onPress={() => onMatchPress(match)}
                             highlightedId={forPlayer?.id}
                         />
                     ))}

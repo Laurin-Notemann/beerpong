@@ -70,3 +70,12 @@ export const byDescendingAveragePoints = (a: Player, b: Player) =>
     (a.matches ? a.points / a.matches : 0);
 
 export const byDescendingElo = (a: Player, b: Player) => b.elo - a.elo;
+
+export const byDescendingMatchesPlayed = (a: Player, b: Player) =>
+    b.matches - a.matches;
+
+export const byDescendingMatchesWon = (a: Player, b: Player) =>
+    b.matchesWon - a.matchesWon;
+
+export const byDescendingMatchesLost = (a: Player, b: Player) =>
+    b.matches - b.matchesWon - (a.matches - a.matchesWon);

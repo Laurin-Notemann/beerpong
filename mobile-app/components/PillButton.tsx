@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
     Animated,
     Pressable,
@@ -9,31 +9,39 @@ import {
 import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const styles = StyleSheet.create({
-    container: {
-        height: 32,
-        backgroundColor: '#333',
-        borderRadius: 16,
-        paddingLeft: 8,
-        paddingRight: 16,
-        alignItems: 'center',
-        flexDirection: 'row',
-    } as ViewStyle,
-    label: {
-        fontSize: 12,
-        color: '#fff',
-        marginLeft: 4,
-        fontWeight: '700',
-    } as TextStyle,
-});
-
 const PillButton: React.FC<{
     label: string;
-    iconName: string;
+    iconName?: string;
     onPress?: () => void;
-    small?: boolean;
-}> = ({ label, iconName, onPress, small = false }) => {
+    onRemove?: () => void;
+}> = ({ label, iconName, onPress, onRemove }) => {
     const scale = useRef(new Animated.Value(1)).current;
+
+    const removable = typeof onRemove === 'function';
+
+    const styles = useMemo(
+        () =>
+            StyleSheet.create({
+                container: {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+
+                    height: 32,
+                    paddingLeft: iconName ? 8 : 16,
+                    paddingRight: removable ? 0 : 16,
+
+                    borderRadius: 16,
+
+                    backgroundColor: removable ? '#2C70FA' : '#333',
+                } as ViewStyle,
+                label: {
+                    fontSize: 12,
+                    color: '#fff',
+                    fontWeight: '700',
+                } as TextStyle,
+            }),
+        [removable, iconName]
+    );
 
     const animate = (to: number) =>
         Animated.spring(scale, {
@@ -50,18 +58,32 @@ const PillButton: React.FC<{
             onPress={onPress}
         >
             <Animated.View
-                style={[
-                    styles.container,
-                    {
-                        height: small ? 26 : 32,
-                        paddingRight: small ? 8 : 16,
-                        paddingLeft: small ? 4 : 8,
-                    },
-                    { transform: [{ scale }] },
-                ]}
+                style={[styles.container, { transform: [{ scale }] }]}
             >
-                <Icon color="#fff" size={20} name={iconName} />
+                {iconName && (
+                    <Icon
+                        color="#fff"
+                        size={20}
+                        name={iconName}
+                        style={{
+                            marginRight: 4,
+                        }}
+                    />
+                )}
                 <Text style={styles.label}>{label}</Text>
+                {removable && (
+                    <Icon
+                        onPress={onRemove}
+                        color="#9FBAF7"
+                        size={16}
+                        name="close"
+                        style={{
+                            paddingVertical: 8,
+                            paddingLeft: 6,
+                            paddingRight: 8,
+                        }}
+                    />
+                )}
             </Animated.View>
         </Pressable>
     );

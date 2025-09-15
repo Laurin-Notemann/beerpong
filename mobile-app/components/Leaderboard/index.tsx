@@ -38,7 +38,12 @@ export interface LeaderboardProps extends ViewProps {
     };
     minMatchesRequiredToBeRanked: number;
     ListEmptyComponent?: React.ReactNode;
-    rankingAlgorithm?: 'AVERAGE' | 'ELO';
+    rankingAlgorithm?:
+        | 'AVERAGE'
+        | 'ELO'
+        | 'MATCHES'
+        | 'MATCHES_WON'
+        | 'MATCHES_LOST';
 }
 
 export default function Leaderboard({
@@ -86,7 +91,10 @@ export default function Leaderboard({
                     isVisible={playerPreviewModalId}
                     onClose={() => setPlayerPreviewModalId(null)}
                     onPress={() => {
-                        nav.navigate('player', { id: playerPreviewModalId! });
+                        nav.navigate('player', {
+                            id: playerPreviewModalId!,
+                            scope: 'today',
+                        });
                         setPlayerPreviewModalId(null);
                     }}
                     content={
