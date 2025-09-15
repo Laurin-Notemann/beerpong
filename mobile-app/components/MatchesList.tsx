@@ -57,6 +57,12 @@ export default function MatchesList({
                 rest.style,
             ]}
             data={days}
+            keyExtractor={(item) => item.date.toISOString()}
+            initialNumToRender={2}
+            maxToRenderPerBatch={3}
+            windowSize={5}
+            updateCellsBatchingPeriod={50}
+            removeClippedSubviews
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item, index }) => (
                 <MenuSection

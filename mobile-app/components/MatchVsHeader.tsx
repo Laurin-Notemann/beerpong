@@ -201,10 +201,8 @@ function Team({
                     return (
                         <Avatar
                             key={index}
-                            style={{
-                                opacity: 0,
-                                marginLeft: -16,
-                            }}
+                            invisibleSpacer
+                            style={{ marginLeft: -16 }}
                         />
                     );
                 })}
@@ -240,10 +238,8 @@ function Team({
                     return (
                         <Avatar
                             key={index}
-                            style={{
-                                opacity: 0,
-                                marginRight: -16,
-                            }}
+                            invisibleSpacer
+                            style={{ marginRight: -16 }}
                         />
                     );
                 })}
