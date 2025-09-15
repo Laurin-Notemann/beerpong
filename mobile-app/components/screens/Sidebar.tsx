@@ -1,5 +1,6 @@
-import { Link } from '@react-navigation/native';
+import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AxiosError } from 'axios';
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
 import { Animated, ScrollView, TouchableOpacity } from 'react-native';
@@ -160,7 +161,7 @@ export interface SidebarGroup {
 }
 
 // eslint-disable-next-line no-empty-pattern
-export function Sidebar() {
+export function Sidebar(props: DrawerContentComponentProps) {
     const { groupIds, selectedGroupId, selectGroup, removeGroup } =
         useGroupStore();
 
@@ -249,6 +250,7 @@ export function Sidebar() {
                                 // eslint-disable-next-line
                                 console.log(Object.keys(nav));
                                 // nav.closeDrawer();
+                                props.navigation.closeDrawer();
                             }}
                             showDeleteButton={isEditMode}
                             onDelete={setGroupIdToBeDeleted}
@@ -270,7 +272,7 @@ export function Sidebar() {
                         >
                             No groups to display. {'\n'}
                             <Link
-                                to="/joinGroup"
+                                href="/joinGroup"
                                 style={{
                                     color: theme.color.text.primary,
                                     fontWeight: 500,
@@ -280,7 +282,7 @@ export function Sidebar() {
                             </Link>{' '}
                             or{' '}
                             <Link
-                                to="/createGroup"
+                                href="/createGroup"
                                 style={{
                                     color: theme.color.text.primary,
                                     fontWeight: 500,
@@ -307,20 +309,32 @@ export function Sidebar() {
                     <MenuItem
                         title="Settings"
                         headIcon="cog-outline"
-                        onPress={() => nav.navigate('localSettings')}
+                        onPress={() =>
+                            props.navigation.navigate('static/aboutPremium', {
+                                screen: 'localSettings',
+                            })
+                        }
                         tailIconType="next"
                     />
 
                     <MenuItem
                         title="Privacy Policy"
                         headIcon="shield-lock"
-                        onPress={() => nav.navigate('static/privacyPolicy')}
+                        onPress={() =>
+                            props.navigation.navigate('static/aboutPremium', {
+                                screen: 'static/privacyPolicy',
+                            })
+                        }
                         tailIconType="next"
                     />
                     <MenuItem
                         title="About Us"
                         headIcon="information-outline"
-                        onPress={() => nav.navigate('static/aboutUs')}
+                        onPress={() =>
+                            props.navigation.navigate('static/aboutPremium', {
+                                screen: 'static/aboutUs',
+                            })
+                        }
                         tailIconType="next"
                     />
                 </MenuSection>
@@ -335,7 +349,12 @@ export function Sidebar() {
                                 type: 'default',
 
                                 onPress: () => {
-                                    nav.navigate('createGroup');
+                                    props.navigation.navigate(
+                                        'static/aboutPremium',
+                                        {
+                                            screen: 'createGroup',
+                                        }
+                                    );
                                     setShowAddGroupModal(false);
                                 },
                             },
@@ -344,7 +363,12 @@ export function Sidebar() {
                                 type: 'default',
 
                                 onPress: () => {
-                                    nav.navigate('joinGroup');
+                                    props.navigation.navigate(
+                                        'static/aboutPremium',
+                                        {
+                                            screen: 'joinGroup',
+                                        }
+                                    );
                                     setShowAddGroupModal(false);
                                 },
                             },
