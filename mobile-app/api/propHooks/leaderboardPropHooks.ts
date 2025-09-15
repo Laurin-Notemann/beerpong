@@ -39,8 +39,6 @@ export const useLeaderboardProps = (
         alltimeLeaderboardQuery.data?.data?.entries!.map(toPlayer) ?? [];
 
     return {
-        rawCurrentSeasonPlayers:
-            seasonLeaderboardQuery.data?.data?.entries ?? [],
         currentSeasonPlayers,
         alltimePlayers,
         dailyPlayers,

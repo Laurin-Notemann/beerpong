@@ -209,7 +209,7 @@ function Team({
                     );
                 })}
             {displayedPlayers
-                .sort((a) => (a.id === highlightedId ? 1 : 0))
+                .sort((a) => (a.profileId === highlightedId ? 1 : 0))
                 .map((i, index) => (
                     <Avatar
                         key={index}
@@ -226,11 +226,12 @@ function Team({
                             marginLeft: color === 'blue' ? -16 : undefined,
 
                             opacity: isCopy
-                                ? i.id === highlightedId
+                                ? i.profileId === highlightedId
                                     ? 1
                                     : 0
                                 : 1,
-                            zIndex: i.id === highlightedId ? 1 : undefined,
+                            zIndex:
+                                i.profileId === highlightedId ? 1 : undefined,
                         }}
                     />
                 ))}

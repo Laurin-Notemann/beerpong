@@ -28,7 +28,7 @@ export interface MatchesListProps
      * - display the influence of the match on the player's ranking
      */
     forPlayer?: {
-        id: string;
+        profileId: string;
     };
     onMatchPress: (match: Match) => void;
 }
@@ -69,7 +69,7 @@ export default function MatchesList({
                             key={idx}
                             match={match}
                             onPress={() => onMatchPress(match)}
-                            highlightedId={forPlayer?.id}
+                            highlightedId={forPlayer?.profileId}
                         />
                     ))}
                 </MenuSection>

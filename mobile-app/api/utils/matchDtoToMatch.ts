@@ -14,6 +14,7 @@ export interface PerformedMove {
 
 export interface TeamMember {
     id: string;
+    profileId: string;
     team: TeamId;
     avatarUrl?: string | null;
     name: string;
