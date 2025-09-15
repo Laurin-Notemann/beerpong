@@ -13,7 +13,6 @@ import { HeaderItem } from '@/components/HeaderItem';
 import { LeaderboardIcon } from '@/components/LeaderboardIcon';
 import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 const CUSTOM_LEADERBOARD_ICON = false;
 
@@ -30,8 +29,6 @@ export default function TabLayout() {
     const { selectedGroupId } = useGroupStore();
 
     const selectedGroup = useGroupQuery(selectedGroupId);
-
-    const experiments = useLocalSettings();
 
     const navStyles = useNavStyles();
 
@@ -123,8 +120,6 @@ export default function TabLayout() {
                         <Icon color={color} size={size} name="format-section" />
                     ),
                     ...groupHeader,
-                    // hide tab in production
-                    href: experiments.rulesTab ? undefined : null,
                 }}
             />
             <Tabs.Screen

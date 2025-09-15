@@ -75,7 +75,6 @@ const areTeamsEqual = (
     const result =
         isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible);
 
-    console.log('areTeamsEqual:', result, teams1, teams2);
     return result;
 };
 
@@ -278,7 +277,6 @@ export default function NewMatchScreen() {
                 red: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
             })
         ) {
-            console.log('inside sache');
             const [blueTeam, redTeam] = getRandomPlayers(playersToRandomize);
 
             newTeams = {
@@ -286,11 +284,6 @@ export default function NewMatchScreen() {
                 red: redTeam.map((i) => i.id),
             };
         }
-        console.log(
-            'sache:',
-            newTeams.blue.map((id) => ({ id })),
-            newTeams.red.map((id) => ({ id }))
-        );
 
         matchDraft.actions.setTeams(
             newTeams.blue.map((id) => ({ id })),

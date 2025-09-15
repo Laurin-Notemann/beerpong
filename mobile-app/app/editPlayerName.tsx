@@ -66,7 +66,6 @@ export default function Page() {
                     ),
 
                     headerTitle: 'Player Name',
-                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 
