@@ -12,9 +12,8 @@ import { useTheme } from '@/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-interface ItemProps {}
 // eslint-disable-next-line no-empty-pattern
-function Item({}: ItemProps) {
+function Item() {
     const size = Math.floor((SCREEN_WIDTH - 32 - 16) / 3);
 
     const nav = useNavigation();

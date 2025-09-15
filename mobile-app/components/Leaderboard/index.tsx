@@ -16,6 +16,7 @@ import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import { ThemedView } from '@/components/ThemedView';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 
 const MODAL_ON_LONG_PRESS = false;
 
@@ -38,7 +39,7 @@ export interface LeaderboardProps extends ViewProps {
     };
     minMatchesRequiredToBeRanked: number;
     ListEmptyComponent?: React.ReactNode;
-    rankingAlgorithm?: 'AVERAGE' | 'ELO';
+    rankingAlgorithm?: RankingAlgorithm;
 }
 
 export default function Leaderboard({

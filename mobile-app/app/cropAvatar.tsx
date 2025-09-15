@@ -3,7 +3,6 @@ import {
     ReactNativeZoomableView,
     ZoomableViewEvent,
 } from '@openspacelabs/react-native-zoomable-view';
-import { useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -19,12 +18,12 @@ import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
 
 import { useUpdatePlayerAvatarMutation } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { QK, replaceWildcards } from '@/api/utils/reactQuery';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { useDebounce } from '@/utils/useDebounce';
 
 const DEBUG = false;
 
@@ -47,13 +46,19 @@ export default function Page() {
         nav.goBack();
     }
 
-    const [transform, setTransform] = useState<ZoomableViewEvent | null>(null);
+    const [zoomLevel, setZoomLevel] = useState(1);
+
+    // debounce so we don't continuously rerender while the user is zooming, only once when they're done
+    const onZoomChange = useDebounce((v: number) => {
+        setZoomLevel(v);
+    }, 10);
+
+    // we're not using useState here as that would rerender the entire page every time a user pans.
+    const transformRef = useRef<ZoomableViewEvent | null>(null);
 
     const { groupId, seasonId } = useGroup();
 
     const uploadAvatarMutation = useUpdatePlayerAvatarMutation();
-
-    const qc = useQueryClient();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -77,17 +82,17 @@ export default function Page() {
         setIsLoading(true);
 
         try {
-            const { offsetX = 0, offsetY = 0, zoomLevel = 1 } = transform ?? {};
+            // const { offsetX = 0, offsetY = 0 } = transformRef.current ?? {};
 
-            const dispZoomW = imgWidth * zoomLevel;
-            const dispZoomH = imgHeight * zoomLevel;
+            // const dispZoomW = imgWidth * zoomLevel;
+            // const dispZoomH = imgHeight * zoomLevel;
 
             // b) where is the top‐left of the zoomed image on‐screen?
             //    Since the ZoomableView always “centers” it by default,
             //    initial top‐left = (screenW–dispZoomW)/2, (imgHeight–dispZoomH)/2
             //    Then user panning adds offsetX / offsetY.
-            const imgLeft = (width - dispZoomW) / 2 + offsetX;
-            const imgTop = (imgHeight - dispZoomH) / 2 + offsetY;
+            // const imgLeft = (width - dispZoomW) / 2 + offsetX;
+            // const imgTop = (imgHeight - dispZoomH) / 2 + offsetY;
 
             // c) the circle’s bounding box _in screen‐coords_:
             //    (circle is centered on the entire screen’s width and at Y = imgHeight/2)
@@ -125,7 +130,7 @@ export default function Page() {
             const cropW = clamp(cropW_px, 0, imgRawWidth - originX);
             const cropH = clamp(cropH_px, 0, imgRawHeight - originY);
 
-            const circleDiameterOnImg = imgRawHeight / zoomLevel;
+            // const circleDiameterOnImg = imgRawHeight / zoomLevel;
 
             const { uri: rawCroppedUri } =
                 await ImageManipulator.manipulateAsync(
@@ -165,15 +170,6 @@ export default function Page() {
                 mimeType: 'image/png',
             });
 
-            await qc.invalidateQueries({
-                predicate: replaceWildcards([
-                    QK.group,
-                    groupId,
-                    QK.season,
-                    '*',
-                    QK.players,
-                ]),
-            });
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to upload player avatar:', err);
@@ -237,15 +233,14 @@ export default function Page() {
                 maxZoom={3}
                 zoomStep={0.5}
                 bindToBorders={true}
-                onTransform={setTransform}
+                onTransform={(e) => {
+                    transformRef.current = e;
+                    onZoomChange(e.zoomLevel);
+                }}
                 style={{ width, height }}
-                contentWidth={
-                    imgWidth! +
-                    (width - circleDiameter) / (transform?.zoomLevel ?? 1)
-                }
+                contentWidth={imgWidth! + (width - circleDiameter) / zoomLevel}
                 contentHeight={
-                    imgHeight! +
-                    (height - circleDiameter) / (transform?.zoomLevel ?? 1)
+                    imgHeight! + (height - circleDiameter) / zoomLevel
                 }
             >
                 <Image

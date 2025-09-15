@@ -1654,6 +1654,7 @@
                     "id": { "type": "string" },
                     "points": { "type": "integer", "format": "int64" },
                     "matches": { "type": "integer", "format": "int64" },
+                    "wins": { "type": "integer", "format": "int64" },
                     "moves": { "type": "integer", "format": "int64" },
                     "totalTeamSize": { "type": "integer", "format": "int64" },
                     "avgPointsPerMatch": {
@@ -1668,7 +1669,8 @@
                             "type": "integer",
                             "format": "int32"
                         }
-                    }
+                    },
+                    "playerId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeListPlayerDto": {

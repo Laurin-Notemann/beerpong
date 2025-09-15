@@ -1,5 +1,6 @@
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import { HighestChip, LowestChip } from '@/components/Chip';
@@ -75,33 +76,41 @@ export default function PlayerStats({
     );
 
     return (
-        <TouchableOpacity
-            disabled
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
             style={{
-                flexDirection: 'row',
-                alignItems: 'flex-end',
-
-                marginBottom: 32,
-                gap: 8,
+                width: '100%',
             }}
         >
-            <Stat
-                title="Average points"
-                value={averagePointsPerMatch}
-                isLowest={env.isDev}
-            />
-            <Stat title="Total points" value={totalPoints || '--'} />
-            <Stat title="Total cups" value={totalCups || '--'} />
-            <Stat
-                title="Matches won"
-                value={
-                    matchesPlayedCount
-                        ? `${matchesWonCount} of ${matchesPlayedCount} (${matchesWonPercentage}%)`
-                        : '--'
-                }
-                isHighest={env.isDev}
-            />
-            <Stat title="Elo" value={formatElo(elo)} />
-        </TouchableOpacity>
+            <TouchableOpacity
+                disabled
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-end',
+
+                    marginBottom: 32,
+                    gap: 8,
+                }}
+            >
+                <Stat
+                    title="Average points"
+                    value={averagePointsPerMatch}
+                    isLowest={env.isDev}
+                />
+                <Stat title="Total points" value={totalPoints || '--'} />
+                <Stat title="Total cups" value={totalCups || '--'} />
+                <Stat
+                    title="Matches won"
+                    value={
+                        matchesPlayedCount
+                            ? `${matchesWonCount} of ${matchesPlayedCount} (${matchesWonPercentage}%)`
+                            : '--'
+                    }
+                    isHighest={env.isDev}
+                />
+                <Stat title="Elo" value={formatElo(elo)} />
+            </TouchableOpacity>
+        </ScrollView>
     );
 }

@@ -195,7 +195,7 @@ export const toPlayer = (i: PlayerDto): Player => {
         elo: i.statistics?.elo ?? 0, // actually nullable from the backend
         matches: i.statistics?.matches!,
         points: i.statistics?.points!,
-        matchesWon: 0,
+        matchesWon: i.statistics?.wins!,
         name: i.profile?.name!,
         avatarUrl: i!.profile?.avatarAsset?.url,
     };

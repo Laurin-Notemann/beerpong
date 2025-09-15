@@ -23,6 +23,7 @@ import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -44,9 +45,8 @@ export default function Page() {
     const [showSortModal, setShowSortModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
 
-    const [sortingAlgorithm, setSortingAlgorithm] = useState<'ELO' | 'AVERAGE'>(
-        'ELO'
-    );
+    const [sortingAlgorithm, setSortingAlgorithm] =
+        useState<RankingAlgorithm>('ELO');
 
     useEffect(() => {
         setSortingAlgorithm(
@@ -113,6 +113,14 @@ export default function Page() {
                                 setShowSortModal(false);
                             },
                         },
+                        {
+                            title: 'Matches Won',
+
+                            onPress: () => {
+                                setSortingAlgorithm('MATCHES_WON');
+                                setShowSortModal(false);
+                            },
+                        },
                     ] as const
                 }
                 isVisible={showSortModal}
@@ -139,7 +147,10 @@ export default function Page() {
                 }
                 isVisible={showInviteModal}
             />
-            <Swiper {...swiper}>
+            <Swiper
+                key={groupId} // rerender when switching groups so we remember which scope we're on
+                {...swiper}
+            >
                 {experiments.dailyLeaderboard && (
                     <ScrollView
                         style={{
@@ -362,20 +373,25 @@ export default function Page() {
                     }}
                 >
                     <LeaderboardScopePicker
+                        key={groupId} // rerender when switching groups so we remember which scope we're on
                         swiperProgress={swiper.swiperProgress}
                         options={[
                             { id: 'today', label: 'Today' },
                             { id: 'season', label: 'This Season' },
-                        ].concat(
-                            groupHasPastSeasons
-                                ? [{ id: 'all-time', label: 'All Time' }]
-                                : []
-                        )}
+                            groupHasPastSeasons && {
+                                id: 'all-time',
+                                label: 'All Time',
+                            },
+                        ]}
                         onChange={(scope) => {
+                            const optionIndex = [
+                                'today',
+                                'season',
+                                'all-time',
+                            ].indexOf(scope);
+
                             swiper.ref?.current?.scrollTo({
-                                index: ['today', 'season', 'all-time'].indexOf(
-                                    scope
-                                ),
+                                index: optionIndex,
                                 animated: true,
                             });
                         }}

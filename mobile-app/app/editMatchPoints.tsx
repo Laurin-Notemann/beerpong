@@ -1,5 +1,4 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -17,8 +16,6 @@ export default function Page() {
     }>();
 
     const nav = useNavigation();
-
-    const [pageIdx, setPageIdx] = useState(parseInt(initialPageIdx));
 
     const { groupId, seasonId } = useGroup();
 
@@ -71,8 +68,7 @@ export default function Page() {
     return (
         <AssignPointsToPlayerModal
             onClose={nav.goBack}
-            pageIdx={pageIdx}
-            setPageIdx={setPageIdx}
+            initialPageIdx={parseInt(initialPageIdx)}
             match={{
                 blueCups: players
                     .filter((i) => i.team === 'blue')
@@ -87,7 +83,6 @@ export default function Page() {
                 redTeam: teamMembers.filter((i) => i.team === 'red'),
                 blueTeam: teamMembers.filter((i) => i.team === 'blue'),
             }}
-            isVisible={pageIdx != null}
             setMoveCount={matchDraft.actions.setMoveCount}
         />
     );

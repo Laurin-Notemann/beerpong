@@ -29,6 +29,7 @@ export const MatchesListItem: React.FC<{
         >
             <>
                 <MatchVsHeader match={match} highlightedId={highlightedId} />
+
                 <View style={{ flexDirection: 'row', gap: 16 }}>
                     <Text
                         style={{

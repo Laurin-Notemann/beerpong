@@ -62,5 +62,5 @@ git push origin branch-name
 
 1. 
 ```sh
-ln ./scripts/pre-commit .git/hooks/pre-commit
+ln ./scripts/pre-committ .git/hooks/pre-committ
 ```

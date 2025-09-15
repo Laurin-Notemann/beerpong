@@ -317,7 +317,11 @@ export default function PlayerScreen({
                         { transform: [{ scale }], opacity: scale },
                     ]}
                 >
-                    <Avatar url={avatarUrl} size={screenWidth - 64} />
+                    <Avatar
+                        url={avatarUrl}
+                        size={screenWidth - 64}
+                        name={name}
+                    />
                 </Animated.View>
             </Modal>
         </GestureHandlerRootView>
