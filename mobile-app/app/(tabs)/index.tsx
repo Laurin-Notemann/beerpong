@@ -114,7 +114,7 @@ export default function Page() {
                             },
                         },
                         {
-                            title: 'Winrate',
+                            title: 'Matches Won',
 
                             onPress: () => {
                                 setSortingAlgorithm('MATCHES_WON');
