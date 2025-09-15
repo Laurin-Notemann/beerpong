@@ -2,7 +2,7 @@
     "expo": {
         "name": "Versus",
         "slug": "mobile-app",
-        "version": "1.0.56",
+        "version": "1.0.57",
         "orientation": "default",
         "icon": "./assets/images/icon.png",
         "scheme": "myapp",
@@ -15,7 +15,7 @@
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "com.linusbolls.mobileapp",
-            "buildNumber": "59",
+            "buildNumber": "60",
             "infoPlist": {
                 "NSPhotoLibraryUsageDescription": true
             },
