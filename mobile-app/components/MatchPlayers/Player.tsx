@@ -127,7 +127,13 @@ export default function Player({
                 }
                 underlayColor={theme.panel.light.active}
             >
-                <>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                    }}
+                >
                     <Avatar
                         url={avatarUrl}
                         size={40}
@@ -204,7 +210,7 @@ export default function Player({
                             style={{ marginLeft: 'auto' }}
                         />
                     )}
-                </>
+                </View>
             </TouchableHighlight>
             {editable && (
                 <Animated.View
