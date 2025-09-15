@@ -5,27 +5,20 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 interface LocalSettingsStore {
     liveMatches: boolean;
     beerpongProMode: boolean;
-    rulesTab: boolean;
-    tutorials: boolean;
-    eloAlgorithm: boolean;
-    premiumVersion: boolean;
     matchPhotos: boolean;
     themeId: string;
+    premiumVersion: boolean;
     showWallpaper: boolean;
-    dailyLeaderboard: boolean;
     scopedPlayerPage: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
         toggleBeerpongProMode: () => void;
-        toggleRulesTab: () => void;
-        toggleTutorials: () => void;
-        toggleEloAlgorithm: () => void;
+
         togglePremiumVersion: () => void;
         toggleMatchPhotos: () => void;
         setTheme: (themeId: string) => void;
         toggleShowWallpaper: () => void;
-        toggleDailyLeaderboard: () => void;
         toggleScopedPlayerPage: () => void;
     };
 }
@@ -56,21 +49,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         beerpongProMode: !get().beerpongProMode,
                     }));
                 },
-                toggleRulesTab: () => {
-                    set(() => ({
-                        rulesTab: !get().rulesTab,
-                    }));
-                },
-                toggleTutorials: () => {
-                    set(() => ({
-                        tutorials: !get().tutorials,
-                    }));
-                },
-                toggleEloAlgorithm: () => {
-                    set(() => ({
-                        eloAlgorithm: !get().eloAlgorithm,
-                    }));
-                },
+
                 togglePremiumVersion: () => {
                     set(() => ({
                         premiumVersion: !get().premiumVersion,
@@ -91,11 +70,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         showWallpaper: !get().showWallpaper,
                     }));
                 },
-                toggleDailyLeaderboard: () => {
-                    set(() => ({
-                        dailyLeaderboard: !get().dailyLeaderboard,
-                    }));
-                },
                 toggleScopedPlayerPage: () => {
                     set(() => ({
                         scopedPlayerPage: !get().scopedPlayerPage,
@@ -109,14 +83,11 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             partialize: (state) => ({
                 liveMatches: state.liveMatches,
                 beerpongProMode: state.beerpongProMode,
-                rulesTab: state.rulesTab,
-                tutorials: state.tutorials,
-                eloAlgorithm: state.eloAlgorithm,
+
                 premiumVersion: state.premiumVersion,
                 matchPhotos: state.matchPhotos,
                 themeId: state.themeId,
                 showWallpaper: state.showWallpaper,
-                dailyLeaderboard: state.dailyLeaderboard,
                 scopedPlayerPage: state.scopedPlayerPage,
             }),
         }

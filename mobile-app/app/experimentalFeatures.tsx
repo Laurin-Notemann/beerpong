@@ -11,22 +11,14 @@ import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
     const {
-        tutorials,
-        toggleTutorials,
         beerpongProMode,
         toggleBeerpongProMode,
         premiumVersion,
         togglePremiumVersion,
-        eloAlgorithm,
-        toggleEloAlgorithm,
-        rulesTab,
-        toggleRulesTab,
         matchPhotos,
         toggleMatchPhotos,
         showWallpaper,
         toggleShowWallpaper,
-        dailyLeaderboard,
-        toggleDailyLeaderboard,
         scopedPlayerPage,
         toggleScopedPlayerPage,
     } = useLocalSettings();
@@ -65,38 +57,11 @@ export default function Page() {
                         }
                     />
                     <MenuItem
-                        title="Tutorials"
-                        tailContent={
-                            <Switch
-                                value={tutorials}
-                                onChange={toggleTutorials}
-                            />
-                        }
-                    />
-                    <MenuItem
                         title="Premium Version"
                         tailContent={
                             <Switch
                                 value={premiumVersion}
                                 onChange={togglePremiumVersion}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Elo Algorithm"
-                        tailContent={
-                            <Switch
-                                value={eloAlgorithm}
-                                onChange={toggleEloAlgorithm}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Rules Tab"
-                        tailContent={
-                            <Switch
-                                value={rulesTab}
-                                onChange={toggleRulesTab}
                             />
                         }
                     />
@@ -115,15 +80,6 @@ export default function Page() {
                             <Switch
                                 value={showWallpaper}
                                 onChange={toggleShowWallpaper}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Daily Leaderboard"
-                        tailContent={
-                            <Switch
-                                value={dailyLeaderboard}
-                                onChange={toggleDailyLeaderboard}
                             />
                         }
                     />

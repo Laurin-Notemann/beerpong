@@ -27,7 +27,6 @@ import Text from '@/components/Text';
 import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { triggerHapticBump } from '@/haptics';
 import { formatGroupCode } from '@/utils/groupCode';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 const USE_SELECT_FOR_SORT = false;
 
@@ -66,12 +65,10 @@ export default function Page() {
         invalidatePlayers(groupId!, seasonId!)
     );
 
-    const experiments = useLocalSettings();
-
     const insets = useInsets(true, true);
 
     const swiper = useSwiper({
-        initialPage: experiments.dailyLeaderboard ? 1 : 0,
+        initialPage: 1,
     });
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
@@ -199,92 +196,84 @@ export default function Page() {
                 isVisible={showInviteModal}
             />
             <Swiper {...swiper} key={groupId + ':' + seasonId}>
-                {experiments.dailyLeaderboard && (
-                    <ScrollView
-                        style={{
-                            flex: 1,
-                        }}
-                        contentContainerStyle={{
-                            alignItems: 'center',
+                <ScrollView
+                    style={{
+                        flex: 1,
+                    }}
+                    contentContainerStyle={{
+                        alignItems: 'center',
 
-                            paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                            paddingBottom:
-                                insets.bottom + (swiperAtTop ? 0 : 48),
+                        paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                        paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
+                    }}
+                    refreshControl={<RefreshControl {...refresh} />}
+                >
+                    <LeaderBoardSeasonInfo
+                        {...dailyLeaderboard}
+                        isCurrentSeason
+                    />
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            gap: 8,
+                            marginTop: 16,
                         }}
-                        refreshControl={<RefreshControl {...refresh} />}
                     >
-                        <LeaderBoardSeasonInfo
-                            {...dailyLeaderboard}
-                            isCurrentSeason
-                        />
-                        {experiments.eloAlgorithm && (
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    gap: 8,
-                                    marginTop: 16,
-                                }}
-                            >
-                                <PillButton
-                                    label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
-                                    iconName="swap-vertical"
-                                    onPress={() => setShowSortModal(true)}
-                                    onRemove={
-                                        sortingAlgorithm ===
-                                        groupRankingAlgorithm
-                                            ? undefined
-                                            : () => {
-                                                  setSortingAlgorithm(
-                                                      groupRankingAlgorithm
-                                                  );
-                                                  triggerHapticBump(
-                                                      'toast:success'
-                                                  );
-                                              }
-                                    }
-                                />
-                                <PillButton
-                                    label="Invite"
-                                    iconName="share-outline"
-                                    onPress={() => setShowInviteModal(true)}
-                                />
-                            </View>
-                        )}
-                        <Leaderboard
-                            rankingAlgorithm={sortingAlgorithm}
-                            ListEmptyComponent={
-                                <LeaderboardEmptyComponent message="No matches played yet today." />
-                            }
-                            players={dailyPlayers}
-                            onPlayerPress={(id) =>
-                                nav.navigate('player', { id, scope: 'today' })
-                            }
-                            minMatchesRequiredToBeRanked={
-                                group.data?.activeSeason?.seasonSettings
-                                    ?.minMatchesToQualify ?? 1
+                        <PillButton
+                            label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
+                            iconName="swap-vertical"
+                            onPress={() => setShowSortModal(true)}
+                            onRemove={
+                                sortingAlgorithm === groupRankingAlgorithm
+                                    ? undefined
+                                    : () => {
+                                          setSortingAlgorithm(
+                                              groupRankingAlgorithm
+                                          );
+                                          triggerHapticBump('toast:success');
+                                      }
                             }
                         />
-                        <Text
-                            color="secondary"
-                            style={{
-                                fontSize: 12,
-                                marginTop: 32,
-                                marginBottom: 32,
-                            }}
-                            onPress={() => {
-                                nav.navigate('dailyLeaderboardSettings');
-                            }}
-                        >
-                            {group.data?.activeSeason!.seasonSettings!
-                                .dailyLeaderboard === 'LAST_24_HOURS'
-                                ? `Day started yesterday at ${dayjs().subtract(24, 'hours').format('H:mm')}.`
-                                : `Day started at ${group.data?.activeSeason!.seasonSettings!.wakeTimeHour! + ':00'}.`}{' '}
-                            <Text color="link" style={{ fontSize: 13 }}>
-                                Learn more
-                            </Text>
+                        <PillButton
+                            label="Invite"
+                            iconName="share-outline"
+                            onPress={() => setShowInviteModal(true)}
+                        />
+                    </View>
+                    <Leaderboard
+                        rankingAlgorithm={sortingAlgorithm}
+                        ListEmptyComponent={
+                            <LeaderboardEmptyComponent message="No matches played yet today." />
+                        }
+                        players={dailyPlayers}
+                        onPlayerPress={(id) =>
+                            nav.navigate('player', { id, scope: 'today' })
+                        }
+                        minMatchesRequiredToBeRanked={
+                            group.data?.activeSeason?.seasonSettings
+                                ?.minMatchesToQualify ?? 1
+                        }
+                    />
+                    <Text
+                        color="secondary"
+                        style={{
+                            fontSize: 12,
+                            marginTop: 32,
+                            marginBottom: 32,
+                        }}
+                        onPress={() => {
+                            nav.navigate('dailyLeaderboardSettings');
+                        }}
+                    >
+                        {group.data?.activeSeason!.seasonSettings!
+                            .dailyLeaderboard === 'LAST_24_HOURS'
+                            ? `Day started yesterday at ${dayjs().subtract(24, 'hours').format('H:mm')}.`
+                            : `Day started at ${group.data?.activeSeason!.seasonSettings!.wakeTimeHour! + ':00'}.`}{' '}
+                        <Text color="link" style={{ fontSize: 13 }}>
+                            Learn more
                         </Text>
-                    </ScrollView>
-                )}
+                    </Text>
+                </ScrollView>
                 <ScrollView
                     style={{
                         flex: 1,
@@ -301,34 +290,32 @@ export default function Page() {
                         {...currentSeasonLeaderboard}
                         isCurrentSeason
                     />
-                    {experiments.eloAlgorithm && (
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                gap: 8,
-                                marginTop: 16,
-                            }}
-                        >
-                            <PillButton
-                                label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
-                                iconName="swap-vertical"
-                                onPress={() => setShowSortModal(true)}
-                                onRemove={
-                                    sortingAlgorithm === groupRankingAlgorithm
-                                        ? undefined
-                                        : () =>
-                                              setSortingAlgorithm(
-                                                  groupRankingAlgorithm
-                                              )
-                                }
-                            />
-                            <PillButton
-                                label="Invite"
-                                iconName="share-outline"
-                                onPress={() => setShowInviteModal(true)}
-                            />
-                        </View>
-                    )}
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            gap: 8,
+                            marginTop: 16,
+                        }}
+                    >
+                        <PillButton
+                            label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
+                            iconName="swap-vertical"
+                            onPress={() => setShowSortModal(true)}
+                            onRemove={
+                                sortingAlgorithm === groupRankingAlgorithm
+                                    ? undefined
+                                    : () =>
+                                          setSortingAlgorithm(
+                                              groupRankingAlgorithm
+                                          )
+                            }
+                        />
+                        <PillButton
+                            label="Invite"
+                            iconName="share-outline"
+                            onPress={() => setShowInviteModal(true)}
+                        />
+                    </View>
                     <Leaderboard
                         rankingAlgorithm={sortingAlgorithm}
                         ListEmptyComponent={
@@ -358,7 +345,7 @@ export default function Page() {
                             : null}
                     </Text>
                 </ScrollView>
-                {experiments.dailyLeaderboard && groupHasPastSeasons && (
+                {groupHasPastSeasons && (
                     <ScrollView
                         style={{
                             flex: 1,
@@ -376,35 +363,32 @@ export default function Page() {
                             {...alltimeLeaderboard}
                             isCurrentSeason
                         />
-                        {experiments.eloAlgorithm && (
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    gap: 8,
-                                    marginTop: 16,
-                                }}
-                            >
-                                <PillButton
-                                    label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
-                                    iconName="swap-vertical"
-                                    onPress={() => setShowSortModal(true)}
-                                    onRemove={
-                                        sortingAlgorithm ===
-                                        groupRankingAlgorithm
-                                            ? undefined
-                                            : () =>
-                                                  setSortingAlgorithm(
-                                                      groupRankingAlgorithm
-                                                  )
-                                    }
-                                />
-                                <PillButton
-                                    label="Invite"
-                                    iconName="share-outline"
-                                    onPress={() => setShowInviteModal(true)}
-                                />
-                            </View>
-                        )}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                gap: 8,
+                                marginTop: 16,
+                            }}
+                        >
+                            <PillButton
+                                label={`Sorted by ${sortOptions.find((i) => i.value === sortingAlgorithm)?.buttonTitle}`}
+                                iconName="swap-vertical"
+                                onPress={() => setShowSortModal(true)}
+                                onRemove={
+                                    sortingAlgorithm === groupRankingAlgorithm
+                                        ? undefined
+                                        : () =>
+                                              setSortingAlgorithm(
+                                                  groupRankingAlgorithm
+                                              )
+                                }
+                            />
+                            <PillButton
+                                label="Invite"
+                                iconName="share-outline"
+                                onPress={() => setShowInviteModal(true)}
+                            />
+                        </View>
                         <Leaderboard
                             rankingAlgorithm={sortingAlgorithm}
                             ListEmptyComponent={
@@ -444,43 +428,41 @@ export default function Page() {
                     backgroundColor: 'red',
                 }}
             > */}
-            {experiments.dailyLeaderboard && (
-                <SafeAreaView
-                    style={{
-                        position: 'absolute',
+            <SafeAreaView
+                style={{
+                    position: 'absolute',
 
-                        top: swiperAtTop ? insets.top + 4 : undefined,
-                        bottom: swiperAtTop ? undefined : insets.bottom + 4,
+                    top: swiperAtTop ? insets.top + 4 : undefined,
+                    bottom: swiperAtTop ? undefined : insets.bottom + 4,
 
-                        width: '100%',
+                    width: '100%',
+                }}
+            >
+                <LeaderboardScopePicker
+                    key={groupId + ':' + seasonId} // rerender when switching groups so we remember which scope we're on
+                    swiperProgress={swiper.swiperProgress}
+                    options={[
+                        { id: 'today', label: 'Today' },
+                        { id: 'season', label: 'This Season' },
+                        groupHasPastSeasons && {
+                            id: 'all-time',
+                            label: 'All Time',
+                        },
+                    ]}
+                    onChange={(scope) => {
+                        const optionIndex = [
+                            'today',
+                            'season',
+                            'all-time',
+                        ].indexOf(scope);
+
+                        swiper.ref?.current?.scrollTo({
+                            index: optionIndex,
+                            animated: true,
+                        });
                     }}
-                >
-                    <LeaderboardScopePicker
-                        key={groupId + ':' + seasonId} // rerender when switching groups so we remember which scope we're on
-                        swiperProgress={swiper.swiperProgress}
-                        options={[
-                            { id: 'today', label: 'Today' },
-                            { id: 'season', label: 'This Season' },
-                            groupHasPastSeasons && {
-                                id: 'all-time',
-                                label: 'All Time',
-                            },
-                        ]}
-                        onChange={(scope) => {
-                            const optionIndex = [
-                                'today',
-                                'season',
-                                'all-time',
-                            ].indexOf(scope);
-
-                            swiper.ref?.current?.scrollTo({
-                                index: optionIndex,
-                                animated: true,
-                            });
-                        }}
-                    />
-                </SafeAreaView>
-            )}
+                />
+            </SafeAreaView>
             {/* </SafeAreaView> */}
         </GestureHandlerRootView>
     );

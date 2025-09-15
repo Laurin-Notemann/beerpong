@@ -33,8 +33,7 @@ import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import { useTheme } from '@/theme';
-
-const PLAYER_PAGE_SCOPE_PICKER = true;
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 const swiperAtTop = false;
 
@@ -130,6 +129,8 @@ export default function PlayerScreen({
             initialScope === 'today' ? 0 : initialScope === seasonId ? 1 : 2,
     });
 
+    const experiments = useLocalSettings();
+
     useEffect(() => {
         if (inspectAvatar) {
             setShow(true);
@@ -184,7 +185,7 @@ export default function PlayerScreen({
                 }}
             />
             {!editable &&
-                (PLAYER_PAGE_SCOPE_PICKER ? (
+                (experiments.scopedPlayerPage ? (
                     <Swiper {...swiper}>
                         <MatchesList
                             onMatchPress={(match) =>
@@ -393,6 +394,12 @@ export default function PlayerScreen({
                     </Swiper>
                 ) : (
                     <MatchesList
+                        onMatchPress={(match) =>
+                            nav.navigate('match', {
+                                id: match.id,
+                                scope: seasonId,
+                            })
+                        }
                         style={{ paddingHorizontal: 0 }}
                         contentContainerStyle={{
                             paddingTop: insets.top,
@@ -565,7 +572,7 @@ export default function PlayerScreen({
                     />
                 </Animated.View>
             </Modal>
-            {PLAYER_PAGE_SCOPE_PICKER && !editable && (
+            {experiments.scopedPlayerPage && !editable && (
                 <SafeAreaView
                     style={{
                         position: 'absolute',

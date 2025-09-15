@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import {
@@ -29,6 +29,7 @@ function uint8ToBase64(bytes: Uint8Array): string {
 }
 
 export default function Page() {
+    const router = useRouter();
     const nav = useNavigation();
 
     const { id, scope } = useLocalSearchParams<{ id: string; scope: string }>();
@@ -77,7 +78,7 @@ export default function Page() {
                 id,
             });
             showSuccessToast(`Deleted player "${playerName}".`);
-            nav.navigate('index');
+            router.back();
         } catch (err) {
             ConsoleLogger.error('failed to delete player:', err);
             showErrorToast('Failed to delete player.');

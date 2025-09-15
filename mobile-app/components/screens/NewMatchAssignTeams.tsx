@@ -12,7 +12,6 @@ import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 export type TeamId = 'red' | 'blue' | null;
@@ -199,8 +198,6 @@ export default function NewMatchAssignTeams({
 
     const { hasTappedToAssignPlayers } = useTutorials();
 
-    const experiments = useLocalSettings();
-
     const blueTeamSize = players.filter((i) => i.team === 'blue').length;
     const redTeamSize = players.filter((i) => i.team === 'red').length;
 
@@ -298,11 +295,7 @@ export default function NewMatchAssignTeams({
                     <PlayerItem
                         randomTeamsMode={randomTeamsMode}
                         onRandomTeamSelect={onRandomTeamSelect}
-                        hasTutorial={
-                            experiments.tutorials &&
-                            !hasTappedToAssignPlayers &&
-                            idx === 1
-                        }
+                        hasTutorial={!hasTappedToAssignPlayers && idx === 1}
                         key={idx}
                         player={i}
                         onSelectTeam={(team) => setTeam(i.id, team)}

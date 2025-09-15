@@ -192,22 +192,18 @@ export default function GroupSettingsScreen({
                             tailContent={allowedMoves.length}
                             onPress={() => nav.navigate('allowedMoves')}
                         />
-                        {experiments.eloAlgorithm && (
-                            <MenuItem
-                                title="Rank Players by"
-                                headIcon="division"
-                                tailIconType="next"
-                                tailContent={
-                                    group.data?.activeSeason?.seasonSettings
-                                        ?.rankingAlgorithm === 'AVERAGE'
-                                        ? 'Average Points Scored'
-                                        : 'Elo'
-                                }
-                                onPress={() =>
-                                    nav.navigate('editRankPlayersBy')
-                                }
-                            />
-                        )}
+                        <MenuItem
+                            title="Rank Players by"
+                            headIcon="division"
+                            tailIconType="next"
+                            tailContent={
+                                group.data?.activeSeason?.seasonSettings
+                                    ?.rankingAlgorithm === 'AVERAGE'
+                                    ? 'Average Points Scored'
+                                    : 'Elo'
+                            }
+                            onPress={() => nav.navigate('editRankPlayersBy')}
+                        />
                         <MenuItem
                             title="Min Matches to Qualify"
                             headIcon="account-lock-open"
@@ -229,38 +225,35 @@ export default function GroupSettingsScreen({
                             tailIconType="next"
                             onPress={() => nav.navigate('teamSizeSettings')}
                         />
-                        {experiments.dailyLeaderboard && (
-                            <MenuItem
-                                title="Daily Leaderboard"
-                                headIcon="calendar-today"
-                                tailContent={(() => {
-                                    if (
-                                        group.data?.activeSeason?.seasonSettings
-                                            ?.dailyLeaderboard === 'WAKE_TIME'
-                                    ) {
-                                        return `Resets at ${group.data?.activeSeason?.seasonSettings.wakeTimeHour}:00`;
-                                    }
-                                    if (
-                                        group.data?.activeSeason?.seasonSettings
-                                            ?.dailyLeaderboard ===
-                                        'RESET_AT_MIDNIGHT'
-                                    ) {
-                                        return 'Resets at 0:00';
-                                    }
-                                    if (
-                                        group.data?.activeSeason?.seasonSettings
-                                            ?.dailyLeaderboard ===
-                                        'LAST_24_HOURS'
-                                    ) {
-                                        return 'Last 24h';
-                                    }
-                                })()}
-                                tailIconType="next"
-                                onPress={() =>
-                                    nav.navigate('dailyLeaderboardSettings')
+                        <MenuItem
+                            title="Daily Leaderboard"
+                            headIcon="calendar-today"
+                            tailContent={(() => {
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard === 'WAKE_TIME'
+                                ) {
+                                    return `Resets at ${group.data?.activeSeason?.seasonSettings.wakeTimeHour}:00`;
                                 }
-                            />
-                        )}
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard ===
+                                    'RESET_AT_MIDNIGHT'
+                                ) {
+                                    return 'Resets at 0:00';
+                                }
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard === 'LAST_24_HOURS'
+                                ) {
+                                    return 'Last 24h';
+                                }
+                            })()}
+                            tailIconType="next"
+                            onPress={() =>
+                                nav.navigate('dailyLeaderboardSettings')
+                            }
+                        />
                     </MenuSection>
                     <MenuSection title="Access">
                         {env.isDev && (

@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -75,11 +76,11 @@ const areTeamsEqual = (
     const result =
         isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible);
 
-    console.log('areTeamsEqual:', result, teams1, teams2);
     return result;
 };
 
 export default function NewMatchScreen() {
+    const router = useRouter();
     const { beerpongProMode } = useLocalSettings();
 
     const scrollX = useSharedValue(0);
@@ -221,7 +222,9 @@ export default function NewMatchScreen() {
             });
             matchDraft.actions.clear();
             showSuccessToast('Created match.');
-            nav.navigate('index');
+
+            router.dismissAll();
+            router.replace('/');
             swiperRef.current?.scrollBy(-1);
             carouselRef.current?.prev();
         } catch (err) {
@@ -278,7 +281,6 @@ export default function NewMatchScreen() {
                 red: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
             })
         ) {
-            console.log('inside sache');
             const [blueTeam, redTeam] = getRandomPlayers(playersToRandomize);
 
             newTeams = {
@@ -286,15 +288,10 @@ export default function NewMatchScreen() {
                 red: redTeam.map((i) => i.id),
             };
         }
-        console.log(
-            'sache:',
-            newTeams.blue.map((id) => ({ id })),
-            newTeams.red.map((id) => ({ id }))
-        );
 
         matchDraft.actions.setTeams(
-            newTeams.blue.map((id) => ({ id })),
-            newTeams.red.map((id) => ({ id }))
+            newTeams.red.map((id) => ({ id })),
+            newTeams.blue.map((id) => ({ id }))
         );
         triggerHapticBump('toast:success');
 
