@@ -91,6 +91,8 @@ export default function PlayerStats({
 
                     marginBottom: 32,
                     gap: 8,
+
+                    paddingHorizontal: 16,
                 }}
             >
                 <Stat

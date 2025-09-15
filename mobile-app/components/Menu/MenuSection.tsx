@@ -57,6 +57,8 @@ export interface MenuSectionProps extends PropsWithChildren {
     color?: 'light' | 'dark'; // | "transparent";
 
     noFlex?: boolean;
+
+    containerStyle?: any;
 }
 export default function MenuSection({
     title,
@@ -74,11 +76,15 @@ export default function MenuSection({
     color = 'light',
 
     noFlex = false,
+
+    containerStyle,
 }: MenuSectionProps) {
     const theme = useTheme();
 
     return (
-        <View style={{ flex: noFlex ? undefined : 1 }}>
+        <View
+            style={{ flex: noFlex ? undefined : 1, ...(containerStyle ?? {}) }}
+        >
             {title && (
                 <Heading
                     title={title}

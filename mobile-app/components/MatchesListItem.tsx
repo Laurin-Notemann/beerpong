@@ -27,7 +27,12 @@ export const MatchesListItem: React.FC<{
             }}
             onPress={onPress}
         >
-            <>
+            <View
+                style={{
+                    flexDirection: 'column',
+                    gap: 4,
+                }}
+            >
                 <MatchVsHeader match={match} highlightedId={highlightedId} />
 
                 <View style={{ flexDirection: 'row', gap: 16 }}>
@@ -52,7 +57,7 @@ export const MatchesListItem: React.FC<{
                             match.redTeam.map((i) => i.name).join(', ')}
                     </Text>
                 </View>
-            </>
+            </View>
         </TouchableHighlight>
     );
 };

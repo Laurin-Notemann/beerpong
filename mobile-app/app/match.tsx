@@ -166,7 +166,7 @@ export default function Page() {
                 seasonId,
                 id,
             });
-            showSuccessToast('Deleted match.');
+            showSuccessToast('Match deleted.');
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to delete match:', err);
@@ -258,6 +258,7 @@ export default function Page() {
             <Stack.Screen
                 options={{
                     ...navStyles,
+                    title: '',
                     headerBackTitleVisible: false,
                     headerRight: () => (
                         <HeaderItem

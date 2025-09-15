@@ -69,7 +69,9 @@ function PlayerItem({
                 paddingLeft: 16,
             }}
         >
-            <>
+            <View
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+            >
                 <Avatar url={player.avatarUrl} size={36} name={player.name} />
                 <Text
                     color="primary"
@@ -166,7 +168,7 @@ function PlayerItem({
                         top={-12}
                     />
                 )}
-            </>
+            </View>
         </TouchableHighlight>
     );
 }

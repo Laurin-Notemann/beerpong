@@ -156,7 +156,7 @@ export default function Avatar({
                             bottom: borderColor ? 2 : 0,
                         }}
                     >
-                        {content || name?.[0] || (
+                        {content || name?.at(0) || (
                             <Icon
                                 color={theme.avatar.text}
                                 size={size / 1.6}
