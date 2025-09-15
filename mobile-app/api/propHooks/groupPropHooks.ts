@@ -1,3 +1,5 @@
+import { useRouter } from 'expo-router';
+
 import {
     useGroupQuery,
     useUpdateGroupWallpaperMutation,
@@ -16,6 +18,7 @@ import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
+    const router = useRouter();
     const { groupId, group } = useGroup();
 
     const { removeGroup } = useGroupStore();
@@ -79,7 +82,8 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
         removeGroup(groupId);
 
-        nav.navigate('index');
+        router.dismissAll();
+        router.replace('/');
     }
 
     const props: GroupSettingsProps | null = data?.data

@@ -12,7 +12,6 @@ import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { useTheme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 const showVsHeader = false;
@@ -32,8 +31,6 @@ export default function AssignPointsToPlayerModal({
     setMoveCount,
     initialPageIdx,
 }: AssignPointsToPlayerModalProps) {
-    const experiments = useLocalSettings();
-
     const { hasDraggedToAssignPoints } = useTutorials();
 
     const players = match.blueTeam.concat(match.redTeam);
@@ -152,7 +149,6 @@ export default function AssignPointsToPlayerModal({
                                         }
                                         setMoveCount={setMoveCount}
                                         hasSwipeTutorial={
-                                            experiments.tutorials &&
                                             !hasDraggedToAssignPoints &&
                                             idx === 0
                                         }

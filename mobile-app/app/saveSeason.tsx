@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -17,6 +18,7 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
     const nav = useNavigation();
+    const router = useRouter();
 
     const { groupId, seasonId, group } = useGroup();
 
@@ -42,11 +44,13 @@ export default function Page() {
                 queryKey: ['groups', groupId],
                 exact: false,
             });
-            nav.navigate('index');
+            router.replace('/');
             matchDraft.clear();
             showSuccessToast(
                 `Saved current leaderboard as "${oldSeasonName}".`
             );
+            router.dismissAll();
+            router.replace('/');
         } catch (err) {
             ConsoleLogger.error('failed to start new season:', err);
             showErrorToast('Failed to create start new season.');
