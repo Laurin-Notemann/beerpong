@@ -199,7 +199,7 @@ export default function PlayerScreen({
                         onMatchPress={(match) =>
                             nav.navigate('match', {
                                 id: match.id,
-                                scope: 'TODO',
+                                seasonId: match.seasonId,
                             })
                         }
                         style={{ paddingHorizontal: 0 }}
@@ -255,7 +255,7 @@ export default function PlayerScreen({
                         onMatchPress={(match) =>
                             nav.navigate('match', {
                                 id: match.id,
-                                scope: 'TODO',
+                                seasonId: match.seasonId,
                             })
                         }
                         style={{ paddingHorizontal: 0 }}
@@ -312,7 +312,7 @@ export default function PlayerScreen({
                             onMatchPress={(match) =>
                                 nav.navigate('match', {
                                     id: match.id,
-                                    scope: 'TODO',
+                                    seasonId: match.seasonId,
                                 })
                             }
                             style={{ paddingHorizontal: 0 }}
@@ -375,7 +375,7 @@ export default function PlayerScreen({
                             onMatchPress={(match) =>
                                 nav.navigate('match', {
                                     id: match.id,
-                                    scope: 'TODO',
+                                    seasonId: match.seasonId,
                                 })
                             }
                             style={{ paddingHorizontal: 0 }}

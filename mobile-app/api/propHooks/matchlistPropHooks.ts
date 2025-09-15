@@ -34,7 +34,7 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     );
 
     function onMatchPress(match: Match) {
-        nav.navigate('match', { id: match.id, scope: seasonId! });
+        nav.navigate('match', { id: match.id, seasonId: seasonId! });
     }
 
     const props: MatchesListProps = { matches, refresh, onMatchPress };

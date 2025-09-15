@@ -26,6 +26,7 @@ export interface TeamMember {
 
 export type Match = {
     id: string;
+    seasonId: string;
     date: Date;
     redCups: number;
     blueCups: number;
