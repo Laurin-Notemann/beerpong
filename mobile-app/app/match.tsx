@@ -46,9 +46,12 @@ export default function Page() {
 
     const [isEditing, setIsEditing] = useState(false);
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, group } = useGroup();
 
-    const { id } = useLocalSearchParams<{ id: string; scope: string }>();
+    const { id, seasonId } = useLocalSearchParams<{
+        id: string;
+        seasonId: string;
+    }>();
 
     // const isCurrentSeason = useLocalSearchParams().scope === seasonId;
 
@@ -95,7 +98,7 @@ export default function Page() {
         const profile = profiles.find((j) => i.playerId === j.id);
 
         if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member');
+            ConsoleLogger.error('failed to get profile for team member'); // TODO: this happens sometimes for a split second
         }
 
         const ownTeam = players.filter((j) => j.team === i.team);
@@ -123,6 +126,7 @@ export default function Page() {
         return {
             id: i.playerId,
             team: i.team,
+            profileId: profile?.profile?.id!,
             avatarUrl: profile?.profile?.avatarAsset?.url,
             name: profile?.profile?.name || 'Unknown',
             points: pointsThisMatch,

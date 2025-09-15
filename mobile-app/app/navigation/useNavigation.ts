@@ -22,7 +22,7 @@ export type RootStackParamList = {
     saveSeason: undefined;
     startLiveMatch: undefined;
     player: { id: string; scope: string };
-    match: { id: string; scope: string };
+    match: { id: string; seasonId: string };
     matches: undefined;
     editFormationName: undefined;
     newMatch: undefined;

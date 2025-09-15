@@ -210,6 +210,7 @@ export class TeamImpl {
 export class MatchImpl {
     public id: string;
     public date: Date;
+    public seasonId: string;
 
     public teams: TeamImpl[];
 
@@ -259,6 +260,7 @@ export class MatchImpl {
             );
         }
 
+        this.seasonId = _data.season!.id!;
         this.id = _data.id!;
         this.date = new Date(_data.date!);
         this.teams = _data.teams!.map((i) => new TeamImpl(i));
@@ -324,6 +326,7 @@ export class MatchImpl {
     public toJSON(): Match {
         return {
             id: this.id,
+            seasonId: this.seasonId,
             date: this.date,
 
             blueCups: this.blueCups,
