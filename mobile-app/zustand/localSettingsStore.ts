@@ -9,6 +9,7 @@ interface LocalSettingsStore {
     themeId: string;
     premiumVersion: boolean;
     showWallpaper: boolean;
+    scopedPlayerPage: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -18,6 +19,7 @@ interface LocalSettingsStore {
         toggleMatchPhotos: () => void;
         setTheme: (themeId: string) => void;
         toggleShowWallpaper: () => void;
+        toggleScopedPlayerPage: () => void;
     };
 }
 
@@ -34,6 +36,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             themeId: 'dark',
             showWallpaper: false,
             dailyLeaderboard: false,
+            scopedPlayerPage: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -67,6 +70,11 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         showWallpaper: !get().showWallpaper,
                     }));
                 },
+                toggleScopedPlayerPage: () => {
+                    set(() => ({
+                        scopedPlayerPage: !get().scopedPlayerPage,
+                    }));
+                },
             },
         }),
         {
@@ -80,6 +88,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 matchPhotos: state.matchPhotos,
                 themeId: state.themeId,
                 showWallpaper: state.showWallpaper,
+                scopedPlayerPage: state.scopedPlayerPage,
             }),
         }
     )

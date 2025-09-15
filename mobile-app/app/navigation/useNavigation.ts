@@ -21,8 +21,8 @@ export type RootStackParamList = {
     minMatchesToQualifySettings: undefined;
     saveSeason: undefined;
     startLiveMatch: undefined;
-    player: { id: string };
-    match: { id: string };
+    player: { id: string; scope: string };
+    match: { id: string; scope: string };
     matches: undefined;
     editFormationName: undefined;
     newMatch: undefined;

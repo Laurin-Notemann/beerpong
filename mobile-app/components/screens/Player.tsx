@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Animated,
     Dimensions,
     Modal,
@@ -15,6 +16,7 @@ import {
 } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useGroup } from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { useNavStyles } from '@/app/navigation/navStyles';
@@ -22,33 +24,42 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
+import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { Swiper, useSwiper } from '@/components/Swiper';
 import { useTheme } from '@/theme';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
+
+const swiperAtTop = false;
 
 const CLOSE_BUTTON = false;
 const SHOW_PAST_SEASONS = false;
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export interface PlayerScreenProps {
+interface ScopeInfo {
     minMatchesRequiredToBeRanked: number;
-    isPending: boolean;
-    id: string;
     placement: number;
-
-    name: string;
-    avatarUrl?: string | null;
-
     matches: Match[];
     matchesWon: number;
     points: number;
     cups: number;
     elo: number;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
+}
+
+export interface PlayerScreenProps {
+    isPending: boolean;
+    id: string;
+
+    name: string;
+    avatarUrl?: string | null;
+
     hasPremium?: boolean;
 
     pastSeasons: number;
@@ -57,28 +68,38 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
     refresh: RefreshProps;
-    rankingAlgorithm: 'AVERAGE' | 'ELO';
+
+    today: ScopeInfo;
+    currentSeason: ScopeInfo;
+    allTime: ScopeInfo;
+
+    initialScope?: string;
 }
 export default function PlayerScreen({
-    minMatchesRequiredToBeRanked,
     isPending,
     id,
-    placement,
     name,
     avatarUrl,
-    matches,
-    matchesWon,
-    points,
-    cups,
-    elo,
-    pastSeasons,
     hasPremium = false,
-
+    pastSeasons,
     onDelete,
     onUploadAvatarPress,
     onDeleteAvatarPress,
     refresh,
-    rankingAlgorithm,
+    initialScope,
+
+    currentSeason: {
+        minMatchesRequiredToBeRanked,
+        placement,
+        matches,
+        matchesWon,
+        points,
+        cups,
+        elo,
+        rankingAlgorithm,
+    },
+    today,
+    allTime,
 }: PlayerScreenProps) {
     const theme = useTheme();
 
@@ -100,6 +121,15 @@ export default function PlayerScreen({
     const [inspectAvatar, setInspectAvatar] = useState(false);
 
     const [show, setShow] = useState(false);
+
+    const { seasonId } = useGroup();
+
+    const swiper = useSwiper({
+        initialPage:
+            initialScope === 'today' ? 0 : initialScope === seasonId ? 1 : 2,
+    });
+
+    const experiments = useLocalSettings();
 
     useEffect(() => {
         if (inspectAvatar) {
@@ -154,63 +184,279 @@ export default function PlayerScreen({
                     ),
                 }}
             />
-            {!editable && (
-                <MatchesList
-                    style={{ paddingHorizontal: 0 }}
-                    contentContainerStyle={{
-                        paddingTop: insets.top,
-                        paddingBottom: insets.bottom,
-                    }}
-                    ListHeaderComponent={
-                        <>
-                            <TouchableHighlight
-                                onPress={() => setInspectAvatar(true)}
-                            >
-                                <PlayerPageHeadSection
-                                    avatarUrl={avatarUrl}
-                                    placement={placement}
-                                    name={name}
-                                    elo={elo}
-                                    matchesWon={matchesWon}
-                                    points={points}
-                                    cups={cups}
-                                    isUnranked={isUnranked}
-                                    editable={editable}
-                                    averagePointsPerMatch={
-                                        averagePointsPerMatch
-                                    }
-                                    onUploadAvatarPress={onUploadAvatarPress}
-                                    matches={matches}
-                                    rankingAlgorithm={rankingAlgorithm}
-                                />
-                            </TouchableHighlight>
-                            <View
-                                style={{
-                                    width: '100%',
-                                    alignItems: 'stretch',
-                                }}
-                            >
-                                {SHOW_PAST_SEASONS && pastSeasons > 0 && (
-                                    <MenuSection>
-                                        <MenuItem
-                                            title="Past Seasons"
-                                            headIcon="pencil-outline"
-                                            tailContent={pastSeasons}
-                                            tailIconType="next"
-                                            onPress={() =>
-                                                nav.navigate('pastSeasons')
+            {!editable &&
+                (experiments.scopedPlayerPage ? (
+                    <Swiper {...swiper}>
+                        <MatchesList
+                            onMatchPress={(match) =>
+                                nav.navigate('match', {
+                                    id: match.id,
+                                    scope: 'TODO',
+                                })
+                            }
+                            contentContainerStyle={{
+                                paddingTop: insets.top,
+                                paddingBottom: insets.bottom,
+                            }}
+                            ListHeaderComponent={
+                                <>
+                                    <TouchableHighlight
+                                        onPress={() => setInspectAvatar(true)}
+                                    >
+                                        <PlayerPageHeadSection
+                                            avatarUrl={avatarUrl}
+                                            placement={placement}
+                                            name={name}
+                                            elo={elo}
+                                            matchesWon={matchesWon}
+                                            points={points}
+                                            cups={cups}
+                                            isUnranked={isUnranked}
+                                            editable={editable}
+                                            averagePointsPerMatch={
+                                                averagePointsPerMatch
                                             }
+                                            onUploadAvatarPress={
+                                                onUploadAvatarPress
+                                            }
+                                            matches={matches}
+                                            rankingAlgorithm={rankingAlgorithm}
                                         />
-                                    </MenuSection>
-                                )}
-                            </View>
-                        </>
-                    }
-                    matches={matches}
-                    refresh={refresh}
-                    forPlayer={{ id }}
-                />
-            )}
+                                    </TouchableHighlight>
+                                    <View
+                                        style={{
+                                            width: '100%',
+                                            alignItems: 'stretch',
+                                        }}
+                                    >
+                                        {SHOW_PAST_SEASONS &&
+                                            pastSeasons > 0 && (
+                                                <MenuSection>
+                                                    <MenuItem
+                                                        title="Past Seasons"
+                                                        headIcon="pencil-outline"
+                                                        tailContent={
+                                                            pastSeasons
+                                                        }
+                                                        tailIconType="next"
+                                                        onPress={() =>
+                                                            nav.navigate(
+                                                                'pastSeasons'
+                                                            )
+                                                        }
+                                                    />
+                                                </MenuSection>
+                                            )}
+                                    </View>
+                                </>
+                            }
+                            matches={today.matches}
+                            refresh={refresh}
+                            forPlayer={{ id }}
+                            ListEmptyComponent={<ActivityIndicator />}
+                        />
+                        <MatchesList
+                            onMatchPress={(match) =>
+                                nav.navigate('match', {
+                                    id: match.id,
+                                    scope: 'TODO',
+                                })
+                            }
+                            contentContainerStyle={{
+                                paddingTop: insets.top,
+                                paddingBottom: insets.bottom,
+                            }}
+                            ListHeaderComponent={
+                                <>
+                                    <TouchableHighlight
+                                        onPress={() => setInspectAvatar(true)}
+                                    >
+                                        <PlayerPageHeadSection
+                                            avatarUrl={avatarUrl}
+                                            placement={placement}
+                                            name={name}
+                                            elo={elo}
+                                            matchesWon={matchesWon}
+                                            points={points}
+                                            cups={cups}
+                                            isUnranked={isUnranked}
+                                            editable={editable}
+                                            averagePointsPerMatch={
+                                                averagePointsPerMatch
+                                            }
+                                            onUploadAvatarPress={
+                                                onUploadAvatarPress
+                                            }
+                                            matches={matches}
+                                            rankingAlgorithm={rankingAlgorithm}
+                                        />
+                                    </TouchableHighlight>
+                                    <View
+                                        style={{
+                                            width: '100%',
+                                            alignItems: 'stretch',
+                                        }}
+                                    >
+                                        {SHOW_PAST_SEASONS &&
+                                            pastSeasons > 0 && (
+                                                <MenuSection>
+                                                    <MenuItem
+                                                        title="Past Seasons"
+                                                        headIcon="pencil-outline"
+                                                        tailContent={
+                                                            pastSeasons
+                                                        }
+                                                        tailIconType="next"
+                                                        onPress={() =>
+                                                            nav.navigate(
+                                                                'pastSeasons'
+                                                            )
+                                                        }
+                                                    />
+                                                </MenuSection>
+                                            )}
+                                    </View>
+                                </>
+                            }
+                            matches={matches}
+                            refresh={refresh}
+                            forPlayer={{ id }}
+                            ListEmptyComponent={<ActivityIndicator />}
+                        />
+                        <MatchesList
+                            onMatchPress={(match) =>
+                                nav.navigate('match', {
+                                    id: match.id,
+                                    scope: 'TODO',
+                                })
+                            }
+                            contentContainerStyle={{
+                                paddingTop: insets.top,
+                                paddingBottom: insets.bottom,
+                            }}
+                            ListHeaderComponent={
+                                <>
+                                    <TouchableHighlight
+                                        onPress={() => setInspectAvatar(true)}
+                                    >
+                                        <PlayerPageHeadSection
+                                            avatarUrl={avatarUrl}
+                                            placement={placement}
+                                            name={name}
+                                            elo={elo}
+                                            matchesWon={matchesWon}
+                                            points={points}
+                                            cups={cups}
+                                            isUnranked={isUnranked}
+                                            editable={editable}
+                                            averagePointsPerMatch={
+                                                averagePointsPerMatch
+                                            }
+                                            onUploadAvatarPress={
+                                                onUploadAvatarPress
+                                            }
+                                            matches={matches}
+                                            rankingAlgorithm={rankingAlgorithm}
+                                        />
+                                    </TouchableHighlight>
+                                    <View
+                                        style={{
+                                            width: '100%',
+                                            alignItems: 'stretch',
+                                        }}
+                                    >
+                                        {SHOW_PAST_SEASONS &&
+                                            pastSeasons > 0 && (
+                                                <MenuSection>
+                                                    <MenuItem
+                                                        title="Past Seasons"
+                                                        headIcon="pencil-outline"
+                                                        tailContent={
+                                                            pastSeasons
+                                                        }
+                                                        tailIconType="next"
+                                                        onPress={() =>
+                                                            nav.navigate(
+                                                                'pastSeasons'
+                                                            )
+                                                        }
+                                                    />
+                                                </MenuSection>
+                                            )}
+                                    </View>
+                                </>
+                            }
+                            matches={allTime.matches}
+                            refresh={refresh}
+                            forPlayer={{ id }}
+                            ListEmptyComponent={<ActivityIndicator />}
+                        />
+                    </Swiper>
+                ) : (
+                    <MatchesList
+                        onMatchPress={(match) =>
+                            nav.navigate('match', {
+                                id: match.id,
+                                scope: seasonId,
+                            })
+                        }
+                        style={{ paddingHorizontal: 0 }}
+                        contentContainerStyle={{
+                            paddingTop: insets.top,
+                            paddingBottom: insets.bottom,
+                        }}
+                        ListHeaderComponent={
+                            <>
+                                <TouchableHighlight
+                                    onPress={() => setInspectAvatar(true)}
+                                >
+                                    <PlayerPageHeadSection
+                                        avatarUrl={avatarUrl}
+                                        placement={placement}
+                                        name={name}
+                                        elo={elo}
+                                        matchesWon={matchesWon}
+                                        points={points}
+                                        cups={cups}
+                                        isUnranked={isUnranked}
+                                        editable={editable}
+                                        averagePointsPerMatch={
+                                            averagePointsPerMatch
+                                        }
+                                        onUploadAvatarPress={
+                                            onUploadAvatarPress
+                                        }
+                                        matches={matches}
+                                        rankingAlgorithm={rankingAlgorithm}
+                                    />
+                                </TouchableHighlight>
+                                <View
+                                    style={{
+                                        width: '100%',
+                                        alignItems: 'stretch',
+                                    }}
+                                >
+                                    {SHOW_PAST_SEASONS && pastSeasons > 0 && (
+                                        <MenuSection>
+                                            <MenuItem
+                                                title="Past Seasons"
+                                                headIcon="pencil-outline"
+                                                tailContent={pastSeasons}
+                                                tailIconType="next"
+                                                onPress={() =>
+                                                    nav.navigate('pastSeasons')
+                                                }
+                                            />
+                                        </MenuSection>
+                                    )}
+                                </View>
+                            </>
+                        }
+                        matches={matches}
+                        refresh={refresh}
+                        forPlayer={{ id }}
+                    />
+                ))}
             {editable && (
                 <ScrollView
                     style={{
@@ -326,6 +572,35 @@ export default function PlayerScreen({
                     />
                 </Animated.View>
             </Modal>
+            {experiments.scopedPlayerPage && !editable && (
+                <SafeAreaView
+                    style={{
+                        position: 'absolute',
+
+                        top: swiperAtTop ? insets.top + 4 : undefined,
+                        bottom: swiperAtTop ? undefined : insets.bottom + 4,
+
+                        width: '100%',
+                    }}
+                >
+                    <LeaderboardScopePicker
+                        swiperProgress={swiper.swiperProgress}
+                        options={[
+                            { id: 'today', label: 'Today' },
+                            { id: 'season', label: 'This Season' },
+                            { id: 'all-time', label: 'All Time' },
+                        ]}
+                        onChange={(scope) => {
+                            swiper.ref?.current?.scrollTo({
+                                index: ['today', 'season', 'all-time'].indexOf(
+                                    scope
+                                ),
+                                animated: true,
+                            });
+                        }}
+                    />
+                </SafeAreaView>
+            )}
         </GestureHandlerRootView>
     );
 }

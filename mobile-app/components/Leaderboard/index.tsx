@@ -87,7 +87,10 @@ export default function Leaderboard({
                     isVisible={playerPreviewModalId}
                     onClose={() => setPlayerPreviewModalId(null)}
                     onPress={() => {
-                        nav.navigate('player', { id: playerPreviewModalId! });
+                        nav.navigate('player', {
+                            id: playerPreviewModalId!,
+                            scope: 'today',
+                        });
                         setPlayerPreviewModalId(null);
                     }}
                     content={

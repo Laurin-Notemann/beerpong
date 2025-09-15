@@ -48,11 +48,13 @@ export default function Page() {
 
     const { groupId, seasonId, group } = useGroup();
 
+    const { id } = useLocalSearchParams<{ id: string; scope: string }>();
+
+    // const isCurrentSeason = useLocalSearchParams().scope === seasonId;
+
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
     const profiles = playersQuery.data?.data ?? [];
-
-    const { id } = useLocalSearchParams<{ id: string }>();
 
     const matchQuery = useMatchQuery(groupId, seasonId, id);
 
@@ -331,7 +333,10 @@ export default function Page() {
                                 pageIdx,
                             });
                         } else {
-                            nav.navigate('player', player);
+                            nav.navigate('player', {
+                                id: player.id!,
+                                scope: seasonId,
+                            });
                         }
                     }}
                     editable={isEditing}
