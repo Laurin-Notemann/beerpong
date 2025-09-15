@@ -46,26 +46,37 @@ function getRandomPlayers(ids: string[]) {
 }
 
 /**
- * whether the teams are equal. also true if teams are equal with switched colors, except for if there are only two players.
+ * whether the teams are equal (order-insensitive).
+ * also true if teams are equal with switched colors, except when there are only two players total (1v1).
  */
 const areTeamsEqual = (
     teams1: { red: string[]; blue: string[] },
     teams2: { red: string[]; blue: string[] }
 ) => {
+    const sameMembers = (a: string[], b: string[]) => {
+        if (a.length !== b.length) return false;
+        const as = [...a].sort();
+        const bs = [...b].sort();
+        for (let i = 0; i < as.length; i++) if (as[i] !== bs[i]) return false;
+        return true;
+    };
+
     const isSame =
-        teams1.red.join(':') === teams2.red.join(':') &&
-        teams1.blue.join(':') === teams2.blue.join(':');
-
+        sameMembers(teams1.red, teams2.red) &&
+        sameMembers(teams1.blue, teams2.blue);
     const isSameWithSwitchedColors =
-        teams1.blue.join(':') === teams2.red.join(':') &&
-        teams1.red.join(':') === teams2.blue.join(':');
+        sameMembers(teams1.blue, teams2.red) &&
+        sameMembers(teams1.red, teams2.blue);
 
-    const anythingButColorSwitchPossible =
-        teams1.red.length + teams2.blue.length > 2;
+    // if total players is 2 (1v1), allow color switch to count as different
+    const totalPlayers = teams1.red.length + teams1.blue.length;
+    const anythingButColorSwitchPossible = totalPlayers > 2;
 
-    return (
-        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible)
-    );
+    const result =
+        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible);
+
+    console.log('areTeamsEqual:', result, teams1, teams2);
+    return result;
 };
 
 export default function NewMatchScreen() {
@@ -267,6 +278,7 @@ export default function NewMatchScreen() {
                 red: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
             })
         ) {
+            console.log('inside sache');
             const [blueTeam, redTeam] = getRandomPlayers(playersToRandomize);
 
             newTeams = {
@@ -274,6 +286,11 @@ export default function NewMatchScreen() {
                 red: redTeam.map((i) => i.id),
             };
         }
+        console.log(
+            'sache:',
+            newTeams.blue.map((id) => ({ id })),
+            newTeams.red.map((id) => ({ id }))
+        );
 
         matchDraft.actions.setTeams(
             newTeams.blue.map((id) => ({ id })),

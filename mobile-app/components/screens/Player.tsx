@@ -143,6 +143,7 @@ export default function PlayerScreen({
                     headerBackTitleVisible: false,
                     title: '',
                     headerTitle: 'Player',
+                    headerLeft: undefined,
                     headerRight: () => (
                         <HeaderItem
                             isLoading={isPending}
@@ -155,6 +156,7 @@ export default function PlayerScreen({
             />
             {!editable && (
                 <MatchesList
+                    style={{ paddingHorizontal: 0 }}
                     contentContainerStyle={{
                         paddingTop: insets.top,
                         paddingBottom: insets.bottom,

@@ -258,6 +258,7 @@ export default function Page() {
             <Stack.Screen
                 options={{
                     ...navStyles,
+                    title: '',
                     headerBackTitleVisible: false,
                     headerRight: () => (
                         <HeaderItem

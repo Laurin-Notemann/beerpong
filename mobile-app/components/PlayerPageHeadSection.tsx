@@ -41,7 +41,7 @@ export function PlayerPageHeadSection({
     const theme = useTheme();
 
     return (
-        <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+        <View style={{ alignItems: 'center' }}>
             <Avatar
                 url={avatarUrl}
                 size={96}
@@ -72,6 +72,8 @@ export function PlayerPageHeadSection({
                     marginBottom: 32,
 
                     textAlign: 'center',
+
+                    paddingHorizontal: 16,
                 }}
             >
                 {name}
