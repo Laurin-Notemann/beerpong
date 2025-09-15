@@ -144,6 +144,8 @@ public class MatchController {
         var error = matchService.deleteMatch(id, seasonId, groupId);
 
         if (error == null) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, id));
+
             return ResponseEnvelope.ok("OK");
         } else {
             return ResponseEnvelope.notOk(error);

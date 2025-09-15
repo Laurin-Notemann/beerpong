@@ -59,7 +59,11 @@ export default function MatchesList({
             data={days}
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item, index }) => (
-                <MenuSection key={index} title={item.title}>
+                <MenuSection
+                    key={index}
+                    title={item.title}
+                    containerStyle={{ marginHorizontal: forPlayer ? 8 : 0 }}
+                >
                     {item.matches.map((match, idx) => (
                         <MatchesListItem
                             key={idx}

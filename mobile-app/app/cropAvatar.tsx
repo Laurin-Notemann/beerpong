@@ -82,17 +82,17 @@ export default function Page() {
         setIsLoading(true);
 
         try {
-            const { offsetX = 0, offsetY = 0 } = transformRef.current ?? {};
+            // const { offsetX = 0, offsetY = 0 } = transformRef.current ?? {};
 
-            const dispZoomW = imgWidth * zoomLevel;
-            const dispZoomH = imgHeight * zoomLevel;
+            // const dispZoomW = imgWidth * zoomLevel;
+            // const dispZoomH = imgHeight * zoomLevel;
 
             // b) where is the top‐left of the zoomed image on‐screen?
             //    Since the ZoomableView always “centers” it by default,
             //    initial top‐left = (screenW–dispZoomW)/2, (imgHeight–dispZoomH)/2
             //    Then user panning adds offsetX / offsetY.
-            const imgLeft = (width - dispZoomW) / 2 + offsetX;
-            const imgTop = (imgHeight - dispZoomH) / 2 + offsetY;
+            // const imgLeft = (width - dispZoomW) / 2 + offsetX;
+            // const imgTop = (imgHeight - dispZoomH) / 2 + offsetY;
 
             // c) the circle’s bounding box _in screen‐coords_:
             //    (circle is centered on the entire screen’s width and at Y = imgHeight/2)
@@ -130,7 +130,7 @@ export default function Page() {
             const cropW = clamp(cropW_px, 0, imgRawWidth - originX);
             const cropH = clamp(cropH_px, 0, imgRawHeight - originY);
 
-            const circleDiameterOnImg = imgRawHeight / zoomLevel;
+            // const circleDiameterOnImg = imgRawHeight / zoomLevel;
 
             const { uri: rawCroppedUri } =
                 await ImageManipulator.manipulateAsync(

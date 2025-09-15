@@ -34,6 +34,51 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 const { width } = Dimensions.get('window');
 
+function getRandomPlayers(ids: string[]) {
+    const shuffledPlayers = ids
+        .map((i) => ({ id: i }))
+        .sort(() => Math.random() - 0.5);
+    const half = Math.floor(shuffledPlayers.length / 2);
+    const blueTeam = shuffledPlayers.slice(0, half);
+    const redTeam = shuffledPlayers.slice(half);
+
+    return [blueTeam, redTeam];
+}
+
+/**
+ * whether the teams are equal (order-insensitive).
+ * also true if teams are equal with switched colors, except when there are only two players total (1v1).
+ */
+const areTeamsEqual = (
+    teams1: { red: string[]; blue: string[] },
+    teams2: { red: string[]; blue: string[] }
+) => {
+    const sameMembers = (a: string[], b: string[]) => {
+        if (a.length !== b.length) return false;
+        const as = [...a].sort();
+        const bs = [...b].sort();
+        for (let i = 0; i < as.length; i++) if (as[i] !== bs[i]) return false;
+        return true;
+    };
+
+    const isSame =
+        sameMembers(teams1.red, teams2.red) &&
+        sameMembers(teams1.blue, teams2.blue);
+    const isSameWithSwitchedColors =
+        sameMembers(teams1.blue, teams2.red) &&
+        sameMembers(teams1.red, teams2.blue);
+
+    // if total players is 2 (1v1), allow color switch to count as different
+    const totalPlayers = teams1.red.length + teams1.blue.length;
+    const anythingButColorSwitchPossible = totalPlayers > 2;
+
+    const result =
+        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible);
+
+    console.log('areTeamsEqual:', result, teams1, teams2);
+    return result;
+};
+
 export default function NewMatchScreen() {
     const { beerpongProMode } = useLocalSettings();
 
@@ -212,10 +257,65 @@ export default function NewMatchScreen() {
         );
     }
 
+    const [randomTeamsMode, setRandomTeamsMode] = useState<{
+        players: string[];
+    } | null>(null);
+
+    function randomize(playersToRandomize: string[]) {
+        if (playersToRandomize.length < minTeamSize * 2) {
+            showErrorToast(
+                `Select at least ${minTeamSize * 2} players to randomize teams.`
+            );
+            return;
+        }
+
+        let newTeams: { red: string[]; blue: string[] } | null = null;
+
+        while (
+            !newTeams ||
+            areTeamsEqual(newTeams, {
+                blue: matchDraft.blueTeam.teamMembers.map((i) => i.playerId),
+                red: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
+            })
+        ) {
+            console.log('inside sache');
+            const [blueTeam, redTeam] = getRandomPlayers(playersToRandomize);
+
+            newTeams = {
+                blue: blueTeam.map((i) => i.id),
+                red: redTeam.map((i) => i.id),
+            };
+        }
+        console.log(
+            'sache:',
+            newTeams.blue.map((id) => ({ id })),
+            newTeams.red.map((id) => ({ id }))
+        );
+
+        matchDraft.actions.setTeams(
+            newTeams.blue.map((id) => ({ id })),
+            newTeams.red.map((id) => ({ id }))
+        );
+        triggerHapticBump('toast:success');
+
+        setRandomTeamsMode(null);
+    }
+
     return (
         <GestureHandlerRootView>
             <AppBackground />
             <NewMatchStack
+                onCreateRandomTeams={() => {
+                    const playersToRandomize = randomTeamsMode?.players ?? [];
+
+                    if (playersToRandomize.length === 0) {
+                        showErrorToast('Select players to randomize teams.');
+                        return;
+                    }
+                    randomize(playersToRandomize);
+                }}
+                randomTeamsMode={randomTeamsMode}
+                onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
                 animationProgress={animationProgress}
                 match={matchObj}
                 onClear={() => {
@@ -261,6 +361,34 @@ export default function NewMatchScreen() {
                     if (item.index === 0) {
                         return (
                             <NewMatchAssignTeams
+                                onRandomTeamSelect={(playerId) =>
+                                    setRandomTeamsMode((prev) => ({
+                                        players: prev!.players.includes(
+                                            playerId
+                                        )
+                                            ? prev!.players.filter(
+                                                  (p) => p !== playerId
+                                              )
+                                            : [...prev!.players, playerId],
+                                    }))
+                                }
+                                randomTeamsMode={randomTeamsMode}
+                                onRandomTeamsPress={() => {
+                                    const playersToRandomize =
+                                        matchDraft.blueTeam.teamMembers
+                                            .map((i) => i.playerId)
+                                            .concat(
+                                                matchDraft.redTeam.teamMembers.map(
+                                                    (i) => i.playerId
+                                                )
+                                            );
+                                    if (playersToRandomize.length === 0) {
+                                        setRandomTeamsMode({ players: [] });
+
+                                        return;
+                                    }
+                                    randomize(playersToRandomize);
+                                }}
                                 minTeamSize={minTeamSize}
                                 maxTeamSize={maxTeamSize}
                                 players={profiles}

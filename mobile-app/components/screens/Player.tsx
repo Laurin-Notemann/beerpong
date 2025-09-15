@@ -169,6 +169,7 @@ export default function PlayerScreen({
                     headerBackTitleVisible: false,
                     title: '',
                     headerTitle: 'Player',
+                    headerLeft: undefined,
                     headerRight: () => (
                         <HeaderItem
                             isLoading={isPending}
@@ -180,194 +181,61 @@ export default function PlayerScreen({
                 }}
             />
             {!editable && (
-                <Swiper {...swiper}>
-                    <MatchesList
-                        onMatchPress={(match) =>
-                            nav.navigate('match', {
-                                id: match.id,
-                                scope: 'TODO',
-                            })
-                        }
-                        contentContainerStyle={{
-                            paddingTop: insets.top,
-                            paddingBottom: insets.bottom,
-                        }}
-                        ListHeaderComponent={
-                            <>
-                                <TouchableHighlight
-                                    onPress={() => setInspectAvatar(true)}
-                                >
-                                    <PlayerPageHeadSection
-                                        avatarUrl={avatarUrl}
-                                        placement={placement}
-                                        name={name}
-                                        elo={elo}
-                                        matchesWon={matchesWon}
-                                        points={points}
-                                        cups={cups}
-                                        isUnranked={isUnranked}
-                                        editable={editable}
-                                        averagePointsPerMatch={
-                                            averagePointsPerMatch
-                                        }
-                                        onUploadAvatarPress={
-                                            onUploadAvatarPress
-                                        }
-                                        matches={matches}
-                                        rankingAlgorithm={rankingAlgorithm}
-                                    />
-                                </TouchableHighlight>
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        alignItems: 'stretch',
-                                    }}
-                                >
-                                    {SHOW_PAST_SEASONS && pastSeasons > 0 && (
-                                        <MenuSection>
-                                            <MenuItem
-                                                title="Past Seasons"
-                                                headIcon="pencil-outline"
-                                                tailContent={pastSeasons}
-                                                tailIconType="next"
-                                                onPress={() =>
-                                                    nav.navigate('pastSeasons')
-                                                }
-                                            />
-                                        </MenuSection>
-                                    )}
-                                </View>
-                            </>
-                        }
-                        matches={matches}
-                        refresh={refresh}
-                        forPlayer={{ id }}
-                    />
-                    <MatchesList
-                        onMatchPress={(match) =>
-                            nav.navigate('match', {
-                                id: match.id,
-                                scope: 'TODO',
-                            })
-                        }
-                        contentContainerStyle={{
-                            paddingTop: insets.top,
-                            paddingBottom: insets.bottom,
-                        }}
-                        ListHeaderComponent={
-                            <>
-                                <TouchableHighlight
-                                    onPress={() => setInspectAvatar(true)}
-                                >
-                                    <PlayerPageHeadSection
-                                        avatarUrl={avatarUrl}
-                                        placement={placement}
-                                        name={name}
-                                        elo={elo}
-                                        matchesWon={matchesWon}
-                                        points={points}
-                                        cups={cups}
-                                        isUnranked={isUnranked}
-                                        editable={editable}
-                                        averagePointsPerMatch={
-                                            averagePointsPerMatch
-                                        }
-                                        onUploadAvatarPress={
-                                            onUploadAvatarPress
-                                        }
-                                        matches={matches}
-                                        rankingAlgorithm={rankingAlgorithm}
-                                    />
-                                </TouchableHighlight>
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        alignItems: 'stretch',
-                                    }}
-                                >
-                                    {SHOW_PAST_SEASONS && pastSeasons > 0 && (
-                                        <MenuSection>
-                                            <MenuItem
-                                                title="Past Seasons"
-                                                headIcon="pencil-outline"
-                                                tailContent={pastSeasons}
-                                                tailIconType="next"
-                                                onPress={() =>
-                                                    nav.navigate('pastSeasons')
-                                                }
-                                            />
-                                        </MenuSection>
-                                    )}
-                                </View>
-                            </>
-                        }
-                        matches={matches}
-                        refresh={refresh}
-                        forPlayer={{ id }}
-                    />
-                    <MatchesList
-                        onMatchPress={(match) =>
-                            nav.navigate('match', {
-                                id: match.id,
-                                scope: 'TODO',
-                            })
-                        }
-                        contentContainerStyle={{
-                            paddingTop: insets.top,
-                            paddingBottom: insets.bottom,
-                        }}
-                        ListHeaderComponent={
-                            <>
-                                <TouchableHighlight
-                                    onPress={() => setInspectAvatar(true)}
-                                >
-                                    <PlayerPageHeadSection
-                                        avatarUrl={avatarUrl}
-                                        placement={placement}
-                                        name={name}
-                                        elo={elo}
-                                        matchesWon={matchesWon}
-                                        points={points}
-                                        cups={cups}
-                                        isUnranked={isUnranked}
-                                        editable={editable}
-                                        averagePointsPerMatch={
-                                            averagePointsPerMatch
-                                        }
-                                        onUploadAvatarPress={
-                                            onUploadAvatarPress
-                                        }
-                                        matches={matches}
-                                        rankingAlgorithm={rankingAlgorithm}
-                                    />
-                                </TouchableHighlight>
-                                <View
-                                    style={{
-                                        width: '100%',
-                                        alignItems: 'stretch',
-                                    }}
-                                >
-                                    {SHOW_PAST_SEASONS && pastSeasons > 0 && (
-                                        <MenuSection>
-                                            <MenuItem
-                                                title="Past Seasons"
-                                                headIcon="pencil-outline"
-                                                tailContent={pastSeasons}
-                                                tailIconType="next"
-                                                onPress={() =>
-                                                    nav.navigate('pastSeasons')
-                                                }
-                                            />
-                                        </MenuSection>
-                                    )}
-                                </View>
-                            </>
-                        }
-                        matches={matches}
-                        refresh={refresh}
-                        forPlayer={{ id }}
-                    />
-                </Swiper>
+                <MatchesList
+                    style={{ paddingHorizontal: 0 }}
+                    contentContainerStyle={{
+                        paddingTop: insets.top,
+                        paddingBottom: insets.bottom,
+                    }}
+                    ListHeaderComponent={
+                        <>
+                            <TouchableHighlight
+                                onPress={() => setInspectAvatar(true)}
+                            >
+                                <PlayerPageHeadSection
+                                    avatarUrl={avatarUrl}
+                                    placement={placement}
+                                    name={name}
+                                    elo={elo}
+                                    matchesWon={matchesWon}
+                                    points={points}
+                                    cups={cups}
+                                    isUnranked={isUnranked}
+                                    editable={editable}
+                                    averagePointsPerMatch={
+                                        averagePointsPerMatch
+                                    }
+                                    onUploadAvatarPress={onUploadAvatarPress}
+                                    matches={matches}
+                                    rankingAlgorithm={rankingAlgorithm}
+                                />
+                            </TouchableHighlight>
+                            <View
+                                style={{
+                                    width: '100%',
+                                    alignItems: 'stretch',
+                                }}
+                            >
+                                {SHOW_PAST_SEASONS && pastSeasons > 0 && (
+                                    <MenuSection>
+                                        <MenuItem
+                                            title="Past Seasons"
+                                            headIcon="pencil-outline"
+                                            tailContent={pastSeasons}
+                                            tailIconType="next"
+                                            onPress={() =>
+                                                nav.navigate('pastSeasons')
+                                            }
+                                        />
+                                    </MenuSection>
+                                )}
+                            </View>
+                        </>
+                    }
+                    matches={matches}
+                    refresh={refresh}
+                    forPlayer={{ id }}
+                />
             )}
             {editable && (
                 <ScrollView
@@ -440,6 +308,194 @@ export default function PlayerScreen({
                         </MenuSection>
                     </View>
                 </ScrollView>
+                //     <Swiper {...swiper}>
+                //     <MatchesList
+                //         onMatchPress={(match) =>
+                //             nav.navigate('match', {
+                //                 id: match.id,
+                //                 scope: 'TODO',
+                //             })
+                //         }
+                //         contentContainerStyle={{
+                //             paddingTop: insets.top,
+                //             paddingBottom: insets.bottom,
+                //         }}
+                //         ListHeaderComponent={
+                //             <>
+                //                 <TouchableHighlight
+                //                     onPress={() => setInspectAvatar(true)}
+                //                 >
+                //                     <PlayerPageHeadSection
+                //                         avatarUrl={avatarUrl}
+                //                         placement={placement}
+                //                         name={name}
+                //                         elo={elo}
+                //                         matchesWon={matchesWon}
+                //                         points={points}
+                //                         cups={cups}
+                //                         isUnranked={isUnranked}
+                //                         editable={editable}
+                //                         averagePointsPerMatch={
+                //                             averagePointsPerMatch
+                //                         }
+                //                         onUploadAvatarPress={
+                //                             onUploadAvatarPress
+                //                         }
+                //                         matches={matches}
+                //                         rankingAlgorithm={rankingAlgorithm}
+                //                     />
+                //                 </TouchableHighlight>
+                //                 <View
+                //                     style={{
+                //                         width: '100%',
+                //                         alignItems: 'stretch',
+                //                     }}
+                //                 >
+                //                     {SHOW_PAST_SEASONS && pastSeasons > 0 && (
+                //                         <MenuSection>
+                //                             <MenuItem
+                //                                 title="Past Seasons"
+                //                                 headIcon="pencil-outline"
+                //                                 tailContent={pastSeasons}
+                //                                 tailIconType="next"
+                //                                 onPress={() =>
+                //                                     nav.navigate('pastSeasons')
+                //                                 }
+                //                             />
+                //                         </MenuSection>
+                //                     )}
+                //                 </View>
+                //             </>
+                //         }
+                //         matches={matches}
+                //         refresh={refresh}
+                //         forPlayer={{ id }}
+                //     />
+                //     <MatchesList
+                //         onMatchPress={(match) =>
+                //             nav.navigate('match', {
+                //                 id: match.id,
+                //                 scope: 'TODO',
+                //             })
+                //         }
+                //         contentContainerStyle={{
+                //             paddingTop: insets.top,
+                //             paddingBottom: insets.bottom,
+                //         }}
+                //         ListHeaderComponent={
+                //             <>
+                //                 <TouchableHighlight
+                //                     onPress={() => setInspectAvatar(true)}
+                //                 >
+                //                     <PlayerPageHeadSection
+                //                         avatarUrl={avatarUrl}
+                //                         placement={placement}
+                //                         name={name}
+                //                         elo={elo}
+                //                         matchesWon={matchesWon}
+                //                         points={points}
+                //                         cups={cups}
+                //                         isUnranked={isUnranked}
+                //                         editable={editable}
+                //                         averagePointsPerMatch={
+                //                             averagePointsPerMatch
+                //                         }
+                //                         onUploadAvatarPress={
+                //                             onUploadAvatarPress
+                //                         }
+                //                         matches={matches}
+                //                         rankingAlgorithm={rankingAlgorithm}
+                //                     />
+                //                 </TouchableHighlight>
+                //                 <View
+                //                     style={{
+                //                         width: '100%',
+                //                         alignItems: 'stretch',
+                //                     }}
+                //                 >
+                //                     {SHOW_PAST_SEASONS && pastSeasons > 0 && (
+                //                         <MenuSection>
+                //                             <MenuItem
+                //                                 title="Past Seasons"
+                //                                 headIcon="pencil-outline"
+                //                                 tailContent={pastSeasons}
+                //                                 tailIconType="next"
+                //                                 onPress={() =>
+                //                                     nav.navigate('pastSeasons')
+                //                                 }
+                //                             />
+                //                         </MenuSection>
+                //                     )}
+                //                 </View>
+                //             </>
+                //         }
+                //         matches={matches}
+                //         refresh={refresh}
+                //         forPlayer={{ id }}
+                //     />
+                //     <MatchesList
+                //         onMatchPress={(match) =>
+                //             nav.navigate('match', {
+                //                 id: match.id,
+                //                 scope: 'TODO',
+                //             })
+                //         }
+                //         contentContainerStyle={{
+                //             paddingTop: insets.top,
+                //             paddingBottom: insets.bottom,
+                //         }}
+                //         ListHeaderComponent={
+                //             <>
+                //                 <TouchableHighlight
+                //                     onPress={() => setInspectAvatar(true)}
+                //                 >
+                //                     <PlayerPageHeadSection
+                //                         avatarUrl={avatarUrl}
+                //                         placement={placement}
+                //                         name={name}
+                //                         elo={elo}
+                //                         matchesWon={matchesWon}
+                //                         points={points}
+                //                         cups={cups}
+                //                         isUnranked={isUnranked}
+                //                         editable={editable}
+                //                         averagePointsPerMatch={
+                //                             averagePointsPerMatch
+                //                         }
+                //                         onUploadAvatarPress={
+                //                             onUploadAvatarPress
+                //                         }
+                //                         matches={matches}
+                //                         rankingAlgorithm={rankingAlgorithm}
+                //                     />
+                //                 </TouchableHighlight>
+                //                 <View
+                //                     style={{
+                //                         width: '100%',
+                //                         alignItems: 'stretch',
+                //                     }}
+                //                 >
+                //                     {SHOW_PAST_SEASONS && pastSeasons > 0 && (
+                //                         <MenuSection>
+                //                             <MenuItem
+                //                                 title="Past Seasons"
+                //                                 headIcon="pencil-outline"
+                //                                 tailContent={pastSeasons}
+                //                                 tailIconType="next"
+                //                                 onPress={() =>
+                //                                     nav.navigate('pastSeasons')
+                //                                 }
+                //                             />
+                //                         </MenuSection>
+                //                     )}
+                //                 </View>
+                //             </>
+                //         }
+                //         matches={matches}
+                //         refresh={refresh}
+                //         forPlayer={{ id }}
+                //     />
+                // </Swiper>
             )}
             <Modal
                 transparent

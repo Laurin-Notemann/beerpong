@@ -13,6 +13,7 @@ import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
+import { formatRatingChange } from '@/utils/format';
 
 function Change({
     value,
@@ -51,10 +52,7 @@ function Change({
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
                 {/* rounded to two decimal places with trailing zeros removed */}
-                {Math.abs(value)
-                    .toFixed(2)
-                    .replace(/\.00$/, '.0')
-                    .replace(/([1-9])0+$/, '$1')}
+                {formatRatingChange(value)}
             </Text>
         </View>
     );
@@ -120,7 +118,13 @@ export default function Player({
                 onPress={onPress}
                 underlayColor={theme.panel.light.active}
             >
-                <>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                    }}
+                >
                     <Avatar
                         url={avatarUrl}
                         size={40}
@@ -197,7 +201,7 @@ export default function Player({
                             style={{ marginLeft: 'auto' }}
                         />
                     )}
-                </>
+                </View>
             </TouchableHighlight>
             {editable && (
                 <Animated.View

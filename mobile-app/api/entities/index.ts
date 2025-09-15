@@ -327,6 +327,8 @@ export class MatchImpl {
 
             blueCups: this.blueCups,
             redCups: this.redCups,
+            blueTeamId: this._blueTeam.id,
+            redTeamId: this._redTeam.id,
 
             blueTeam: this.blueTeam.map((i) => {
                 const player = i.toJSON();

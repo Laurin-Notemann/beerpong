@@ -24,6 +24,7 @@ import { RefreshControl } from '@/components/RefreshControl';
 import Select from '@/components/Select';
 import { Swiper, useSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
+import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { triggerHapticBump } from '@/haptics';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -49,7 +50,7 @@ export default function Page() {
     const groupRankingAlgorithm =
         group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
 
-    const [sortingAlgorithm, setSortingAlgorithm] = useState(
+    const [sortingAlgorithm, setSortingAlgorithm] = useState<RankingAlgorithm>(
         groupRankingAlgorithm
     );
 
@@ -96,16 +97,16 @@ export default function Page() {
                 (groupRankingAlgorithm === 'AVERAGE' ? ' (Group Default)' : ''),
             buttonTitle: 'Average',
         },
-        // {
-        //     value: 'MATCHES',
-        //     title: 'Matches Played',
-        //     buttonTitle: 'Matches',
-        // },
-        // {
-        //     value: 'MATCHES_WON',
-        //     title: 'Matches Won',
-        //     buttonTitle: 'Matches Won',
-        // },
+        {
+            value: 'MATCHES',
+            title: 'Matches Played',
+            buttonTitle: 'Matches',
+        },
+        {
+            value: 'MATCHES_WON',
+            title: 'Matches Won',
+            buttonTitle: 'Matches Won',
+        },
     ];
 
     return (
@@ -125,20 +126,48 @@ export default function Page() {
             <ConfirmationModal
                 onClose={() => setShowSortModal(false)}
                 title="Sort Players By"
-                content={
-                    <Select
-                        color="light"
-                        value={sortingAlgorithm}
-                        style={{
-                            marginHorizontal: 16,
-                        }}
-                        onChange={(id) => {
-                            setSortingAlgorithm(id as any);
-                            setShowSortModal(false);
-                        }}
-                        items={sortOptions}
-                    />
+                actions={
+                    [
+                        {
+                            title: 'Elo (Group Default)',
+
+                            onPress: () => {
+                                setSortingAlgorithm('ELO');
+                                setShowSortModal(false);
+                            },
+                        },
+                        {
+                            title: 'Average Points Scored',
+
+                            onPress: () => {
+                                setSortingAlgorithm('AVERAGE');
+                                setShowSortModal(false);
+                            },
+                        },
+                        {
+                            title: 'Matches Won',
+
+                            onPress: () => {
+                                setSortingAlgorithm('MATCHES_WON');
+                                setShowSortModal(false);
+                            },
+                        },
+                    ] as const
                 }
+                // content={
+                //     <Select
+                //         color="light"
+                //         value={sortingAlgorithm}
+                //         style={{
+                //             marginHorizontal: 16,
+                //         }}
+                //         onChange={(id) => {
+                //             setSortingAlgorithm(id as any);
+                //             setShowSortModal(false);
+                //         }}
+                //         items={sortOptions}
+                //     />
+                // }
                 isVisible={showSortModal}
             />
             <ConfirmationModal
@@ -421,20 +450,25 @@ export default function Page() {
                     }}
                 >
                     <LeaderboardScopePicker
+                        key={groupId + ':' + seasonId} // rerender when switching groups so we remember which scope we're on
                         swiperProgress={swiper.swiperProgress}
                         options={[
                             { id: 'today', label: 'Today' },
                             { id: 'season', label: 'This Season' },
-                        ].concat(
-                            groupHasPastSeasons
-                                ? [{ id: 'all-time', label: 'All Time' }]
-                                : []
-                        )}
+                            groupHasPastSeasons && {
+                                id: 'all-time',
+                                label: 'All Time',
+                            },
+                        ]}
                         onChange={(scope) => {
+                            const optionIndex = [
+                                'today',
+                                'season',
+                                'all-time',
+                            ].indexOf(scope);
+
                             swiper.ref?.current?.scrollTo({
-                                index: ['today', 'season', 'all-time'].indexOf(
-                                    scope
-                                ),
+                                index: optionIndex,
                                 animated: true,
                             });
                         }}

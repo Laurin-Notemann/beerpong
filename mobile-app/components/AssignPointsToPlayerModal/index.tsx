@@ -75,7 +75,7 @@ export default function AssignPointsToPlayerModal({
 
         setFinisherId(player.id);
         // timeout of 0 is necessary because the next page isn't even rendered yet
-        setTimeout(() => swiper.ref.current?.next(), 0);
+        setTimeout(() => swiper.ref.current?.next({ animated: true }), 0);
     }
     const theme = useTheme();
 

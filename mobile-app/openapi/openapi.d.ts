@@ -96,6 +96,7 @@ declare namespace Components {
             id?: string;
             points?: number; // int64
             matches?: number; // int64
+            wins?: number; // int64
             moves?: number; // int64
             totalTeamSize?: number; // int64
             avgPointsPerMatch?: number; // double
@@ -104,6 +105,7 @@ declare namespace Components {
             rankBy?: {
                 [name: string]: number; // int32
             };
+            playerId?: string;
         }
         export interface ProfileCreateDto {
             name?: string;

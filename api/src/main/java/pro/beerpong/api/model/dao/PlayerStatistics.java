@@ -20,6 +20,8 @@ public class PlayerStatistics {
     private String id;
     private long points = 0;
     private long matches = 0;
+    @Column(columnDefinition = "bigint default 0")
+    private long wins = 0;
     private long moves = 0;
     private long totalTeamSize = 0;
     private double avgPointsPerMatch = 0.0D;
