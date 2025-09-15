@@ -6,7 +6,6 @@ import {
     useDeletePlayerMutation,
 } from '@/api/calls/playerHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { usePlayerPageScope } from '@/app/usePlayerPageScope';
@@ -36,11 +35,13 @@ export default function Page() {
 
     const { groupId, seasonId } = useGroup();
 
-    const { currentSeasonPlayers } = useLeaderboardProps(groupId, seasonId!);
-
     const deletePlayerMutation = useDeletePlayerMutation();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
+
+    const player = seasonsQuery.data?.data
+        ?.flatMap((i) => i.players)
+        ?.find((i) => i.id === id);
 
     const pastSeasons =
         seasonsQuery.data?.data
@@ -60,11 +61,11 @@ export default function Page() {
     const refresh = usePullToRefresh(() =>
         invalidatePlayers(groupId!, seasonId!)
     );
-    const { scopes } = usePlayerPageScope(id);
+    const profileId = player?.profileId!;
+
+    const { scopes } = usePlayerPageScope(profileId);
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
-
-    const player = currentSeasonPlayers.find((i) => i.id === id);
 
     const playerName = player?.name || 'Unknown';
 
@@ -84,8 +85,6 @@ export default function Page() {
             showErrorToast('Failed to delete player.');
         }
     }
-
-    const profileId = player?.profileId;
 
     const isLoading = seasonsQuery.isLoading;
 

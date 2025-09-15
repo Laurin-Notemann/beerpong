@@ -17,15 +17,13 @@ import { SeasonSettings } from '@/openapi/openapi';
 // TODO: additional seasons
 // TODO: minMatchesRequiredToBeRanked, placement, elo, points, rankingAlgorithm
 
-export function usePlayerPageScope(playerId: string) {
+export function usePlayerPageScope(profileId: string) {
     const { groupId, seasonId, group } = useGroup();
 
-    const { currentSeasonPlayers, alltimePlayers, dailyPlayers } =
-        useLeaderboardProps(groupId, seasonId!);
-
-    const profileId = currentSeasonPlayers.find(
-        (i) => i.id === playerId
-    )?.profileId;
+    const { alltimePlayers, dailyPlayers } = useLeaderboardProps(
+        groupId,
+        seasonId!
+    );
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -100,7 +98,13 @@ export function usePlayerPageScope(playerId: string) {
 
         obj.set(
             i.id!,
-            getScope(profileId, seasonMatches, i.seasonSettings, i.players)
+            getScope(
+                profileId,
+                seasonMatches,
+                i.seasonSettings,
+                i.players,
+                i.name || 'Unknown'
+            )
         );
         return obj;
     }, new Map());
@@ -111,7 +115,8 @@ export function usePlayerPageScope(playerId: string) {
             profileId,
             todayMatches,
             group.data?.activeSeason?.seasonSettings,
-            dailyPlayers
+            dailyPlayers,
+            'Today'
         )
     );
     if (scopes.get(seasonId!)) scopes.set('season', scopes.get(seasonId!)!);
@@ -121,7 +126,8 @@ export function usePlayerPageScope(playerId: string) {
             profileId,
             allTimeMatches,
             group.data?.activeSeason?.seasonSettings,
-            alltimePlayers
+            alltimePlayers,
+            'All Time'
         )
     );
 
@@ -155,7 +161,8 @@ const getScope = (
     profileId: string | undefined,
     matches: Match[],
     seasonSettings: SeasonSettings | undefined,
-    seasonPlayers: Player[]
+    seasonPlayers: Player[],
+    name: string
 ): ScopeInfo => {
     const sortedPlayers = seasonPlayers.sort(
         seasonSettings?.rankingAlgorithm === 'AVERAGE'
@@ -182,5 +189,7 @@ const getScope = (
             matches.length > 0
                 ? ((player?.points ?? 0) / matches.length).toFixed(1)
                 : '--',
+
+        name,
     };
 };
