@@ -147,7 +147,10 @@ export default function Page() {
                 }
                 isVisible={showInviteModal}
             />
-            <Swiper {...swiper}>
+            <Swiper
+                key={groupId} // rerender when switching groups so we remember which scope we're on
+                {...swiper}
+            >
                 {experiments.dailyLeaderboard && (
                     <ScrollView
                         style={{
@@ -370,20 +373,25 @@ export default function Page() {
                     }}
                 >
                     <LeaderboardScopePicker
+                        key={groupId} // rerender when switching groups so we remember which scope we're on
                         swiperProgress={swiper.swiperProgress}
                         options={[
                             { id: 'today', label: 'Today' },
                             { id: 'season', label: 'This Season' },
-                        ].concat(
-                            groupHasPastSeasons
-                                ? [{ id: 'all-time', label: 'All Time' }]
-                                : []
-                        )}
+                            groupHasPastSeasons && {
+                                id: 'all-time',
+                                label: 'All Time',
+                            },
+                        ]}
                         onChange={(scope) => {
+                            const optionIndex = [
+                                'today',
+                                'season',
+                                'all-time',
+                            ].indexOf(scope);
+
                             swiper.ref?.current?.scrollTo({
-                                index: ['today', 'season', 'all-time'].indexOf(
-                                    scope
-                                ),
+                                index: optionIndex,
                                 animated: true,
                             });
                         }}
