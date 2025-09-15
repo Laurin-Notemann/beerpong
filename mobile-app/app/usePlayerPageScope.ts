@@ -1,4 +1,5 @@
 import {
+    Player,
     useAllSeasonsQuery,
     useGroup,
     useSeasonSettings,
@@ -10,6 +11,8 @@ import {
 } from '@/api/propHooks/leaderboardPropHooks';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
+import { ScopeInfo } from '@/components/screens/Player';
+import { SeasonSettings } from '@/openapi/openapi';
 
 // TODO: additional seasons
 // TODO: minMatchesRequiredToBeRanked, placement, elo, points, rankingAlgorithm
@@ -17,8 +20,12 @@ import { eloAlgorithm } from '@/app/EloAlgorithm';
 export function usePlayerPageScope(playerId: string) {
     const { groupId, seasonId, group } = useGroup();
 
-    const { currentSeasonPlayers, rawCurrentSeasonPlayers } =
+    const { currentSeasonPlayers, alltimePlayers, dailyPlayers } =
         useLeaderboardProps(groupId, seasonId!);
+
+    const profileId = currentSeasonPlayers.find(
+        (i) => i.id === playerId
+    )?.profileId;
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -26,24 +33,18 @@ export function usePlayerPageScope(playerId: string) {
     const activeSeason = seasonsQuery.data?.data?.find(
         (i) => i.endDate == null
     );
-
-    const player = rawCurrentSeasonPlayers.find((i) => i.id === playerId);
-
-    const sortedPlayers = currentSeasonPlayers.sort(
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
-            ? byDescendingAveragePoints
-            : byDescendingElo
-    );
-
-    const placement = sortedPlayers.findIndex((i) => i.id === playerId) + 1;
-
-    const minMatchesRequiredToBeRanked = 1;
+    const playerIds =
+        seasonsQuery.data?.data?.flatMap((i) =>
+            i.players.filter((j) => j.profileId === profileId).map((i) => i.id)
+        ) ?? [];
 
     const currentSeasonMatches =
         activeSeason?.ruleMoves && activeSeason?.rawPlayers
             ? (activeSeason?.matches
                   .filter((i) =>
-                      i.teamMembers!.find((j) => j.playerId === playerId)
+                      i.teamMembers!.find((j) =>
+                          playerIds.includes(j.playerId!)
+                      )
                   )
                   .map(
                       matchDtoToMatch(
@@ -75,69 +76,111 @@ export function usePlayerPageScope(playerId: string) {
         i.ruleMoves && i.rawPlayers
             ? i.matches
                   .filter((i) =>
-                      i.teamMembers!.find((j) => j.playerId === playerId)
+                      i.teamMembers!.find((j) =>
+                          playerIds.includes(j.playerId!)
+                      )
                   )
                   .map(matchDtoToMatch(i.rawPlayers, i.ruleMoves))
             : []
     );
 
-    const currentSeason = {
-        minMatchesRequiredToBeRanked,
-        placement,
-        elo: player?.statistics?.elo ?? eloAlgorithm.params.startingElo,
-        matchesWon: getMatchesWon(playerId, currentSeasonMatches),
-        points: player?.statistics?.points ?? 0,
-        cups: getAllTimeCups(playerId, currentSeasonMatches),
-        matches: currentSeasonMatches,
-        rankingAlgorithm:
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-            'AVERAGE',
-    };
-    const today = {
-        minMatchesRequiredToBeRanked,
-        placement,
-        elo: player?.statistics?.elo ?? eloAlgorithm.params.startingElo,
-        matchesWon: getMatchesWon(playerId, todayMatches),
-        points: player?.statistics?.points ?? 0,
-        cups: getAllTimeCups(playerId, todayMatches),
-        matches: todayMatches,
-        rankingAlgorithm:
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-            'AVERAGE',
-    };
-    const allTime = {
-        minMatchesRequiredToBeRanked,
-        placement,
-        elo: player?.statistics?.elo ?? eloAlgorithm.params.startingElo,
-        matchesWon: getMatchesWon(playerId, allTimeMatches),
-        points: player?.statistics?.points ?? 0,
-        cups: getAllTimeCups(playerId, allTimeMatches),
-        matches: allTimeMatches,
-        rankingAlgorithm:
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-            'AVERAGE',
-    };
-    return { currentSeason, today, allTime };
+    const scopes = (seasonsQuery.data?.data ?? []).reduce<
+        Map<string, ScopeInfo>
+    >((obj, i) => {
+        const seasonMatches =
+            i?.ruleMoves && i?.rawPlayers
+                ? (i?.matches
+                      .filter((i) =>
+                          i.teamMembers!.find((j) =>
+                              playerIds.includes(j.playerId!)
+                          )
+                      )
+                      .map(matchDtoToMatch(i?.rawPlayers, i?.ruleMoves)) ?? [])
+                : [];
+
+        obj.set(
+            i.id!,
+            getScope(profileId, seasonMatches, i.seasonSettings, i.players)
+        );
+        return obj;
+    }, new Map());
+
+    scopes.set(
+        'today',
+        getScope(
+            profileId,
+            todayMatches,
+            group.data?.activeSeason?.seasonSettings,
+            dailyPlayers
+        )
+    );
+    if (scopes.get(seasonId!)) scopes.set('season', scopes.get(seasonId!)!);
+    scopes.set(
+        'all-time',
+        getScope(
+            profileId,
+            allTimeMatches,
+            group.data?.activeSeason?.seasonSettings,
+            alltimePlayers
+        )
+    );
+
+    return { scopes };
 }
 
-const getMatchesWon = (playerId: string, matches: Match[]) => {
+const getMatchesWon = (profileId: string | undefined, matches: Match[]) => {
     return matches.filter(
         (i) =>
             i.redTeam
                 .concat(i.blueTeam)
                 .find((j) => j.moves.some((k) => k.isFinish && k.count > 0))
                 ?.team ===
-            i.redTeam.concat(i.blueTeam).find((j) => j.id === playerId)?.team
+            i.redTeam.concat(i.blueTeam).find((j) => j.profileId === profileId)
+                ?.team
     ).length;
 };
-const getAllTimeCups = (playerId: string, matches: Match[]) => {
+const getAllTimeCups = (profileId: string | undefined, matches: Match[]) => {
     return matches.reduce((sum, i) => {
         const player = i.blueTeam
             .concat(i.redTeam)
-            .find((i) => i.id === playerId);
+            .find((i) => i.profileId === profileId);
 
         if (!player) return sum;
 
         return sum + player.moves.reduce((sum, i) => sum + i.count, 0);
     }, 0);
+};
+
+const getScope = (
+    profileId: string | undefined,
+    matches: Match[],
+    seasonSettings: SeasonSettings | undefined,
+    seasonPlayers: Player[]
+): ScopeInfo => {
+    const sortedPlayers = seasonPlayers.sort(
+        seasonSettings?.rankingAlgorithm === 'AVERAGE'
+            ? byDescendingAveragePoints
+            : byDescendingElo
+    );
+
+    const placement =
+        sortedPlayers.findIndex((i) => i.profileId === profileId) + 1;
+
+    const player = sortedPlayers.find((i) => i.profileId === profileId);
+
+    return {
+        minMatchesRequiredToBeRanked: seasonSettings?.minMatchesToQualify ?? 0,
+        placement,
+        elo: player?.elo ?? eloAlgorithm.params.startingElo,
+        matchesWon: getMatchesWon(profileId, matches),
+        points: player?.points ?? 0,
+        cups: getAllTimeCups(profileId, matches),
+        matches: matches,
+        rankingAlgorithm: seasonSettings?.rankingAlgorithm ?? 'AVERAGE',
+        isUnranked: matches.length < (seasonSettings?.minMatchesToQualify ?? 0),
+        averagePointsPerMatch:
+            matches.length > 0
+                ? ((player?.points ?? 0) / matches.length).toFixed(1)
+                : '--',
+    };
 };

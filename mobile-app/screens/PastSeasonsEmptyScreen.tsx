@@ -172,6 +172,7 @@ export interface SeasonCardProps {
     numMatches: number;
     minMatchesRequiredToBeRanked: number;
     rankingAlgorithm?: 'AVERAGE' | 'ELO';
+    onPlayerPress?: (playerId: string) => void;
 }
 export const SeasonCard: React.FC<SeasonCardProps> = ({
     season,
@@ -179,6 +180,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
     numMatches,
     minMatchesRequiredToBeRanked,
     rankingAlgorithm = 'AVERAGE',
+    onPlayerPress,
 }) => {
     return (
         <ThemedView
@@ -194,6 +196,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 season={{ ...season, numPlayers: players.length, numMatches }}
                 minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
                 rankingAlgorithm={rankingAlgorithm}
+                onPlayerPress={onPlayerPress}
             />
         </ThemedView>
     );

@@ -36,7 +36,7 @@ export default function Page() {
 
     const { groupId, seasonId } = useGroup();
 
-    const { rawCurrentSeasonPlayers } = useLeaderboardProps(groupId, seasonId!);
+    const { currentSeasonPlayers } = useLeaderboardProps(groupId, seasonId!);
 
     const deletePlayerMutation = useDeletePlayerMutation();
 
@@ -60,13 +60,13 @@ export default function Page() {
     const refresh = usePullToRefresh(() =>
         invalidatePlayers(groupId!, seasonId!)
     );
-    const { currentSeason, today, allTime } = usePlayerPageScope(id);
+    const { scopes } = usePlayerPageScope(id);
 
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
-    const player = rawCurrentSeasonPlayers.find((i) => i.id === id);
+    const player = currentSeasonPlayers.find((i) => i.id === id);
 
-    const playerName = player?.profile?.name || 'Unknown';
+    const playerName = player?.name || 'Unknown';
 
     async function onDelete() {
         if (!groupId || !seasonId) return;
@@ -85,7 +85,7 @@ export default function Page() {
         }
     }
 
-    const profileId = player?.profile?.id;
+    const profileId = player?.profileId;
 
     const isLoading = seasonsQuery.isLoading;
 
@@ -153,16 +153,15 @@ export default function Page() {
     return (
         <>
             <PlayerScreen
-                currentSeason={currentSeason}
-                today={today}
-                allTime={allTime}
+                scopes={scopes}
                 name={playerName}
                 isPending={isUploadingAvatar || deletePlayerMutation.isPending}
                 id={id}
+                profileId={profileId!}
                 hasPremium={false}
                 pastSeasons={activeSeasons.length}
                 onDelete={onDelete}
-                avatarUrl={player?.profile?.avatarAsset?.url}
+                avatarUrl={player?.avatarUrl}
                 onUploadAvatarPress={onUploadAvatarPress}
                 onDeleteAvatarPress={onDeleteAvatarPress}
                 refresh={refresh}

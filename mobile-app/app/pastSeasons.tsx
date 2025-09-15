@@ -5,6 +5,7 @@ import Carousel from 'react-native-reanimated-carousel';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { useNavStyles } from '@/app/navigation/navStyles';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import {
@@ -20,6 +21,8 @@ const { width, height } = Dimensions.get('window');
  */
 export default function Page() {
     const theme = useTheme();
+
+    const nav = useNavigation();
 
     const { groupId } = useGroup();
 
@@ -91,6 +94,12 @@ export default function Page() {
                                     rankingAlgorithm={
                                         season.item.seasonSettings
                                             ?.rankingAlgorithm
+                                    }
+                                    onPlayerPress={(id) =>
+                                        nav.navigate('player', {
+                                            id,
+                                            scope: season.item.id!,
+                                        })
                                     }
                                 />
                             </ScrollView>

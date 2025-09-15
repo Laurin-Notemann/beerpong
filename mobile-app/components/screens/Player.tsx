@@ -42,7 +42,7 @@ const SHOW_PAST_SEASONS = false;
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface ScopeInfo {
+export interface ScopeInfo {
     minMatchesRequiredToBeRanked: number;
     placement: number;
     matches: Match[];
@@ -51,11 +51,14 @@ interface ScopeInfo {
     cups: number;
     elo: number;
     rankingAlgorithm: 'AVERAGE' | 'ELO';
+    averagePointsPerMatch: string;
+    isUnranked: boolean;
 }
 
 export interface PlayerScreenProps {
     isPending: boolean;
     id: string;
+    profileId: string;
 
     name: string;
     avatarUrl?: string | null;
@@ -69,15 +72,14 @@ export interface PlayerScreenProps {
     onDeleteAvatarPress: () => void;
     refresh: RefreshProps;
 
-    today: ScopeInfo;
-    currentSeason: ScopeInfo;
-    allTime: ScopeInfo;
+    scopes: Map<string, ScopeInfo>;
 
     initialScope?: string;
 }
 export default function PlayerScreen({
     isPending,
     id,
+    profileId,
     name,
     avatarUrl,
     hasPremium = false,
@@ -88,7 +90,9 @@ export default function PlayerScreen({
     refresh,
     initialScope,
 
-    currentSeason: {
+    scopes,
+}: PlayerScreenProps) {
+    const {
         minMatchesRequiredToBeRanked,
         placement,
         matches,
@@ -97,10 +101,8 @@ export default function PlayerScreen({
         cups,
         elo,
         rankingAlgorithm,
-    },
-    today,
-    allTime,
-}: PlayerScreenProps) {
+    } = scopes.get(initialScope!)!;
+
     const theme = useTheme();
 
     const nav = useNavigation();
@@ -208,22 +210,13 @@ export default function PlayerScreen({
                                         onPress={() => setInspectAvatar(true)}
                                     >
                                         <PlayerPageHeadSection
+                                            {...scopes.get('today')!}
                                             avatarUrl={avatarUrl}
-                                            placement={placement}
                                             name={name}
-                                            elo={elo}
-                                            matchesWon={matchesWon}
-                                            points={points}
-                                            cups={cups}
-                                            isUnranked={isUnranked}
                                             editable={editable}
-                                            averagePointsPerMatch={
-                                                averagePointsPerMatch
-                                            }
                                             onUploadAvatarPress={
                                                 onUploadAvatarPress
                                             }
-                                            matches={matches}
                                             rankingAlgorithm={rankingAlgorithm}
                                         />
                                     </TouchableHighlight>
@@ -254,9 +247,9 @@ export default function PlayerScreen({
                                     </View>
                                 </>
                             }
-                            matches={today.matches}
+                            matches={scopes.get('today')!.matches}
                             refresh={refresh}
-                            forPlayer={{ id }}
+                            forPlayer={{ profileId }}
                             ListEmptyComponent={<ActivityIndicator />}
                         />
                         <MatchesList
@@ -278,22 +271,13 @@ export default function PlayerScreen({
                                         onPress={() => setInspectAvatar(true)}
                                     >
                                         <PlayerPageHeadSection
+                                            {...scopes.get('season')!}
                                             avatarUrl={avatarUrl}
-                                            placement={placement}
                                             name={name}
-                                            elo={elo}
-                                            matchesWon={matchesWon}
-                                            points={points}
-                                            cups={cups}
-                                            isUnranked={isUnranked}
                                             editable={editable}
-                                            averagePointsPerMatch={
-                                                averagePointsPerMatch
-                                            }
                                             onUploadAvatarPress={
                                                 onUploadAvatarPress
                                             }
-                                            matches={matches}
                                             rankingAlgorithm={rankingAlgorithm}
                                         />
                                     </TouchableHighlight>
@@ -324,9 +308,9 @@ export default function PlayerScreen({
                                     </View>
                                 </>
                             }
-                            matches={matches}
+                            matches={scopes.get('season')!.matches}
                             refresh={refresh}
-                            forPlayer={{ id }}
+                            forPlayer={{ profileId }}
                             ListEmptyComponent={<ActivityIndicator />}
                         />
                         {groupHasPastSeasons && (
@@ -352,22 +336,13 @@ export default function PlayerScreen({
                                             }
                                         >
                                             <PlayerPageHeadSection
+                                                {...scopes.get('all-time')!}
                                                 avatarUrl={avatarUrl}
-                                                placement={placement}
                                                 name={name}
-                                                elo={elo}
-                                                matchesWon={matchesWon}
-                                                points={points}
-                                                cups={cups}
-                                                isUnranked={isUnranked}
                                                 editable={editable}
-                                                averagePointsPerMatch={
-                                                    averagePointsPerMatch
-                                                }
                                                 onUploadAvatarPress={
                                                     onUploadAvatarPress
                                                 }
-                                                matches={matches}
                                                 rankingAlgorithm={
                                                     rankingAlgorithm
                                                 }
@@ -400,9 +375,9 @@ export default function PlayerScreen({
                                         </View>
                                     </>
                                 }
-                                matches={allTime.matches}
+                                matches={scopes.get('all-time')!.matches}
                                 refresh={refresh}
-                                forPlayer={{ id }}
+                                forPlayer={{ profileId }}
                                 ListEmptyComponent={<ActivityIndicator />}
                             />
                         )}
@@ -412,7 +387,7 @@ export default function PlayerScreen({
                         onMatchPress={(match) =>
                             nav.navigate('match', {
                                 id: match.id,
-                                scope: seasonId,
+                                scope: seasonId!,
                             })
                         }
                         style={{ paddingHorizontal: 0 }}
@@ -469,7 +444,7 @@ export default function PlayerScreen({
                         }
                         matches={matches}
                         refresh={refresh}
-                        forPlayer={{ id }}
+                        forPlayer={{ profileId }}
                     />
                 ))}
             {editable && (
