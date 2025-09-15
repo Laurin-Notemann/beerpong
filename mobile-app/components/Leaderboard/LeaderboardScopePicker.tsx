@@ -14,15 +14,17 @@ import { useTheme } from '@/theme';
 export interface LeaderboardScopePickerProps {
     swiperProgress: Animated.SharedValue<number>;
 
-    options: { id: string; label: string }[];
+    options: ({ id: string; label: string } | null | undefined | false)[];
 
     onChange: (value: string) => void;
 }
 export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     swiperProgress,
     onChange,
-    options,
+    options: optionsProp,
 }) => {
+    const options = optionsProp.filter((i) => i != null && i !== false);
+
     const sidePadding = 8;
 
     const containerRef = useRef<View>(null);
