@@ -85,7 +85,7 @@ export function PlayerPageHeadSection({
                 {name}
             </Text>
 
-            <PlayerStats player={player} />
+            {!editable && <PlayerStats player={player} />}
         </View>
     );
 }

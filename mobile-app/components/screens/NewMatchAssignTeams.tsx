@@ -232,76 +232,81 @@ export default function NewMatchAssignTeams({
                 paddingHorizontal: 16,
 
                 paddingBottom: insets.bottom + 24,
+
+                minHeight: '100%',
             }}
         >
-            <Heading
-                title={
-                    errorMessage ? (
-                        <Text
-                            color="negative"
-                            style={{
-                                fontSize: 16,
-                                fontWeight: 500,
+            {/* empty <View> bc otherwise the items are spaced apart  */}
+            <View>
+                <Heading
+                    title={
+                        errorMessage ? (
+                            <Text
+                                color="negative"
+                                style={{
+                                    fontSize: 16,
+                                    fontWeight: 500,
 
-                                marginBottom: 32,
-                            }}
-                        >
-                            {errorMessage}
-                        </Text>
-                    ) : undefined
-                }
-            />
-            {!isRandomTeamsMode && (
-                <>
-                    <MenuSection style={{ marginBottom: 20 }}>
-                        <MenuItem
-                            headIcon="dice-multiple-outline"
-                            title="Random Teams"
-                            tailIconType="next"
-                            onPress={onRandomTeamsPress}
-                        />
-                    </MenuSection>
-                    <MenuSection style={{ marginBottom: 20 }}>
-                        <MenuItem
-                            headIcon="account-plus-outline"
-                            title="Create new Player"
-                            tailIconType="next"
-                            onPress={() => nav.navigate('createNewPlayer')}
-                        />
-                    </MenuSection>
-                </>
-            )}
-            <MenuSection>
-                {players.length === 0 && (
-                    <View
-                        style={{
-                            height: 62,
-                            width: '100%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <Text
-                            color="secondary"
-                            style={{
-                                textAlign: 'center',
-                            }}
-                        >
-                            Add players to create a match
-                        </Text>
-                    </View>
+                                    marginBottom: 32,
+                                }}
+                            >
+                                {errorMessage}
+                            </Text>
+                        ) : undefined
+                    }
+                />
+                {!isRandomTeamsMode && (
+                    <>
+                        <MenuSection style={{ marginBottom: 20 }}>
+                            <MenuItem
+                                headIcon="dice-multiple-outline"
+                                title="Random Teams"
+                                tailIconType="next"
+                                onPress={onRandomTeamsPress}
+                            />
+                        </MenuSection>
+                        <MenuSection style={{ marginBottom: 20 }}>
+                            <MenuItem
+                                headIcon="account-plus-outline"
+                                title="Create new Player"
+                                tailIconType="next"
+                                onPress={() => nav.navigate('createNewPlayer')}
+                            />
+                        </MenuSection>
+                    </>
                 )}
-                {players.map((i, idx) => (
-                    <PlayerItem
-                        randomTeamsMode={randomTeamsMode}
-                        onRandomTeamSelect={onRandomTeamSelect}
-                        hasTutorial={!hasTappedToAssignPlayers && idx === 1}
-                        key={idx}
-                        player={i}
-                        onSelectTeam={(team) => setTeam(i.id, team)}
-                    />
-                ))}
-            </MenuSection>
+                <MenuSection>
+                    {players.length === 0 && (
+                        <View
+                            style={{
+                                height: 62,
+                                width: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Text
+                                color="secondary"
+                                style={{
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Add players to create a match
+                            </Text>
+                        </View>
+                    )}
+                    {players.map((i, idx) => (
+                        <PlayerItem
+                            randomTeamsMode={randomTeamsMode}
+                            onRandomTeamSelect={onRandomTeamSelect}
+                            hasTutorial={!hasTappedToAssignPlayers && idx === 1}
+                            key={idx}
+                            player={i}
+                            onSelectTeam={(team) => setTeam(i.id, team)}
+                        />
+                    ))}
+                </MenuSection>
+            </View>
         </ScrollView>
     );
 }

@@ -5,10 +5,12 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 import { HighestChip, LowestChip } from '@/components/Chip';
 import {
+    RankingAlgorithm,
     rankingAlgorithms,
     RankingPlayer,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
+import { useScopePicker } from '@/zustand/scopePickerStore';
 
 export function Stat({
     value,
@@ -63,6 +65,8 @@ export interface PlayerStatsProps {
 export default function PlayerStats({ player }: PlayerStatsProps) {
     const router = useRouter();
 
+    const scopePicker = useScopePicker();
+
     return (
         <ScrollView
             horizontal
@@ -91,11 +95,11 @@ export default function PlayerStats({ player }: PlayerStatsProps) {
                             value={algo.getDisplayValue(player, 'stat')}
                             // isLowest={env.isDev}
                             onPress={() => {
+                                scopePicker.setRankingAlgorithm(
+                                    id as RankingAlgorithm
+                                );
                                 router.dismissAll();
-                                router.push({
-                                    pathname: '/',
-                                    params: { sortBy: id },
-                                });
+                                router.push({ pathname: '/' });
                             }}
                         />
                     ))}

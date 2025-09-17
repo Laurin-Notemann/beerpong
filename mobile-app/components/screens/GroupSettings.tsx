@@ -153,13 +153,6 @@ export default function GroupSettingsScreen({
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem
-                            title="Past Seasons"
-                            headIcon="cards"
-                            tailIconType="next"
-                            tailContent={pastSeasons}
-                            onPress={() => nav.navigate('pastSeasons')}
-                        />
-                        <MenuItem
                             title="Start new Season"
                             headIcon="cached"
                             tailIconType="next"

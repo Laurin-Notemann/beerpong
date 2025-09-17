@@ -3,6 +3,7 @@ import { ScrollView, Text, View, ViewProps } from 'react-native';
 import { useInsets } from '@/app/useInsets';
 import Leaderboard from '@/components/Leaderboard';
 import { ThemedView } from '@/components/ThemedView';
+import { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { mockSeasons } from '@/screens/mockSeasons';
 import { useTheme } from '@/theme';
 
@@ -171,8 +172,10 @@ export interface SeasonCardProps {
     players: any[];
     numMatches: number;
     minMatchesRequiredToBeRanked: number;
-    rankingAlgorithm?: 'AVERAGE' | 'ELO';
+    rankingAlgorithm?: RankingAlgorithm;
     onPlayerPress?: (playerId: string) => void;
+
+    style?: any;
 }
 export const SeasonCard: React.FC<SeasonCardProps> = ({
     season,
@@ -181,6 +184,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
     minMatchesRequiredToBeRanked,
     rankingAlgorithm = 'AVERAGE',
     onPlayerPress,
+    style,
 }) => {
     return (
         <ThemedView
@@ -188,6 +192,8 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 flex: 1,
 
                 paddingBottom: 32,
+
+                ...(style ?? {}),
             }}
         >
             <Leaderboard

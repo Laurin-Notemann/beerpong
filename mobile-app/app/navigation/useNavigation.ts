@@ -3,7 +3,7 @@ import { useNavigation as useRawNavigation } from 'expo-router';
 
 export type RootStackParamList = {
     cropAvatar: { uri: string; profileId: string };
-    index: { sortBy?: string };
+    index: undefined;
     formations: undefined;
     createGroupSetName: undefined;
     createGroupSetGame: undefined;
