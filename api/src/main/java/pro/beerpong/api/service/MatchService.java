@@ -321,27 +321,6 @@ public class MatchService {
     }
 
     @Transactional
-    public TeamDto saveMatchPhoto(TeamDto team) {
-        String oldWallpaperAssetId = null;
-
-        if (team.getPhotoAsset() != null) {
-            oldWallpaperAssetId = team.getPhotoAsset().getId();
-        }
-
-        var assetMetadataDto = assetService.storeAsset(AssetType.TEAM_PHOTO);
-
-        team.setPhotoAsset(assetMetadataDto);
-
-        teamRepository.save(teamMapper.teamDtoToTeam(team));
-
-        if (oldWallpaperAssetId != null) {
-            assetService.deleteAsset(oldWallpaperAssetId);
-        }
-
-        return team;
-    }
-
-    @Transactional
     public TeamDto deleteMatchPhoto(TeamDto team) {
         if (team.getPhotoAsset() != null) {
             assetService.deleteAsset(team.getPhotoAsset().getId());
@@ -370,18 +349,6 @@ public class MatchService {
         if (oldWallpaperAssetId != null) {
             assetService.deleteAsset(oldWallpaperAssetId);
         }
-
-        return team;
-    }
-
-    @Transactional
-    public TeamDto deleteMatchPhoto(TeamDto team) {
-        if (team.getPhotoAsset() != null) {
-            assetService.deleteAsset(team.getPhotoAsset().getId());
-            team.setPhotoAsset(null);
-        }
-
-        teamRepository.save(teamMapper.teamDtoToTeam(team));
 
         return team;
     }
