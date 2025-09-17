@@ -6,6 +6,8 @@ import Carousel, {
     TCarouselProps,
 } from 'react-native-reanimated-carousel';
 
+import { useTheme } from '@/theme';
+
 export interface SwiperProps
     extends Omit<
         TCarouselProps,
@@ -18,6 +20,8 @@ export interface SwiperProps
     onPageChange?: (idx: number) => void;
 
     swiperProgress: SharedValue<number>;
+
+    withPeek?: boolean;
 }
 
 /**
@@ -26,7 +30,17 @@ export interface SwiperProps
  * - peek
  */
 export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
-    ({ children, enabled, onPageChange, swiperProgress, ...rest }, ref) => {
+    (
+        {
+            children,
+            enabled,
+            onPageChange,
+            swiperProgress,
+            withPeek = false,
+            ...rest
+        },
+        ref
+    ) => {
         const pages = Array.isArray(children) ? children : [children];
 
         const cleanPages = pages.filter((i) => !!i) as JSX.Element[];
@@ -36,6 +50,8 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
         const [containerWidth, setContainerWidth] = useState(
             Dimensions.get('window').width
         );
+
+        const theme = useTheme();
 
         return (
             <View
@@ -55,7 +71,14 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
                     }}
                     onSnapToItem={onPageChange}
                     loop={false}
-                    width={containerWidth}
+                    width={
+                        withPeek
+                            ? containerWidth -
+                              theme.carousel.peekGap -
+                              theme.carousel.peekSize * 2
+                            : containerWidth
+                    }
+                    style={{ width: containerWidth }}
                     enabled={enabled}
                     data={cleanPages}
                     renderItem={(item) => item.item}
@@ -83,6 +106,15 @@ export function useSwiper(options?: { initialPage?: number | null }) {
         swiperProgress,
         ref,
         defaultIndex: initialPage,
+    };
+}
+
+export function useControlledSwiper(progress: SharedValue<number>) {
+    const ref = useRef<ICarouselInstance>(null);
+
+    return {
+        swiperProgress: progress,
+        ref,
     };
 }
 

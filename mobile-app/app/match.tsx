@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
     useDeleteMatchMutation,
@@ -22,6 +23,7 @@ import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
+import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -53,7 +55,7 @@ export default function Page() {
         seasonId: string;
     }>();
 
-    // const isCurrentSeason = useLocalSearchParams().scope === seasonId;
+    const isCurrentSeason = useLocalSearchParams().scope === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -266,26 +268,27 @@ export default function Page() {
                     ...navStyles,
                     title: '',
                     headerBackTitleVisible: false,
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={isEditing && !matchDraft.isDirty}
-                            isLoading={
-                                updateMatchMutation.isPending ||
-                                deleteMatchMutation.isPending
-                            }
-                            onPress={async () => {
-                                if (!isEditing) {
-                                    setIsEditing(true);
-                                    return;
+                    headerRight: () =>
+                        isCurrentSeason ? (
+                            <HeaderItem
+                                disabled={isEditing && !matchDraft.isDirty}
+                                isLoading={
+                                    updateMatchMutation.isPending ||
+                                    deleteMatchMutation.isPending
                                 }
-                                if (matchDraft.isDirty) {
-                                    await updateMatch();
-                                }
-                            }}
-                        >
-                            {isEditing ? 'Save' : 'Edit'}
-                        </HeaderItem>
-                    ),
+                                onPress={async () => {
+                                    if (!isEditing) {
+                                        setIsEditing(true);
+                                        return;
+                                    }
+                                    if (matchDraft.isDirty) {
+                                        await updateMatch();
+                                    }
+                                }}
+                            >
+                                {isEditing ? 'Save' : 'Edit'}
+                            </HeaderItem>
+                        ) : undefined,
                     headerLeft: isEditing
                         ? () => (
                               <HeaderItem
@@ -389,6 +392,24 @@ export default function Page() {
                     </MenuSection>
                 )}
             </ScrollView>
+            {!isEditing && !isCurrentSeason && (
+                <SafeAreaView
+                    style={{
+                        position: 'absolute',
+
+                        bottom: insets.bottom + 4,
+
+                        width: '100%',
+                    }}
+                >
+                    <LeaderboardScopePicker
+                        onlyShowSeason={seasonId}
+                        isPastSeason
+                        hasPastSeasonsButton={false}
+                        hasSortButton={false}
+                    />
+                </SafeAreaView>
+            )}
         </>
     );
 }

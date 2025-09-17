@@ -25,6 +25,7 @@ import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/theme';
 import { LoggingProvider } from '@/utils/useLogging';
+import { SwiperProgressProvider } from '@/zustand/scopePickerStore';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
 Sentry.init(env.sentry);
@@ -105,25 +106,27 @@ export default function RootLayout() {
             <LoggingProvider>
                 <ApiProvider>
                     <ThemeProvider value={appTheme}>
-                        <PortalProvider>
-                            <RootSiblingParent>
-                                <StatusBar barStyle={theme.barStyle} />
-                                <Drawer.Navigator
-                                    screenOptions={{
-                                        drawerStyle: {
-                                            width: 256,
-                                        },
-                                        headerShown: false,
-                                    }}
-                                    drawerContent={Sidebar}
-                                >
-                                    <Drawer.Screen
-                                        name="static/aboutPremium"
-                                        component={Everything}
-                                    />
-                                </Drawer.Navigator>
-                            </RootSiblingParent>
-                        </PortalProvider>
+                        <SwiperProgressProvider>
+                            <PortalProvider>
+                                <RootSiblingParent>
+                                    <StatusBar barStyle={theme.barStyle} />
+                                    <Drawer.Navigator
+                                        screenOptions={{
+                                            drawerStyle: {
+                                                width: 256,
+                                            },
+                                            headerShown: false,
+                                        }}
+                                        drawerContent={Sidebar}
+                                    >
+                                        <Drawer.Screen
+                                            name="static/aboutPremium"
+                                            component={Everything}
+                                        />
+                                    </Drawer.Navigator>
+                                </RootSiblingParent>
+                            </PortalProvider>
+                        </SwiperProgressProvider>
                     </ThemeProvider>
                 </ApiProvider>
             </LoggingProvider>
