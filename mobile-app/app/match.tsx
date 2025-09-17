@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
     useDeleteMatchMutation,
@@ -22,6 +23,7 @@ import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import { HeaderItem } from '@/components/HeaderItem';
+import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -46,13 +48,18 @@ export default function Page() {
 
     const [isEditing, setIsEditing] = useState(false);
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, group } = useGroup();
+
+    const { id, seasonId } = useLocalSearchParams<{
+        id: string;
+        seasonId: string;
+    }>();
+
+    const isCurrentSeason = useLocalSearchParams().scope === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
     const profiles = playersQuery.data?.data ?? [];
-
-    const { id } = useLocalSearchParams<{ id: string }>();
 
     const matchQuery = useMatchQuery(groupId, seasonId, id);
 
@@ -93,7 +100,7 @@ export default function Page() {
         const profile = profiles.find((j) => i.playerId === j.id);
 
         if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member');
+            ConsoleLogger.error('failed to get profile for team member'); // TODO: this happens sometimes for a split second
         }
 
         const ownTeam = players.filter((j) => j.team === i.team);
@@ -121,6 +128,7 @@ export default function Page() {
         return {
             id: i.playerId,
             team: i.team,
+            profileId: profile?.profile?.id!,
             avatarUrl: profile?.profile?.avatarAsset?.url,
             name: profile?.profile?.name || 'Unknown',
             points: pointsThisMatch,
@@ -166,7 +174,7 @@ export default function Page() {
                 seasonId,
                 id,
             });
-            showSuccessToast('Deleted match.');
+            showSuccessToast('Match deleted.');
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to delete match:', err);
@@ -258,27 +266,29 @@ export default function Page() {
             <Stack.Screen
                 options={{
                     ...navStyles,
+                    title: '',
                     headerBackTitleVisible: false,
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={isEditing && !matchDraft.isDirty}
-                            isLoading={
-                                updateMatchMutation.isPending ||
-                                deleteMatchMutation.isPending
-                            }
-                            onPress={async () => {
-                                if (!isEditing) {
-                                    setIsEditing(true);
-                                    return;
+                    headerRight: () =>
+                        isCurrentSeason ? (
+                            <HeaderItem
+                                disabled={isEditing && !matchDraft.isDirty}
+                                isLoading={
+                                    updateMatchMutation.isPending ||
+                                    deleteMatchMutation.isPending
                                 }
-                                if (matchDraft.isDirty) {
-                                    await updateMatch();
-                                }
-                            }}
-                        >
-                            {isEditing ? 'Save' : 'Edit'}
-                        </HeaderItem>
-                    ),
+                                onPress={async () => {
+                                    if (!isEditing) {
+                                        setIsEditing(true);
+                                        return;
+                                    }
+                                    if (matchDraft.isDirty) {
+                                        await updateMatch();
+                                    }
+                                }}
+                            >
+                                {isEditing ? 'Save' : 'Edit'}
+                            </HeaderItem>
+                        ) : undefined,
                     headerLeft: isEditing
                         ? () => (
                               <HeaderItem
@@ -330,7 +340,10 @@ export default function Page() {
                                 pageIdx,
                             });
                         } else {
-                            nav.navigate('player', player);
+                            nav.navigate('player', {
+                                id: player.id!,
+                                scope: seasonId,
+                            });
                         }
                     }}
                     editable={isEditing}
@@ -379,6 +392,24 @@ export default function Page() {
                     </MenuSection>
                 )}
             </ScrollView>
+            {!isEditing && !isCurrentSeason && (
+                <SafeAreaView
+                    style={{
+                        position: 'absolute',
+
+                        bottom: insets.bottom + 4,
+
+                        width: '100%',
+                    }}
+                >
+                    <LeaderboardScopePicker
+                        onlyShowSeason={seasonId}
+                        isPastSeason
+                        hasPastSeasonsButton={false}
+                        hasSortButton={false}
+                    />
+                </SafeAreaView>
+            )}
         </>
     );
 }

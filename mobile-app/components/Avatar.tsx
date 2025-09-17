@@ -61,6 +61,8 @@ export interface AvatarProps {
     placement?: number;
     isUnranked?: boolean;
 
+    invisibleSpacer?: boolean;
+
     onPress?: () => void;
 }
 export default function Avatar({
@@ -74,9 +76,17 @@ export default function Avatar({
     placement,
     isUnranked = false,
 
+    invisibleSpacer = false,
+
     onPress,
 }: AvatarProps) {
     const theme = useTheme();
+
+    if (invisibleSpacer)
+        return (
+            <View style={{ opacity: 0, width: size, height: size, ...style }} />
+        );
+
     return (
         <Pressable
             style={{
@@ -156,7 +166,7 @@ export default function Avatar({
                             bottom: borderColor ? 2 : 0,
                         }}
                     >
-                        {content || name?.[0] || (
+                        {content || name?.at(0) || (
                             <Icon
                                 color={theme.avatar.text}
                                 size={size / 1.6}

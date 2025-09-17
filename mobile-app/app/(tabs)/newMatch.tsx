@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -46,29 +47,40 @@ function getRandomPlayers(ids: string[]) {
 }
 
 /**
- * whether the teams are equal. also true if teams are equal with switched colors, except for if there are only two players.
+ * whether the teams are equal (order-insensitive).
+ * also true if teams are equal with switched colors, except when there are only two players total (1v1).
  */
 const areTeamsEqual = (
     teams1: { red: string[]; blue: string[] },
     teams2: { red: string[]; blue: string[] }
 ) => {
+    const sameMembers = (a: string[], b: string[]) => {
+        if (a.length !== b.length) return false;
+        const as = [...a].sort();
+        const bs = [...b].sort();
+        for (let i = 0; i < as.length; i++) if (as[i] !== bs[i]) return false;
+        return true;
+    };
+
     const isSame =
-        teams1.red.join(':') === teams2.red.join(':') &&
-        teams1.blue.join(':') === teams2.blue.join(':');
-
+        sameMembers(teams1.red, teams2.red) &&
+        sameMembers(teams1.blue, teams2.blue);
     const isSameWithSwitchedColors =
-        teams1.blue.join(':') === teams2.red.join(':') &&
-        teams1.red.join(':') === teams2.blue.join(':');
+        sameMembers(teams1.blue, teams2.red) &&
+        sameMembers(teams1.red, teams2.blue);
 
-    const anythingButColorSwitchPossible =
-        teams1.red.length + teams2.blue.length > 2;
+    // if total players is 2 (1v1), allow color switch to count as different
+    const totalPlayers = teams1.red.length + teams1.blue.length;
+    const anythingButColorSwitchPossible = totalPlayers > 2;
 
-    return (
-        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible)
-    );
+    const result =
+        isSame || (isSameWithSwitchedColors && anythingButColorSwitchPossible);
+
+    return result;
 };
 
 export default function NewMatchScreen() {
+    const router = useRouter();
     const { beerpongProMode } = useLocalSettings();
 
     const scrollX = useSharedValue(0);
@@ -210,7 +222,9 @@ export default function NewMatchScreen() {
             });
             matchDraft.actions.clear();
             showSuccessToast('Created match.');
-            nav.navigate('index');
+
+            router.dismissAll();
+            router.replace('/');
             swiperRef.current?.scrollBy(-1);
             carouselRef.current?.prev();
         } catch (err) {
@@ -276,8 +290,8 @@ export default function NewMatchScreen() {
         }
 
         matchDraft.actions.setTeams(
-            newTeams.blue.map((id) => ({ id })),
-            newTeams.red.map((id) => ({ id }))
+            newTeams.red.map((id) => ({ id })),
+            newTeams.blue.map((id) => ({ id }))
         );
         triggerHapticBump('toast:success');
 

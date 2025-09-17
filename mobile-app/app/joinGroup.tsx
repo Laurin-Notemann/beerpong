@@ -1,16 +1,15 @@
 import { AxiosError } from 'axios';
+import { useRouter } from 'expo-router';
 import React from 'react';
 
 import { useJoinGroupMutation } from '@/api/calls/groupHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import JoinGroup from '@/components/screens/JoinGroup';
 import { showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
-    const nav = useNavigation();
-
+    const router = useRouter();
     const joinGroupMutation = useJoinGroupMutation();
 
     const { addGroup, selectGroup } = useGroupStore();
@@ -23,9 +22,9 @@ export default function Page() {
                 addGroup(data.data.id);
                 selectGroup(data.data.id);
 
-                nav.navigate('index');
-
                 showSuccessToast(`You joined "${data.data.name}"`);
+                router.dismissAll();
+                router.replace('/');
             }
         } catch (err) {
             ConsoleLogger.error('Error joining group:', err);

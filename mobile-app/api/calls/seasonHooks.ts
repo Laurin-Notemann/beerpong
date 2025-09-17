@@ -5,7 +5,14 @@ import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { Paths, PlayerDto, SeasonSettings } from '@/openapi/openapi';
+import {
+    MatchDto,
+    Paths,
+    PlayerDto,
+    RuleMoveDto,
+    SeasonDto,
+    SeasonSettings,
+} from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export const useSeasonQuery = (
@@ -36,7 +43,18 @@ export const useSeasonQuery = (
 export const useAllSeasonsQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetAllSeasons.Responses.$200 | null>({
+    return useQuery<
+        | (Omit<Paths.GetAllSeasons.Responses.$200, 'data'> & {
+              data?: (SeasonDto & {
+                  numMatches: number;
+                  players: Player[];
+                  rawPlayers: PlayerDto[];
+                  matches: MatchDto[];
+                  ruleMoves: RuleMoveDto[] | undefined;
+              })[];
+          })
+        | null
+    >({
         queryKey: [QK.group, groupId, QK.seasons],
         queryFn: async () => {
             if (!groupId) {
@@ -55,6 +73,13 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                         seasonId: season.id!,
                     });
 
+                    const ruleMoves = await (
+                        await api
+                    ).getAllRuleMoves({
+                        groupId,
+                        seasonId: season.id!,
+                    });
+
                     const leaderboard = await (
                         await api
                     ).getLeaderboard({
@@ -69,6 +94,9 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                         ...season,
                         numMatches: matches.data.data?.length ?? 0,
                         players: players.map(toPlayer),
+                        rawPlayers: players,
+                        matches: matches.data.data ?? [],
+                        ruleMoves: ruleMoves.data.data,
                     };
                 })
             );
@@ -187,6 +215,8 @@ export interface Player {
     matchesWon: number;
     elo: number;
     avatarUrl?: string | null;
+    profileId: string;
+    cups: number;
 }
 
 export const toPlayer = (i: PlayerDto): Player => {
@@ -198,5 +228,7 @@ export const toPlayer = (i: PlayerDto): Player => {
         matchesWon: i.statistics?.wins!,
         name: i.profile?.name!,
         avatarUrl: i!.profile?.avatarAsset?.url,
+        profileId: i!.profile?.id!,
+        cups: i.statistics?.moves ?? 0,
     };
 };

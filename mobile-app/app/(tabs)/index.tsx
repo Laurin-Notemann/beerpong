@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View } from 'react-native';
+import { Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native';
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -12,20 +13,21 @@ import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { PastSeasonsSwiper } from '@/app/pastSeasons';
 import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
+import { HeaderTitle } from '@/components/HeaderItem';
 import Leaderboard from '@/components/Leaderboard';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import PillButton from '@/components/PillButton';
 import { RefreshControl } from '@/components/RefreshControl';
-import { Swiper, useSwiper } from '@/components/Swiper';
+import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
-import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { formatGroupCode } from '@/utils/groupCode';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
+import { useScopePicker } from '@/zustand/scopePickerStore';
 
 const swiperAtTop = false;
 
@@ -42,17 +44,29 @@ export default function Page() {
         alltimeLeaderboard,
     } = useLeaderboardProps(groupId, seasonId ?? null);
 
-    const [showSortModal, setShowSortModal] = useState(false);
     const [showInviteModal, setShowInviteModal] = useState(false);
 
-    const [sortingAlgorithm, setSortingAlgorithm] =
-        useState<RankingAlgorithm>('ELO');
+    const groupRankingAlgorithm =
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
 
-    useEffect(() => {
-        setSortingAlgorithm(
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm!
-        );
-    }, [group.data?.activeSeason?.seasonSettings?.rankingAlgorithm]);
+    const scopePicker = useScopePicker();
+
+    const leaderboardSwiper = useControlledSwiper(
+        scopePicker.leaderboardSwiperProgress
+    );
+    const pastSeasonsSwiper = useControlledSwiper(
+        scopePicker.pastSeasonsSwiperProgress
+    );
+
+    // keep shared progress in sync with persisted page index
+    React.useEffect(() => {
+        leaderboardSwiper.swiperProgress.value =
+            scopePicker.leaderboardPageIndex ?? 0;
+    }, [scopePicker.leaderboardPageIndex]);
+    React.useEffect(() => {
+        pastSeasonsSwiper.swiperProgress.value =
+            scopePicker.pastSeasonsPageIndex ?? 0;
+    }, [scopePicker.pastSeasonsPageIndex]);
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -60,26 +74,38 @@ export default function Page() {
         invalidatePlayers(groupId!, seasonId!)
     );
 
-    const experiments = useLocalSettings();
-
     const insets = useInsets(true, true);
-
-    const swiper = useSwiper({
-        initialPage: experiments.dailyLeaderboard ? 1 : 0,
-    });
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 
     return (
         <GestureHandlerRootView>
+            <Stack.Screen
+                options={{
+                    headerTitle: scopePicker.isPastSeasonsMode
+                        ? () => <HeaderTitle title="Past Seasons" />
+                        : () => (
+                              <HeaderTitle
+                                  title={group.data?.name || 'Unknown'}
+                              />
+                          ),
+
+                    headerRight: () => (
+                        <PillButton
+                            label="Invite"
+                            iconName="share-outline"
+                            onPress={() => setShowInviteModal(true)}
+                        />
+                    ),
+                }}
+            />
             {/* <Stack.Screen
                 options={{
                     headerTitle: () => (
@@ -92,39 +118,7 @@ export default function Page() {
                 }}
             /> */}
             <AppBackground />
-            <ConfirmationModal
-                onClose={() => setShowSortModal(false)}
-                title="Sort Players By"
-                actions={
-                    [
-                        {
-                            title: 'Elo (Group Default)',
 
-                            onPress: () => {
-                                setSortingAlgorithm('ELO');
-                                setShowSortModal(false);
-                            },
-                        },
-                        {
-                            title: 'Average Points Scored',
-
-                            onPress: () => {
-                                setSortingAlgorithm('AVERAGE');
-                                setShowSortModal(false);
-                            },
-                        },
-                        {
-                            title: 'Matches Won',
-
-                            onPress: () => {
-                                setSortingAlgorithm('MATCHES_WON');
-                                setShowSortModal(false);
-                            },
-                        },
-                    ] as const
-                }
-                isVisible={showSortModal}
-            />
             <ConfirmationModal
                 onClose={() => setShowInviteModal(false)}
                 title="Invite Friends to this Group"
@@ -147,11 +141,16 @@ export default function Page() {
                 }
                 isVisible={showInviteModal}
             />
-            <Swiper
-                key={groupId} // rerender when switching groups so we remember which scope we're on
-                {...swiper}
-            >
-                {experiments.dailyLeaderboard && (
+            {!scopePicker.isPastSeasonsMode && (
+                <Swiper
+                    {...leaderboardSwiper}
+                    ref={scopePicker.leaderboardSwiperRef}
+                    defaultIndex={scopePicker.leaderboardPageIndex ?? 0}
+                    onPageChange={(idx) =>
+                        scopePicker.setLeaderboardPageIndex(idx)
+                    }
+                    key={groupId + ':' + seasonId}
+                >
                     <ScrollView
                         style={{
                             flex: 1,
@@ -169,34 +168,17 @@ export default function Page() {
                             {...dailyLeaderboard}
                             isCurrentSeason
                         />
-                        {experiments.eloAlgorithm && (
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    gap: 8,
-                                    marginTop: 16,
-                                }}
-                            >
-                                <PillButton
-                                    label="Sort"
-                                    iconName="swap-vertical"
-                                    onPress={() => setShowSortModal(true)}
-                                />
-                                <PillButton
-                                    label="Invite"
-                                    iconName="share-outline"
-                                    onPress={() => setShowInviteModal(true)}
-                                />
-                            </View>
-                        )}
                         <Leaderboard
-                            rankingAlgorithm={sortingAlgorithm}
+                            rankingAlgorithm={
+                                scopePicker.rankingAlgorithm ??
+                                groupRankingAlgorithm
+                            }
                             ListEmptyComponent={
                                 <LeaderboardEmptyComponent message="No matches played yet today." />
                             }
                             players={dailyPlayers}
                             onPlayerPress={(id) =>
-                                nav.navigate('player', { id })
+                                nav.navigate('player', { id, scope: 'today' })
                             }
                             minMatchesRequiredToBeRanked={
                                 group.data?.activeSeason?.seasonSettings
@@ -223,71 +205,6 @@ export default function Page() {
                             </Text>
                         </Text>
                     </ScrollView>
-                )}
-                <ScrollView
-                    style={{
-                        flex: 1,
-                    }}
-                    contentContainerStyle={{
-                        alignItems: 'center',
-
-                        paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                        paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
-                    }}
-                    refreshControl={<RefreshControl {...refresh} />}
-                >
-                    <LeaderBoardSeasonInfo
-                        {...currentSeasonLeaderboard}
-                        isCurrentSeason
-                    />
-                    {experiments.eloAlgorithm && (
-                        <View
-                            style={{
-                                flexDirection: 'row',
-                                gap: 8,
-                                marginTop: 16,
-                            }}
-                        >
-                            <PillButton
-                                label="Sort"
-                                iconName="swap-vertical"
-                                onPress={() => setShowSortModal(true)}
-                            />
-                            <PillButton
-                                label="Invite"
-                                iconName="share-outline"
-                                onPress={() => setShowInviteModal(true)}
-                            />
-                        </View>
-                    )}
-                    <Leaderboard
-                        rankingAlgorithm={sortingAlgorithm}
-                        ListEmptyComponent={
-                            <LeaderboardEmptyComponent message="No matches played yet this season." />
-                        }
-                        players={currentSeasonPlayers}
-                        onPlayerPress={(id) => nav.navigate('player', { id })}
-                        minMatchesRequiredToBeRanked={
-                            group.data?.activeSeason?.seasonSettings
-                                ?.minMatchesToQualify ?? 1
-                        }
-                    />
-                    <Text
-                        color="secondary"
-                        style={{
-                            fontSize: 12,
-                            marginTop: 32,
-                            marginBottom: 32,
-                        }}
-                    >
-                        {group.data?.activeSeason?.startDate
-                            ? `Season started ${env.format.date.seasonStartAndEnd(
-                                  dayjs(group.data.activeSeason.startDate)
-                              )}`
-                            : null}
-                    </Text>
-                </ScrollView>
-                {experiments.dailyLeaderboard && groupHasPastSeasons && (
                     <ScrollView
                         style={{
                             flex: 1,
@@ -302,37 +219,20 @@ export default function Page() {
                         refreshControl={<RefreshControl {...refresh} />}
                     >
                         <LeaderBoardSeasonInfo
-                            {...alltimeLeaderboard}
+                            {...currentSeasonLeaderboard}
                             isCurrentSeason
                         />
-                        {experiments.eloAlgorithm && (
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    gap: 8,
-                                    marginTop: 16,
-                                }}
-                            >
-                                <PillButton
-                                    label="Sort"
-                                    iconName="swap-vertical"
-                                    onPress={() => setShowSortModal(true)}
-                                />
-                                <PillButton
-                                    label="Invite"
-                                    iconName="share-outline"
-                                    onPress={() => setShowInviteModal(true)}
-                                />
-                            </View>
-                        )}
                         <Leaderboard
-                            rankingAlgorithm={sortingAlgorithm}
-                            ListEmptyComponent={
-                                <LeaderboardEmptyComponent message="No matches played yet in this group." />
+                            rankingAlgorithm={
+                                scopePicker.rankingAlgorithm ??
+                                groupRankingAlgorithm
                             }
-                            players={alltimePlayers}
+                            ListEmptyComponent={
+                                <LeaderboardEmptyComponent message="No matches played yet this season." />
+                            }
+                            players={currentSeasonPlayers}
                             onPlayerPress={(id) =>
-                                nav.navigate('player', { id })
+                                nav.navigate('player', { id, scope: seasonId! })
                             }
                             minMatchesRequiredToBeRanked={
                                 group.data?.activeSeason?.seasonSettings
@@ -348,56 +248,97 @@ export default function Page() {
                             }}
                         >
                             {group.data?.activeSeason?.startDate
-                                ? `Group created ${env.format.date.seasonStartAndEnd(
-                                      dayjs(pastSeasons[0].startDate)
+                                ? `Season started ${env.format.date.seasonStartAndEnd(
+                                      dayjs(group.data.activeSeason.startDate)
                                   )}`
                                 : null}
                         </Text>
                     </ScrollView>
-                )}
-            </Swiper>
+                    {groupHasPastSeasons && (
+                        <ScrollView
+                            style={{
+                                flex: 1,
+                            }}
+                            contentContainerStyle={{
+                                alignItems: 'center',
+
+                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                                paddingBottom:
+                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                            }}
+                            refreshControl={<RefreshControl {...refresh} />}
+                        >
+                            <LeaderBoardSeasonInfo
+                                {...alltimeLeaderboard}
+                                isCurrentSeason
+                            />
+                            <Leaderboard
+                                rankingAlgorithm={
+                                    scopePicker.rankingAlgorithm ??
+                                    groupRankingAlgorithm
+                                }
+                                ListEmptyComponent={
+                                    <LeaderboardEmptyComponent message="No matches played yet in this group." />
+                                }
+                                players={alltimePlayers}
+                                onPlayerPress={(id) =>
+                                    nav.navigate('player', {
+                                        id,
+                                        scope: 'all-time',
+                                    })
+                                }
+                                minMatchesRequiredToBeRanked={
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.minMatchesToQualify ?? 1
+                                }
+                            />
+                            <Text
+                                color="secondary"
+                                style={{
+                                    fontSize: 12,
+                                    marginTop: 32,
+                                    marginBottom: 32,
+                                }}
+                            >
+                                {group.data?.activeSeason?.startDate
+                                    ? `Group created ${env.format.date.seasonStartAndEnd(
+                                          dayjs(pastSeasons[0].startDate)
+                                      )}`
+                                    : null}
+                            </Text>
+                        </ScrollView>
+                    )}
+                </Swiper>
+            )}
+            {scopePicker.isPastSeasonsMode && (
+                <PastSeasonsSwiper
+                    swiper={{
+                        ...pastSeasonsSwiper,
+                        ref: scopePicker.pastSeasonsSwiperRef,
+                        defaultIndex: scopePicker.pastSeasonsPageIndex ?? 0,
+                        onPageChange: (idx: number) =>
+                            scopePicker.setPastSeasonsPageIndex(idx),
+                    }}
+                    rankingAlgorithm={scopePicker.rankingAlgorithm}
+                />
+            )}
             {/* <SafeAreaView
                 style={{
                     backgroundColor: 'red',
                 }}
             > */}
-            {experiments.dailyLeaderboard && (
-                <SafeAreaView
-                    style={{
-                        position: 'absolute',
+            <SafeAreaView
+                style={{
+                    position: 'absolute',
 
-                        top: swiperAtTop ? insets.top + 4 : undefined,
-                        bottom: swiperAtTop ? undefined : insets.bottom + 4,
+                    top: swiperAtTop ? insets.top + 4 : undefined,
+                    bottom: swiperAtTop ? undefined : insets.bottom + 4,
 
-                        width: '100%',
-                    }}
-                >
-                    <LeaderboardScopePicker
-                        key={groupId} // rerender when switching groups so we remember which scope we're on
-                        swiperProgress={swiper.swiperProgress}
-                        options={[
-                            { id: 'today', label: 'Today' },
-                            { id: 'season', label: 'This Season' },
-                            groupHasPastSeasons && {
-                                id: 'all-time',
-                                label: 'All Time',
-                            },
-                        ]}
-                        onChange={(scope) => {
-                            const optionIndex = [
-                                'today',
-                                'season',
-                                'all-time',
-                            ].indexOf(scope);
-
-                            swiper.ref?.current?.scrollTo({
-                                index: optionIndex,
-                                animated: true,
-                            });
-                        }}
-                    />
-                </SafeAreaView>
-            )}
+                    width: '100%',
+                }}
+            >
+                <LeaderboardScopePicker />
+            </SafeAreaView>
             {/* </SafeAreaView> */}
         </GestureHandlerRootView>
     );

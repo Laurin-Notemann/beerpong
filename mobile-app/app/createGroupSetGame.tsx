@@ -1,10 +1,10 @@
+import { useRouter } from 'expo-router';
 import React from 'react';
 
 import {
     useCreateGroupMutation,
     useGroupPresetsQuery,
 } from '@/api/calls/groupHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import LoadingScreen from '@/components/LoadingScreen';
 import { CreateGroupSetGame } from '@/components/screens/CreateGroupSetGame';
 import { showErrorToast, showSuccessToast } from '@/toast';
@@ -14,7 +14,7 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
-    const nav = useNavigation();
+    const router = useRouter();
     const { members, name } = useCreateGroupStore();
     const createGroupMutation = useCreateGroupMutation();
     const { addGroup } = useGroupStore();
@@ -52,7 +52,8 @@ export default function Page() {
 
             showSuccessToast(`You created "${name}"`);
 
-            nav.navigate('index');
+            router.dismissAll();
+            router.replace('/');
         } catch (err) {
             ConsoleLogger.error('failed to create group:', err);
             showErrorToast('Failed to create group.');

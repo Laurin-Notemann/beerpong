@@ -3,9 +3,12 @@ import { TouchableOpacity } from 'react-native';
 import Avatar from '@/components/Avatar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import type { RankingAlgorithm } from '@/constants/rankingAlgorithms';
+import {
+    getRankingAlgorithm,
+    type RankingAlgorithm,
+} from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatElo, formatPlacement, formatWinRate } from '@/utils/format';
+import { formatPlacement } from '@/utils/format';
 
 export interface LeaderboardPlayerItemProps {
     id: string;
@@ -19,6 +22,8 @@ export interface LeaderboardPlayerItemProps {
     points: number;
     elo: number;
     unranked?: boolean;
+
+    cups: number;
 
     onPlayerPress?: (id: string) => void;
     onPlayerLongPress?: (id: string) => void;
@@ -38,10 +43,9 @@ export default function LeaderboardPlayerItem({
     onPlayerPress,
     onPlayerLongPress,
     rankingAlgorithm,
+    cups,
 }: LeaderboardPlayerItemProps) {
     const theme = useTheme();
-    // account for division by zero
-    const averagePointsPerMatch = matches ? (points / matches).toFixed(1) : '';
 
     return (
         <TouchableOpacity
@@ -100,11 +104,15 @@ export default function LeaderboardPlayerItem({
                     color: theme.color.text.secondary,
                 }}
             >
-                {rankingAlgorithm === 'AVERAGE'
-                    ? averagePointsPerMatch
-                    : rankingAlgorithm === 'ELO'
-                      ? formatElo(elo)
-                      : formatWinRate(matches, matchesWon)}
+                {getRankingAlgorithm(rankingAlgorithm).getDisplayValue({
+                    avatarUrl,
+                    name,
+                    cups,
+                    matchesWon,
+                    matches: matches,
+                    elo,
+                    points,
+                })}
             </ThemedText>
         </TouchableOpacity>
     );

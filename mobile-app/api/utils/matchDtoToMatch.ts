@@ -14,6 +14,7 @@ export interface PerformedMove {
 
 export interface TeamMember {
     id: string;
+    profileId: string;
     team: TeamId;
     avatarUrl?: string | null;
     name: string;
@@ -25,9 +26,12 @@ export interface TeamMember {
 
 export type Match = {
     id: string;
+    seasonId: string;
     date: Date;
     redCups: number;
     blueCups: number;
+    blueTeamId: string;
+    redTeamId: string;
     redTeam: TeamMember[];
     blueTeam: TeamMember[];
 
@@ -123,6 +127,12 @@ export const getInfluenceOfMatchOnAveragePoints = (
             // @ts-expect-error TODO: type elo field
             eloAlgorithm.calculateElo(match);
 
+            // Persist updated Elo back into running ratings for subsequent matches
+            for (const player of match.blueTeam.concat(match.redTeam)) {
+                // @ts-expect-error TODO: type elo field
+                ratings[player.id] = player.elo ?? ratings[player.id];
+            }
+
             if (match.id === matchId) {
                 const newElo =
                     match.blueTeam
@@ -130,7 +140,7 @@ export const getInfluenceOfMatchOnAveragePoints = (
                         // @ts-expect-error TODO: type elo field
                         .find((p) => p.id === playerId)?.elo ?? 0;
 
-                return previousElo - newElo;
+                return newElo - previousElo;
             }
         }
         return 0;

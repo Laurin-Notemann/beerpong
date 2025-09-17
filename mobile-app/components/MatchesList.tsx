@@ -4,7 +4,6 @@ import { FlatList, FlatListProps } from 'react-native';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -29,18 +28,18 @@ export interface MatchesListProps
      * - display the influence of the match on the player's ranking
      */
     forPlayer?: {
-        id: string;
+        profileId: string;
     };
+    onMatchPress: (match: Match) => void;
 }
 export default function MatchesList({
     matches,
     refresh,
     forPlayer,
+    onMatchPress,
 
     ...rest
 }: MatchesListProps) {
-    const nav = useNavigation();
-
     const days = groupMatchesByDay(matches);
 
     return (
@@ -58,17 +57,25 @@ export default function MatchesList({
                 rest.style,
             ]}
             data={days}
+            keyExtractor={(item) => item.date.toISOString()}
+            initialNumToRender={2}
+            maxToRenderPerBatch={3}
+            windowSize={5}
+            updateCellsBatchingPeriod={50}
+            removeClippedSubviews
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item, index }) => (
-                <MenuSection key={index} title={item.title}>
+                <MenuSection
+                    key={index}
+                    title={item.title}
+                    containerStyle={{ marginHorizontal: forPlayer ? 8 : 0 }}
+                >
                     {item.matches.map((match, idx) => (
                         <MatchesListItem
                             key={idx}
                             match={match}
-                            onPress={() =>
-                                nav.navigate('match', { id: match.id })
-                            }
-                            highlightedId={forPlayer?.id}
+                            onPress={() => onMatchPress(match)}
+                            highlightedId={forPlayer?.profileId}
                         />
                     ))}
                 </MenuSection>

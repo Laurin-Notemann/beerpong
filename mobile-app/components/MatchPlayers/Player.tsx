@@ -10,10 +10,10 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
+import { formatRatingChange } from '@/utils/format';
 
 function Change({
     value,
@@ -52,10 +52,7 @@ function Change({
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
                 {/* rounded to two decimal places with trailing zeros removed */}
-                {Math.abs(value)
-                    .toFixed(2)
-                    .replace(/\.00$/, '.0')
-                    .replace(/([1-9])0+$/, '$1')}
+                {formatRatingChange(value)}
             </Text>
         </View>
     );
@@ -84,6 +81,7 @@ export default function Player({
 }: PlayerProps) {
     const animation = useRef(new Animated.Value(0)).current; // start with height 0
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toggleCollapse = () => {
         // Animate the height when toggling
         Animated.timing(animation, {
@@ -101,8 +99,6 @@ export default function Player({
         outputRange: [0, 44 * moves.length], // customize the height range based on your content
     });
 
-    const nav = useNavigation();
-
     const performedMoves = moves.filter((i) => i.count > 0);
 
     const theme = useTheme();
@@ -119,15 +115,16 @@ export default function Player({
                     borderTopWidth: 0.5,
                     borderTopColor: theme.panel.light.active,
                 }}
-                onPress={
-                    onPress ??
-                    (editable
-                        ? toggleCollapse
-                        : () => nav.navigate('player', { id }))
-                }
+                onPress={onPress}
                 underlayColor={theme.panel.light.active}
             >
-                <>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                    }}
+                >
                     <Avatar
                         url={avatarUrl}
                         size={40}
@@ -204,7 +201,7 @@ export default function Player({
                             style={{ marginLeft: 'auto' }}
                         />
                     )}
-                </>
+                </View>
             </TouchableHighlight>
             {editable && (
                 <Animated.View

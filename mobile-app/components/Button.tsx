@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import {
+    Animated,
     Text,
     TouchableHighlight,
     TouchableHighlightProps,
@@ -27,6 +29,16 @@ export default function Button({
 
     ...rest
 }: ButtonProps) {
+    const scale = useRef(new Animated.Value(1)).current;
+
+    const animate = (to: number) =>
+        Animated.spring(scale, {
+            toValue: to,
+            useNativeDriver: true,
+            speed: 200,
+            bounciness: 8,
+        }).start();
+
     const theme = useTheme();
 
     const style = (
@@ -53,39 +65,48 @@ export default function Button({
         <TouchableHighlight
             {...rest}
             disabled={disabled}
+            onPressIn={() => animate(0.98)}
+            onPressOut={() => animate(1)}
             onPress={onPress}
-            style={[
-                rest.style,
-                {
-                    alignItems: 'center',
-                    justifyContent: 'center',
-
-                    height: size === 'large' ? 52 : 42,
-
-                    borderRadius: size === 'large' ? 5 : 10,
-                    backgroundColor: disabled ? '#222' : style.backgroundColor,
-
-                    alignSelf: 'stretch',
-
-                    paddingHorizontal: 16,
-                },
-            ]}
-            underlayColor={style.active}
         >
-            {typeof title === 'string' ? (
-                <Text
-                    style={{
-                        fontSize: 17,
-                        fontWeight: 600,
+            <Animated.View
+                style={[
+                    rest.style,
+                    {
+                        alignItems: 'center',
+                        justifyContent: 'center',
 
-                        color: disabled ? '#444' : style.color,
-                    }}
-                >
-                    {title}
-                </Text>
-            ) : (
-                title
-            )}
+                        height: size === 'large' ? 52 : 42,
+
+                        borderRadius: size === 'large' ? 5 : 10,
+                        backgroundColor: disabled
+                            ? '#222'
+                            : style.backgroundColor,
+
+                        alignSelf: 'stretch',
+
+                        paddingHorizontal: 16,
+                    },
+                    {
+                        transform: [{ scale }],
+                    },
+                ]}
+            >
+                {typeof title === 'string' ? (
+                    <Text
+                        style={{
+                            fontSize: 17,
+                            fontWeight: 600,
+
+                            color: disabled ? '#444' : style.color,
+                        }}
+                    >
+                        {title}
+                    </Text>
+                ) : (
+                    title
+                )}
+            </Animated.View>
         </TouchableHighlight>
     );
 }
