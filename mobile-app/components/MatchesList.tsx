@@ -63,7 +63,7 @@ export default function MatchesList({
             ]}
             data={days}
             keyExtractor={(item) => item.date.toISOString()}
-            initialNumToRender={2}
+            initialNumToRender={1}
             maxToRenderPerBatch={3}
             windowSize={5}
             updateCellsBatchingPeriod={50}

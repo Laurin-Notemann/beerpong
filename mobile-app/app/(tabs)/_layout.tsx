@@ -11,6 +11,8 @@ import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import { LeaderboardIcon } from '@/components/LeaderboardIcon';
+import { LiveMatchIndicator } from '@/components/LiveMatchIndicator';
+import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
@@ -51,26 +53,60 @@ export default function TabLayout() {
         headerLeft: GroupsButton,
     };
 
+    const isOffline = false;
+
     return (
         <Tabs
             tabBar={(props) => {
                 return (
-                    <View
-                        style={{
-                            position: 'absolute',
+                    <>
+                        <View
+                            style={{
+                                position: 'absolute',
 
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                        }}
-                    >
-                        <BlurView
-                            intensity={theme.blur?.intensity || 50}
-                            tint={theme.blur?.tint}
-                            style={StyleSheet.absoluteFill}
-                        />
-                        <BottomTabBar {...props} />
-                    </View>
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                            }}
+                        >
+                            {/* {hasScopePicker && (
+                                <SafeAreaView
+                                    edges={['left', 'right']}
+                                    pointerEvents="box-none"
+                                >
+                                    <LeaderboardScopePicker
+                                        hasSortButton={!isMatches}
+                                    />
+                                </SafeAreaView>
+                            )} */}
+                            <LiveMatchIndicator />
+                            <View>
+                                <BlurView
+                                    intensity={theme.blur?.intensity || 50}
+                                    tint={theme.blur?.tint}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                                <BottomTabBar {...props} />
+                            </View>
+                        </View>
+                        {isOffline && (
+                            <View
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: 52,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Text color="secondary" variant="fineprint">
+                                    You're offline
+                                </Text>
+                            </View>
+                        )}
+                    </>
                 );
             }}
         >

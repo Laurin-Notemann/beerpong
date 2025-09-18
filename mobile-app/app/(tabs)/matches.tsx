@@ -45,6 +45,9 @@ export default function Page() {
             {!scopePicker.isPastSeasonsMode && <MatchesSwiper />}
             {scopePicker.isPastSeasonsMode && <PastMatchesSwiper />}
             <SafeAreaView
+                key="scope-picker"
+                edges={['left', 'right']}
+                pointerEvents="box-none"
                 style={{
                     position: 'absolute',
 

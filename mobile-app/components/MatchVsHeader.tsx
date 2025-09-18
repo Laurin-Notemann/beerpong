@@ -68,8 +68,18 @@ const hasFinishMove = (team?: TeamMember[]): boolean => {
     );
 };
 
+type InputTeamMember = Pick<
+    TeamMember,
+    'name' | 'avatarUrl' | 'profileId' | 'moves'
+>;
+
+type InputMatch = Pick<Match, 'blueCups' | 'redCups'> & {
+    blueTeam: InputTeamMember[];
+    redTeam: InputTeamMember[];
+};
+
 export interface MatchVsHeaderProps extends ViewProps {
-    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
+    match: InputMatch;
 
     hasScore?: boolean;
 
@@ -102,55 +112,23 @@ export default function MatchVsHeader({
                 rest.style,
             ]}
         >
-            <View
-                style={{
-                    flexDirection: 'row',
-                    position: 'relative',
-                    // calibrated to the height of the avatars so we don't get layout shift
-                    height: 36,
-                }}
-            >
-                <Team
-                    color="blue"
-                    players={match.blueTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                />
-                <Team
-                    color="blue"
-                    players={match.blueTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                    isCopy
-                />
-            </View>
+            <Team
+                color="blue"
+                players={match.blueTeam}
+                maxItems={maxItems}
+                highlightedId={highlightedId}
+            />
 
             <ScoreChip winnerTeamId={winnerTeamId}>
                 {hasScore ? match.blueCups + ':' + match.redCups : 'vs'}
             </ScoreChip>
 
-            <View
-                style={{
-                    flexDirection: 'row',
-                    position: 'relative',
-                    height: 36,
-                    // width: 76,
-                }}
-            >
-                <Team
-                    color="red"
-                    players={match.redTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                />
-                <Team
-                    color="red"
-                    players={match.redTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                    isCopy
-                />
-            </View>
+            <Team
+                color="red"
+                players={match.redTeam}
+                maxItems={maxItems}
+                highlightedId={highlightedId}
+            />
         </View>
     );
 }
@@ -171,78 +149,76 @@ function Team({
 }) {
     const theme = useTheme();
 
-    const emptyAvatarsUsedForSpacing = Array(
-        Math.max(maxItems - players.length, 0)
-    ).fill(null);
-
     const displayedPlayers = players.slice(0, maxItems);
+
+    const avatarSize = 36;
+
+    const avatarGap = 16;
+
+    const teamWidth = avatarSize * maxItems - avatarGap * (maxItems - 1);
+
+    const highlightedPlayer = players.find(
+        (i) => i.profileId === highlightedId
+    );
+
+    const mod = color === 'red' ? 1 : -1;
 
     return (
         <View
-            style={[
-                isCopy
-                    ? {
-                          position: 'absolute',
-                          left: color === 'red' ? 0 : undefined,
-                          right: color === 'blue' ? 0 : undefined,
-                          top: 0,
-                      }
-                    : {
-                          opacity: highlightedId == null ? 1 : 0.3,
-                      },
-                {
-                    flexDirection: 'row',
-                    justifyContent: color === 'red' ? 'flex-end' : 'flex-end',
-                },
-            ]}
-        >
-            {color === 'blue' &&
-                emptyAvatarsUsedForSpacing.map((_, index) => {
-                    return (
-                        <Avatar
-                            key={index}
-                            invisibleSpacer
-                            style={{ marginLeft: -16 }}
-                        />
-                    );
-                })}
-            {displayedPlayers
-                .sort((a) => (a.profileId === highlightedId ? 1 : 0))
-                .map((i, index) => (
-                    <Avatar
-                        key={index}
-                        url={i.avatarUrl}
-                        content={
-                            index === maxItems - 1 && players.length > maxItems
-                                ? '+' + (players.length - maxItems + 1)
-                                : undefined
-                        }
-                        name={i.name}
-                        borderColor={theme.color.team[color]}
-                        style={{
-                            marginRight: color === 'red' ? -16 : undefined,
-                            marginLeft: color === 'blue' ? -16 : undefined,
+            style={{
+                flexDirection: 'row',
+                justifyContent: color === 'red' ? 'flex-start' : 'flex-end',
 
-                            opacity: isCopy
-                                ? i.profileId === highlightedId
-                                    ? 1
-                                    : 0
-                                : 1,
-                            zIndex:
-                                i.profileId === highlightedId ? 1 : undefined,
-                        }}
-                    />
-                ))}
-            {color === 'red' &&
-                emptyAvatarsUsedForSpacing.map((_, index) => {
-                    return (
+                width: teamWidth,
+            }}
+        >
+            <View
+                style={{
+                    flexDirection: 'row',
+                    opacity: highlightedId ? 0.3 : 1,
+                }}
+            >
+                {displayedPlayers
+                    .sort((a, b) =>
+                        a.profileId === highlightedId
+                            ? -mod
+                            : b.profileId === highlightedId
+                              ? mod
+                              : 0
+                    )
+                    .map((i, index) => (
                         <Avatar
                             key={index}
-                            invisibleSpacer
-                            style={{ marginRight: -16 }}
+                            url={i.avatarUrl}
+                            content={
+                                index === maxItems - 1 &&
+                                players.length > maxItems
+                                    ? '+' + (players.length - maxItems + 1)
+                                    : undefined
+                            }
+                            name={i.name}
+                            borderColor={theme.color.team[color]}
+                            style={{
+                                marginRight: color === 'red' ? -16 : undefined,
+                                marginLeft: color === 'blue' ? -16 : undefined,
+                            }}
                         />
-                    );
-                })}
+                    ))}
+            </View>
+            {highlightedPlayer && (
+                <Avatar
+                    url={highlightedPlayer.avatarUrl}
+                    name={highlightedPlayer.name}
+                    borderColor={theme.color.team[color]}
+                    style={{
+                        position: 'absolute',
+                        left: color === 'red' ? 0 : undefined,
+                        right: color === 'blue' ? 0 : undefined,
+
+                        zIndex: 9,
+                    }}
+                />
+            )}
         </View>
     );
 }
