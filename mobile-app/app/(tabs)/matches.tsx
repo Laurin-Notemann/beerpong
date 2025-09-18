@@ -34,6 +34,8 @@ export default function Page() {
 
                     headerRight: () => (
                         <PillButton
+                            blur
+                            style={{ marginRight: 4 }}
                             label="Invite"
                             iconName="share-outline"
                             onPress={() => setShowInviteModal(true)}

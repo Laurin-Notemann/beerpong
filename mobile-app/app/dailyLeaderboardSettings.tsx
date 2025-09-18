@@ -125,6 +125,7 @@ export default function Page() {
                     }}
                 >
                     <MenuItem
+                        border={false}
                         title="Reset time"
                         headIcon="alarm"
                         tailContent={wakeTimeDate.getHours() + ':00'}

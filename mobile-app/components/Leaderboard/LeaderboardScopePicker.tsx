@@ -322,6 +322,8 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                     style={{
                         flexDirection: 'row',
 
+                        justifyContent: 'flex-end',
+
                         height: 48,
 
                         gap: 4,
@@ -405,9 +407,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
                                 borderRadius: 99,
                                 overflow: 'hidden',
-
-                                marginLeft:
-                                    options.length > 0 ? undefined : 'auto',
                             }}
                             onPress={() => {
                                 scopePicker.setIsPastSeasonsMode(

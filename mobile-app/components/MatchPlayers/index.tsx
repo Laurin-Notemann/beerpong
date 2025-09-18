@@ -34,6 +34,7 @@ export default function MatchPlayers({
                 {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
+                        border={idx !== 0}
                         player={i}
                         expanded={false}
                         setIsExpanded={() => {}} // unused, the items used to be expandable
@@ -48,6 +49,7 @@ export default function MatchPlayers({
                 {redTeam.map((i, idx) => (
                     <Player
                         key={idx}
+                        border={idx !== 0}
                         player={i}
                         expanded={false}
                         setIsExpanded={() => {}} // unused, the items used to be expandable

@@ -23,13 +23,21 @@ export interface TextProps extends ReactNativeTextProps {
     variant?: keyof typeof fontSizeMap;
     bold?: boolean;
 
-    color: keyof Theme['color']['text'];
+    color?: keyof Theme['color']['text'];
+
+    code?: boolean;
+    italic?: boolean;
+    paragraph?: boolean;
 }
 export default function Text({
+    paragraph = false,
     children,
+    italic = false,
     variant = 'body1',
     color = 'primary',
     bold = false,
+
+    code = false,
     ...rest
 }: TextProps) {
     const theme = useTheme();
@@ -39,8 +47,12 @@ export default function Text({
             {...rest}
             style={{
                 fontSize: fontSizeMap[variant],
-                color: theme.color.text[color],
-                fontWeight: bold ? 'bold' : undefined,
+                color: code ? theme.textEmphasis : theme.color.text[color],
+                fontWeight: bold || code ? 'bold' : undefined,
+
+                fontStyle: italic ? 'italic' : 'normal',
+
+                lineHeight: paragraph ? 28 : undefined,
 
                 ...((rest.style as Record<string, string>) ?? {}),
             }}

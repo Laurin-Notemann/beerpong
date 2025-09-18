@@ -2,11 +2,11 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView, Switch } from 'react-native';
 
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
@@ -21,8 +21,6 @@ export default function Page() {
         toggleShowWallpaper,
     } = useLocalSettings();
 
-    const theme = useTheme();
-
     return (
         <>
             <Stack.Screen
@@ -31,11 +29,10 @@ export default function Page() {
                     headerTitle: '',
                 }}
             />
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingTop: useInsets(true).top,
@@ -46,6 +43,7 @@ export default function Page() {
             >
                 <MenuSection title="Experimental Features">
                     <MenuItem
+                        border={false}
                         title="Beerpong Pro Mode"
                         tailContent={
                             <Switch

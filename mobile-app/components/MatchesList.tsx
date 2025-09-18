@@ -78,6 +78,7 @@ export default function MatchesList({
                 >
                     {item.matches.map((match, idx) => (
                         <MatchesListItem
+                            border={idx !== 0}
                             key={idx}
                             match={match}
                             onPress={() => onMatchPress(match)}
