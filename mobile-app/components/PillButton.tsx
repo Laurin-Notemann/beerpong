@@ -20,6 +20,7 @@ const PillButton: React.FC<{
     onRemove?: () => void;
     backgroundColor?: string;
     blur?: boolean;
+    style?: any;
 }> = ({
     label,
     iconName,
@@ -27,6 +28,7 @@ const PillButton: React.FC<{
     onRemove,
     blur = false,
     backgroundColor = '#333',
+    style,
 }) => {
     const scale = useRef(new Animated.Value(1)).current;
 
@@ -77,6 +79,7 @@ const PillButton: React.FC<{
             onPressIn={() => animate(0.94)} // shrink a bit
             onPressOut={() => animate(1)} // unshrink
             onPress={onPress}
+            {...(style ?? {})}
         >
             <Animated.View
                 style={[styles.container, { transform: [{ scale }] }]}

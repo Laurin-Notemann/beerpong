@@ -9,7 +9,7 @@ export function useInsets(
 
     return {
         ...insets,
-        top: hasHeader ? insets.top + 42 : insets.top,
+        top: hasHeader ? insets.top + 44 : insets.top,
         bottom:
             (hasTabbar ? insets.bottom + 45 : insets.bottom) -
             (isWeirdAfterSwitchingToNewSafeAreaAPI ? 34 : 0),

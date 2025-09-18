@@ -3,6 +3,8 @@ import { useLocalSettings } from '@/zustand/localSettingsStore';
 const black = '#000';
 
 export interface Theme {
+    textEmphasis: string;
+    activeGroupItem: string;
     id: string;
     blur: {
         intensity: number;
@@ -79,6 +81,8 @@ export interface Theme {
 }
 
 const lightModeTheme: Theme = {
+    textEmphasis: '#EF4679',
+    activeGroupItem: 'rgba(0,0,0,0.2)',
     id: 'light',
     blur: {
         intensity: 0,
@@ -160,6 +164,8 @@ const lightModeTheme: Theme = {
 };
 
 const darkModeTheme: Theme = {
+    textEmphasis: '#EF4679',
+    activeGroupItem: 'rgba(0,0,0,0.3)',
     id: 'dark',
     blur: {
         intensity: 0,
@@ -243,6 +249,8 @@ const darkModeTheme: Theme = {
 };
 
 const darkWithGloss: Theme = {
+    textEmphasis: '#EF4679',
+    activeGroupItem: 'rgba(255,255,255,0.08)',
     id: 'darkWithGloss',
     blur: {
         intensity: 50,
@@ -308,7 +316,7 @@ const darkWithGloss: Theme = {
             bg: '#2e2e2e',
             border: '#444',
             active: '#3B3B3B',
-            dividers: '#3B3B3B',
+            dividers: '#1d1d1d',
         },
         dark: {
             bg: '#1B1B1B',

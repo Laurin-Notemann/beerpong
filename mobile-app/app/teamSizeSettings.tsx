@@ -76,6 +76,7 @@ export default function Page() {
             <InputModal>
                 <MenuSection>
                     <MenuItemNumberInput
+                        border={false}
                         title="Min Team Size"
                         headIcon="account-group-outline"
                         defaultValue={minTeamSize}

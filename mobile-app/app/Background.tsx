@@ -59,7 +59,7 @@ export const AppBackground: React.FC = () => {
                     width,
                     height,
                     backgroundColor: '#000',
-                    opacity: 0.2,
+                    opacity: 0.25,
                 }}
             />
         </View>

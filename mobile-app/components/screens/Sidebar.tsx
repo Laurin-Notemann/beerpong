@@ -9,7 +9,7 @@ import {
     TouchableHighlight,
     TouchableOpacity,
 } from 'react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -93,7 +93,7 @@ export function SidebarGroupItem({
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: isActive ? 'rgba(0,0,0,0.3)' : undefined,
+                backgroundColor: isActive ? theme.activeGroupItem : undefined,
 
                 height: 58,
             }}
@@ -337,6 +337,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                     color="dark"
                 >
                     <MenuItem
+                        border={false}
                         title="Settings"
                         headIcon="cog-outline"
                         onPress={() =>

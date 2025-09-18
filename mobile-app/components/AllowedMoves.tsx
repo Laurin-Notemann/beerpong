@@ -65,9 +65,15 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
 
     const nav = useNavigation();
 
-    const renderItem = ({ item, drag, isActive }: RenderItemParams<Move>) => {
+    const renderItem = ({
+        item,
+        drag,
+        isActive,
+        getIndex,
+    }: RenderItemParams<Move>) => {
         return (
             <MenuItem
+                border={getIndex() !== 0}
                 title={item.name}
                 key={item.id}
                 subtitle={formatStats(item)}

@@ -68,9 +68,13 @@ export interface PlayerProps {
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
     onPress?: () => void;
+
+    border?: boolean;
 }
 export default function Player({
     player: { id, avatarUrl, team, name, points, change, moves },
+
+    border = false,
 
     expanded,
     setIsExpanded,
@@ -112,8 +116,10 @@ export default function Player({
                     height: 76,
                     paddingHorizontal: 15,
 
-                    borderTopWidth: 0.5,
-                    borderTopColor: theme.panel.light.active,
+                    borderTopWidth: border ? 0.5 : undefined,
+                    borderTopColor: border
+                        ? theme.panel.light.active
+                        : undefined,
                 }}
                 onPress={onPress}
                 underlayColor={theme.panel.light.active}

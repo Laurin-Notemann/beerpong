@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import { PremiumPerksCarousel } from '@/components/PremiumPerksCarousel';
@@ -26,6 +27,7 @@ export default function Page() {
                     headerTitle: 'About Premium',
                 }}
             />
+            <AppBackground />
             <PremiumPerksCarousel
                 onGetPremiumPress={() => {}}
                 onSecondaryActionPress={() => {}}
