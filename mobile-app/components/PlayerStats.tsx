@@ -10,7 +10,7 @@ import {
     RankingPlayer,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { useScopePicker } from '@/zustand/scopePickerStore';
+import { useScopePicker } from '@/zustand/useScopePicker';
 
 export function Stat({
     value,

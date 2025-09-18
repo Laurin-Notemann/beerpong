@@ -31,6 +31,8 @@ export interface MatchesListProps
         profileId: string;
     };
     onMatchPress: (match: Match) => void;
+
+    background?: boolean;
 }
 export default function MatchesList({
     matches,
@@ -38,12 +40,15 @@ export default function MatchesList({
     forPlayer,
     onMatchPress,
 
+    background,
+
     ...rest
 }: MatchesListProps) {
     const days = groupMatchesByDay(matches);
 
     return (
         <FlatList
+            ListEmptyComponent={<NoMatchesPlayedYet />}
             {...rest}
             contentContainerStyle={[
                 { paddingBottom: 32 },
@@ -69,6 +74,7 @@ export default function MatchesList({
                     key={index}
                     title={item.title}
                     containerStyle={{ marginHorizontal: forPlayer ? 8 : 0 }}
+                    background={background}
                 >
                     {item.matches.map((match, idx) => (
                         <MatchesListItem
@@ -80,7 +86,6 @@ export default function MatchesList({
                     ))}
                 </MenuSection>
             )}
-            ListEmptyComponent={<NoMatchesPlayedYet />}
         />
     );
 }

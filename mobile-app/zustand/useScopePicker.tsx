@@ -1,20 +1,17 @@
-import { createContext, useContext, useRef } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
-import type { ICarouselInstance } from 'react-native-reanimated-carousel';
 import { create } from 'zustand';
 
 import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 
-const SwiperProgressContext = createContext<{
+const ScopePickerContext = createContext<{
     leaderboardSwiperProgress: SharedValue<number>;
     pastSeasonsSwiperProgress: SharedValue<number>;
-    leaderboardSwiperRef: React.RefObject<ICarouselInstance | null>;
-    pastSeasonsSwiperRef: React.RefObject<ICarouselInstance | null>;
 } | null>(null);
 
-export function SwiperProgressProvider({
+export function ScopePickerProvider({
     children,
 }: {
     children: React.ReactNode;
@@ -22,20 +19,15 @@ export function SwiperProgressProvider({
     const leaderboardSwiperProgress = useSharedValue(0);
     const pastSeasonsSwiperProgress = useSharedValue(0);
 
-    const leaderboardSwiperRef = useRef<ICarouselInstance | null>(null);
-    const pastSeasonsSwiperRef = useRef<ICarouselInstance | null>(null);
-
     return (
-        <SwiperProgressContext.Provider
+        <ScopePickerContext.Provider
             value={{
                 leaderboardSwiperProgress,
                 pastSeasonsSwiperProgress,
-                leaderboardSwiperRef,
-                pastSeasonsSwiperRef,
             }}
         >
             {children}
-        </SwiperProgressContext.Provider>
+        </ScopePickerContext.Provider>
     );
 }
 
@@ -67,7 +59,7 @@ interface ScopePickerStore {
     };
 }
 
-export const useScopePickerStore = create<ScopePickerStore>()((set, get) => ({
+const useScopePickerStore = create<ScopePickerStore>()((set, get) => ({
     groups: {},
     actions: {
         setRankingAlgorithm: (groupId, rankingAlgorithm) =>
@@ -138,18 +130,27 @@ export function useScopePicker() {
 
     const { groups, actions } = useScopePickerStore();
 
-    const context = useContext(SwiperProgressContext);
+    const context = useContext(ScopePickerContext);
 
     if (!context) {
         throw new Error(
-            'useScopePicker must be used within a SwiperProgressProvider'
+            'useScopePicker must be used within a ScopePickerProvider'
         );
     }
 
     const leaderboardSwiperProgress = context.leaderboardSwiperProgress;
     const pastSeasonsSwiperProgress = context.pastSeasonsSwiperProgress;
-    const leaderboardSwiperRef = context.leaderboardSwiperRef;
-    const pastSeasonsSwiperRef = context.pastSeasonsSwiperRef;
+
+    // when switching groups
+    useEffect(() => {
+        // TODO: without the timeout, this is glitchy, and with the timeout it does nothing (maybe because of the defaultPageIdx in useControlledSwiper?)
+        // setTimeout(() => {
+        //     leaderboardSwiperProgress.value =
+        //         groups[groupId!]?.leaderboardPageIndex ?? 0;
+        //     pastSeasonsSwiperProgress.value =
+        //         groups[groupId!]?.pastSeasonsPageIndex ?? 0;
+        // }, 0);
+    }, [groupId]);
 
     const defaults = {
         isPastSeasonsMode: false,
@@ -168,13 +169,17 @@ export function useScopePicker() {
             actions.setPastSeasonId(groupId!, seasonId),
         setIsPastSeasonsMode: (isPastSeasonsMode: boolean) =>
             actions.setIsPastSeasonsMode(groupId!, isPastSeasonsMode),
-        setLeaderboardPageIndex: (pageIdx: number) =>
-            actions.setLeaderboardPageIndex(groupId!, pageIdx),
-        setPastSeasonsPageIndex: (pageIdx: number) =>
-            actions.setPastSeasonsPageIndex(groupId!, pageIdx),
+        setLeaderboardPageIndex: (pageIdx: number) => {
+            actions.setLeaderboardPageIndex(groupId!, pageIdx);
+
+            leaderboardSwiperProgress.value = pageIdx;
+        },
+        setPastSeasonsPageIndex: (pageIdx: number) => {
+            actions.setPastSeasonsPageIndex(groupId!, pageIdx);
+
+            pastSeasonsSwiperProgress.value = pageIdx;
+        },
         leaderboardSwiperProgress,
         pastSeasonsSwiperProgress,
-        leaderboardSwiperRef,
-        pastSeasonsSwiperRef,
     };
 }

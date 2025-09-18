@@ -16,6 +16,7 @@ const fontSizeMap = {
     subtitle2: 14, // Secondary subtitles or minor captions
     body1: 16, // Main body text, normal content
     body2: 14, // Secondary body text, less important content
+    fineprint: 12,
 };
 
 export interface TextProps extends ReactNativeTextProps {

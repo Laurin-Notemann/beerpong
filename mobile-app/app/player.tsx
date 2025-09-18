@@ -31,7 +31,7 @@ export default function Page() {
     const router = useRouter();
     const nav = useNavigation();
 
-    const { id, scope } = useLocalSearchParams<{ id: string; scope: string }>();
+    const { id } = useLocalSearchParams<{ id: string }>();
 
     const { groupId, seasonId } = useGroup();
 
@@ -164,7 +164,8 @@ export default function Page() {
                 onUploadAvatarPress={onUploadAvatarPress}
                 onDeleteAvatarPress={onDeleteAvatarPress}
                 refresh={refresh}
-                initialScope={scope}
+                prevPlayerId={undefined} // TODO
+                nextPlayerId={undefined} // TODO
             />
         </>
     );

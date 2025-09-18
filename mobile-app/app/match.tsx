@@ -1,7 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, View } from 'react-native';
 
 import {
     useDeleteMatchMutation,
@@ -29,6 +28,7 @@ import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
 import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
@@ -95,6 +95,9 @@ export default function Page() {
     }, [isEditing]);
 
     const players = matchDraft.actions.getPlayers();
+
+    const prevMatchId = undefined; // TODO
+    const nextMatchId = undefined; // TODO
 
     const teamMembers = players.map<TeamMember>((i) => {
         const profile = profiles.find((j) => i.playerId === j.id);
@@ -393,13 +396,13 @@ export default function Page() {
                 )}
             </ScrollView>
             {!isEditing && !isCurrentSeason && (
-                <SafeAreaView
+                <View
                     style={{
                         position: 'absolute',
 
-                        bottom: insets.bottom + 4,
-
-                        width: '100%',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
                     }}
                 >
                     <LeaderboardScopePicker
@@ -408,7 +411,34 @@ export default function Page() {
                         hasPastSeasonsButton={false}
                         hasSortButton={false}
                     />
-                </SafeAreaView>
+                    <PlayerAndMatchBottomNav
+                        hasNextAndPrevButtons={false}
+                        onPrevPress={
+                            !prevMatchId
+                                ? undefined
+                                : () => {
+                                      if (prevMatchId) {
+                                          nav.navigate('match', {
+                                              id: prevMatchId,
+                                              seasonId,
+                                          });
+                                      }
+                                  }
+                        }
+                        onNextPress={
+                            !nextMatchId
+                                ? undefined
+                                : () => {
+                                      if (nextMatchId) {
+                                          nav.navigate('match', {
+                                              id: nextMatchId,
+                                              seasonId,
+                                          });
+                                      }
+                                  }
+                        }
+                    />
+                </View>
             )}
         </>
     );
