@@ -20,7 +20,7 @@ import {
 } from '@/constants/rankingAlgorithms';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
-import { useScopePicker } from '@/zustand/scopePickerStore';
+import { useScopePicker } from '@/zustand/useScopePicker';
 
 const USE_SELECT_IN_SORT_MODAL = false;
 
@@ -49,26 +49,20 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
             ?.filter((i) => i.endDate != null)
             ?.filter((i) => i.numMatches > 0) ?? [];
 
-    hasPastSeasonsButton = hasPastSeasonsButton && pastSeasons.length > 0;
-
     function onChange(scope: string) {
+        return; // TODO: make this work again
+
         // Navigate controlled swipers when clicking on tabs
         const optionIndex = ['today', 'season', 'all-time'].indexOf(scope);
         if (optionIndex !== -1) {
-            scopePicker.leaderboardSwiperRef.current?.scrollTo?.({
-                index: optionIndex,
-                animated: true,
-            });
+            scopePicker.leaderboardSwiperProgress.value = optionIndex;
             scopePicker.setLeaderboardPageIndex(optionIndex);
             return;
         }
 
         const pastIdx = pastSeasons.findIndex((i) => i.id === scope);
         if (pastIdx !== -1) {
-            scopePicker.pastSeasonsSwiperRef.current?.scrollTo?.({
-                index: pastIdx,
-                animated: true,
-            });
+            scopePicker.pastSeasonsSwiperProgress.value = pastIdx;
             scopePicker.setPastSeasonsPageIndex(pastIdx);
         }
     }
@@ -207,10 +201,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
                     height: 48,
 
-                    width: hasPastSeasonsButton
-                        ? 342 // TODO: un-hardcode
-                        : undefined,
-
                     borderRadius: 99,
 
                     overflow: 'hidden',
@@ -218,6 +208,8 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                     backgroundColor: isPastSeasonsMode
                         ? pastSeasonsColor
                         : undefined,
+
+                    flexShrink: 1,
                 },
                 active: {
                     position: 'absolute',

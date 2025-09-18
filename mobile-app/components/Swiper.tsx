@@ -1,10 +1,15 @@
-import { forwardRef, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
-import { SharedValue, useSharedValue } from 'react-native-reanimated';
+import {
+    SharedValue,
+    useAnimatedReaction,
+    useSharedValue,
+} from 'react-native-reanimated';
 import Carousel, {
     ICarouselInstance,
     TCarouselProps,
 } from 'react-native-reanimated-carousel';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { useTheme } from '@/theme';
 
@@ -53,6 +58,12 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
 
         const theme = useTheme();
 
+        const computedWidth = withPeek
+            ? containerWidth -
+              theme.carousel.peekGap -
+              theme.carousel.peekSize * 2
+            : containerWidth;
+
         return (
             <View
                 ref={containerRef}
@@ -67,17 +78,11 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
                     {...rest}
                     ref={ref}
                     onProgressChange={(relativeOffset) => {
-                        swiperProgress.value = -relativeOffset / containerWidth;
+                        swiperProgress.value = -relativeOffset / computedWidth;
                     }}
                     onSnapToItem={onPageChange}
                     loop={false}
-                    width={
-                        withPeek
-                            ? containerWidth -
-                              theme.carousel.peekGap -
-                              theme.carousel.peekSize * 2
-                            : containerWidth
-                    }
+                    width={computedWidth}
                     style={{ width: containerWidth }}
                     enabled={enabled}
                     data={cleanPages}
@@ -109,10 +114,32 @@ export function useSwiper(options?: { initialPage?: number | null }) {
     };
 }
 
-export function useControlledSwiper(progress: SharedValue<number>) {
+export function useControlledSwiper(
+    progress: SharedValue<number>,
+    debugName: string
+) {
     const ref = useRef<ICarouselInstance>(null);
 
+    const switchToPage = (value: number) => {
+        ref.current?.scrollTo({ index: value, animated: false });
+    };
+
+    useEffect(() => {
+        switchToPage(Math.round(progress.value));
+    }, []);
+
+    useAnimatedReaction(
+        () => progress.value,
+        (v) => {
+            'worklet';
+            if (Math.round(v) === v) {
+                scheduleOnRN(switchToPage, v);
+            }
+        }
+    );
+
     return {
+        defaultIndex: Math.round(progress.value),
         swiperProgress: progress,
         ref,
     };

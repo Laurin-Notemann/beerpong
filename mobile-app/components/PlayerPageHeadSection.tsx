@@ -68,7 +68,10 @@ export function PlayerPageHeadSection({
                     color: theme.color.text.secondary,
                 }}
             >
-                {getRankingAlgorithm(rankingAlgorithm).getDisplayValue(player)}
+                {!editable &&
+                    getRankingAlgorithm(rankingAlgorithm).getDisplayValue(
+                        player
+                    )}
             </Text>
             <Text
                 style={{

@@ -2,11 +2,12 @@ import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
     interpolate,
+    SharedValue,
     useAnimatedStyle,
 } from 'react-native-reanimated';
 
 export const SwipeButtons: React.FC<{
-    animationProgress: Animated.SharedValue<number>;
+    animationProgress: SharedValue<number>;
 
     slot1: React.ReactNode;
     slot2: React.ReactNode;

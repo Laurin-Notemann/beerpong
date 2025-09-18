@@ -10,7 +10,6 @@ export type RootStackParamList = {
     editFormation: undefined;
     createGroup: undefined;
     joinGroup: undefined;
-    pastSeasons: undefined;
     editPlayerName: { id: string };
     editGroupName: { id: string };
     createNewPlayer: undefined;
@@ -21,7 +20,7 @@ export type RootStackParamList = {
     minMatchesToQualifySettings: undefined;
     saveSeason: undefined;
     startLiveMatch: undefined;
-    player: { id: string; scope: string };
+    player: { id: string };
     match: { id: string; seasonId: string };
     matches: undefined;
     editFormationName: undefined;
