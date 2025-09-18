@@ -46,7 +46,6 @@ export default function Page() {
             {scopePicker.isPastSeasonsMode && <PastSeasonsSwiper />}
             <SafeAreaView
                 key="scope-picker"
-                edges={['left', 'right']}
                 pointerEvents="box-none"
                 style={{
                     position: 'absolute',

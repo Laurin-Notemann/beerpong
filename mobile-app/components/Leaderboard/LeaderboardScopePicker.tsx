@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import PillButton from '@/components/PillButton';
+import PressableScale from '@/components/PressableScale';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
 import {
@@ -397,7 +398,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                         </View>
                     )}
                     {hasPastSeasonsButton && (
-                        <Pressable
+                        <PressableScale
                             style={{
                                 width: 48,
                                 height: 48,
@@ -435,7 +436,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                                     size={16}
                                 />
                             </BlurView>
-                        </Pressable>
+                        </PressableScale>
                     )}
                 </View>
             </View>

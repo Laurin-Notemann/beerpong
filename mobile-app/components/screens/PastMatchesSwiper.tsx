@@ -60,7 +60,7 @@ export function PastMatchesSwiper() {
                         )}
                         style={{
                             marginTop: insets.top,
-                            marginBottom: insets.bottom + 7,
+                            marginBottom: insets.bottom + 8,
 
                             marginHorizontal: theme.carousel.peekGap / 2,
                             left:

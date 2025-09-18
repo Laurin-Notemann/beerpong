@@ -1,7 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
     Animated,
     Dimensions,
     Modal,
@@ -234,7 +233,6 @@ export default function PlayerScreen({
                                     matches={scopes.get(obj.id!)!.matches}
                                     refresh={refresh}
                                     forPlayer={{ profileId }}
-                                    ListEmptyComponent={<ActivityIndicator />}
                                 />
                             ))}
                         </Swiper>
@@ -366,7 +364,6 @@ export default function PlayerScreen({
                                 matches={scopes.get('all-time')!.matches}
                                 refresh={refresh}
                                 forPlayer={{ profileId }}
-                                ListEmptyComponent={<ActivityIndicator />}
                             />
                         )}
                     </Swiper>
