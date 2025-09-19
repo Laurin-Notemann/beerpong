@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import Animated from 'react-native-reanimated';
+import { SharedValue } from 'react-native-reanimated';
 
 import { useGroup } from '@/api/calls/seasonHooks';
-import { Match } from '@/api/utils/matchDtoToMatch';
+import { MinimalMatch } from '@/api/utils/matchDtoToMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
@@ -13,9 +13,9 @@ export const NewMatchStack: React.FC<{
     randomTeamsMode: { players: string[] } | null;
     onExitRandomTeamsMode: () => void;
 
-    animationProgress: Animated.SharedValue<number>;
+    animationProgress: SharedValue<number>;
 
-    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
+    match: Omit<MinimalMatch, 'id' | 'date'>;
 
     isCreating: boolean;
 

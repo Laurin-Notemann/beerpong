@@ -47,8 +47,13 @@ export const matchDtoToMatch =
         return new MatchImpl(i, players, allowedMoves).toJSON();
     };
 
+export type MinimalMatch = Pick<
+    Match,
+    'id' | 'date' | 'blueCups' | 'redCups' | 'redTeam' | 'blueTeam'
+>;
+
 export const getInfluenceOfMatchOnAveragePoints = (
-    matches: Omit<Match, 'winnerTeamId'>[],
+    matches: MinimalMatch[],
     playerId: string,
     matchId: string,
     rankingAlgorithm: 'AVERAGE' | 'ELO' = 'AVERAGE'
@@ -124,8 +129,7 @@ export const getInfluenceOfMatchOnAveragePoints = (
                     .find((p) => p.id === playerId)?.elo ??
                 eloAlgorithm.params.startingElo;
 
-            // @ts-expect-error TODO: type elo field
-            eloAlgorithm.calculateElo(match);
+            // eloAlgorithm.calculateElo(match);
 
             // Persist updated Elo back into running ratings for subsequent matches
             for (const player of match.blueTeam.concat(match.redTeam)) {
