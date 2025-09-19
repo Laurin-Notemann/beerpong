@@ -1,17 +1,12 @@
 import React from 'react';
-import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    View,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { SafeAreaView, ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useInsets } from '@/app/useInsets';
-import Button from '@/components/Button';
+import { DualCameraView } from '@/components/DualCameraView';
 import MatchPlayers from '@/components/MatchPlayers';
-import { useTheme } from '@/theme';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export interface CreateMatchAssignPointsProps {
@@ -36,7 +31,9 @@ export default function CreateMatchAssignPoints({
 
     const insets = useInsets(true, true);
 
-    const theme = useTheme();
+    const [takeTeamPhoto, setTakeTeamPhoto] = React.useState(false);
+
+    if (takeTeamPhoto) return <DualCameraView />;
 
     return (
         <View style={{ position: 'relative', flex: 1 }}>
@@ -68,56 +65,28 @@ export default function CreateMatchAssignPoints({
                     marginHorizontal: 8,
                     marginBottom: insets.bottom + 16,
 
+                    justifyContent: 'space-between',
+
                     gap: 16,
                 }}
             >
                 {experiments.matchPhotos && (
-                    <Button
-                        variant="secondary"
-                        title={
-                            <Icon
-                                color={theme.color.text.primary}
-                                size={24}
-                                name="camera"
-                            />
-                        }
-                        size="large"
-                        onPress={onSubmit}
-                        disabled={isPending}
-                        style={{
-                            // box shadow:
-                            shadowColor: '#000',
-                            shadowOffset: {
-                                width: 0,
-                                height: 4,
-                            },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 4,
-                            elevation: 5,
-
-                            aspectRatio: 1,
-                        }}
+                    <OverlayIconButton
+                        iconName="camera"
+                        onPress={() => setTakeTeamPhoto(true)}
                     />
                 )}
-                <Button
-                    variant="primary"
-                    title={isPending ? <ActivityIndicator /> : 'Create'}
-                    size="large"
+                {/* <OverlayTextButton
+                    fullWidth
+                    title="Pro mode"
+                    isPending={isPending}
                     onPress={onSubmit}
-                    disabled={isPending}
-                    style={{
-                        // box shadow:
-                        shadowColor: '#000',
-                        shadowOffset: {
-                            width: 0,
-                            height: 4,
-                        },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 4,
-                        elevation: 5,
-
-                        flex: 1,
-                    }}
+                /> */}
+                <OverlayTextButton
+                    fullWidth
+                    title="Create"
+                    isPending={isPending}
+                    onPress={onSubmit}
                 />
             </SafeAreaView>
         </View>

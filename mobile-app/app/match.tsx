@@ -18,6 +18,7 @@ import {
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
@@ -30,7 +31,6 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
-import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
@@ -44,8 +44,6 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 const USE_MATCH_QUERY = false;
 
 export default function Page() {
-    const theme = useTheme();
-
     const [isEditing, setIsEditing] = useState(false);
 
     const { groupId, group } = useGroup();
@@ -319,11 +317,10 @@ export default function Page() {
                         ),
                 }}
             />
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,

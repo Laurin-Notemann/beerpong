@@ -9,10 +9,10 @@ import { useInterval } from '@/components/useInterval';
 
 const EXPERIMENTAL_LIVE_MATCHES = false;
 
-function useRerenderEverySecond() {
+export function useRerenderEverySecond() {
     const [, setNow] = useState(Date.now());
 
-    useInterval(() => setNow(Date.now()), 1000);
+    useInterval(() => setNow(Date.now()), 100);
 }
 
 export function LiveMatchIndicator() {

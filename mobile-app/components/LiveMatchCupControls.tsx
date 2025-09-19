@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, TouchableHighlight, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { StyleSheet, View } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import { useTheme } from '@/theme';
 
 export interface LiveMatchCupControlsProps {
@@ -29,18 +29,7 @@ export default function LiveMatchCupControls({
                     right: 16,
                     bottom: insets.bottom + 16,
 
-                    borderRadius: 10,
-                    backgroundColor: theme.panel.light.bg,
-                },
-                button: {
-                    alignItems: 'center',
-                    justifyContent: 'center',
-
-                    width: 50,
-                    height: 50,
-
-                    borderTopWidth: 0.5,
-                    borderTopColor: theme.panel.light.dividers,
+                    gap: 16,
                 },
                 dot: {
                     position: 'absolute',
@@ -58,71 +47,31 @@ export default function LiveMatchCupControls({
 
     return (
         <View style={styles.container}>
-            {/* <Link
-        href={{
-          pathname: "/formations",
-          params: { color: "red" },
-        }}
-        style={{ width: 50, height: 50 }}
-      > */}
-            <TouchableHighlight
-                style={styles.button}
-                underlayColor={theme.panel.light.active}
+            <OverlayIconButton
+                iconName="arrow-collapse"
                 onPress={() => nav.navigate('formations')}
-            >
-                <>
-                    <Icon
-                        name="arrow-collapse"
-                        size={24}
-                        color={theme.color.text.primary}
-                    />
-                    <View
-                        style={[
-                            styles.dot,
-                            { backgroundColor: theme.color.team.red },
-                        ]}
-                    />
-                </>
-            </TouchableHighlight>
-            {/* </Link> */}
-            <TouchableHighlight
-                style={styles.button}
-                underlayColor={theme.panel.light.active}
-                onPress={onFlip}
-            >
-                <Icon
-                    name="swap-vertical"
-                    size={24}
-                    color={theme.color.text.primary}
-                />
-            </TouchableHighlight>
-            {/* <Link
-        href={{
-          pathname: "/formations",
-          params: { color: "blue" },
-        }}
-        style={{ width: 50, height: 50 }}
-      > */}
-            <TouchableHighlight
-                style={styles.button}
-                underlayColor={theme.panel.light.active}
-                onPress={() => nav.navigate('formations')}
-            >
-                <>
-                    <Icon
-                        name="arrow-collapse"
-                        size={24}
-                        color={theme.color.text.primary}
-                    />
+                content={
                     <View
                         style={[
                             styles.dot,
                             { backgroundColor: theme.color.team.blue },
                         ]}
                     />
-                </>
-            </TouchableHighlight>
-            {/* </Link> */}
+                }
+            />
+            <OverlayIconButton iconName="swap-vertical" onPress={onFlip} />
+            <OverlayIconButton
+                iconName="arrow-collapse"
+                onPress={() => nav.navigate('formations')}
+                content={
+                    <View
+                        style={[
+                            styles.dot,
+                            { backgroundColor: theme.color.team.red },
+                        ]}
+                    />
+                }
+            />
         </View>
     );
 }

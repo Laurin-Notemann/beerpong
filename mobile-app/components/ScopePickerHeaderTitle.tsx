@@ -6,7 +6,7 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 export function ScopePickerHeaderTitle() {
     const scopePicker = useScopePicker();
 
-    const { groupId } = useGroup();
+    const { groupId, group } = useGroup();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -39,7 +39,9 @@ export function ScopePickerHeaderTitle() {
             height={21}
         >
             <HeaderTitle title="Today" />
-            <HeaderTitle title="This Season" />
+            <HeaderTitle
+                title={group.data?.activeSeason?.name || 'This Season'}
+            />
             {groupHasPastSeasons && <HeaderTitle title="All Time" />}
         </SwipeChildren>
     );

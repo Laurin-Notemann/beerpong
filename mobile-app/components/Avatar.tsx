@@ -51,7 +51,7 @@ export interface AvatarProps {
     url?: string | null;
     name?: string;
     content?: string;
-    size?: 128 | 96 | 40 | 36;
+    size?: 128 | 96 | 40 | 36 | number;
 
     style?: any;
 
@@ -106,6 +106,8 @@ export default function Avatar({
                             left: 0,
                             width: size,
                             height: size,
+
+                            backgroundColor: theme.avatar.bg,
                         }}
                     />
                 )}

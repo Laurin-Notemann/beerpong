@@ -37,7 +37,7 @@ export function Cup({
             duration: MOVEMENT_ANIMATION_DURATION_MS,
         }),
         // to always put the cups in the lower rows over the upper ones for consistency
-        zIndex: y,
+        zIndex: Math.round(y),
     }));
     const gestures = [
         onPan?.enabled(!disabled),

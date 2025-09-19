@@ -17,6 +17,7 @@ type Props = {
     speed?: number;
     /** Spring bounciness (default 8) */
     bounciness?: number;
+    fullWidth?: boolean;
 } & Omit<PressableProps, 'style'>;
 
 const PressableScale: React.FC<Props> = ({
@@ -27,6 +28,7 @@ const PressableScale: React.FC<Props> = ({
     bounciness = 8,
     onPressIn,
     onPressOut,
+    fullWidth = false,
     ...pressableProps
 }) => {
     const scale = useRef(new Animated.Value(1)).current;
@@ -47,6 +49,9 @@ const PressableScale: React.FC<Props> = ({
     return (
         <Pressable
             {...pressableProps}
+            style={{
+                flex: fullWidth ? 1 : undefined,
+            }}
             onPressIn={(e) => {
                 animate(pressedScale);
                 onPressIn?.(e);

@@ -70,7 +70,7 @@ export default function ConfirmationModal({
                     right: 0,
                 },
                 sheet: {
-                    backgroundColor: theme.panel.light.active,
+                    backgroundColor: theme.color.modal.bg,
                     borderTopLeftRadius: 16,
                     borderTopRightRadius: 16,
                     overflow: 'hidden',
