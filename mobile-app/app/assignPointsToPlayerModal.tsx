@@ -4,7 +4,7 @@ import React from 'react';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { ConsoleLogger } from '@/utils/logging';
@@ -62,10 +62,13 @@ export default function Page() {
                     isFinish: j.finishingMove!,
                 };
             }),
+            profileId: '#',
         };
     });
 
-    const match = {
+    const match: MinimalMatch = {
+        id: '#',
+        date: new Date(),
         blueCups: players
             .filter((i) => i.team === 'blue')
             .map((i) => i.moves)

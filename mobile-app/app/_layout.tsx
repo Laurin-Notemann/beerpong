@@ -59,6 +59,7 @@ function Everything() {
                 name="dailyLeaderboardSettings"
                 options={modalStyles}
             />
+            <Stack.Screen name="takeTeamPhotos" options={modalStyles} />
             <Stack.Screen name="teamSizeSettings" options={modalStyles} />
             <Stack.Screen
                 name="minMatchesToQualifySettings"

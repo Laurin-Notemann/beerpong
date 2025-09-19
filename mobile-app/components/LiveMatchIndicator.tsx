@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 
+import { MinimalMatch } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import PressableScale from '@/components/PressableScale';
@@ -18,14 +19,32 @@ export function useRerenderEverySecond() {
 export function LiveMatchIndicator() {
     const liveMatchStartDate = useRef(new Date());
 
-    const matchesInProgress = [
+    const matchesInProgress: (MinimalMatch & { startDate: Date })[] = [
         {
-            startDate: liveMatchStartDate.current,
+            id: '#',
+            date: new Date(),
+            startDate: liveMatchStartDate.current!,
             blueCups: 6,
             redCups: 3,
             blueTeam: [
-                { id: '#', profileId: '#', moves: [], name: 'Thies' },
-                { id: '#', profileId: '#', moves: [], name: 'Bolls' },
+                {
+                    id: '#',
+                    profileId: '#',
+                    moves: [],
+                    name: 'Thies',
+                    team: 'blue',
+                    points: 0,
+                    change: 0,
+                },
+                {
+                    id: '#',
+                    profileId: '#',
+                    moves: [],
+                    name: 'Bolls',
+                    team: 'blue',
+                    points: 0,
+                    change: 0,
+                },
             ],
             redTeam: [
                 {
@@ -33,8 +52,19 @@ export function LiveMatchIndicator() {
                     profileId: '#',
                     moves: [],
                     name: 'Schicke',
+                    team: 'red',
+                    points: 0,
+                    change: 0,
                 },
-                { id: '#', profileId: '#', moves: [], name: 'Ole' },
+                {
+                    id: '#',
+                    profileId: '#',
+                    moves: [],
+                    name: 'Ole',
+                    team: 'red',
+                    points: 0,
+                    change: 0,
+                },
             ],
         },
     ];

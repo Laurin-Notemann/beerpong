@@ -31,6 +31,8 @@ interface CupsState {
 }
 
 interface MatchDraftStore {
+    blueTeamPhotoUri?: string;
+    redTeamPhotoUri?: string;
     hasBeenOnPageTwo: boolean;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
@@ -51,6 +53,10 @@ interface MatchDraftStore {
             redTeam: { id: string }[],
             blueTeam: { id: string }[]
         ) => void;
+        setTeamPhotos: (photos: {
+            blueTeamPhotoUri?: string;
+            redTeamPhotoUri?: string;
+        }) => void;
     };
 }
 
@@ -237,6 +243,12 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         currentFormation: Formation.Pyramid_10,
                     },
                 },
+            }));
+        },
+        setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
+            set(() => ({
+                blueTeamPhotoUri: blueTeamPhotoUri,
+                redTeamPhotoUri: redTeamPhotoUri,
             }));
         },
     },

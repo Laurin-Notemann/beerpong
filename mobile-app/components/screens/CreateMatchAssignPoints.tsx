@@ -1,13 +1,16 @@
-import React from 'react';
+import { useCameraPermissions } from 'expo-camera';
+import React, { useEffect } from 'react';
 import { SafeAreaView, ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
-import { DualCameraView } from '@/components/DualCameraView';
+import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import MatchPlayers from '@/components/MatchPlayers';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -29,11 +32,32 @@ export default function CreateMatchAssignPoints({
 }: CreateMatchAssignPointsProps) {
     const experiments = useLocalSettings();
 
+    const [camPerm, requestCamPerm] = useCameraPermissions();
+
     const insets = useInsets(true, true);
 
-    const [takeTeamPhoto, setTakeTeamPhoto] = React.useState(false);
+    const [
+        openCameraAsSoonAsWeHavePermission,
+        setOpenCameraAsSoonAsWeHavePermission,
+    ] = React.useState(false);
 
-    if (takeTeamPhoto) return <DualCameraView />;
+    const nav = useNavigation();
+
+    useEffect(() => {
+        if (openCameraAsSoonAsWeHavePermission && camPerm?.granted) {
+            nav.navigate('takeTeamPhotos');
+            setOpenCameraAsSoonAsWeHavePermission(false);
+        }
+    }, [camPerm, openCameraAsSoonAsWeHavePermission]);
+
+    function onTakeTeamPhoto() {
+        setOpenCameraAsSoonAsWeHavePermission(true);
+        if (!camPerm?.granted) {
+            requestCamPerm();
+            return;
+        }
+    }
+    const matchDraft = useMatchDraftStore();
 
     return (
         <View style={{ position: 'relative', flex: 1 }}>
@@ -47,6 +71,23 @@ export default function CreateMatchAssignPoints({
                     paddingBottom: insets.bottom + 84,
                 }}
             >
+                {experiments.matchPhotos &&
+                    matchDraft.blueTeamPhotoUri &&
+                    matchDraft.redTeamPhotoUri && (
+                        <DualTeamPhoto
+                            match={{ blueTeam: [], redTeam: [] }}
+                            blueImageSource={
+                                matchDraft.blueTeamPhotoUri
+                                    ? { uri: matchDraft.blueTeamPhotoUri }
+                                    : undefined
+                            }
+                            redImageSource={
+                                matchDraft.redTeamPhotoUri
+                                    ? { uri: matchDraft.redTeamPhotoUri }
+                                    : undefined
+                            }
+                        />
+                    )}
                 <MatchPlayers
                     editable
                     players={players}
@@ -73,7 +114,7 @@ export default function CreateMatchAssignPoints({
                 {experiments.matchPhotos && (
                     <OverlayIconButton
                         iconName="camera"
-                        onPress={() => setTakeTeamPhoto(true)}
+                        onPress={onTakeTeamPhoto}
                     />
                 )}
                 {/* <OverlayTextButton

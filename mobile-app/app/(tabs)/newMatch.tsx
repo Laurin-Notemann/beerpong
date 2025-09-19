@@ -13,13 +13,9 @@ import {
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import {
-    getInfluenceOfMatchOnAveragePoints,
-    Match,
-    matchDtoToMatch,
-    TeamMember,
-} from '@/api/utils/matchDtoToMatch';
+import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { AppBackground } from '@/app/Background';
+import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Cups from '@/app/startLiveMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
@@ -104,18 +100,6 @@ export default function NewMatchScreen() {
 
     const matchDraft = useMatchDraftStore();
 
-    const profiles = (playersQuery.data?.data ?? [])
-        .filter((i) => i.activeThisSeason)
-        .map<Player>((i) => ({
-            id: i.id!,
-            name: i.profile?.name || 'Unknown',
-            team:
-                matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
-                    ?.team ?? null,
-
-            avatarUrl: i.profile?.avatarAsset?.url,
-        }));
-
     const hasValidTeams =
         matchDraft.redTeam.teamMembers.length >= minTeamSize &&
         matchDraft.blueTeam.teamMembers.length >= minTeamSize &&
@@ -138,58 +122,28 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    const players = matchDraft.actions.getPlayers();
+    const profiles = playersQuery.data?.data ?? [];
 
-    const teamMembers = players.map<TeamMember>((i) => {
-        const profile = (playersQuery.data?.data ?? []).find(
-            (j) => i.playerId === j.id
-        );
+    const selectablePlayers = profiles
+        .filter((i) => i.activeThisSeason)
+        .map<Player>((i) => ({
+            id: i.id!,
+            name: i.profile?.name || 'Unknown',
+            team:
+                matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
+                    ?.team ?? null,
 
-        if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member');
-        }
+            avatarUrl: i.profile?.avatarAsset?.url,
+        }));
 
-        const ownTeam = players.filter((j) => j.team === i.team);
-
-        const pointsForOwnMoves = i.moves.reduce(
-            (sum, j) =>
-                sum +
-                j.count *
-                    (allowedMoves.find((k) => k.id === j.moveId)
-                        ?.pointsForScorer ?? 0),
-            0
-        );
-        const teamMoves = ownTeam.reduce<(typeof i)['moves']>(
-            (sum, j) => sum.concat(j.moves),
-            []
-        );
-        const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
-            const pointsForMove =
-                allowedMoves.find((k) => k.id === j.moveId)?.pointsForTeam ?? 0;
-
-            return sum + pointsForMove * j.count;
-        }, 0);
-        const points = pointsForOwnMoves + pointsForTeamMoves;
-
-        return {
-            id: i.playerId,
-            team: i.team,
-            avatarUrl: profile?.profile?.avatarAsset?.url,
-            name: profile?.profile?.name || 'Unknown',
-            points,
-            change: 0, // we set this later, can't set it here bc we need matchObj to calculate it which requires teamMembers 🙃
-            moves: allowedMoves.map((j) => {
-                return {
-                    id: j.id!,
-                    count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
-                    title: j.name || 'Unknown',
-                    points: j.pointsForScorer!,
-                    pointsForTeam: j.pointsForTeam!,
-                    isFinish: j.finishingMove!,
-                };
-            }),
-        };
-    });
+    const displayMatch = getDisplayMatch(
+        matchDraft.actions.getPlayers(),
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm,
+        playersQuery.data?.data ?? [],
+        matches,
+        movesQuery.data?.data ?? []
+    );
+    const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
     const createMatchMutation = useCreateMatchMutation();
 
@@ -231,33 +185,6 @@ export default function NewMatchScreen() {
             ConsoleLogger.error('failed to create match:', err);
             showErrorToast('Failed to create match.');
         }
-    }
-
-    const matchObj = {
-        id: '#',
-        date: new Date(),
-        blueCups: teamMembers
-            .filter((i) => i.team === 'blue')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
-        redCups: teamMembers
-            .filter((i) => i.team === 'red')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
-        redTeam: teamMembers.filter((i) => i.team === 'red'),
-        blueTeam: teamMembers.filter((i) => i.team === 'blue'),
-        winnerTeamId: null,
-    };
-
-    for (const i of teamMembers) {
-        i.change = getInfluenceOfMatchOnAveragePoints(
-            matches.concat([matchObj as Match]),
-            i.id,
-            '#',
-            group.data?.activeSeason?.seasonSettings?.rankingAlgorithm
-        );
     }
 
     const [randomTeamsMode, setRandomTeamsMode] = useState<{
@@ -314,7 +241,7 @@ export default function NewMatchScreen() {
                 randomTeamsMode={randomTeamsMode}
                 onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
                 animationProgress={animationProgress}
-                match={matchObj}
+                match={displayMatch}
                 onClear={() => {
                     matchDraft.actions.clear();
                     triggerHapticBump('selection');
@@ -388,7 +315,7 @@ export default function NewMatchScreen() {
                                 }}
                                 minTeamSize={minTeamSize}
                                 maxTeamSize={maxTeamSize}
-                                players={profiles}
+                                players={selectablePlayers}
                                 setTeam={matchDraft.actions.setPlayerTeam}
                             />
                         );

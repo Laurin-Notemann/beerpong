@@ -11,7 +11,7 @@ interface MoveDraft {
     moveId: string;
     count: number;
 }
-interface PlayerDraft {
+export interface PlayerDraft {
     playerId: string;
     moves: MoveDraft[];
 }

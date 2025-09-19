@@ -2,17 +2,17 @@ import React from 'react';
 import { Text, View, ViewProps } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { useTheme } from '@/theme';
 
-function ScoreChip({
+export function ScoreChip({
     winnerTeamId,
-    children,
+    children = 'vs',
 }: {
-    winnerTeamId: 'red' | 'blue' | null;
-    children: React.ReactNode;
+    winnerTeamId?: 'red' | 'blue' | null;
+    children?: React.ReactNode;
 }) {
     const theme = useTheme();
     return (
@@ -47,11 +47,6 @@ function ScoreChip({
                     paddingHorizontal: 5,
                     paddingVertical: 2,
                     fontSize: 16,
-
-                    // backgroundColor:
-                    //   Math.round(Math.random()) === 1
-                    //     ? theme.color.team.red
-                    //     : theme.color.team.blue,
                 }}
             >
                 {children}
@@ -68,18 +63,8 @@ const hasFinishMove = (team?: TeamMember[]): boolean => {
     );
 };
 
-type InputTeamMember = Pick<
-    TeamMember,
-    'name' | 'avatarUrl' | 'profileId' | 'moves'
->;
-
-type InputMatch = Pick<Match, 'blueCups' | 'redCups'> & {
-    blueTeam: InputTeamMember[];
-    redTeam: InputTeamMember[];
-};
-
 export interface MatchVsHeaderProps extends ViewProps {
-    match: InputMatch;
+    match: Omit<MinimalMatch, 'id' | 'date'>;
 
     hasScore?: boolean;
 
@@ -133,29 +118,34 @@ export default function MatchVsHeader({
     );
 }
 
-function Team({
+export function Team({
     highlightedId,
     players,
-    maxItems,
+    maxItems = 4,
     color,
-    isCopy = false,
+    centered = false,
+    style,
+    size = 36,
 }: {
     highlightedId?: string | null;
     players: TeamMember[];
-    maxItems: number;
+    maxItems?: number;
     color: 'red' | 'blue';
-
-    isCopy?: boolean;
+    centered?: boolean;
+    style?: ViewProps['style'];
+    size?: number;
 }) {
     const theme = useTheme();
 
     const displayedPlayers = players.slice(0, maxItems);
 
-    const avatarSize = 36;
+    const avatarSize = size;
 
-    const avatarGap = 16;
+    const avatarGap = size / 2.25;
 
-    const teamWidth = avatarSize * maxItems - avatarGap * (maxItems - 1);
+    const maxWidth = avatarSize * maxItems - avatarGap * (maxItems - 1);
+    const actualWidth =
+        avatarSize * players.length - avatarGap * (players.length - 1);
 
     const highlightedPlayer = players.find(
         (i) => i.profileId === highlightedId
@@ -165,12 +155,15 @@ function Team({
 
     return (
         <View
-            style={{
-                flexDirection: 'row',
-                justifyContent: color === 'red' ? 'flex-start' : 'flex-end',
+            style={[
+                {
+                    flexDirection: 'row',
+                    justifyContent: color === 'red' ? 'flex-start' : 'flex-end',
 
-                width: teamWidth,
-            }}
+                    width: centered ? actualWidth : maxWidth,
+                },
+                style,
+            ]}
         >
             <View
                 style={{
@@ -188,6 +181,7 @@ function Team({
                     )
                     .map((i, index) => (
                         <Avatar
+                            size={avatarSize}
                             key={index}
                             url={i.avatarUrl}
                             content={
@@ -199,14 +193,17 @@ function Team({
                             name={i.name}
                             borderColor={theme.color.team[color]}
                             style={{
-                                marginRight: color === 'red' ? -16 : undefined,
-                                marginLeft: color === 'blue' ? -16 : undefined,
+                                marginRight:
+                                    color === 'red' ? -avatarGap : undefined,
+                                marginLeft:
+                                    color === 'blue' ? -avatarGap : undefined,
                             }}
                         />
                     ))}
             </View>
             {highlightedPlayer && (
                 <Avatar
+                    size={avatarSize}
                     url={highlightedPlayer.avatarUrl}
                     name={highlightedPlayer.name}
                     borderColor={theme.color.team[color]}
