@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, Text, View } from 'react-native';
@@ -19,14 +18,12 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
-
-import { OverlayTextButton } from '../overlay/OverlayTextButton';
-import PressableScale from '../PressableScale';
 
 export type RuleRenderItem = {
     id: string;

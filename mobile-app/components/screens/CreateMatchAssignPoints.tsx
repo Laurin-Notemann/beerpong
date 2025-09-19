@@ -1,23 +1,13 @@
-import { BlurView } from 'expo-blur';
 import React from 'react';
-import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    View,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { SafeAreaView, ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useInsets } from '@/app/useInsets';
-import Button from '@/components/Button';
+import { DualCameraView } from '@/components/DualCameraView';
 import MatchPlayers from '@/components/MatchPlayers';
-import { useTheme } from '@/theme';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
-
-import { OverlayIconButton } from '../overlay/OverlayIconButton';
-import { OverlayTextButton } from '../overlay/OverlayTextButton';
-import PressableScale from '../PressableScale';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -41,7 +31,9 @@ export default function CreateMatchAssignPoints({
 
     const insets = useInsets(true, true);
 
-    const theme = useTheme();
+    const [takeTeamPhoto, setTakeTeamPhoto] = React.useState(false);
+
+    if (takeTeamPhoto) return <DualCameraView />;
 
     return (
         <View style={{ position: 'relative', flex: 1 }}>
@@ -81,8 +73,7 @@ export default function CreateMatchAssignPoints({
                 {experiments.matchPhotos && (
                     <OverlayIconButton
                         iconName="camera"
-                        onPress={onSubmit}
-                        disabled={isPending}
+                        onPress={() => setTakeTeamPhoto(true)}
                     />
                 )}
                 {/* <OverlayTextButton

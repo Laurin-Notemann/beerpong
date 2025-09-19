@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { AnimatedScrollViewProps } from 'react-native-reanimated';
 
@@ -14,15 +13,13 @@ import ErrorScreen from '@/components/ErrorScreen';
 import Leaderboard from '@/components/Leaderboard';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
+import { LeaderboardCountdown } from '@/components/LeaderboardCountdown';
 import LoadingScreen from '@/components/LoadingScreen';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
 import { SeasonSettings } from '@/openapi/openapi';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-import { LeaderboardCountdown } from '../LeaderboardCountdown';
-import { useRerenderEverySecond } from '../LiveMatchIndicator';
 
 dayjs.extend(duration);
 

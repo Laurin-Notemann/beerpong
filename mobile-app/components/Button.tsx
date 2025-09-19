@@ -1,9 +1,8 @@
 import { BlurView } from 'expo-blur';
 import { Text, TouchableHighlightProps, View } from 'react-native';
 
+import PressableScale from '@/components/PressableScale';
 import { useTheme } from '@/theme';
-
-import PressableScale from './PressableScale';
 
 export interface ButtonProps extends TouchableHighlightProps {
     title: JSX.Element | string;

@@ -1,12 +1,10 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, TouchableHighlight, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { StyleSheet, View } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import { useTheme } from '@/theme';
-
-import { OverlayIconButton } from './overlay/OverlayIconButton';
 
 export interface LiveMatchCupControlsProps {
     onFlip: () => void;

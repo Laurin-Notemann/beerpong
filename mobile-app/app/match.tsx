@@ -31,7 +31,6 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
-import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
@@ -45,8 +44,6 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 const USE_MATCH_QUERY = false;
 
 export default function Page() {
-    const theme = useTheme();
-
     const [isEditing, setIsEditing] = useState(false);
 
     const { groupId, group } = useGroup();

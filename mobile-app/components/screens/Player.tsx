@@ -4,8 +4,6 @@ import {
     Animated,
     Dimensions,
     Modal,
-    SafeAreaView,
-    TouchableHighlight,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -13,7 +11,6 @@ import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
@@ -36,8 +33,6 @@ import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-import { OverlayIconButton } from '../overlay/OverlayIconButton';
 
 const swiperAtTop = false;
 

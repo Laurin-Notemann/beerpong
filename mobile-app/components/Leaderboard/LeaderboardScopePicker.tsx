@@ -11,8 +11,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
-import PressableScale from '@/components/PressableScale';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
 import {
@@ -22,8 +22,6 @@ import {
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-import { OverlayIconButton } from '../overlay/OverlayIconButton';
 
 const USE_SELECT_IN_SORT_MODAL = false;
 
