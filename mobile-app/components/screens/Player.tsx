@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
@@ -36,9 +37,9 @@ import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
-const swiperAtTop = false;
+import { OverlayIconButton } from '../overlay/OverlayIconButton';
 
-const CLOSE_BUTTON = false;
+const swiperAtTop = false;
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -185,6 +186,7 @@ export default function PlayerScreen({
                     ),
                 }}
             />
+            <AppBackground />
             {!editable &&
                 (scopePicker.isPastSeasonsMode ? (
                     groupHasPastSeasons ? (
@@ -208,7 +210,7 @@ export default function PlayerScreen({
                                     }}
                                     ListHeaderComponent={
                                         <>
-                                            <TouchableHighlight
+                                            <TouchableOpacity
                                                 onPress={() =>
                                                     setInspectAvatar(true)
                                                 }
@@ -227,7 +229,7 @@ export default function PlayerScreen({
                                                             .rankingAlgorithm
                                                     }
                                                 />
-                                            </TouchableHighlight>
+                                            </TouchableOpacity>
                                         </>
                                     }
                                     matches={scopes.get(obj.id!)!.matches}
@@ -259,7 +261,7 @@ export default function PlayerScreen({
                             }}
                             ListHeaderComponent={
                                 <>
-                                    <TouchableHighlight
+                                    <TouchableOpacity
                                         onPress={() => setInspectAvatar(true)}
                                     >
                                         <PlayerPageHeadSection
@@ -276,7 +278,7 @@ export default function PlayerScreen({
                                                     .rankingAlgorithm
                                             }
                                         />
-                                    </TouchableHighlight>
+                                    </TouchableOpacity>
                                 </>
                             }
                             matches={scopes.get('today')!.matches}
@@ -298,11 +300,12 @@ export default function PlayerScreen({
                             }}
                             ListHeaderComponent={
                                 <>
-                                    <TouchableHighlight
+                                    <TouchableOpacity
                                         onPress={() => setInspectAvatar(true)}
                                     >
                                         <PlayerPageHeadSection
-                                            {...scopes.get('season')!}
+                                            // TODO: scopes.get('season') is actually null on first render sometimes
+                                            {...(scopes.get('season') ?? {})}
                                             avatarUrl={avatarUrl}
                                             name={name}
                                             editable={editable}
@@ -311,14 +314,15 @@ export default function PlayerScreen({
                                             }
                                             rankingAlgorithm={
                                                 rankingAlgorithm ??
-                                                scopes.get('season')!
-                                                    .rankingAlgorithm
+                                                scopes.get('season')
+                                                    ?.rankingAlgorithm ??
+                                                'ELO'
                                             }
                                         />
-                                    </TouchableHighlight>
+                                    </TouchableOpacity>
                                 </>
                             }
-                            matches={scopes.get('season')!.matches}
+                            matches={scopes.get('season')?.matches ?? []}
                             refresh={refresh}
                             forPlayer={{ profileId }}
                         />
@@ -339,7 +343,7 @@ export default function PlayerScreen({
                                 }}
                                 ListHeaderComponent={
                                     <>
-                                        <TouchableHighlight
+                                        <TouchableOpacity
                                             onPress={() =>
                                                 setInspectAvatar(true)
                                             }
@@ -358,7 +362,7 @@ export default function PlayerScreen({
                                                         .rankingAlgorithm
                                                 }
                                             />
-                                        </TouchableHighlight>
+                                        </TouchableOpacity>
                                     </>
                                 }
                                 matches={scopes.get('all-time')!.matches}
@@ -372,8 +376,6 @@ export default function PlayerScreen({
                 <ScrollView
                     style={{
                         flex: 1,
-
-                        backgroundColor: theme.color.bg,
                     }}
                     contentContainerStyle={{
                         top: insets.top,
@@ -406,6 +408,7 @@ export default function PlayerScreen({
                     >
                         <MenuSection>
                             <MenuItem
+                                border={false}
                                 title={name}
                                 headIcon="pencil-outline"
                                 onPress={() =>
@@ -449,28 +452,24 @@ export default function PlayerScreen({
                     opacity={fade}
                     onPress={() => setInspectAvatar(false)}
                 />
-                {CLOSE_BUTTON && (
-                    <SafeAreaView>
-                        <Animated.View
-                            style={[{ transform: [{ scale }], opacity: scale }]}
-                        >
-                            <TouchableOpacity
-                                onPress={() => setInspectAvatar(false)}
-                            >
-                                <Icon
-                                    color={theme.color.text.primary}
-                                    name="close"
-                                    size={32}
-                                />
-                            </TouchableOpacity>
-                        </Animated.View>
-                    </SafeAreaView>
-                )}
+                {/* <SafeAreaView
+                    style={{
+                        paddingHorizontal: 4,
+                    }}
+                >
+                    <OverlayIconButton
+                        iconName="close"
+                        onPress={() => setInspectAvatar(false)}
+                    />
+                </SafeAreaView> */}
+
                 <Animated.View
                     style={[
                         {
                             marginVertical: 'auto',
                             alignItems: 'center',
+
+                            justifyContent: 'center',
                         },
                         { transform: [{ scale }], opacity: scale },
                     ]}
@@ -478,11 +477,7 @@ export default function PlayerScreen({
                     <Avatar
                         url={avatarUrl}
                         // Avatar's size prop is a union type; pass via style for custom size
-                        style={{
-                            width: screenWidth - 64,
-                            height: screenWidth - 64,
-                        }}
-                        size={128}
+                        size={screenWidth - 64}
                         name={name}
                     />
                 </Animated.View>

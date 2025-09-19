@@ -1,12 +1,9 @@
-import { useRef } from 'react';
-import {
-    Animated,
-    Text,
-    TouchableHighlight,
-    TouchableHighlightProps,
-} from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Text, TouchableHighlightProps, View } from 'react-native';
 
 import { useTheme } from '@/theme';
+
+import PressableScale from './PressableScale';
 
 export interface ButtonProps extends TouchableHighlightProps {
     title: JSX.Element | string;
@@ -17,6 +14,8 @@ export interface ButtonProps extends TouchableHighlightProps {
     onPress: () => void;
 
     disabled?: boolean;
+
+    blur?: boolean;
 }
 export default function Button({
     title,
@@ -27,18 +26,10 @@ export default function Button({
 
     disabled = false,
 
+    blur = false,
+
     ...rest
 }: ButtonProps) {
-    const scale = useRef(new Animated.Value(1)).current;
-
-    const animate = (to: number) =>
-        Animated.spring(scale, {
-            toValue: to,
-            useNativeDriver: true,
-            speed: 200,
-            bounciness: 8,
-        }).start();
-
     const theme = useTheme();
 
     const style = (
@@ -49,64 +40,99 @@ export default function Button({
                 active: theme.panel.light.active,
             },
             primary: {
-                backgroundColor: '#2C6BED',
+                backgroundColor: theme.button.primary,
                 color: 'white',
-                active: '#2C58B3',
+                active: theme.button.primaryActive,
             },
             secondary: {
                 backgroundColor: theme.panel.dark.bg,
-                color: '#2C6BED',
+                color: theme.button.primary,
                 active: theme.panel.dark.active,
             },
         } as const
     )[variant];
 
     return (
-        <TouchableHighlight
+        <PressableScale
             {...rest}
             disabled={disabled}
-            onPressIn={() => animate(0.98)}
-            onPressOut={() => animate(1)}
+            pressedScale={0.95}
             onPress={onPress}
         >
-            <Animated.View
-                style={[
-                    rest.style,
-                    {
-                        alignItems: 'center',
-                        justifyContent: 'center',
+            {blur ? (
+                <BlurView
+                    intensity={70}
+                    tint={theme.blur.tint}
+                    style={[
+                        rest.style,
+                        {
+                            alignItems: 'center',
+                            justifyContent: 'center',
 
-                        height: size === 'large' ? 52 : 42,
+                            height: size === 'large' ? 52 : 42,
 
-                        borderRadius: size === 'large' ? 5 : 10,
-                        backgroundColor: disabled
-                            ? '#222'
-                            : style.backgroundColor,
+                            borderRadius: size === 'large' ? 5 : 10,
 
-                        alignSelf: 'stretch',
+                            alignSelf: 'stretch',
 
-                        paddingHorizontal: 16,
-                    },
-                    {
-                        transform: [{ scale }],
-                    },
-                ]}
-            >
-                {typeof title === 'string' ? (
-                    <Text
-                        style={{
-                            fontSize: 17,
-                            fontWeight: 600,
+                            paddingHorizontal: 16,
 
-                            color: disabled ? '#444' : style.color,
-                        }}
-                    >
-                        {title}
-                    </Text>
-                ) : (
-                    title
-                )}
-            </Animated.View>
-        </TouchableHighlight>
+                            backgroundColor: theme.overlay.backgroundColor,
+                        },
+                    ]}
+                >
+                    {typeof title === 'string' ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: 600,
+
+                                color: disabled ? '#444' : style.color,
+                            }}
+                        >
+                            {title}
+                        </Text>
+                    ) : (
+                        title
+                    )}
+                </BlurView>
+            ) : (
+                <View
+                    style={[
+                        rest.style,
+                        {
+                            alignItems: 'center',
+                            justifyContent: 'center',
+
+                            height: size === 'large' ? 52 : 42,
+
+                            borderRadius: size === 'large' ? 5 : 10,
+                            backgroundColor: disabled
+                                ? '#222'
+                                : style.backgroundColor,
+
+                            alignSelf: 'stretch',
+
+                            paddingHorizontal: 16,
+                        },
+                    ]}
+                >
+                    {typeof title === 'string' ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: 600,
+
+                                color: disabled ? '#444' : style.color,
+                            }}
+                        >
+                            {title}
+                        </Text>
+                    ) : (
+                        title
+                    )}
+                </View>
+            )}
+        </PressableScale>
     );
 }

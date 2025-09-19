@@ -18,6 +18,7 @@ import {
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
@@ -319,11 +320,10 @@ export default function Page() {
                         ),
                 }}
             />
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,

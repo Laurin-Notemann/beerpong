@@ -3,9 +3,16 @@ import { useLocalSettings } from '@/zustand/localSettingsStore';
 const black = '#000';
 
 export interface Theme {
-    textEmphasis: string;
     activeGroupItem: string;
     id: string;
+    button: {
+        primary: string;
+        primaryActive: string;
+    };
+    overlay: {
+        backgroundColor: string | undefined;
+        highlightColor: string;
+    };
     blur: {
         intensity: number;
         tint: 'dark' | 'light';
@@ -43,6 +50,7 @@ export interface Theme {
             negative: string;
             branding: string;
             link: string;
+            emphasis: string;
         };
         bg: string;
         topNav: string;
@@ -81,9 +89,16 @@ export interface Theme {
 }
 
 const lightModeTheme: Theme = {
-    textEmphasis: '#EF4679',
     activeGroupItem: 'rgba(0,0,0,0.2)',
+    button: {
+        primary: '#2C6BED',
+        primaryActive: '#2C58B3',
+    },
     id: 'light',
+    overlay: {
+        backgroundColor: 'rgba(255,255,255, 0.5)',
+        highlightColor: 'rgba(0, 0, 0, 0.05)',
+    },
     blur: {
         intensity: 0,
         tint: 'light',
@@ -126,6 +141,7 @@ const lightModeTheme: Theme = {
             branding: '#2C6BED',
 
             link: '#6291F3',
+            emphasis: '#EF4679',
         },
         bg: '#EFEFF0', // white background
         topNav: '#FFFFFF',
@@ -164,9 +180,16 @@ const lightModeTheme: Theme = {
 };
 
 const darkModeTheme: Theme = {
-    textEmphasis: '#EF4679',
     activeGroupItem: 'rgba(0,0,0,0.3)',
+    button: {
+        primary: '#2C6BED',
+        primaryActive: '#2C58B3',
+    },
     id: 'dark',
+    overlay: {
+        backgroundColor: undefined,
+        highlightColor: 'rgba(255,255,255,0.1)',
+    },
     blur: {
         intensity: 0,
         tint: 'dark',
@@ -211,6 +234,7 @@ const darkModeTheme: Theme = {
             branding: '#2C6BED',
 
             link: '#6291F3',
+            emphasis: '#EF4679',
         },
         bg: black,
         topNav: black,
@@ -249,9 +273,16 @@ const darkModeTheme: Theme = {
 };
 
 const darkWithGloss: Theme = {
-    textEmphasis: '#EF4679',
     activeGroupItem: 'rgba(255,255,255,0.08)',
+    button: {
+        primary: '#AD1F40',
+        primaryActive: '#EF4679',
+    },
     id: 'darkWithGloss',
+    overlay: {
+        backgroundColor: undefined,
+        highlightColor: 'rgba(255,255,255,0.1)',
+    },
     blur: {
         intensity: 50,
         tint: 'dark',
@@ -268,12 +299,12 @@ const darkWithGloss: Theme = {
         peekSize: 8,
     },
     avatar: {
-        bg: '#D2D2DC',
+        bg: 'rgba(255,255,255,0.2)',
         text: '#bbb',
 
         badge: {
-            bg: '#D4D4D4',
-            text: '#333',
+            bg: 'white',
+            text: '#111',
         },
     },
     color: {
@@ -282,8 +313,8 @@ const darkWithGloss: Theme = {
         premium: '#9647FD',
 
         modal: {
-            bg: '#222',
-            buttonUnderlay: '#4A4A4A',
+            bg: '#111',
+            buttonUnderlay: '#1f1f1f',
         },
         text: {
             primary: '#f6f6f6',
@@ -295,7 +326,8 @@ const darkWithGloss: Theme = {
 
             branding: '#2C6BED',
 
-            link: '#6291F3',
+            link: '#EF4679',
+            emphasis: '#EF4679',
         },
         bg: black,
         topNav: black,
@@ -305,7 +337,7 @@ const darkWithGloss: Theme = {
             blue: '#18A0FB',
         },
         delete: '#F44336',
-        confirm: '#6291F3',
+        confirm: '#EF4679',
     },
     borderRadius: {
         card: 10,
@@ -315,8 +347,8 @@ const darkWithGloss: Theme = {
         light: {
             bg: '#2e2e2e',
             border: '#444',
-            active: '#3B3B3B',
-            dividers: '#1d1d1d',
+            active: 'rgba(255,255,255,0.05)',
+            dividers: 'rgba(255,255,255,0.05)',
         },
         dark: {
             bg: '#1B1B1B',

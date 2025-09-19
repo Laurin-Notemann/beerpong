@@ -1,3 +1,4 @@
+import { BlurView } from 'expo-blur';
 import React from 'react';
 import {
     ActivityIndicator,
@@ -13,6 +14,10 @@ import Button from '@/components/Button';
 import MatchPlayers from '@/components/MatchPlayers';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+
+import { OverlayIconButton } from '../overlay/OverlayIconButton';
+import { OverlayTextButton } from '../overlay/OverlayTextButton';
+import PressableScale from '../PressableScale';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -68,56 +73,29 @@ export default function CreateMatchAssignPoints({
                     marginHorizontal: 8,
                     marginBottom: insets.bottom + 16,
 
+                    justifyContent: 'space-between',
+
                     gap: 16,
                 }}
             >
                 {experiments.matchPhotos && (
-                    <Button
-                        variant="secondary"
-                        title={
-                            <Icon
-                                color={theme.color.text.primary}
-                                size={24}
-                                name="camera"
-                            />
-                        }
-                        size="large"
+                    <OverlayIconButton
+                        iconName="camera"
                         onPress={onSubmit}
                         disabled={isPending}
-                        style={{
-                            // box shadow:
-                            shadowColor: '#000',
-                            shadowOffset: {
-                                width: 0,
-                                height: 4,
-                            },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 4,
-                            elevation: 5,
-
-                            aspectRatio: 1,
-                        }}
                     />
                 )}
-                <Button
-                    variant="primary"
-                    title={isPending ? <ActivityIndicator /> : 'Create'}
-                    size="large"
+                {/* <OverlayTextButton
+                    fullWidth
+                    title="Pro mode"
+                    isPending={isPending}
                     onPress={onSubmit}
-                    disabled={isPending}
-                    style={{
-                        // box shadow:
-                        shadowColor: '#000',
-                        shadowOffset: {
-                            width: 0,
-                            height: 4,
-                        },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 4,
-                        elevation: 5,
-
-                        flex: 1,
-                    }}
+                /> */}
+                <OverlayTextButton
+                    fullWidth
+                    title="Create"
+                    isPending={isPending}
+                    onPress={onSubmit}
                 />
             </SafeAreaView>
         </View>

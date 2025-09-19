@@ -44,10 +44,14 @@ export default function Text({
 
     return (
         <ReactNativeText
+            selectable={paragraph}
+            selectionColor={theme.color.text.emphasis}
             {...rest}
             style={{
                 fontSize: fontSizeMap[variant],
-                color: code ? theme.textEmphasis : theme.color.text[color],
+                color: code
+                    ? theme.color.text.emphasis
+                    : theme.color.text[color],
                 fontWeight: bold || code ? 'bold' : undefined,
 
                 fontStyle: italic ? 'italic' : 'normal',

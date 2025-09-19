@@ -9,7 +9,7 @@ export function Heading({
     titleHeadIcon,
     titleTailIcon,
     headingSubtitle,
-    paragraph: isSache = false,
+    paragraph = false,
     border = true,
 }: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'> & {
     headingSubtitle?: string;
@@ -21,7 +21,7 @@ export function Heading({
     return (
         <View
             style={
-                isSache
+                paragraph
                     ? {
                           borderTopWidth: border ? 1 : 0,
                           borderColor: 'rgb(31, 31, 31)',
@@ -48,8 +48,10 @@ export function Heading({
         >
             {titleHeadIcon}
             <Text
+                selectable={paragraph}
+                selectionColor={theme.color.text.emphasis}
                 style={
-                    isSache
+                    paragraph
                         ? {
                               fontSize: 24,
                               lineHeight: 32,

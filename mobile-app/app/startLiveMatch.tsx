@@ -41,8 +41,6 @@ export default function Screen() {
         //     />
         <View
             style={{
-                backgroundColor: theme.color.bg,
-
                 alignItems: 'center',
                 flex: 1,
 

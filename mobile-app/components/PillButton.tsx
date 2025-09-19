@@ -4,13 +4,13 @@ import {
     Animated,
     Pressable,
     StyleSheet,
-    TextStyle,
+    TouchableOpacity,
     View,
     ViewStyle,
 } from 'react-native';
-import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
 const PillButton: React.FC<{
@@ -36,6 +36,8 @@ const PillButton: React.FC<{
 
     const hasBlur = blur && !removable;
 
+    const theme = useTheme();
+
     const styles = useMemo(
         () =>
             StyleSheet.create({
@@ -48,20 +50,15 @@ const PillButton: React.FC<{
                     paddingRight: hasBlur ? undefined : removable ? 0 : 16,
 
                     backgroundColor: removable
-                        ? '#2C70FA'
+                        ? theme.button.primary
                         : hasBlur
                           ? undefined
                           : backgroundColor,
 
                     borderRadius: 16,
                 } as ViewStyle,
-                label: {
-                    fontSize: 12,
-                    color: '#fff',
-                    fontWeight: '700',
-                } as TextStyle,
             }),
-        [removable, iconName, hasBlur, backgroundColor]
+        [removable, iconName, hasBlur, backgroundColor, theme]
     );
 
     const animate = (to: number) =>
@@ -71,8 +68,6 @@ const PillButton: React.FC<{
             speed: 200,
             bounciness: 8,
         }).start();
-
-    const theme = useTheme();
 
     return (
         <Pressable
@@ -109,12 +104,19 @@ const PillButton: React.FC<{
 
                                     paddingLeft: iconName ? 8 : 16,
                                     paddingRight: removable ? 0 : 16,
+
+                                    backgroundColor:
+                                        theme.overlay.backgroundColor,
                                 },
                             ]}
                         >
                             {iconName && (
                                 <Icon
-                                    color="#fff"
+                                    color={
+                                        removable
+                                            ? 'white'
+                                            : theme.color.text.primary
+                                    }
                                     size={20}
                                     name={iconName}
                                     style={{
@@ -122,26 +124,44 @@ const PillButton: React.FC<{
                                     }}
                                 />
                             )}
-                            <Text style={styles.label}>{label}</Text>
+                            <Text
+                                variant="fineprint"
+                                bold
+                                style={{
+                                    color: removable
+                                        ? 'white'
+                                        : theme.color.text.primary,
+                                }}
+                            >
+                                {label}
+                            </Text>
                             {removable && (
-                                <Icon
+                                <TouchableOpacity
                                     onPress={onRemove}
-                                    color="#9FBAF7"
-                                    size={16}
-                                    name="close"
-                                    style={{
-                                        paddingVertical: 8,
-                                        paddingLeft: 6,
-                                        paddingRight: 8,
-                                    }}
-                                />
+                                    activeOpacity={0.4}
+                                >
+                                    <Icon
+                                        color="#9FBAF7"
+                                        size={16}
+                                        name="close"
+                                        style={{
+                                            paddingVertical: 8,
+                                            paddingLeft: 6,
+                                            paddingRight: 8,
+                                        }}
+                                    />
+                                </TouchableOpacity>
                             )}
                         </BlurView>
                     ) : (
                         <>
                             {iconName && (
                                 <Icon
-                                    color="#fff"
+                                    color={
+                                        removable
+                                            ? 'white'
+                                            : theme.color.text.primary
+                                    }
                                     size={20}
                                     name={iconName}
                                     style={{
@@ -149,19 +169,33 @@ const PillButton: React.FC<{
                                     }}
                                 />
                             )}
-                            <Text style={styles.label}>{label}</Text>
+                            <Text
+                                variant="fineprint"
+                                bold
+                                style={{
+                                    color: removable
+                                        ? 'white'
+                                        : theme.color.text.primary,
+                                }}
+                            >
+                                {label}
+                            </Text>
                             {removable && (
-                                <Icon
+                                <TouchableOpacity
                                     onPress={onRemove}
-                                    color="#9FBAF7"
-                                    size={16}
-                                    name="close"
-                                    style={{
-                                        paddingVertical: 8,
-                                        paddingLeft: 6,
-                                        paddingRight: 8,
-                                    }}
-                                />
+                                    activeOpacity={0.4}
+                                >
+                                    <Icon
+                                        color="rgba(255,255,255,0.7)"
+                                        size={16}
+                                        name="close"
+                                        style={{
+                                            paddingVertical: 8,
+                                            paddingLeft: 6,
+                                            paddingRight: 8,
+                                        }}
+                                    />
+                                </TouchableOpacity>
                             )}
                         </>
                     )}

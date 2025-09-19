@@ -1,3 +1,4 @@
+import { BlurView } from 'expo-blur';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, Text, View } from 'react-native';
@@ -23,6 +24,9 @@ import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
+
+import { OverlayTextButton } from '../overlay/OverlayTextButton';
+import PressableScale from '../PressableScale';
 
 export type RuleRenderItem = {
     id: string;
@@ -266,7 +270,7 @@ export default function Rules({
             {isEditing && (
                 <View
                     style={{
-                        flexDirection: 'row',
+                        flexDirection: 'row-reverse',
                         alignItems: 'stretch',
                         justifyContent: 'space-between',
 
@@ -278,26 +282,23 @@ export default function Rules({
                         paddingHorizontal: 16,
                     }}
                 >
+                    <OverlayTextButton
+                        onPress={() => nav.navigate('createNewRule')}
+                        title="Add Rule"
+                    />
+
                     {selectedIds.length > 0 && (
                         <>
-                            <Button
+                            <OverlayTextButton
+                                onPress={() => setShowDeleteConfirmation(true)}
                                 title="Delete"
-                                onPress={() => setShowDeleteConfirmation(true)}
                             />
-                            {/* <Button
-                                title="Copy to Group"
+                            {/* <OverlayTextButton
                                 onPress={() => setShowDeleteConfirmation(true)}
+                                title="Copy to Group"
                             /> */}
                         </>
                     )}
-                    <Button
-                        title="Add Rule"
-                        onPress={() => nav.navigate('createNewRule')}
-                        style={{
-                            alignSelf: 'stretch',
-                            marginLeft: 'auto',
-                        }}
-                    />
                 </View>
             )}
         </GestureHandlerRootView>

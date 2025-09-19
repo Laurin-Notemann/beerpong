@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { AnimatedScrollViewProps } from 'react-native-reanimated';
 
@@ -18,6 +20,11 @@ import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
 import { SeasonSettings } from '@/openapi/openapi';
 import { useScopePicker } from '@/zustand/useScopePicker';
+
+import { LeaderboardCountdown } from '../LeaderboardCountdown';
+import { useRerenderEverySecond } from '../LiveMatchIndicator';
+
+dayjs.extend(duration);
 
 const swiperAtTop = false;
 
@@ -101,6 +108,22 @@ export function LeaderboardSwiper() {
 
     const isLoading = !group || seasonsQuery.isLoading;
 
+    const dailyLeaderboardIsEmpty =
+        dailyPlayers.filter((i) => i.matches > 0).length === 0;
+
+    const hasDailyLeaderboardCountdown =
+        group.data?.activeSeason?.seasonSettings?.dailyLeaderboard ===
+            'WAKE_TIME' && !dailyLeaderboardIsEmpty;
+
+    const wakeTimeHour =
+        group.data?.activeSeason?.seasonSettings?.wakeTimeHour ?? 0;
+
+    const dailyLeaderboardResetDate = dayjs()
+        .hour(wakeTimeHour)
+        .minute(0)
+        .second(0)
+        .add(1, 'day');
+
     if (isLoading) return <LoadingScreen />;
     if (seasonsQuery.isError) return <ErrorScreen error={seasonsQuery.error} />;
 
@@ -108,6 +131,12 @@ export function LeaderboardSwiper() {
         <Swiper {...swiper}>
             <LayoutScrollView refreshControl={<RefreshControl {...refresh} />}>
                 <LeaderBoardSeasonInfo {...dailyLeaderboard} isCurrentSeason />
+                {hasDailyLeaderboardCountdown && (
+                    <LeaderboardCountdown
+                        type="today"
+                        endDate={dailyLeaderboardResetDate}
+                    />
+                )}
                 <Leaderboard
                     rankingAlgorithm={rankingAlgorithm}
                     ListEmptyComponent={

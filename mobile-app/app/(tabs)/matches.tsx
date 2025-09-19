@@ -1,3 +1,4 @@
+import { useIsFocused } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,10 +16,18 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 
 const swiperAtTop = false;
 
+function FocusedMatchesContent() {
+    const scopePicker = useScopePicker();
+    return scopePicker.isPastSeasonsMode ? (
+        <PastMatchesSwiper />
+    ) : (
+        <MatchesSwiper />
+    );
+}
+
 export default function Page() {
     const insets = useInsets(true, true, true);
-
-    const scopePicker = useScopePicker();
+    const isFocused = useIsFocused();
 
     const [showInviteModal, setShowInviteModal] = useState(false);
 
@@ -44,22 +53,23 @@ export default function Page() {
                 }}
             />
             <AppBackground />
-            {!scopePicker.isPastSeasonsMode && <MatchesSwiper />}
-            {scopePicker.isPastSeasonsMode && <PastMatchesSwiper />}
-            <SafeAreaView
-                key="scope-picker"
-                pointerEvents="box-none"
-                style={{
-                    position: 'absolute',
+            {isFocused ? <FocusedMatchesContent /> : null}
+            {isFocused ? (
+                <SafeAreaView
+                    key="scope-picker"
+                    pointerEvents="box-none"
+                    style={{
+                        position: 'absolute',
 
-                    top: swiperAtTop ? insets.top + 4 : undefined,
-                    bottom: swiperAtTop ? undefined : insets.bottom + 4,
+                        top: swiperAtTop ? insets.top + 4 : undefined,
+                        bottom: swiperAtTop ? undefined : insets.bottom + 4,
 
-                    width: '100%',
-                }}
-            >
-                <LeaderboardScopePicker hasSortButton={false} />
-            </SafeAreaView>
+                        width: '100%',
+                    }}
+                >
+                    <LeaderboardScopePicker hasSortButton={false} />
+                </SafeAreaView>
+            ) : null}
         </GestureHandlerRootView>
     );
 }
