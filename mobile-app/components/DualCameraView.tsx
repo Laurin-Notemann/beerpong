@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { env } from '@/api/env';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
@@ -228,6 +229,10 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                         ratio="4:3"
                         facing={primaryType}
                         onCameraReady={onCameraReady}
+                        style={[
+                            StyleSheet.absoluteFill,
+                            env.isDev && { backgroundColor: 'tomato' },
+                        ]}
                     />
                 )}
                 <View
