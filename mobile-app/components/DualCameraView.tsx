@@ -4,13 +4,13 @@ import {
     ActivityIndicator,
     Animated,
     StyleSheet,
-    Text,
     TouchableOpacity,
     View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
 const IN_PROGRESS_FADE_ANIMATION_SPEED = 200;
@@ -94,6 +94,10 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
         }
     }, [isCapturing, overlayOpacity]);
 
+    const cameraPermissionDenied = camPerm && !camPerm.granted;
+
+    const cameraPermissionCantAskAgain = camPerm && !camPerm.canAskAgain;
+
     const takeOne = useCallback(async () => {
         const result = await cameraRef.current?.takePictureAsync({
             quality: 1,
@@ -103,10 +107,10 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
         return result.uri;
     }, []);
 
-    const onTakePhotoPress = useCallback(async () => {
+    const onTakePhotoPress = async () => {
         if (!camPerm?.granted) {
-            await requestCamPerm();
-            if (!camPerm?.granted) throw new Error('Camera permission denied');
+            const newPerm = await requestCamPerm();
+            if (!newPerm.granted) throw new Error('Camera permission denied');
         }
         setIsCapturing(true);
 
@@ -137,20 +141,12 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             setPrimaryType('back');
             setIsCapturing(false);
         }
-    }, [camPerm?.granted, requestCamPerm, takeOne, secondaryType]);
+    };
 
     const onFlipCameraPress = () =>
         setPrimaryType((t) => (t === 'back' ? 'front' : 'back'));
 
     const theme = useTheme();
-
-    if (!camPerm?.granted) {
-        return (
-            <View style={styles.center}>
-                <Text>Requesting camera permission…</Text>
-            </View>
-        );
-    }
 
     return (
         <View style={styles.container}>
@@ -178,10 +174,44 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                     ]}
                 >
                     <Icon
-                        name="camera-outline"
+                        name={
+                            camPerm?.granted
+                                ? 'camera-outline'
+                                : 'camera-lock-outline'
+                        }
                         color="rgba(255,255,255,0.15)"
                         size={48}
                     />
+                    {cameraPermissionDenied && (
+                        <Text
+                            color="tertiary"
+                            bold
+                            style={{
+                                marginTop: 16,
+                                paddingHorizontal: 30,
+                                textAlign: 'center',
+                                lineHeight: 24,
+                            }}
+                        >
+                            {cameraPermissionCantAskAgain ? (
+                                'Please open your system settings and give Versus permission to use your camera.'
+                            ) : (
+                                <>
+                                    {'Missing camera permission.\n'}
+                                    <Text
+                                        onPress={async () => {
+                                            await requestCamPerm();
+                                        }}
+                                        color="link"
+                                        bold
+                                        style={{ lineHeight: 24 }}
+                                    >
+                                        Give permission
+                                    </Text>
+                                </>
+                            )}
+                        </Text>
+                    )}
                 </View>
                 {camPerm?.granted && (
                     <CameraView
@@ -232,7 +262,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             <View style={[styles.controls]}>
                 <TakePhotoButton
                     onPress={onTakePhotoPress}
-                    disabled={isCapturing}
+                    disabled={isCapturing || !camPerm?.granted}
                 />
             </View>
             <Animated.View
