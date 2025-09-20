@@ -282,8 +282,26 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                {experiments.matchPhotos && (
-                    <DualTeamPhoto match={displayMatch} />
+                {experiments.matchPhotos && isEditing && (
+                    <DualTeamPhoto
+                        match={displayMatch}
+                        editable={isEditing}
+                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                        onRemovePress={matchDraft.actions.removeTeamPhotos}
+                        onSwapTeamColorsPress={
+                            matchDraft.actions.swapTeamPhotos
+                        }
+                        blueImageSource={
+                            matchDraft.blueTeamPhotoUri
+                                ? { uri: matchDraft.blueTeamPhotoUri }
+                                : undefined
+                        }
+                        redImageSource={
+                            matchDraft.redTeamPhotoUri
+                                ? { uri: matchDraft.redTeamPhotoUri }
+                                : undefined
+                        }
+                    />
                 )}
                 <MatchPlayers
                     onPlayerPress={(player) => {

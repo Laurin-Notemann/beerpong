@@ -7,20 +7,28 @@ import { useTheme } from '@/theme';
 export function OverlayIconButton({
     iconName,
     onPress,
+    onPressIn,
+    onPressOut,
     backgroundColor,
     disabled = false,
     content,
+    blur = true,
 }: {
     iconName: string;
     onPress?: () => void;
+    onPressIn?: () => void;
+    onPressOut?: () => void;
+
     backgroundColor?: string;
     disabled?: boolean;
     content?: React.ReactNode;
+    blur?: boolean;
 }) {
     const theme = useTheme();
 
     return (
         <PressableScale
+            pressedScale={0.9}
             disabled={disabled}
             style={{
                 width: 48,
@@ -30,9 +38,11 @@ export function OverlayIconButton({
                 overflow: 'hidden',
             }}
             onPress={onPress}
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
         >
             <BlurView
-                intensity={70}
+                intensity={blur ? 70 : 0}
                 tint={theme.blur.tint}
                 style={{
                     alignItems: 'center',

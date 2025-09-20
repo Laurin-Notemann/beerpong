@@ -2,58 +2,97 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Animated,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import { useTheme } from '@/theme';
 
-// for saving leaderboards as pngs:
+const IN_PROGRESS_FADE_ANIMATION_SPEED = 200;
 
-// import * as MediaLibrary from 'expo-media-library';
+// Prefer waiting for `onCameraReady` after switching lenses, with a fallback timeout (simulators may not fire it).
+const CAMERA_READY_FALLBACK_MS = 1000;
 
-// const [mlPerm, requestMLPerm] = MediaLibrary.usePermissions();
-// mlPerm?.granted
+export interface DualCameraPhoto {
+    blueTeamPhotoUri: string;
+    redTeamPhotoUri: string;
+}
 
-// import { captureRef } from 'react-native-view-shot';
-
-// const compositeRef = useRef<View>(null);
-
-// const [mlPerm, requestMLPerm] = MediaLibrary.usePermissions();
-
-export function DualCameraView({
-    onResult,
-}: {
-    onResult: (
-        result: { blueTeamPhotoUri: string; redTeamPhotoUri: string } | null
-    ) => void;
-}) {
+export interface DualCameraViewProps {
+    onResult: (result: DualCameraPhoto) => void;
+}
+export function DualCameraView({ onResult }: DualCameraViewProps) {
     const cameraRef = useRef<CameraView>(null);
 
     const [camPerm, requestCamPerm] = useCameraPermissions();
 
     const [primaryType, setPrimaryType] = useState<'front' | 'back'>('back');
+
     const secondaryType = primaryType === 'back' ? 'front' : 'back';
 
     const [isCapturing, setIsCapturing] = useState(false);
-    const [previewMode, setPreviewMode] = useState(false);
 
-    const [frontUri, setFrontUri] = useState<string | null>(null);
-    const [backUri, setBackUri] = useState<string | null>(null);
-    const [, setCompositeUri] = useState<string | null>(null);
+    const overlayOpacity = useRef(new Animated.Value(0)).current;
 
-    const primaryUri = primaryType === 'back' ? backUri : frontUri;
-    const secondaryUri = secondaryType === 'back' ? backUri : frontUri;
+    const [overlayBlocking, setOverlayBlocking] = useState(false);
+
+    // Resolve when camera is ready after facing switch
+    const resolveNextReadyRef = useRef<(() => void) | null>(null);
+
+    const onCameraReady = useCallback(() => {
+        // this never fires in the simulator!
+        if (resolveNextReadyRef.current) {
+            const resolve = resolveNextReadyRef.current;
+            resolveNextReadyRef.current = null;
+            resolve();
+        }
+    }, []);
+
+    const waitForNextCameraReady = useCallback(() => {
+        return new Promise<void>((resolve) => {
+            resolveNextReadyRef.current = resolve;
+        });
+    }, []);
+
+    const waitForReadyWithTimeout = useCallback(async () => {
+        let timeoutId: any;
+        try {
+            await Promise.race([
+                waitForNextCameraReady(),
+                new Promise<void>((resolve) => {
+                    timeoutId = setTimeout(resolve, CAMERA_READY_FALLBACK_MS);
+                }),
+            ]);
+        } finally {
+            if (timeoutId) clearTimeout(timeoutId);
+            // Ensure lingering resolver doesn't trigger later
+            resolveNextReadyRef.current = null;
+        }
+    }, [waitForNextCameraReady]);
 
     useEffect(() => {
-        if (!previewMode && !camPerm?.granted) requestCamPerm();
-    }, [camPerm, previewMode]);
-
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+        if (isCapturing) {
+            setOverlayBlocking(true);
+            Animated.timing(overlayOpacity, {
+                toValue: 1,
+                duration: IN_PROGRESS_FADE_ANIMATION_SPEED,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            Animated.timing(overlayOpacity, {
+                toValue: 0,
+                duration: IN_PROGRESS_FADE_ANIMATION_SPEED,
+                useNativeDriver: true,
+            }).start(({ finished }) => {
+                if (finished) setOverlayBlocking(false);
+            });
+        }
+    }, [isCapturing, overlayOpacity]);
 
     const takeOne = useCallback(async () => {
         const result = await cameraRef.current?.takePictureAsync({
@@ -70,53 +109,31 @@ export function DualCameraView({
             if (!camPerm?.granted) throw new Error('Camera permission denied');
         }
         setIsCapturing(true);
-        setCompositeUri(null);
+
         try {
             // 1) Capture primary
             const firstUri = await takeOne();
 
-            // 2) Switch to secondary, give the camera a moment to reconfigure
+            // 2) Switch to secondary, wait for camera to be ready
             setPrimaryType((t) => (t === 'back' ? 'front' : 'back'));
-            await sleep(350);
+            await waitForReadyWithTimeout();
 
             // 3) Capture secondary
             const secondUri = await takeOne();
 
             // 4) Store based on which was which at start
             if (secondaryType === 'front') {
-                // primary was back, secondary is front
-                setBackUri(firstUri);
-                setFrontUri(secondUri);
                 onResult({
                     blueTeamPhotoUri: firstUri,
                     redTeamPhotoUri: secondUri,
                 });
             } else {
-                // primary was front, secondary is back
-                setFrontUri(firstUri);
-                setBackUri(secondUri);
                 onResult({
                     blueTeamPhotoUri: secondUri,
                     redTeamPhotoUri: firstUri,
                 });
             }
-
-            // 5) Show composed preview and snapshot the composed view
-            setPreviewMode(true);
-            // allow layout to finish
-            await sleep(50);
-            // const uri = await captureRef(compositeRef, {
-            //     format: 'jpg',
-            //     quality: 0.92,
-            // });
-            // setCompositeUri(uri);
-
-            // // 6) Save to camera roll
-            // if (mlPerm?.granted && uri) {
-            //     await MediaLibrary.saveToLibraryAsync(uri);
-            // }
         } finally {
-            // Return UI to user-preferred primary (back by default here)
             setPrimaryType('back');
             setIsCapturing(false);
         }
@@ -124,11 +141,6 @@ export function DualCameraView({
 
     const onFlipCameraPress = () =>
         setPrimaryType((t) => (t === 'back' ? 'front' : 'back'));
-
-    const onRetakePress = () => {
-        setPreviewMode(false);
-        onResult(null);
-    };
 
     const theme = useTheme();
 
@@ -142,101 +154,114 @@ export function DualCameraView({
 
     return (
         <View style={styles.container}>
-            {!previewMode && (
-                <View style={[styles.previewBox]}>
-                    <CameraView
-                        ref={cameraRef}
-                        style={[
-                            styles.camera,
-                            {
-                                borderColor: theme.color.team.blue,
-                                borderWidth: 2,
+            <View
+                style={{
+                    borderColor: theme.color.team.blue,
+                    borderWidth: 2,
 
-                                borderRadius: 18,
-                            },
-                        ]}
+                    borderRadius: 18,
+
+                    position: 'relative',
+                    aspectRatio: 3 / 4, // 4:3 camera ratio -> container is 3:4 to fit height-first
+                    width: '100%',
+
+                    overflow: 'hidden',
+                }}
+            >
+                <View
+                    style={[
+                        StyleSheet.absoluteFillObject,
+                        {
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        },
+                    ]}
+                >
+                    <Icon
+                        name="camera-outline"
+                        color="rgba(255,255,255,0.15)"
+                        size={48}
+                    />
+                </View>
+                {camPerm?.granted && (
+                    <CameraView
+                        key={primaryType}
+                        ref={cameraRef}
                         ratio="4:3"
                         facing={primaryType}
+                        onCameraReady={onCameraReady}
                     />
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            top: 0,
-
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-end',
-
-                            paddingHorizontal: 20,
-                            paddingVertical: 16,
-                        }}
-                    >
-                        <OverlayIconButton
-                            iconName="autorenew"
-                            onPress={onFlipCameraPress}
-                        />
-                    </View>
-                </View>
-            )}
-
-            {previewMode && (
+                )}
                 <View
                     style={{
-                        position: 'relative',
+                        flexDirection: 'row',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        top: 0,
 
-                        flex: 1,
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-end',
+
+                        paddingHorizontal: 20,
+                        paddingVertical: 16,
                     }}
                 >
-                    <DualTeamPhoto
-                        blueLarge
-                        match={{ blueTeam: [], redTeam: [] }}
-                        blueImageSource={
-                            primaryUri ? { uri: primaryUri } : undefined
-                        }
-                        redImageSource={
-                            secondaryUri ? { uri: secondaryUri } : undefined
-                        }
+                    <OverlayIconButton
+                        iconName="autorenew"
+                        onPress={onFlipCameraPress}
                     />
-                    <View
-                        style={[
-                            StyleSheet.absoluteFillObject,
-                            {
-                                flexDirection: 'row',
-
-                                justifyContent: 'flex-end',
-
-                                paddingHorizontal: 20,
-                                paddingVertical: 16,
-                            },
-                        ]}
-                    >
-                        <OverlayIconButton
-                            iconName="close"
-                            onPress={onRetakePress}
-                        />
-                    </View>
                 </View>
-            )}
+                <Animated.View
+                    style={[
+                        StyleSheet.absoluteFillObject,
+                        {
+                            justifyContent: 'center',
+                            alignItems: 'center',
+
+                            opacity: overlayOpacity,
+                            pointerEvents: overlayBlocking ? 'auto' : 'none',
+                        },
+                    ]}
+                >
+                    <ActivityIndicator />
+                </Animated.View>
+            </View>
 
             <View style={[styles.controls]}>
-                {!previewMode && !isCapturing && (
-                    <TakePhotoButton onPress={onTakePhotoPress} />
-                )}
-                {isCapturing && <ActivityIndicator />}
+                <TakePhotoButton
+                    onPress={onTakePhotoPress}
+                    disabled={isCapturing}
+                />
             </View>
+            <Animated.View
+                style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        opacity: overlayOpacity,
+                        pointerEvents: overlayBlocking ? 'auto' : 'none',
+                    },
+                ]}
+            />
         </View>
     );
 }
 
-function TakePhotoButton({ onPress }: { onPress: () => void }) {
+function TakePhotoButton({
+    onPress,
+    disabled = false,
+}: {
+    onPress: () => void;
+    disabled?: boolean;
+}) {
     return (
         <TouchableOpacity
             activeOpacity={0.7}
             style={styles.shutter}
             onPress={onPress}
+            disabled={disabled}
         >
             <View style={styles.innerShutter} />
         </TouchableOpacity>
@@ -245,21 +270,17 @@ function TakePhotoButton({ onPress }: { onPress: () => void }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    previewBox: {
-        position: 'relative',
-        aspectRatio: 3 / 4, // 4:3 camera ratio -> container is 3:4 to fit height-first
-        width: '100%',
-    },
+
     camera: { width: '100%', height: '100%' },
     controls: {
-        height: 94,
+        position: 'relative',
 
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
 
         marginTop: 84,
-        paddingBottom: 84,
+        marginBottom: 84,
     },
     shutter: {
         width: 94,
@@ -290,50 +311,3 @@ const styles = StyleSheet.create({
     },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });
-
-{
-    /* <ViewShot
-    ref={compositeRef}
-    style={[
-        styles.previewBox,
-        previewMode
-            ? {}
-            : {
-                  position: 'absolute',
-                  opacity: 0,
-                  pointerEvents: 'none',
-              },
-
-        DEBUG && {
-            backgroundColor: previewMode ? 'green' : 'blue',
-        },
-    ]}
->
-    {backUri && (
-        <Image
-            source={{ uri: backUri }}
-            style={[
-                styles.camera,
-                {
-                    borderColor: 'white',
-                    borderWidth: 1,
-                    marginTop: 100,
-                },
-            ]}
-            resizeMode="cover"
-        />
-    )}
-    {frontUri && (
-        <View style={pipStyle}>
-            <Image
-                source={{ uri: frontUri }}
-                style={{
-                    width: '100%',
-                    height: '100%',
-                }}
-                resizeMode="cover"
-            />
-        </View>
-    )}
-</ViewShot>; */
-}

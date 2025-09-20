@@ -10,7 +10,6 @@ export type RootStackParamList = {
     editFormation: undefined;
     createGroup: undefined;
     joinGroup: undefined;
-    takeTeamPhotos: undefined;
     editPlayerName: { id: string };
     editGroupName: { id: string };
     createNewPlayer: undefined;
