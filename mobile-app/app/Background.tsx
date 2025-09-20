@@ -40,6 +40,8 @@ export const AppBackground: React.FC = () => {
                 position: 'absolute',
                 width,
                 height,
+
+                backgroundColor: theme.color.bg,
             }}
         >
             <Image

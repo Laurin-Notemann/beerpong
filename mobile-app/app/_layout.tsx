@@ -37,6 +37,7 @@ SplashScreen.preventAutoHideAsync();
 
 function Everything() {
     const modalStyles = useModalStyles();
+
     return (
         <Stack initialRouteName="(tabs)">
             <Stack.Screen
@@ -59,7 +60,7 @@ function Everything() {
                 name="dailyLeaderboardSettings"
                 options={modalStyles}
             />
-            <Stack.Screen name="takeTeamPhotos" options={modalStyles} />
+
             <Stack.Screen name="teamSizeSettings" options={modalStyles} />
             <Stack.Screen
                 name="minMatchesToQualifySettings"

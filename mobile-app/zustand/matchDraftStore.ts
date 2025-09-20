@@ -57,6 +57,8 @@ interface MatchDraftStore {
             blueTeamPhotoUri?: string;
             redTeamPhotoUri?: string;
         }) => void;
+        removeTeamPhotos: () => void;
+        swapTeamPhotos: () => void;
     };
 }
 
@@ -249,6 +251,18 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
             set(() => ({
                 blueTeamPhotoUri: blueTeamPhotoUri,
                 redTeamPhotoUri: redTeamPhotoUri,
+            }));
+        },
+        removeTeamPhotos: () => {
+            set(() => ({
+                blueTeamPhotoUri: undefined,
+                redTeamPhotoUri: undefined,
+            }));
+        },
+        swapTeamPhotos: () => {
+            set((state) => ({
+                blueTeamPhotoUri: state.redTeamPhotoUri,
+                redTeamPhotoUri: state.blueTeamPhotoUri,
             }));
         },
     },

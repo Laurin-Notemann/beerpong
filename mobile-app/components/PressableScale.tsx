@@ -1,5 +1,5 @@
 // PressableScale.tsx
-import React, { useMemo, useRef } from 'react';
+import React, { useImperativeHandle, useMemo, useRef } from 'react';
 import {
     Animated,
     Pressable,
@@ -7,6 +7,11 @@ import {
     StyleProp,
     ViewStyle,
 } from 'react-native';
+
+export type PressableScaleHandle = {
+    pressIn: () => void;
+    pressOut: () => void;
+};
 
 type Props = {
     children: React.ReactNode;
@@ -22,54 +27,68 @@ type Props = {
     pressableStyle?: StyleProp<ViewStyle>;
 } & Omit<PressableProps, 'style'>;
 
-const PressableScale: React.FC<Props> = ({
-    pressableStyle,
-    children,
-    style,
-    pressedScale = 0.95,
-    speed = 200,
-    bounciness = 8,
-    onPressIn,
-    onPressOut,
-    fullWidth = false,
-    ...pressableProps
-}) => {
-    const scale = useRef(new Animated.Value(1)).current;
+const PressableScale = React.forwardRef<PressableScaleHandle, Props>(
+    (
+        {
+            pressableStyle,
+            children,
+            style,
+            pressedScale = 0.95,
+            speed = 200,
+            bounciness = 8,
+            onPressIn,
+            onPressOut,
+            fullWidth = false,
+            ...pressableProps
+        },
+        ref
+    ) => {
+        const scale = useRef(new Animated.Value(1)).current;
 
-    const animate = (to: number) =>
-        Animated.spring(scale, {
-            toValue: to,
-            useNativeDriver: true,
-            speed,
-            bounciness,
-        }).start();
+        const animate = (to: number) =>
+            Animated.spring(scale, {
+                toValue: to,
+                useNativeDriver: true,
+                speed,
+                bounciness,
+            }).start();
 
-    const animatedStyle = useMemo(
-        () => [{ transform: [{ scale }] }, style],
-        [scale, style]
-    );
+        useImperativeHandle(
+            ref,
+            () => ({
+                pressIn: () => animate(pressedScale),
+                pressOut: () => animate(1),
+            }),
+            [pressedScale, speed, bounciness]
+        );
 
-    return (
-        <Pressable
-            {...pressableProps}
-            style={[
-                {
-                    flex: fullWidth ? 1 : undefined,
-                },
-                pressableStyle,
-            ]}
-            onPressIn={(e) => {
-                animate(pressedScale);
-                onPressIn?.(e);
-            }}
-            onPressOut={(e) => {
-                animate(1);
-                onPressOut?.(e);
-            }}
-        >
-            <Animated.View style={animatedStyle}>{children}</Animated.View>
-        </Pressable>
-    );
-};
+        const animatedStyle = useMemo(
+            () => [{ transform: [{ scale }] }, style],
+            [scale, style]
+        );
+
+        return (
+            <Pressable
+                {...pressableProps}
+                style={[
+                    {
+                        flex: fullWidth ? 1 : undefined,
+                    },
+                    pressableStyle,
+                ]}
+                onPressIn={(e) => {
+                    animate(pressedScale);
+                    onPressIn?.(e);
+                }}
+                onPressOut={(e) => {
+                    animate(1);
+                    onPressOut?.(e);
+                }}
+            >
+                <Animated.View style={animatedStyle}>{children}</Animated.View>
+            </Pressable>
+        );
+    }
+);
 
 export default PressableScale;
