@@ -107,14 +107,20 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
         return result.uri;
     }, []);
 
-    const onTakePhotoPress = async () => {
-        if (!camPerm?.granted) {
-            const newPerm = await requestCamPerm();
-            if (!newPerm.granted) throw new Error('Camera permission denied');
-        }
-        setIsCapturing(true);
+    const [err, setErr] = useState<Error | null>(null);
 
+    const onTakePhotoPress = async () => {
         try {
+            if (!camPerm?.granted) {
+                const newPerm = await requestCamPerm();
+
+                if (!newPerm.granted) {
+                    setErr(new Error('Camera permission denied'));
+                    return;
+                }
+            }
+            setIsCapturing(true);
+
             // 1) Capture primary
             const firstUri = await takeOne();
 
@@ -137,6 +143,8 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                     redTeamPhotoUri: firstUri,
                 });
             }
+        } catch (error) {
+            setErr(error as Error);
         } finally {
             setPrimaryType('back');
             setIsCapturing(false);
@@ -260,6 +268,20 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             </View>
 
             <View style={[styles.controls]}>
+                {err && (
+                    <Text
+                        color="negative"
+                        style={{
+                            textAlign: 'center',
+
+                            position: 'absolute',
+
+                            top: -48,
+                        }}
+                    >
+                        Error: {err?.message || 'Unknown error'}
+                    </Text>
+                )}
                 <TakePhotoButton
                     onPress={onTakePhotoPress}
                     disabled={isCapturing || !camPerm?.granted}
