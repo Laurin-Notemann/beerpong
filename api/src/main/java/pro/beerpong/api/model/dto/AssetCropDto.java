@@ -6,11 +6,12 @@ import pro.beerpong.api.util.AssetType;
 import java.time.ZonedDateTime;
 
 @Data
-public class AssetMetadataDto {
-    private String id;
-    private String url;
-    private AssetType type;
+public class AssetCropDto {
     private double offsetX;
     private double offsetY;
     private double zoom;
+
+    public boolean validate() {
+        return this.offsetX >= 0 && this.offsetY >= 0 && this.zoom >= 0;
+    }
 }

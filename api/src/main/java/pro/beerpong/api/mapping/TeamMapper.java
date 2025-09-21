@@ -5,8 +5,11 @@ import org.mapstruct.Mapping;
 import pro.beerpong.api.model.dao.Team;
 import pro.beerpong.api.model.dto.TeamDto;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = AssetMapper.class)
 public interface TeamMapper {
     @Mapping(source = "match.id", target = "matchId")
     TeamDto teamToTeamDto(Team team);
+
+    @Mapping(source = "matchId", target = "match.id")
+    Team teamDtoToTeam(TeamDto teamDto);
 }
