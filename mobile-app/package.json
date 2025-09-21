@@ -1,7 +1,7 @@
 {
     "name": "mobile-app",
     "main": "expo-router/entry",
-    "version": "1.0.82",
+    "version": "1.0.83",
     "scripts": {
         "prestart": "cp ../.env.example .env",
         "start": "expo start",
@@ -47,6 +47,7 @@
         "expo-dev-client": "~6.0.12",
         "expo-font": "~14.0.8",
         "expo-haptics": "~15.0.7",
+        "expo-image": "^3.0.8",
         "expo-image-manipulator": "~14.0.7",
         "expo-image-picker": "~17.0.8",
         "expo-jwt": "^1.8.2",
