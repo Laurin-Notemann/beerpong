@@ -49,5 +49,5 @@ jobs:
           POSTGRES_PASSWORD: user
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          BACKEND_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         working-directory: api
