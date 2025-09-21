@@ -46,3 +46,5 @@ public class AssetService {
         return assetMapper.assetToAssetMetadataDto(assetRepository.save(asset));
     }
 }
+// random comment to trigger the github action lmaooooo feel free to remove this
+// in the future
