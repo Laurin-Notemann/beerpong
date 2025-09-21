@@ -129,9 +129,9 @@ public class GroupService {
             oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
         }
 
-        var assetMetadataDto = assetService.storeAsset(AssetType.GROUP_WALLPAPER, assetCropDto);
+        var uploadResponse = assetService.storeAsset(AssetType.GROUP_WALLPAPER, assetCropDto);
 
-        groupDto.setWallpaperAsset(assetMetadataDto);
+        groupDto.setWallpaperAsset(uploadResponse);
 
         groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
 
@@ -139,7 +139,7 @@ public class GroupService {
             assetService.deleteAsset(oldWallpaperAssetId);
         }
 
-        return assetMetadataDto;
+        return uploadResponse;
     }
 
     private GroupDto withStats(@Nullable GroupDto groupDto) {

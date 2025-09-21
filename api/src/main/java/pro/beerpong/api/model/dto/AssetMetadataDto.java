@@ -10,7 +10,6 @@ public class AssetMetadataDto {
     private String id;
     private String url;
     private AssetType type;
-    private ZonedDateTime uploadedAt;
     private double offsetX;
     private double offsetY;
     private double zoom;

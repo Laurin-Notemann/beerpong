@@ -15,3 +15,10 @@ server:
 sentry:
   dsn: ${BACKEND_SENTRY_DSN}
   debug: false
+app:
+  aws:
+    region: ${AWS_REGION}
+    bucket: ${AWS_BUCKET_NAME}
+    endpoint: ${AWS_ENDPOINT}
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
