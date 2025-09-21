@@ -23,11 +23,11 @@ import java.time.Duration;
 public class AssetService {
     private final S3Presigner presigner;
     private final S3Client client;
-    @Value("${app.aws.bucket}") private String bucket;
+    @Value("${app.aws.bucket}")
+    private String bucket;
 
     private final AssetMapper assetMapper;
     private final AssetRepository assetRepository;
-
 
     public boolean assetExists(String assetId) {
         return assetRepository.existsById(assetId);
@@ -37,8 +37,7 @@ public class AssetService {
         client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucket)
                 .key(assetId)
-                .build()
-        );
+                .build());
 
         assetRepository.deleteById(assetId);
     }
@@ -53,7 +52,8 @@ public class AssetService {
 
     public AssetUploadResponse storeAsset(AssetType assetType, @Nullable AssetCropDto assetCropDto) {
         if (assetCropDto != null) {
-            return this.storeAsset(assetType, assetCropDto.getOffsetX(), assetCropDto.getOffsetY(), assetCropDto.getZoom());
+            return this.storeAsset(assetType, assetCropDto.getOffsetX(), assetCropDto.getOffsetY(),
+                    assetCropDto.getZoom());
         } else {
             return this.storeAsset(assetType);
         }
@@ -72,7 +72,7 @@ public class AssetService {
 
         asset = assetRepository.save(asset);
 
-        //TODO check contentType
+        // TODO check contentType
         return createPutUpload(assetRepository.save(asset), "png");
     }
 
@@ -85,8 +85,7 @@ public class AssetService {
 
         var presigned = presigner.presignPutObject(b -> b
                 .signatureDuration(Duration.ofMinutes(5))
-                .putObjectRequest(putReq)
-        );
+                .putObjectRequest(putReq));
 
         var response = new AssetUploadResponse();
         response.setId(asset.getId());
@@ -102,5 +101,3 @@ public class AssetService {
         return response;
     }
 }
-// random comment to trigger the github action lmaooooo feel free to remove this
-// in the future
