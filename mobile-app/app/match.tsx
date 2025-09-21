@@ -192,6 +192,8 @@ export default function Page() {
     }
     const experiments = useLocalSettings();
 
+    const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
+
     const isLoading =
         !groupId ||
         !seasonId ||
@@ -216,8 +218,6 @@ export default function Page() {
         );
     }
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
-
-    const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
 
     return (
         <>

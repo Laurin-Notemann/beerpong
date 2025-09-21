@@ -13,7 +13,7 @@ export function OverlayIconButton({
     disabled = false,
     content,
     blur = true,
-    size = 'large',
+    size = 'medium',
 }: {
     iconName: string;
     onPress?: () => void;

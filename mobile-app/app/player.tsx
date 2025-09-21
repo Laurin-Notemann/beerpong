@@ -8,10 +8,12 @@ import {
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { putTemp } from '@/app/tempRouteStore';
 import { usePlayerPageScope } from '@/app/usePlayerPageScope';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import PlayerScreen from '@/components/screens/Player';
+import { triggerHapticBump } from '@/haptics';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
@@ -46,7 +48,8 @@ export default function Page() {
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-expect-error TODO: type this properly
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     // TODO: this should only be the seasons where this specific player was active
@@ -99,6 +102,7 @@ export default function Page() {
             // mediaTypes: ['images'],
             selectionLimit: 1,
         });
+        console.log('done');
 
         const mimeType = result?.mimeType;
         const byteArray = result?.byteArray;
@@ -118,9 +122,20 @@ export default function Page() {
         try {
             const base64 = uint8ToBase64(byteArray);
 
+            console.log('done 2');
+
             const uri = `data:${result.type};base64,${base64}`;
 
-            nav.navigate('cropAvatar', { uri, profileId });
+            console.log('done 3');
+
+            triggerHapticBump('light');
+
+            console.log('done 4');
+
+            const imageKey = putTemp<string>(uri);
+            nav.navigate('cropAvatar', { imageKey, profileId });
+
+            console.log('done 5');
         } catch (err) {
             ConsoleLogger.error('failed to process image:', err);
             showErrorToast('Failed to process image.');

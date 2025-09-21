@@ -72,6 +72,12 @@ function Everything() {
                 options={modalStyles}
             />
             <Stack.Screen
+                name="cropAvatar"
+                options={{
+                    animation: 'fade',
+                }}
+            />
+            <Stack.Screen
                 name="assignPointsToPlayerModal"
                 options={modalStyles}
             />
