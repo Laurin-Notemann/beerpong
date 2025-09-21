@@ -1,7 +1,6 @@
 package pro.beerpong.api.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
@@ -49,7 +48,7 @@ public class MatchController {
 
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
@@ -77,7 +76,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
@@ -105,7 +104,7 @@ public class MatchController {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
                 return ResponseEnvelope.ok(match);
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
@@ -124,6 +123,10 @@ public class MatchController {
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        }
+
+        if (matchCreateDto.getTeams().stream().anyMatch(teamCreateDto -> teamCreateDto.getExistingTeamId() == null)) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_NEEDS_IDS);
         }
 
         var match = matchService.getRawMatchById(id);
@@ -150,5 +153,69 @@ public class MatchController {
         } else {
             return ResponseEnvelope.notOk(error);
         }
+    }
+
+    @PutMapping("/{id}/photos/{teamId}")
+    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId,
+                                                              @PathVariable String seasonId,
+                                                              @PathVariable String id,
+                                                              @PathVariable String teamId) {
+        var match = matchService.getMatchById(id);
+
+        if (match == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
+        if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+        }
+
+        var teamOpt = match.getTeams().stream()
+                .filter(teamDto -> teamDto.getId().equals(teamId))
+                .findFirst();
+
+        if (teamOpt.isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NO_TEAM_FOUND);
+        }
+
+        var dto = matchService.saveMatchPhoto(teamOpt.get());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_TEAM_PHOTO_SET, id, dto));
+
+        return ResponseEnvelope.ok(dto);
+    }
+
+    @DeleteMapping("/{id}/photos/{teamId}")
+    public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId,
+                                                                 @PathVariable String seasonId,
+                                                                 @PathVariable String id,
+                                                                 @PathVariable String teamId) {
+        var match = matchService.getMatchById(id);
+
+        if (match == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
+        if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+        }
+
+        var teamOpt = match.getTeams().stream()
+                .filter(teamDto -> teamDto.getId().equals(teamId))
+                .findFirst();
+
+        if (teamOpt.isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NO_TEAM_FOUND);
+        }
+
+        if (teamOpt.get().getPhotoAsset() == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_HAS_NO_PHOTO);
+        }
+
+        var dto = matchService.deleteMatchPhoto(teamOpt.get());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_TEAM_PHOTO_DELETE, id, dto));
+
+        return ResponseEnvelope.ok(dto);
     }
 }
