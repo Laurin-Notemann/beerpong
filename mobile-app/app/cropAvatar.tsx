@@ -218,7 +218,7 @@ export default function Page() {
             <ReactNativeZoomableView
                 ref={ref}
                 minZoom={minZoom}
-                maxZoom={3}
+                maxZoom={5}
                 zoomStep={0.5}
                 bindToBorders={true}
                 onTransform={(e) => {

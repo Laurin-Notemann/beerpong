@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
 import { PropsWithChildren } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -144,6 +145,8 @@ export default function Avatar({
                                 borderColor,
                             }}
                             resizeMode="cover"
+                            cachePolicy="memory-disk"
+                            transition={200} // nice fade
                         />
                     )}
 
