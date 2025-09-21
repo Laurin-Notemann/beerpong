@@ -8,11 +8,18 @@ import type {
 
 declare namespace Components {
     namespace Schemas {
+        export interface AssetCropDto {
+            offsetX?: number; // double
+            offsetY?: number; // double
+            zoom?: number; // double
+        }
         export interface AssetMetadataDto {
             id?: string;
             url?: string;
             type?: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO';
-            uploadedAt?: string; // date-time
+            offsetX?: number; // double
+            offsetY?: number; // double
+            zoom?: number; // double
         }
         export interface ErrorDetails {
             code?: string;
@@ -662,6 +669,7 @@ declare namespace Paths {
             groupId: Parameters.GroupId;
             id: Parameters.Id;
         }
+        export type RequestBody = Components.Schemas.AssetCropDto;
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
@@ -690,6 +698,7 @@ declare namespace Paths {
         export interface PathParameters {
             id: Parameters.Id;
         }
+        export type RequestBody = Components.Schemas.AssetCropDto;
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeAssetMetadataDto;
@@ -817,7 +826,7 @@ export interface OperationMethods {
      */
     'setWallpaper'(
         parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
-        data?: any,
+        data?: Paths.SetWallpaper.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
     /**
@@ -929,7 +938,7 @@ export interface OperationMethods {
      */
     'setAvatar'(
         parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
-        data?: any,
+        data?: Paths.SetAvatar.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.SetAvatar.Responses.$200>;
     /**
@@ -1116,7 +1125,7 @@ export interface PathsDictionary {
          */
         'put'(
             parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
-            data?: any,
+            data?: Paths.SetWallpaper.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.SetWallpaper.Responses.$200>;
         /**
@@ -1242,7 +1251,7 @@ export interface PathsDictionary {
          */
         'put'(
             parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
-            data?: any,
+            data?: Paths.SetAvatar.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.SetAvatar.Responses.$200>;
         /**
@@ -1436,6 +1445,7 @@ export interface PathsDictionary {
 
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
+export type AssetCropDto = Components.Schemas.AssetCropDto;
 export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;

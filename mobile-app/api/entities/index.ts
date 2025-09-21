@@ -211,6 +211,8 @@ export class MatchImpl {
     public id: string;
     public date: Date;
     public seasonId: string;
+    public blueTeamPhotoUrl?: string | null;
+    public redTeamPhotoUrl?: string | null;
 
     public teams: TeamImpl[];
 
@@ -266,6 +268,8 @@ export class MatchImpl {
         this.id = _data.id!;
         this.date = new Date(_data.date!);
         this.teams = _data.teams!.map((i) => new TeamImpl(i));
+        this.blueTeamPhotoUrl = _data.teams[0]?.photoAsset?.url ?? null;
+        this.redTeamPhotoUrl = _data.teams[1]?.photoAsset?.url ?? null;
 
         const players = _players.map((i) => new PlayerImpl(i));
         const ruleMoves = _ruleMoves.map((i) => new RuleMoveImpl(i));
@@ -335,6 +339,8 @@ export class MatchImpl {
             redCups: this.redCups,
             blueTeamId: this._blueTeam.id,
             redTeamId: this._redTeam.id,
+            blueTeamPhotoUrl: this.blueTeamPhotoUrl,
+            redTeamPhotoUrl: this.redTeamPhotoUrl,
 
             blueTeam: this.blueTeam.map((i) => {
                 const player = i.toJSON();

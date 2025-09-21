@@ -306,27 +306,30 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                {experiments.matchPhotos && isEditing && (
-                    <DualTeamPhoto
-                        match={displayMatch}
-                        editable={isEditing}
-                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                        onRemovePress={() => setShowDeletePhotoPrompt(true)}
-                        onSwapTeamColorsPress={
-                            matchDraft.actions.swapTeamPhotos
-                        }
-                        blueImageSource={
-                            matchDraft.blueTeamPhotoUri
-                                ? { uri: matchDraft.blueTeamPhotoUri }
-                                : undefined
-                        }
-                        redImageSource={
-                            matchDraft.redTeamPhotoUri
-                                ? { uri: matchDraft.redTeamPhotoUri }
-                                : undefined
-                        }
-                    />
-                )}
+                {experiments.matchPhotos &&
+                    (isEditing ||
+                        (match?.blueTeamPhotoUrl &&
+                            match?.redTeamPhotoUrl)) && (
+                        <DualTeamPhoto
+                            match={displayMatch}
+                            editable={isEditing}
+                            onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                            onRemovePress={() => setShowDeletePhotoPrompt(true)}
+                            onSwapTeamColorsPress={
+                                matchDraft.actions.swapTeamPhotos
+                            }
+                            blueImageSource={
+                                match?.blueTeamPhotoUrl
+                                    ? { uri: match?.blueTeamPhotoUrl }
+                                    : undefined
+                            }
+                            redImageSource={
+                                match?.redTeamPhotoUrl
+                                    ? { uri: match?.redTeamPhotoUrl }
+                                    : undefined
+                            }
+                        />
+                    )}
                 <MatchPlayers
                     onPlayerPress={(player) => {
                         if (isEditing) {

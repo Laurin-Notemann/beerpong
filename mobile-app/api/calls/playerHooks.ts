@@ -4,6 +4,7 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
+import { ConsoleLogger } from '@/utils/logging';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
@@ -83,15 +84,38 @@ export const useUpdatePlayerAvatarMutation = () => {
         }
     >({
         mutationFn: async (body) => {
-            const { byteArray, mimeType, ...rest } = body;
+            const { byteArray } = body;
 
             const res = await (
                 await api
             )
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setAvatar(body.groupId, body.profileId);
-            console.log('result:', res?.data.data?.avatarAsset);
-            return res?.data;
+                .setAvatar(
+                    {
+                        groupId: body.groupId,
+                        id: body.profileId,
+                    },
+                    undefined
+                );
+            const singleUploadUrl =
+                res?.data.data?.avatarAsset?.singleUploadUrl;
+
+            if (!singleUploadUrl)
+                throw new Error('No upload URL returned from server');
+
+            const uploadRes = await fetch(singleUploadUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': body.mimeType,
+                },
+                body: byteArray,
+            });
+            if (!uploadRes.ok) {
+                ConsoleLogger.error(
+                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
+                );
+            }
+            return uploadRes;
         },
     });
 };
