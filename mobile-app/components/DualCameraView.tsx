@@ -20,6 +20,8 @@ const IN_PROGRESS_FADE_ANIMATION_SPEED = 200;
 const CAMERA_MAX_WAIT_MS = 1000;
 const CAMERA_MIN_WAIT_MS = 300;
 
+const RETRIES_ON_INACTIVE = 3;
+
 export interface DualCameraPhoto {
     blueTeamPhotoUri: string;
     redTeamPhotoUri: string;
@@ -46,12 +48,14 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     // Resolve when camera is ready after facing switch
     const resolveNextReadyRef = useRef<(() => void) | null>(null);
 
+    const [cameraReady, setCameraReady] = useState(false);
+
     const onCameraReady = useCallback(() => {
-        // this never fires in the simulator!
+        setCameraReady(true);
+        // resolve pending waiter if you keep that mechanism:
         if (resolveNextReadyRef.current) {
-            const resolve = resolveNextReadyRef.current;
+            resolveNextReadyRef.current();
             resolveNextReadyRef.current = null;
-            resolve();
         }
     }, []);
 
@@ -79,10 +83,9 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             ]);
         } finally {
             if (timeoutId) clearTimeout(timeoutId);
-            // Ensure lingering resolver doesn't trigger later
             resolveNextReadyRef.current = null;
         }
-    }, [waitForNextCameraReady]);
+    }, []);
 
     useEffect(() => {
         if (isCapturing) {
@@ -108,54 +111,69 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     const cameraPermissionCantAskAgain = camPerm && !camPerm.canAskAgain;
 
     const takeOne = useCallback(async () => {
-        const result = await cameraRef.current?.takePictureAsync({
-            quality: 1,
-            skipProcessing: true,
-        });
-        if (!result?.uri) throw new Error('No image from camera');
-        return result.uri;
+        let lastErr: unknown;
+        for (let i = 0; i < RETRIES_ON_INACTIVE; i++) {
+            try {
+                const result = await cameraRef.current?.takePictureAsync({
+                    quality: 1,
+                    skipProcessing: true,
+                });
+                if (!result?.uri) throw new Error('No image from camera');
+                return result.uri;
+            } catch (e: any) {
+                const msg = String(e?.message ?? e);
+                if (msg.includes('No active and enabled video connection')) {
+                    await new Promise((r) => setTimeout(r, 250));
+                    lastErr = e;
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw lastErr ?? new Error('Camera not ready');
     }, []);
 
     const [err, setErr] = useState<Error | null>(null);
 
     const onTakePhotoPress = async () => {
+        if (!camPerm?.granted || !cameraReady) return;
+
+        const startFacing = primaryType;
+        const nextFacing = startFacing === 'back' ? 'front' : 'back';
+
+        setErr(null);
+        setIsCapturing(true);
+
         try {
-            if (!camPerm?.granted) {
-                const newPerm = await requestCamPerm();
-
-                if (!newPerm.granted) {
-                    setErr(new Error('Camera permission denied'));
-                    return;
-                }
-            }
-            setIsCapturing(true);
-
-            // 1) Capture primary
+            // 1) Shot on current lens
             const firstUri = await takeOne();
 
-            // 2) Switch to secondary, wait for camera to be ready
-            setPrimaryType((t) => (t === 'back' ? 'front' : 'back'));
-            await waitForReadyWithTimeout();
+            // 2) Flip and wait for the *new* session
+            setCameraReady(false); // will be set true by onCameraReady
+            setPrimaryType(nextFacing);
+            await waitForReadyWithTimeout(); // or wait until cameraReady becomes true
 
-            // 3) Capture secondary
+            // 3) Second shot
             const secondUri = await takeOne();
 
-            // 4) Store based on which was which at start
-            if (secondaryType === 'front') {
-                onResult({
-                    blueTeamPhotoUri: firstUri,
-                    redTeamPhotoUri: secondUri,
-                });
-            } else {
-                onResult({
-                    blueTeamPhotoUri: secondUri,
-                    redTeamPhotoUri: firstUri,
-                });
-            }
+            // 4) Map deterministically (no stale state)
+            const frontUri = startFacing === 'front' ? firstUri : secondUri;
+            const backUri = startFacing === 'back' ? firstUri : secondUri;
+
+            onResult({
+                // adjust mapping to your semantics:
+                blueTeamPhotoUri: backUri,
+                redTeamPhotoUri: frontUri,
+            });
         } catch (error) {
             setErr(error as Error);
         } finally {
-            setPrimaryType('back');
+            // Optional: choose your post-flow lens policy.
+            // Either stay on the *last used* lens:
+            // setPrimaryType(nextFacing);
+            // Or restore to where the user started:
+            setPrimaryType(startFacing);
+
             setIsCapturing(false);
         }
     };
@@ -297,7 +315,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 )}
                 <TakePhotoButton
                     onPress={onTakePhotoPress}
-                    disabled={isCapturing || !camPerm?.granted}
+                    disabled={isCapturing || !camPerm?.granted || !cameraReady}
                 />
             </View>
             <Animated.View
