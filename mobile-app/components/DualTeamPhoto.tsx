@@ -20,6 +20,7 @@ import { ScoreChip, Team } from '@/components/MatchVsHeader';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PressableScale from '@/components/PressableScale';
 import Text from '@/components/Text';
+import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 
 const FADE_CAMERA_IN_OUT_ANIMATION_SPEED = 200;
@@ -134,10 +135,18 @@ export function DualTeamPhoto({
 
     function _onCycleMode() {
         setMode((current) => {
-            if (current === 'equal') return 'blueLarge';
-            if (current === 'blueLarge') return 'redLarge';
-            if (current === 'redLarge') return 'equal';
-
+            if (current === 'equal') {
+                triggerHapticBump('light');
+                return 'blueLarge';
+            }
+            if (current === 'blueLarge') {
+                triggerHapticBump('light');
+                return 'redLarge';
+            }
+            if (current === 'redLarge') {
+                triggerHapticBump('selection');
+                return 'equal';
+            }
             throw new Error('unreachable');
         });
     }
@@ -183,6 +192,7 @@ export function DualTeamPhoto({
                                 ]}
                             >
                                 <OverlayIconButton
+                                    size="small"
                                     iconName="close"
                                     onPress={closeCameraModal}
                                 />
@@ -250,7 +260,10 @@ export function DualTeamPhoto({
                             <OverlayIconButton
                                 blur={false}
                                 iconName="close"
-                                onPress={onRemovePress}
+                                onPress={() => {
+                                    triggerHapticBump('selection');
+                                    onRemovePress();
+                                }}
                                 onPressIn={() => {
                                     animatePrimary(SWAP_TEAMS_ANIMATION_SCALE);
                                     animateSecondary(

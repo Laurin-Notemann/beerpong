@@ -12,13 +12,14 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { env } from '@/api/env';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import Text from '@/components/Text';
+import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 
 const IN_PROGRESS_FADE_ANIMATION_SPEED = 200;
 
 // Prefer waiting for `onCameraReady` after switching lenses, with a fallback timeout (simulators may not fire it).
 const CAMERA_MAX_WAIT_MS = 1000;
-const CAMERA_MIN_WAIT_MS = 300;
+const CAMERA_MIN_WAIT_MS = 500;
 
 const RETRIES_ON_INACTIVE = 3;
 
@@ -37,7 +38,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
 
     const [primaryType, setPrimaryType] = useState<'front' | 'back'>('back');
 
-    const secondaryType = primaryType === 'back' ? 'front' : 'back';
+    const [flash, setFlash] = useState<'off' | 'torch'>('off');
 
     const [isCapturing, setIsCapturing] = useState(false);
 
@@ -160,6 +161,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             const frontUri = startFacing === 'front' ? firstUri : secondUri;
             const backUri = startFacing === 'back' ? firstUri : secondUri;
 
+            triggerHapticBump('toast:success');
             onResult({
                 // adjust mapping to your semantics:
                 blueTeamPhotoUri: backUri,
@@ -178,8 +180,14 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
         }
     };
 
-    const onFlipCameraPress = () =>
+    const onFlipCameraPress = () => {
+        triggerHapticBump('light');
         setPrimaryType((t) => (t === 'back' ? 'front' : 'back'));
+    };
+    const onToggleFlashPress = () => {
+        triggerHapticBump('light');
+        setFlash((f) => (f === 'off' ? 'torch' : 'off'));
+    };
 
     const theme = useTheme();
 
@@ -254,6 +262,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                         ref={cameraRef}
                         ratio="4:3"
                         facing={primaryType}
+                        flash={flash as any}
                         onCameraReady={onCameraReady}
                         style={[
                             StyleSheet.absoluteFill,
@@ -278,6 +287,14 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                     }}
                 >
                     <OverlayIconButton
+                        size="large"
+                        blur={false}
+                        iconName={flash === 'torch' ? 'flash' : 'flash-off'}
+                        onPress={onToggleFlashPress}
+                    />
+                    <OverlayIconButton
+                        size="large"
+                        blur={false}
                         iconName="autorenew"
                         onPress={onFlipCameraPress}
                     />
@@ -315,7 +332,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 )}
                 <TakePhotoButton
                     onPress={onTakePhotoPress}
-                    disabled={isCapturing || !camPerm?.granted || !cameraReady}
+                    disabled={isCapturing || !camPerm?.granted}
                 />
             </View>
             <Animated.View
@@ -366,20 +383,20 @@ const styles = StyleSheet.create({
         marginBottom: 84,
     },
     shutter: {
-        width: 94,
-        height: 94,
+        width: 76,
+        height: 76,
         borderRadius: 999,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'white',
     },
     innerShutter: {
-        width: 86,
-        height: 86,
+        width: 68,
+        height: 68,
         borderRadius: 999,
         backgroundColor: 'white',
 
-        borderWidth: 4,
+        borderWidth: 3,
         borderColor: 'black',
     },
     shutterText: { color: 'black', fontSize: 28, lineHeight: 28 },

@@ -18,6 +18,7 @@ import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import ErrorScreen from '@/components/ErrorScreen';
 import { HeaderItem } from '@/components/HeaderItem';
@@ -216,8 +217,31 @@ export default function Page() {
     }
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
+    const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
+
     return (
         <>
+            <ConfirmationModal
+                isVisible={showDeletePhotoPrompt}
+                onClose={() => setShowDeletePhotoPrompt(false)}
+                title="Delete Match Photo"
+                description="Are you sure you want to delete this match photo? This can't be undone."
+                actions={[
+                    {
+                        type: 'danger',
+                        title: 'Delete',
+                        onPress: () => {
+                            matchDraft.actions.removeTeamPhotos();
+                            setShowDeletePhotoPrompt(false);
+                        },
+                    },
+                    {
+                        title: 'Cancel',
+                        onPress: () => setShowDeletePhotoPrompt(false),
+                    },
+                ]}
+            />
+
             <Stack.Screen
                 options={{
                     ...navStyles,
@@ -287,7 +311,7 @@ export default function Page() {
                         match={displayMatch}
                         editable={isEditing}
                         onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                        onRemovePress={matchDraft.actions.removeTeamPhotos}
+                        onRemovePress={() => setShowDeletePhotoPrompt(true)}
                         onSwapTeamColorsPress={
                             matchDraft.actions.swapTeamPhotos
                         }
