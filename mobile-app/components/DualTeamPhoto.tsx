@@ -81,8 +81,23 @@ export function DualTeamPhoto({
 
     const isEmpty = blueImageSource == null && redImageSource == null;
 
+    const primaryTeamRef = useRef<'blue' | 'red'>(
+        initialMode === 'redLarge' ? 'red' : 'blue'
+    );
+
+    // keep ref in sync whenever we’re NOT in equal mode
+    useEffect(() => {
+        if (mode === 'blueLarge') primaryTeamRef.current = 'blue';
+        else if (mode === 'redLarge') primaryTeamRef.current = 'red';
+    }, [mode]);
+
+    // replace your `primary` derivation with this:
     const primary =
-        mode === 'equal' ? 'blue' : mode === 'blueLarge' ? 'blue' : 'red';
+        mode === 'equal'
+            ? primaryTeamRef.current
+            : mode === 'blueLarge'
+              ? 'blue'
+              : 'red';
 
     const secondary = primary === 'blue' ? 'red' : 'blue';
 
@@ -226,7 +241,10 @@ export function DualTeamPhoto({
                             <OverlayIconButton
                                 blur={false}
                                 iconName="swap-horizontal"
-                                onPress={onSwapTeamColorsPress}
+                                onPress={() => {
+                                    triggerHapticBump('light');
+                                    onSwapTeamColorsPress();
+                                }}
                                 onPressIn={() => {
                                     animatePrimary(
                                         1 / SWAP_TEAMS_ANIMATION_SCALE
@@ -244,7 +262,10 @@ export function DualTeamPhoto({
                         <OverlayIconButton
                             blur={false}
                             iconName="camera-retake-outline"
-                            onPress={_onTakePhoto}
+                            onPress={() => {
+                                triggerHapticBump('light');
+                                _onTakePhoto();
+                            }}
                             onPressIn={() => {
                                 animatePrimary(1 / SWAP_TEAMS_ANIMATION_SCALE);
                                 animateSecondary(

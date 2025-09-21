@@ -89,11 +89,8 @@ export const useUpdatePlayerAvatarMutation = () => {
                 await api
             )
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setAvatar(rest, byteArray as any, {
-                    headers: {
-                        'Content-Type': mimeType,
-                    },
-                });
+                .setAvatar(body.groupId, body.profileId);
+            console.log('result:', res?.data.data?.avatarAsset);
             return res?.data;
         },
     });

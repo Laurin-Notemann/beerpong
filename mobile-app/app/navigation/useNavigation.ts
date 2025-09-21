@@ -2,7 +2,7 @@ import { NavigationProp } from '@react-navigation/native';
 import { useNavigation as useRawNavigation } from 'expo-router';
 
 export type RootStackParamList = {
-    cropAvatar: { uri: string; profileId: string };
+    cropAvatar: { imageKey: string; profileId: string };
     index: undefined;
     formations: undefined;
     createGroupSetName: undefined;

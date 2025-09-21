@@ -38,7 +38,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
 
     const [primaryType, setPrimaryType] = useState<'front' | 'back'>('back');
 
-    const [flash, setFlash] = useState<'off' | 'torch'>('off');
+    const [flash, setFlash] = useState<'off' | 'on'>('off');
 
     const [isCapturing, setIsCapturing] = useState(false);
 
@@ -49,7 +49,9 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     // Resolve when camera is ready after facing switch
     const resolveNextReadyRef = useRef<(() => void) | null>(null);
 
-    const [cameraReady, setCameraReady] = useState(false);
+    const [_cameraReady, setCameraReady] = useState(false);
+
+    const cameraReady = _cameraReady || env.isDev; // in dev, we don't get onCameraReady calls, so just ignore it
 
     const onCameraReady = useCallback(() => {
         setCameraReady(true);
@@ -186,7 +188,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     };
     const onToggleFlashPress = () => {
         triggerHapticBump('light');
-        setFlash((f) => (f === 'off' ? 'torch' : 'off'));
+        setFlash((f) => (f === 'off' ? 'on' : 'off'));
     };
 
     const theme = useTheme();
@@ -262,7 +264,8 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                         ref={cameraRef}
                         ratio="4:3"
                         facing={primaryType}
-                        flash={flash as any}
+                        flash={flash}
+                        enableTorch
                         onCameraReady={onCameraReady}
                         style={[
                             StyleSheet.absoluteFill,
@@ -289,7 +292,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                     <OverlayIconButton
                         size="large"
                         blur={false}
-                        iconName={flash === 'torch' ? 'flash' : 'flash-off'}
+                        iconName={flash === 'on' ? 'flash' : 'flash-off'}
                         onPress={onToggleFlashPress}
                     />
                     <OverlayIconButton

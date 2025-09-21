@@ -20,6 +20,7 @@ import { useUpdatePlayerAvatarMutation } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { deleteTemp, getTemp } from '@/app/tempRouteStore';
 import Avatar from '@/components/Avatar';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -28,10 +29,12 @@ import { useDebounce } from '@/utils/useDebounce';
 const DEBUG = false;
 
 export default function Page() {
-    const { uri, profileId } = useLocalSearchParams<{
-        uri: string;
+    const { imageKey, profileId } = useLocalSearchParams<{
+        imageKey: string;
         profileId: string;
     }>();
+
+    const uri = imageKey ? getTemp<string>(imageKey) : undefined;
 
     const [croppedUri, setCroppedUri] = useState<string | null>(null);
 
@@ -43,6 +46,7 @@ export default function Page() {
     const nav = useNavigation();
 
     function onCancel() {
+        if (imageKey) deleteTemp(imageKey);
         nav.goBack();
     }
 
@@ -80,57 +84,39 @@ export default function Page() {
             return;
 
         setIsLoading(true);
-
         try {
-            // const { offsetX = 0, offsetY = 0 } = transformRef.current ?? {};
+            const z = transformRef.current?.zoomLevel ?? 1;
+            const offsetX = transformRef.current?.offsetX ?? 0;
+            const offsetY = transformRef.current?.offsetY ?? 0;
 
-            // const dispZoomW = imgWidth * zoomLevel;
-            // const dispZoomH = imgHeight * zoomLevel;
+            // displayed size
+            const dispW = imgWidth! * z;
+            const dispH = imgHeight! * z;
 
-            // b) where is the top‐left of the zoomed image on‐screen?
-            //    Since the ZoomableView always “centers” it by default,
-            //    initial top‐left = (screenW–dispZoomW)/2, (imgHeight–dispZoomH)/2
-            //    Then user panning adds offsetX / offsetY.
-            // const imgLeft = (width - dispZoomW) / 2 + offsetX;
-            // const imgTop = (imgHeight - dispZoomH) / 2 + offsetY;
+            // ✅ scale offsets by zoom to convert content-space pan -> screen-space pan
+            const imgLeft = (width - dispW) / 2 + offsetX * z;
+            const imgTop = (height - dispH) / 2 + offsetY * z;
 
-            // c) the circle’s bounding box _in screen‐coords_:
-            //    (circle is centered on the entire screen’s width and at Y = imgHeight/2)
-            //    NOTE: since your ZoomableView only spans the “display height” of the image (imgHeight),
-            //    the vertical center of that view is at y = imgHeight/2.
+            // circle box on screen
             const circleScreenX = (width - circleDiameter) / 2;
-            const circleScreenY = (imgHeight - circleDiameter) / 2;
+            const circleScreenY = (height - circleDiameter) / 2;
 
-            // d) find where that bounding‐square sits *relative to the zoomed‐image top‐left*:
-            const overlapX_zoomed = circleScreenX;
-            const overlapY_zoomed = circleScreenY;
+            // display -> raw
+            const factorX = imgRawWidth! / imgWidth!;
+            const factorY = imgRawHeight! / imgHeight!;
 
-            // e) convert that “zoomed‐image offset” back to “original image pixels”:
-            //    1) dividing by zoomLevel takes us from “zoomed display px” → “display px”
-            //    2) multiply (imgRawWidth / imgWidth) to convert “display px” → “raw px”
-            const factorX = imgRawWidth / imgWidth;
-            const factorY = imgRawHeight / imgHeight;
+            const originX_px = ((circleScreenX - imgLeft) / z) * factorX;
+            const originY_px = ((circleScreenY - imgTop) / z) * factorY;
+            const cropW_px = (circleDiameter / z) * factorX;
+            const cropH_px = (circleDiameter / z) * factorY;
 
-            const originX_px = (overlapX_zoomed / zoomLevel) * factorX;
-            const originY_px = (overlapY_zoomed / zoomLevel) * factorY;
-
-            // f) similarly, how wide/high is that circle‐box in raw pixels?
-            const cropW_px = (circleDiameter / zoomLevel) * factorX;
-            const cropH_px = (circleDiameter / zoomLevel) * factorY;
-
-            //
-            // === 4) Now we have (originX_px, originY_px, cropW_px, cropH_px) in original pixels.
-            //     Clamp to valid ranges to avoid “out of bounds” errors:
-            //
+            // clamp
             const clamp = (val: number, min: number, max: number) =>
                 Math.max(min, Math.min(val, max));
-
             const originX = clamp(originX_px, 0, imgRawWidth - 1);
             const originY = clamp(originY_px, 0, imgRawHeight - 1);
             const cropW = clamp(cropW_px, 0, imgRawWidth - originX);
             const cropH = clamp(cropH_px, 0, imgRawHeight - originY);
-
-            // const circleDiameterOnImg = imgRawHeight / zoomLevel;
 
             const { uri: rawCroppedUri } =
                 await ImageManipulator.manipulateAsync(
@@ -139,13 +125,7 @@ export default function Page() {
                         {
                             crop: {
                                 originX,
-                                // originX:
-                                //     (imgRawWidth - circleDiameterOnImg) / 2 -
-                                //     (offsetX * factorX) / zoomLevel,
                                 originY,
-                                // originY:
-                                //     (imgRawHeight - circleDiameterOnImg) / 2 -
-                                //     (offsetY * factorY) / zoomLevel,
                                 width: cropW,
                                 height: cropH,
                             },
@@ -170,6 +150,7 @@ export default function Page() {
                 mimeType: 'image/png',
             });
 
+            if (imageKey) deleteTemp(imageKey);
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to upload player avatar:', err);
@@ -178,12 +159,14 @@ export default function Page() {
             setIsLoading(false);
         }
     }
+
     const minZoom: number =
         imgWidth == null || imgHeight == null
             ? 1
             : Math.max(circleDiameter / imgWidth, circleDiameter / imgHeight);
 
     useEffect(() => {
+        if (!uri) return;
         Image.getSize(
             uri,
             (imgRawWidth, imgRawHeight) => {
@@ -207,6 +190,12 @@ export default function Page() {
             }
         );
     }, [uri, width]);
+
+    useEffect(() => {
+        return () => {
+            if (imageKey) deleteTemp(imageKey);
+        };
+    }, [imageKey]);
 
     const ref = useRef<ReactNativeZoomableView | null>(null);
 
