@@ -17,7 +17,8 @@ import { useTheme } from '@/theme';
 const IN_PROGRESS_FADE_ANIMATION_SPEED = 200;
 
 // Prefer waiting for `onCameraReady` after switching lenses, with a fallback timeout (simulators may not fire it).
-const CAMERA_READY_FALLBACK_MS = 1000;
+const CAMERA_MAX_WAIT_MS = 1000;
+const CAMERA_MIN_WAIT_MS = 300;
 
 export interface DualCameraPhoto {
     blueTeamPhotoUri: string;
@@ -63,11 +64,18 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     const waitForReadyWithTimeout = useCallback(async () => {
         let timeoutId: any;
         try {
-            await Promise.race([
-                waitForNextCameraReady(),
-                new Promise<void>((resolve) => {
-                    timeoutId = setTimeout(resolve, CAMERA_READY_FALLBACK_MS);
-                }),
+            const minWait = new Promise<void>((resolve) =>
+                setTimeout(resolve, CAMERA_MIN_WAIT_MS)
+            );
+
+            await Promise.all([
+                minWait,
+                Promise.race([
+                    waitForNextCameraReady(),
+                    new Promise<void>((resolve) => {
+                        timeoutId = setTimeout(resolve, CAMERA_MAX_WAIT_MS);
+                    }),
+                ]),
             ]);
         } finally {
             if (timeoutId) clearTimeout(timeoutId);
