@@ -73,6 +73,7 @@ export default function Page() {
             <InputModal>
                 <MenuSection>
                     <MenuItemNumberInput
+                        border={false}
                         title="Min Matches to Qualify"
                         subtitle="Players have to play at least this many matches to show up on the leaderboard."
                         headIcon="account-lock-open"

@@ -4,7 +4,11 @@ import { View } from 'react-native';
 import { Host as PortalProvider } from 'react-native-portalize';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
+import {
+    MinimalMatch,
+    PerformedMove,
+    TeamMember,
+} from '@/api/utils/matchDtoToMatch';
 import FinishMovePage from '@/components/AssignPointsToPlayerModal/FinishMovePage';
 import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScorerPage';
 import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
@@ -21,7 +25,7 @@ export interface AssignPointsToPlayerModalProps {
 
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
-    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
+    match: MinimalMatch;
 
     initialPageIdx: number | null;
 }

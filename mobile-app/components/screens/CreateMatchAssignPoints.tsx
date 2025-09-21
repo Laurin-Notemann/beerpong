@@ -1,18 +1,13 @@
 import React from 'react';
-import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    View,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { SafeAreaView, ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useInsets } from '@/app/useInsets';
-import Button from '@/components/Button';
+import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import MatchPlayers from '@/components/MatchPlayers';
-import { useTheme } from '@/theme';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
@@ -36,7 +31,7 @@ export default function CreateMatchAssignPoints({
 
     const insets = useInsets(true, true);
 
-    const theme = useTheme();
+    const matchDraft = useMatchDraftStore();
 
     return (
         <View style={{ position: 'relative', flex: 1 }}>
@@ -50,6 +45,27 @@ export default function CreateMatchAssignPoints({
                     paddingBottom: insets.bottom + 84,
                 }}
             >
+                {experiments.matchPhotos && (
+                    <DualTeamPhoto
+                        match={{ blueTeam: [], redTeam: [] }}
+                        editable
+                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                        onRemovePress={matchDraft.actions.removeTeamPhotos}
+                        onSwapTeamColorsPress={
+                            matchDraft.actions.swapTeamPhotos
+                        }
+                        blueImageSource={
+                            matchDraft.blueTeamPhotoUri
+                                ? { uri: matchDraft.blueTeamPhotoUri }
+                                : undefined
+                        }
+                        redImageSource={
+                            matchDraft.redTeamPhotoUri
+                                ? { uri: matchDraft.redTeamPhotoUri }
+                                : undefined
+                        }
+                    />
+                )}
                 <MatchPlayers
                     editable
                     players={players}
@@ -68,56 +84,16 @@ export default function CreateMatchAssignPoints({
                     marginHorizontal: 8,
                     marginBottom: insets.bottom + 16,
 
+                    justifyContent: 'space-between',
+
                     gap: 16,
                 }}
             >
-                {experiments.matchPhotos && (
-                    <Button
-                        variant="secondary"
-                        title={
-                            <Icon
-                                color={theme.color.text.primary}
-                                size={24}
-                                name="camera"
-                            />
-                        }
-                        size="large"
-                        onPress={onSubmit}
-                        disabled={isPending}
-                        style={{
-                            // box shadow:
-                            shadowColor: '#000',
-                            shadowOffset: {
-                                width: 0,
-                                height: 4,
-                            },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 4,
-                            elevation: 5,
-
-                            aspectRatio: 1,
-                        }}
-                    />
-                )}
-                <Button
-                    variant="primary"
-                    title={isPending ? <ActivityIndicator /> : 'Create'}
-                    size="large"
+                <OverlayTextButton
+                    fullWidth
+                    title="Create"
+                    isPending={isPending}
                     onPress={onSubmit}
-                    disabled={isPending}
-                    style={{
-                        // box shadow:
-                        shadowColor: '#000',
-                        shadowOffset: {
-                            width: 0,
-                            height: 4,
-                        },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 4,
-                        elevation: 5,
-
-                        flex: 1,
-                    }}
                 />
             </SafeAreaView>
         </View>

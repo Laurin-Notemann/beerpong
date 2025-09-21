@@ -25,7 +25,7 @@ import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/theme';
 import { LoggingProvider } from '@/utils/useLogging';
-import { SwiperProgressProvider } from '@/zustand/scopePickerStore';
+import { ScopePickerProvider } from '@/zustand/useScopePicker';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
 Sentry.init(env.sentry);
@@ -37,6 +37,7 @@ SplashScreen.preventAutoHideAsync();
 
 function Everything() {
     const modalStyles = useModalStyles();
+
     return (
         <Stack initialRouteName="(tabs)">
             <Stack.Screen
@@ -59,6 +60,7 @@ function Everything() {
                 name="dailyLeaderboardSettings"
                 options={modalStyles}
             />
+
             <Stack.Screen name="teamSizeSettings" options={modalStyles} />
             <Stack.Screen
                 name="minMatchesToQualifySettings"
@@ -106,7 +108,7 @@ export default function RootLayout() {
             <LoggingProvider>
                 <ApiProvider>
                     <ThemeProvider value={appTheme}>
-                        <SwiperProgressProvider>
+                        <ScopePickerProvider>
                             <PortalProvider>
                                 <RootSiblingParent>
                                     <StatusBar barStyle={theme.barStyle} />
@@ -126,7 +128,7 @@ export default function RootLayout() {
                                     </Drawer.Navigator>
                                 </RootSiblingParent>
                             </PortalProvider>
-                        </SwiperProgressProvider>
+                        </ScopePickerProvider>
                     </ThemeProvider>
                 </ApiProvider>
             </LoggingProvider>

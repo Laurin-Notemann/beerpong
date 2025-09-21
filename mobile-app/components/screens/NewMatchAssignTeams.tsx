@@ -259,6 +259,7 @@ export default function NewMatchAssignTeams({
                     <>
                         <MenuSection style={{ marginBottom: 20 }}>
                             <MenuItem
+                                border={false}
                                 headIcon="dice-multiple-outline"
                                 title="Random Teams"
                                 tailIconType="next"
@@ -267,6 +268,7 @@ export default function NewMatchAssignTeams({
                         </MenuSection>
                         <MenuSection style={{ marginBottom: 20 }}>
                             <MenuItem
+                                border={false}
                                 headIcon="account-plus-outline"
                                 title="Create new Player"
                                 tailIconType="next"

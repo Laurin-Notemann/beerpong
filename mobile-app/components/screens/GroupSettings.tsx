@@ -84,6 +84,15 @@ export default function GroupSettingsScreen({
             >
                 <SafeAreaView>
                     <MenuSection title="Settings">
+                        <MenuItem
+                            border={false}
+                            title={groupName}
+                            headIcon="pencil-outline"
+                            tailIconType="next"
+                            onPress={() =>
+                                nav.navigate('editGroupName', { id })
+                            }
+                        />
                         {experiments.premiumVersion && (
                             <MenuItem
                                 title="Premium Version"
@@ -94,14 +103,6 @@ export default function GroupSettingsScreen({
                                 }
                             />
                         )}
-                        <MenuItem
-                            title={groupName}
-                            headIcon="pencil-outline"
-                            tailIconType="next"
-                            onPress={() =>
-                                nav.navigate('editGroupName', { id })
-                            }
-                        />
                         {experiments.showWallpaper && (
                             <MenuItem
                                 title="Set Wallpaper"
@@ -153,6 +154,7 @@ export default function GroupSettingsScreen({
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem
+                            border={false}
                             title="Start new Season"
                             headIcon="cached"
                             tailIconType="next"
@@ -249,6 +251,16 @@ export default function GroupSettingsScreen({
                         />
                     </MenuSection>
                     <MenuSection title="Access">
+                        <MenuItem
+                            border={false}
+                            title="Code"
+                            headIcon="share-outline"
+                            tailIconType="next"
+                            tailContent={formatGroupCode(groupCode)}
+                            onPress={() =>
+                                copyToClipboard(formatGroupCode(groupCode))
+                            }
+                        />
                         {env.isDev && (
                             <>
                                 <MenuItem
@@ -273,15 +285,6 @@ export default function GroupSettingsScreen({
                                 />
                             </>
                         )}
-                        <MenuItem
-                            title="Code"
-                            headIcon="share-outline"
-                            tailIconType="next"
-                            tailContent={formatGroupCode(groupCode)}
-                            onPress={() =>
-                                copyToClipboard(formatGroupCode(groupCode))
-                            }
-                        />
                     </MenuSection>
                     <MenuSection
                         style={{
@@ -291,6 +294,7 @@ export default function GroupSettingsScreen({
                         }}
                     >
                         <MenuItem
+                            border={false}
                             title="Leave Group"
                             headIcon="exit-to-app"
                             onPress={onLeaveGroup}

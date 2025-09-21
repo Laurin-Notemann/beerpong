@@ -18,6 +18,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
@@ -266,7 +267,7 @@ export default function Rules({
             {isEditing && (
                 <View
                     style={{
-                        flexDirection: 'row',
+                        flexDirection: 'row-reverse',
                         alignItems: 'stretch',
                         justifyContent: 'space-between',
 
@@ -278,26 +279,23 @@ export default function Rules({
                         paddingHorizontal: 16,
                     }}
                 >
+                    <OverlayTextButton
+                        onPress={() => nav.navigate('createNewRule')}
+                        title="Add Rule"
+                    />
+
                     {selectedIds.length > 0 && (
                         <>
-                            <Button
+                            <OverlayTextButton
+                                onPress={() => setShowDeleteConfirmation(true)}
                                 title="Delete"
-                                onPress={() => setShowDeleteConfirmation(true)}
                             />
-                            {/* <Button
-                                title="Copy to Group"
+                            {/* <OverlayTextButton
                                 onPress={() => setShowDeleteConfirmation(true)}
+                                title="Copy to Group"
                             /> */}
                         </>
                     )}
-                    <Button
-                        title="Add Rule"
-                        onPress={() => nav.navigate('createNewRule')}
-                        style={{
-                            alignSelf: 'stretch',
-                            marginLeft: 'auto',
-                        }}
-                    />
                 </View>
             )}
         </GestureHandlerRootView>

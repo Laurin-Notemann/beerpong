@@ -1,12 +1,12 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Text } from 'react-native';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
+import Text from '@/components/Text';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
@@ -91,6 +91,7 @@ export default function Page() {
                     onChange={setRankingAlgorithm}
                     footer={
                         <Text
+                            color="link"
                             onPress={() => {
                                 // close the modal
                                 nav.goBack();
@@ -100,9 +101,6 @@ export default function Page() {
                                 fontSize: 13,
                                 lineHeight: 16,
                                 fontWeight: 400,
-                                // color: '#A7A7A7',
-
-                                color: '#6291F3',
 
                                 paddingHorizontal: 16,
                                 paddingVertical: 11,

@@ -11,7 +11,7 @@ interface MoveDraft {
     moveId: string;
     count: number;
 }
-interface PlayerDraft {
+export interface PlayerDraft {
     playerId: string;
     moves: MoveDraft[];
 }
@@ -20,6 +20,8 @@ interface TeamDraft {
 }
 
 interface MatchEditDraftStore {
+    blueTeamPhotoUri?: string;
+    redTeamPhotoUri?: string;
     // whether there are changes to be saved
     isDirty: boolean;
     // the original state before editing, used to determine isDirty
@@ -36,6 +38,12 @@ interface MatchEditDraftStore {
         setPlayerTeam: (playerId: string, team: TeamId) => void;
         setMoveCount: (userId: string, moveId: string, count: number) => void;
         setMatch: (match: Match) => void;
+        setTeamPhotos: (photos: {
+            blueTeamPhotoUri?: string;
+            redTeamPhotoUri?: string;
+        }) => void;
+        removeTeamPhotos: () => void;
+        swapTeamPhotos: () => void;
     };
 }
 
@@ -176,6 +184,24 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                         blueTeam,
                     },
                     isDirty: false,
+                }));
+            },
+            setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
+                set(() => ({
+                    blueTeamPhotoUri: blueTeamPhotoUri,
+                    redTeamPhotoUri: redTeamPhotoUri,
+                }));
+            },
+            removeTeamPhotos: () => {
+                set(() => ({
+                    blueTeamPhotoUri: undefined,
+                    redTeamPhotoUri: undefined,
+                }));
+            },
+            swapTeamPhotos: () => {
+                set((state) => ({
+                    blueTeamPhotoUri: state.redTeamPhotoUri,
+                    redTeamPhotoUri: state.blueTeamPhotoUri,
                 }));
             },
         },

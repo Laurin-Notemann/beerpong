@@ -31,6 +31,8 @@ export interface MatchesListProps
         profileId: string;
     };
     onMatchPress: (match: Match) => void;
+
+    background?: boolean;
 }
 export default function MatchesList({
     matches,
@@ -38,12 +40,15 @@ export default function MatchesList({
     forPlayer,
     onMatchPress,
 
+    background,
+
     ...rest
 }: MatchesListProps) {
     const days = groupMatchesByDay(matches);
 
     return (
         <FlatList
+            ListEmptyComponent={<NoMatchesPlayedYet />}
             {...rest}
             contentContainerStyle={[
                 { paddingBottom: 32 },
@@ -58,7 +63,7 @@ export default function MatchesList({
             ]}
             data={days}
             keyExtractor={(item) => item.date.toISOString()}
-            initialNumToRender={2}
+            initialNumToRender={1}
             maxToRenderPerBatch={3}
             windowSize={5}
             updateCellsBatchingPeriod={50}
@@ -69,9 +74,11 @@ export default function MatchesList({
                     key={index}
                     title={item.title}
                     containerStyle={{ marginHorizontal: forPlayer ? 8 : 0 }}
+                    background={background}
                 >
                     {item.matches.map((match, idx) => (
                         <MatchesListItem
+                            border={idx !== 0}
                             key={idx}
                             match={match}
                             onPress={() => onMatchPress(match)}
@@ -80,7 +87,6 @@ export default function MatchesList({
                     ))}
                 </MenuSection>
             )}
-            ListEmptyComponent={<NoMatchesPlayedYet />}
         />
     );
 }

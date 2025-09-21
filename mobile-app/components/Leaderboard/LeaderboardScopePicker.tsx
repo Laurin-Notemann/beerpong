@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { useMemo, useRef, useState } from 'react';
+import { startTransition, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
@@ -20,7 +21,7 @@ import {
 } from '@/constants/rankingAlgorithms';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
-import { useScopePicker } from '@/zustand/scopePickerStore';
+import { useScopePicker } from '@/zustand/useScopePicker';
 
 const USE_SELECT_IN_SORT_MODAL = false;
 
@@ -40,7 +41,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 }) => {
     const scopePicker = useScopePicker();
 
-    const { groupId } = useGroup();
+    const { groupId, group } = useGroup();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -49,26 +50,20 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
             ?.filter((i) => i.endDate != null)
             ?.filter((i) => i.numMatches > 0) ?? [];
 
-    hasPastSeasonsButton = hasPastSeasonsButton && pastSeasons.length > 0;
-
     function onChange(scope: string) {
+        return; // TODO: make this work again
+
         // Navigate controlled swipers when clicking on tabs
         const optionIndex = ['today', 'season', 'all-time'].indexOf(scope);
         if (optionIndex !== -1) {
-            scopePicker.leaderboardSwiperRef.current?.scrollTo?.({
-                index: optionIndex,
-                animated: true,
-            });
+            scopePicker.leaderboardSwiperProgress.value = optionIndex;
             scopePicker.setLeaderboardPageIndex(optionIndex);
             return;
         }
 
         const pastIdx = pastSeasons.findIndex((i) => i.id === scope);
         if (pastIdx !== -1) {
-            scopePicker.pastSeasonsSwiperRef.current?.scrollTo?.({
-                index: pastIdx,
-                animated: true,
-            });
+            scopePicker.pastSeasonsSwiperProgress.value = pastIdx;
             scopePicker.setPastSeasonsPageIndex(pastIdx);
         }
     }
@@ -97,7 +92,10 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
             }))
           : [
                 { id: 'today', label: 'Today' },
-                { id: 'season', label: 'This Season' },
+                {
+                    id: 'season',
+                    label: group.data?.activeSeason?.name || 'This Season',
+                },
                 ...(groupHasPastSeasons
                     ? ([
                           { id: 'all-time', label: 'All Time' },
@@ -207,26 +205,22 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
                     height: 48,
 
-                    width: hasPastSeasonsButton
-                        ? 342 // TODO: un-hardcode
-                        : undefined,
-
                     borderRadius: 99,
 
                     overflow: 'hidden',
 
                     backgroundColor: isPastSeasonsMode
                         ? pastSeasonsColor
-                        : undefined,
+                        : theme.overlay.backgroundColor,
+
+                    flexShrink: 1,
                 },
                 active: {
                     position: 'absolute',
 
                     top: 8,
 
-                    backgroundColor: 'white',
-
-                    opacity: 0.1,
+                    backgroundColor: theme.overlay.highlightColor,
 
                     borderRadius: 99,
 
@@ -241,7 +235,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
             }),
         [theme, isPastSeasonsMode, hasPastSeasonsButton]
     );
-    const { group } = useGroup();
 
     const groupRankingAlgorithm =
         group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
@@ -314,9 +307,11 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                             onRemove={
                                 scopePicker.rankingAlgorithm
                                     ? () => {
-                                          scopePicker.setRankingAlgorithm(
-                                              undefined
-                                          );
+                                          startTransition(() => {
+                                              scopePicker.setRankingAlgorithm(
+                                                  undefined
+                                              );
+                                          });
                                           triggerHapticBump('toast:success');
                                       }
                                     : undefined
@@ -328,6 +323,8 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                 <View
                     style={{
                         flexDirection: 'row',
+
+                        justifyContent: 'flex-end',
 
                         height: 48,
 
@@ -381,7 +378,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                                     >
                                         {option.label && (
                                             <Text
-                                                color="primary"
                                                 style={{
                                                     fontSize: 13,
                                                     fontWeight: 600,
@@ -405,45 +401,19 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                         </View>
                     )}
                     {hasPastSeasonsButton && (
-                        <Pressable
-                            style={{
-                                width: 48,
-                                height: 48,
-
-                                borderRadius: 99,
-                                overflow: 'hidden',
-
-                                marginLeft:
-                                    options.length > 0 ? undefined : 'auto',
-                            }}
+                        <OverlayIconButton
+                            iconName="cards"
                             onPress={() => {
-                                scopePicker.setIsPastSeasonsMode(
-                                    !isPastSeasonsMode
-                                );
+                                startTransition(() => {
+                                    scopePicker.setIsPastSeasonsMode(
+                                        !isPastSeasonsMode
+                                    );
+                                });
                             }}
-                        >
-                            <BlurView
-                                intensity={70}
-                                tint={theme.blur.tint}
-                                style={{
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-
-                                    backgroundColor: isPastSeasonsMode
-                                        ? pastSeasonsColor
-                                        : undefined,
-
-                                    width: 48,
-                                    height: 48,
-                                }}
-                            >
-                                <Icon
-                                    name="cards"
-                                    color={theme.color.text.secondary}
-                                    size={16}
-                                />
-                            </BlurView>
-                        </Pressable>
+                            backgroundColor={
+                                isPastSeasonsMode ? pastSeasonsColor : undefined
+                            }
+                        />
                     )}
                 </View>
             </View>

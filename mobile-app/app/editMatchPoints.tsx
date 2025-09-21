@@ -3,7 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { ConsoleLogger } from '@/utils/logging';
@@ -62,27 +62,32 @@ export default function Page() {
                     isFinish: j.finishingMove!,
                 };
             }),
+            profileId: '#',
         };
     });
+
+    const displayMatch: MinimalMatch = {
+        id: '#',
+        date: new Date(),
+        blueCups: players
+            .filter((i) => i.team === 'blue')
+            .map((i) => i.moves)
+            .flat()
+            .reduce((sum, i) => sum + i.count, 0),
+        redCups: players
+            .filter((i) => i.team === 'red')
+            .map((i) => i.moves)
+            .flat()
+            .reduce((sum, i) => sum + i.count, 0),
+        redTeam: teamMembers.filter((i) => i.team === 'red'),
+        blueTeam: teamMembers.filter((i) => i.team === 'blue'),
+    };
 
     return (
         <AssignPointsToPlayerModal
             onClose={nav.goBack}
             initialPageIdx={parseInt(initialPageIdx)}
-            match={{
-                blueCups: players
-                    .filter((i) => i.team === 'blue')
-                    .map((i) => i.moves)
-                    .flat()
-                    .reduce((sum, i) => sum + i.count, 0),
-                redCups: players
-                    .filter((i) => i.team === 'red')
-                    .map((i) => i.moves)
-                    .flat()
-                    .reduce((sum, i) => sum + i.count, 0),
-                redTeam: teamMembers.filter((i) => i.team === 'red'),
-                blueTeam: teamMembers.filter((i) => i.team === 'blue'),
-            }}
+            match={displayMatch}
             setMoveCount={matchDraft.actions.setMoveCount}
         />
     );

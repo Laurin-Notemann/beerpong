@@ -1,7 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, View } from 'react-native';
 
 import {
     useDeleteMatchMutation,
@@ -12,16 +11,16 @@ import {
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import {
-    getInfluenceOfMatchOnAveragePoints,
-    Match,
-    matchDtoToMatch,
-    TeamMember,
-} from '@/api/utils/matchDtoToMatch';
+import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
+import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
+import ConfirmationModal from '@/components/ConfirmationModal';
+import { DualTeamPhoto } from '@/components/DualTeamPhoto';
+import ErrorScreen from '@/components/ErrorScreen';
 import { HeaderItem } from '@/components/HeaderItem';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -29,10 +28,11 @@ import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
-import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 
 /**
@@ -44,8 +44,6 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 const USE_MATCH_QUERY = false;
 
 export default function Page() {
-    const theme = useTheme();
-
     const [isEditing, setIsEditing] = useState(false);
 
     const { groupId, group } = useGroup();
@@ -94,76 +92,18 @@ export default function Page() {
         }
     }, [isEditing]);
 
-    const players = matchDraft.actions.getPlayers();
+    const prevMatchId = undefined; // TODO
+    const nextMatchId = undefined; // TODO
 
-    const teamMembers = players.map<TeamMember>((i) => {
-        const profile = profiles.find((j) => i.playerId === j.id);
-
-        if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member'); // TODO: this happens sometimes for a split second
-        }
-
-        const ownTeam = players.filter((j) => j.team === i.team);
-
-        const pointsForOwnMoves = i.moves.reduce(
-            (sum, j) =>
-                sum +
-                j.count *
-                    (allowedMoves.find((k) => k.id === j.moveId)
-                        ?.pointsForScorer ?? 0),
-            0
-        );
-        const teamMoves = ownTeam.reduce<(typeof i)['moves']>(
-            (sum, j) => sum.concat(j.moves),
-            []
-        );
-        const pointsForTeamMoves = teamMoves.reduce((sum, j) => {
-            const pointsForMove =
-                allowedMoves.find((k) => k.id === j.moveId)?.pointsForTeam ?? 0;
-
-            return sum + pointsForMove * j.count;
-        }, 0);
-        const pointsThisMatch = pointsForOwnMoves + pointsForTeamMoves;
-
-        return {
-            id: i.playerId,
-            team: i.team,
-            profileId: profile?.profile?.id!,
-            avatarUrl: profile?.profile?.avatarAsset?.url,
-            name: profile?.profile?.name || 'Unknown',
-            points: pointsThisMatch,
-            change: 0, // unused in this occurence so we don't have to calculate it here
-            moves: allowedMoves.map((j) => {
-                return {
-                    id: j.id!,
-                    count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
-                    title: j.name || 'Unknown',
-                    points: j.pointsForScorer!,
-                    pointsForTeam: j.pointsForTeam!,
-                    isFinish: j.finishingMove!,
-                };
-            }),
-        };
-    });
-
-    const matchObj: Omit<Match, 'winnerTeamId'> | null = isEditing
-        ? {
-              id: match?.id!,
-              date: match?.date!,
-              blueCups: players
-                  .filter((i) => i.team === 'blue')
-                  .map((i) => i.moves)
-                  .flat()
-                  .reduce((sum, i) => sum + i.count, 0),
-              redCups: players
-                  .filter((i) => i.team === 'red')
-                  .map((i) => i.moves)
-                  .flat()
-                  .reduce((sum, i) => sum + i.count, 0),
-              redTeam: teamMembers.filter((i) => i.team === 'red'),
-              blueTeam: teamMembers.filter((i) => i.team === 'blue'),
-          }
-        : match!;
+    const displayMatch = isEditing
+        ? getDisplayMatch(
+              matchDraft.actions.getPlayers(),
+              group.data?.activeSeason?.seasonSettings?.rankingAlgorithm,
+              playersQuery.data?.data ?? [],
+              matches,
+              movesQuery.data?.data ?? []
+          )
+        : match;
 
     async function onDelete() {
         if (!groupId || !seasonId || !id) return;
@@ -204,7 +144,7 @@ export default function Page() {
     const updateMatchMutation = useUpdateMatchMutation();
 
     async function updateMatch() {
-        if (!groupId || !seasonId || !match?.id) {
+        if (!groupId || !seasonId || !match?.id || !displayMatch) {
             ConsoleLogger.error(
                 'Failed to update match: Group ID or Season ID is missing'
             );
@@ -215,7 +155,7 @@ export default function Page() {
             id: match.id,
             teams: [
                 {
-                    teamMembers: matchObj!.blueTeam.map((i) => ({
+                    teamMembers: displayMatch.blueTeam.map((i) => ({
                         playerId: i.id,
                         moves: i.moves.map((j) => ({
                             moveId: j.id,
@@ -224,7 +164,7 @@ export default function Page() {
                     })),
                 },
                 {
-                    teamMembers: matchObj!.redTeam.map((i) => ({
+                    teamMembers: displayMatch.redTeam.map((i) => ({
                         playerId: i.id,
                         moves: i.moves.map((j) => ({
                             moveId: j.id,
@@ -250,6 +190,7 @@ export default function Page() {
             showErrorToast('Failed to update match.');
         }
     }
+    const experiments = useLocalSettings();
 
     const isLoading =
         !groupId ||
@@ -261,13 +202,50 @@ export default function Page() {
 
     if (isLoading) return <LoadingScreen />;
 
+    if (!displayMatch) {
+        if (isEditing) return <ErrorScreen message="Failed to edit match" />;
+        return (
+            <ErrorScreen
+                message={
+                    matchesQuery.error?.message ||
+                    playersQuery.error?.message ||
+                    movesQuery.error?.message ||
+                    'Failed to load match'
+                }
+            />
+        );
+    }
+    const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
+
+    const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
+
     return (
         <>
+            <ConfirmationModal
+                isVisible={showDeletePhotoPrompt}
+                onClose={() => setShowDeletePhotoPrompt(false)}
+                title="Delete Match Photo"
+                description="Are you sure you want to delete this match photo? This can't be undone."
+                actions={[
+                    {
+                        type: 'danger',
+                        title: 'Delete',
+                        onPress: () => {
+                            matchDraft.actions.removeTeamPhotos();
+                            setShowDeletePhotoPrompt(false);
+                        },
+                    },
+                    {
+                        title: 'Cancel',
+                        onPress: () => setShowDeletePhotoPrompt(false),
+                    },
+                ]}
+            />
+
             <Stack.Screen
                 options={{
                     ...navStyles,
                     title: '',
-                    headerBackTitleVisible: false,
                     headerRight: () =>
                         isCurrentSeason ? (
                             <HeaderItem
@@ -316,11 +294,10 @@ export default function Page() {
                         ),
                 }}
             />
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,
@@ -329,11 +306,32 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
+                {experiments.matchPhotos && isEditing && (
+                    <DualTeamPhoto
+                        match={displayMatch}
+                        editable={isEditing}
+                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                        onRemovePress={() => setShowDeletePhotoPrompt(true)}
+                        onSwapTeamColorsPress={
+                            matchDraft.actions.swapTeamPhotos
+                        }
+                        blueImageSource={
+                            matchDraft.blueTeamPhotoUri
+                                ? { uri: matchDraft.blueTeamPhotoUri }
+                                : undefined
+                        }
+                        redImageSource={
+                            matchDraft.redTeamPhotoUri
+                                ? { uri: matchDraft.redTeamPhotoUri }
+                                : undefined
+                        }
+                    />
+                )}
                 <MatchPlayers
                     onPlayerPress={(player) => {
                         if (isEditing) {
-                            const pageIdx = (matchObj?.blueTeam ?? [])
-                                .concat(matchObj?.redTeam ?? [])
+                            const pageIdx = displayMatch.blueTeam
+                                .concat(displayMatch.redTeam)
                                 .findIndex((j) => j.id === player.id);
 
                             nav.navigate('editMatchPoints', {
@@ -342,32 +340,11 @@ export default function Page() {
                         } else {
                             nav.navigate('player', {
                                 id: player.id!,
-                                scope: seasonId,
                             });
                         }
                     }}
                     editable={isEditing}
-                    players={(matchObj?.blueTeam ?? [])
-                        .concat(matchObj?.redTeam ?? [])
-                        .map((i) => ({
-                            id: i.id!,
-                            change: getInfluenceOfMatchOnAveragePoints(
-                                isEditing
-                                    ? matches.map((i) =>
-                                          i.id === match?.id ? matchObj! : i
-                                      )
-                                    : matches,
-                                i.id!,
-                                match?.id!,
-                                group.data?.activeSeason?.seasonSettings
-                                    ?.rankingAlgorithm
-                            ),
-                            moves: i.moves,
-                            name: i.name,
-                            avatarUrl: i.avatarUrl,
-                            points: i.points,
-                            team: i.team,
-                        }))}
+                    players={teamMembers}
                     setMoveCount={setMoveCount}
                 />
                 {isEditing && (
@@ -393,13 +370,13 @@ export default function Page() {
                 )}
             </ScrollView>
             {!isEditing && !isCurrentSeason && (
-                <SafeAreaView
+                <View
                     style={{
                         position: 'absolute',
 
-                        bottom: insets.bottom + 4,
-
-                        width: '100%',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
                     }}
                 >
                     <LeaderboardScopePicker
@@ -408,7 +385,34 @@ export default function Page() {
                         hasPastSeasonsButton={false}
                         hasSortButton={false}
                     />
-                </SafeAreaView>
+                    <PlayerAndMatchBottomNav
+                        hasNextAndPrevButtons={false}
+                        onPrevPress={
+                            !prevMatchId
+                                ? undefined
+                                : () => {
+                                      if (prevMatchId) {
+                                          nav.navigate('match', {
+                                              id: prevMatchId,
+                                              seasonId,
+                                          });
+                                      }
+                                  }
+                        }
+                        onNextPress={
+                            !nextMatchId
+                                ? undefined
+                                : () => {
+                                      if (nextMatchId) {
+                                          nav.navigate('match', {
+                                              id: nextMatchId,
+                                              seasonId,
+                                          });
+                                      }
+                                  }
+                        }
+                    />
+                </View>
             )}
         </>
     );

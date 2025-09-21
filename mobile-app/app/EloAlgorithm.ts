@@ -1,4 +1,4 @@
-import { type Match } from '@/api/utils/matchDtoToMatch';
+import { MinimalMatch } from '@/api/utils/matchDtoToMatch';
 
 // Lightweight adapter to mirror Java's PlayerStatisticsDto API
 interface PlayerStatisticsLike {
@@ -6,6 +6,12 @@ interface PlayerStatisticsLike {
     getElo(): number;
     setElo(v: number): void;
 }
+
+type InputMatch = MinimalMatch & {
+    winnerTeamId: string;
+    blueTeamId: string;
+    redTeamId: string;
+};
 
 class EloAlgorithm {
     // Standard-Elo
@@ -77,9 +83,9 @@ class EloAlgorithm {
         redTeamStats: PlayerStatisticsLike[],
         playerPoints: Map<string, number>
     ): void;
-    public static calculateElo(match: Match): void;
+    public static calculateElo(match: InputMatch): void;
     public static calculateElo(
-        a: string | Match,
+        a: string | InputMatch,
         b?: string,
         c?: number,
         d?: number,
@@ -89,7 +95,7 @@ class EloAlgorithm {
     ): void {
         // Wrapper to keep existing callers working
         if (typeof a !== 'string') {
-            const match = a as Match;
+            const match = a as InputMatch;
 
             const blue = match.blueTeam;
             const red = match.redTeam;
@@ -103,7 +109,7 @@ class EloAlgorithm {
             const teamRedPoints = red.reduce((s, p) => s + (p.points ?? 0), 0);
 
             const wrap = (
-                players: Match['redTeam']
+                players: InputMatch['redTeam']
             ): PlayerStatisticsLike[] => {
                 return players.map((p) => ({
                     getPlayerId: () => p.id as string,

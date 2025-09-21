@@ -3,8 +3,13 @@ import { AxiosError } from 'axios';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
-import { Animated, ScrollView, TouchableOpacity } from 'react-native';
-import { Pressable, View } from 'react-native';
+import {
+    Animated,
+    ScrollView,
+    TouchableHighlight,
+    TouchableOpacity,
+} from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -61,6 +66,8 @@ export function SidebarGroupItem({
         }).start();
     }, [showDeleteButton]);
 
+    const theme = useTheme();
+
     if (RENDER_AS_MENU_ITEM) {
         return (
             <MenuItem
@@ -86,12 +93,12 @@ export function SidebarGroupItem({
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: isActive ? 'rgba(0,0,0,0.3)' : undefined,
+                backgroundColor: isActive ? theme.activeGroupItem : undefined,
 
                 height: 58,
             }}
         >
-            <Pressable onPress={() => onDelete(id)}>
+            <TouchableOpacity onPress={() => onDelete(id)}>
                 <Animated.View
                     style={{
                         justifyContent: 'center',
@@ -109,18 +116,26 @@ export function SidebarGroupItem({
                         }}
                     />
                 </Animated.View>
-            </Pressable>
+            </TouchableOpacity>
 
-            <Pressable
+            <TouchableHighlight
                 disabled={isActive}
                 onPress={() => onPress(id)}
-                style={{ flex: 1, paddingHorizontal: 17, paddingVertical: 12 }}
+                underlayColor={theme.panel.dark.active}
+                style={{ flex: 1, flexShrink: 1 }}
             >
-                <>
+                <View
+                    style={{
+                        paddingHorizontal: 17,
+                        paddingVertical: 12,
+
+                        overflow: 'hidden',
+                    }}
+                >
                     <Text
                         color="primary"
                         style={{ fontSize: 17 }}
-                        numberOfLines={2}
+                        numberOfLines={1}
                     >
                         {isLoading ? (
                             'Loading...'
@@ -140,15 +155,19 @@ export function SidebarGroupItem({
                             data?.data?.name || 'Unknown'
                         )}
                     </Text>
-                    <Text color="secondary" style={{ fontSize: 12 }}>
+                    <Text
+                        color="secondary"
+                        style={{ fontSize: 12 }}
+                        numberOfLines={1}
+                    >
                         {isLoading
                             ? ''
                             : failedToLoad
                               ? 'Failed to load'
                               : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`}
                     </Text>
-                </>
-            </Pressable>
+                </View>
+            </TouchableHighlight>
         </View>
     );
 }
@@ -193,16 +212,21 @@ export function Sidebar(props: DrawerContentComponentProps) {
                 <View
                     style={{
                         flexDirection: 'row',
-                        alignItems: 'center',
 
                         height: 50,
-                        paddingHorizontal: 16,
                     }}
                 >
                     <>
                         <TouchableOpacity
                             onPress={() => setIsEditMode(!isEditMode)}
-                            style={{ marginRight: 'auto' }}
+                            style={{
+                                marginRight: 'auto',
+
+                                justifyContent: 'center',
+
+                                height: '100%',
+                                paddingHorizontal: 16,
+                            }}
                         >
                             <Text
                                 color="primary"
@@ -215,7 +239,13 @@ export function Sidebar(props: DrawerContentComponentProps) {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => setShowAddGroupModal(true)}
-                            style={{ marginLeft: 'auto' }}
+                            style={{
+                                marginLeft: 'auto',
+                                justifyContent: 'center',
+
+                                height: '100%',
+                                paddingHorizontal: 16,
+                            }}
                         >
                             <Icon
                                 name="plus"
@@ -307,6 +337,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                     color="dark"
                 >
                     <MenuItem
+                        border={false}
                         title="Settings"
                         headIcon="cog-outline"
                         onPress={() =>

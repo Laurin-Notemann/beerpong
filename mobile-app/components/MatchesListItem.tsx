@@ -11,7 +11,8 @@ export const MatchesListItem: React.FC<{
     match: Match;
     onPress: () => void;
     highlightedId?: string;
-}> = ({ match, onPress, highlightedId }) => {
+    border?: boolean;
+}> = ({ match, onPress, highlightedId, border = true }) => {
     const theme = useTheme();
 
     return (
@@ -22,8 +23,8 @@ export const MatchesListItem: React.FC<{
                 paddingHorizontal: 16,
                 paddingVertical: 7,
 
-                borderTopColor: theme.panel.light.active,
-                borderTopWidth: 0.5,
+                borderTopColor: border ? theme.panel.light.active : undefined,
+                borderTopWidth: border ? 0.5 : undefined,
             }}
             onPress={onPress}
         >

@@ -140,6 +140,8 @@ export const PremiumPerksCarousel = ({
                     gap: 8,
                     paddingHorizontal:
                         theme.carousel.peekGap + theme.carousel.peekSize,
+
+                    paddingTop: 16,
                 }}
             >
                 <Button
