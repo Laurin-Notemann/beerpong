@@ -6,6 +6,7 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
+import { ConsoleLogger } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 
 export const useMatchQuery = (
@@ -129,6 +130,60 @@ export const useUpdateMatchMutation = () => {
         mutationFn: async (body) => {
             const res = await (await api).updateMatch(body, body);
             return res?.data;
+        },
+    });
+};
+
+export const useUpdateMatchPhotoMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.SetPhoto.Responses.$200 | null,
+        Error,
+        {
+            byteArray: Uint8Array<ArrayBuffer>;
+            mimeType: string;
+
+            groupId: ApiId;
+            seasonId: ApiId;
+            matchId: ApiId;
+            teamId: ApiId;
+        }
+    >({
+        mutationFn: async (body) => {
+            const { byteArray, mimeType } = body;
+
+            const res = await (
+                await api
+            )
+                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
+                .setPhoto(
+                    {
+                        groupId: body.groupId,
+                        seasonId: body.seasonId,
+                        id: body.matchId,
+                        teamId: body.teamId,
+                    },
+                    undefined
+                );
+            const singleUploadUrl = res?.data.data?.photoAsset?.singleUploadUrl;
+
+            if (!singleUploadUrl)
+                throw new Error('No upload URL returned from server');
+
+            const uploadRes = await fetch(singleUploadUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': mimeType,
+                },
+                body: byteArray,
+            });
+            if (!uploadRes.ok) {
+                ConsoleLogger.error(
+                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
+                );
+            }
+            return uploadRes;
         },
     });
 };

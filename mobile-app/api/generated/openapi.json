@@ -80,6 +80,15 @@
                         "schema": { "type": "string" }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AssetCropDto"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -609,6 +618,15 @@
                         "schema": { "type": "string" }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AssetCropDto"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1251,7 +1269,9 @@
                             "TEAM_PHOTO"
                         ]
                     },
-                    "uploadedAt": { "type": "string", "format": "date-time" }
+                    "offsetX": { "type": "number", "format": "double" },
+                    "offsetY": { "type": "number", "format": "double" },
+                    "zoom": { "type": "number", "format": "double" }
                 }
             },
             "ErrorDetails": {
@@ -1334,6 +1354,14 @@
                         ]
                     },
                     "wakeTimeHour": { "type": "integer", "format": "int32" }
+                }
+            },
+            "AssetCropDto": {
+                "type": "object",
+                "properties": {
+                    "offsetX": { "type": "number", "format": "double" },
+                    "offsetY": { "type": "number", "format": "double" },
+                    "zoom": { "type": "number", "format": "double" }
                 }
             },
             "ResponseEnvelopeAssetMetadataDto": {

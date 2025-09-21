@@ -102,7 +102,6 @@ export default function Page() {
             // mediaTypes: ['images'],
             selectionLimit: 1,
         });
-        console.log('done');
 
         const mimeType = result?.mimeType;
         const byteArray = result?.byteArray;
@@ -122,20 +121,12 @@ export default function Page() {
         try {
             const base64 = uint8ToBase64(byteArray);
 
-            console.log('done 2');
-
             const uri = `data:${result.type};base64,${base64}`;
-
-            console.log('done 3');
 
             triggerHapticBump('light');
 
-            console.log('done 4');
-
             const imageKey = putTemp<string>(uri);
             nav.navigate('cropAvatar', { imageKey, profileId });
-
-            console.log('done 5');
         } catch (err) {
             ConsoleLogger.error('failed to process image:', err);
             showErrorToast('Failed to process image.');

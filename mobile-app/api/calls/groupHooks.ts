@@ -4,6 +4,7 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { Paths } from '@/openapi/openapi';
+import { ConsoleLogger } from '@/utils/logging';
 
 export const useGroupPresetsQuery = () => {
     const { api } = useApi();
@@ -94,12 +95,28 @@ export const useUpdateGroupWallpaperMutation = () => {
                 await api
             )
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setWallpaper(rest, byteArray as any, {
-                    headers: {
-                        'Content-Type': mimeType,
-                    },
-                });
-            return res?.data;
+                .setWallpaper(rest.groupId);
+
+            const singleUploadUrl = res?.data.data?.singleUploadUrl;
+
+            console.log('uploading:', mimeType);
+
+            if (!singleUploadUrl)
+                throw new Error('No upload URL returned from server');
+
+            const uploadRes = await fetch(singleUploadUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': mimeType,
+                },
+                body: byteArray,
+            });
+            if (!uploadRes.ok) {
+                ConsoleLogger.error(
+                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
+                );
+            }
+            return uploadRes;
         },
     });
 };

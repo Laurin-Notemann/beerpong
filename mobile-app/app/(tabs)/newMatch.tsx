@@ -9,6 +9,7 @@ import Swiper from 'react-native-swiper';
 import {
     useCreateMatchMutation,
     useMatchesQuery,
+    useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -147,6 +148,8 @@ export default function NewMatchScreen() {
 
     const createMatchMutation = useCreateMatchMutation();
 
+    const updateMatchPhotoMutation = useUpdateMatchPhotoMutation();
+
     const finishes = teamMembers
         .flatMap((i) => i.moves)
         .filter((i) => i.isFinish);
@@ -169,13 +172,42 @@ export default function NewMatchScreen() {
         }
 
         try {
-            await createMatchMutation.mutateAsync({
+            const matchRes = await createMatchMutation.mutateAsync({
                 groupId,
                 seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
             matchDraft.actions.clear();
             showSuccessToast('Created match.');
+
+            if (matchDraft.blueTeamPhotoUri && matchDraft.redTeamPhotoUri) {
+                console.log('uploading...');
+                const blueByteArray = await uriToByteArray(
+                    matchDraft.blueTeamPhotoUri
+                );
+                const redByteArray = await uriToByteArray(
+                    matchDraft.redTeamPhotoUri
+                );
+                console.log('transformed');
+                await updateMatchPhotoMutation.mutateAsync({
+                    groupId,
+                    seasonId,
+                    matchId: matchRes?.data?.id!,
+                    mimeType: 'image/png',
+                    byteArray: blueByteArray,
+                    teamId: matchRes?.data?.teams?.[0].id!,
+                });
+                console.log('first uploaded');
+                await updateMatchPhotoMutation.mutateAsync({
+                    groupId,
+                    seasonId,
+                    matchId: matchRes?.data?.id!,
+                    mimeType: 'image/png',
+                    byteArray: redByteArray,
+                    teamId: matchRes?.data?.teams?.[1].id!,
+                });
+                console.log('second uploaded');
+            }
 
             router.dismissAll();
             router.replace('/');
@@ -349,4 +381,12 @@ export default function NewMatchScreen() {
             />
         </GestureHandlerRootView>
     );
+}
+
+export async function uriToByteArray(uri: string) {
+    const resp = await fetch(uri);
+    const buffer = await resp.arrayBuffer();
+    const byteArray = new Uint8Array(buffer);
+
+    return byteArray;
 }
