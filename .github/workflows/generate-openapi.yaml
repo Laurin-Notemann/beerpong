@@ -94,6 +94,11 @@ jobs:
           POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
           API_BASE_URL: http://localhost:8080/
           BACKEND_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         working-directory: api
 
       # replace all occurences of "*/*" with "application/json" in the openapi.json file
