@@ -13,6 +13,7 @@ export function OverlayIconButton({
     disabled = false,
     content,
     blur = true,
+    size = 'large',
 }: {
     iconName: string;
     onPress?: () => void;
@@ -23,6 +24,7 @@ export function OverlayIconButton({
     disabled?: boolean;
     content?: React.ReactNode;
     blur?: boolean;
+    size?: 'small' | 'medium' | 'large';
 }) {
     const theme = useTheme();
 
@@ -31,8 +33,8 @@ export function OverlayIconButton({
             pressedScale={0.9}
             disabled={disabled}
             style={{
-                width: 48,
-                height: 48,
+                width: size === 'small' ? 24 : 48,
+                height: size === 'small' ? 24 : 48,
 
                 borderRadius: 99,
                 overflow: 'hidden',
@@ -48,8 +50,8 @@ export function OverlayIconButton({
                     alignItems: 'center',
                     justifyContent: 'center',
 
-                    width: 48,
-                    height: 48,
+                    width: size === 'small' ? 24 : 48,
+                    height: size === 'small' ? 24 : 48,
 
                     backgroundColor: disabled
                         ? '#333'
@@ -58,8 +60,12 @@ export function OverlayIconButton({
             >
                 <Icon
                     name={iconName}
-                    color={theme.color.text.secondary}
-                    size={16}
+                    color={
+                        blur
+                            ? theme.color.text.secondary
+                            : theme.color.text.primary
+                    }
+                    size={size === 'large' ? 24 : 16}
                 />
             </BlurView>
             {content}
