@@ -13,30 +13,34 @@ import java.net.URI;
 
 @Configuration
 public class AwsConfig {
-    @Value("${app.aws.endpoint}") private String endpoint;
-    @Value("${app.aws.region}")   private String region;
-    @Value("${app.aws.access-key}") private String accessKey;
-    @Value("${app.aws.secret-key}") private String secretKey;
+        @Value("${app.aws.endpoint}")
+        private String endpoint;
+        @Value("${app.aws.region}")
+        private String region;
+        @Value("${app.aws.access-key}")
+        private String accessKey;
+        @Value("${app.aws.secret-key}")
+        private String secretKey;
 
-    @Bean
-    public S3Client s3Client() {
-        return S3Client.builder()
-                .region(Region.of(region))
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(
-                        StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey))
-                )
-                .build();
-    }
+        @Bean
+        public S3Client s3Client() {
+                return S3Client.builder()
+                                .region(Region.of(region))
+                                .endpointOverride(URI.create("https://" + endpoint))
+                                .credentialsProvider(
+                                                StaticCredentialsProvider.create(
+                                                                AwsBasicCredentials.create(accessKey, secretKey)))
+                                .build();
+        }
 
-    @Bean
-    public S3Presigner s3Presigner() {
-        return S3Presigner.builder()
-                .region(Region.of(region))
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(
-                        StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey))
-                )
-                .build();
-    }
+        @Bean
+        public S3Presigner s3Presigner() {
+                return S3Presigner.builder()
+                                .region(Region.of(region))
+                                .endpointOverride(URI.create("https://" + endpoint))
+                                .credentialsProvider(
+                                                StaticCredentialsProvider.create(
+                                                                AwsBasicCredentials.create(accessKey, secretKey)))
+                                .build();
+        }
 }

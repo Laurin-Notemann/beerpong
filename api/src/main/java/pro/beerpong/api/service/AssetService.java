@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import pro.beerpong.api.mapping.AssetMapper;
 import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dto.AssetCropDto;
@@ -72,8 +75,7 @@ public class AssetService {
 
         asset = assetRepository.save(asset);
 
-        // TODO check contentType
-        return createPutUpload(assetRepository.save(asset), "png");
+        return createPutUpload(assetRepository.save(asset), resolveImageContentType());
     }
 
     public AssetUploadResponse createPutUpload(Asset asset, String contentType) {
@@ -89,7 +91,7 @@ public class AssetService {
 
         var response = new AssetUploadResponse();
         response.setId(asset.getId());
-        response.setUrl("s3://" + bucket + "/" + asset.getId());
+        response.setUrl(assetMapper.generateUrl(asset));
         response.setSingleUploadUrl(presigned.url().toString());
 
         response.setZoom(asset.getZoom());
@@ -99,5 +101,19 @@ public class AssetService {
         response.setType(asset.getType());
 
         return response;
+    }
+
+    private String resolveImageContentType() {
+        RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs instanceof ServletRequestAttributes servletAttrs) {
+            String contentType = servletAttrs.getRequest().getContentType();
+            if (contentType != null) {
+                String lower = contentType.toLowerCase();
+                if (lower.startsWith("image/")) {
+                    return contentType;
+                }
+            }
+        }
+        return "image/png";
     }
 }
