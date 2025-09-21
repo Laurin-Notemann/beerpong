@@ -13,5 +13,6 @@ spring:
 server:
   max-http-request-header-size: 64KB
 sentry:
-  dsn: ${BACKEND_SENTRY_DSN}
+  #todo rename to BACKEND_SENTRY_DSN
+  dsn: ${SENTRY_DSN}
   debug: false
