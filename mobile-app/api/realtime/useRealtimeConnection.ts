@@ -121,7 +121,7 @@ export function useRealtimeConnection() {
                 break;
             case 'PROFILES':
                 invalidateLeaderboard(e.groupId);
-                // refetch because apparently the create player event is for profile?
+                // refetch because the create player event is for profile
                 refetchGroup(e.groupId);
 
                 client.current.logger.info('refetching profiles');
@@ -166,6 +166,22 @@ export function useRealtimeConnection() {
 
                 invalidateLeaderboard(e.groupId);
 
+                qc.invalidateQueries({
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
+                        QK.players,
+                    ]),
+                });
+                qc.invalidateQueries({
+                    predicate: queryKeyStartsWith([
+                        QK.group,
+                        e.groupId,
+                        QK.seasons,
+                    ]),
+                });
                 break;
         }
     };

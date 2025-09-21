@@ -36,6 +36,9 @@ export type Match = {
     blueTeam: TeamMember[];
 
     winnerTeamId: string | null;
+
+    blueTeamPhotoUrl?: string | null;
+    redTeamPhotoUrl?: string | null;
 };
 
 export const matchDtoToMatch =
