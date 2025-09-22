@@ -72,7 +72,7 @@ export interface MatchVsHeaderProps extends ViewProps {
 
     highlightedId?: string;
 }
-export default function MatchVsHeader({
+function MatchVsHeader({
     match,
     hasScore = true,
     maxItems = 4,
@@ -97,7 +97,7 @@ export default function MatchVsHeader({
                 rest.style,
             ]}
         >
-            <Team
+            <TeamMemo
                 color="blue"
                 players={match.blueTeam}
                 maxItems={maxItems}
@@ -108,7 +108,7 @@ export default function MatchVsHeader({
                 {hasScore ? match.blueCups + ':' + match.redCups : 'vs'}
             </ScoreChip>
 
-            <Team
+            <TeamMemo
                 color="red"
                 players={match.redTeam}
                 maxItems={maxItems}
@@ -118,7 +118,7 @@ export default function MatchVsHeader({
     );
 }
 
-export function Team({
+function Team({
     highlightedId,
     players,
     maxItems = 4,
@@ -192,6 +192,7 @@ export function Team({
                             }
                             name={i.name}
                             borderColor={theme.color.team[color]}
+                            variant="list"
                             style={{
                                 marginRight:
                                     color === 'red' ? -avatarGap : undefined,
@@ -207,6 +208,7 @@ export function Team({
                     url={highlightedPlayer.avatarUrl}
                     name={highlightedPlayer.name}
                     borderColor={theme.color.team[color]}
+                    variant="list"
                     style={{
                         position: 'absolute',
                         left: color === 'red' ? 0 : undefined,
@@ -219,3 +221,78 @@ export function Team({
         </View>
     );
 }
+
+const TeamMemo = React.memo(Team, (prev, next) => {
+    if (
+        prev.highlightedId !== next.highlightedId ||
+        prev.color !== next.color ||
+        prev.size !== next.size ||
+        prev.maxItems !== next.maxItems
+    ) {
+        return false;
+    }
+    if (prev.players.length !== next.players.length) {
+        return false;
+    }
+    // Compare only properties used for rendering
+    for (let idx = 0; idx < prev.players.length; idx++) {
+        const p = prev.players[idx];
+        const n = next.players[idx];
+        if (
+            p.profileId !== n.profileId ||
+            p.avatarUrl !== n.avatarUrl ||
+            p.name !== n.name
+        ) {
+            return false;
+        }
+    }
+    return true;
+});
+
+const MemoMatchVsHeader = React.memo(MatchVsHeader, (prev, next) => {
+    if (
+        prev.highlightedId !== next.highlightedId ||
+        prev.hasScore !== next.hasScore ||
+        prev.maxItems !== next.maxItems
+    ) {
+        return false;
+    }
+    const a = prev.match;
+    const b = next.match;
+    if (a.blueCups !== b.blueCups || a.redCups !== b.redCups) {
+        return false;
+    }
+    // Teams shallow compare for items used in Team comparator
+    if (
+        a.blueTeam.length !== b.blueTeam.length ||
+        a.redTeam.length !== b.redTeam.length
+    ) {
+        return false;
+    }
+    for (let idx = 0; idx < a.blueTeam.length; idx++) {
+        const pa = a.blueTeam[idx];
+        const pb = b.blueTeam[idx];
+        if (
+            pa.profileId !== pb.profileId ||
+            pa.avatarUrl !== pb.avatarUrl ||
+            pa.name !== pb.name
+        ) {
+            return false;
+        }
+    }
+    for (let idx = 0; idx < a.redTeam.length; idx++) {
+        const pa = a.redTeam[idx];
+        const pb = b.redTeam[idx];
+        if (
+            pa.profileId !== pb.profileId ||
+            pa.avatarUrl !== pb.avatarUrl ||
+            pa.name !== pb.name
+        ) {
+            return false;
+        }
+    }
+    return true;
+});
+
+export default MemoMatchVsHeader;
+export { TeamMemo as Team };
