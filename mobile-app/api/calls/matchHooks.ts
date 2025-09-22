@@ -187,3 +187,20 @@ export const useUpdateMatchPhotoMutation = () => {
         },
     });
 };
+
+export const useDeleteMatchPhotoMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.DeletePhoto.Responses.$200 | null,
+        Error,
+        { groupId: ApiId; seasonId: ApiId; matchId: ApiId; teamId: ApiId }
+    >({
+        mutationFn: async ({ groupId, seasonId, matchId, teamId }) => {
+            const res = await (
+                await api
+            ).deletePhoto(groupId, seasonId, matchId, teamId);
+            return res?.data;
+        },
+    });
+};

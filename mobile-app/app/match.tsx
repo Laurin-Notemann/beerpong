@@ -4,15 +4,18 @@ import { ScrollView, View } from 'react-native';
 
 import {
     useDeleteMatchMutation,
+    useDeleteMatchPhotoMutation,
     useMatchesQuery,
     useMatchQuery,
     useUpdateMatchMutation,
+    useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { uriToByteArray } from '@/app/(tabs)/newMatch';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
@@ -53,7 +56,7 @@ export default function Page() {
         seasonId: string;
     }>();
 
-    const isCurrentSeason = useLocalSearchParams().scope === seasonId;
+    const isCurrentSeason = group.data?.activeSeason?.id === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -143,6 +146,10 @@ export default function Page() {
 
     const updateMatchMutation = useUpdateMatchMutation();
 
+    const updateMatchPhotoMutation = useUpdateMatchPhotoMutation();
+
+    const deleteMatchPhotoMutation = useDeleteMatchPhotoMutation();
+
     async function updateMatch() {
         if (!groupId || !seasonId || !match?.id || !displayMatch) {
             ConsoleLogger.error(
@@ -179,6 +186,53 @@ export default function Page() {
 
         try {
             await updateMatchMutation.mutateAsync(data);
+            if (
+                matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl ||
+                matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
+            ) {
+                if (
+                    !matchDraft.blueTeamPhotoUri ||
+                    !matchDraft.redTeamPhotoUri
+                ) {
+                    await deleteMatchPhotoMutation.mutateAsync({
+                        groupId,
+                        seasonId,
+                        matchId: match.id,
+                        teamId: match.blueTeamId,
+                    });
+                    await deleteMatchPhotoMutation.mutateAsync({
+                        groupId,
+                        seasonId,
+                        matchId: match.id,
+                        teamId: match.redTeamId,
+                    });
+                } else {
+                    const blueByteArray = await uriToByteArray(
+                        matchDraft.blueTeamPhotoUri
+                    );
+                    const redByteArray = await uriToByteArray(
+                        matchDraft.redTeamPhotoUri
+                    );
+
+                    await updateMatchPhotoMutation.mutateAsync({
+                        groupId,
+                        seasonId,
+                        matchId: match.id,
+                        mimeType: 'image/png',
+                        byteArray: blueByteArray,
+                        teamId: match.blueTeamId,
+                    });
+
+                    await updateMatchPhotoMutation.mutateAsync({
+                        groupId,
+                        seasonId,
+                        matchId: match.id,
+                        mimeType: 'image/png',
+                        byteArray: redByteArray,
+                        teamId: match.redTeamId,
+                    });
+                }
+            }
             showSuccessToast('Updated match.');
             setIsEditing(false);
         } catch (err) {
@@ -319,14 +373,22 @@ export default function Page() {
                                 matchDraft.actions.swapTeamPhotos
                             }
                             blueImageSource={
-                                match?.blueTeamPhotoUrl
-                                    ? { uri: match?.blueTeamPhotoUrl }
-                                    : undefined
+                                isEditing
+                                    ? matchDraft?.blueTeamPhotoUri
+                                        ? { uri: matchDraft?.blueTeamPhotoUri }
+                                        : undefined
+                                    : match?.blueTeamPhotoUrl
+                                      ? { uri: match?.blueTeamPhotoUrl }
+                                      : undefined
                             }
                             redImageSource={
-                                match?.redTeamPhotoUrl
-                                    ? { uri: match?.redTeamPhotoUrl }
-                                    : undefined
+                                isEditing
+                                    ? matchDraft?.redTeamPhotoUri
+                                        ? { uri: matchDraft?.redTeamPhotoUri }
+                                        : undefined
+                                    : match?.redTeamPhotoUrl
+                                      ? { uri: match?.redTeamPhotoUrl }
+                                      : undefined
                             }
                         />
                     )}

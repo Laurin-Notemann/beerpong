@@ -139,12 +139,14 @@ export const useDeletePlayerAvatarMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.SetAvatar.Responses.$200 | null,
+        Paths.DeleteAvatar.Responses.$200 | null,
         Error,
-        { groupId: ApiId; seasonId: ApiId; profileId: ApiId }
+        { groupId: ApiId; profileId: ApiId }
     >({
-        mutationFn: async () => {
-            const res = await (await api).setAvatar();
+        mutationFn: async (body) => {
+            const res = await (
+                await api
+            ).deleteAvatar(body.groupId, body.profileId);
             return res?.data;
         },
     });

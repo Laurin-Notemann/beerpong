@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 
 import {
+    useDeleteWallpaperMutation,
     useGroupQuery,
     useUpdateGroupWallpaperMutation,
 } from '@/api/calls/groupHooks';
@@ -28,6 +29,8 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const nav = useNavigation();
 
     const updateGroupWallpaperMutation = useUpdateGroupWallpaperMutation();
+
+    const deleteWallpaperMutation = useDeleteWallpaperMutation();
 
     const pastSeasons =
         seasonsQuery.data?.data
@@ -59,11 +62,13 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             showErrorToast('Failed to upload group wallpaper.');
         }
     }
+
     async function onDeleteWallpaperPress() {
         if (!groupId) return;
 
         try {
-            // TODO: implement this
+            await deleteWallpaperMutation.mutateAsync({ groupId });
+
             showSuccessToast('Removed group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to remove group wallpaper:', err);
