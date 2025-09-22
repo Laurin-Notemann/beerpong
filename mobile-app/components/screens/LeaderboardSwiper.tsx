@@ -205,7 +205,7 @@ export function LeaderboardSwiper() {
                     <Text
                         color="secondary"
                         variant="fineprint"
-                        style={{ marginTop: 32, marginBottom: 32 }}
+                        style={{ marginTop: 32, marginBottom: 32 + 32 }}
                     >
                         {group.data?.activeSeason?.startDate
                             ? `Group created ${env.format.date.seasonStartAndEnd(

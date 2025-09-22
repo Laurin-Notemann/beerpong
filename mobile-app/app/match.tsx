@@ -81,7 +81,7 @@ export default function Page() {
 
     const nav = useNavigation();
 
-    const insets = useInsets();
+    const insets = useInsets(true, true);
 
     const match = USE_MATCH_QUERY
         ? matchQuery.data?.data

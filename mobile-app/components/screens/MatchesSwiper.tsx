@@ -60,7 +60,7 @@ export function MatchesSwiper() {
             <MatchesList
                 contentContainerStyle={{
                     paddingTop: insets.top,
-                    paddingBottom: insets.bottom + 48,
+                    paddingBottom: insets.bottom + 64,
                 }}
                 {...props}
                 matches={todayMatches}
@@ -71,7 +71,7 @@ export function MatchesSwiper() {
             <MatchesList
                 contentContainerStyle={{
                     paddingTop: insets.top,
-                    paddingBottom: insets.bottom + 48,
+                    paddingBottom: insets.bottom + 64,
                 }}
                 {...props}
                 ListEmptyComponent={
@@ -82,7 +82,7 @@ export function MatchesSwiper() {
                 <MatchesList
                     contentContainerStyle={{
                         paddingTop: insets.top,
-                        paddingBottom: insets.bottom + 48,
+                        paddingBottom: insets.bottom + 64,
                     }}
                     {...props}
                     matches={allTimeMatches}
