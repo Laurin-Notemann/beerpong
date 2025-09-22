@@ -4,8 +4,6 @@ name: Generate OpenApi
 
 on:
   pull_request:
-    paths:
-      - "api/**"
   workflow_dispatch:
 
 jobs:
@@ -37,36 +35,39 @@ jobs:
           token: ${{ secrets.PAT }}
           fetch-depth: 0
 
-      - name: Check recent commit authors
+      # Early gate: only run if the most recent commit touched api/**
+      - name: Check latest commit touches api/**
+        id: latest_commit_api_check
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Get the most recent commit that triggered this workflow
+          LATEST_SHA="${{ github.sha }}"
+          echo "Latest commit: $LATEST_SHA"
+          CHANGED=$(git diff --name-only "${LATEST_SHA}^" "${LATEST_SHA}" -- 'api/**' || true)
+          if [[ -z "${CHANGED}" ]]; then
+            echo "No changes under api/** in the latest commit. Skipping workflow."
+            exit 0
+          else
+            echo "Latest commit changed files under api/**:"
+            echo "${CHANGED}"
+          fi
+
+      # Only check the most recent commit message for bot commit
+      - name: Check most recent commit message
         id: check_authors
         shell: bash
         run: |
-          # For pull requests, use the base ref
-          if [[ -n "${{ github.base_ref }}" ]]; then
-            # Fetch the PR base branch
-            git fetch origin ${{ github.base_ref }}
-            
-            # Get the merge base between the PR head and base
-            MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-            
-            # Check the commits between the merge base and HEAD
-            COMMIT_RANGE="$MERGE_BASE..HEAD"
-          else
-            # For direct pushes or workflow_dispatch, check last few commits
-            COMMIT_RANGE="HEAD~10..HEAD"
-          fi
-
-          COMMIT_MESSAGES=$(git log $COMMIT_RANGE --format='%s')
-          echo "Commit messages in range:"
-          echo "$COMMIT_MESSAGES"
-
-          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi types"; then
+          set -euo pipefail
+          LAST_MSG="$(git log -1 --format='%s')"
+          echo "Most recent commit message: $LAST_MSG"
+          if echo "$LAST_MSG" | grep -q "chore: update openapi types"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
-            echo "A recent commit contains the version bump message. Stopping the workflow."
-            exit 0  # This will stop the workflow without failing it
+            echo "Most recent commit is the bot update. Stopping the workflow."
+            exit 0
           else
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
-            echo "No version bump commit found. Continuing the workflow."
+            echo "Most recent commit is not the bot update. Continuing."
           fi
 
       # Restore state cache to remember last processed commit per branch.
@@ -160,7 +161,7 @@ jobs:
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         working-directory: api
 
-      # replace all occurences of "*/*" with "application/json" in the openapi.json file
+      # replace all occurrences of "*/*" with "application/json" in the openapi.json file
       - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
 
