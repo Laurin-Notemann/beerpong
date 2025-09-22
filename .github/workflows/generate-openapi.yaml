@@ -33,50 +33,72 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-          fetch-depth: 0  # full history so we can diff against older SHAs
+          fetch-depth: 0
 
-      # Early gate: only run if the most recent commit touched api/**
+      - name: Determine effective HEAD SHA
+        id: head_sha
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Prefer PR head SHA if available (avoids GitHub "merge" commit subjects)
+          HEAD_SHA="${{ github.event.pull_request.head.sha || '' }}"
+          if [[ -z "$HEAD_SHA" ]]; then
+            HEAD_SHA="${{ github.sha }}"
+          fi
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "Effective head SHA: $HEAD_SHA"
+
+      # Early gate: only run if the latest commit (on first-parent chain) touched api/**
       - name: Check latest commit touches api/**
         id: latest_commit_api_check
         shell: bash
         run: |
           set -euo pipefail
-          LATEST_SHA="${{ github.sha }}"
-          echo "Latest commit: $LATEST_SHA"
-          # Ensure parent exists (merge commits have multiple parents; use first)
-          PARENT_SHA="$(git rev-parse "${LATEST_SHA}^" 2>/dev/null || true)"
-          if [[ -z "${PARENT_SHA}" ]]; then
-            # If this is the first commit, just check the tree files
-            CHANGED=$(git diff --name-only "${LATEST_SHA}" -- 'api/**' || true)
+          HEAD_SHA="${{ steps.head_sha.outputs.head_sha }}"
+          # Use first-parent to stay on the PR branch history and skip merge noise
+          PARENT_SHA="$(git rev-list --first-parent -n 2 "$HEAD_SHA" | tail -n1 || true)"
+          if [[ -n "$PARENT_SHA" ]]; then
+            RANGE="$PARENT_SHA..$HEAD_SHA"
           else
-            CHANGED=$(git diff --name-only "${LATEST_SHA}^" "${LATEST_SHA}" -- 'api/**' || true)
+            # Single commit case: compare against empty tree
+            RANGE="$HEAD_SHA"
+          fi
+          echo "Checking changes in range: $RANGE under api/**"
+          if [[ "$RANGE" == "$HEAD_SHA" ]]; then
+            CHANGED="$(git diff --name-only "$HEAD_SHA" -- 'api/**' || true)"
+          else
+            CHANGED="$(git diff --name-only $RANGE -- 'api/**' || true)"
           fi
           if [[ -z "${CHANGED}" ]]; then
-            echo "No changes under api/** in the latest commit. Skipping workflow."
+            echo "No changes under api/** in the latest change set. Skipping workflow."
             exit 0
           else
-            echo "Latest commit changed files under api/**:"
+            echo "Latest change set touched api/**:"
             echo "${CHANGED}"
           fi
 
-      # Only check the most recent commit message for bot commit
-      - name: Check most recent commit message
+      # Look at the most recent non-merge commit subject on the first-parent chain
+      - name: Check most recent non-merge commit message
         id: check_authors
         shell: bash
         run: |
           set -euo pipefail
-          LAST_MSG="$(git log -1 --format='%s')"
-          echo "Most recent commit message: $LAST_MSG"
-          if echo "$LAST_MSG" | grep -q "chore: update openapi types"; then
+          HEAD_SHA="${{ steps.head_sha.outputs.head_sha }}"
+          LAST_MSG="$(git log --first-parent -1 --no-merges --format='%s' "$HEAD_SHA" || true)"
+          if [[ -z "$LAST_MSG" ]]; then
+            # Fallback if the head is itself a merge and there is no non-merge reachable
+            LAST_MSG="$(git log -1 --format='%s' "$HEAD_SHA" || true)"
+          fi
+          echo "Most recent non-merge commit message: $LAST_MSG"
+          if echo "$LAST_MSG" | grep -qE '^chore: update openapi types$'; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
-            echo "Most recent commit is the bot update. Stopping the workflow."
+            echo "Latest non-merge commit is the bot update. Stopping the workflow."
             exit 0
           else
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
-            echo "Most recent commit is not the bot update. Continuing."
+            echo "Latest non-merge commit is not the bot update. Continuing."
           fi
 
-      # Restore state cache to remember last processed commit per branch.
       - name: Restore openapi state cache
         id: openapi_state_cache
         if: steps.check_authors.outputs.has_bot_author != 'true'
@@ -93,18 +115,18 @@ jobs:
           set -euo pipefail
           mkdir -p .ci/openapi-state
           STATE_FILE=".ci/openapi-state/last-sha"
-          LAST_SHA=""
           if [[ -f "$STATE_FILE" ]]; then
-            LAST_SHA=$(cat "$STATE_FILE" || true)
-          fi
-
-          if [[ -z "${LAST_SHA}" ]]; then
-            echo "No previous state found for this branch. First run will proceed."
-            echo "first_run=true" >> $GITHUB_OUTPUT
+            LAST_SHA="$(cat "$STATE_FILE" || true)"
           else
-            echo "Found previous last SHA (from cache): $LAST_SHA"
+            LAST_SHA=""
+          fi
+          if [[ -z "${LAST_SHA}" ]]; then
+            echo "first_run=true" >> $GITHUB_OUTPUT
+            echo "No previous state found for this branch. First run will proceed."
+          else
             echo "first_run=false" >> $GITHUB_OUTPUT
             echo "last_sha=$LAST_SHA" >> $GITHUB_OUTPUT
+            echo "Found previous last SHA: $LAST_SHA"
           fi
 
       - name: Detect api/** changes since last run
@@ -113,7 +135,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # First run on this branch: always run
+          HEAD_SHA="${{ steps.head_sha.outputs.head_sha }}"
           if [[ "${{ steps.last_sha.outputs.first_run }}" == "true" ]]; then
             echo "First run on this branch. Proceeding with generation."
             echo "api_changed=true" >> $GITHUB_OUTPUT
@@ -121,38 +143,22 @@ jobs:
           fi
 
           CACHED_LAST_SHA="${{ steps.last_sha.outputs.last_sha }}"
-
-          # Make sure the cached SHA exists in history; if not, pick a safe fallback.
+          # Ensure base exists; otherwise fallback to merge-base or root
           if ! git cat-file -e "${CACHED_LAST_SHA}^{commit}" 2>/dev/null; then
             echo "Cached last SHA ${CACHED_LAST_SHA} is not reachable; falling back."
-            # Try merge-base with the remote branch head
-            # Determine the remote tracking ref (pull_request -> use refs/pull/.../merge base via base_ref)
-            BRANCH_NAME="${{ github.ref_name }}"
-            # Fetch the remote branch if base_ref is available (PR context)
             if [[ -n "${{ github.base_ref }}" ]]; then
               git fetch origin "${{ github.base_ref }}" --depth=200 || true
-              FALLBACK_BASE="$(git merge-base HEAD "origin/${{ github.base_ref }}")" || true
+              FALLBACK_BASE="$(git merge-base "$HEAD_SHA" "origin/${{ github.base_ref }}")" || true
             else
-              # Not a PR: ensure we have recent history
-              git fetch origin "${BRANCH_NAME}:${BRANCH_NAME}" --depth=200 || true
-              FALLBACK_BASE="$(git merge-base HEAD "${BRANCH_NAME}")" || true
+              FALLBACK_BASE="$(git rev-list --max-parents=0 "$HEAD_SHA" | tail -n1)"
             fi
-
-            if [[ -n "${FALLBACK_BASE}" ]]; then
-              BASE_SHA="${FALLBACK_BASE}"
-              echo "Using merge-base fallback: ${BASE_SHA}"
-            else
-              # Final fallback: root commit
-              BASE_SHA="$(git rev-list --max-parents=0 HEAD | tail -n1)"
-              echo "Using root commit fallback: ${BASE_SHA}"
-            fi
+            BASE_SHA="${FALLBACK_BASE}"
           else
             BASE_SHA="${CACHED_LAST_SHA}"
           fi
 
-          echo "Diffing api/** between $BASE_SHA and HEAD"
-          CHANGED="$(git diff --name-only "${BASE_SHA}"..HEAD -- 'api/**' || true)"
-
+          echo "Diffing api/** between $BASE_SHA and $HEAD_SHA"
+          CHANGED="$(git diff --name-only "${BASE_SHA}".."${HEAD_SHA}" -- 'api/**' || true)"
           if [[ -z "$CHANGED" ]]; then
             echo "api_changed=false" >> $GITHUB_OUTPUT
             echo "No changes under api/** since last processed base. Skipping."
@@ -230,7 +236,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p .ci/openapi-state
-          git rev-parse HEAD > .ci/openapi-state/last-sha
+          git rev-parse "${{ steps.head_sha.outputs.head_sha }}" > .ci/openapi-state/last-sha
 
       - name: Save openapi state cache
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
