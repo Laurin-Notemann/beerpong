@@ -147,10 +147,10 @@ export const useDeletePlayerAvatarMutation = () => {
         Error,
         { groupId: ApiId; profileId: ApiId }
     >({
-        mutationFn: async (body) => {
+        mutationFn: async ({ groupId, profileId }) => {
             const res = await (
                 await api
-            ).deleteAvatar(body.groupId, body.profileId);
+            ).deleteAvatar({ groupId, id: profileId });
             return res?.data;
         },
     });

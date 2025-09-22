@@ -150,22 +150,24 @@ export const useUpdateMatchPhotoMutation = () => {
             teamId: ApiId;
         }
     >({
-        mutationFn: async (body) => {
-            const { byteArray, mimeType } = body;
-
+        mutationFn: async ({
+            byteArray,
+            mimeType,
+            groupId,
+            seasonId,
+            matchId,
+            teamId,
+        }) => {
             const res = await (
                 await api
             )
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setPhoto(
-                    {
-                        groupId: body.groupId,
-                        seasonId: body.seasonId,
-                        id: body.matchId,
-                        teamId: body.teamId,
-                    },
-                    undefined
-                );
+                .setPhoto({
+                    groupId,
+                    seasonId,
+                    id: matchId,
+                    teamId,
+                });
             // @ts-expect-error TODO: broken typegen for AssetUploadResponse
             const singleUploadUrl = res?.data.data?.photoAsset?.singleUploadUrl;
 
@@ -203,9 +205,12 @@ export const useDeleteMatchPhotoMutation = () => {
         mutationFn: async ({ groupId, seasonId, matchId, teamId }) => {
             const res = await (
                 await api
-            )
-                // @ts-expect-error TODO: broken typegen for DeletePhoto
-                .deletePhoto(groupId, seasonId, matchId, teamId);
+            ).deletePhoto({
+                groupId,
+                seasonId,
+                id: matchId,
+                teamId,
+            });
             return res?.data;
         },
     });
