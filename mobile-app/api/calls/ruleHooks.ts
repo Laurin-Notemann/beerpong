@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { mockRules } from '@/components/mockData/rules';
@@ -84,6 +85,7 @@ export const useSetRulesMutation = () => {
 
             return res?.data;
         },
+        onError: captureMutationErr('updateRules'),
     });
 };
 

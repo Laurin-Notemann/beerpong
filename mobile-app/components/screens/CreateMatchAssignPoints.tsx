@@ -6,7 +6,6 @@ import { useInsets } from '@/app/useInsets';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import MatchPlayers from '@/components/MatchPlayers';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export interface CreateMatchAssignPointsProps {
@@ -27,8 +26,6 @@ export default function CreateMatchAssignPoints({
     onCancel,
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
-    const experiments = useLocalSettings();
-
     const insets = useInsets(true, true);
 
     const matchDraft = useMatchDraftStore();
@@ -45,27 +42,23 @@ export default function CreateMatchAssignPoints({
                     paddingBottom: insets.bottom + 84,
                 }}
             >
-                {experiments.matchPhotos && (
-                    <DualTeamPhoto
-                        match={{ blueTeam: [], redTeam: [] }}
-                        editable
-                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                        onRemovePress={matchDraft.actions.removeTeamPhotos}
-                        onSwapTeamColorsPress={
-                            matchDraft.actions.swapTeamPhotos
-                        }
-                        blueImageSource={
-                            matchDraft.blueTeamPhotoUri
-                                ? { uri: matchDraft.blueTeamPhotoUri }
-                                : undefined
-                        }
-                        redImageSource={
-                            matchDraft.redTeamPhotoUri
-                                ? { uri: matchDraft.redTeamPhotoUri }
-                                : undefined
-                        }
-                    />
-                )}
+                <DualTeamPhoto
+                    match={{ blueTeam: [], redTeam: [] }}
+                    editable
+                    onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                    onRemovePress={matchDraft.actions.removeTeamPhotos}
+                    onSwapTeamColorsPress={matchDraft.actions.swapTeamPhotos}
+                    blueImageSource={
+                        matchDraft.blueTeamPhotoUri
+                            ? { uri: matchDraft.blueTeamPhotoUri }
+                            : undefined
+                    }
+                    redImageSource={
+                        matchDraft.redTeamPhotoUri
+                            ? { uri: matchDraft.redTeamPhotoUri }
+                            : undefined
+                    }
+                />
                 <MatchPlayers
                     editable
                     players={players}

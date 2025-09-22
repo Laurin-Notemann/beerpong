@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import {
@@ -119,6 +120,7 @@ export const useStartNewSeasonMutation = () => {
             const res = await (await api).startNewSeason(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('startNewSeason'),
     });
 };
 
@@ -156,6 +158,7 @@ export const useSetSeasonSettingsMutations = () => {
             ).updateSeasonById({ groupId, id }, rest);
             return res?.data;
         },
+        onError: captureMutationErr('updateSeasonSettings'),
     });
 };
 

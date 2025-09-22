@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { FlatList, FlatListProps } from 'react-native';
 
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
@@ -46,6 +46,11 @@ export default function MatchesList({
 }: MatchesListProps) {
     const days = groupMatchesByDay(matches);
 
+    const handleMatchPress = useCallback(
+        (match: Match) => onMatchPress(match),
+        [onMatchPress]
+    );
+
     return (
         <FlatList
             ListEmptyComponent={<NoMatchesPlayedYet />}
@@ -79,9 +84,9 @@ export default function MatchesList({
                     {item.matches.map((match, idx) => (
                         <MatchesListItem
                             border={idx !== 0}
-                            key={idx}
+                            key={match.id}
                             match={match}
-                            onPress={() => onMatchPress(match)}
+                            onPress={() => handleMatchPress(match)}
                             highlightedId={forPlayer?.profileId}
                         />
                     ))}
