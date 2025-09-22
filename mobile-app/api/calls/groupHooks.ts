@@ -89,13 +89,13 @@ export const useUpdateGroupWallpaperMutation = () => {
         }
     >({
         mutationFn: async (body) => {
-            const { byteArray, mimeType, ...rest } = body;
+            const { byteArray, groupId } = body;
 
             const res = await (
                 await api
             )
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setWallpaper(rest.groupId);
+                .setWallpaper(groupId);
 
             // @ts-expect-error TODO: broken typegen for AssetUploadResponse
             const singleUploadUrl = res?.data.data?.singleUploadUrl;
@@ -106,10 +106,11 @@ export const useUpdateGroupWallpaperMutation = () => {
             const uploadRes = await fetch(singleUploadUrl, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': mimeType,
+                    'Content-Type': 'image/png', // TODO: have the backend support mime types other than image/png
                 },
                 body: byteArray as Uint8Array<ArrayBuffer>,
             });
+
             if (!uploadRes.ok) {
                 ConsoleLogger.error(
                     `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
