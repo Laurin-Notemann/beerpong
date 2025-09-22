@@ -18,7 +18,7 @@ import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
 
 import { useUpdatePlayerAvatarMutation } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { uriToByteArray } from '@/app/(tabs)/newMatch';
+import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { deleteTemp, getTemp } from '@/app/tempRouteStore';

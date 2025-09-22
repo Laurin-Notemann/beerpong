@@ -15,6 +15,7 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -378,12 +379,4 @@ export default function NewMatchScreen() {
             />
         </GestureHandlerRootView>
     );
-}
-
-export async function uriToByteArray(uri: string) {
-    const resp = await fetch(uri);
-    const buffer = await resp.arrayBuffer();
-    const byteArray = new Uint8Array(buffer);
-
-    return byteArray;
 }

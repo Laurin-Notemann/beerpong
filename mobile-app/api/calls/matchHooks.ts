@@ -3,10 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
+import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 
 export const useMatchQuery = (
@@ -97,6 +98,7 @@ export const useCreateMatchMutation = () => {
                 throw err;
             }
         },
+        onError: captureMutationErr('createMatch'),
     });
 };
 
@@ -112,6 +114,7 @@ export const useDeleteMatchMutation = () => {
             const res = await (await api).deleteMatchById(body);
             return res?.data;
         },
+        onError: captureMutationErr('deleteMatch'),
     });
 };
 
@@ -131,6 +134,7 @@ export const useUpdateMatchMutation = () => {
             const res = await (await api).updateMatch(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('updateMatch'),
     });
 };
 
@@ -160,37 +164,23 @@ export const useUpdateMatchPhotoMutation = () => {
         }) => {
             const res = await (
                 await api
-            )
-                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setPhoto({
-                    groupId,
-                    seasonId,
-                    id: matchId,
-                    teamId,
-                });
-            // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-            const singleUploadUrl = res?.data.data?.photoAsset?.singleUploadUrl;
-
-            if (!singleUploadUrl)
-                throw new Error('No upload URL returned from server');
-
-            const uploadRes = await fetch(singleUploadUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': mimeType,
-                },
-                body: byteArray,
+            ).setPhoto({
+                groupId,
+                seasonId,
+                id: matchId,
+                teamId,
             });
-            if (!uploadRes.ok) {
-                ConsoleLogger.error(
-                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
-                );
-                throw new Error(
-                    'Failed to upload image with status ' + uploadRes.status
-                );
-            }
+
+            await uploadImage(
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
+                res?.data.data?.photoAsset?.singleUploadUrl,
+                byteArray,
+                'matchPhoto',
+                mimeType
+            );
             return res.data;
         },
+        onError: captureMutationErr('updateMatchPhoto'),
     });
 };
 
@@ -211,7 +201,8 @@ export const useDeleteMatchPhotoMutation = () => {
                 id: matchId,
                 teamId,
             });
-            return res?.data;
+            return res.data;
         },
+        onError: captureMutationErr('deleteMatchPhoto'),
     });
 };

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, Switch } from 'react-native';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    Switch,
+} from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -40,6 +45,8 @@ export interface GroupSettingsProps {
     onDeleteWallpaperPress: () => void;
     onLeaveGroup: () => void;
     wallpaperAsset?: { url?: string | null } | null;
+
+    isUpdatingWallpaper?: boolean;
 }
 export default function GroupSettingsScreen({
     id,
@@ -53,6 +60,7 @@ export default function GroupSettingsScreen({
     wallpaperAsset,
     onUploadWallpaperPress,
     onDeleteWallpaperPress,
+    isUpdatingWallpaper = false,
 }: GroupSettingsProps) {
     const nav = useNavigation();
 
@@ -111,6 +119,11 @@ export default function GroupSettingsScreen({
                                     onPress={() =>
                                         setShowChangeWallpaperModal(true)
                                     }
+                                    tailContent={
+                                        isUpdatingWallpaper ? (
+                                            <ActivityIndicator />
+                                        ) : undefined
+                                    }
                                 />
                             ) : (
                                 <MenuItem
@@ -118,6 +131,11 @@ export default function GroupSettingsScreen({
                                     headIcon="image-multiple"
                                     tailIconType="next"
                                     onPress={onUploadWallpaperPress}
+                                    tailContent={
+                                        isUpdatingWallpaper ? (
+                                            <ActivityIndicator />
+                                        ) : undefined
+                                    }
                                 />
                             ))}
                         <ConfirmationModal

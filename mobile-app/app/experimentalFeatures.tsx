@@ -15,8 +15,6 @@ export default function Page() {
         toggleBeerpongProMode,
         premiumVersion,
         togglePremiumVersion,
-        matchPhotos,
-        toggleMatchPhotos,
         showWallpaper,
         toggleShowWallpaper,
     } = useLocalSettings();
@@ -58,15 +56,6 @@ export default function Page() {
                             <Switch
                                 value={premiumVersion}
                                 onChange={togglePremiumVersion}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Team Photos"
-                        tailContent={
-                            <Switch
-                                value={matchPhotos}
-                                onChange={toggleMatchPhotos}
                             />
                         }
                     />
