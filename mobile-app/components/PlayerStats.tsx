@@ -73,6 +73,8 @@ export default function PlayerStats({ player }: PlayerStatsProps) {
             showsHorizontalScrollIndicator={false}
             style={{
                 width: '100%',
+
+                opacity: player.matches === 0 ? 0 : 1,
             }}
         >
             <View

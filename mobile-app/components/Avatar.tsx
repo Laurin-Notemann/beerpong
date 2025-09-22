@@ -146,7 +146,7 @@ export default function Avatar({
                             }}
                             resizeMode="cover"
                             cachePolicy="memory-disk"
-                            transition={100} // nice fade
+                            transition={100} // fade in
                         />
                     )}
 
