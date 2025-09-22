@@ -98,6 +98,7 @@ export const useUpdatePlayerAvatarMutation = () => {
                     undefined
                 );
             const singleUploadUrl =
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
                 res?.data.data?.avatarAsset?.singleUploadUrl;
 
             if (!singleUploadUrl)
@@ -114,8 +115,11 @@ export const useUpdatePlayerAvatarMutation = () => {
                 ConsoleLogger.error(
                     `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
                 );
+                throw new Error(
+                    'Failed to upload image with status ' + uploadRes.status
+                );
             }
-            return uploadRes;
+            return res.data;
         },
     });
 };

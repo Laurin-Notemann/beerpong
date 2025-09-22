@@ -1,0 +1,6 @@
+#!/bin/sh
+if git diff --cached --name-only | grep -q '^mobile-app/'; then
+  echo "Running lint for mobile-app..."
+  cd mobile-app
+  npm run lint || exit 1
+fi

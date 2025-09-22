@@ -30,7 +30,7 @@ function Change({
                     flexDirection: 'row',
                     alignItems: 'center',
                 },
-                style,
+                style as any,
             ]}
         >
             <Icon

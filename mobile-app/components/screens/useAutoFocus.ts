@@ -10,7 +10,7 @@ import { TextInput } from 'react-native';
  *
  * TODO: this solution is not ideal, because it's overengineered and takes longer for the keyboard to show up than the `autoFocus` property.
  */
-export function useAutoFocus(inputRef: React.RefObject<TextInput>) {
+export function useAutoFocus(inputRef: React.RefObject<TextInput | null>) {
     const navigation = useNavigation();
 
     useEffect(() => {

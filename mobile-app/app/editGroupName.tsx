@@ -51,7 +51,6 @@ export default function Page() {
                     ),
 
                     headerTitle: 'Group Name',
-                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 

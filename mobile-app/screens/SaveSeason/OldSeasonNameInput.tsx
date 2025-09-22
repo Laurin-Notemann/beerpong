@@ -12,7 +12,7 @@ import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
 
 export const OldSeasonNameInput: React.FC<{
-    oldSeasonNameInputRef: React.RefObject<RNTextInput>;
+    oldSeasonNameInputRef: React.RefObject<RNTextInput | null>;
     numMatches: number;
     numPlayers: number;
     startDate: string;
