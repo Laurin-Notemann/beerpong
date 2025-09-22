@@ -38,7 +38,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     async function onUploadWallpaperPress() {
         const [result] = await launchImageLibrary({
-            // mediaTypes: ['images'],
+            mediaTypes: ['images'],
             selectionLimit: 1,
         });
         const mimeType = result?.mimeType;

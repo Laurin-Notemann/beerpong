@@ -15,7 +15,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { uriToByteArray } from '@/app/(tabs)/newMatch';
+import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
@@ -360,38 +360,36 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                {experiments.matchPhotos &&
-                    (isEditing ||
-                        (match?.blueTeamPhotoUrl &&
-                            match?.redTeamPhotoUrl)) && (
-                        <DualTeamPhoto
-                            match={displayMatch}
-                            editable={isEditing}
-                            onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                            onRemovePress={() => setShowDeletePhotoPrompt(true)}
-                            onSwapTeamColorsPress={
-                                matchDraft.actions.swapTeamPhotos
-                            }
-                            blueImageSource={
-                                isEditing
-                                    ? matchDraft?.blueTeamPhotoUri
-                                        ? { uri: matchDraft?.blueTeamPhotoUri }
-                                        : undefined
-                                    : match?.blueTeamPhotoUrl
-                                      ? { uri: match?.blueTeamPhotoUrl }
-                                      : undefined
-                            }
-                            redImageSource={
-                                isEditing
-                                    ? matchDraft?.redTeamPhotoUri
-                                        ? { uri: matchDraft?.redTeamPhotoUri }
-                                        : undefined
-                                    : match?.redTeamPhotoUrl
-                                      ? { uri: match?.redTeamPhotoUrl }
-                                      : undefined
-                            }
-                        />
-                    )}
+                {(isEditing ||
+                    (match?.blueTeamPhotoUrl && match?.redTeamPhotoUrl)) && (
+                    <DualTeamPhoto
+                        match={displayMatch}
+                        editable={isEditing}
+                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                        onRemovePress={() => setShowDeletePhotoPrompt(true)}
+                        onSwapTeamColorsPress={
+                            matchDraft.actions.swapTeamPhotos
+                        }
+                        blueImageSource={
+                            isEditing
+                                ? matchDraft?.blueTeamPhotoUri
+                                    ? { uri: matchDraft?.blueTeamPhotoUri }
+                                    : undefined
+                                : match?.blueTeamPhotoUrl
+                                  ? { uri: match?.blueTeamPhotoUrl }
+                                  : undefined
+                        }
+                        redImageSource={
+                            isEditing
+                                ? matchDraft?.redTeamPhotoUri
+                                    ? { uri: matchDraft?.redTeamPhotoUri }
+                                    : undefined
+                                : match?.redTeamPhotoUrl
+                                  ? { uri: match?.redTeamPhotoUrl }
+                                  : undefined
+                        }
+                    />
+                )}
                 <MatchPlayers
                     onPlayerPress={(player) => {
                         if (isEditing) {

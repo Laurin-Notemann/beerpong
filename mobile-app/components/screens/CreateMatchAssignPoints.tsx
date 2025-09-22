@@ -45,27 +45,23 @@ export default function CreateMatchAssignPoints({
                     paddingBottom: insets.bottom + 84,
                 }}
             >
-                {experiments.matchPhotos && (
-                    <DualTeamPhoto
-                        match={{ blueTeam: [], redTeam: [] }}
-                        editable
-                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                        onRemovePress={matchDraft.actions.removeTeamPhotos}
-                        onSwapTeamColorsPress={
-                            matchDraft.actions.swapTeamPhotos
-                        }
-                        blueImageSource={
-                            matchDraft.blueTeamPhotoUri
-                                ? { uri: matchDraft.blueTeamPhotoUri }
-                                : undefined
-                        }
-                        redImageSource={
-                            matchDraft.redTeamPhotoUri
-                                ? { uri: matchDraft.redTeamPhotoUri }
-                                : undefined
-                        }
-                    />
-                )}
+                <DualTeamPhoto
+                    match={{ blueTeam: [], redTeam: [] }}
+                    editable
+                    onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                    onRemovePress={matchDraft.actions.removeTeamPhotos}
+                    onSwapTeamColorsPress={matchDraft.actions.swapTeamPhotos}
+                    blueImageSource={
+                        matchDraft.blueTeamPhotoUri
+                            ? { uri: matchDraft.blueTeamPhotoUri }
+                            : undefined
+                    }
+                    redImageSource={
+                        matchDraft.redTeamPhotoUri
+                            ? { uri: matchDraft.redTeamPhotoUri }
+                            : undefined
+                    }
+                />
                 <MatchPlayers
                     editable
                     players={players}

@@ -62,15 +62,6 @@ export default function Page() {
                         }
                     />
                     <MenuItem
-                        title="Team Photos"
-                        tailContent={
-                            <Switch
-                                value={matchPhotos}
-                                onChange={toggleMatchPhotos}
-                            />
-                        }
-                    />
-                    <MenuItem
                         title="Group Wallpaper"
                         tailContent={
                             <Switch
