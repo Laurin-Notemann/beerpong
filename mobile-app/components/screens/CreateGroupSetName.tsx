@@ -36,7 +36,6 @@ export default function CreateGroupSetName({
                         ),
 
                         headerTitle: 'Set Group Name',
-                        headerBackTitleVisible: false,
                         headerBackVisible: true,
                         headerTintColor: theme.color.text.primary,
 

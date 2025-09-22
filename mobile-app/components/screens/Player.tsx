@@ -300,7 +300,7 @@ export default function PlayerScreen({
                                     >
                                         <PlayerPageHeadSection
                                             // TODO: scopes.get('season') is actually null on first render sometimes
-                                            {...(scopes.get('season') ?? {})}
+                                            {...(scopes.get('season')! ?? {})}
                                             avatarUrl={avatarUrl}
                                             name={name}
                                             editable={editable}

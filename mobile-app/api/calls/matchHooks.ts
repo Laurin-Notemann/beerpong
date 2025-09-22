@@ -166,6 +166,7 @@ export const useUpdateMatchPhotoMutation = () => {
                     },
                     undefined
                 );
+            // @ts-expect-error TODO: broken typegen for AssetUploadResponse
             const singleUploadUrl = res?.data.data?.photoAsset?.singleUploadUrl;
 
             if (!singleUploadUrl)
@@ -182,8 +183,11 @@ export const useUpdateMatchPhotoMutation = () => {
                 ConsoleLogger.error(
                     `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
                 );
+                throw new Error(
+                    'Failed to upload image with status ' + uploadRes.status
+                );
             }
-            return uploadRes;
+            return res.data;
         },
     });
 };
@@ -199,7 +203,9 @@ export const useDeleteMatchPhotoMutation = () => {
         mutationFn: async ({ groupId, seasonId, matchId, teamId }) => {
             const res = await (
                 await api
-            ).deletePhoto(groupId, seasonId, matchId, teamId);
+            )
+                // @ts-expect-error TODO: broken typegen for DeletePhoto
+                .deletePhoto(groupId, seasonId, matchId, teamId);
             return res?.data;
         },
     });
