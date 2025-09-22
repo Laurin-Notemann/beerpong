@@ -7,7 +7,6 @@ import {
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -26,8 +25,6 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const nav = useNavigation();
-
     const updateGroupWallpaperMutation = useUpdateGroupWallpaperMutation();
 
     const deleteWallpaperMutation = useDeleteWallpaperMutation();
@@ -35,7 +32,6 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const { data, ...screenState } = useGroupQuery(groupId);

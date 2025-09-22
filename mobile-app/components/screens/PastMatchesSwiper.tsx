@@ -54,7 +54,7 @@ export function PastMatchesSwiper() {
                         contentContainerStyle={{
                             paddingBottom: insets.bottom + 48,
                         }}
-                        {...props}
+                        {...props!}
                         matches={season.matches.map(
                             matchDtoToMatch(season.rawPlayers, season.ruleMoves)
                         )}

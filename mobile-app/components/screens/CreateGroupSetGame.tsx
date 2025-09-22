@@ -56,7 +56,6 @@ export const CreateGroupSetGame: React.FC<{
                     ),
 
                     headerTitle: 'Create Group',
-                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 

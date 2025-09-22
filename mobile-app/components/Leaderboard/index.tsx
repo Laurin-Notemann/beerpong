@@ -87,7 +87,6 @@ export default function Leaderboard({
                     onPress={() => {
                         nav.navigate('player', {
                             id: playerPreviewModalId!,
-                            scope: 'today',
                         });
                         setPlayerPreviewModalId(null);
                     }}

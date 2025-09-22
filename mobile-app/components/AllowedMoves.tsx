@@ -118,7 +118,6 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
                             iconName="plus"
                             label="New"
                             onPress={onNewPress}
-                            small
                         />
                     ) : undefined
                 }

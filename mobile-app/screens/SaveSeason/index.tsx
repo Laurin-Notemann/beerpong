@@ -88,7 +88,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
             <Swiper
                 {...swiper}
                 enabled={!(swiper.swiperPage === 0 && !hasValidName)}
-                onScrollBegin={() => {
+                onScrollStart={() => {
                     oldSeasonNameInputRef.current?.blur();
                 }}
             >

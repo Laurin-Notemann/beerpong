@@ -57,7 +57,7 @@ export default function MenuItem({
 
     return (
         <>
-            {confirmationPrompt && isPromptShown && (
+            {confirmationPrompt && (
                 <ConfirmationModal
                     isVisible={isPromptShown}
                     onClose={hidePrompt}
