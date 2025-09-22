@@ -1,4 +1,5 @@
-import { Dimensions, Image, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Dimensions, View } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { useTheme } from '@/theme';
@@ -54,6 +55,8 @@ export const AppBackground: React.FC = () => {
 
                     backgroundColor: theme.color.bg,
                 }}
+                cachePolicy="memory-disk"
+                transition={100} // fade in
             />
             <View
                 style={{
