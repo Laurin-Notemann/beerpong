@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import Animated from 'react-native-reanimated';
+import { SharedValue } from 'react-native-reanimated';
 
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { HeaderItem, HeaderTitle } from '@/components/HeaderItem';
@@ -10,7 +10,7 @@ export const SaveSeasonStack: React.FC<{
     isNextDisabled: boolean;
     isCreateDisabled: boolean;
 
-    animationProgress: Animated.SharedValue<number>;
+    animationProgress: SharedValue<number>;
 
     isCreating: boolean;
 

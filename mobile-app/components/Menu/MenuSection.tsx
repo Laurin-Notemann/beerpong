@@ -27,8 +27,6 @@ export function Heading({
                           borderColor: 'rgb(31, 31, 31)',
                           paddingTop: 40,
                           paddingHorizontal: 0,
-                          fontSize: 24,
-                          lineHeight: 32,
 
                           flexDirection: 'row',
                           alignItems: 'flex-end',

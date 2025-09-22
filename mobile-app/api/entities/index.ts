@@ -253,7 +253,7 @@ export class MatchImpl {
 
     constructor(
         _data: Omit<Components.Schemas.MatchDto, 'date'> & {
-            date: string | Date;
+            date?: string | Date;
         },
         _players: Components.Schemas.PlayerDto[],
         _ruleMoves: Components.Schemas.RuleMoveDto[]

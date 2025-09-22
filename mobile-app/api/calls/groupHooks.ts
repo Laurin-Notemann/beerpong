@@ -82,7 +82,7 @@ export const useUpdateGroupWallpaperMutation = () => {
         Paths.UpdateProfile.Responses.$200 | null,
         Error,
         {
-            byteArray: Uint8Array<ArrayBuffer>;
+            byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>;
             mimeType: string;
 
             groupId: ApiId;
@@ -97,9 +97,8 @@ export const useUpdateGroupWallpaperMutation = () => {
                 // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
                 .setWallpaper(rest.groupId);
 
+            // @ts-expect-error TODO: broken typegen for AssetUploadResponse
             const singleUploadUrl = res?.data.data?.singleUploadUrl;
-
-            console.log('uploading:', mimeType);
 
             if (!singleUploadUrl)
                 throw new Error('No upload URL returned from server');
@@ -109,14 +108,17 @@ export const useUpdateGroupWallpaperMutation = () => {
                 headers: {
                     'Content-Type': mimeType,
                 },
-                body: byteArray,
+                body: byteArray as Uint8Array<ArrayBuffer>,
             });
             if (!uploadRes.ok) {
                 ConsoleLogger.error(
                     `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
                 );
+                throw new Error(
+                    'Failed to upload image with status ' + uploadRes.status
+                );
             }
-            return uploadRes;
+            return res.data;
         },
     });
 };

@@ -5,13 +5,13 @@ import { Animated } from 'react-native';
 import EmptyDot from '@/components/PaginationDots/component/EmptyDot';
 
 function usePrevious<T>(value: T): T | undefined {
-    const ref = useRef<T>();
+    const ref = useRef<T>(null);
 
     useEffect(() => {
         ref.current = value;
     }, [value]);
 
-    return ref.current;
+    return ref.current ?? undefined;
 }
 
 type IDotStyle = {
