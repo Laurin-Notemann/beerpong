@@ -1362,7 +1362,9 @@
                     "offsetX": { "type": "number", "format": "double" },
                     "offsetY": { "type": "number", "format": "double" },
                     "zoom": { "type": "number", "format": "double" },
-                    "width": { "type": "number", "format": "double" }
+                    "width": { "type": "number", "format": "double" },
+                    "height": { "type": "number", "format": "double" },
+                    "originX": { "type": "number", "format": "double" }
                 }
             },
             "ResponseEnvelopeAssetMetadataDto": {
