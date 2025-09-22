@@ -143,7 +143,6 @@ export default function Page() {
         try {
             await deleteAvatarMutation.mutateAsync({
                 groupId,
-                seasonId,
                 profileId,
             });
             showSuccessToast('Player avatar deleted.');

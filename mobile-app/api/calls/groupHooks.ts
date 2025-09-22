@@ -120,3 +120,18 @@ export const useUpdateGroupWallpaperMutation = () => {
         },
     });
 };
+
+export const useDeleteWallpaperMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.DeleteWallpaper.Responses.$200 | null,
+        Error,
+        { groupId: ApiId }
+    >({
+        mutationFn: async (body) => {
+            const res = await (await api).deleteWallpaper(body.groupId);
+            return res?.data;
+        },
+    });
+};

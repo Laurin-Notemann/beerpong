@@ -107,6 +107,8 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         currentFormation: Formation.Pyramid_10,
                     },
                 },
+                blueTeamPhotoUri: undefined,
+                redTeamPhotoUri: undefined,
             }));
         },
         getPlayers: () => {
