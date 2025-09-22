@@ -149,10 +149,8 @@ function Avatar({
                                 borderColor,
                             }}
                             resizeMode="cover"
-                            cachePolicy={
-                                variant === 'list' ? 'disk' : 'memory-disk'
-                            }
-                            priority={variant === 'list' ? 'low' : 'normal'}
+                            cachePolicy="memory-disk"
+                            // priority={variant === 'list' ? 'low' : 'normal'}
                             transition={variant === 'list' ? 0 : 100}
                         />
                     )}
