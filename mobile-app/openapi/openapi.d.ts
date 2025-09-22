@@ -12,6 +12,7 @@ declare namespace Components {
             offsetX?: number; // double
             offsetY?: number; // double
             zoom?: number; // double
+            width?: number; // double
         }
         export interface AssetMetadataDto {
             id?: string;
