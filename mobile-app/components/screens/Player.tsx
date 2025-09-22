@@ -201,7 +201,7 @@ export default function PlayerScreen({
                                             insets.top + (swiperAtTop ? 48 : 0),
                                         paddingBottom:
                                             insets.bottom +
-                                            (swiperAtTop ? 0 : 48),
+                                            (swiperAtTop ? 0 : 48 + 64),
                                     }}
                                     ListHeaderComponent={
                                         <>

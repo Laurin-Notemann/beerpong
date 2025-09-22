@@ -103,18 +103,23 @@ export default function GroupSettingsScreen({
                                 }
                             />
                         )}
-                        {experiments.showWallpaper && (
-                            <MenuItem
-                                title="Set Wallpaper"
-                                headIcon="image-multiple"
-                                tailIconType="next"
-                                onPress={() =>
-                                    wallpaperAsset?.url
-                                        ? setShowChangeWallpaperModal(true)
-                                        : onUploadWallpaperPress()
-                                }
-                            />
-                        )}
+                        {experiments.showWallpaper &&
+                            (wallpaperAsset?.url ? (
+                                <MenuItem
+                                    title="Change Wallpaper"
+                                    headIcon="image-multiple"
+                                    onPress={() =>
+                                        setShowChangeWallpaperModal(true)
+                                    }
+                                />
+                            ) : (
+                                <MenuItem
+                                    title="Set Wallpaper"
+                                    headIcon="image-multiple"
+                                    tailIconType="next"
+                                    onPress={onUploadWallpaperPress}
+                                />
+                            ))}
                         <ConfirmationModal
                             onClose={() => setShowChangeWallpaperModal(false)}
                             title="Group Wallpaper"
