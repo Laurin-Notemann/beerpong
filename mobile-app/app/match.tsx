@@ -35,7 +35,6 @@ import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 
 /**
@@ -244,7 +243,6 @@ export default function Page() {
             showErrorToast('Failed to update match.');
         }
     }
-    const experiments = useLocalSettings();
 
     const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
 

@@ -15,8 +15,6 @@ export default function Page() {
         toggleBeerpongProMode,
         premiumVersion,
         togglePremiumVersion,
-        matchPhotos,
-        toggleMatchPhotos,
         showWallpaper,
         toggleShowWallpaper,
     } = useLocalSettings();

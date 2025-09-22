@@ -6,7 +6,6 @@ import { useInsets } from '@/app/useInsets';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import MatchPlayers from '@/components/MatchPlayers';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export interface CreateMatchAssignPointsProps {
@@ -27,8 +26,6 @@ export default function CreateMatchAssignPoints({
     onCancel,
     onPlayerPress,
 }: CreateMatchAssignPointsProps) {
-    const experiments = useLocalSettings();
-
     const insets = useInsets(true, true);
 
     const matchDraft = useMatchDraftStore();
