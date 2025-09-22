@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-          fetch-depth: 0
+          fetch-depth: 0  # full history so we can diff against older SHAs
 
       # Early gate: only run if the most recent commit touched api/**
       - name: Check latest commit touches api/**
@@ -41,10 +41,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Get the most recent commit that triggered this workflow
           LATEST_SHA="${{ github.sha }}"
           echo "Latest commit: $LATEST_SHA"
-          CHANGED=$(git diff --name-only "${LATEST_SHA}^" "${LATEST_SHA}" -- 'api/**' || true)
+          # Ensure parent exists (merge commits have multiple parents; use first)
+          PARENT_SHA="$(git rev-parse "${LATEST_SHA}^" 2>/dev/null || true)"
+          if [[ -z "${PARENT_SHA}" ]]; then
+            # If this is the first commit, just check the tree files
+            CHANGED=$(git diff --name-only "${LATEST_SHA}" -- 'api/**' || true)
+          else
+            CHANGED=$(git diff --name-only "${LATEST_SHA}^" "${LATEST_SHA}" -- 'api/**' || true)
+          fi
           if [[ -z "${CHANGED}" ]]; then
             echo "No changes under api/** in the latest commit. Skipping workflow."
             exit 0
@@ -87,17 +93,16 @@ jobs:
           set -euo pipefail
           mkdir -p .ci/openapi-state
           STATE_FILE=".ci/openapi-state/last-sha"
+          LAST_SHA=""
           if [[ -f "$STATE_FILE" ]]; then
             LAST_SHA=$(cat "$STATE_FILE" || true)
-          else
-            LAST_SHA=""
           fi
 
           if [[ -z "${LAST_SHA}" ]]; then
             echo "No previous state found for this branch. First run will proceed."
             echo "first_run=true" >> $GITHUB_OUTPUT
           else
-            echo "Found previous last SHA: $LAST_SHA"
+            echo "Found previous last SHA (from cache): $LAST_SHA"
             echo "first_run=false" >> $GITHUB_OUTPUT
             echo "last_sha=$LAST_SHA" >> $GITHUB_OUTPUT
           fi
@@ -108,24 +113,53 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # If this is the first run on this branch, we always run.
+          # First run on this branch: always run
           if [[ "${{ steps.last_sha.outputs.first_run }}" == "true" ]]; then
             echo "First run on this branch. Proceeding with generation."
             echo "api_changed=true" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          LAST_SHA="${{ steps.last_sha.outputs.last_sha }}"
-          echo "Diffing api/** between $LAST_SHA and HEAD"
-          CHANGED="$(git diff --name-only "${LAST_SHA}"..HEAD -- 'api/**' || true)"
+          CACHED_LAST_SHA="${{ steps.last_sha.outputs.last_sha }}"
+
+          # Make sure the cached SHA exists in history; if not, pick a safe fallback.
+          if ! git cat-file -e "${CACHED_LAST_SHA}^{commit}" 2>/dev/null; then
+            echo "Cached last SHA ${CACHED_LAST_SHA} is not reachable; falling back."
+            # Try merge-base with the remote branch head
+            # Determine the remote tracking ref (pull_request -> use refs/pull/.../merge base via base_ref)
+            BRANCH_NAME="${{ github.ref_name }}"
+            # Fetch the remote branch if base_ref is available (PR context)
+            if [[ -n "${{ github.base_ref }}" ]]; then
+              git fetch origin "${{ github.base_ref }}" --depth=200 || true
+              FALLBACK_BASE="$(git merge-base HEAD "origin/${{ github.base_ref }}")" || true
+            else
+              # Not a PR: ensure we have recent history
+              git fetch origin "${BRANCH_NAME}:${BRANCH_NAME}" --depth=200 || true
+              FALLBACK_BASE="$(git merge-base HEAD "${BRANCH_NAME}")" || true
+            fi
+
+            if [[ -n "${FALLBACK_BASE}" ]]; then
+              BASE_SHA="${FALLBACK_BASE}"
+              echo "Using merge-base fallback: ${BASE_SHA}"
+            else
+              # Final fallback: root commit
+              BASE_SHA="$(git rev-list --max-parents=0 HEAD | tail -n1)"
+              echo "Using root commit fallback: ${BASE_SHA}"
+            fi
+          else
+            BASE_SHA="${CACHED_LAST_SHA}"
+          fi
+
+          echo "Diffing api/** between $BASE_SHA and HEAD"
+          CHANGED="$(git diff --name-only "${BASE_SHA}"..HEAD -- 'api/**' || true)"
 
           if [[ -z "$CHANGED" ]]; then
             echo "api_changed=false" >> $GITHUB_OUTPUT
-            echo "No changes under api/** since last run. Skipping."
+            echo "No changes under api/** since last processed base. Skipping."
             exit 0
           else
             echo "api_changed=true" >> $GITHUB_OUTPUT
-            echo "Changed files since last run:"
+            echo "Changed files since last processed base:"
             echo "$CHANGED"
           fi
 
@@ -145,9 +179,9 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      # spin up the backend including database, which is needed for the openapi generation
-      - run: mvn verify
+      - name: Build backend and generate OpenAPI
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        run: mvn verify
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
@@ -161,9 +195,9 @@ jobs:
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         working-directory: api
 
-      # replace all occurrences of "*/*" with "application/json" in the openapi.json file
-      - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
+      - name: Fix content-type in generated OpenAPI
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
 
       - name: Cache npm packages
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
@@ -182,11 +216,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: "mobile-app/package-lock.json"
 
-      - run: npm ci && npm run gen-types && npm run format
+      - name: Generate client types
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         working-directory: mobile-app
+        run: |
+          npm ci
+          npm run gen-types
+          npm run format
 
-      # Update last processed SHA and save cache (only if we ran)
       - name: Update last processed SHA
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         shell: bash
@@ -202,7 +239,8 @@ jobs:
           path: .ci/openapi-state
           key: openapi-state-${{ github.ref_name }}
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Commit generated types
         if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update openapi types"
