@@ -137,7 +137,7 @@ export function LeaderboardSwiper() {
                 <Leaderboard
                     rankingAlgorithm={rankingAlgorithm}
                     ListEmptyComponent={
-                        <LeaderboardEmptyComponent message="No matches played yet today." />
+                        <LeaderboardEmptyComponent message="No players qualified yet today." />
                     }
                     players={dailyPlayers}
                     onPlayerPress={onPlayerPress}
@@ -165,7 +165,7 @@ export function LeaderboardSwiper() {
                 <Leaderboard
                     rankingAlgorithm={rankingAlgorithm}
                     ListEmptyComponent={
-                        <LeaderboardEmptyComponent message="No matches played yet this season." />
+                        <LeaderboardEmptyComponent message="No players qualified this season." />
                     }
                     players={currentSeasonPlayers}
                     onPlayerPress={onPlayerPress}
@@ -194,7 +194,7 @@ export function LeaderboardSwiper() {
                     <Leaderboard
                         rankingAlgorithm={rankingAlgorithm}
                         ListEmptyComponent={
-                            <LeaderboardEmptyComponent message="No matches played yet in this group." />
+                            <LeaderboardEmptyComponent message="No players qualified in this group." />
                         }
                         players={alltimePlayers}
                         onPlayerPress={onPlayerPress}
