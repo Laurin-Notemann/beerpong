@@ -265,7 +265,6 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                         ratio="4:3"
                         facing={primaryType}
                         flash={flash}
-                        enableTorch
                         onCameraReady={onCameraReady}
                         style={[
                             StyleSheet.absoluteFill,

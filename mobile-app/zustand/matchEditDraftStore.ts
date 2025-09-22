@@ -71,6 +71,8 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                         teamMembers: [],
                     },
                     isDirty: true,
+                    blueTeamPhotoUri: undefined,
+                    redTeamPhotoUri: undefined,
                 }));
             },
             getPlayers: () => {
@@ -184,6 +186,8 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                         blueTeam,
                     },
                     isDirty: false,
+                    blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
+                    redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
                 }));
             },
             setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {

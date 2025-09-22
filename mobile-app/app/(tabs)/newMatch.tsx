@@ -177,18 +177,14 @@ export default function NewMatchScreen() {
                 seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
-            matchDraft.actions.clear();
-            showSuccessToast('Created match.');
-
             if (matchDraft.blueTeamPhotoUri && matchDraft.redTeamPhotoUri) {
-                console.log('uploading...');
                 const blueByteArray = await uriToByteArray(
                     matchDraft.blueTeamPhotoUri
                 );
                 const redByteArray = await uriToByteArray(
                     matchDraft.redTeamPhotoUri
                 );
-                console.log('transformed');
+
                 await updateMatchPhotoMutation.mutateAsync({
                     groupId,
                     seasonId,
@@ -197,7 +193,7 @@ export default function NewMatchScreen() {
                     byteArray: blueByteArray,
                     teamId: matchRes?.data?.teams?.[0].id!,
                 });
-                console.log('first uploaded');
+
                 await updateMatchPhotoMutation.mutateAsync({
                     groupId,
                     seasonId,
@@ -206,8 +202,9 @@ export default function NewMatchScreen() {
                     byteArray: redByteArray,
                     teamId: matchRes?.data?.teams?.[1].id!,
                 });
-                console.log('second uploaded');
             }
+            matchDraft.actions.clear();
+            showSuccessToast('Created match.');
 
             router.dismissAll();
             router.replace('/');
