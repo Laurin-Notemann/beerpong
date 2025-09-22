@@ -75,6 +75,7 @@ export default function Page() {
                     isFinish: j.finishingMove!,
                 };
             }),
+            profileId: profile?.id!,
         };
     });
 
