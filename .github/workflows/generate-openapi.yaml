@@ -69,8 +69,67 @@ jobs:
             echo "No version bump commit found. Continuing the workflow."
           fi
 
-      - name: Set up JDK 21 corretto
+      # Restore state cache to remember last processed commit per branch.
+      - name: Restore openapi state cache
+        id: openapi_state_cache
         if: steps.check_authors.outputs.has_bot_author != 'true'
+        uses: actions/cache@v4
+        with:
+          path: .ci/openapi-state
+          key: openapi-state-${{ github.ref_name }}
+
+      - name: Determine last processed commit
+        id: last_sha
+        if: steps.check_authors.outputs.has_bot_author != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/openapi-state
+          STATE_FILE=".ci/openapi-state/last-sha"
+          if [[ -f "$STATE_FILE" ]]; then
+            LAST_SHA=$(cat "$STATE_FILE" || true)
+          else
+            LAST_SHA=""
+          fi
+
+          if [[ -z "${LAST_SHA}" ]]; then
+            echo "No previous state found for this branch. First run will proceed."
+            echo "first_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "Found previous last SHA: $LAST_SHA"
+            echo "first_run=false" >> $GITHUB_OUTPUT
+            echo "last_sha=$LAST_SHA" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect api/** changes since last run
+        id: detect_api_changes
+        if: steps.check_authors.outputs.has_bot_author != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # If this is the first run on this branch, we always run.
+          if [[ "${{ steps.last_sha.outputs.first_run }}" == "true" ]]; then
+            echo "First run on this branch. Proceeding with generation."
+            echo "api_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          LAST_SHA="${{ steps.last_sha.outputs.last_sha }}"
+          echo "Diffing api/** between $LAST_SHA and HEAD"
+          CHANGED="$(git diff --name-only "${LAST_SHA}"..HEAD -- 'api/**' || true)"
+
+          if [[ -z "$CHANGED" ]]; then
+            echo "api_changed=false" >> $GITHUB_OUTPUT
+            echo "No changes under api/** since last run. Skipping."
+            exit 0
+          else
+            echo "api_changed=true" >> $GITHUB_OUTPUT
+            echo "Changed files since last run:"
+            echo "$CHANGED"
+          fi
+
+      - name: Set up JDK 21 corretto
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: "21"
@@ -78,7 +137,7 @@ jobs:
           cache: "maven"
 
       - name: Cache Maven packages
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.m2
@@ -87,7 +146,7 @@ jobs:
 
       # spin up the backend including database, which is needed for the openapi generation
       - run: mvn verify
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
@@ -103,10 +162,10 @@ jobs:
 
       # replace all occurences of "*/*" with "application/json" in the openapi.json file
       - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
 
       - name: Cache npm packages
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.npm
@@ -115,7 +174,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Use Node.js
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -123,10 +182,26 @@ jobs:
           cache-dependency-path: "mobile-app/package-lock.json"
 
       - run: npm ci && npm run gen-types && npm run format
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         working-directory: mobile-app
 
+      # Update last processed SHA and save cache (only if we ran)
+      - name: Update last processed SHA
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/openapi-state
+          git rev-parse HEAD > .ci/openapi-state/last-sha
+
+      - name: Save openapi state cache
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .ci/openapi-state
+          key: openapi-state-${{ github.ref_name }}
+
       - uses: stefanzweifel/git-auto-commit-action@v5
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         with:
           commit_message: "chore: update openapi types"
