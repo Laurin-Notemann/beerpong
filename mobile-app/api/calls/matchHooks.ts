@@ -122,7 +122,7 @@ export const useUpdateMatchMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.UpdateMatch.Responses.$200 | null,
+        Paths.UpdateMatch.Responses.$200,
         Error,
         Paths.UpdateMatch.RequestBody & {
             groupId: ApiId;
@@ -132,7 +132,7 @@ export const useUpdateMatchMutation = () => {
     >({
         mutationFn: async (body) => {
             const res = await (await api).updateMatch(body, body);
-            return res?.data;
+            return res.data;
         },
         onError: captureMutationErr('updateMatch'),
     });
