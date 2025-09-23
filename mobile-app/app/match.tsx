@@ -168,6 +168,7 @@ export default function Page() {
                             count: j.count,
                         })),
                     })),
+                    existingTeamId: match.blueTeamId,
                 },
                 {
                     teamMembers: displayMatch.redTeam.map((i) => ({
@@ -177,6 +178,7 @@ export default function Page() {
                             count: j.count,
                         })),
                     })),
+                    existingTeamId: match.redTeamId,
                 },
             ],
             groupId,
