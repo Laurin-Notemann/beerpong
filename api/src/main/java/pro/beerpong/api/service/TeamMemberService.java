@@ -34,6 +34,8 @@ public class TeamMemberService {
             TeamMember teamMember = new TeamMember();
             teamMember.setTeam(team);
 
+
+
             playerRepository.findById(teamMemberCreateDto.getPlayerId()).ifPresent(player -> {
                 teamMember.setPlayer(player);
                 TeamMember savedTeamMember = teamMemberRepository.save(teamMember);

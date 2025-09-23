@@ -18,7 +18,6 @@ export default function Page() {
                     headerRight: () => <HeaderItem noMargin>Done</HeaderItem>,
 
                     headerTitle: 'Formation Name',
-                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 

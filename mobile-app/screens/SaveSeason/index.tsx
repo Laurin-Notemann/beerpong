@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { TextInput } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
+import { AppBackground } from '@/app/Background';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
@@ -85,10 +86,11 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 }
                 isCreating={isCreating}
             />
+            <AppBackground />
             <Swiper
                 {...swiper}
                 enabled={!(swiper.swiperPage === 0 && !hasValidName)}
-                onScrollBegin={() => {
+                onScrollStart={() => {
                     oldSeasonNameInputRef.current?.blur();
                 }}
             >

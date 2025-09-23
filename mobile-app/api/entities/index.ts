@@ -157,6 +157,7 @@ export class TeamMemberImpl {
     public toJSON(): TeamMember {
         return {
             id: this.playerId,
+            profileId: this.player?.profileId!,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
             name: this.name,
@@ -209,6 +210,9 @@ export class TeamImpl {
 export class MatchImpl {
     public id: string;
     public date: Date;
+    public seasonId: string;
+    public blueTeamPhotoUrl?: string | null;
+    public redTeamPhotoUrl?: string | null;
 
     public teams: TeamImpl[];
 
@@ -248,7 +252,9 @@ export class MatchImpl {
     private ruleMoves: RuleMoveImpl[];
 
     constructor(
-        _data: Components.Schemas.MatchDto,
+        _data: Omit<Components.Schemas.MatchDto, 'date'> & {
+            date?: string | Date;
+        },
         _players: Components.Schemas.PlayerDto[],
         _ruleMoves: Components.Schemas.RuleMoveDto[]
     ) {
@@ -258,9 +264,12 @@ export class MatchImpl {
             );
         }
 
+        this.seasonId = _data.season!.id!;
         this.id = _data.id!;
         this.date = new Date(_data.date!);
         this.teams = _data.teams!.map((i) => new TeamImpl(i));
+        this.blueTeamPhotoUrl = _data.teams[0]?.photoAsset?.url ?? null;
+        this.redTeamPhotoUrl = _data.teams[1]?.photoAsset?.url ?? null;
 
         const players = _players.map((i) => new PlayerImpl(i));
         const ruleMoves = _ruleMoves.map((i) => new RuleMoveImpl(i));
@@ -323,10 +332,15 @@ export class MatchImpl {
     public toJSON(): Match {
         return {
             id: this.id,
+            seasonId: this.seasonId,
             date: this.date,
 
             blueCups: this.blueCups,
             redCups: this.redCups,
+            blueTeamId: this._blueTeam.id,
+            redTeamId: this._redTeam.id,
+            blueTeamPhotoUrl: this.blueTeamPhotoUrl,
+            redTeamPhotoUrl: this.redTeamPhotoUrl,
 
             blueTeam: this.blueTeam.map((i) => {
                 const player = i.toJSON();

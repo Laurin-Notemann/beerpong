@@ -1,10 +1,12 @@
+import { useRouter } from 'expo-router';
+
 import {
+    useDeleteWallpaperMutation,
     useGroupQuery,
     useUpdateGroupWallpaperMutation,
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -16,27 +18,27 @@ import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
+    const router = useRouter();
     const { groupId, group } = useGroup();
 
     const { removeGroup } = useGroupStore();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const nav = useNavigation();
-
     const updateGroupWallpaperMutation = useUpdateGroupWallpaperMutation();
+
+    const deleteWallpaperMutation = useDeleteWallpaperMutation();
 
     const pastSeasons =
         seasonsQuery.data?.data
             ?.filter((i) => i.endDate != null)
-            // @ts-expect-error TODO: type this properly
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const { data, ...screenState } = useGroupQuery(groupId);
 
     async function onUploadWallpaperPress() {
         const [result] = await launchImageLibrary({
-            // mediaTypes: ['images'],
+            mediaTypes: ['images'],
             selectionLimit: 1,
         });
         const mimeType = result?.mimeType;
@@ -56,11 +58,13 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             showErrorToast('Failed to upload group wallpaper.');
         }
     }
+
     async function onDeleteWallpaperPress() {
         if (!groupId) return;
 
         try {
-            // TODO: implement this
+            await deleteWallpaperMutation.mutateAsync({ groupId });
+
             showSuccessToast('Removed group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to remove group wallpaper:', err);
@@ -79,7 +83,8 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
         removeGroup(groupId);
 
-        nav.navigate('index');
+        router.dismissAll();
+        router.replace('/');
     }
 
     const props: GroupSettingsProps | null = data?.data
@@ -94,6 +99,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               onDeleteWallpaperPress,
               onLeaveGroup,
               wallpaperAsset: data.data.wallpaperAsset,
+              isUpdatingWallpaper: updateGroupWallpaperMutation.isPending,
           }
         : null;
 

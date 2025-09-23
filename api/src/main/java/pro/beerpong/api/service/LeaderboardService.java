@@ -2,15 +2,20 @@ package pro.beerpong.api.service;
 
 import com.google.api.client.util.Lists;
 import com.google.common.collect.Maps;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.PlayerStatistics;
+import pro.beerpong.api.model.dao.TeamMember;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
@@ -18,18 +23,18 @@ import pro.beerpong.api.util.RankingAlgorithm;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 public class LeaderboardService {
-    private static final double K_FACTOR = 10D;
-    private static final int ELO_DIVIDER = 400;
-
     private final RuleMoveService ruleMoveService;
     private final MatchService matchService;
     private final PlayerRepository playerRepository;
@@ -149,6 +154,7 @@ public class LeaderboardService {
                 }
 
                 playerDto.getStatistics().setId(null);
+                playerDto.getStatistics().setPlayerId(playerDto.getId());
                 entries.put(playerDto.getProfile().getId(), playerDto);
             }
         });
@@ -162,12 +168,23 @@ public class LeaderboardService {
             // increment the player count
             numMatches.incrementAndGet();
 
+            var blueTeamId = matchDto.getTeams().getFirst().getId();
+            var redTeamId = matchDto.getTeams().get(1).getId();
+
+            var blueTeamPoints = new AtomicLong();
+            var redTeamPoints = new AtomicLong();
+
+            var playerPoints = new HashMap<String, Long>();
+
+            var winningTeam = new AtomicReference<String>();
+
             // go through all teams
             matchDto.getTeams().forEach(teamDto -> {
                 // collect team members
                 var teamMembers = matchDto.getTeamMembers().stream()
                         .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
                         .collect(Collectors.toCollection(Lists::newArrayList));
+                var toAdd = (teamDto.getId().equals(blueTeamId) ? blueTeamPoints : redTeamPoints);
 
                 // go through all team members
                 teamMembers.forEach(teamMemberDto -> {
@@ -199,16 +216,27 @@ public class LeaderboardService {
                             }
 
                             // get entry and points for this move
+                            var member = teamMembers.stream()
+                                    .filter(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId()))
+                                    .findFirst()
+                                    .orElse(null);
                             var entry = entries.get(memberToProfile.get(dto.getTeamMemberId()));
                             var points = ruleMoveService.getPointsById(dto.getMoveId());
 
-                            if (points == null) {
+                            if (points == null || member == null) {
                                 return;
                             }
 
+                            // save winning team
+                            if (ruleMoveService.isFinish(dto.getMoveId())) {
+                                winningTeam.set(member.getTeamId());
+                            }
+
+                            var ownPoints = points.getFirst() * dto.getValue();
+
                             // add total moves and gained points to the scorers entry
                             entry.getStatistics().addMoves(dto.getValue());
-                            entry.getStatistics().addPoints(points.getFirst() * dto.getValue());
+                            entry.getStatistics().addPoints(ownPoints);
 
                             // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
                             if (points.getSecond() > 0) {
@@ -222,14 +250,15 @@ public class LeaderboardService {
                                     }
                                 });
                             }
+
+                            // add gained points to the total team points
+                            playerPoints.merge(entry.getStatistics().getPlayerId(), (long) ownPoints, Long::sum);
+                            toAdd.addAndGet(ownPoints);
                         });
 
                 // clear members cache
                 teamMembers.clear();
             });
-
-            var blueTeamId = matchDto.getTeams().getFirst().getId();
-            var redTeamId = matchDto.getTeams().get(1).getId();
 
             var blueTeamMembers = matchDto.getTeamMembers().stream()
                     .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId) &&
@@ -249,8 +278,31 @@ public class LeaderboardService {
                     .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
                     .toList();
 
+            List<PlayerStatisticsDto> winners;
+
+            // add wins to winner team
+            if (winningTeam.get() == null) {
+                return;
+            } else if (winningTeam.get().equals(blueTeamId)) {
+                winners = blueTeamMemberStatistics;
+            } else {
+                winners = redTeamMemberStatistics;
+            }
+
+            winners.forEach(PlayerStatisticsDto::addWin);
+
             // calculate elo for both teams
-            EloAlgorithm.calculateElo(blueTeamMemberStatistics, redTeamMemberStatistics);
+            EloAlgorithm.calculateElo(
+                    winningTeam.get(),
+                    blueTeamId,
+                    blueTeamPoints.get(),
+                    redTeamPoints.get(),
+                    blueTeamMemberStatistics,
+                    redTeamMemberStatistics,
+                    playerPoints
+            );
+
+            playerPoints.clear();
         });
 
         // calculate averages for all entries

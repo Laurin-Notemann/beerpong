@@ -3,8 +3,10 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
+import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
@@ -58,12 +60,14 @@ export const useMatchesByPlayerQuery = (
 
     if (!matchesQuery.data?.data) return matchesQuery;
 
-    const matches = matchesQuery.data.data;
-
-    matchesQuery.data.data = matches.filter((i) =>
-        i.teamMembers?.find((j) => j.playerId === playerId)
+    const matchesForPlayer = matchesQuery.data.data.filter((i) =>
+        i.teamMembers!.find((j) => j.playerId === playerId)
     );
-    return matchesQuery;
+
+    return {
+        ...matchesQuery,
+        data: { data: matchesForPlayer },
+    };
 };
 
 export const useCreateMatchMutation = () => {
@@ -94,6 +98,7 @@ export const useCreateMatchMutation = () => {
                 throw err;
             }
         },
+        onError: captureMutationErr('createMatch'),
     });
 };
 
@@ -109,6 +114,7 @@ export const useDeleteMatchMutation = () => {
             const res = await (await api).deleteMatchById(body);
             return res?.data;
         },
+        onError: captureMutationErr('deleteMatch'),
     });
 };
 
@@ -116,7 +122,7 @@ export const useUpdateMatchMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.UpdateMatch.Responses.$200 | null,
+        Paths.UpdateMatch.Responses.$200,
         Error,
         Paths.UpdateMatch.RequestBody & {
             groupId: ApiId;
@@ -126,7 +132,77 @@ export const useUpdateMatchMutation = () => {
     >({
         mutationFn: async (body) => {
             const res = await (await api).updateMatch(body, body);
-            return res?.data;
+            return res.data;
         },
+        onError: captureMutationErr('updateMatch'),
+    });
+};
+
+export const useUpdateMatchPhotoMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.SetPhoto.Responses.$200 | null,
+        Error,
+        {
+            byteArray: Uint8Array<ArrayBuffer>;
+            mimeType: string;
+
+            groupId: ApiId;
+            seasonId: ApiId;
+            matchId: ApiId;
+            teamId: ApiId;
+        }
+    >({
+        mutationFn: async ({
+            byteArray,
+            mimeType,
+            groupId,
+            seasonId,
+            matchId,
+            teamId,
+        }) => {
+            const res = await (
+                await api
+            ).setPhoto({
+                groupId,
+                seasonId,
+                id: matchId,
+                teamId,
+            });
+
+            await uploadImage(
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
+                res?.data.data?.photoAsset?.singleUploadUrl,
+                byteArray,
+                'matchPhoto',
+                mimeType
+            );
+            return res.data;
+        },
+        onError: captureMutationErr('updateMatchPhoto'),
+    });
+};
+
+export const useDeleteMatchPhotoMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.DeletePhoto.Responses.$200 | null,
+        Error,
+        { groupId: ApiId; seasonId: ApiId; matchId: ApiId; teamId: ApiId }
+    >({
+        mutationFn: async ({ groupId, seasonId, matchId, teamId }) => {
+            const res = await (
+                await api
+            ).deletePhoto({
+                groupId,
+                seasonId,
+                id: matchId,
+                teamId,
+            });
+            return res.data;
+        },
+        onError: captureMutationErr('deleteMatchPhoto'),
     });
 };

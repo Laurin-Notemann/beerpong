@@ -2,17 +2,17 @@ import React from 'react';
 import { Text, View, ViewProps } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { useTheme } from '@/theme';
 
-function ScoreChip({
+export function ScoreChip({
     winnerTeamId,
-    children,
+    children = 'vs',
 }: {
-    winnerTeamId: 'red' | 'blue' | null;
-    children: React.ReactNode;
+    winnerTeamId?: 'red' | 'blue' | null;
+    children?: React.ReactNode;
 }) {
     const theme = useTheme();
     return (
@@ -47,11 +47,6 @@ function ScoreChip({
                     paddingHorizontal: 5,
                     paddingVertical: 2,
                     fontSize: 16,
-
-                    // backgroundColor:
-                    //   Math.round(Math.random()) === 1
-                    //     ? theme.color.team.red
-                    //     : theme.color.team.blue,
                 }}
             >
                 {children}
@@ -69,7 +64,7 @@ const hasFinishMove = (team?: TeamMember[]): boolean => {
 };
 
 export interface MatchVsHeaderProps extends ViewProps {
-    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
+    match: Omit<MinimalMatch, 'id' | 'date'>;
 
     hasScore?: boolean;
 
@@ -77,7 +72,7 @@ export interface MatchVsHeaderProps extends ViewProps {
 
     highlightedId?: string;
 }
-export default function MatchVsHeader({
+function MatchVsHeader({
     match,
     hasScore = true,
     maxItems = 4,
@@ -102,55 +97,23 @@ export default function MatchVsHeader({
                 rest.style,
             ]}
         >
-            <View
-                style={{
-                    flexDirection: 'row',
-                    position: 'relative',
-                    // calibrated to the height of the avatars so we don't get layout shift
-                    height: 36,
-                }}
-            >
-                <Team
-                    color="blue"
-                    players={match.blueTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                />
-                <Team
-                    color="blue"
-                    players={match.blueTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                    isCopy
-                />
-            </View>
+            <TeamMemo
+                color="blue"
+                players={match.blueTeam}
+                maxItems={maxItems}
+                highlightedId={highlightedId}
+            />
 
             <ScoreChip winnerTeamId={winnerTeamId}>
                 {hasScore ? match.blueCups + ':' + match.redCups : 'vs'}
             </ScoreChip>
 
-            <View
-                style={{
-                    flexDirection: 'row',
-                    position: 'relative',
-                    height: 36,
-                    // width: 76,
-                }}
-            >
-                <Team
-                    color="red"
-                    players={match.redTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                />
-                <Team
-                    color="red"
-                    players={match.redTeam}
-                    maxItems={maxItems}
-                    highlightedId={highlightedId}
-                    isCopy
-                />
-            </View>
+            <TeamMemo
+                color="red"
+                players={match.redTeam}
+                maxItems={maxItems}
+                highlightedId={highlightedId}
+            />
         </View>
     );
 }
@@ -158,94 +121,178 @@ export default function MatchVsHeader({
 function Team({
     highlightedId,
     players,
-    maxItems,
+    maxItems = 4,
     color,
-    isCopy = false,
+    centered = false,
+    style,
+    size = 36,
 }: {
     highlightedId?: string | null;
     players: TeamMember[];
-    maxItems: number;
+    maxItems?: number;
     color: 'red' | 'blue';
-
-    isCopy?: boolean;
+    centered?: boolean;
+    style?: ViewProps['style'];
+    size?: number;
 }) {
     const theme = useTheme();
 
-    const emptyAvatarsUsedForSpacing = Array(
-        Math.max(maxItems - players.length, 0)
-    ).fill(null);
-
     const displayedPlayers = players.slice(0, maxItems);
+
+    const avatarSize = size;
+
+    const avatarGap = size / 2.25;
+
+    const maxWidth = avatarSize * maxItems - avatarGap * (maxItems - 1);
+    const actualWidth =
+        avatarSize * players.length - avatarGap * (players.length - 1);
+
+    const highlightedPlayer = players.find(
+        (i) => i.profileId === highlightedId
+    );
+
+    const mod = color === 'red' ? 1 : -1;
 
     return (
         <View
             style={[
-                isCopy
-                    ? {
-                          position: 'absolute',
-                          left: color === 'red' ? 0 : undefined,
-                          right: color === 'blue' ? 0 : undefined,
-                          top: 0,
-                      }
-                    : {
-                          opacity: highlightedId == null ? 1 : 0.3,
-                      },
                 {
                     flexDirection: 'row',
-                    justifyContent: color === 'red' ? 'flex-end' : 'flex-end',
+                    justifyContent: color === 'red' ? 'flex-start' : 'flex-end',
+
+                    width: centered ? actualWidth : maxWidth,
                 },
+                style,
             ]}
         >
-            {color === 'blue' &&
-                emptyAvatarsUsedForSpacing.map((_, index) => {
-                    return (
+            <View
+                style={{
+                    flexDirection: 'row',
+                    opacity: highlightedId ? 0.3 : 1,
+                }}
+            >
+                {displayedPlayers
+                    .sort((a, b) =>
+                        a.profileId === highlightedId
+                            ? -mod
+                            : b.profileId === highlightedId
+                              ? mod
+                              : 0
+                    )
+                    .map((i, index) => (
                         <Avatar
+                            size={avatarSize}
                             key={index}
+                            url={i.avatarUrl}
+                            content={
+                                index === maxItems - 1 &&
+                                players.length > maxItems
+                                    ? '+' + (players.length - maxItems + 1)
+                                    : undefined
+                            }
+                            name={i.name}
+                            borderColor={theme.color.team[color]}
+                            variant="list"
                             style={{
-                                opacity: 0,
-                                marginLeft: -16,
+                                marginRight:
+                                    color === 'red' ? -avatarGap : undefined,
+                                marginLeft:
+                                    color === 'blue' ? -avatarGap : undefined,
                             }}
                         />
-                    );
-                })}
-            {displayedPlayers
-                .sort((a) => (a.id === highlightedId ? 1 : 0))
-                .map((i, index) => (
-                    <Avatar
-                        key={index}
-                        url={i.avatarUrl}
-                        content={
-                            index === maxItems - 1 && players.length > maxItems
-                                ? '+' + (players.length - maxItems + 1)
-                                : undefined
-                        }
-                        name={i.name}
-                        borderColor={theme.color.team[color]}
-                        style={{
-                            marginRight: color === 'red' ? -16 : undefined,
-                            marginLeft: color === 'blue' ? -16 : undefined,
+                    ))}
+            </View>
+            {highlightedPlayer && (
+                <Avatar
+                    size={avatarSize}
+                    url={highlightedPlayer.avatarUrl}
+                    name={highlightedPlayer.name}
+                    borderColor={theme.color.team[color]}
+                    variant="list"
+                    style={{
+                        position: 'absolute',
+                        left: color === 'red' ? 0 : undefined,
+                        right: color === 'blue' ? 0 : undefined,
 
-                            opacity: isCopy
-                                ? i.id === highlightedId
-                                    ? 1
-                                    : 0
-                                : 1,
-                            zIndex: i.id === highlightedId ? 1 : undefined,
-                        }}
-                    />
-                ))}
-            {color === 'red' &&
-                emptyAvatarsUsedForSpacing.map((_, index) => {
-                    return (
-                        <Avatar
-                            key={index}
-                            style={{
-                                opacity: 0,
-                                marginRight: -16,
-                            }}
-                        />
-                    );
-                })}
+                        zIndex: 9,
+                    }}
+                />
+            )}
         </View>
     );
 }
+
+const TeamMemo = React.memo(Team, (prev, next) => {
+    if (
+        prev.highlightedId !== next.highlightedId ||
+        prev.color !== next.color ||
+        prev.size !== next.size ||
+        prev.maxItems !== next.maxItems
+    ) {
+        return false;
+    }
+    if (prev.players.length !== next.players.length) {
+        return false;
+    }
+    // Compare only properties used for rendering
+    for (let idx = 0; idx < prev.players.length; idx++) {
+        const p = prev.players[idx];
+        const n = next.players[idx];
+        if (
+            p.profileId !== n.profileId ||
+            p.avatarUrl !== n.avatarUrl ||
+            p.name !== n.name
+        ) {
+            return false;
+        }
+    }
+    return true;
+});
+
+const MemoMatchVsHeader = React.memo(MatchVsHeader, (prev, next) => {
+    if (
+        prev.highlightedId !== next.highlightedId ||
+        prev.hasScore !== next.hasScore ||
+        prev.maxItems !== next.maxItems
+    ) {
+        return false;
+    }
+    const a = prev.match;
+    const b = next.match;
+    if (a.blueCups !== b.blueCups || a.redCups !== b.redCups) {
+        return false;
+    }
+    // Teams shallow compare for items used in Team comparator
+    if (
+        a.blueTeam.length !== b.blueTeam.length ||
+        a.redTeam.length !== b.redTeam.length
+    ) {
+        return false;
+    }
+    for (let idx = 0; idx < a.blueTeam.length; idx++) {
+        const pa = a.blueTeam[idx];
+        const pb = b.blueTeam[idx];
+        if (
+            pa.profileId !== pb.profileId ||
+            pa.avatarUrl !== pb.avatarUrl ||
+            pa.name !== pb.name
+        ) {
+            return false;
+        }
+    }
+    for (let idx = 0; idx < a.redTeam.length; idx++) {
+        const pa = a.redTeam[idx];
+        const pb = b.redTeam[idx];
+        if (
+            pa.profileId !== pb.profileId ||
+            pa.avatarUrl !== pb.avatarUrl ||
+            pa.name !== pb.name
+        ) {
+            return false;
+        }
+    }
+    return true;
+});
+
+export default MemoMatchVsHeader;
+export { TeamMemo as Team };

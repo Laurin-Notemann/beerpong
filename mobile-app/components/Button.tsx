@@ -1,9 +1,7 @@
-import {
-    Text,
-    TouchableHighlight,
-    TouchableHighlightProps,
-} from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Text, TouchableHighlightProps, View } from 'react-native';
 
+import PressableScale from '@/components/PressableScale';
 import { useTheme } from '@/theme';
 
 export interface ButtonProps extends TouchableHighlightProps {
@@ -15,6 +13,8 @@ export interface ButtonProps extends TouchableHighlightProps {
     onPress: () => void;
 
     disabled?: boolean;
+
+    blur?: boolean;
 }
 export default function Button({
     title,
@@ -24,6 +24,8 @@ export default function Button({
     onPress,
 
     disabled = false,
+
+    blur = false,
 
     ...rest
 }: ButtonProps) {
@@ -37,55 +39,99 @@ export default function Button({
                 active: theme.panel.light.active,
             },
             primary: {
-                backgroundColor: '#2C6BED',
+                backgroundColor: theme.button.primary,
                 color: 'white',
-                active: '#2C58B3',
+                active: theme.button.primaryActive,
             },
             secondary: {
                 backgroundColor: theme.panel.dark.bg,
-                color: '#2C6BED',
+                color: theme.button.primary,
                 active: theme.panel.dark.active,
             },
         } as const
     )[variant];
 
     return (
-        <TouchableHighlight
+        <PressableScale
             {...rest}
             disabled={disabled}
+            pressedScale={0.95}
             onPress={onPress}
-            style={[
-                rest.style,
-                {
-                    alignItems: 'center',
-                    justifyContent: 'center',
-
-                    height: size === 'large' ? 52 : 42,
-
-                    borderRadius: size === 'large' ? 5 : 10,
-                    backgroundColor: disabled ? '#222' : style.backgroundColor,
-
-                    alignSelf: 'stretch',
-
-                    paddingHorizontal: 16,
-                },
-            ]}
-            underlayColor={style.active}
         >
-            {typeof title === 'string' ? (
-                <Text
-                    style={{
-                        fontSize: 17,
-                        fontWeight: 600,
+            {blur ? (
+                <BlurView
+                    intensity={70}
+                    tint={theme.blur.tint}
+                    style={[
+                        rest.style,
+                        {
+                            alignItems: 'center',
+                            justifyContent: 'center',
 
-                        color: disabled ? '#444' : style.color,
-                    }}
+                            height: size === 'large' ? 52 : 42,
+
+                            borderRadius: size === 'large' ? 5 : 10,
+
+                            alignSelf: 'stretch',
+
+                            paddingHorizontal: 16,
+
+                            backgroundColor: theme.overlay.backgroundColor,
+                        },
+                    ]}
                 >
-                    {title}
-                </Text>
+                    {typeof title === 'string' ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: 600,
+
+                                color: disabled ? '#444' : style.color,
+                            }}
+                        >
+                            {title}
+                        </Text>
+                    ) : (
+                        title
+                    )}
+                </BlurView>
             ) : (
-                title
+                <View
+                    style={[
+                        rest.style,
+                        {
+                            alignItems: 'center',
+                            justifyContent: 'center',
+
+                            height: size === 'large' ? 52 : 42,
+
+                            borderRadius: size === 'large' ? 5 : 10,
+                            backgroundColor: disabled
+                                ? '#222'
+                                : style.backgroundColor,
+
+                            alignSelf: 'stretch',
+
+                            paddingHorizontal: 16,
+                        },
+                    ]}
+                >
+                    {typeof title === 'string' ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: 600,
+
+                                color: disabled ? '#444' : style.color,
+                            }}
+                        >
+                            {title}
+                        </Text>
+                    ) : (
+                        title
+                    )}
+                </View>
             )}
-        </TouchableHighlight>
+        </PressableScale>
     );
 }

@@ -9,32 +9,64 @@ export function Heading({
     titleHeadIcon,
     titleTailIcon,
     headingSubtitle,
+    paragraph = false,
+    border = true,
 }: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'> & {
     headingSubtitle?: string;
+    paragraph?: boolean;
+    border?: boolean;
 }) {
     const theme = useTheme();
+
     return (
         <View
-            style={{
-                flexDirection: 'row',
-                alignItems: 'flex-end',
+            style={
+                paragraph
+                    ? {
+                          borderTopWidth: border ? 1 : 0,
+                          borderColor: 'rgb(31, 31, 31)',
+                          paddingTop: 40,
+                          paddingHorizontal: 0,
 
-                height: 64,
-                paddingHorizontal: 8,
-                paddingBottom: 12,
-            }}
+                          flexDirection: 'row',
+                          alignItems: 'flex-end',
+
+                          marginTop: 48,
+                          marginBottom: 24,
+                      }
+                    : {
+                          flexDirection: 'row',
+                          alignItems: 'flex-end',
+
+                          height: 64,
+                          paddingHorizontal: 8,
+                          paddingBottom: 12,
+                      }
+            }
         >
             {titleHeadIcon}
             <Text
-                style={{
-                    fontSize: 17,
-                    lineHeight: 22,
-                    fontWeight: 500,
-                    color: theme.color.text.primary,
+                selectable={paragraph}
+                selectionColor={theme.color.text.emphasis}
+                style={
+                    paragraph
+                        ? {
+                              fontSize: 24,
+                              lineHeight: 32,
+                              color: theme.color.text.primary,
 
-                    marginLeft: titleHeadIcon ? 8 : 0,
-                    marginRight: 'auto',
-                }}
+                              fontWeight: '700',
+                          }
+                        : {
+                              fontSize: 17,
+                              lineHeight: 22,
+                              fontWeight: 500,
+                              color: theme.color.text.primary,
+
+                              marginLeft: titleHeadIcon ? 8 : 0,
+                              marginRight: 'auto',
+                          }
+                }
             >
                 {title}
             </Text>
@@ -57,6 +89,8 @@ export interface MenuSectionProps extends PropsWithChildren {
     color?: 'light' | 'dark'; // | "transparent";
 
     noFlex?: boolean;
+
+    containerStyle?: any;
 }
 export default function MenuSection({
     title,
@@ -74,11 +108,15 @@ export default function MenuSection({
     color = 'light',
 
     noFlex = false,
+
+    containerStyle,
 }: MenuSectionProps) {
     const theme = useTheme();
 
     return (
-        <View style={{ flex: noFlex ? undefined : 1 }}>
+        <View
+            style={{ flex: noFlex ? undefined : 1, ...(containerStyle ?? {}) }}
+        >
             {title && (
                 <Heading
                     title={title}

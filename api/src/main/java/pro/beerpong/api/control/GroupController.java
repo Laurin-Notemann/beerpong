@@ -6,8 +6,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.service.AssetService;
+import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.AuthService;
+import pro.beerpong.api.service.AssetService;
 import pro.beerpong.api.service.GroupService;
+import pro.beerpong.api.sockets.SocketEvent;
+import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 
@@ -18,11 +24,15 @@ public class GroupController {
     public static final String JOIN_GROUP_ENDPOINT = "join";
 
     private final GroupService groupService;
+    private final AssetService assetService;
+    private final SubscriptionHandler subscriptionHandler;
     private final AuthService authService;
 
     @Autowired
-    public GroupController(GroupService groupService, AuthService authService) {
+    public GroupController(GroupService groupService, AssetService assetService, SubscriptionHandler subscriptionHandler, AuthService authService) {
         this.groupService = groupService;
+        this.assetService = assetService;
+        this.subscriptionHandler = subscriptionHandler;
         this.authService = authService;
     }
 
@@ -107,6 +117,48 @@ public class GroupController {
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
+    }
+
+    @PutMapping("/{id}/wallpaper")
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String id,
+                                                                           @RequestBody(required = false) AssetCropDto assetCropDto) {
+        var group = groupService.getGroupById(id);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        if (assetCropDto != null && !assetCropDto.validate()) {
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_VALIDATION_FAILED);
+        }
+
+        var dto = groupService.storeWallpaper(group, assetCropDto);
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_SET, id, dto));
+
+        return ResponseEnvelope.ok(dto);
+    }
+
+    @DeleteMapping("{id}/wallpaper")
+    public ResponseEntity<ResponseEnvelope<GroupDto>> deleteWallpaper(@PathVariable String id) {
+        var group = groupService.getGroupById(id);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var asset = group.getWallpaperAsset();
+
+        if (asset == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_HAS_NO_WALLPAPER);
+        }
+
+        group = groupService.deleteWallpaper(group);
+        assetService.deleteAsset(asset.getId());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_DELETE, id, group));
+
+        return ResponseEnvelope.ok(group);
     }
 
     @PostMapping("/{id}/" + JOIN_GROUP_ENDPOINT)

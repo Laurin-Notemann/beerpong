@@ -2,34 +2,22 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { ScrollView, Switch } from 'react-native';
 
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useInsets } from '@/app/useInsets';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 export default function Page() {
     const {
-        tutorials,
-        toggleTutorials,
         beerpongProMode,
         toggleBeerpongProMode,
         premiumVersion,
         togglePremiumVersion,
-        eloAlgorithm,
-        toggleEloAlgorithm,
-        rulesTab,
-        toggleRulesTab,
-        matchPhotos,
-        toggleMatchPhotos,
         showWallpaper,
         toggleShowWallpaper,
-        dailyLeaderboard,
-        toggleDailyLeaderboard,
     } = useLocalSettings();
-
-    const theme = useTheme();
 
     return (
         <>
@@ -39,11 +27,10 @@ export default function Page() {
                     headerTitle: '',
                 }}
             />
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingTop: useInsets(true).top,
@@ -54,20 +41,12 @@ export default function Page() {
             >
                 <MenuSection title="Experimental Features">
                     <MenuItem
+                        border={false}
                         title="Beerpong Pro Mode"
                         tailContent={
                             <Switch
                                 value={beerpongProMode}
                                 onChange={toggleBeerpongProMode}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Tutorials"
-                        tailContent={
-                            <Switch
-                                value={tutorials}
-                                onChange={toggleTutorials}
                             />
                         }
                     />
@@ -81,47 +60,11 @@ export default function Page() {
                         }
                     />
                     <MenuItem
-                        title="Elo Algorithm"
-                        tailContent={
-                            <Switch
-                                value={eloAlgorithm}
-                                onChange={toggleEloAlgorithm}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Rules Tab"
-                        tailContent={
-                            <Switch
-                                value={rulesTab}
-                                onChange={toggleRulesTab}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Team Photos"
-                        tailContent={
-                            <Switch
-                                value={matchPhotos}
-                                onChange={toggleMatchPhotos}
-                            />
-                        }
-                    />
-                    <MenuItem
                         title="Group Wallpaper"
                         tailContent={
                             <Switch
                                 value={showWallpaper}
                                 onChange={toggleShowWallpaper}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Daily Leaderboard"
-                        tailContent={
-                            <Switch
-                                value={dailyLeaderboard}
-                                onChange={toggleDailyLeaderboard}
                             />
                         }
                     />

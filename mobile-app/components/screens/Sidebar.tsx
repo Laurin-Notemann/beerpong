@@ -1,9 +1,15 @@
-import { Link } from '@react-navigation/native';
+import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { AxiosError } from 'axios';
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { useEffect, useRef } from 'react';
-import { Animated, ScrollView, TouchableOpacity } from 'react-native';
-import { Pressable, View } from 'react-native';
+import {
+    Animated,
+    ScrollView,
+    TouchableHighlight,
+    TouchableOpacity,
+} from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -60,6 +66,8 @@ export function SidebarGroupItem({
         }).start();
     }, [showDeleteButton]);
 
+    const theme = useTheme();
+
     if (RENDER_AS_MENU_ITEM) {
         return (
             <MenuItem
@@ -85,12 +93,12 @@ export function SidebarGroupItem({
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: isActive ? 'rgba(0,0,0,0.3)' : undefined,
+                backgroundColor: isActive ? theme.activeGroupItem : undefined,
 
                 height: 58,
             }}
         >
-            <Pressable onPress={() => onDelete(id)}>
+            <TouchableOpacity onPress={() => onDelete(id)}>
                 <Animated.View
                     style={{
                         justifyContent: 'center',
@@ -108,18 +116,26 @@ export function SidebarGroupItem({
                         }}
                     />
                 </Animated.View>
-            </Pressable>
+            </TouchableOpacity>
 
-            <Pressable
+            <TouchableHighlight
                 disabled={isActive}
                 onPress={() => onPress(id)}
-                style={{ flex: 1, paddingHorizontal: 17, paddingVertical: 12 }}
+                underlayColor={theme.panel.dark.active}
+                style={{ flex: 1, flexShrink: 1 }}
             >
-                <>
+                <View
+                    style={{
+                        paddingHorizontal: 17,
+                        paddingVertical: 12,
+
+                        overflow: 'hidden',
+                    }}
+                >
                     <Text
                         color="primary"
                         style={{ fontSize: 17 }}
-                        numberOfLines={2}
+                        numberOfLines={1}
                     >
                         {isLoading ? (
                             'Loading...'
@@ -139,15 +155,19 @@ export function SidebarGroupItem({
                             data?.data?.name || 'Unknown'
                         )}
                     </Text>
-                    <Text color="secondary" style={{ fontSize: 12 }}>
+                    <Text
+                        color="secondary"
+                        style={{ fontSize: 12 }}
+                        numberOfLines={1}
+                    >
                         {isLoading
                             ? ''
                             : failedToLoad
                               ? 'Failed to load'
                               : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`}
                     </Text>
-                </>
-            </Pressable>
+                </View>
+            </TouchableHighlight>
         </View>
     );
 }
@@ -159,10 +179,8 @@ export interface SidebarGroup {
     matchesCount: number;
 }
 
-export interface SidebarProps {}
-
 // eslint-disable-next-line no-empty-pattern
-export function Sidebar({}: SidebarProps) {
+export function Sidebar(props: DrawerContentComponentProps) {
     const { groupIds, selectedGroupId, selectGroup, removeGroup } =
         useGroupStore();
 
@@ -194,16 +212,21 @@ export function Sidebar({}: SidebarProps) {
                 <View
                     style={{
                         flexDirection: 'row',
-                        alignItems: 'center',
 
                         height: 50,
-                        paddingHorizontal: 16,
                     }}
                 >
                     <>
                         <TouchableOpacity
                             onPress={() => setIsEditMode(!isEditMode)}
-                            style={{ marginRight: 'auto' }}
+                            style={{
+                                marginRight: 'auto',
+
+                                justifyContent: 'center',
+
+                                height: '100%',
+                                paddingHorizontal: 16,
+                            }}
                         >
                             <Text
                                 color="primary"
@@ -216,7 +239,13 @@ export function Sidebar({}: SidebarProps) {
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => setShowAddGroupModal(true)}
-                            style={{ marginLeft: 'auto' }}
+                            style={{
+                                marginLeft: 'auto',
+                                justifyContent: 'center',
+
+                                height: '100%',
+                                paddingHorizontal: 16,
+                            }}
                         >
                             <Icon
                                 name="plus"
@@ -251,6 +280,7 @@ export function Sidebar({}: SidebarProps) {
                                 // eslint-disable-next-line
                                 console.log(Object.keys(nav));
                                 // nav.closeDrawer();
+                                props.navigation.closeDrawer();
                             }}
                             showDeleteButton={isEditMode}
                             onDelete={setGroupIdToBeDeleted}
@@ -272,7 +302,7 @@ export function Sidebar({}: SidebarProps) {
                         >
                             No groups to display. {'\n'}
                             <Link
-                                to="/joinGroup"
+                                href="/joinGroup"
                                 style={{
                                     color: theme.color.text.primary,
                                     fontWeight: 500,
@@ -282,7 +312,7 @@ export function Sidebar({}: SidebarProps) {
                             </Link>{' '}
                             or{' '}
                             <Link
-                                to="/createGroup"
+                                href="/createGroup"
                                 style={{
                                     color: theme.color.text.primary,
                                     fontWeight: 500,
@@ -307,22 +337,35 @@ export function Sidebar({}: SidebarProps) {
                     color="dark"
                 >
                     <MenuItem
+                        border={false}
                         title="Settings"
                         headIcon="cog-outline"
-                        onPress={() => nav.navigate('localSettings')}
+                        onPress={() =>
+                            props.navigation.navigate('static/aboutPremium', {
+                                screen: 'localSettings',
+                            })
+                        }
                         tailIconType="next"
                     />
 
                     <MenuItem
                         title="Privacy Policy"
                         headIcon="shield-lock"
-                        onPress={() => nav.navigate('static/privacyPolicy')}
+                        onPress={() =>
+                            props.navigation.navigate('static/aboutPremium', {
+                                screen: 'static/privacyPolicy',
+                            })
+                        }
                         tailIconType="next"
                     />
                     <MenuItem
                         title="About Us"
                         headIcon="information-outline"
-                        onPress={() => nav.navigate('static/aboutUs')}
+                        onPress={() =>
+                            props.navigation.navigate('static/aboutPremium', {
+                                screen: 'static/aboutUs',
+                            })
+                        }
                         tailIconType="next"
                     />
                 </MenuSection>
@@ -337,7 +380,12 @@ export function Sidebar({}: SidebarProps) {
                                 type: 'default',
 
                                 onPress: () => {
-                                    nav.navigate('createGroup');
+                                    props.navigation.navigate(
+                                        'static/aboutPremium',
+                                        {
+                                            screen: 'createGroup',
+                                        }
+                                    );
                                     setShowAddGroupModal(false);
                                 },
                             },
@@ -346,7 +394,12 @@ export function Sidebar({}: SidebarProps) {
                                 type: 'default',
 
                                 onPress: () => {
-                                    nav.navigate('joinGroup');
+                                    props.navigation.navigate(
+                                        'static/aboutPremium',
+                                        {
+                                            screen: 'joinGroup',
+                                        }
+                                    );
                                     setShowAddGroupModal(false);
                                 },
                             },

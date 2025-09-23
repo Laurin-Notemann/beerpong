@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, Switch } from 'react-native';
+import {
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    Switch,
+} from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -40,6 +45,8 @@ export interface GroupSettingsProps {
     onDeleteWallpaperPress: () => void;
     onLeaveGroup: () => void;
     wallpaperAsset?: { url?: string | null } | null;
+
+    isUpdatingWallpaper?: boolean;
 }
 export default function GroupSettingsScreen({
     id,
@@ -53,6 +60,7 @@ export default function GroupSettingsScreen({
     wallpaperAsset,
     onUploadWallpaperPress,
     onDeleteWallpaperPress,
+    isUpdatingWallpaper = false,
 }: GroupSettingsProps) {
     const nav = useNavigation();
 
@@ -84,6 +92,15 @@ export default function GroupSettingsScreen({
             >
                 <SafeAreaView>
                     <MenuSection title="Settings">
+                        <MenuItem
+                            border={false}
+                            title={groupName}
+                            headIcon="pencil-outline"
+                            tailIconType="next"
+                            onPress={() =>
+                                nav.navigate('editGroupName', { id })
+                            }
+                        />
                         {experiments.premiumVersion && (
                             <MenuItem
                                 title="Premium Version"
@@ -94,26 +111,33 @@ export default function GroupSettingsScreen({
                                 }
                             />
                         )}
-                        <MenuItem
-                            title={groupName}
-                            headIcon="pencil-outline"
-                            tailIconType="next"
-                            onPress={() =>
-                                nav.navigate('editGroupName', { id })
-                            }
-                        />
-                        {experiments.showWallpaper && (
-                            <MenuItem
-                                title="Set Wallpaper"
-                                headIcon="image-multiple"
-                                tailIconType="next"
-                                onPress={() =>
-                                    wallpaperAsset?.url
-                                        ? setShowChangeWallpaperModal(true)
-                                        : onUploadWallpaperPress()
-                                }
-                            />
-                        )}
+                        {experiments.showWallpaper &&
+                            (wallpaperAsset?.url ? (
+                                <MenuItem
+                                    title="Change Wallpaper"
+                                    headIcon="image-multiple"
+                                    onPress={() =>
+                                        setShowChangeWallpaperModal(true)
+                                    }
+                                    tailContent={
+                                        isUpdatingWallpaper ? (
+                                            <ActivityIndicator />
+                                        ) : undefined
+                                    }
+                                />
+                            ) : (
+                                <MenuItem
+                                    title="Set Wallpaper"
+                                    headIcon="image-multiple"
+                                    tailIconType="next"
+                                    onPress={onUploadWallpaperPress}
+                                    tailContent={
+                                        isUpdatingWallpaper ? (
+                                            <ActivityIndicator />
+                                        ) : undefined
+                                    }
+                                />
+                            ))}
                         <ConfirmationModal
                             onClose={() => setShowChangeWallpaperModal(false)}
                             title="Group Wallpaper"
@@ -153,13 +177,7 @@ export default function GroupSettingsScreen({
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem
-                            title="Past Seasons"
-                            headIcon="cards"
-                            tailIconType="next"
-                            tailContent={pastSeasons}
-                            onPress={() => nav.navigate('pastSeasons')}
-                        />
-                        <MenuItem
+                            border={false}
                             title="Start new Season"
                             headIcon="cached"
                             tailIconType="next"
@@ -192,22 +210,18 @@ export default function GroupSettingsScreen({
                             tailContent={allowedMoves.length}
                             onPress={() => nav.navigate('allowedMoves')}
                         />
-                        {experiments.eloAlgorithm && (
-                            <MenuItem
-                                title="Rank Players by"
-                                headIcon="division"
-                                tailIconType="next"
-                                tailContent={
-                                    group.data?.activeSeason?.seasonSettings
-                                        ?.rankingAlgorithm === 'AVERAGE'
-                                        ? 'Average Points Scored'
-                                        : 'Elo'
-                                }
-                                onPress={() =>
-                                    nav.navigate('editRankPlayersBy')
-                                }
-                            />
-                        )}
+                        <MenuItem
+                            title="Rank Players by"
+                            headIcon="division"
+                            tailIconType="next"
+                            tailContent={
+                                group.data?.activeSeason?.seasonSettings
+                                    ?.rankingAlgorithm === 'AVERAGE'
+                                    ? 'Average Points Scored'
+                                    : 'Elo'
+                            }
+                            onPress={() => nav.navigate('editRankPlayersBy')}
+                        />
                         <MenuItem
                             title="Min Matches to Qualify"
                             headIcon="account-lock-open"
@@ -229,40 +243,47 @@ export default function GroupSettingsScreen({
                             tailIconType="next"
                             onPress={() => nav.navigate('teamSizeSettings')}
                         />
-                        {experiments.dailyLeaderboard && (
-                            <MenuItem
-                                title="Daily Leaderboard"
-                                headIcon="calendar-today"
-                                tailContent={(() => {
-                                    if (
-                                        group.data?.activeSeason?.seasonSettings
-                                            ?.dailyLeaderboard === 'WAKE_TIME'
-                                    ) {
-                                        return `Resets at ${group.data?.activeSeason?.seasonSettings.wakeTimeHour}:00`;
-                                    }
-                                    if (
-                                        group.data?.activeSeason?.seasonSettings
-                                            ?.dailyLeaderboard ===
-                                        'RESET_AT_MIDNIGHT'
-                                    ) {
-                                        return 'Resets at 0:00';
-                                    }
-                                    if (
-                                        group.data?.activeSeason?.seasonSettings
-                                            ?.dailyLeaderboard ===
-                                        'LAST_24_HOURS'
-                                    ) {
-                                        return 'Last 24h';
-                                    }
-                                })()}
-                                tailIconType="next"
-                                onPress={() =>
-                                    nav.navigate('dailyLeaderboardSettings')
+                        <MenuItem
+                            title="Daily Leaderboard"
+                            headIcon="calendar-today"
+                            tailContent={(() => {
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard === 'WAKE_TIME'
+                                ) {
+                                    return `Resets at ${group.data?.activeSeason?.seasonSettings.wakeTimeHour}:00`;
                                 }
-                            />
-                        )}
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard ===
+                                    'RESET_AT_MIDNIGHT'
+                                ) {
+                                    return 'Resets at 0:00';
+                                }
+                                if (
+                                    group.data?.activeSeason?.seasonSettings
+                                        ?.dailyLeaderboard === 'LAST_24_HOURS'
+                                ) {
+                                    return 'Last 24h';
+                                }
+                            })()}
+                            tailIconType="next"
+                            onPress={() =>
+                                nav.navigate('dailyLeaderboardSettings')
+                            }
+                        />
                     </MenuSection>
                     <MenuSection title="Access">
+                        <MenuItem
+                            border={false}
+                            title="Code"
+                            headIcon="share-outline"
+                            tailIconType="next"
+                            tailContent={formatGroupCode(groupCode)}
+                            onPress={() =>
+                                copyToClipboard(formatGroupCode(groupCode))
+                            }
+                        />
                         {env.isDev && (
                             <>
                                 <MenuItem
@@ -287,15 +308,6 @@ export default function GroupSettingsScreen({
                                 />
                             </>
                         )}
-                        <MenuItem
-                            title="Code"
-                            headIcon="share-outline"
-                            tailIconType="next"
-                            tailContent={formatGroupCode(groupCode)}
-                            onPress={() =>
-                                copyToClipboard(formatGroupCode(groupCode))
-                            }
-                        />
                     </MenuSection>
                     <MenuSection
                         style={{
@@ -305,6 +317,7 @@ export default function GroupSettingsScreen({
                         }}
                     >
                         <MenuItem
+                            border={false}
                             title="Leave Group"
                             headIcon="exit-to-app"
                             onPress={onLeaveGroup}

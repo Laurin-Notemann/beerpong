@@ -68,13 +68,13 @@
                 }
             }
         },
-        "/groups/{groupId}/wallpaper": {
+        "/groups/{id}/wallpaper": {
             "put": {
-                "tags": ["group-asset-controller"],
+                "tags": ["group-controller"],
                 "operationId": "setWallpaper",
                 "parameters": [
                     {
-                        "name": "groupId",
+                        "name": "id",
                         "in": "path",
                         "required": true,
                         "schema": { "type": "string" }
@@ -83,10 +83,11 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": { "type": "string", "format": "byte" }
+                            "schema": {
+                                "$ref": "#/components/schemas/AssetCropDto"
+                            }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "200": {
@@ -95,6 +96,30 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["group-controller"],
+                "operationId": "deleteWallpaper",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
                                 }
                             }
                         }
@@ -345,6 +370,92 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/matches/{id}/photos/{teamId}": {
+            "put": {
+                "tags": ["match-controller"],
+                "operationId": "setPhoto",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTeamDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["match-controller"],
+                "operationId": "deletePhoto",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTeamDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{id}": {
             "get": {
                 "tags": ["season-controller"],
@@ -417,46 +528,6 @@
                 }
             }
         },
-        "/groups/{groupId}/profiles/{profileId}/avatar": {
-            "put": {
-                "tags": ["profile-asset-controller"],
-                "operationId": "setAvatar",
-                "parameters": [
-                    {
-                        "name": "groupId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "profileId",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": { "type": "string", "format": "byte" }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/groups/{groupId}/profiles/{id}": {
             "get": {
                 "tags": ["profile-controller"],
@@ -515,6 +586,77 @@
                     },
                     "required": true
                 },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{id}/avatar": {
+            "put": {
+                "tags": ["profile-controller"],
+                "operationId": "setAvatar",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AssetCropDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["profile-controller"],
+                "operationId": "deleteAvatar",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -610,58 +752,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/groups/{id}/leave": {
-            "post": {
-                "tags": ["group-controller"],
-                "operationId": "leaveGroup",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/groups/{id}/join": {
-            "post": {
-                "tags": ["group-controller"],
-                "operationId": "joinGroup",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
                                 }
                             }
                         }
@@ -873,62 +963,6 @@
                 }
             }
         },
-        "/auth/signup": {
-            "post": {
-                "tags": ["auth-controller"],
-                "operationId": "signup",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AuthSignupDto"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeAuthTokenDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/refresh": {
-            "post": {
-                "tags": ["auth-controller"],
-                "operationId": "refreshAuth",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AuthRefreshDto"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeAuthTokenDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/healthcheck": {
             "get": {
                 "tags": ["healthcheck-controller"],
@@ -1125,24 +1159,6 @@
                 }
             }
         },
-        "/groups/user": {
-            "get": {
-                "tags": ["group-controller"],
-                "operationId": "findUserGroups",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ResponseEnvelopeListGroupDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/group-presets": {
             "get": {
                 "tags": ["group-presets-controller"],
@@ -1181,30 +1197,6 @@
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeAssetMetadataDto"
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/{id}/data": {
-            "get": {
-                "tags": ["asset-controller"],
-                "operationId": "fetchData",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "application/json": {
-                                "schema": { "type": "object" }
                             }
                         }
                     }
@@ -1269,8 +1261,17 @@
                 "properties": {
                     "id": { "type": "string" },
                     "url": { "type": "string" },
-                    "mediaType": { "type": "string" },
-                    "uploadedAt": { "type": "string", "format": "date-time" }
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "GROUP_WALLPAPER",
+                            "PROFILE_AVATAR",
+                            "TEAM_PHOTO"
+                        ]
+                    },
+                    "offsetX": { "type": "number", "format": "double" },
+                    "offsetY": { "type": "number", "format": "double" },
+                    "zoom": { "type": "number", "format": "double" }
                 }
             },
             "ErrorDetails": {
@@ -1286,14 +1287,9 @@
                     "id": { "type": "string" },
                     "name": { "type": "string" },
                     "inviteCode": { "type": "string" },
-                    "activeSeason": {
-                        "$ref": "#/components/schemas/SeasonDto"
-                    },
+                    "activeSeason": { "$ref": "#/components/schemas/Season" },
                     "wallpaperAsset": {
                         "$ref": "#/components/schemas/AssetMetadataDto"
-                    },
-                    "createdBy": {
-                        "$ref": "#/components/schemas/GroupMemberDto"
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
                     "sportPreset": {
@@ -1305,30 +1301,12 @@
                     "numberOfSeasons": { "type": "integer", "format": "int32" }
                 }
             },
-            "GroupMemberDto": {
-                "type": "object",
-                "properties": {
-                    "id": { "type": "string" },
-                    "active": { "type": "boolean" },
-                    "groupId": { "type": "string" },
-                    "userId": { "type": "string" }
-                }
-            },
             "GroupPreset": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
                     "title": { "type": "string" },
                     "imageUrl": { "type": "string" }
-                }
-            },
-            "LocalTime": {
-                "type": "object",
-                "properties": {
-                    "hour": { "type": "integer", "format": "int32" },
-                    "minute": { "type": "integer", "format": "int32" },
-                    "second": { "type": "integer", "format": "int32" },
-                    "nano": { "type": "integer", "format": "int32" }
                 }
             },
             "ResponseEnvelopeGroupDto": {
@@ -1340,7 +1318,7 @@
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
-            "SeasonDto": {
+            "Season": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
@@ -1350,9 +1328,6 @@
                     "groupId": { "type": "string" },
                     "seasonSettings": {
                         "$ref": "#/components/schemas/SeasonSettings"
-                    },
-                    "createdBy": {
-                        "$ref": "#/components/schemas/GroupMemberDto"
                     }
                 }
             },
@@ -1378,7 +1353,15 @@
                             "LAST_24_HOURS"
                         ]
                     },
-                    "wakeTime": { "$ref": "#/components/schemas/LocalTime" }
+                    "wakeTimeHour": { "type": "integer", "format": "int32" }
+                }
+            },
+            "AssetCropDto": {
+                "type": "object",
+                "properties": {
+                    "offsetX": { "type": "number", "format": "double" },
+                    "offsetY": { "type": "number", "format": "double" },
+                    "zoom": { "type": "number", "format": "double" }
                 }
             },
             "ResponseEnvelopeAssetMetadataDto": {
@@ -1415,10 +1398,7 @@
                     "id": { "type": "string" },
                     "title": { "type": "string" },
                     "description": { "type": "string" },
-                    "season": { "$ref": "#/components/schemas/SeasonDto" },
-                    "createdBy": {
-                        "$ref": "#/components/schemas/GroupMemberDto"
-                    }
+                    "season": { "$ref": "#/components/schemas/Season" }
                 }
             },
             "RuleMoveCreateDto": {
@@ -1447,7 +1427,7 @@
                     "pointsForTeam": { "type": "integer", "format": "int32" },
                     "pointsForScorer": { "type": "integer", "format": "int32" },
                     "finishingMove": { "type": "boolean" },
-                    "season": { "$ref": "#/components/schemas/SeasonDto" }
+                    "season": { "$ref": "#/components/schemas/Season" }
                 }
             },
             "MatchCreateDto": {
@@ -1471,6 +1451,8 @@
             "TeamCreateDto": {
                 "type": "object",
                 "properties": {
+                    "existingTeamId": { "type": "string" },
+                    "savePhoto": { "type": "boolean" },
                     "teamMembers": {
                         "type": "array",
                         "items": {
@@ -1494,10 +1476,7 @@
                 "properties": {
                     "id": { "type": "string" },
                     "date": { "type": "string", "format": "date-time" },
-                    "season": { "$ref": "#/components/schemas/SeasonDto" },
-                    "createdBy": {
-                        "$ref": "#/components/schemas/GroupMemberDto"
-                    },
+                    "season": { "$ref": "#/components/schemas/Season" },
                     "teams": {
                         "type": "array",
                         "items": { "$ref": "#/components/schemas/TeamDto" }
@@ -1538,7 +1517,10 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "matchId": { "type": "string" }
+                    "matchId": { "type": "string" },
+                    "photoAsset": {
+                        "$ref": "#/components/schemas/AssetMetadataDto"
+                    }
                 }
             },
             "TeamMemberDto": {
@@ -1549,28 +1531,13 @@
                     "playerId": { "type": "string" }
                 }
             },
-            "SeasonSettingsDto": {
+            "ResponseEnvelopeTeamDto": {
                 "type": "object",
                 "properties": {
-                    "minMatchesToQualify": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "minTeamSize": { "type": "integer", "format": "int32" },
-                    "maxTeamSize": { "type": "integer", "format": "int32" },
-                    "rankingAlgorithm": {
-                        "type": "string",
-                        "enum": ["AVERAGE", "ELO"]
-                    },
-                    "dailyLeaderboard": {
-                        "type": "string",
-                        "enum": [
-                            "RESET_AT_MIDNIGHT",
-                            "WAKE_TIME",
-                            "LAST_24_HOURS"
-                        ]
-                    },
-                    "wakeTime": { "type": "string" }
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/TeamDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
             "SeasonUpdateDto": {
@@ -1578,7 +1545,7 @@
                 "type": "object",
                 "properties": {
                     "seasonSettings": {
-                        "$ref": "#/components/schemas/SeasonSettingsDto"
+                        "$ref": "#/components/schemas/SeasonSettings"
                     }
                 }
             },
@@ -1591,6 +1558,23 @@
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
+            "SeasonDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "startDate": { "type": "string", "format": "date-time" },
+                    "endDate": { "type": "string", "format": "date-time" },
+                    "groupId": { "type": "string" },
+                    "seasonSettings": {
+                        "$ref": "#/components/schemas/SeasonSettings"
+                    }
+                }
+            },
+            "ProfileCreateDto": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } }
+            },
             "ProfileDto": {
                 "type": "object",
                 "properties": {
@@ -1599,10 +1583,7 @@
                     "avatarAsset": {
                         "$ref": "#/components/schemas/AssetMetadataDto"
                     },
-                    "groupId": { "type": "string" },
-                    "createdBy": {
-                        "$ref": "#/components/schemas/GroupMemberDto"
-                    }
+                    "groupId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeProfileDto": {
@@ -1613,10 +1594,6 @@
                     "data": { "$ref": "#/components/schemas/ProfileDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
-            },
-            "ProfileCreateDto": {
-                "type": "object",
-                "properties": { "name": { "type": "string" } }
             },
             "SeasonCreateDto": {
                 "type": "object",
@@ -1630,15 +1607,6 @@
                     }
                 }
             },
-            "ResponseEnvelopeString": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
-                    "httpCode": { "type": "integer", "format": "int32" },
-                    "data": { "type": "string" },
-                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
-            },
             "ProfileCreatedDto": {
                 "type": "object",
                 "properties": {
@@ -1648,9 +1616,6 @@
                         "$ref": "#/components/schemas/AssetMetadataDto"
                     },
                     "groupId": { "type": "string" },
-                    "createdBy": {
-                        "$ref": "#/components/schemas/GroupMemberDto"
-                    },
                     "reactivated": { "type": "boolean" },
                     "lastActiveSeasonId": { "type": "string" }
                 }
@@ -1666,35 +1631,14 @@
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
-            "AuthSignupDto": {
-                "type": "object",
-                "properties": {
-                    "installationType": {
-                        "type": "string",
-                        "enum": ["IOS", "ANDROID"]
-                    },
-                    "deviceId": { "type": "string" }
-                }
-            },
-            "AuthTokenDto": {
-                "type": "object",
-                "properties": {
-                    "token": { "type": "string" },
-                    "type": { "type": "string", "enum": ["ACCESS", "REFRESH"] }
-                }
-            },
-            "ResponseEnvelopeAuthTokenDto": {
+            "ResponseEnvelopeString": {
                 "type": "object",
                 "properties": {
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
-                    "data": { "$ref": "#/components/schemas/AuthTokenDto" },
+                    "data": { "type": "string" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
-            },
-            "AuthRefreshDto": {
-                "type": "object",
-                "properties": { "refreshToken": { "type": "string" } }
             },
             "ResponseEnvelopeListSeasonDto": {
                 "type": "object",
@@ -1753,7 +1697,8 @@
                             "type": "integer",
                             "format": "int32"
                         }
-                    }
+                    },
+                    "playerId": { "type": "string" }
                 }
             },
             "ResponseEnvelopeListPlayerDto": {
@@ -1785,7 +1730,7 @@
                 "properties": {
                     "id": { "type": "string" },
                     "date": { "type": "string", "format": "date-time" },
-                    "season": { "$ref": "#/components/schemas/SeasonDto" },
+                    "season": { "$ref": "#/components/schemas/Season" },
                     "blueTeam": {
                         "$ref": "#/components/schemas/MatchOverviewTeamDto"
                     },
@@ -1870,18 +1815,6 @@
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/LeaderboardDto" },
-                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
-            },
-            "ResponseEnvelopeListGroupDto": {
-                "type": "object",
-                "properties": {
-                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
-                    "httpCode": { "type": "integer", "format": "int32" },
-                    "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/GroupDto" }
-                    },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },

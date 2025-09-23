@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import pro.beerpong.api.service.AssetService;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.ProfileService;
@@ -21,6 +22,7 @@ import java.util.List;
 public class ProfileController {
     private final GroupService groupService;
     private final ProfileService profileService;
+    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
 
     @PostMapping
@@ -97,6 +99,65 @@ public class ProfileController {
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
+    }
+
+    @PutMapping("/{id}/avatar")
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId,
+                                                                  @PathVariable String id,
+                                                                  @RequestBody(required = false) AssetCropDto assetCropDto) {
+        var group = groupService.getGroupById(groupId);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var profile = profileService.getProfileById(id);
+
+        if (profile == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
+        }
+
+        if (assetCropDto != null && !assetCropDto.validate()) {
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_VALIDATION_FAILED);
+        }
+
+        var dto = profileService.storeProfilePicture(profile, assetCropDto);
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
+
+        return ResponseEnvelope.ok(dto);
+    }
+
+    @DeleteMapping("{id}/avatar")
+    public ResponseEntity<ResponseEnvelope<ProfileDto>> deleteAvatar(@PathVariable String groupId, @PathVariable String id) {
+        var group = groupService.getGroupById(groupId);
+
+        if (group == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+        }
+
+        var profile = profileService.getProfileById(id);
+
+        if (profile == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
+        }
+
+        if (!profile.getGroupId().equals(groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_OF_GROUP);
+        }
+
+        var asset = profile.getAvatarAsset();
+
+        if (asset == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_HAS_NO_AVATAR);
+        }
+
+        profile = profileService.deleteProfilePicture(profile);
+        assetService.deleteAsset(asset.getId());
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_DELETE, id, profile));
+
+        return ResponseEnvelope.ok(profile);
     }
 
 // it is not intended to delete profiles!

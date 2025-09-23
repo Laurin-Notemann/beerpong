@@ -14,6 +14,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Set;
@@ -25,12 +26,13 @@ import java.util.stream.Collectors;
 public class SubscriptionHandler extends TextWebSocketHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionHandler.class);
     // Source: https://www.baeldung.com/java-validate-uuid-string
-    private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+    private static final Pattern UUID_PATTERN = Pattern
+            .compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
     private static final int MAX_GROUP_SUBSCRIPTIONS = 100;
     private static final Gson GSON = new GsonBuilder()
             .serializeNulls()
             .registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter())
-            .registerTypeAdapter(LocalTimeAdapter.class, new LocalTimeAdapter())
+            .registerTypeAdapter(LocalTime.class, new LocalTimeAdapter())
             .create();
 
     private final Map<String, Set<String>> userGroups = new ConcurrentHashMap<>();
@@ -76,9 +78,8 @@ public class SubscriptionHandler extends TextWebSocketHandler {
     }
 
     public void broadcastMessage(String message) {
-        groupSessions.forEach((s, webSocketSessions) ->
-                webSocketSessions.forEach(session ->
-                        sendMessage(session, message)));
+        groupSessions
+                .forEach((s, webSocketSessions) -> webSocketSessions.forEach(session -> sendMessage(session, message)));
     }
 
     public void callEvent(SocketEvent<?> event) {

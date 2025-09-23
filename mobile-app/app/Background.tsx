@@ -1,10 +1,11 @@
-import { Dimensions, Image, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Dimensions, View } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
-export const AppBackground: React.FC<{}> = () => {
+export const AppBackground: React.FC = () => {
     const { width, height } = Dimensions.get('window');
 
     const { group } = useGroup();
@@ -40,6 +41,8 @@ export const AppBackground: React.FC<{}> = () => {
                 position: 'absolute',
                 width,
                 height,
+
+                backgroundColor: theme.color.bg,
             }}
         >
             <Image
@@ -52,6 +55,8 @@ export const AppBackground: React.FC<{}> = () => {
 
                     backgroundColor: theme.color.bg,
                 }}
+                cachePolicy="memory-disk"
+                transition={100} // fade in
             />
             <View
                 style={{
@@ -59,7 +64,8 @@ export const AppBackground: React.FC<{}> = () => {
                     width,
                     height,
                     backgroundColor: '#000',
-                    opacity: 0.2,
+                    // opacity: 0.1,
+                    opacity: 0,
                 }}
             />
         </View>

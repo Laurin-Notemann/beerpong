@@ -1,9 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
+import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
+import { ConsoleLogger } from '@/utils/logging';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
@@ -45,6 +48,7 @@ export const useCreatePlayerMutation = () => {
             const res = await (await api).createProfile(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('createPlayer'),
     });
 };
 
@@ -64,6 +68,7 @@ export const useUpdatePlayerMutation = () => {
             const res = await (await api).updateProfile(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('updatePlayer'),
     });
 };
 
@@ -71,7 +76,7 @@ export const useUpdatePlayerAvatarMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.UpdateProfile.Responses.$200 | null,
+        Paths.SetAvatar.Responses.$200 | null,
         Error,
         {
             byteArray: Uint8Array<ArrayBuffer>;
@@ -82,20 +87,23 @@ export const useUpdatePlayerAvatarMutation = () => {
             profileId: ApiId;
         }
     >({
-        mutationFn: async (body) => {
-            const { byteArray, mimeType, ...rest } = body;
-
+        mutationFn: async ({ byteArray, mimeType, groupId, profileId }) => {
             const res = await (
                 await api
-            )
-                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setAvatar(rest, byteArray as any, {
-                    headers: {
-                        'Content-Type': mimeType,
-                    },
-                });
-            return res?.data;
+            ).setAvatar({
+                groupId,
+                id: profileId,
+            });
+            await uploadImage(
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
+                res?.data.data?.avatarAsset?.singleUploadUrl,
+                byteArray,
+                'profilePicture',
+                mimeType
+            );
+            return res.data;
         },
+        onError: captureMutationErr('updateAvatar'),
     });
 };
 
@@ -111,6 +119,7 @@ export const useDeletePlayerMutation = () => {
             const res = await (await api).deletePlayer(body);
             return res?.data;
         },
+        onError: captureMutationErr('deletePlayer'),
     });
 };
 
@@ -118,13 +127,16 @@ export const useDeletePlayerAvatarMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.SetAvatar.Responses.$200 | null,
+        Paths.DeleteAvatar.Responses.$200 | null,
         Error,
-        { groupId: ApiId; seasonId: ApiId; profileId: ApiId }
+        { groupId: ApiId; profileId: ApiId }
     >({
-        mutationFn: async () => {
-            const res = await (await api).setAvatar();
+        mutationFn: async ({ groupId, profileId }) => {
+            const res = await (
+                await api
+            ).deleteAvatar({ groupId, id: profileId });
             return res?.data;
         },
+        onError: captureMutationErr('deleteAvatar'),
     });
 };

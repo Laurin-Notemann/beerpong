@@ -16,30 +16,47 @@ const fontSizeMap = {
     subtitle2: 14, // Secondary subtitles or minor captions
     body1: 16, // Main body text, normal content
     body2: 14, // Secondary body text, less important content
+    fineprint: 12,
 };
 
 export interface TextProps extends ReactNativeTextProps {
     variant?: keyof typeof fontSizeMap;
     bold?: boolean;
 
-    color: keyof Theme['color']['text'];
+    color?: keyof Theme['color']['text'];
+
+    code?: boolean;
+    italic?: boolean;
+    paragraph?: boolean;
 }
 export default function Text({
+    paragraph = false,
     children,
+    italic = false,
     variant = 'body1',
     color = 'primary',
     bold = false,
+
+    code = false,
     ...rest
 }: TextProps) {
     const theme = useTheme();
 
     return (
         <ReactNativeText
+            selectable={paragraph}
+            selectionColor={theme.color.text.emphasis}
             {...rest}
             style={{
                 fontSize: fontSizeMap[variant],
-                color: theme.color.text[color],
-                fontWeight: bold ? 'bold' : undefined,
+                color: code
+                    ? theme.color.text.emphasis
+                    : theme.color.text[color],
+                fontWeight: bold || code ? 'bold' : undefined,
+
+                fontStyle: italic ? 'italic' : 'normal',
+
+                lineHeight: paragraph ? 28 : undefined,
 
                 ...((rest.style as Record<string, string>) ?? {}),
             }}

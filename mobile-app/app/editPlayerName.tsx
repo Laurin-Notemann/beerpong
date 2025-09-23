@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 
 import {
@@ -6,7 +6,6 @@ import {
     useUpdatePlayerMutation,
 } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
@@ -15,9 +14,8 @@ import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 
 export default function Page() {
-    const nav = useNavigation();
-
     const { groupId, seasonId } = useGroup();
+    const router = useRouter();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -43,7 +41,7 @@ export default function Page() {
                 id: profileId,
                 name: value,
             });
-            nav.navigate('index');
+            router.back();
         } catch (err) {
             ConsoleLogger.error('failed to update player:', err);
             showErrorToast('Failed to update player.');
@@ -66,7 +64,6 @@ export default function Page() {
                     ),
 
                     headerTitle: 'Player Name',
-                    headerBackTitleVisible: false,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 

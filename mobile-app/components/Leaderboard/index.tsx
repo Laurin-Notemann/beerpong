@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import { Pressable, View, ViewProps } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
-import {
-    byDescendingAveragePoints,
-    byDescendingElo,
-} from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
@@ -16,6 +12,10 @@ import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import { ThemedView } from '@/components/ThemedView';
+import {
+    getRankingAlgorithm,
+    type RankingAlgorithm,
+} from '@/constants/rankingAlgorithms';
 
 const MODAL_ON_LONG_PRESS = false;
 
@@ -38,7 +38,7 @@ export interface LeaderboardProps extends ViewProps {
     };
     minMatchesRequiredToBeRanked: number;
     ListEmptyComponent?: React.ReactNode;
-    rankingAlgorithm?: 'AVERAGE' | 'ELO';
+    rankingAlgorithm?: RankingAlgorithm;
 }
 
 export default function Leaderboard({
@@ -60,10 +60,9 @@ export default function Leaderboard({
 
     const nav = useNavigation();
 
-    const sortedPlayers =
-        rankingAlgorithm === 'AVERAGE'
-            ? players.sort(byDescendingAveragePoints)
-            : players.sort(byDescendingElo);
+    const sortedPlayers = players.sort(
+        getRankingAlgorithm(rankingAlgorithm).sortFunc
+    );
 
     const rankedPlayers = sortedPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked
@@ -86,7 +85,9 @@ export default function Leaderboard({
                     isVisible={playerPreviewModalId}
                     onClose={() => setPlayerPreviewModalId(null)}
                     onPress={() => {
-                        nav.navigate('player', { id: playerPreviewModalId! });
+                        nav.navigate('player', {
+                            id: playerPreviewModalId!,
+                        });
                         setPlayerPreviewModalId(null);
                     }}
                     content={
@@ -103,7 +104,6 @@ export default function Leaderboard({
                                 minMatchesRequiredToBeRanked
                             }
                             editable={false}
-                            averagePointsPerMatch={'0.0'} // TODO
                             onUploadAvatarPress={() => {}}
                             matches={[]}
                             rankingAlgorithm={rankingAlgorithm}
@@ -139,6 +139,7 @@ export default function Leaderboard({
                     <LeaderboardPlayerItem
                         key={idx}
                         name={i.name}
+                        cups={i.cups}
                         id={i.id}
                         placement={idx + (withPodium ? 4 : 1)}
                         points={i.points}
@@ -205,6 +206,7 @@ export default function Leaderboard({
                     unrankedPlayers.map((i, idx) => (
                         <LeaderboardPlayerItem
                             key={idx}
+                            cups={i.cups}
                             name={i.name}
                             id={i.id}
                             placement={

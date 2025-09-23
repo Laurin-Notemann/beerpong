@@ -1,10 +1,17 @@
-import { forwardRef, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
-import { SharedValue, useSharedValue } from 'react-native-reanimated';
+import {
+    SharedValue,
+    useAnimatedReaction,
+    useSharedValue,
+} from 'react-native-reanimated';
 import Carousel, {
     ICarouselInstance,
     TCarouselProps,
 } from 'react-native-reanimated-carousel';
+import { scheduleOnRN } from 'react-native-worklets';
+
+import { useTheme } from '@/theme';
 
 export interface SwiperProps
     extends Omit<
@@ -18,6 +25,8 @@ export interface SwiperProps
     onPageChange?: (idx: number) => void;
 
     swiperProgress: SharedValue<number>;
+
+    withPeek?: boolean;
 }
 
 /**
@@ -26,7 +35,17 @@ export interface SwiperProps
  * - peek
  */
 export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
-    ({ children, enabled, onPageChange, swiperProgress, ...rest }, ref) => {
+    (
+        {
+            children,
+            enabled,
+            onPageChange,
+            swiperProgress,
+            withPeek = false,
+            ...rest
+        },
+        ref
+    ) => {
         const pages = Array.isArray(children) ? children : [children];
 
         const cleanPages = pages.filter((i) => !!i) as JSX.Element[];
@@ -36,6 +55,14 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
         const [containerWidth, setContainerWidth] = useState(
             Dimensions.get('window').width
         );
+
+        const theme = useTheme();
+
+        const computedWidth = withPeek
+            ? containerWidth -
+              theme.carousel.peekGap -
+              theme.carousel.peekSize * 2
+            : containerWidth;
 
         return (
             <View
@@ -51,11 +78,12 @@ export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
                     {...rest}
                     ref={ref}
                     onProgressChange={(relativeOffset) => {
-                        swiperProgress.value = -relativeOffset / containerWidth;
+                        swiperProgress.value = -relativeOffset / computedWidth;
                     }}
                     onSnapToItem={onPageChange}
                     loop={false}
-                    width={containerWidth}
+                    width={computedWidth}
+                    style={{ width: containerWidth }}
                     enabled={enabled}
                     data={cleanPages}
                     renderItem={(item) => item.item}
@@ -83,6 +111,37 @@ export function useSwiper(options?: { initialPage?: number | null }) {
         swiperProgress,
         ref,
         defaultIndex: initialPage,
+    };
+}
+
+export function useControlledSwiper(
+    progress: SharedValue<number>,
+    debugName: string
+) {
+    const ref = useRef<ICarouselInstance>(null);
+
+    const switchToPage = (value: number) => {
+        ref.current?.scrollTo({ index: value, animated: false });
+    };
+
+    useEffect(() => {
+        switchToPage(Math.round(progress.value));
+    }, []);
+
+    useAnimatedReaction(
+        () => progress.value,
+        (v) => {
+            'worklet';
+            if (Math.round(v) === v) {
+                scheduleOnRN(switchToPage, v);
+            }
+        }
+    );
+
+    return {
+        defaultIndex: Math.round(progress.value),
+        swiperProgress: progress,
+        ref,
     };
 }
 

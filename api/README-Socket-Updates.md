@@ -93,9 +93,9 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **groupUpdate:** When a group is update
 
-#### Matches (body: MatchDto)
+#### Matches (body: MatchDto, MatchId)
 
-* **matchCreate:** When a match is created
+* **matchCreate:** When a match is created (only sends matchId)
 * **matchUpdate:** When a match is updated
 * **matchDelete:** When a match is delete
 
@@ -118,11 +118,15 @@ A list of all event types with their corresponding dto and all available scopes:
 * **seasonStart:** When a new season is started
 * **seasonUpdate:** When a season is updated
 
-#### Assets (body: AssetMetadataDto | ProfileDto)
+#### Assets (body: AssetMetadataDto | ProfileDto | TeamDto)
 
-* **groupWallpaperSet:** When a groups wallpaper is updated
-* **profileAvatarSet:** When a profiles avatar is updated
-*
+* **groupWallpaperSet:** When a groups wallpaper is updated, result is the newly created asset
+* **groupWallpaperDelete:** When a groups wallpaper is deleted, result is the group
+* **profileAvatarSet:** When a profiles avatar is updated, result is the profile
+* **profileAvatarDelete:** When a profiles avatar is deleted, result is the profile
+* **matchTeamPhotoSet:** When a match team photo is updated, result is the team
+* **matchTeamPhotoDelete:** When a match team photo is deleted, result is the team
+
 #### Profiles (body: ProfileDto)
 
 * **profileCreate:** When a profile is created

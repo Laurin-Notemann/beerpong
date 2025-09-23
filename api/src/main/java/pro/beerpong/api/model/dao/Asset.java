@@ -5,8 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
-
-import java.time.ZonedDateTime;
+import pro.beerpong.api.util.AssetType;
 
 @Entity(name = "assets")
 @Data
@@ -14,7 +13,8 @@ public class Asset {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private byte[] data;
-    private String mediaType;
-    private ZonedDateTime uploadedAt;
+    private AssetType type;
+    private double offsetX;
+    private double offsetY;
+    private double zoom;
 }

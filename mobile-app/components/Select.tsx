@@ -26,6 +26,7 @@ export default function Select({
 
                 return (
                     <MenuItem
+                        border={idx !== 0}
                         key={idx}
                         tailIconType={
                             value == null

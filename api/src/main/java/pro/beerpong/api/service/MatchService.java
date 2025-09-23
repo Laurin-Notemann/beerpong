@@ -1,12 +1,15 @@
 package pro.beerpong.api.service;
 
+import com.google.common.collect.Maps;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMemberMapper;
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.mapping.PlayerMapper;
+import pro.beerpong.api.mapping.TeamMapper;
 import pro.beerpong.api.mapping.SeasonMapper;
 import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.*;
@@ -14,11 +17,13 @@ import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,7 +39,6 @@ public class MatchService {
      * Feature flag: discuss if this should be enabled in future
      */
     private static final boolean USE_DAILY_MATCHES_FROM_PAST_SEASONS = false;
-
 
     private final SubscriptionHandler subscriptionHandler;
 
@@ -55,6 +59,8 @@ public class MatchService {
     private final AuthService authService;
     private final GroupMemberMapper groupMemberMapper;
     private final SeasonMapper seasonMapper;
+    private final AssetService assetService;
+    private final TeamMapper teamMapper;
 
     @Autowired
     public MatchService(SubscriptionHandler subscriptionHandler,
@@ -67,7 +73,10 @@ public class MatchService {
                         MatchMoveRepository matchMoveRepository,
                         RuleMoveRepository ruleMoveRepository,
                         MatchMoveMapper matchMoveMapper,
-                        TeamService teamService, SeasonRepository seasonRepository, RuleMoveService ruleMoveService, PlayerMapper playerMapper, AuthService authService, GroupMemberMapper groupMemberMapper, SeasonMapper seasonMapper) {
+                        TeamService teamService,
+                        SeasonRepository seasonRepository,
+                        RuleMoveService ruleMoveService,
+                        PlayerMapper playerMapper, AssetService assetService, TeamMapper teamMapper, AuthService authService, GroupMemberMapper groupMemberMapper, SeasonMapper seasonMapper) {
         this.subscriptionHandler = subscriptionHandler;
 
         this.matchRepository = matchRepository;
@@ -87,6 +96,8 @@ public class MatchService {
         this.authService = authService;
         this.groupMemberMapper = groupMemberMapper;
         this.seasonMapper = seasonMapper;
+        this.assetService = assetService;
+        this.teamMapper = teamMapper;
     }
 
     public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
@@ -108,6 +119,10 @@ public class MatchService {
                             var player = playerRepository.findById(memberDto.getPlayerId());
 
                             if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
+                                return false;
+                            }
+                            if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId)
+                                    || !player.get().getSeason().getGroupId().equals(groupId)) {
                                 return false;
                             }
 
@@ -134,7 +149,7 @@ public class MatchService {
 
         match = matchRepository.save(match);
 
-        teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
+        teamService.createTeamsForMatch(match, matchCreateDto.getTeams(), null);
 
         return matchToMatchDto(match);
     }
@@ -146,6 +161,7 @@ public class MatchService {
 
         // Step 1: Find all teams associated with the match
         List<Team> teams = teamRepository.findAllByMatchId(match.getId());
+        Map<String, Asset> teamAssets = Maps.newHashMap();
 
         // Step 2: Loop through each team
         for (Team team : teams) {
@@ -168,6 +184,11 @@ public class MatchService {
 
             // Step 7: Delete all team members
             teamMemberRepository.deleteAll(teamMembers);
+
+            // Step 8: If the team has a photo, save it to be reused
+            if (team.getPhotoAsset() != null) {
+                teamAssets.put(team.getId(), team.getPhotoAsset());
+            }
         }
 
         // Step 8: Delete all teams
@@ -175,7 +196,7 @@ public class MatchService {
 
         MatchDto updatedDto = matchToEmptyMatchDto(match);
 
-        teamService.createTeamsForMatch(match, matchCreateDto.getTeams());
+        teamService.createTeamsForMatch(match, matchCreateDto.getTeams(), teamAssets);
 
         loadMatchInfo(match, updatedDto);
 
@@ -226,7 +247,7 @@ public class MatchService {
         };
 
         if (USE_DAILY_MATCHES_FROM_PAST_SEASONS) {
-            //TODO implement: see comment
+            // TODO implement: see comment
             return matchRepository.findBySeasonId(group.getActiveSeason().getId())
                     .stream()
                     .filter(predicate)
@@ -292,16 +313,16 @@ public class MatchService {
         dto.setBlueTeam(buildOverviewTeam(
                 bluePlayers,
                 match.getMatchMoves().stream()
-                        .filter(matchMoveDto -> bluePlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
-                        .toList()
-        ));
+                        .filter(matchMoveDto -> bluePlayers.stream().anyMatch(
+                                teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                        .toList()));
 
         dto.setRedTeam(buildOverviewTeam(
                 redPlayers,
                 match.getMatchMoves().stream()
-                        .filter(matchMoveDto -> redPlayers.stream().anyMatch(teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
-                        .toList()
-        ));
+                        .filter(matchMoveDto -> redPlayers.stream().anyMatch(
+                                teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
+                        .toList()));
 
         return dto;
     }
@@ -309,8 +330,8 @@ public class MatchService {
     public boolean hasWrongTeamSizes(Season season, MatchCreateDto dto) {
         var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(new SeasonSettings());
 
-        return !dto.getTeams().stream().allMatch(teamCreateDto ->
-                teamCreateDto.getTeamMembers().size() >= settings.getMinTeamSize() &&
+        return !dto.getTeams().stream()
+                .allMatch(teamCreateDto -> teamCreateDto.getTeamMembers().size() >= settings.getMinTeamSize() &&
                         teamCreateDto.getTeamMembers().size() <= settings.getMaxTeamSize());
     }
 
@@ -318,6 +339,40 @@ public class MatchService {
         return matchRepository.findById(id).orElse(null);
     }
 
+    @Transactional
+    public TeamDto deleteMatchPhoto(TeamDto team) {
+        if (team.getPhotoAsset() != null) {
+            assetService.deleteAsset(team.getPhotoAsset().getId());
+            team.setPhotoAsset(null);
+        }
+
+        teamRepository.save(teamMapper.teamDtoToTeam(team));
+
+        return team;
+    }
+
+    @Transactional
+    public TeamDto saveMatchPhoto(TeamDto team) {
+        String oldWallpaperAssetId = null;
+
+        if (team.getPhotoAsset() != null) {
+            oldWallpaperAssetId = team.getPhotoAsset().getId();
+        }
+
+        var assetMetadataDto = assetService.storeAsset(AssetType.TEAM_PHOTO);
+
+        team.setPhotoAsset(assetMetadataDto);
+
+        teamRepository.save(teamMapper.teamDtoToTeam(team));
+
+        if (oldWallpaperAssetId != null) {
+            assetService.deleteAsset(oldWallpaperAssetId);
+        }
+
+        return team;
+    }
+
+    @Transactional
     public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
         AtomicReference<ErrorCodes> error = new AtomicReference<>();
 
@@ -360,9 +415,6 @@ public class MatchService {
 
                     // Step 6: Delete all teams
                     teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
-
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, match));
-
                     matchRepository.deleteById(id);
                 } else {
                     error.set(ErrorCodes.MATCH_NOT_OF_GROUP);
@@ -443,11 +495,11 @@ public class MatchService {
                         return IntStream.range(0, moveDto.getCount())
                                 .mapToObj(i -> ruleMove);
                     } else {
-                        return IntStream.empty().mapToObj(i -> null);
+                        return IntStream.empty().mapToObj(i -> (RuleMove) null);
                     }
                 })
                 .filter(Objects::nonNull)
-                //TODO should the pointsForTeam count only once?
+                // TODO should the pointsForTeam count only once?
                 .map(ruleMove -> ruleMove.getPointsForScorer() + (multiplier * ruleMove.getPointsForTeam()))
                 .reduce(Integer::sum)
                 .orElse(0);

@@ -1,8 +1,6 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,16 +10,23 @@ import pro.beerpong.api.model.dto.AssetMetadataDto;
 import pro.beerpong.api.model.dto.ErrorCodes;
 import pro.beerpong.api.model.dto.ResponseEnvelope;
 import pro.beerpong.api.service.AssetService;
-import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/assets")
 @RequiredArgsConstructor
 public class AssetController {
     private final AssetService assetService;
+
+    @GetMapping("{id}")
+    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> getAsset(@PathVariable String id) {
+        var assetMetadata = assetService.getAssetData(id);
+
+        if (assetMetadata == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
+        }
+
+        return ResponseEnvelope.ok(assetMetadata);
+    }
 
     //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
     /*@DeleteMapping("{id}")
@@ -34,39 +39,6 @@ public class AssetController {
 
         return ResponseEnvelope.okNoContent();
     }*/
-
-    @GetMapping("{id}")
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> getAsset(@PathVariable String id) {
-        var assetMetadata = assetService.getAssetMetadata(id);
-
-        if (assetMetadata == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
-        }
-
-        return ResponseEnvelope.ok(assetMetadata);
-    }
-
-    @GetMapping("{id}/data")
-    public ResponseEntity<?> fetchData(@PathVariable String id) {
-        var assetMetadata = assetService.getAssetMetadata(id);
-        byte[] asset = assetService.fetchAsset(id);
-
-        if (assetMetadata == null || asset == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
-        }
-
-        String cacheControl = "public, max-age=31536000, immutable";
-        String expires = ZonedDateTime
-                            .now(ZoneOffset.UTC)
-                            .plusYears(1)
-                            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.valueOf(assetMetadata.getMediaType()))
-                .header(HttpHeaders.CACHE_CONTROL, cacheControl)
-                .header(HttpHeaders.EXPIRES, expires)
-                .body(asset);
-    }
 
     //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
     /*@PostMapping

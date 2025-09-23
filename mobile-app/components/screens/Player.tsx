@@ -4,8 +4,6 @@ import {
     Animated,
     Dimensions,
     Modal,
-    SafeAreaView,
-    TouchableHighlight,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -13,42 +11,54 @@ import {
     GestureHandlerRootView,
     ScrollView,
 } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
+import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { Swiper, useControlledSwiper } from '@/components/Swiper';
+import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
+import { useScopePicker } from '@/zustand/useScopePicker';
 
-const CLOSE_BUTTON = false;
-const SHOW_PAST_SEASONS = false;
+const swiperAtTop = false;
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export interface PlayerScreenProps {
+export interface ScopeInfo {
     minMatchesRequiredToBeRanked: number;
-    isPending: boolean;
-    id: string;
     placement: number;
-
-    name: string;
-    avatarUrl?: string | null;
-
     matches: Match[];
     matchesWon: number;
     points: number;
     cups: number;
     elo: number;
+    rankingAlgorithm: 'AVERAGE' | 'ELO';
+    isUnranked: boolean;
+    name: string;
+}
+
+export interface PlayerScreenProps {
+    isPending: boolean;
+    id: string;
+    profileId: string;
+
+    name: string;
+    avatarUrl?: string | null;
+
     hasPremium?: boolean;
 
     pastSeasons: number;
@@ -57,29 +67,34 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
     refresh: RefreshProps;
-    rankingAlgorithm: 'AVERAGE' | 'ELO';
+
+    scopes: Map<string, ScopeInfo>;
+
+    prevPlayerId?: string;
+    nextPlayerId?: string;
 }
 export default function PlayerScreen({
-    minMatchesRequiredToBeRanked,
     isPending,
     id,
-    placement,
+    profileId,
     name,
     avatarUrl,
-    matches,
-    matchesWon,
-    points,
-    cups,
-    elo,
-    pastSeasons,
     hasPremium = false,
-
+    pastSeasons,
     onDelete,
     onUploadAvatarPress,
     onDeleteAvatarPress,
     refresh,
-    rankingAlgorithm,
+
+    prevPlayerId,
+    nextPlayerId,
+
+    scopes,
 }: PlayerScreenProps) {
+    const scopePicker = useScopePicker();
+
+    const rankingAlgorithm = scopePicker.rankingAlgorithm;
+
     const theme = useTheme();
 
     const nav = useNavigation();
@@ -88,18 +103,32 @@ export default function PlayerScreen({
 
     const insets = useInsets(true);
 
-    // account for division by zero
-    const averagePointsPerMatch =
-        matches.length > 0 ? (points / matches.length).toFixed(1) : '--';
-
-    const isUnranked = matches.length < minMatchesRequiredToBeRanked;
-
     const fade = useRef(new Animated.Value(0)).current;
     const scale = useRef(new Animated.Value(0)).current;
 
     const [inspectAvatar, setInspectAvatar] = useState(false);
 
     const [show, setShow] = useState(false);
+
+    const { groupId } = useGroup();
+
+    const seasonsQuery = useAllSeasonsQuery(groupId);
+
+    const pastSeasonss =
+        seasonsQuery.data?.data
+            ?.filter((i) => i.endDate != null)
+            ?.filter((i) => i.numMatches > 0) ?? [];
+
+    const leaderboardSwiper = useControlledSwiper(
+        scopePicker.leaderboardSwiperProgress,
+        'player'
+    );
+    const pastSeasonsSwiper = useControlledSwiper(
+        scopePicker.pastSeasonsSwiperProgress,
+        'pastPlayer'
+    );
+
+    const groupHasPastSeasons = pastSeasons > 0;
 
     useEffect(() => {
         if (inspectAvatar) {
@@ -139,10 +168,9 @@ export default function PlayerScreen({
             <Stack.Screen
                 options={{
                     ...useNavStyles(),
-
-                    headerBackTitleVisible: false,
                     title: '',
                     headerTitle: 'Player',
+                    headerLeft: undefined,
                     headerRight: () => (
                         <HeaderItem
                             isLoading={isPending}
@@ -153,68 +181,196 @@ export default function PlayerScreen({
                     ),
                 }}
             />
-            {!editable && (
-                <MatchesList
-                    contentContainerStyle={{
-                        paddingTop: insets.top,
-                        paddingBottom: insets.bottom,
-                    }}
-                    ListHeaderComponent={
-                        <>
-                            <TouchableHighlight
-                                onPress={() => setInspectAvatar(true)}
-                            >
-                                <PlayerPageHeadSection
-                                    avatarUrl={avatarUrl}
-                                    placement={placement}
-                                    name={name}
-                                    elo={elo}
-                                    matchesWon={matchesWon}
-                                    points={points}
-                                    cups={cups}
-                                    isUnranked={isUnranked}
-                                    editable={editable}
-                                    averagePointsPerMatch={
-                                        averagePointsPerMatch
+            <AppBackground />
+            {!editable &&
+                (scopePicker.isPastSeasonsMode ? (
+                    groupHasPastSeasons ? (
+                        <Swiper key={`past-${groupId}`} {...pastSeasonsSwiper}>
+                            {pastSeasonss.map((obj) => (
+                                <MatchesList
+                                    key={obj.id}
+                                    onMatchPress={(match) =>
+                                        nav.navigate('match', {
+                                            id: match.id,
+                                            seasonId: match.seasonId,
+                                        })
                                     }
-                                    onUploadAvatarPress={onUploadAvatarPress}
-                                    matches={matches}
-                                    rankingAlgorithm={rankingAlgorithm}
+                                    style={{ paddingHorizontal: 0 }}
+                                    contentContainerStyle={{
+                                        paddingTop:
+                                            insets.top + (swiperAtTop ? 48 : 0),
+                                        paddingBottom:
+                                            insets.bottom +
+                                            (swiperAtTop ? 0 : 48 + 64),
+                                    }}
+                                    ListHeaderComponent={
+                                        <>
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    setInspectAvatar(true)
+                                                }
+                                            >
+                                                <PlayerPageHeadSection
+                                                    {...scopes.get(obj.id!)!}
+                                                    avatarUrl={avatarUrl}
+                                                    name={name}
+                                                    editable={editable}
+                                                    onUploadAvatarPress={
+                                                        onUploadAvatarPress
+                                                    }
+                                                    rankingAlgorithm={
+                                                        rankingAlgorithm ??
+                                                        scopes.get(obj.id!)!
+                                                            .rankingAlgorithm
+                                                    }
+                                                />
+                                            </TouchableOpacity>
+                                        </>
+                                    }
+                                    matches={scopes.get(obj.id!)!.matches}
+                                    refresh={refresh}
+                                    forPlayer={{ profileId }}
                                 />
-                            </TouchableHighlight>
-                            <View
-                                style={{
-                                    width: '100%',
-                                    alignItems: 'stretch',
-                                }}
-                            >
-                                {SHOW_PAST_SEASONS && pastSeasons > 0 && (
-                                    <MenuSection>
-                                        <MenuItem
-                                            title="Past Seasons"
-                                            headIcon="pencil-outline"
-                                            tailContent={pastSeasons}
-                                            tailIconType="next"
-                                            onPress={() =>
-                                                nav.navigate('pastSeasons')
+                            ))}
+                        </Swiper>
+                    ) : (
+                        <PastSeasonsEmptyScreen />
+                    )
+                ) : (
+                    <Swiper
+                        key={`leaderboard-${groupId}`}
+                        {...leaderboardSwiper}
+                    >
+                        <MatchesList
+                            onMatchPress={(match) =>
+                                nav.navigate('match', {
+                                    id: match.id,
+                                    seasonId: match.seasonId,
+                                })
+                            }
+                            style={{ paddingHorizontal: 0 }}
+                            contentContainerStyle={{
+                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                                paddingBottom:
+                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                            }}
+                            ListHeaderComponent={
+                                <>
+                                    <TouchableOpacity
+                                        onPress={() => setInspectAvatar(true)}
+                                    >
+                                        <PlayerPageHeadSection
+                                            {...scopes.get('today')!}
+                                            avatarUrl={avatarUrl}
+                                            name={name}
+                                            editable={editable}
+                                            onUploadAvatarPress={
+                                                onUploadAvatarPress
+                                            }
+                                            rankingAlgorithm={
+                                                rankingAlgorithm ??
+                                                scopes.get('today')!
+                                                    .rankingAlgorithm
                                             }
                                         />
-                                    </MenuSection>
-                                )}
-                            </View>
-                        </>
-                    }
-                    matches={matches}
-                    refresh={refresh}
-                    forPlayer={{ id }}
-                />
-            )}
+                                    </TouchableOpacity>
+                                </>
+                            }
+                            matches={scopes.get('today')!.matches}
+                            refresh={refresh}
+                            forPlayer={{ profileId }}
+                        />
+                        <MatchesList
+                            onMatchPress={(match) =>
+                                nav.navigate('match', {
+                                    id: match.id,
+                                    seasonId: match.seasonId,
+                                })
+                            }
+                            style={{ paddingHorizontal: 0 }}
+                            contentContainerStyle={{
+                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                                paddingBottom:
+                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                            }}
+                            ListHeaderComponent={
+                                <>
+                                    <TouchableOpacity
+                                        onPress={() => setInspectAvatar(true)}
+                                    >
+                                        <PlayerPageHeadSection
+                                            // TODO: scopes.get('season') is actually null on first render sometimes
+                                            {...(scopes.get('season')! ?? {})}
+                                            avatarUrl={avatarUrl}
+                                            name={name}
+                                            editable={editable}
+                                            onUploadAvatarPress={
+                                                onUploadAvatarPress
+                                            }
+                                            rankingAlgorithm={
+                                                rankingAlgorithm ??
+                                                scopes.get('season')
+                                                    ?.rankingAlgorithm ??
+                                                'ELO'
+                                            }
+                                        />
+                                    </TouchableOpacity>
+                                </>
+                            }
+                            matches={scopes.get('season')?.matches ?? []}
+                            refresh={refresh}
+                            forPlayer={{ profileId }}
+                        />
+                        {groupHasPastSeasons && (
+                            <MatchesList
+                                onMatchPress={(match) =>
+                                    nav.navigate('match', {
+                                        id: match.id,
+                                        seasonId: match.seasonId,
+                                    })
+                                }
+                                style={{ paddingHorizontal: 0 }}
+                                contentContainerStyle={{
+                                    paddingTop:
+                                        insets.top + (swiperAtTop ? 48 : 0),
+                                    paddingBottom:
+                                        insets.bottom + (swiperAtTop ? 0 : 48),
+                                }}
+                                ListHeaderComponent={
+                                    <>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                setInspectAvatar(true)
+                                            }
+                                        >
+                                            <PlayerPageHeadSection
+                                                {...scopes.get('all-time')!}
+                                                avatarUrl={avatarUrl}
+                                                name={name}
+                                                editable={editable}
+                                                onUploadAvatarPress={
+                                                    onUploadAvatarPress
+                                                }
+                                                rankingAlgorithm={
+                                                    rankingAlgorithm ??
+                                                    scopes.get('all-time')!
+                                                        .rankingAlgorithm
+                                                }
+                                            />
+                                        </TouchableOpacity>
+                                    </>
+                                }
+                                matches={scopes.get('all-time')!.matches}
+                                refresh={refresh}
+                                forPlayer={{ profileId }}
+                            />
+                        )}
+                    </Swiper>
+                ))}
             {editable && (
                 <ScrollView
                     style={{
                         flex: 1,
-
-                        backgroundColor: theme.color.bg,
                     }}
                     contentContainerStyle={{
                         top: insets.top,
@@ -226,18 +382,17 @@ export default function PlayerScreen({
                 >
                     <PlayerPageHeadSection
                         avatarUrl={avatarUrl}
-                        placement={placement}
+                        placement={0} // doesn't get shown because this is only ever editable
                         name={name}
-                        elo={elo}
-                        matchesWon={matchesWon}
-                        points={points}
-                        cups={cups}
-                        isUnranked={isUnranked}
-                        editable={editable}
-                        averagePointsPerMatch={averagePointsPerMatch}
+                        elo={0} // doesn't get shown because this is only ever editable
+                        matchesWon={0} // doesn't get shown because this is only ever editable
+                        points={0} // doesn't get shown because this is only ever editable
+                        cups={0} // doesn't get shown because this is only ever editable
+                        isUnranked={false} // doesn't get shown because this is only ever editable
+                        editable
                         onUploadAvatarPress={onUploadAvatarPress}
-                        matches={matches}
-                        rankingAlgorithm={rankingAlgorithm}
+                        matches={[]} // doesn't get shown because this is only ever editable
+                        rankingAlgorithm={rankingAlgorithm!}
                     />
                     <View
                         style={{
@@ -248,6 +403,7 @@ export default function PlayerScreen({
                     >
                         <MenuSection>
                             <MenuItem
+                                border={false}
                                 title={name}
                                 headIcon="pencil-outline"
                                 onPress={() =>
@@ -291,39 +447,88 @@ export default function PlayerScreen({
                     opacity={fade}
                     onPress={() => setInspectAvatar(false)}
                 />
-                {CLOSE_BUTTON && (
-                    <SafeAreaView>
-                        <Animated.View
-                            style={[{ transform: [{ scale }], opacity: scale }]}
-                        >
-                            <TouchableOpacity
-                                onPress={() => setInspectAvatar(false)}
-                            >
-                                <Icon
-                                    color={theme.color.text.primary}
-                                    name="close"
-                                    size={32}
-                                />
-                            </TouchableOpacity>
-                        </Animated.View>
-                    </SafeAreaView>
-                )}
+                {/* <SafeAreaView
+                    style={{
+                        paddingHorizontal: 4,
+                    }}
+                >
+                    <OverlayIconButton
+                        iconName="close"
+                        onPress={() => setInspectAvatar(false)}
+                    />
+                </SafeAreaView> */}
+
                 <Animated.View
                     style={[
                         {
                             marginVertical: 'auto',
                             alignItems: 'center',
+
+                            justifyContent: 'center',
                         },
                         { transform: [{ scale }], opacity: scale },
                     ]}
                 >
                     <Avatar
                         url={avatarUrl}
+                        // Avatar's size prop is a union type; pass via style for custom size
                         size={screenWidth - 64}
                         name={name}
                     />
                 </Animated.View>
             </Modal>
+            {!editable && (
+                // <SafeAreaView
+                //     style={{
+                //         position: 'absolute',
+
+                //         top: swiperAtTop ? insets.top + 4 : undefined,
+                //         bottom: swiperAtTop ? undefined : insets.bottom + 4,
+
+                //         width: '100%',
+                //     }}
+                // >
+                //     <LeaderboardScopePicker />
+
+                // </SafeAreaView>
+                <View
+                    style={{
+                        position: 'absolute',
+
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                    }}
+                >
+                    <LeaderboardScopePicker />
+
+                    <PlayerAndMatchBottomNav
+                        hasNextAndPrevButtons={false}
+                        onPrevPress={
+                            !prevPlayerId
+                                ? undefined
+                                : () => {
+                                      if (prevPlayerId) {
+                                          nav.navigate('player', {
+                                              id: prevPlayerId,
+                                          });
+                                      }
+                                  }
+                        }
+                        onNextPress={
+                            !nextPlayerId
+                                ? undefined
+                                : () => {
+                                      if (nextPlayerId) {
+                                          nav.navigate('player', {
+                                              id: nextPlayerId,
+                                          });
+                                      }
+                                  }
+                        }
+                    />
+                </View>
+            )}
         </GestureHandlerRootView>
     );
 }

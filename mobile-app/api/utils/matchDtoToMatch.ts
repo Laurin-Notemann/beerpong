@@ -14,6 +14,7 @@ export interface PerformedMove {
 
 export interface TeamMember {
     id: string;
+    profileId: string;
     team: TeamId;
     avatarUrl?: string | null;
     name: string;
@@ -25,13 +26,19 @@ export interface TeamMember {
 
 export type Match = {
     id: string;
+    seasonId: string;
     date: Date;
     redCups: number;
     blueCups: number;
+    blueTeamId: string;
+    redTeamId: string;
     redTeam: TeamMember[];
     blueTeam: TeamMember[];
 
     winnerTeamId: string | null;
+
+    blueTeamPhotoUrl?: string | null;
+    redTeamPhotoUrl?: string | null;
 };
 
 export const matchDtoToMatch =
@@ -43,8 +50,13 @@ export const matchDtoToMatch =
         return new MatchImpl(i, players, allowedMoves).toJSON();
     };
 
+export type MinimalMatch = Pick<
+    Match,
+    'id' | 'date' | 'blueCups' | 'redCups' | 'redTeam' | 'blueTeam'
+>;
+
 export const getInfluenceOfMatchOnAveragePoints = (
-    matches: Omit<Match, 'winnerTeamId'>[],
+    matches: MinimalMatch[],
     playerId: string,
     matchId: string,
     rankingAlgorithm: 'AVERAGE' | 'ELO' = 'AVERAGE'
@@ -120,8 +132,13 @@ export const getInfluenceOfMatchOnAveragePoints = (
                     .find((p) => p.id === playerId)?.elo ??
                 eloAlgorithm.params.startingElo;
 
-            // @ts-expect-error TODO: type elo field
-            eloAlgorithm.calculateElo(match);
+            // eloAlgorithm.calculateElo(match);
+
+            // Persist updated Elo back into running ratings for subsequent matches
+            for (const player of match.blueTeam.concat(match.redTeam)) {
+                // @ts-expect-error TODO: type elo field
+                ratings[player.id] = player.elo ?? ratings[player.id];
+            }
 
             if (match.id === matchId) {
                 const newElo =
@@ -130,7 +147,7 @@ export const getInfluenceOfMatchOnAveragePoints = (
                         // @ts-expect-error TODO: type elo field
                         .find((p) => p.id === playerId)?.elo ?? 0;
 
-                return previousElo - newElo;
+                return newElo - previousElo;
             }
         }
         return 0;

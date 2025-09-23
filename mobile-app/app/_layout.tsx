@@ -25,6 +25,7 @@ import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme } from '@/theme';
 import { LoggingProvider } from '@/utils/useLogging';
+import { ScopePickerProvider } from '@/zustand/useScopePicker';
 
 // https://sentry.io is a error reporting SaaS we use to remotely track production issues
 Sentry.init(env.sentry);
@@ -36,6 +37,7 @@ SplashScreen.preventAutoHideAsync();
 
 function Everything() {
     const modalStyles = useModalStyles();
+
     return (
         <Stack initialRouteName="(tabs)">
             <Stack.Screen
@@ -58,6 +60,7 @@ function Everything() {
                 name="dailyLeaderboardSettings"
                 options={modalStyles}
             />
+
             <Stack.Screen name="teamSizeSettings" options={modalStyles} />
             <Stack.Screen
                 name="minMatchesToQualifySettings"
@@ -67,6 +70,12 @@ function Everything() {
             <Stack.Screen
                 name="createGroupCustomGameModal"
                 options={modalStyles}
+            />
+            <Stack.Screen
+                name="cropAvatar"
+                options={{
+                    animation: 'fade',
+                }}
             />
             <Stack.Screen
                 name="assignPointsToPlayerModal"
@@ -105,25 +114,27 @@ export default function RootLayout() {
             <LoggingProvider>
                 <ApiProvider>
                     <ThemeProvider value={appTheme}>
-                        <PortalProvider>
-                            <RootSiblingParent>
-                                <StatusBar barStyle={theme.barStyle} />
-                                <Drawer.Navigator
-                                    screenOptions={{
-                                        drawerStyle: {
-                                            width: 256,
-                                        },
-                                        headerShown: false,
-                                    }}
-                                    drawerContent={Sidebar}
-                                >
-                                    <Drawer.Screen
-                                        name="static/aboutPremium"
-                                        component={Everything}
-                                    />
-                                </Drawer.Navigator>
-                            </RootSiblingParent>
-                        </PortalProvider>
+                        <ScopePickerProvider>
+                            <PortalProvider>
+                                <RootSiblingParent>
+                                    <StatusBar barStyle={theme.barStyle} />
+                                    <Drawer.Navigator
+                                        screenOptions={{
+                                            drawerStyle: {
+                                                width: 256,
+                                            },
+                                            headerShown: false,
+                                        }}
+                                        drawerContent={Sidebar}
+                                    >
+                                        <Drawer.Screen
+                                            name="static/aboutPremium"
+                                            component={Everything}
+                                        />
+                                    </Drawer.Navigator>
+                                </RootSiblingParent>
+                            </PortalProvider>
+                        </ScopePickerProvider>
                     </ThemeProvider>
                 </ApiProvider>
             </LoggingProvider>

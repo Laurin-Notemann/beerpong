@@ -1,6 +1,7 @@
 package pro.beerpong.api.model.dto;
 
 import lombok.Data;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
 
@@ -8,6 +9,8 @@ import java.time.ZonedDateTime;
 public class AssetMetadataDto {
     private String id;
     private String url;
-    private String mediaType;
-    private ZonedDateTime uploadedAt;
+    private AssetType type;
+    private double offsetX;
+    private double offsetY;
+    private double zoom;
 }

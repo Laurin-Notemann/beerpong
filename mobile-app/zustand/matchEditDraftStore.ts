@@ -11,7 +11,7 @@ interface MoveDraft {
     moveId: string;
     count: number;
 }
-interface PlayerDraft {
+export interface PlayerDraft {
     playerId: string;
     moves: MoveDraft[];
 }
@@ -20,12 +20,16 @@ interface TeamDraft {
 }
 
 interface MatchEditDraftStore {
+    blueTeamPhotoUri?: string;
+    redTeamPhotoUri?: string;
     // whether there are changes to be saved
     isDirty: boolean;
     // the original state before editing, used to determine isDirty
     _baseline: {
         redTeam: TeamDraft;
         blueTeam: TeamDraft;
+        blueTeamPhotoUri?: string;
+        redTeamPhotoUri?: string;
     } | null;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
@@ -36,6 +40,12 @@ interface MatchEditDraftStore {
         setPlayerTeam: (playerId: string, team: TeamId) => void;
         setMoveCount: (userId: string, moveId: string, count: number) => void;
         setMatch: (match: Match) => void;
+        setTeamPhotos: (photos: {
+            blueTeamPhotoUri?: string;
+            redTeamPhotoUri?: string;
+        }) => void;
+        removeTeamPhotos: () => void;
+        swapTeamPhotos: () => void;
     };
 }
 
@@ -63,6 +73,8 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                         teamMembers: [],
                     },
                     isDirty: true,
+                    blueTeamPhotoUri: undefined,
+                    redTeamPhotoUri: undefined,
                 }));
             },
             getPlayers: () => {
@@ -174,8 +186,42 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                     _baseline: {
                         redTeam,
                         blueTeam,
+                        blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
+                        redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
                     },
                     isDirty: false,
+                    blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
+                    redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
+                }));
+            },
+            setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
+                set((state) => ({
+                    blueTeamPhotoUri: blueTeamPhotoUri,
+                    redTeamPhotoUri: redTeamPhotoUri,
+                    isDirty:
+                        state._baseline?.blueTeamPhotoUri !==
+                            blueTeamPhotoUri ||
+                        state._baseline?.redTeamPhotoUri !== redTeamPhotoUri,
+                }));
+            },
+            removeTeamPhotos: () => {
+                set((state) => ({
+                    blueTeamPhotoUri: undefined,
+                    redTeamPhotoUri: undefined,
+                    isDirty:
+                        state._baseline?.blueTeamPhotoUri != null ||
+                        state._baseline?.redTeamPhotoUri != null,
+                }));
+            },
+            swapTeamPhotos: () => {
+                set((state) => ({
+                    blueTeamPhotoUri: state.redTeamPhotoUri,
+                    redTeamPhotoUri: state.blueTeamPhotoUri,
+                    isDirty:
+                        state._baseline?.blueTeamPhotoUri !==
+                            state.redTeamPhotoUri ||
+                        state._baseline?.redTeamPhotoUri !==
+                            state.blueTeamPhotoUri,
                 }));
             },
         },

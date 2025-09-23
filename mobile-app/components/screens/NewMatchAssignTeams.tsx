@@ -12,21 +12,26 @@ import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 export type TeamId = 'red' | 'blue' | null;
 
 function PlayerItem({
+    randomTeamsMode,
     player,
     onSelectTeam,
 
     hasTutorial = false,
+
+    onRandomTeamSelect,
 }: {
+    randomTeamsMode: { players: string[] } | null;
     player: Player;
     isRedTeam?: boolean;
     isBlueTeam?: boolean;
     onSelectTeam: (team: TeamId) => void;
+
+    onRandomTeamSelect: (playerId: string) => void;
 
     hasTutorial?: boolean;
 }) {
@@ -40,6 +45,11 @@ function PlayerItem({
     return (
         <TouchableHighlight
             onPress={() => {
+                if (randomTeamsMode != null) {
+                    onRandomTeamSelect(player.id);
+                    triggerHapticBump('selection');
+                    return;
+                }
                 if (player.team === null) onSelectTeam('blue');
                 if (player.team === 'blue') onSelectTeam('red');
                 if (player.team === 'red') onSelectTeam(null);
@@ -58,7 +68,9 @@ function PlayerItem({
                 paddingLeft: 16,
             }}
         >
-            <>
+            <View
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+            >
                 <Avatar url={player.avatarUrl} size={36} name={player.name} />
                 <Text
                     color="primary"
@@ -74,47 +86,80 @@ function PlayerItem({
                     {player.name}
                 </Text>
 
-                <Pressable
-                    style={{
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                {randomTeamsMode == null ? (
+                    <>
+                        <Pressable
+                            style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
 
-                        width: 50,
-                        height: 50,
-                    }}
-                    onPress={() => {
-                        onSelectTeam(isBlueTeam ? null : 'blue');
-                        triggerHapticBump('selection');
-                    }}
-                >
-                    <Icon
-                        color={theme.color.team.blue}
-                        size={24}
-                        name={isBlueTeam ? 'check-circle' : 'circle-outline'}
-                        style={{ opacity: isBlueTeam ? 1 : 0.7 }}
-                    />
-                </Pressable>
+                                width: 50,
+                                height: 50,
+                            }}
+                            onPress={() => {
+                                onSelectTeam(isBlueTeam ? null : 'blue');
+                                triggerHapticBump('selection');
+                            }}
+                        >
+                            <Icon
+                                color={theme.color.team.blue}
+                                size={24}
+                                name={
+                                    isBlueTeam
+                                        ? 'check-circle'
+                                        : 'circle-outline'
+                                }
+                                style={{ opacity: isBlueTeam ? 1 : 0.7 }}
+                            />
+                        </Pressable>
 
-                <Pressable
-                    style={{
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        <Pressable
+                            style={{
+                                alignItems: 'center',
+                                justifyContent: 'center',
 
-                        width: 50,
-                        height: 50,
-                    }}
-                    onPress={() => {
-                        onSelectTeam(isRedTeam ? null : 'red');
-                        triggerHapticBump('selection');
-                    }}
-                >
-                    <Icon
-                        color={theme.color.team.red}
-                        size={24}
-                        name={isRedTeam ? 'check-circle' : 'circle-outline'}
-                        style={{ opacity: isRedTeam ? 1 : 0.7 }}
-                    />
-                </Pressable>
+                                width: 50,
+                                height: 50,
+                            }}
+                            onPress={() => {
+                                onSelectTeam(isRedTeam ? null : 'red');
+                                triggerHapticBump('selection');
+                            }}
+                        >
+                            <Icon
+                                color={theme.color.team.red}
+                                size={24}
+                                name={
+                                    isRedTeam
+                                        ? 'check-circle'
+                                        : 'circle-outline'
+                                }
+                                style={{ opacity: isRedTeam ? 1 : 0.7 }}
+                            />
+                        </Pressable>
+                    </>
+                ) : (
+                    <View
+                        style={{
+                            alignItems: 'center',
+                            justifyContent: 'center',
+
+                            width: 50,
+                            height: 50,
+                        }}
+                    >
+                        <Icon
+                            color={theme.color.text.secondary}
+                            size={24}
+                            name={
+                                randomTeamsMode.players.includes(player.id)
+                                    ? 'check-circle'
+                                    : 'circle-outline'
+                            }
+                            style={{ opacity: isRedTeam ? 1 : 0.7 }}
+                        />
+                    </View>
+                )}
                 {hasTutorial && (
                     <TutorialBubble
                         text="Try double-tapping a players name!"
@@ -122,7 +167,7 @@ function PlayerItem({
                         top={-12}
                     />
                 )}
-            </>
+            </View>
         </TouchableHighlight>
     );
 }
@@ -130,12 +175,18 @@ function PlayerItem({
 export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 
 export interface NewMatchAssignTeamsProps {
+    randomTeamsMode: { players: string[] } | null;
+    onRandomTeamSelect: (playerId: string) => void;
+    onRandomTeamsPress: () => void;
     minTeamSize: number;
     maxTeamSize: number;
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
 }
 export default function NewMatchAssignTeams({
+    randomTeamsMode,
+    onRandomTeamSelect,
+    onRandomTeamsPress,
     minTeamSize,
     maxTeamSize,
     players,
@@ -146,8 +197,6 @@ export default function NewMatchAssignTeams({
     const nav = useNavigation();
 
     const { hasTappedToAssignPlayers } = useTutorials();
-
-    const experiments = useLocalSettings();
 
     const blueTeamSize = players.filter((i) => i.team === 'blue').length;
     const redTeamSize = players.filter((i) => i.team === 'red').length;
@@ -171,6 +220,8 @@ export default function NewMatchAssignTeams({
         }
     })();
 
+    const isRandomTeamsMode = randomTeamsMode !== null;
+
     return (
         <ScrollView
             style={{
@@ -181,67 +232,83 @@ export default function NewMatchAssignTeams({
                 paddingHorizontal: 16,
 
                 paddingBottom: insets.bottom + 24,
+
+                minHeight: '100%',
             }}
         >
-            <Heading
-                title={
-                    errorMessage ? (
-                        <Text
-                            color="negative"
-                            style={{
-                                fontSize: 16,
-                                fontWeight: 500,
+            {/* empty <View> bc otherwise the items are spaced apart  */}
+            <View>
+                <Heading
+                    title={
+                        errorMessage ? (
+                            <Text
+                                color="negative"
+                                style={{
+                                    fontSize: 16,
+                                    fontWeight: 500,
 
-                                marginBottom: 32,
-                            }}
-                        >
-                            {errorMessage}
-                        </Text>
-                    ) : undefined
-                }
-            />
-
-            <MenuSection style={{ marginBottom: 20 }}>
-                <MenuItem
-                    headIcon="account-plus-outline"
-                    title="Create new Player"
-                    tailIconType="next"
-                    onPress={() => nav.navigate('createNewPlayer')}
+                                    marginBottom: 32,
+                                }}
+                            >
+                                {errorMessage}
+                            </Text>
+                        ) : undefined
+                    }
                 />
-            </MenuSection>
-            <MenuSection>
-                {players.length === 0 && (
-                    <View
-                        style={{
-                            height: 62,
-                            width: '100%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <Text
-                            color="secondary"
+                {!isRandomTeamsMode && (
+                    <>
+                        <MenuSection style={{ marginBottom: 20 }}>
+                            <MenuItem
+                                border={false}
+                                headIcon="dice-multiple-outline"
+                                title="Random Teams"
+                                tailIconType="next"
+                                onPress={onRandomTeamsPress}
+                            />
+                        </MenuSection>
+                        <MenuSection style={{ marginBottom: 20 }}>
+                            <MenuItem
+                                border={false}
+                                headIcon="account-plus-outline"
+                                title="Create new Player"
+                                tailIconType="next"
+                                onPress={() => nav.navigate('createNewPlayer')}
+                            />
+                        </MenuSection>
+                    </>
+                )}
+                <MenuSection>
+                    {players.length === 0 && (
+                        <View
                             style={{
-                                textAlign: 'center',
+                                height: 62,
+                                width: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                             }}
                         >
-                            Add players to create a match
-                        </Text>
-                    </View>
-                )}
-                {players.map((i, idx) => (
-                    <PlayerItem
-                        hasTutorial={
-                            experiments.tutorials &&
-                            !hasTappedToAssignPlayers &&
-                            idx === 1
-                        }
-                        key={idx}
-                        player={i}
-                        onSelectTeam={(team) => setTeam(i.id, team)}
-                    />
-                ))}
-            </MenuSection>
+                            <Text
+                                color="secondary"
+                                style={{
+                                    textAlign: 'center',
+                                }}
+                            >
+                                Add players to create a match
+                            </Text>
+                        </View>
+                    )}
+                    {players.map((i, idx) => (
+                        <PlayerItem
+                            randomTeamsMode={randomTeamsMode}
+                            onRandomTeamSelect={onRandomTeamSelect}
+                            hasTutorial={!hasTappedToAssignPlayers && idx === 1}
+                            key={idx}
+                            player={i}
+                            onSelectTeam={(team) => setTeam(i.id, team)}
+                        />
+                    ))}
+                </MenuSection>
+            </View>
         </ScrollView>
     );
 }

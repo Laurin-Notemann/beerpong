@@ -130,6 +130,9 @@ const DecorativeMatchCard: React.FC<ViewProps & any> = ({
         >
             <MatchesListItem
                 match={{
+                    seasonId: '#',
+                    blueTeamId: '#',
+                    redTeamId: '#',
                     id: 'decorative-match',
                     blueCups: 5,
                     redCups: 10,
@@ -143,6 +146,7 @@ const DecorativeMatchCard: React.FC<ViewProps & any> = ({
                             name: 'Linus',
                             points: 123,
                             team: 'blue',
+                            profileId: '#',
                         },
                         {
                             id: '#2',
@@ -151,6 +155,7 @@ const DecorativeMatchCard: React.FC<ViewProps & any> = ({
                             name: 'Thies',
                             points: 123,
                             team: 'blue',
+                            profileId: '#',
                         },
                     ],
                     redTeam: [
@@ -161,6 +166,7 @@ const DecorativeMatchCard: React.FC<ViewProps & any> = ({
                             name: 'Timon',
                             points: 123,
                             team: 'red',
+                            profileId: '#',
                         },
                         {
                             id: '#2',
@@ -169,6 +175,7 @@ const DecorativeMatchCard: React.FC<ViewProps & any> = ({
                             name: 'Elina',
                             points: 123,
                             team: 'red',
+                            profileId: '#',
                         },
                     ],
                 }}

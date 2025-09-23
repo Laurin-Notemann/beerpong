@@ -1,14 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
-import {
-    byDescendingAveragePoints,
-    byDescendingElo,
-    useLeaderboardProps,
-} from '@/api/propHooks/leaderboardPropHooks';
+import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
+import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { Components } from '@/openapi/openapi';
 import { SaveSeasonScreen } from '@/screens/SaveSeason';
 import { showErrorToast, showSuccessToast } from '@/toast';
@@ -17,6 +15,7 @@ import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
     const nav = useNavigation();
+    const router = useRouter();
 
     const { groupId, seasonId, group } = useGroup();
 
@@ -42,11 +41,13 @@ export default function Page() {
                 queryKey: ['groups', groupId],
                 exact: false,
             });
-            nav.navigate('index');
+            router.replace('/');
             matchDraft.clear();
             showSuccessToast(
                 `Saved current leaderboard as "${oldSeasonName}".`
             );
+            router.dismissAll();
+            router.replace('/');
         } catch (err) {
             ConsoleLogger.error('failed to start new season:', err);
             showErrorToast('Failed to create start new season.');
@@ -63,11 +64,11 @@ export default function Page() {
         groupId,
         seasonId ?? null
     );
+    const rankingAlgorithm =
+        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm;
 
     const sortedPlayers = currentSeasonPlayers.sort(
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm === 'AVERAGE'
-            ? byDescendingAveragePoints
-            : byDescendingElo
+        getRankingAlgorithm(rankingAlgorithm).sortFunc
     );
 
     const rankedPlayers = sortedPlayers.filter(

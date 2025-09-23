@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
-import { PropsWithChildren } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import React, { memo, PropsWithChildren } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -51,7 +52,7 @@ export interface AvatarProps {
     url?: string | null;
     name?: string;
     content?: string;
-    size?: 128 | 96 | 40 | 36;
+    size?: 128 | 96 | 40 | 36 | number;
 
     style?: any;
 
@@ -61,9 +62,11 @@ export interface AvatarProps {
     placement?: number;
     isUnranked?: boolean;
 
+    variant?: 'default' | 'list';
+
     onPress?: () => void;
 }
-export default function Avatar({
+function Avatar({
     url,
     name,
     content,
@@ -74,20 +77,23 @@ export default function Avatar({
     placement,
     isUnranked = false,
 
+    variant = 'default',
+
     onPress,
 }: AvatarProps) {
     const theme = useTheme();
+
+    const Container: any = onPress ? Pressable : View;
+
     return (
-        <Pressable
+        <Container
             style={{
                 width: size,
                 height: size,
 
                 ...style,
             }}
-            onPress={onPress}
-            // so an avatar without an onPress doesn't intercept clicks
-            disabled={onPress == null}
+            {...(onPress ? { onPress } : {})}
         >
             <View
                 style={{
@@ -95,17 +101,21 @@ export default function Avatar({
                     overflow: 'hidden',
                 }}
             >
-                <BlurView
-                    intensity={theme.blur?.intensity ?? 0}
-                    tint={theme.blur?.tint}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: size,
-                        height: size,
-                    }}
-                />
+                {(theme.blur?.intensity ?? 0) !== 0 && variant !== 'list' && (
+                    <BlurView
+                        intensity={theme.blur?.intensity ?? 0}
+                        tint={theme.blur?.tint}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: size,
+                            height: size,
+
+                            backgroundColor: theme.avatar.bg,
+                        }}
+                    />
+                )}
                 <View
                     style={{
                         alignItems: 'center',
@@ -139,29 +149,33 @@ export default function Avatar({
                                 borderColor,
                             }}
                             resizeMode="cover"
+                            cachePolicy="memory-disk"
+                            // priority={variant === 'list' ? 'low' : 'normal'}
+                            transition={variant === 'list' ? 0 : 100}
                         />
                     )}
+                    {(!url || content) && (
+                        <ThemedText
+                            style={{
+                                lineHeight: size,
+                                fontSize: size / 2.7,
 
-                    <ThemedText
-                        style={{
-                            lineHeight: size,
-                            fontSize: size / 2.7,
+                                fontWeight: 500,
 
-                            fontWeight: 500,
+                                color: theme.avatar.text,
 
-                            color: theme.avatar.text,
-
-                            bottom: borderColor ? 2 : 0,
-                        }}
-                    >
-                        {content || name?.[0] || (
-                            <Icon
-                                color={theme.avatar.text}
-                                size={size / 1.6}
-                                name="account-outline"
-                            />
-                        )}
-                    </ThemedText>
+                                bottom: borderColor ? 2 : 0,
+                            }}
+                        >
+                            {content || name?.at(0) || (
+                                <Icon
+                                    color={theme.avatar.text}
+                                    size={size / 1.6}
+                                    name="account-outline"
+                                />
+                            )}
+                        </ThemedText>
+                    )}
                 </View>
             </View>
             {canUpload && (
@@ -187,6 +201,20 @@ export default function Avatar({
                     </Text>
                 </Badge>
             )}
-        </Pressable>
+        </Container>
     );
 }
+export default memo(Avatar, (prev, next) => {
+    // Intentionally ignore onPress identity to improve list perf
+    return (
+        prev.url === next.url &&
+        prev.name === next.name &&
+        prev.content === next.content &&
+        prev.size === next.size &&
+        prev.borderColor === next.borderColor &&
+        prev.canUpload === next.canUpload &&
+        prev.placement === next.placement &&
+        prev.isUnranked === next.isUnranked &&
+        prev.variant === next.variant
+    );
+});

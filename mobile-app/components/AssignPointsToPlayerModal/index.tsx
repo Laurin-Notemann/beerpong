@@ -4,7 +4,11 @@ import { View } from 'react-native';
 import { Host as PortalProvider } from 'react-native-portalize';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
+import {
+    MinimalMatch,
+    PerformedMove,
+    TeamMember,
+} from '@/api/utils/matchDtoToMatch';
 import FinishMovePage from '@/components/AssignPointsToPlayerModal/FinishMovePage';
 import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScorerPage';
 import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
@@ -12,7 +16,6 @@ import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { useTheme } from '@/theme';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 const showVsHeader = false;
@@ -22,7 +25,7 @@ export interface AssignPointsToPlayerModalProps {
 
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
-    match: Omit<Match, 'id' | 'date' | 'winnerTeamId'>;
+    match: MinimalMatch;
 
     initialPageIdx: number | null;
 }
@@ -32,8 +35,6 @@ export default function AssignPointsToPlayerModal({
     setMoveCount,
     initialPageIdx,
 }: AssignPointsToPlayerModalProps) {
-    const experiments = useLocalSettings();
-
     const { hasDraggedToAssignPoints } = useTutorials();
 
     const players = match.blueTeam.concat(match.redTeam);
@@ -75,10 +76,7 @@ export default function AssignPointsToPlayerModal({
 
         setFinisherId(player.id);
         // timeout of 0 is necessary because the next page isn't even rendered yet
-        setTimeout(
-            () => swiper.ref.current?.scrollTo({ index: 1, animated: true }),
-            0
-        );
+        setTimeout(() => swiper.ref.current?.next({ animated: true }), 0);
     }
     const theme = useTheme();
 
@@ -155,7 +153,6 @@ export default function AssignPointsToPlayerModal({
                                         }
                                         setMoveCount={setMoveCount}
                                         hasSwipeTutorial={
-                                            experiments.tutorials &&
                                             !hasDraggedToAssignPoints &&
                                             idx === 0
                                         }

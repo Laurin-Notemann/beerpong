@@ -8,6 +8,8 @@ import Animated, {
     withSpring,
 } from 'react-native-reanimated';
 
+import PressableScale from '@/components/PressableScale';
+
 const MOVEMENT_ANIMATION_DURATION_MS = 0;
 
 export interface CupProps {
@@ -37,7 +39,7 @@ export function Cup({
             duration: MOVEMENT_ANIMATION_DURATION_MS,
         }),
         // to always put the cups in the lower rows over the upper ones for consistency
-        zIndex: y,
+        zIndex: Math.round(y),
     }));
     const gestures = [
         onPan?.enabled(!disabled),
@@ -45,23 +47,25 @@ export function Cup({
     ].filter((i) => i != null);
 
     return (
-        <GestureDetector gesture={Gesture.Race(...gestures)}>
-            <Animated.View
-                style={[
-                    {
-                        position: 'absolute',
-                        width: width,
-                        height: width,
+        <PressableScale>
+            <GestureDetector gesture={Gesture.Race(...gestures)}>
+                <Animated.View
+                    style={[
+                        {
+                            position: 'absolute',
+                            width: width,
+                            height: width,
 
-                        backgroundColor: disabled ? '#2E2E2E' : color,
-                        borderColor: '#222',
+                            backgroundColor: disabled ? '#2E2E2E' : color,
+                            borderColor: '#222',
 
-                        borderRadius: width / 2,
-                        borderWidth: disabled ? 0 : width / 16,
-                    },
-                    animatedStyle,
-                ]}
-            />
-        </GestureDetector>
+                            borderRadius: width / 2,
+                            borderWidth: disabled ? 0 : width / 16,
+                        },
+                        animatedStyle,
+                    ]}
+                />
+            </GestureDetector>
+        </PressableScale>
     );
 }

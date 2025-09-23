@@ -3,6 +3,7 @@ import React from 'react';
 import { ScrollView, Switch } from 'react-native';
 
 import { env } from '@/api/env';
+import { AppBackground } from '@/app/Background';
 import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
@@ -10,7 +11,6 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
 import { triggerHapticBump } from '@/haptics';
-import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
@@ -23,8 +23,6 @@ export default function Page() {
 
     const settings = useLocalSettings();
 
-    const theme = useTheme();
-
     return (
         <>
             <Stack.Screen
@@ -33,11 +31,10 @@ export default function Page() {
                     headerTitle: 'Settings',
                 }}
             />
+            <AppBackground />
             <ScrollView
                 style={{
                     flex: 1,
-
-                    backgroundColor: theme.color.bg,
                 }}
                 contentContainerStyle={{
                     paddingTop: insets.top,
@@ -62,6 +59,7 @@ export default function Page() {
                 </MenuSection>
                 <MenuSection title="Development">
                     <MenuItem
+                        border={false}
                         title="Experimental Features"
                         headIcon="flask-outline"
                         tailIconType="next"

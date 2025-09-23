@@ -1,37 +1,75 @@
-import { SafeAreaView } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import React, { useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import { AppBackground } from '@/app/Background';
 import { useInsets } from '@/app/useInsets';
-import ErrorScreen from '@/components/ErrorScreen';
-import LoadingScreen from '@/components/LoadingScreen';
-import MatchesList from '@/components/MatchesList';
+import { InviteModal } from '@/components/InviteModal';
+import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
+import PillButton from '@/components/PillButton';
+import { ScopePickerHeaderTitle } from '@/components/ScopePickerHeaderTitle';
+import { MatchesSwiper } from '@/components/screens/MatchesSwiper';
+import { PastMatchesSwiper } from '@/components/screens/PastMatchesSwiper';
+import { useScopePicker } from '@/zustand/useScopePicker';
 
-export default function Screen() {
-    const { props, isLoading, error } = useMatchlistProps();
+const swiperAtTop = false;
 
-    const insets = useInsets(true, true);
+function FocusedMatchesContent() {
+    const scopePicker = useScopePicker();
+    return scopePicker.isPastSeasonsMode ? (
+        <PastMatchesSwiper />
+    ) : (
+        <MatchesSwiper />
+    );
+}
 
-    if (isLoading) return <LoadingScreen />;
+export default function Page() {
+    const insets = useInsets(true, true, true);
+    const isFocused = useIsFocused();
 
-    if (!props) return <ErrorScreen error={error} />;
+    const [showInviteModal, setShowInviteModal] = useState(false);
 
     return (
-        <>
-            <AppBackground />
-            <SafeAreaView
-                style={{
-                    flex: 1,
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <InviteModal
+                isVisible={showInviteModal}
+                onClose={() => setShowInviteModal(false)}
+            />
+            <Stack.Screen
+                options={{
+                    headerTitle: () => <ScopePickerHeaderTitle />,
+
+                    headerRight: () => (
+                        <PillButton
+                            blur
+                            style={{ marginRight: 4 }}
+                            label="Invite"
+                            iconName="share-outline"
+                            onPress={() => setShowInviteModal(true)}
+                        />
+                    ),
                 }}
-            >
-                <MatchesList
-                    contentContainerStyle={{
-                        paddingTop: insets.top,
-                        paddingBottom: insets.bottom + 32,
+            />
+            <AppBackground />
+            {isFocused ? <FocusedMatchesContent /> : null}
+            {isFocused ? (
+                <SafeAreaView
+                    key="scope-picker"
+                    pointerEvents="box-none"
+                    style={{
+                        position: 'absolute',
+
+                        top: swiperAtTop ? insets.top + 4 : undefined,
+                        bottom: swiperAtTop ? undefined : insets.bottom + 4,
+
+                        width: '100%',
                     }}
-                    {...props}
-                />
-            </SafeAreaView>
-        </>
+                >
+                    <LeaderboardScopePicker hasSortButton={false} />
+                </SafeAreaView>
+            ) : null}
+        </GestureHandlerRootView>
     );
 }

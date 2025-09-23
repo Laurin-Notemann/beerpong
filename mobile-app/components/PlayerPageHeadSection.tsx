@@ -3,8 +3,11 @@ import { Text, View } from 'react-native';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import PlayerStats from '@/components/PlayerStats';
+import {
+    getRankingAlgorithm,
+    type RankingAlgorithm,
+} from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatElo } from '@/utils/format';
 
 export function PlayerPageHeadSection({
     avatarUrl,
@@ -19,7 +22,6 @@ export function PlayerPageHeadSection({
 
     isUnranked,
     editable,
-    averagePointsPerMatch,
     rankingAlgorithm,
 }: {
     avatarUrl?: string | null;
@@ -34,13 +36,22 @@ export function PlayerPageHeadSection({
 
     isUnranked: boolean;
     editable: boolean;
-    averagePointsPerMatch: string;
-    rankingAlgorithm: 'AVERAGE' | 'ELO';
+    rankingAlgorithm: RankingAlgorithm;
 }) {
     const theme = useTheme();
 
+    const player = {
+        avatarUrl,
+        name,
+        cups,
+        matchesWon,
+        matches: matches.length,
+        elo,
+        points,
+    };
+
     return (
-        <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+        <View style={{ alignItems: 'center' }}>
             <Avatar
                 url={avatarUrl}
                 size={96}
@@ -57,9 +68,10 @@ export function PlayerPageHeadSection({
                     color: theme.color.text.secondary,
                 }}
             >
-                {rankingAlgorithm === 'AVERAGE'
-                    ? averagePointsPerMatch
-                    : formatElo(elo)}
+                {!editable &&
+                    getRankingAlgorithm(rankingAlgorithm).getDisplayValue(
+                        player
+                    )}
             </Text>
             <Text
                 style={{
@@ -69,18 +81,14 @@ export function PlayerPageHeadSection({
                     marginBottom: 32,
 
                     textAlign: 'center',
+
+                    paddingHorizontal: 16,
                 }}
             >
                 {name}
             </Text>
 
-            <PlayerStats
-                totalCups={cups}
-                totalPoints={points}
-                matchesWonCount={matchesWon}
-                matchesPlayedCount={matches.length}
-                elo={elo}
-            />
+            {!editable && <PlayerStats player={player} />}
         </View>
     );
 }

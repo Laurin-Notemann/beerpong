@@ -75,11 +75,22 @@ jobs:
         working-directory: mobile-app
 
       - name: Create Pull Request
+        id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: Bump app version to ${{ steps.bump_version.outputs.new_version }}
           title: Bump app version to ${{ steps.bump_version.outputs.new_version }} and submit
           branch: bump-app-version-${{ steps.bump_version.outputs.new_version }}
-          base: ${{ github.head_ref }}
+          # target staging when patch_update=true, otherwise prod
+          base: ${{ inputs.patch_update && 'staging' || 'main' }}
           delete-branch: true
+          labels: automerge
           token: ${{ secrets.PAT }}
+
+      - name: Enable native auto-merge (squash)
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.PAT }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash

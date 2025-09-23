@@ -1,8 +1,11 @@
 import { ScrollView, Text, View, ViewProps } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppBackground } from '@/app/Background';
 import { useInsets } from '@/app/useInsets';
 import Leaderboard from '@/components/Leaderboard';
 import { ThemedView } from '@/components/ThemedView';
+import { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { mockSeasons } from '@/screens/mockSeasons';
 import { useTheme } from '@/theme';
 
@@ -11,111 +14,120 @@ export const PastSeasonsEmptyScreen: React.FC = () => {
     const theme = useTheme();
 
     return (
-        <ScrollView
-            style={{ flex: 1, backgroundColor: theme.color.bg }}
-            contentContainerStyle={{
-                paddingTop: insets.top,
-            }}
-        >
-            <View
-                style={{
-                    position: 'relative',
+        <>
+            <AppBackground />
+            <ScrollView
+                contentContainerStyle={{
+                    paddingTop: insets.top,
 
-                    height: 430,
+                    minHeight: '100%',
 
-                    marginTop: 64,
+                    paddingBottom: 64,
                 }}
             >
-                <DecorativeSeasonCard
-                    {...mockSeasons[0]}
-                    style={{
-                        position: 'absolute',
-                        transform: [{ rotateZ: '-20deg' }],
-
-                        right: 60,
-                        top: -170,
-
-                        width: 352,
-
-                        shadowColor: '#000',
-                        shadowOpacity: 0.5,
-                        shadowRadius: 16,
-                    }}
-                />
-                <DecorativeSeasonCard
-                    {...mockSeasons[1]}
-                    style={{
-                        position: 'absolute',
-                        transform: [{ rotateZ: '15deg' }],
-
-                        left: 80,
-                        top: -170,
-
-                        width: 352,
-
-                        shadowColor: '#000',
-                        shadowOpacity: 0.5,
-                        shadowRadius: 16,
-                    }}
-                />
-                <DecorativeSeasonCard
-                    {...mockSeasons[2]}
-                    style={{
-                        position: 'absolute',
-
-                        top: -170,
-
-                        width: 352,
-
-                        shadowColor: '#000',
-                        shadowOpacity: 0.5,
-                        shadowRadius: 16,
-                    }}
-                />
-            </View>
-            <View
-                style={{
-                    alignItems: 'center',
-                    gap: 10,
-                }}
-            >
-                <Text
-                    style={{
-                        fontSize: 22,
-
-                        fontWeight: 'bold',
-
-                        color: theme.color.text.primary,
-
-                        textAlign: 'center',
-                    }}
-                >
-                    Seasons
-                </Text>
                 <View
                     style={{
-                        width: 288,
+                        position: 'relative',
+
+                        width: 390,
+                        height: 430,
+
+                        marginTop: 64,
+
+                        marginHorizontal: 'auto',
+                    }}
+                >
+                    <DecorativeSeasonCard
+                        {...mockSeasons[0]}
+                        style={{
+                            position: 'absolute',
+                            transform: [{ rotateZ: '-20deg' }],
+
+                            right: 60,
+                            top: -170,
+
+                            width: 352,
+
+                            shadowColor: '#000',
+                            shadowOpacity: 0.5,
+                            shadowRadius: 16,
+                        }}
+                    />
+                    <DecorativeSeasonCard
+                        {...mockSeasons[1]}
+                        style={{
+                            position: 'absolute',
+                            transform: [{ rotateZ: '15deg' }],
+
+                            left: 80,
+                            top: -170,
+
+                            width: 352,
+
+                            shadowColor: '#000',
+                            shadowOpacity: 0.5,
+                            shadowRadius: 16,
+                        }}
+                    />
+                    <DecorativeSeasonCard
+                        {...mockSeasons[2]}
+                        style={{
+                            position: 'absolute',
+
+                            top: -170,
+
+                            width: 352,
+
+                            shadowColor: '#000',
+                            shadowOpacity: 0.5,
+                            shadowRadius: 16,
+                        }}
+                    />
+                </View>
+                <View
+                    style={{
+                        alignItems: 'center',
+                        gap: 10,
                     }}
                 >
                     <Text
                         style={{
-                            fontSize: 15,
-                            lineHeight: 20,
+                            fontSize: 22,
 
-                            color: theme.color.text.secondary,
+                            fontWeight: 'bold',
+
+                            color: theme.color.text.primary,
 
                             textAlign: 'center',
-
+                        }}
+                    >
+                        Seasons
+                    </Text>
+                    <View
+                        style={{
                             width: 288,
                         }}
                     >
-                        Seasons allow you to reset your leaderboard without
-                        losing the results! When you start a new season, your
-                        current leaderboard will still be visible here.
-                    </Text>
+                        <Text
+                            style={{
+                                fontSize: 15,
+                                lineHeight: 20,
+
+                                color: theme.color.text.secondary,
+
+                                textAlign: 'center',
+
+                                width: 288,
+                            }}
+                        >
+                            Seasons allow you to reset your leaderboard without
+                            losing the results! When you start a new season,
+                            your current leaderboard will still be visible here.
+                        </Text>
+                    </View>
                 </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </>
     );
 };
 
@@ -171,7 +183,10 @@ export interface SeasonCardProps {
     players: any[];
     numMatches: number;
     minMatchesRequiredToBeRanked: number;
-    rankingAlgorithm?: 'AVERAGE' | 'ELO';
+    rankingAlgorithm?: RankingAlgorithm;
+    onPlayerPress?: (playerId: string) => void;
+
+    style?: any;
 }
 export const SeasonCard: React.FC<SeasonCardProps> = ({
     season,
@@ -179,6 +194,8 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
     numMatches,
     minMatchesRequiredToBeRanked,
     rankingAlgorithm = 'AVERAGE',
+    onPlayerPress,
+    style,
 }) => {
     return (
         <ThemedView
@@ -186,6 +203,8 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 flex: 1,
 
                 paddingBottom: 32,
+
+                ...(style ?? {}),
             }}
         >
             <Leaderboard
@@ -194,6 +213,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 season={{ ...season, numPlayers: players.length, numMatches }}
                 minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
                 rankingAlgorithm={rankingAlgorithm}
+                onPlayerPress={onPlayerPress}
             />
         </ThemedView>
     );

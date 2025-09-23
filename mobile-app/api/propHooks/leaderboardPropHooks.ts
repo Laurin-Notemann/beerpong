@@ -39,8 +39,6 @@ export const useLeaderboardProps = (
         alltimeLeaderboardQuery.data?.data?.entries!.map(toPlayer) ?? [];
 
     return {
-        rawCurrentSeasonPlayers:
-            seasonLeaderboardQuery.data?.data?.entries ?? [],
         currentSeasonPlayers,
         alltimePlayers,
         dailyPlayers,
@@ -61,12 +59,3 @@ export const useLeaderboardProps = (
         },
     };
 };
-
-/**
- * usage: `players.sort(byAveragePoints)`
- */
-export const byDescendingAveragePoints = (a: Player, b: Player) =>
-    (b.matches ? b.points / b.matches : 0) -
-    (a.matches ? a.points / a.matches : 0);
-
-export const byDescendingElo = (a: Player, b: Player) => b.elo - a.elo;

@@ -80,6 +80,7 @@ export default function EditFormation() {
                         }}
                     >
                         <MenuItem
+                            border={false}
                             title="Ring of Water"
                             headIcon="pencil-outline"
                             onPress={() => nav.navigate('editFormationName')}

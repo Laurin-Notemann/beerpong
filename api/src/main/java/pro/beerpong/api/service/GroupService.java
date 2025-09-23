@@ -17,6 +17,7 @@ import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
+import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -143,17 +144,24 @@ public class GroupService {
                 .orElse(null);
     }
 
+    public GroupDto deleteWallpaper(GroupDto groupDto) {
+        groupDto.setWallpaperAsset(null);
+        groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
+
+        return groupDto;
+    }
+
     @Transactional
-    public AssetMetadataDto storeWallpaper(GroupDto groupDto, byte[] content, String contentType) {
+    public AssetMetadataDto storeWallpaper(GroupDto groupDto, @Nullable AssetCropDto assetCropDto) {
         String oldWallpaperAssetId = null;
 
         if (groupDto.getWallpaperAsset() != null) {
             oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
         }
 
-        var assetMetadataDto = assetService.storeAsset(content, contentType);
+        var uploadResponse = assetService.storeAsset(AssetType.GROUP_WALLPAPER, assetCropDto);
 
-        groupDto.setWallpaperAsset(assetMetadataDto);
+        groupDto.setWallpaperAsset(uploadResponse);
 
         groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
 
@@ -161,7 +169,7 @@ public class GroupService {
             assetService.deleteAsset(oldWallpaperAssetId);
         }
 
-        return assetMetadataDto;
+        return uploadResponse;
     }
 
     private GroupDto withStats(@Nullable GroupDto groupDto) {
