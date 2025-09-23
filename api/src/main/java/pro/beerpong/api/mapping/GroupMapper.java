@@ -8,7 +8,7 @@ import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;
 import pro.beerpong.api.model.dto.GroupPreset;
 
-@Mapper(componentModel = "spring", uses = AssetAuthMapper.class)
+@Mapper(componentModel = "spring", uses = AssetMapper.class)
 public abstract class GroupMapper {
     @Mapping(target = "sportPreset", expression = "java(fromPreset(groupDto))")
     public abstract Group groupDtoToGroup(GroupDto groupDto);

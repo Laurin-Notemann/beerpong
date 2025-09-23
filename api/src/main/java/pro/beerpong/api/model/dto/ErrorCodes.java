@@ -40,7 +40,6 @@ public enum ErrorCodes {
     MATCH_NOT_OF_GROUP(HttpStatus.BAD_REQUEST, "matchNotOfGroup", "The provided match id does not match the provided season or group!"),
     /* RULE MOVES */
     MATCH_CREATE_DTO_NEEDS_IDS(HttpStatus.BAD_REQUEST, "matchCreateDtoNeedsIds", "Every team needs a 'existingTeamId' attribute containing the id of the existing team!"),
-    MATCH_DTO_VALIDATION_FAILED(HttpStatus.FORBIDDEN, "matchDtoValidationFailed", "The validation of the match create dto failed (invalid player, rulemove, season or group id, or no finish move)"),
     MATCH_NO_TEAM_FOUND(HttpStatus.FORBIDDEN, "matchNoTeamFound", "Could not find a team with the provided id linked to the provided match!"),
     MATCH_TEAM_HAS_NO_PHOTO(HttpStatus.NOT_FOUND, "matchTeamHasNoPhoto", "The provided team does not have a photo set!"),
     MATCH_GROUP_OR_SEASON_ID_DONT_MATCH(HttpStatus.BAD_REQUEST, "matchGroupOrSeasonIdDontMatch", "The provided group and season id dont match the group and season id of the provided match!")
@@ -52,8 +51,6 @@ public enum ErrorCodes {
     /* RULES */
     RULE_INVALID_DTO(HttpStatus.BAD_REQUEST, "ruleInvalidDto", "Every rule name and description has to be non-null and non-empty!"),
     /* PLAYERS */
-    RULE_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "ruleValidationFailed", "The validation of the created rules has failed (invalid group or season id)")
-    /* PLAYERS */,
     PLAYER_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "playerNotFound", "The requested player could not be found!"),
     PLAYER_ALREADY_DELETED(HttpStatus.FORBIDDEN, "playerAlreadyDeleted", "This player has been deleted!"),
@@ -62,7 +59,6 @@ public enum ErrorCodes {
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "profileNotFound", "The requested profile could not be found!"),
     PROFILE_NOT_OF_GROUP(HttpStatus.BAD_REQUEST, "profileNotOfGroup", "The provided profile and group id do not match!"),
     PROFILE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "profileAlreadyExists", "There already exists a profile with the provided name and an active player in the current season!"),
-    PROFILE_NOT_OF_GROUP(HttpStatus.FORBIDDEN, "profileHasDifferentGroup", "The profiles group id does not match the provided group id!"),
     PROFILE_HAS_NO_AVATAR(HttpStatus.NOT_FOUND, "profileHasNoAvatar", "The provided profiles does not have an avatar saved!")
     /* ASSETS */,
     ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "assetNotFound", "The requested asset could not be found!"),

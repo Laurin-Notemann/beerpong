@@ -18,6 +18,8 @@ public abstract class AssetMapper {
     @Mapping(target = "url", expression = "java(generateUrl(asset))")
     public abstract AssetMetadataDto assetToAssetMetadataDto(Asset asset);
 
+    public abstract Asset assetMetadataDtoToAsset(AssetMetadataDto dto);
+
     @Mapping(source = "group.id", target = "groupId")
     @Mapping(source = "user.id", target = "userId")
     public abstract GroupMemberDto groupMemberToGroupMemberDto(GroupMember groupMember);

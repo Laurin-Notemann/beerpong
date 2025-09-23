@@ -174,7 +174,7 @@ public class MatchController {
     }
 
     @PutMapping("/{id}/photos/{teamId}")
-    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId, @PathVariable String teamId) {
+    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
         var match = matchService.getMatchById(id);
 
         if (match == null) {
@@ -201,7 +201,7 @@ public class MatchController {
     }
 
     @DeleteMapping("/{id}/photos/{teamId}")
-    public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId, @PathVariable String teamId) {
+    public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
         var match = matchService.getMatchById(id);
 
         if (match == null) {
