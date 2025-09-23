@@ -8,10 +8,16 @@ import java.util.List;
 
 @Data
 public class MatchDto {
+    @NotNull
     private String id;
+    @NotNull
     private ZonedDateTime date;
+    @NotNull
     private Season season;
+    @NotNull
     private List<TeamDto> teams;
+    @NotNull
     private List<TeamMemberDto> teamMembers;
+    @NotNull
     private List<MatchMoveDtoComplete> matchMoves;
 }
