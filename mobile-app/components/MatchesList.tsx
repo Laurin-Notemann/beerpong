@@ -1,5 +1,6 @@
+import { FlashList, FlashListProps } from '@shopify/flash-list';
 import React, { useCallback } from 'react';
-import { FlatList, FlatListProps } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
 
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
@@ -11,7 +12,7 @@ import { RefreshControl } from '@/components/RefreshControl';
 
 export interface MatchesListProps
     extends Omit<
-        FlatListProps<{
+        FlashListProps<{
             matches: Match[];
             title: string;
             date: Date;
@@ -51,28 +52,32 @@ export default function MatchesList({
         [onMatchPress]
     );
 
+    const {
+        style: restStyle,
+        contentContainerStyle: restContentContainerStyle,
+        ...listProps
+    } = rest as any;
+
+    const containerStyle = StyleSheet.flatten([
+        { paddingBottom: 32 },
+        restContentContainerStyle,
+    ]) as ViewStyle | undefined;
+    const listStyle = StyleSheet.flatten([
+        {
+            alignSelf: 'stretch',
+            paddingHorizontal: 16,
+        },
+        restStyle,
+    ]) as ViewStyle | undefined;
+
     return (
-        <FlatList
+        <FlashList<{ matches: Match[]; title: string; date: Date }>
             ListEmptyComponent={<NoMatchesPlayedYet />}
-            {...rest}
-            contentContainerStyle={[
-                { paddingBottom: 32 },
-                rest.contentContainerStyle,
-            ]}
-            style={[
-                {
-                    alignSelf: 'stretch',
-                    paddingHorizontal: 16,
-                },
-                rest.style,
-            ]}
+            {...listProps}
+            contentContainerStyle={containerStyle as any}
+            style={listStyle as any}
             data={days}
             keyExtractor={(item) => item.date.toISOString()}
-            initialNumToRender={1}
-            maxToRenderPerBatch={3}
-            windowSize={5}
-            updateCellsBatchingPeriod={50}
-            removeClippedSubviews
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item, index }) => (
                 <MenuSection
