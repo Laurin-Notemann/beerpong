@@ -54,9 +54,13 @@ const MatchesListItemInner: React.FC<{
                             flex: 1,
                         }}
                     >
-                        {match.blueTeam.map((i) => i.name).join(', ') +
+                        {match.blueTeam
+                            .map((i) => i.name || 'Unknown')
+                            .join(', ') +
                             ' - ' +
-                            match.redTeam.map((i) => i.name).join(', ')}
+                            match.redTeam
+                                .map((i) => i.name || 'Unknown')
+                                .join(', ')}
                     </Text>
                 </View>
             </View>

@@ -15,9 +15,16 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
-    const { data, ...screenState } = useMatchesQuery(groupId, seasonId);
+    const matchesQuery = useMatchesQuery(groupId, seasonId);
 
     const movesQuery = useMoves(groupId, seasonId);
+
+    const isLoading =
+        playersQuery.isLoading ||
+        matchesQuery.isLoading ||
+        movesQuery.isLoading;
+
+    const error = playersQuery.error ?? matchesQuery.error ?? movesQuery.error;
 
     const { invalidateMatches } = useQueryInvalidation();
 
@@ -25,11 +32,11 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
         invalidateMatches(groupId!, seasonId!)
     );
 
-    if (!data?.data) return { props: null, ...screenState };
+    if (!matchesQuery.data?.data) return { props: null, isLoading, error };
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
-    const matches = data.data.map(
+    const matches = matchesQuery.data.data.map(
         matchDtoToMatch(playersQuery.data?.data, allowedMoves)
     );
 
@@ -41,6 +48,7 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
 
     return {
         props,
-        ...screenState,
+        isLoading,
+        error,
     };
 };
