@@ -231,6 +231,7 @@ export default function Page() {
             }
             showSuccessToast('Updated match.');
             setIsEditing(false);
+            invalidateMatches(groupId, seasonId);
         } catch (err) {
             ConsoleLogger.error(
                 'failed to update match:',
