@@ -99,8 +99,6 @@ export function DualTeamPhoto({
               ? 'blue'
               : 'red';
 
-    const secondary = primary === 'blue' ? 'red' : 'blue';
-
     const areEqualSize = mode === 'equal';
 
     const aspectRatio = 4 / 3;

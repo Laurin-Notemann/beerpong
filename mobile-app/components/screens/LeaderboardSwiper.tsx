@@ -124,6 +124,8 @@ export function LeaderboardSwiper() {
     if (isLoading) return <LoadingScreen />;
     if (seasonsQuery.isError) return <ErrorScreen error={seasonsQuery.error} />;
 
+    const spacing = { marginTop: 32, marginBottom: 67 };
+
     return (
         <Swiper {...swiper}>
             <LayoutScrollView refreshControl={<RefreshControl {...refresh} />}>
@@ -146,7 +148,7 @@ export function LeaderboardSwiper() {
                 <Text
                     color="secondary"
                     variant="fineprint"
-                    style={{ marginTop: 32, marginBottom: 66 }}
+                    style={spacing}
                     onPress={() => {
                         nav.navigate('dailyLeaderboardSettings');
                     }}
@@ -171,11 +173,7 @@ export function LeaderboardSwiper() {
                     onPlayerPress={onPlayerPress}
                     minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
                 />
-                <Text
-                    color="secondary"
-                    variant="fineprint"
-                    style={{ marginTop: 32, marginBottom: 66 }}
-                >
+                <Text color="secondary" variant="fineprint" style={spacing}>
                     {group.data?.activeSeason?.startDate
                         ? `Season started ${env.format.date.seasonStartAndEnd(
                               dayjs(group.data.activeSeason.startDate)
@@ -202,11 +200,7 @@ export function LeaderboardSwiper() {
                             minMatchesRequiredToBeRanked
                         }
                     />
-                    <Text
-                        color="secondary"
-                        variant="fineprint"
-                        style={{ marginTop: 32, marginBottom: 66 }}
-                    >
+                    <Text color="secondary" variant="fineprint" style={spacing}>
                         {group.data?.activeSeason?.startDate
                             ? `Group created ${env.format.date.seasonStartAndEnd(
                                   dayjs(pastSeasons[0].startDate)
