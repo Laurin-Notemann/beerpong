@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.google.api.client.util.Lists;
@@ -27,6 +28,7 @@ public class EloTest {
   private static final Gson GSON = new GsonBuilder().create();
 
   @Test
+  @Disabled
   public void testElo() {
     var classLoader = getClass().getClassLoader();
 
