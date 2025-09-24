@@ -124,18 +124,6 @@ export default function Page() {
         }
     }
 
-    function setMoveCount(userId: string, moveId: string, count: number) {
-        // setPlayers((prev) => {
-        //     const copy: typeof prev = JSON.parse(JSON.stringify(prev));
-        //     const player = copy.find((i) => i.id === userId);
-        //     if (!player) return prev;
-        //     const move = player?.moves.find((i) => i.id === moveId);
-        //     if (!move) return prev;
-        //     move.count = count;
-        //     return copy;
-        // });
-    }
-
     const { invalidateMatches } = useQueryInvalidation();
 
     const refresh = usePullToRefresh(() =>
@@ -243,6 +231,7 @@ export default function Page() {
             }
             showSuccessToast('Updated match.');
             setIsEditing(false);
+            invalidateMatches(groupId, seasonId);
         } catch (err) {
             ConsoleLogger.error(
                 'failed to update match:',
@@ -282,6 +271,15 @@ export default function Page() {
     }
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
+    const headerItemWidth = 54;
+
+    async function onEditCancel() {
+        if (matchDraft.isDirty) {
+            // TODO: show confirmation dialog
+        }
+        setIsEditing(false);
+    }
+
     return (
         <>
             <ConfirmationModal
@@ -309,9 +307,34 @@ export default function Page() {
                 options={{
                     ...navStyles,
                     title: '',
+
+                    headerLeft: isEditing
+                        ? () => (
+                              <HeaderItem
+                                  left
+                                  width={headerItemWidth}
+                                  noMargin
+                                  onPress={onEditCancel}
+                              >
+                                  Cancel
+                              </HeaderItem>
+                          )
+                        : () => (
+                              <HeaderItem
+                                  left
+                                  width={headerItemWidth}
+                                  noMargin
+                                  onPress={() => nav.goBack()}
+                                  backButton
+                              />
+                          ),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerRight: () =>
                         isCurrentSeason ? (
                             <HeaderItem
+                                right
+                                width={headerItemWidth}
+                                noMargin
                                 disabled={isEditing && !matchDraft.isDirty}
                                 isLoading={
                                     isSaving || deleteMatchMutation.isPending
@@ -329,31 +352,9 @@ export default function Page() {
                                 {isEditing ? 'Save' : 'Edit'}
                             </HeaderItem>
                         ) : undefined,
-                    headerLeft: isEditing
-                        ? () => (
-                              <HeaderItem
-                                  onPress={async () => {
-                                      if (matchDraft.isDirty) {
-                                          // TODO: show confirmation dialog
-                                      }
-                                      setIsEditing(false);
-                                  }}
-                              >
-                                  Cancel
-                              </HeaderItem>
-                          )
-                        : undefined,
-                    headerTitle: () =>
-                        match ? (
-                            <MatchVsHeader
-                                match={match}
-                                style={{
-                                    bottom: 4,
-                                }}
-                            />
-                        ) : (
-                            ''
-                        ),
+                    headerTitle: () => (
+                        <MatchVsHeader variant="header" match={match} />
+                    ),
                 }}
             />
             <AppBackground />
@@ -416,7 +417,7 @@ export default function Page() {
                     }}
                     editable={isEditing}
                     players={teamMembers}
-                    setMoveCount={setMoveCount}
+                    setMoveCount={() => {}} // TODO: remove unused prop
                 />
                 {isEditing && (
                     <MenuSection
