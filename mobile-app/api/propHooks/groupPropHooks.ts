@@ -99,6 +99,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               onDeleteWallpaperPress,
               onLeaveGroup,
               wallpaperAsset: data.data.wallpaperAsset,
+              isUpdatingWallpaper: updateGroupWallpaperMutation.isPending,
           }
         : null;
 

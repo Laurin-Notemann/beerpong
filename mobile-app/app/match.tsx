@@ -149,6 +149,8 @@ export default function Page() {
 
     const deleteMatchPhotoMutation = useDeleteMatchPhotoMutation();
 
+    const [isSaving, setIsSaving] = useState(false);
+
     async function updateMatch() {
         if (!groupId || !seasonId || !match?.id || !displayMatch) {
             ConsoleLogger.error(
@@ -184,9 +186,14 @@ export default function Page() {
             groupId,
             seasonId,
         };
+        setIsSaving(true);
 
         try {
-            await updateMatchMutation.mutateAsync(data);
+            const res = await updateMatchMutation.mutateAsync(data);
+
+            const newBlueTeamId = res.data!.teams![0].id!;
+            const newRedTeamId = res.data!.teams![1].id!;
+
             if (
                 matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl ||
                 matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
@@ -199,13 +206,13 @@ export default function Page() {
                         groupId,
                         seasonId,
                         matchId: match.id,
-                        teamId: match.blueTeamId,
+                        teamId: newBlueTeamId,
                     });
                     await deleteMatchPhotoMutation.mutateAsync({
                         groupId,
                         seasonId,
                         matchId: match.id,
-                        teamId: match.redTeamId,
+                        teamId: newRedTeamId,
                     });
                 } else {
                     const blueByteArray = await uriToByteArray(
@@ -221,7 +228,7 @@ export default function Page() {
                         matchId: match.id,
                         mimeType: 'image/png',
                         byteArray: blueByteArray,
-                        teamId: match.blueTeamId,
+                        teamId: newBlueTeamId,
                     });
 
                     await updateMatchPhotoMutation.mutateAsync({
@@ -230,7 +237,7 @@ export default function Page() {
                         matchId: match.id,
                         mimeType: 'image/png',
                         byteArray: redByteArray,
-                        teamId: match.redTeamId,
+                        teamId: newRedTeamId,
                     });
                 }
             }
@@ -243,6 +250,8 @@ export default function Page() {
                 JSON.stringify(data, null, 2)
             );
             showErrorToast('Failed to update match.');
+        } finally {
+            setIsSaving(false);
         }
     }
 
@@ -305,8 +314,7 @@ export default function Page() {
                             <HeaderItem
                                 disabled={isEditing && !matchDraft.isDirty}
                                 isLoading={
-                                    updateMatchMutation.isPending ||
-                                    deleteMatchMutation.isPending
+                                    isSaving || deleteMatchMutation.isPending
                                 }
                                 onPress={async () => {
                                     if (!isEditing) {
