@@ -417,7 +417,7 @@ public class MatchService {
                     teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
                     matchRepository.deleteById(id);
                 } else {
-                    error.set(ErrorCodes.MATCH_NOT_OF_GROUP);
+                    error.set(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
                 }
             } else {
                 error.set(ErrorCodes.SEASON_ALREADY_ENDED);

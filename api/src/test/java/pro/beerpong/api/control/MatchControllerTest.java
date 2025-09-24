@@ -10,6 +10,7 @@ import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.dto.*;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1682,7 +1683,7 @@ public class MatchControllerTest {
         requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
 
         var seasonDto = new SeasonCreateDto();
         seasonDto.setOldSeasonName("testing");
@@ -1695,7 +1696,7 @@ public class MatchControllerTest {
         var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
     }
 
     @Test
@@ -1997,7 +1998,7 @@ public class MatchControllerTest {
         requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
 
         var seasonDto = new SeasonCreateDto();
         seasonDto.setOldSeasonName("testing");
@@ -2010,7 +2011,7 @@ public class MatchControllerTest {
         var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
     }
 
     @Test
@@ -2068,6 +2069,7 @@ public class MatchControllerTest {
         assertEquals(oldMatch, fetched);
 
         matchDto = buildDto(
+                fetched,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2393,6 +2395,7 @@ public class MatchControllerTest {
 
         // test non unique players in same team
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(player1.getId()),
                         buildMember(player2.getId())
@@ -2408,6 +2411,7 @@ public class MatchControllerTest {
 
         // test non unique players in different teams
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(player1.getId()),
                         buildMember(player3.getId())
@@ -2477,6 +2481,7 @@ public class MatchControllerTest {
 
         // test too many finish moves in different teams
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2504,6 +2509,7 @@ public class MatchControllerTest {
 
         // test too many finish moves in same team
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2531,6 +2537,7 @@ public class MatchControllerTest {
 
         // test no finish move
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2558,6 +2565,7 @@ public class MatchControllerTest {
 
         // test finish move amount!=1
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2585,6 +2593,7 @@ public class MatchControllerTest {
 
         // test finish move amount!=1
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2701,6 +2710,7 @@ public class MatchControllerTest {
 
         // test invalid player id
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember("someIdThatNotExists")
@@ -2715,6 +2725,7 @@ public class MatchControllerTest {
 
         // test invalid player id
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember("someIdThatNotExists")
                 ),
@@ -2729,6 +2740,7 @@ public class MatchControllerTest {
 
         // test player from other season
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(oldPlayer1.getId())
@@ -2743,6 +2755,7 @@ public class MatchControllerTest {
 
         // test player from other season
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(newPlayer2.getId())
@@ -2757,6 +2770,7 @@ public class MatchControllerTest {
 
         // test player from other group
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(newPlayer2.getId())
@@ -2771,6 +2785,7 @@ public class MatchControllerTest {
 
         // test player from other group
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(otherPlayer1.getId())
@@ -2876,6 +2891,7 @@ public class MatchControllerTest {
 
         // test invalid move id
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2899,6 +2915,7 @@ public class MatchControllerTest {
 
         // test invalid move id
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2923,6 +2940,7 @@ public class MatchControllerTest {
 
         // test move from other season
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2947,6 +2965,7 @@ public class MatchControllerTest {
 
         // test move from other season
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2971,6 +2990,7 @@ public class MatchControllerTest {
 
         // test finish move from other season
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2995,6 +3015,7 @@ public class MatchControllerTest {
 
         // test move from other season
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3018,6 +3039,7 @@ public class MatchControllerTest {
 
         // test move from other group
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3042,6 +3064,7 @@ public class MatchControllerTest {
 
         // test move from other group
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3066,6 +3089,7 @@ public class MatchControllerTest {
 
         // test finish move from other group
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3090,6 +3114,7 @@ public class MatchControllerTest {
 
         // test move from other group
         matchDto = buildDto(
+                match,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3269,7 +3294,7 @@ public class MatchControllerTest {
         var newSeason = requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + oldMatch.getId(), null, String.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
 
         // test invalid match id (other group than provided)
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
@@ -3303,12 +3328,24 @@ public class MatchControllerTest {
         var otherGroupMatch = requestUtils.assertSuccess(matchResponse, MatchDto.class);
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + otherGroupMatch.getId(), null, String.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
     }
 
     private MatchCreateDto buildDto(TeamCreateDto... teams) {
+        return buildDto(null, teams);
+    }
+
+    private MatchCreateDto buildDto(@Nullable MatchDto existing, TeamCreateDto... teams) {
+        var teamList = List.of(teams);
+
+        if (existing != null) {
+            for (int i = 0; i < teams.length; i++) {
+                teamList.get(i).setExistingTeamId(existing.getTeams().get(i).getId());
+            }
+        }
+
         var dto = new MatchCreateDto();
-        dto.setTeams(List.of(teams));
+        dto.setTeams(teamList);
         return dto;
     }
 
