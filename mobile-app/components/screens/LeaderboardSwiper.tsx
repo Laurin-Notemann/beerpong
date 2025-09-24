@@ -146,7 +146,7 @@ export function LeaderboardSwiper() {
                 <Text
                     color="secondary"
                     variant="fineprint"
-                    style={{ marginTop: 32, marginBottom: 32 }}
+                    style={{ marginTop: 32, marginBottom: 66 }}
                     onPress={() => {
                         nav.navigate('dailyLeaderboardSettings');
                     }}
@@ -174,7 +174,7 @@ export function LeaderboardSwiper() {
                 <Text
                     color="secondary"
                     variant="fineprint"
-                    style={{ marginTop: 32, marginBottom: 32 }}
+                    style={{ marginTop: 32, marginBottom: 66 }}
                 >
                     {group.data?.activeSeason?.startDate
                         ? `Season started ${env.format.date.seasonStartAndEnd(
@@ -205,7 +205,7 @@ export function LeaderboardSwiper() {
                     <Text
                         color="secondary"
                         variant="fineprint"
-                        style={{ marginTop: 32, marginBottom: 32 + 32 }}
+                        style={{ marginTop: 32, marginBottom: 66 }}
                     >
                         {group.data?.activeSeason?.startDate
                             ? `Group created ${env.format.date.seasonStartAndEnd(

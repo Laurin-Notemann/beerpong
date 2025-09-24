@@ -337,7 +337,7 @@ const darkWithGloss: Theme = {
             blue: '#18A0FB',
         },
         delete: '#F44336',
-        confirm: '#EF4679',
+        confirm: '#6291F3',
     },
     borderRadius: {
         card: 10,

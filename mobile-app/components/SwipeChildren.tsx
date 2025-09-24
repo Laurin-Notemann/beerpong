@@ -68,7 +68,7 @@ export const SwipeChildren: React.FC<SwipeChildrenProps> = ({
     children,
     distance = 96,
     right = false,
-    height = 22,
+    height = 21,
 }) => {
     const items = useMemo(() => React.Children.toArray(children), [children]);
     const [widths, setWidths] = useState<number[]>(Array(items.length).fill(0));

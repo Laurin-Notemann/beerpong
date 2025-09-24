@@ -23,7 +23,6 @@ export function ScopePickerHeaderTitle() {
                 key="pastSeasons"
                 progress={scopePicker.pastSeasonsSwiperProgress}
                 right
-                height={21}
             >
                 {pastSeasons.map((i) => (
                     <HeaderTitle key={i.id} title={i.name || 'Unknown'} />
@@ -36,7 +35,6 @@ export function ScopePickerHeaderTitle() {
             key="leaderboard"
             progress={scopePicker.leaderboardSwiperProgress}
             right
-            height={21}
         >
             <HeaderTitle title="Today" />
             <HeaderTitle

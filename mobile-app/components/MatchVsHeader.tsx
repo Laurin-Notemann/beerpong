@@ -64,21 +64,26 @@ const hasFinishMove = (team?: TeamMember[]): boolean => {
 };
 
 export interface MatchVsHeaderProps extends ViewProps {
-    match: Omit<MinimalMatch, 'id' | 'date'>;
+    match: Omit<MinimalMatch, 'id' | 'date'> | null | undefined;
 
     hasScore?: boolean;
 
     maxItems?: number;
 
     highlightedId?: string;
+
+    variant?: 'default' | 'header';
 }
 function MatchVsHeader({
     match,
     hasScore = true,
     maxItems = 4,
     highlightedId,
+    variant = 'default',
     ...rest
 }: MatchVsHeaderProps) {
+    if (!match) return null;
+
     const winnerTeamId: TeamId = hasFinishMove(match.redTeam)
         ? 'red'
         : hasFinishMove(match.blueTeam)
@@ -92,7 +97,9 @@ function MatchVsHeader({
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 16,
+
+                    gap: variant === 'header' ? 2 : 16,
+                    bottom: variant === 'header' ? 4 : undefined,
                 },
                 rest.style,
             ]}
@@ -259,6 +266,9 @@ const MemoMatchVsHeader = React.memo(MatchVsHeader, (prev, next) => {
     }
     const a = prev.match;
     const b = next.match;
+
+    if (!a || !b) return false;
+
     if (a.blueCups !== b.blueCups || a.redCups !== b.redCups) {
         return false;
     }
