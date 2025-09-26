@@ -32,17 +32,6 @@ declare namespace Components {
             token?: string;
             type?: 'ACCESS' | 'REFRESH';
         }
-        export interface AuthRefreshDto {
-            refreshToken?: string;
-        }
-        export interface AuthSignupDto {
-            installationType?: 'IOS' | 'ANDROID';
-            deviceId?: string;
-        }
-        export interface AuthTokenDto {
-            token?: string;
-            type?: 'ACCESS' | 'REFRESH';
-        }
         export interface ErrorDetails {
             code?: string;
             description?: string;
@@ -465,9 +454,9 @@ declare namespace Paths {
         }
         export interface PathParameters {
             groupId: Parameters.GroupId;
-            seasonId: Parameters.SeasonId;
-            id: Parameters.Id;
             teamId: Parameters.TeamId;
+            id: Parameters.Id;
+            seasonId: Parameters.SeasonId;
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeTeamDto;
@@ -771,9 +760,9 @@ declare namespace Paths {
         }
         export interface PathParameters {
             groupId: Parameters.GroupId;
-            seasonId: Parameters.SeasonId;
-            id: Parameters.Id;
             teamId: Parameters.TeamId;
+            id: Parameters.Id;
+            seasonId: Parameters.SeasonId;
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeTeamDto;
