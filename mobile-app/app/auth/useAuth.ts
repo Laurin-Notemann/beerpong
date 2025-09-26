@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react-native';
 import * as Application from 'expo-application';
+import { isAxiosError } from 'axios';
 // import * as Notifications from 'expo-notifications';
 // import * as Permissions from 'expo-permissions';
 import jwt, { JWTBody, JWTDefaultBody } from 'expo-jwt';
@@ -74,7 +75,10 @@ async function getRefreshToken(api: BeerPongClient): Promise<string> {
 
         const deviceId = await getInstallationId();
 
-        const signupRes = await api.signup({}, { installationType, deviceId });
+        const signupRes = await api.signup(undefined, {
+            installationType,
+            deviceId,
+        });
 
         const refreshToken = signupRes.data.data?.token;
 
@@ -107,7 +111,9 @@ async function getAccessToken(
     try {
         refreshToken = await getRefreshToken(api);
 
-        const accessTokenRes = await api.refreshAuth({}, { refreshToken });
+        const accessTokenRes = await api.refreshAuth(undefined, {
+            refreshToken,
+        });
 
         const accessToken = accessTokenRes.data.data?.token;
 
@@ -131,9 +137,39 @@ async function getAccessToken(
             'with refreshToken',
             refreshToken
         );
-        (err as Error).message =
-            'Failed to get access token: ' +
-            (err instanceof Error ? err.message : 'Unknown error');
+        if (isAxiosError(err)) {
+            // more detailed error response returned by the backend, can be found in ErrorCodes.java
+            const customErrorCode = err.response?.data.error?.code;
+
+            // standard http error code, e.g. "Bad Request", automatically thrown by spring boot
+            const httpErrorCode = err.response?.data.error;
+
+            const isInvalidRefreshToken =
+                customErrorCode === 'authRefreshInvalidToken';
+
+            if (isInvalidRefreshToken) {
+                ConsoleLogger.error(
+                    'Failed to get access token: refresh token not accepted by backend'
+                );
+                await versusDeviceStorage.removeRefreshToken();
+
+                err = new Error(
+                    'Failed to get access token: refresh token not accepted by backend'
+                );
+            } else {
+                const message = customErrorCode ?? httpErrorCode ?? err.message;
+
+                (err as Error).message =
+                    'Failed to get access token: ' +
+                    message +
+                    ': ' +
+                    err.message;
+            }
+        } else {
+            (err as Error).message =
+                'Failed to get access token: ' +
+                ((err as Error).message ?? 'Unknown error');
+        }
 
         Sentry.captureException(err, {
             extra: {
@@ -167,13 +203,12 @@ export function useAuth() {
 
             try {
                 ConsoleLogger.info('refreshing access token');
+
                 const promise = getAccessToken(api);
 
                 setFetchingPromise(promise);
 
                 const value = await promise;
-
-                ConsoleLogger.info('refreshed access token');
 
                 setAccessToken(value);
 

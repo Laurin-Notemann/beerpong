@@ -43,10 +43,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
 
             client.interceptors.request.use((config) => {
                 config.headers.Authorization = 'Bearer ' + accessToken;
-                console.log(
-                    'using request interceptor:',
-                    config.headers.Authorization
-                );
+
                 return config;
             });
 

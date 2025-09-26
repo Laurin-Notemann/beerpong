@@ -34,12 +34,25 @@ class VersusDeviceStorage {
             );
         }
     }
+    private async removeItemAsync(key: string) {
+        try {
+            return this.store.deleteItemAsync(key, {
+                keychainAccessible: 0,
+                keychainService: this.KEYCHAIN_SERVICE,
+            });
+        } catch (err) {
+            this.logger.error(`Failed to remove item with key "${key}":`, err);
+        }
+    }
 
     public async getRefreshToken() {
         return this.getItemAsync(this.REFRESH_TOKEN_KEY);
     }
     public async setRefreshToken(token: string) {
         return this.setItemAsync(this.REFRESH_TOKEN_KEY, token);
+    }
+    public async removeRefreshToken() {
+        return this.removeItemAsync(this.REFRESH_TOKEN_KEY);
     }
 }
 export const versusDeviceStorage = new VersusDeviceStorage();
