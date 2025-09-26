@@ -1,12 +1,15 @@
 package pro.beerpong.api.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.sockets.LocalTimeAdapter;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -20,7 +23,13 @@ public class SeasonController {
     }
 
     @PutMapping("/active-season")
-    public ResponseEntity<ResponseEnvelope<SeasonDto>> startNewSeason(@PathVariable String groupId, @RequestBody SeasonCreateDto dto) {
+    public ResponseEntity<ResponseEnvelope<SeasonDto>> startNewSeason(@PathVariable String groupId,
+                                                                      @RequestBody SeasonCreateDto dto,
+                                                                      @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         if (groupId == null || groupId.trim().isEmpty()) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
@@ -33,7 +42,7 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_RULE_MOVES);
         }
 
-        var season = seasonService.startNewSeason(dto, groupId);
+        var season = seasonService.startNewSeason(dto, groupId, user);
 
         if (season != null) {
             return ResponseEnvelope.ok(season);
@@ -94,15 +103,29 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
-        if (dto.getSeasonSettings().getWakeTimeHour() < 0 || dto.getSeasonSettings().getWakeTimeHour() > 23) {
+        var minMatches = (dto.getSeasonSettings().getMinMatchesToQualify() != null ? dto.getSeasonSettings().getMinMatchesToQualify() : season.get().getSeasonSettings().getMinMatchesToQualify());
+        var minTeamSize = (dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : season.get().getSeasonSettings().getMinTeamSize());
+        var maxTeamSize = (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : season.get().getSeasonSettings().getMaxTeamSize());
+
+        LocalTime wakeTime = season.get().getSeasonSettings().getWakeTime();
+
+        if (dto.getSeasonSettings().getWakeTime() != null) {
+            try {
+                wakeTime = LocalTime.parse(dto.getSeasonSettings().getWakeTime(), LocalTimeAdapter.FORMATTER);
+            } catch (DateTimeParseException e) {
+                wakeTime = null;
+            }
+        }
+
+        if (wakeTime == null) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TIME_FORMAT);
-        } else if (dto.getSeasonSettings().getMinTeamSize() > dto.getSeasonSettings().getMaxTeamSize()) {
+        } else if (minTeamSize > maxTeamSize) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_WRONG_TEAM_SIZES);
         }
 
-        dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(dto.getSeasonSettings().getMinMatchesToQualify(), 0), 1000));
-        dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMinTeamSize(), 1), 10));
-        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(dto.getSeasonSettings().getMaxTeamSize(), 1), 10));
+        dto.getSeasonSettings().setMinMatchesToQualify(Math.min(Math.max(minMatches, 0), 1000));
+        dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(minTeamSize, 1), 10));
+        dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(maxTeamSize, 1), 10));
 
         SeasonDto updatedSeason = seasonService.updateSeason(season.get(), dto);
         if (updatedSeason != null) {

@@ -2,6 +2,7 @@ package pro.beerpong.api.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.dto.*;
 import pro.beerpong.api.service.MatchService;
@@ -15,6 +16,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
 public class MatchController {
+    // currently we only support games played with exactly 2 teams
+    private static final int MIN_TEAM_AMOUNT = 2;
+    private static final int MAX_TEAM_AMOUNT = 2;
+
     private final MatchService matchService;
     private final SeasonService seasonService;
     private final SubscriptionHandler subscriptionHandler;
@@ -28,7 +33,12 @@ public class MatchController {
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
-                                                                  @RequestBody MatchCreateDto matchCreateDto) {
+                                                                  @RequestBody MatchCreateDto matchCreateDto,
+                                                                  @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
         var error = seasonService.validateActiveSeason(MatchDto.class, pair);
 
@@ -40,7 +50,11 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
-        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto);
+        if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
+        }
+
+        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto, user);
 
         if (match != null) {
             if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
@@ -125,6 +139,10 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
 
+        if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
+        }
+
         if (matchCreateDto.getTeams().stream().anyMatch(teamCreateDto -> teamCreateDto.getExistingTeamId() == null)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_NEEDS_IDS);
         }
@@ -156,10 +174,7 @@ public class MatchController {
     }
 
     @PutMapping("/{id}/photos/{teamId}")
-    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId,
-                                                              @PathVariable String seasonId,
-                                                              @PathVariable String id,
-                                                              @PathVariable String teamId) {
+    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
         var match = matchService.getMatchById(id);
 
         if (match == null) {
@@ -186,10 +201,7 @@ public class MatchController {
     }
 
     @DeleteMapping("/{id}/photos/{teamId}")
-    public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId,
-                                                                 @PathVariable String seasonId,
-                                                                 @PathVariable String id,
-                                                                 @PathVariable String teamId) {
+    public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
         var match = matchService.getMatchById(id);
 
         if (match == null) {

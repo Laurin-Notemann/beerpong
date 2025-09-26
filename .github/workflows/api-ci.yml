@@ -55,4 +55,5 @@ jobs:
           AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
         working-directory: api

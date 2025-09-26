@@ -41,8 +41,8 @@ export default function Page() {
     useEffect(() => {
         // we need to keep this in state because `realtime` is a ref and will not cause a rerender if it changes,
         // so the indicator could be misleading
-        setIsRealtimeOpen(realtime.isOpen);
-    }, [realtime.isOpen]);
+        setIsRealtimeOpen(realtime?.isOpen ?? false);
+    }, [realtime?.isOpen]);
 
     const theme = useTheme();
 

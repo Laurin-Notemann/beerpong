@@ -2,9 +2,7 @@ package pro.beerpong.api.mapping;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.web.util.UriComponentsBuilder;
 import pro.beerpong.api.control.GroupPresetsController;
-import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dto.GroupCreateDto;
 import pro.beerpong.api.model.dto.GroupDto;

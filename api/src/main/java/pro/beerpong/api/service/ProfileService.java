@@ -6,9 +6,14 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.dto.ProfileCreateDto;
+import pro.beerpong.api.model.dto.ProfileCreatedDto;
+import pro.beerpong.api.model.dto.ProfileDto;
+import pro.beerpong.api.model.dto.UserDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.util.AssetType;
@@ -25,8 +30,9 @@ public class ProfileService {
     private final GroupMapper groupMapper;
     private final ProfileMapper profileMapper;
     private final PlayerService playerService;
+    private final AuthService authService;
 
-    public ProfileCreatedDto createPlayer(String groupId, ProfileCreateDto dto) {
+    public ProfileCreatedDto createPlayer(String groupId, ProfileCreateDto dto, UserDto user) {
         var existing = this.getProfileByName(groupId, dto.getName());
 
         if (existing != null) {
@@ -63,19 +69,20 @@ public class ProfileService {
                 return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
             }
         } else {
-            return new ProfileCreatedDto(this.createProfile(groupId, dto), false, null);
+            return new ProfileCreatedDto(this.createProfile(groupId, dto, authService.memberByUser(user, groupId)), false, null);
         }
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto) {
-        return this.createProfile(groupId, profileCreateDto, true);
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, GroupMember groupMember) {
+        return this.createProfile(groupId, profileCreateDto, true, groupMember);
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer) {
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer, GroupMember groupMember) {
         var groupOptional = groupRepository.findById(groupId);
 
         var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
         profile.setGroup(groupOptional.orElseThrow());
+        profile.setCreatedBy(groupMember);
 
         var savedProfile = profileRepository.save(profile);
 
@@ -125,10 +132,10 @@ public class ProfileService {
         return false;
     }
 
-    public ProfileDto updateProfile(String id, ProfileCreateDto profileCreateDto) {
+    public ProfileDto updateProfile(String id, String groupId, ProfileCreateDto profileCreateDto) {
         var profile = getRawProfileById(id);
 
-        if (profile == null) {
+        if (profile == null || !profile.getGroup().getId().equals(groupId)) {
             return null;
         }
 

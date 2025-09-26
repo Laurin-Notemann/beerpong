@@ -6,4 +6,9 @@ import lombok.Data;
 public class RuleCreateDto {
     private String title;
     private String description;
+
+    public boolean invalidDto() {
+        return this.title == null || this.title.trim().isEmpty() ||
+                this.description == null || this.description.trim().isEmpty();
+    }
 }

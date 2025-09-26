@@ -60,7 +60,7 @@ jobs:
           echo "Commit messages in range:"
           echo "$COMMIT_MESSAGES"
 
-          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi types"; then
+          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi types (TEMPORARILY DISABLE ACTION)"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
             echo "A recent commit contains the version bump message. Stopping the workflow."
             exit 0  # This will stop the workflow without failing it
@@ -99,6 +99,7 @@ jobs:
           AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
         working-directory: api
 
       # replace all occurences of "*/*" with "application/json" in the openapi.json file
@@ -130,3 +131,4 @@ jobs:
         if: steps.check_authors.outputs.has_bot_author != 'true'
         with:
           commit_message: "chore: update openapi types"
+          skip_checkout: true
