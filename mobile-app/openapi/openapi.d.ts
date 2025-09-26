@@ -32,6 +32,17 @@ declare namespace Components {
             token?: string;
             type?: 'ACCESS' | 'REFRESH';
         }
+        export interface AuthRefreshDto {
+            refreshToken?: string;
+        }
+        export interface AuthSignupDto {
+            installationType?: 'IOS' | 'ANDROID';
+            deviceId?: string;
+        }
+        export interface AuthTokenDto {
+            token?: string;
+            type?: 'ACCESS' | 'REFRESH';
+        }
         export interface ErrorDetails {
             code?: string;
             description?: string;

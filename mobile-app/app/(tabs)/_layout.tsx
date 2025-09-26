@@ -26,8 +26,6 @@ const GroupsButton = () => {
 };
 
 export default function TabLayout() {
-    const nav = useNavigation();
-
     const { selectedGroupId } = useGroupStore();
 
     const selectedGroup = useGroupQuery(selectedGroupId);
@@ -38,11 +36,6 @@ export default function TabLayout() {
 
     const headerTitleIfGroupIsLoading = '';
     const headerTitleIfGroupCantBeFound = '';
-
-    if (!selectedGroupId) {
-        nav.navigate('onboarding');
-        return;
-    }
 
     const groupHeader = {
         ...navStyles,
