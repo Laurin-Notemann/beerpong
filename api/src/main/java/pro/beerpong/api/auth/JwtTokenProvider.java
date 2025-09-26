@@ -1,4 +1,3 @@
-// temp comment to force openapi action to rerun
 package pro.beerpong.api.auth;
 
 import io.jsonwebtoken.*;

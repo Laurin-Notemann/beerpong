@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 
 import { QK } from '@/api/utils/reactQuery';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import JoinGroup from '@/components/screens/JoinGroup';
 import { showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -11,6 +12,9 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
     const router = useRouter();
+
+    const nav = useNavigation();
+
     const { joinGroupMutation, selectGroup } = useGroupStore();
 
     const queryClient = useQueryClient();
