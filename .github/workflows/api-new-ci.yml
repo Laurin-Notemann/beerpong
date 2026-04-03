@@ -1,4 +1,4 @@
-name: Api CI
+name: Api New CI
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   run-tests:
-    name: Run Api tests
+    name: Run Api new tests
     runs-on: ubuntu-latest
     services:
       postgres:
