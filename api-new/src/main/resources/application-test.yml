@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:mydb;NON_KEYWORDS=VALUE
+    username: sa
+    password: password
