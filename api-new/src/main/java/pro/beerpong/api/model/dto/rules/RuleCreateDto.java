@@ -8,7 +8,9 @@ public class RuleCreateDto {
     private String description;
 
     public boolean invalidDto() {
-        return this.title == null || this.title.trim().isEmpty() ||
-                this.description == null || this.description.trim().isEmpty();
+        return this.title == null ||
+                this.title.trim().isEmpty() ||
+                this.description == null ||
+                this.description.trim().isEmpty();
     }
 }

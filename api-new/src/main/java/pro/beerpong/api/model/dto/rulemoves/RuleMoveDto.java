@@ -9,5 +9,4 @@ public class RuleMoveDto {
     private int pointsForTeam;
     private int pointsForScorer;
     private boolean finishingMove;
-    private SeasonDto season;
 }

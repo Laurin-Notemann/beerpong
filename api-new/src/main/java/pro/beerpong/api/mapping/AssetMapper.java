@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Value;
 import pro.beerpong.api.model.dao.Asset;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.AssetUploadResponse;
+import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 
 @Mapper(componentModel = "spring")
 public abstract class AssetMapper {

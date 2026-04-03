@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.ResponseEnvelope;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
+import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.service.AssetService;
 
 @RestController

@@ -10,7 +10,9 @@ public class RuleMoveCreateDto {
     private boolean finishingMove;
 
     public boolean invalidDto() {
-        return this.name == null || this.name.trim().isEmpty() ||
-                this.pointsForTeam < 0 || this.pointsForScorer < 0;
+        return this.name == null ||
+                this.name.trim().isEmpty() ||
+                this.pointsForTeam < 0 ||
+                this.pointsForScorer < 0;
     }
 }
