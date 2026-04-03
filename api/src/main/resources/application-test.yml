@@ -3,3 +3,13 @@ spring:
     url: jdbc:h2:mem:mydb;NON_KEYWORDS=VALUE
     username: sa
     password: password
+sentry:
+    dsn: ""
+app:
+  aws:
+    enabled: false
+    region: ${AWS_REGION}
+    bucket: ${AWS_BUCKET_NAME}
+    endpoint: ${AWS_ENDPOINT}
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
