@@ -20,7 +20,7 @@ public enum ErrorCodes {
     INVALID_GROUP_INVITE_CODE(HttpStatus.BAD_REQUEST, "invalidGroupInviteCode", "Group invite code must be non-null and non-empty!"),
     INVALID_GROUP_ID(HttpStatus.BAD_REQUEST, "invalidGroupId", "Group id must be non-null and non-empty!")
     /* SEASONS */,
-    SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "seasonNotFound", "The requested season could not be found!"),
+    SEASON_NOT_FOUND(HttpStatus.NOT_FOUND, "seasonNotFound", "This season could not be found!"),
     SEASON_ALREADY_ENDED(HttpStatus.FORBIDDEN, "seasonAlreadyEnded", "Past seasons are immutable!"),
     SEASON_WRONG_TIME_FORMAT(HttpStatus.BAD_REQUEST, "seasonWrongTimeFormat", "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"),
     SEASON_WRONG_TEAM_SIZES(HttpStatus.BAD_REQUEST, "seasonWrongTeamSizes", "The min team size has to be less then or equal to the max team size!"),
@@ -49,9 +49,9 @@ public enum ErrorCodes {
     /* RULES */
     RULE_INVALID_DTO(HttpStatus.BAD_REQUEST, "ruleInvalidDto", "Every rule name and description has to be non-null and non-empty!"),
     /* PLAYERS */
-    PLAYER_VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "playerValidationFailed", "The player is not part of the provided season or group!"),
     PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "playerNotFound", "The requested player could not be found!"),
     PLAYER_ALREADY_DELETED(HttpStatus.FORBIDDEN, "playerAlreadyDeleted", "This player has been deleted!"),
+    PLAYER_NOT_OF_GROUP(HttpStatus.BAD_REQUEST, "playerNotOfGroup", "The provided player and group id do not match!"),
     INVALID_PLAYER_ID(HttpStatus.BAD_REQUEST, "invalidPlayerId", "Player id must be non-null and non-empty!")
     /* PROFILES */,
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "profileNotFound", "The requested profile could not be found!"),

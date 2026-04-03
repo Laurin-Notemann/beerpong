@@ -3,6 +3,8 @@ package pro.beerpong.api.sockets;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
+import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.profile.ProfileDto;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
 import pro.beerpong.api.model.dto.rules.RuleDto;
 import pro.beerpong.api.model.dto.seasons.SeasonDto;

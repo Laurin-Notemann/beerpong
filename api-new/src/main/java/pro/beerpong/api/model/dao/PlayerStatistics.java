@@ -40,4 +40,17 @@ public class PlayerStatistics {
 
     @Transient
     private Map<RankingAlgorithm, Integer> rankBy = Maps.newHashMap();
+
+    public PlayerStatistics(PlayerStatistics statistics) {
+        this.id = null;
+        this.points = statistics.getPoints();
+        this.matches = statistics.getMatches();
+        this.wins = statistics.getWins();
+        this.moves = statistics.getMoves();
+        this.totalTeamSize = statistics.getTotalTeamSize();
+        this.avgPointsPerMatch = statistics.getAvgPointsPerMatch();
+        this.avgTeamSize = statistics.getAvgTeamSize();
+        this.elo = statistics.getElo();
+        this.rankBy = statistics.getRankBy();
+    }
 }

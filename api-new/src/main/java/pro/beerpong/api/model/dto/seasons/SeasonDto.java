@@ -13,6 +13,6 @@ public class SeasonDto {
     private ZonedDateTime startDate;
     private ZonedDateTime endDate;
     private String groupId;
-    private SeasonSettings seasonSettings;
-    private GroupMemberDto createdBy;
+    private String seasonSettingsId;
+    private String createdBy;
 }

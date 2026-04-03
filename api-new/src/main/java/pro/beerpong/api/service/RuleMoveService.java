@@ -1,7 +1,6 @@
 package pro.beerpong.api.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,7 @@ import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.dto.ServiceResponse;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveCreateDto;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
 import pro.beerpong.api.repository.RuleMoveRepository;

@@ -8,5 +8,6 @@ public class RuleDto {
     private String id;
     private String title;
     private String description;
-    private GroupMemberDto createdBy;
+    private String createdBy;
+    private String seasonId;
 }

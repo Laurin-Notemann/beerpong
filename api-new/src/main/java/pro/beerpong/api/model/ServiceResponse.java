@@ -1,19 +1,18 @@
-package pro.beerpong.api.model.dto;
+package pro.beerpong.api.model;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import pro.beerpong.api.model.ErrorCodes;
 
 @Getter
 public class ServiceResponse<T> {
     private T data;
     private ErrorCodes errorCode;
 
-    private ServiceResponse(@NotNull T data) {
+    protected ServiceResponse(@NotNull T data) {
         this.data = data;
     }
 
-    private ServiceResponse(@NotNull ErrorCodes errorCode) {
+    protected ServiceResponse(@NotNull ErrorCodes errorCode) {
         this.errorCode = errorCode;
     }
 
@@ -23,6 +22,10 @@ public class ServiceResponse<T> {
 
     public static <T> ServiceResponse<T> error(ErrorCodes code) {
         return new ServiceResponse<>(code);
+    }
+
+    public boolean isOk() {
+        return this.data != null;
     }
 
     public boolean isError() {
