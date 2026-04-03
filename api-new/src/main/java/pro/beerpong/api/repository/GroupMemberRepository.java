@@ -14,7 +14,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, String
 
     List<GroupMember> findByGroupId(String groupId);
 
-    Optional<GroupMember> findByUserIdAndGroupId(String groupId, String userId);
+    Optional<GroupMember> findByUserIdAndGroupId(String userId, String groupId);
 
     boolean existsByUserIdAndGroupId(String userId, String groupId);
 
