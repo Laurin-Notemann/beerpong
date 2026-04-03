@@ -1,4 +1,4 @@
-package pro.beerpong.api.model.dto;
+package pro.beerpong.api.model.dto.user;
 
 import lombok.Data;
 

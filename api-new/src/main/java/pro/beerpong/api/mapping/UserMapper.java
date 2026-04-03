@@ -2,7 +2,7 @@ package pro.beerpong.api.mapping;
 
 import org.mapstruct.Mapper;
 import pro.beerpong.api.model.dao.User;
-import pro.beerpong.api.model.dto.UserDto;
+import pro.beerpong.api.model.dto.user.UserDto;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
