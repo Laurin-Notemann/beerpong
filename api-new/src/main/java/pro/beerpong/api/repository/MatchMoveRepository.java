@@ -9,7 +9,7 @@ import pro.beerpong.api.model.dao.TeamMember;
 import java.util.List;
 
 public interface MatchMoveRepository extends JpaRepository<MatchMove, String> {
-    List<MatchMove> findByTeamMemberId(String teamMemberId);
+    List<MatchMove> findByTeamMemberIdIn(List<String> teamMemberIds);
 
     void deleteAllByTeamMemberId(String teamMemberId);
 

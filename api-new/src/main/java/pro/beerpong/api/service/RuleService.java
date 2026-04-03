@@ -1,7 +1,7 @@
 package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -12,7 +12,6 @@ import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dto.rules.RuleCreateDto;
 import pro.beerpong.api.model.dto.rules.RuleDto;
-import pro.beerpong.api.model.dto.seasons.SeasonDto;
 import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.RuleRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -21,6 +20,7 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class RuleService {
     private static final List<DefaultRule> DEFAULT_RULES = List.of(
             buildRule("Teams", "The two teams can have any size, and they don't have to have the same number of players."),
@@ -45,20 +45,13 @@ public class RuleService {
     );
 
     private final SubscriptionHandler subscriptionHandler;
-    private final RuleRepository ruleRepository;
 
-    private final RuleMapper ruleMapper;
-    private final AuthService authService;
+    private final RuleRepository ruleRepository;
     private final SeasonRepository seasonRepository;
 
-    @Autowired
-    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper, AuthService authService, SeasonRepository seasonRepository) {
-        this.subscriptionHandler = subscriptionHandler;
-        this.ruleRepository = matchRepository;
-        this.ruleMapper = ruleMapper;
-        this.authService = authService;
-        this.seasonRepository = seasonRepository;
-    }
+    private final RuleMapper ruleMapper;
+
+    private final AuthService authService;
 
     @Transactional
     public List<RuleDto> writeRules(String groupId, String seasonId, List<RuleCreateDto> rules, UserDto user) {

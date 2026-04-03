@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class RuleMoveService {
     private static final List<DefaultRuleMove> DEFAULT_BEERPONG_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
@@ -41,19 +43,11 @@ public class RuleMoveService {
     );
 
     private final SubscriptionHandler subscriptionHandler;
+
     private final RuleMoveRepository moveRepository;
     private final SeasonRepository seasonRepository;
 
     private final RuleMoveMapper moveMapper;
-
-    @Autowired
-    public RuleMoveService(SubscriptionHandler subscriptionHandler, RuleMoveRepository moveRepository, SeasonRepository seasonRepository,
-                           RuleMoveMapper moveMapper) {
-        this.subscriptionHandler = subscriptionHandler;
-        this.moveRepository = moveRepository;
-        this.seasonRepository = seasonRepository;
-        this.moveMapper = moveMapper;
-    }
 
     public ServiceResponse<RuleMoveDto> createRuleMove(String groupId, Season season, RuleMoveCreateDto createDto, boolean callSocket) {
         if (createDto.invalidDto()) {

@@ -24,11 +24,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthService {
     private final JwtTokenProvider tokenProvider;
+
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
-    private final UserMapper userMapper;
     private final GroupMemberRepository groupMemberRepository;
     private final GroupRepository groupRepository;
+
+    private final UserMapper userMapper;
 
     public AuthTokenDto registerDevice(AuthSignupDto dto) {
         if (dto.getDeviceId() == null || dto.getDeviceId().trim().isEmpty() || dto.getInstallationType() == null) {
