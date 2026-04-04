@@ -8,8 +8,10 @@ import pro.beerpong.api.mapping.TeamMapper;
 import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dao.Team;
+import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.model.dto.teams.TeamCreateDto;
 import pro.beerpong.api.model.dto.teams.TeamDto;
+import pro.beerpong.api.repository.AssetRepository;
 import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.TeamRepository;
 import pro.beerpong.api.util.AssetType;
@@ -27,18 +29,17 @@ public class TeamService {
     private final AssetService assetService;
 
     private final TeamMapper teamMapper;
+    private final AssetRepository assetRepository;
 
-    @Transactional
     public void createTeamsForMatch(String matchId, List<TeamCreateDto> teams, @Nullable Map<String, Asset> teamAssets) {
         var match = matchRepository.getReferenceById(matchId);
 
         List<Team> entities = teams.stream()
-                .map(dto -> {
-                    Team team = new Team();
-                    team.setMatch(match);
-                    team.setPhoto(resolveTeamPhoto(dto, teamAssets));
-                    return team;
-                })
+                .map(dto -> new Team(
+                        null,
+                        match,
+                        resolveTeamPhoto(dto, teamAssets)
+                ))
                 .toList();
 
         List<Team> saved = teamRepository.saveAll(entities);
@@ -56,6 +57,7 @@ public class TeamService {
         if (teamAssets == null && dto.isSavePhoto()) {
             var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
 
+            //TODO fix asset uploading
             assetService.uploadAsset(asset);
 
             return asset;

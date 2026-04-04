@@ -178,6 +178,7 @@ public class GroupService {
             return groupDto;
         }
 
+        //TODO should this be num of all time matches?
         groupDto.setNumberOfMatches(matchRepository.countBySeasonId(groupDto.getActiveSeasonId()));
         groupDto.setNumberOfPlayers(playerRepository.countBySeasonId(groupDto.getActiveSeasonId()));
         groupDto.setNumberOfSeasons(seasonRepository.countByGroupId(groupDto.getId()));
