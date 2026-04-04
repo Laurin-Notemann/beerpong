@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface SeasonRepository extends JpaRepository<Season, String> {
     List<Season> findByGroupId(String groupId);
 
+    long countByGroupId(String groupId);
+
     @Query("SELECT s FROM Season s JOIN FETCH s.seasonSettings WHERE s.id = :id")
     Optional<Season> findByIdWithSettings(@Param("id") String id);
 

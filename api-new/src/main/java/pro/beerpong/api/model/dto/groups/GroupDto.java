@@ -17,7 +17,7 @@ public class GroupDto {
     private ZonedDateTime createdAt;
     private GroupPreset sportPreset;
     private String customSportName;
-    private int numberOfPlayers;
-    private int numberOfMatches;
-    private int numberOfSeasons;
+    private long numberOfPlayers;
+    private long numberOfMatches;
+    private long numberOfSeasons;
 }

@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface PlayerRepository extends JpaRepository<Player, String> {
     List<Player> findBySeasonId(String seasonId);
 
+    long countBySeasonId(String seasonId);
+
     List<Player> findByProfileId(String profileId);
 
     @Query("SELECT p FROM Player p JOIN FETCH p.season WHERE p.profile.id = :profileId ORDER BY p.season.startDate DESC LIMIT 1")
