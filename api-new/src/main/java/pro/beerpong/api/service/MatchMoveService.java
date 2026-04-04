@@ -25,20 +25,17 @@ public class MatchMoveService {
     private final MatchMoveMapper matchMoveMapper;
 
     public void createMatchMoves(TeamMember teamMember, List<MatchMoveDto> moves) {
-        for (MatchMoveDto moveDto : moves) {
-            if (moveDto.getCount() < 1) {
-                continue;
-            }
+        List<MatchMove> entities = moves.stream()
+                .filter(dto -> dto.getCount() >= 1)
+                .map(dto -> new MatchMove(
+                        null,
+                        dto.getCount(),
+                        teamMember,
+                        ruleMoveRepository.getReferenceById(dto.getMoveId())
+                ))
+                .toList();
 
-            MatchMove matchMove = new MatchMove(
-                    null,
-                    moveDto.getCount(),
-                    teamMember,
-                    ruleMoveRepository.getReferenceById(moveDto.getMoveId())
-            );
-
-            matchMoveRepository.save(matchMove);
-        }
+        matchMoveRepository.saveAll(entities);
     }
 
     public List<MatchMoveDtoComplete> buildMatchMoveDtos(List<TeamMemberDto> teamMembers) {
