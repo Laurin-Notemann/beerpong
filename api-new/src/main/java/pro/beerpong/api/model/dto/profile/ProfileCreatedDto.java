@@ -15,10 +15,10 @@ public class ProfileCreatedDto extends ProfileDto {
     @Nullable
     private String lastActiveSeasonId;
 
-    public ProfileCreatedDto(String id, String name, AssetMetadataDto asset, String groupId, GroupMemberDto createdBy, boolean reactivated, @Nullable String lastActiveSeasonId) {
+    public ProfileCreatedDto(String id, String name, String asset, String groupId, String createdBy, boolean reactivated, @Nullable String lastActiveSeasonId) {
         setId(id);
         setName(name);
-        setAvatarAsset(asset);
+        setAssetIdAvatar(asset);
         setGroupId(groupId);
         setCreatedBy(createdBy);
         this.reactivated = reactivated;
@@ -26,6 +26,6 @@ public class ProfileCreatedDto extends ProfileDto {
     }
 
     public ProfileCreatedDto(ProfileDto profile, boolean reactivated, @Nullable String lastActiveSeasonId) {
-        this(profile.getId(), profile.getName(), profile.getAvatarAsset(), profile.getGroupId(), profile.getCreatedBy(), reactivated, lastActiveSeasonId);
+        this(profile.getId(), profile.getName(), profile.getAssetIdAvatar(), profile.getGroupId(), profile.getCreatedBy(), reactivated, lastActiveSeasonId);
     }
 }

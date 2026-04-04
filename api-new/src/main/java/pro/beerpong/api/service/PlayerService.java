@@ -36,17 +36,17 @@ public class PlayerService {
 
     private final PlayerMapper playerMapper;
 
-    public List<PlayerDto> getBySeasonId(String seasonId) {
-        return this.getBySeasonId(seasonId, false);
-    }
-
-    public List<PlayerDto> getBySeasonId(String seasonId, boolean showInactive) {
-        return playerRepository.findBySeasonId(seasonId)
-                .stream()
-                .filter(player -> showInactive || player.isActiveThisSeason())
-                .map(this::mapPlayer)
-                .toList();
-    }
+// TODO   public List<PlayerDto> getBySeasonId(String seasonId) {
+//        return this.getBySeasonId(seasonId, false);
+//    }
+//
+// TODO   public List<PlayerDto> getBySeasonId(String seasonId, boolean showInactive) {
+//        return playerRepository.findBySeasonId(seasonId)
+//                .stream()
+//                .filter(player -> showInactive || player.isActiveThisSeason())
+//                .map(this::mapPlayer)
+//                .toList();
+//    }
 
     public Optional<Player> findLatestPlayer(String profileId) {
         return playerRepository.findLatestByProfileId(profileId);

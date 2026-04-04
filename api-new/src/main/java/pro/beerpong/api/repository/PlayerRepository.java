@@ -13,9 +13,6 @@ public interface PlayerRepository extends JpaRepository<Player, String> {
 
     List<Player> findByProfileId(String profileId);
 
-    @Query("SELECT p FROM Player p JOIN FETCH p.season WHERE p.profile.id = :profileId")
-    List<Player> findByProfileIdWithSeason(@Param("profileId") String profileId);
-
     @Query("SELECT p FROM Player p JOIN FETCH p.season WHERE p.profile.id = :profileId ORDER BY p.season.startDate DESC LIMIT 1")
     Optional<Player> findLatestByProfileId(@Param("profileId") String profileId);
 

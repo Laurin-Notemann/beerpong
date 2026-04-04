@@ -55,7 +55,7 @@ public class AssetService {
         return assetMapper.assetMetadataDtoToAsset(dto);
     }
 
-    public AssetUploadResponse storeAsset(AssetType assetType, @Nullable AssetCropDto assetCropDto) {
+    public Asset storeAsset(AssetType assetType, @Nullable AssetCropDto assetCropDto) {
         if (assetCropDto != null) {
             return this.storeAsset(
                     assetType,
@@ -68,11 +68,11 @@ public class AssetService {
         }
     }
 
-    public AssetUploadResponse storeAsset(AssetType assetType) {
+    public Asset storeAsset(AssetType assetType) {
         return this.storeAsset(assetType, 0.0D, 0.0D, 0.0D);
     }
 
-    public AssetUploadResponse storeAsset(AssetType assetType, double offsetX, double offsetY, double zoom) {
+    public Asset storeAsset(AssetType assetType, double offsetX, double offsetY, double zoom) {
         var asset = new Asset(
                 null,
                 assetType,
@@ -83,6 +83,10 @@ public class AssetService {
 
         asset = assetRepository.save(asset);
 
+        return asset;
+    }
+
+    public AssetUploadResponse uploadAsset(Asset asset) {
         return createPutUpload(asset, resolveImageContentType());
     }
 
