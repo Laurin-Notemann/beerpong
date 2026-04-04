@@ -11,6 +11,9 @@ import java.util.Optional;
 public interface PlayerRepository extends JpaRepository<Player, String> {
     List<Player> findBySeasonId(String seasonId);
 
+    @Query("SELECT p FROM Player p WHERE p.season.id = :seasonId AND p.activeThisSeason = true")
+    List<Player> findBySeasonIdOnlyActive(String seasonId);
+
     long countBySeasonId(String seasonId);
 
     List<Player> findByProfileId(String profileId);
