@@ -30,11 +30,12 @@ public class MatchMoveService {
                 continue;
             }
 
-            MatchMove matchMove = new MatchMove();
-
-            matchMove.setTeamMember(teamMember);
-            matchMove.setRuleMove(ruleMoveRepository.getReferenceById(moveDto.getMoveId()));
-            matchMove.setValue(moveDto.getCount());
+            MatchMove matchMove = new MatchMove(
+                    null,
+                    moveDto.getCount(),
+                    teamMember,
+                    ruleMoveRepository.getReferenceById(moveDto.getMoveId())
+            );
 
             matchMoveRepository.save(matchMove);
         }

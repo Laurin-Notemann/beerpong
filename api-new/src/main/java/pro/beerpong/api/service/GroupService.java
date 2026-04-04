@@ -25,10 +25,7 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
@@ -47,7 +44,6 @@ public class GroupService {
     private final AuthService authService;
     private final AssetService assetService;
     private final ProfileService profileService;
-    private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
 
@@ -80,7 +76,7 @@ public class GroupService {
         groupMember.setGroup(group);
         groupMember = groupMemberRepository.save(groupMember);
 
-        // TODO maybe find way to prevent double group saving. but not that big of a deal
+        // future: maybe find way to prevent double group saving. but not that big of a deal
         group.setCreatedBy(groupMember);
 
         season.setCreatedBy(groupMember);
@@ -108,11 +104,11 @@ public class GroupService {
                 .map(groupMapper::groupToGroupDto);
     }
 
-    public GroupDto getGroupById(String id) {
-        return withStats(getRawGroupById(id));
+    public GroupDto getGroupByIdWithStats(String id) {
+        return withStats(getGroupById(id));
     }
 
-    public GroupDto getRawGroupById(String id) {
+    public GroupDto getGroupById(String id) {
         return groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
                 .orElse(null);
