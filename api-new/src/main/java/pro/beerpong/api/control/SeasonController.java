@@ -111,7 +111,7 @@ public class SeasonController {
         dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(maxTeamSize, 1), 10));
 
         SeasonDto updatedSeason = seasonService.updateSeason(pair.getSecond(), dto);
-        
+
         if (updatedSeason != null) {
             return ResponseEnvelope.ok(updatedSeason);
         } else {

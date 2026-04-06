@@ -98,7 +98,11 @@ public class SeasonService {
 
             var leaderboard = leaderboardService.generateLeaderboard(groupMapper.groupToGroupDto(group), "season", true, oldSeason.getId());
 
-            leaderboard.getEntries().forEach(oldPlayerDto -> {
+            if (leaderboard.isError()) {
+                return ServiceResponse.error(ErrorCodes.ERROR);
+            }
+
+            leaderboard.getData().getEntries().forEach(oldPlayerDto -> {
                 var player = new Player();
                 player.setId(null);
                 player.setProfile(profileRepository.getReferenceById(oldPlayerDto.getProfileId()));
@@ -138,14 +142,15 @@ public class SeasonService {
         var players = playerService.getPlayerIdsInSeason(seasonId, showInactive);
 
         if (showStats) {
-            return leaderboardService.generateLeaderboard(
-                            groupService.getGroupById(groupId),
-                            "season",
-                            true,
-                            seasonId,
-                            players
-                    )
-                    .getEntries();
+            var leaderBoard = leaderboardService.generateLeaderboard(
+                    groupService.getGroupById(groupId),
+                    "season",
+                    true,
+                    seasonId,
+                    players
+            );
+
+            return (leaderBoard.isOk() ? leaderBoard.getData().getEntries() : List.of());
         } else {
             return playerRepository.findByIdInWithStatistics(players).stream()
                     .peek(playerDto -> playerDto.setStatistics(null))
