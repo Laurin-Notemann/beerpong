@@ -18,4 +18,6 @@ public interface ProfileRepository extends JpaRepository<Profile, String> {
     List<Profile> findByGroupIdWithAvatar(@Param("groupId") String groupId);
 
     Optional<Profile> findByGroupIdAndName(String groupId, String name);
+
+    boolean existsByIdAndGroupId(String id, String groupId);
 }

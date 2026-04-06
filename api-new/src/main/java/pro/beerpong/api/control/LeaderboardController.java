@@ -1,5 +1,6 @@
 package pro.beerpong.api.control;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
@@ -12,18 +13,13 @@ import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.LeaderboardService;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/groups/{groupId}")
 public class LeaderboardController {
-    private final LeaderboardService leaderboardService;
-    private final GroupService groupService;
     private final SeasonRepository seasonRepository;
 
-    @Autowired
-    public LeaderboardController(LeaderboardService leaderboardService, GroupService groupService, SeasonRepository seasonRepository) {
-        this.leaderboardService = leaderboardService;
-        this.groupService = groupService;
-        this.seasonRepository = seasonRepository;
-    }
+    private final LeaderboardService leaderboardService;
+    private final GroupService groupService;
 
     @GetMapping("/leaderboard")
     public ResponseEntity<ResponseEnvelope<LeaderboardDto>> getLeaderboard(@PathVariable String groupId, @RequestParam String scope, @RequestParam(required = false) @Nullable String seasonId) {

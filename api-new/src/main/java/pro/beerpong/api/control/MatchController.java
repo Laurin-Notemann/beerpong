@@ -1,7 +1,6 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +29,14 @@ public class MatchController {
     private static final int MIN_TEAM_AMOUNT = 2;
     private static final int MAX_TEAM_AMOUNT = 2;
 
-    private final MatchService matchService;
-    private final SeasonService seasonService;
     private final SubscriptionHandler subscriptionHandler;
+
     private final MatchRepository matchRepository;
     private final SeasonRepository seasonRepository;
     private final TeamRepository teamRepository;
+
+    private final MatchService matchService;
+    private final SeasonService seasonService;
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
@@ -74,9 +75,7 @@ public class MatchController {
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getAllMatches(@PathVariable String groupId, @PathVariable String seasonId) {
-        if (!seasonRepository.existsById(seasonId)) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
-        } else if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
@@ -85,9 +84,7 @@ public class MatchController {
 
     @GetMapping("/extended")
     public ResponseEntity<ResponseEnvelope<List<MatchDtoExtended>>> getAllMatchesExtended(@PathVariable String groupId, @PathVariable String seasonId) {
-        if (!seasonRepository.existsById(seasonId)) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
-        } else if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 

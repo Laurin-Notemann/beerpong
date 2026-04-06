@@ -12,8 +12,8 @@ import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.service.AssetService;
 
 @RestController
-@RequestMapping("/assets")
 @RequiredArgsConstructor
+@RequestMapping("/assets")
 public class AssetController {
     private final AssetService assetService;
 

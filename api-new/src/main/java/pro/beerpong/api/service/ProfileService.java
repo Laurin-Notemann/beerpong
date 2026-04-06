@@ -109,8 +109,8 @@ public class ProfileService {
         return profileMapper.profileToProfileDto(savedProfile);
     }
 
-    public List<ProfileDto> listAllProfiles() {
-        return profileRepository.findAll()
+    public List<ProfileDto> listAllProfiles(String groupId) {
+        return profileRepository.findByGroupId(groupId)
                 .stream()
                 .map(profileMapper::profileToProfileDto)
                 .collect(Collectors.toList());
@@ -155,11 +155,17 @@ public class ProfileService {
             return null;
         }
 
-        profile.get().setAvatar(null);
+        if (profile.get().getAvatar() != null) {
+            assetService.deleteAsset(profile.get().getAvatar().getId());
 
-        profileRepository.save(profile.get());
+            profile.get().setAvatar(null);
 
-        return profileMapper.profileToProfileDto(profile.get());
+            profileRepository.save(profile.get());
+
+            return profileMapper.profileToProfileDto(profile.get());
+        } else {
+            return null;
+        }
     }
 
     @Transactional

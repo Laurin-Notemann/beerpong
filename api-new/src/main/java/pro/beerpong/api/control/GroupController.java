@@ -1,5 +1,6 @@
 package pro.beerpong.api.control;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,23 +23,16 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/groups")
 public class GroupController {
     public static final String USER_GROUPS_ENDPOINT = "user";
     public static final String JOIN_GROUP_ENDPOINT = "join";
 
-    private final GroupService groupService;
-    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
-    private final AuthService authService;
 
-    @Autowired
-    public GroupController(GroupService groupService, AssetService assetService, SubscriptionHandler subscriptionHandler, AuthService authService) {
-        this.groupService = groupService;
-        this.assetService = assetService;
-        this.subscriptionHandler = subscriptionHandler;
-        this.authService = authService;
-    }
+    private final GroupService groupService;
+    private final AuthService authService;
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto,
@@ -154,7 +148,6 @@ public class GroupController {
         }
 
         group = groupService.unsetWallpaper(group.getId());
-        assetService.deleteAsset(assetId);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_DELETE, id, group));
 

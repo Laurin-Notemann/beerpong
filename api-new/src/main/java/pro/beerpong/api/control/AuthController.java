@@ -14,8 +14,8 @@ import pro.beerpong.api.model.dto.auth.AuthTokenDto;
 import pro.beerpong.api.service.AuthService;
 
 @RestController
-@RequestMapping("/auth")
 @RequiredArgsConstructor
+@RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
 

@@ -160,10 +160,16 @@ public class GroupService {
         var group = groupRepository.findById(groupId).orElse(null);
         if (group == null) return null;
 
-        group.setWallpaper(null);
-        groupRepository.save(group);
+        if (group.getWallpaper() != null) {
+            assetService.deleteAsset(group.getWallpaper().getId());
 
-        return groupMapper.groupToGroupDto(group);
+            group.setWallpaper(null);
+            groupRepository.save(group);
+
+            return groupMapper.groupToGroupDto(group);
+        } else {
+            return null;
+        }
     }
 
     @Transactional

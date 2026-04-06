@@ -13,6 +13,8 @@ public interface RuleMoveRepository extends JpaRepository<RuleMove, String> {
 
     List<RuleMove> findByIdIn(List<String> ids);
 
+    boolean existsByIdAndSeasonId(String id, String seasonId);
+
     @Query("SELECT rm.id FROM RuleMove rm WHERE rm.id IN :ids AND rm.finishingMove = true")
     List<String> findFinishingMoveIds(@Param("ids") List<String> ids);
 
