@@ -18,10 +18,7 @@ import pro.beerpong.api.model.dto.seasons.SeasonDto;
 import pro.beerpong.api.model.dto.seasons.SeasonStartDto;
 import pro.beerpong.api.model.dto.seasons.SeasonUpdateDto;
 import pro.beerpong.api.model.dto.user.UserDto;
-import pro.beerpong.api.repository.GroupRepository;
-import pro.beerpong.api.repository.PlayerRepository;
-import pro.beerpong.api.repository.PlayerStatisticsRepository;
-import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.LocalTimeAdapter;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -44,18 +41,14 @@ public class SeasonService {
     private final PlayerRepository playerRepository;
 
     private final AuthService authService;
-    private final PlayerService playerService;
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
-    private final GroupService groupService;
-    //TODO private final LeaderboardService leaderboardService;
+    private final LeaderboardService leaderboardService;
 
     private final SeasonMapper seasonMapper;
-    private final GroupMapper groupMapper;
-    private final PlayerMapper playerMapper;
     private final ProfileMapper profileMapper;
     private final PlayerStatisticsMapper playerStatisticsMapper;
-    private final SeasonSettingsMapper seasonSettingsMapper;
+    private final ProfileRepository profileRepository;
 
     public ServiceResponse<SeasonDto> startNewSeason(@NotNull SeasonCreateDto dto, @NotNull String groupId, @NotNull UserDto user) {
         var createdByOptional = authService.getMemberInGroup(user.getId(), groupId);
@@ -102,7 +95,7 @@ public class SeasonService {
             leaderboard.getEntries().forEach(oldPlayerDto -> {
                 var player = new Player();
                 player.setId(null);
-                player.setProfile(profileMapper.profileDtoToProfile(oldPlayerDto.getProfile()));
+                player.setProfile(profileRepository.getReferenceById(oldPlayerDto.getProfileId()));
                 player.setSeason(season);
                 player.setActiveThisSeason(oldPlayerDto.isActiveThisSeason());
 

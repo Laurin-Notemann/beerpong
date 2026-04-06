@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dto.player.PlayerCreateDto;
 import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
 
 @Mapper(componentModel = "spring", uses = PlayerStatisticsMapper.class)
 public interface PlayerMapper {
@@ -12,6 +13,9 @@ public interface PlayerMapper {
     @Mapping(source = "season.id", target = "seasonId")
     @Mapping(source = "statistics.id", target = "statisticsId")
     PlayerDto playerToPlayerDto(Player player);
+
+    @Mapping(source = "profile.id", target = "profileId")
+    PlayerDtoExtended playerToPlayerDtoExtended(Player player);
 
     Player playerCreateDtoToPlayer(PlayerCreateDto dto);
 

@@ -14,6 +14,19 @@ public interface PlayerRepository extends JpaRepository<Player, String> {
     @Query("SELECT p FROM Player p WHERE p.season.id = :seasonId AND p.activeThisSeason = true")
     List<Player> findBySeasonIdOnlyActive(String seasonId);
 
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.id = :seasonId")
+    List<Player> findBySeasonIdWithStatistics(@Param("seasonId") String seasonId);
+
+
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.id = :seasonId AND p.id IN :ids")
+    List<Player> findBySeasonIdWithStatisticsIn(@Param("seasonId") String seasonId, @Param("ids") List<String> ids);
+
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.group.id = :groupId")
+    List<Player> findByGroupIdWithStatistics(@Param("groupId") String groupId);
+
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.group.id = :groupId AND p.id IN :ids")
+    List<Player> findByGroupIdWithStatisticsIn(@Param("groupId") String groupId, @Param("ids") List<String> ids);
+
     long countBySeasonId(String seasonId);
 
     List<Player> findByProfileId(String profileId);

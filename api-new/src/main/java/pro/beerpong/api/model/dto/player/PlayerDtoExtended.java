@@ -1,15 +1,13 @@
 package pro.beerpong.api.model.dto.player;
 
 import lombok.Data;
-import pro.beerpong.api.model.dao.PlayerStatistics;
-import pro.beerpong.api.model.dto.profile.ProfileDto;
 import pro.beerpong.api.model.dto.seasons.SeasonDto;
 
 @Data
-public class PlayerDto {
+public class PlayerDtoExtended {
     private String id;
     private String profileId;
-    private String seasonId;
+    private SeasonDto season;
     private boolean activeThisSeason;
-    private String statisticsId;
+    private PlayerStatisticsDto statistics;
 }

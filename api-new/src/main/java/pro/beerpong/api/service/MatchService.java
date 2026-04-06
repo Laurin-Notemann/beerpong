@@ -1,8 +1,10 @@
 package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.*;
 import pro.beerpong.api.model.DefaultServiceResponse;
@@ -12,7 +14,7 @@ import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.model.dto.matches.*;
 import pro.beerpong.api.model.dto.matchmoves.MatchMoveDto;
 import pro.beerpong.api.model.dto.matchmoves.MatchMoveDtoComplete;
-import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
 import pro.beerpong.api.model.dto.teammembers.TeamMemberCreateDto;
 import pro.beerpong.api.model.dto.teammembers.TeamMemberDto;
 import pro.beerpong.api.model.dto.teams.TeamDto;
@@ -237,19 +239,30 @@ public class MatchService {
                 .map(this::matchToMatchDto);
     }
 
-    public Stream<PlayerDto> streamAllPlayers(@NotNull String groupId) {
-        return playerRepository.findByGroupId(groupId).stream()
-                .map(playerMapper::playerToPlayerDto);
+    public List<PlayerDtoExtended> getAllPlayers(@NotNull String groupId, @Nullable List<String> playerIds) {
+        Stream<Player> playerStream;
+
+        if (playerIds == null) {
+            playerStream = playerRepository.findByGroupIdWithStatistics(groupId).stream();
+        } else {
+            playerStream = playerRepository.findByGroupIdWithStatisticsIn(groupId, playerIds).stream();
+        }
+
+        return playerStream.map(playerMapper::playerToPlayerDtoExtended)
+                .toList();
     }
 
-    public Stream<MatchDto> streamAllMatchesInSeason(@NotNull String seasonId) {
-        return matchRepository.findBySeasonId(seasonId).stream()
-                .map(this::matchToMatchDto);
-    }
+    public List<PlayerDtoExtended> getAllPlayersInSeason(@NotNull String seasonId, @Nullable List<String> playerIds) {
+        Stream<Player> playerStream;
 
-    public Stream<PlayerDto> streamAllPlayersInSeason(@NotNull String seasonId) {
-        return playerRepository.findBySeasonId(seasonId).stream()
-                .map(playerMapper::playerToPlayerDto);
+        if (playerIds == null) {
+            playerStream = playerRepository.findBySeasonIdWithStatistics(seasonId).stream();
+        } else {
+            playerStream = playerRepository.findBySeasonIdWithStatisticsIn(seasonId, playerIds).stream();
+        }
+
+        return playerStream.map(playerMapper::playerToPlayerDtoExtended)
+                .toList();
     }
 
     public MatchDtoExtended getFullMatch(@NotNull Match match) {
@@ -285,7 +298,12 @@ public class MatchService {
     }
 
     public List<MatchDtoExtended> getFullMatchesBySeasonId(@NotNull String seasonId) {
-        var matches = matchRepository.findBySeasonId(seasonId);
+        return getFullMatchesSince(seasonId, null);
+    }
+
+    public List<MatchDtoExtended> getFullMatchesSince(@NotNull String seasonId, @Nullable ZonedDateTime since) {
+        var matches = (since == null ? matchRepository.findBySeasonId(seasonId) :
+                matchRepository.findBySeasonIdAndDateAfter(seasonId, since));
         var matchIds = matches.stream()
                 .map(Match::getId)
                 .toList();

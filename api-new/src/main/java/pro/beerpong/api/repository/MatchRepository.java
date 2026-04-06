@@ -14,9 +14,6 @@ import java.util.Optional;
 public interface MatchRepository extends JpaRepository<Match, String> {
     List<Match> findBySeasonId(String seasonId);
 
-    @Query("SELECT m.id FROM Match m WHERE m.season.id = :seasonId")
-    List<String> findMatchesBySeasonId(@Param("seasonId") String seasonId);
-
     long countBySeasonId(String seasonId);
 
     @Query("SELECT m FROM Match m JOIN FETCH m.createdBy WHERE m.season.id = :seasonId ORDER BY m.date DESC")
