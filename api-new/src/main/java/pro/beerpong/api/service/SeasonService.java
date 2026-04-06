@@ -13,6 +13,7 @@ import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
 import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
 import pro.beerpong.api.model.dto.seasons.SeasonDto;
 import pro.beerpong.api.model.dto.seasons.SeasonStartDto;
@@ -49,6 +50,10 @@ public class SeasonService {
     private final ProfileMapper profileMapper;
     private final PlayerStatisticsMapper playerStatisticsMapper;
     private final ProfileRepository profileRepository;
+    private final GroupMapper groupMapper;
+    private final GroupService groupService;
+    private final PlayerService playerService;
+    private final PlayerMapper playerMapper;
 
     public ServiceResponse<SeasonDto> startNewSeason(@NotNull SeasonCreateDto dto, @NotNull String groupId, @NotNull UserDto user) {
         var createdByOptional = authService.getMemberInGroup(user.getId(), groupId);
@@ -90,7 +95,7 @@ public class SeasonService {
 
             oldSeason = seasonRepository.save(oldSeason);
 
-            var leaderboard = leaderboardService.generateLeaderboard(group.getId(), "season", true, oldSeason.getId());
+            var leaderboard = leaderboardService.generateLeaderboard(groupMapper.groupToGroupDto(group), "season", true, oldSeason.getId());
 
             leaderboard.getEntries().forEach(oldPlayerDto -> {
                 var player = new Player();
@@ -128,21 +133,22 @@ public class SeasonService {
         return ServiceResponse.ok(newDto);
     }
 
-    public List<PlayerDto> calcStatsForPlayersInSeason(SeasonDto season, boolean showInactive, boolean showStats) {
-        var players = playerRepository.findBySeasonId(season.getId(), showInactive);
+    public List<PlayerDtoExtended> getPlayersWithStats(String groupId, String seasonId, boolean showInactive, boolean showStats) {
+        var players = playerService.getPlayerIdsInSeason(seasonId, showInactive);
 
         if (showStats) {
             return leaderboardService.generateLeaderboard(
-                            season.getGroupId(),
+                            groupService.getGroupById(groupId),
                             "season",
                             true,
-                            season.getId(),
-                            players.stream()
+                            seasonId,
+                            players
                     )
                     .getEntries();
         } else {
-            return players.stream()
+            return playerRepository.findByIdInWithStatistics(players).stream()
                     .peek(playerDto -> playerDto.setStatistics(null))
+                    .map(playerMapper::playerToPlayerDtoExtended)
                     .toList();
         }
     }

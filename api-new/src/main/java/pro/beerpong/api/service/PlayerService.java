@@ -31,22 +31,17 @@ public class PlayerService {
     private final SubscriptionHandler subscriptionHandler;
 
     private final PlayerRepository playerRepository;
-    private final SeasonRepository seasonRepository;
     private final PlayerStatisticsRepository playerStatisticsRepository;
 
     private final PlayerMapper playerMapper;
 
-// TODO   public List<PlayerDto> getBySeasonId(String seasonId) {
-//        return this.getBySeasonId(seasonId, false);
-//    }
-//
-// TODO   public List<PlayerDto> getBySeasonId(String seasonId, boolean showInactive) {
-//        return playerRepository.findBySeasonId(seasonId)
-//                .stream()
-//                .filter(player -> showInactive || player.isActiveThisSeason())
-//                .map(this::mapPlayer)
-//                .toList();
-//    }
+    public List<String> getPlayerIdsInSeason(String seasonId, boolean withInactive) {
+        if (withInactive) {
+            return playerRepository.findAllPlayerIdsInSeason(seasonId);
+        } else {
+            return playerRepository.findActivePlayerIdsInSeason(seasonId);
+        }
+    }
 
     public Optional<Player> findLatestPlayer(String profileId) {
         return playerRepository.findLatestByProfileId(profileId);

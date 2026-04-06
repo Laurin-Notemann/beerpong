@@ -44,7 +44,7 @@ public class LeaderboardService {
         return this.generateLeaderboard(group, scope, useOld, seasonId, null);
     }
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId, @Nullable List<String> playerIds) {
+    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean includeExistingStats, @Nullable String seasonId, @Nullable List<String> playerIds) {
         var context = buildContext(group, scope, seasonId, playerIds);
 
         if (context == null) {
@@ -55,7 +55,7 @@ public class LeaderboardService {
         var ruleMoves = loadRuleMoves(context.matches);
 
         // build player lookup: profileId -> PlayerDto
-        var entries = buildPlayerEntries(context.players, scope, useOld);
+        var entries = buildPlayerEntries(context.players, scope, includeExistingStats);
 
         // build memberToProfile lookup
         var memberToProfile = buildMemberToProfileMap(context.matches);
@@ -237,14 +237,14 @@ public class LeaderboardService {
         return memberToProfile;
     }
 
-    private Map<String, PlayerDtoExtended> buildPlayerEntries(List<PlayerDtoExtended> players, String scope, boolean useOld) {
+    private Map<String, PlayerDtoExtended> buildPlayerEntries(List<PlayerDtoExtended> players, String scope, boolean includeExistingStats) {
         Map<String, PlayerDtoExtended> entries = new HashMap<>();
 
         players.forEach(playerDto -> {
             var existing = entries.get(playerDto.getProfileId());
 
             if (existing == null || isNewerPlayer(playerDto, existing)) {
-                if ((!scope.equals("all-time") && !useOld) || playerDto.getStatistics() == null) {
+                if ((!scope.equals("all-time") && !includeExistingStats) || playerDto.getStatistics() == null) {
                     playerDto.setStatistics(new PlayerStatisticsDto());
                 }
                 playerDto.getStatistics().setId(null);

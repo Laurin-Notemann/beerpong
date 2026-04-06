@@ -11,8 +11,11 @@ import java.util.Optional;
 public interface PlayerRepository extends JpaRepository<Player, String> {
     List<Player> findBySeasonId(String seasonId);
 
-    @Query("SELECT p FROM Player p WHERE p.season.id = :seasonId AND p.activeThisSeason = true")
-    List<Player> findBySeasonIdOnlyActive(String seasonId);
+    @Query("SELECT p.id FROM Player p WHERE p.season.id = :seasonId AND p.activeThisSeason = true")
+    List<String> findActivePlayerIdsInSeason(@Param("seasonId") String seasonId);
+
+    @Query("SELECT p.id FROM Player p WHERE p.season.id = :seasonId")
+    List<String> findAllPlayerIdsInSeason(@Param("seasonId") String seasonId);
 
     @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.id = :seasonId")
     List<Player> findBySeasonIdWithStatistics(@Param("seasonId") String seasonId);
@@ -20,6 +23,9 @@ public interface PlayerRepository extends JpaRepository<Player, String> {
 
     @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.id = :seasonId AND p.id IN :ids")
     List<Player> findBySeasonIdWithStatisticsIn(@Param("seasonId") String seasonId, @Param("ids") List<String> ids);
+
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.id IN :ids")
+    List<Player> findByIdInWithStatistics(@Param("ids") List<String> ids);
 
     @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.group.id = :groupId")
     List<Player> findByGroupIdWithStatistics(@Param("groupId") String groupId);
