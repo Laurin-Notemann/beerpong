@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class ServiceResponse<T> {
     private T data;
-    private ErrorCodes errorCode;
+    private ErrorCodes errorCode = ErrorCodes.ERROR;
 
     protected ServiceResponse(@NotNull T data) {
         this.data = data;
@@ -29,6 +29,6 @@ public class ServiceResponse<T> {
     }
 
     public boolean isError() {
-        return this.data == null && this.errorCode != null;
+        return this.data == null;
     }
 }

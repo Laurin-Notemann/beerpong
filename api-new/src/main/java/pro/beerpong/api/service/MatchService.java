@@ -1,7 +1,6 @@
 package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,6 +10,7 @@ import pro.beerpong.api.model.DefaultServiceResponse;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.*;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 import pro.beerpong.api.model.dto.matches.*;
 import pro.beerpong.api.model.dto.matchmoves.MatchMoveDto;
 import pro.beerpong.api.model.dto.matchmoves.MatchMoveDtoComplete;
@@ -124,7 +124,13 @@ public class MatchService {
     }
 
     @Transactional
-    public ServiceResponse<MatchDto> updateMatch(@NotNull String groupId, @NotNull Match match, @NotNull MatchCreateDto matchCreateDto) {
+    public ServiceResponse<MatchDto> updateMatch(@NotNull String groupId, @NotNull String matchId, @NotNull MatchCreateDto matchCreateDto) {
+        var match = matchRepository.getMatchById(matchId);
+
+        if (match == null) {
+            return ServiceResponse.error(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
         if (invalidCreateDto(match.getSeason().getId(), matchCreateDto)) {
             return ServiceResponse.error(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
         }
@@ -209,14 +215,16 @@ public class MatchService {
         if (team.getPhoto() != null) {
             assetService.deleteAsset(team.getPhoto().getId());
             team.setPhoto(null);
-        }
+            teamRepository.save(team);
 
-        teamRepository.save(team);
-        return teamMapper.teamToTeamDto(team);
+            return teamMapper.teamToTeamDto(team);
+        } else {
+            return null;
+        }
     }
 
     @Transactional
-    public TeamDto saveMatchPhoto(String teamId) {
+    public AssetUploadResponse saveMatchPhoto(String teamId) {
         var team = teamRepository.findById(teamId).orElse(null);
         if (team == null) return null;
 
@@ -230,7 +238,7 @@ public class MatchService {
             assetService.deleteAsset(oldPhotoId);
         }
 
-        return teamMapper.teamToTeamDto(team);
+        return assetService.uploadAsset(asset);
     }
 
 
@@ -265,6 +273,24 @@ public class MatchService {
                 .toList();
     }
 
+    public MatchDto getMatchById(@NotNull String matchId) {
+        return matchRepository.findById(matchId)
+                .map(this::matchToMatchDto)
+                .orElse(null);
+    }
+
+    public List<MatchDto> getMatchesInSeason(@NotNull String seasonId) {
+        return matchRepository.findBySeasonId(seasonId).stream()
+                .map(this::matchToMatchDto)
+                .toList();
+    }
+
+    public MatchDtoExtended getFullMatchById(@NotNull String matchId) {
+        var match = matchRepository.findById(matchId).orElse(null);
+        if (match == null) return null;
+        return getFullMatch(match);
+    }
+
     public MatchDtoExtended getFullMatch(@NotNull Match match) {
         var teams = teamRepository.findByMatchId(match.getId()).stream()
                 .map(teamMapper::teamToTeamDto)
@@ -289,7 +315,7 @@ public class MatchService {
         dto.setId(match.getId());
         dto.setDate(match.getDate());
         dto.setSeasonId(match.getSeason().getId());
-        dto.setCreatedBy(match.getCreatedBy().getId());
+        dto.setCreatedById(match.getCreatedBy().getId());
         dto.setTeams(teams);
         dto.setTeamMembers(teamMembers);
         dto.setMatchMoves(matchMoves);
@@ -331,7 +357,7 @@ public class MatchService {
             dto.setId(match.getId());
             dto.setDate(match.getDate());
             dto.setSeasonId(seasonId);
-            dto.setCreatedBy(match.getCreatedBy().getId());
+            dto.setCreatedById(match.getCreatedBy().getId());
 
             var matchTeams = teams.stream()
                     .filter(t -> t.getMatchId().equals(match.getId()))
@@ -399,6 +425,12 @@ public class MatchService {
                 .toList();
     }
 
+    public MatchOverviewDto getMatchOverviewById(@NotNull String matchId) {
+        var match = getFullMatchById(matchId);
+        if (match == null) return null;
+        return getMatchOverviewByMatch(match);
+    }
+
     public MatchOverviewDto getMatchOverviewByMatch(@NotNull MatchDtoExtended match) {
         if (match.getTeams().size() != 2) {
             throw new IllegalArgumentException("Match must have exactly least 2 teams");
@@ -451,13 +483,13 @@ public class MatchService {
                         teamCreateDto.getTeamMembers().size() <= settings.getMaxTeamSize());
     }
 
-    private MatchDto matchToMatchDto(@NotNull Match match) {
+    public MatchDto matchToMatchDto(@NotNull Match match) {
         var dto = new MatchDto();
 
         dto.setId(match.getId());
         dto.setDate(match.getDate());
         dto.setSeasonId(match.getSeason().getId());
-        dto.setCreatedBy(match.getCreatedBy().getId());
+        dto.setCreatedById(match.getCreatedBy().getId());
 
         return dto;
     }

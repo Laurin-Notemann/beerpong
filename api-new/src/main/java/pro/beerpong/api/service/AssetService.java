@@ -57,6 +57,7 @@ public class AssetService {
 
     public Asset storeAsset(AssetType assetType, @Nullable AssetCropDto assetCropDto) {
         if (assetCropDto != null) {
+            //TODO fix asset uploading
             return this.storeAsset(
                     assetType,
                     assetCropDto.getOffsetX(),

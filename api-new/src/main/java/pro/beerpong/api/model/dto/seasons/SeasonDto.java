@@ -1,8 +1,6 @@
 package pro.beerpong.api.model.dto.seasons;
 
 import lombok.Data;
-import pro.beerpong.api.model.dao.SeasonSettings;
-import pro.beerpong.api.model.dto.groupmembers.GroupMemberDto;
 
 import java.time.ZonedDateTime;
 
@@ -14,5 +12,5 @@ public class SeasonDto {
     private ZonedDateTime endDate;
     private String groupId;
     private SeasonSettingsDto seasonSettings;
-    private String createdBy;
+    private String createdById;
 }

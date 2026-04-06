@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface GroupMemberRepository extends JpaRepository<GroupMember, String> {
 
     List<GroupMember> findByUserId(String userId);
+    @Query("SELECT gm.group.id FROM GroupMember gm WHERE gm.user.id = :userId")
+    List<String> findGroupsByUserId(@Param("userId") String userId);
 
     List<GroupMember> findByGroupId(String groupId);
 

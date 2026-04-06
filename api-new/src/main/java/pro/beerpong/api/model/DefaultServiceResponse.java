@@ -17,4 +17,8 @@ public class DefaultServiceResponse extends ServiceResponse<Boolean> {
         return new DefaultServiceResponse(code);
     }
 
+    @Override
+    public Boolean getData() {
+        throw new UnsupportedOperationException("Default service response has no data. It should only be used to see if an operation was successful or not.");
+    }
 }

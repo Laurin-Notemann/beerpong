@@ -40,7 +40,7 @@ public class SocketEventData<T> {
     public static final SocketEventData<ProfileDto> PROFILE_AVATAR_DELETE = new SocketEventData<>(ProfileDto.class, SocketEventType.ASSETS, "profileAvatarDelete");
     public static final SocketEventData<AssetMetadataDto> GROUP_WALLPAPER_SET = new SocketEventData<>(AssetMetadataDto.class, SocketEventType.ASSETS, "groupWallpaperSet");
     public static final SocketEventData<GroupDto> GROUP_WALLPAPER_DELETE = new SocketEventData<>(GroupDto.class, SocketEventType.ASSETS, "groupWallpaperDelete");
-    public static final SocketEventData<TeamDto> MATCH_TEAM_PHOTO_SET = new SocketEventData<>(TeamDto.class, SocketEventType.ASSETS, "matchTeamPhotoSet");
+    public static final SocketEventData<AssetMetadataDto> MATCH_TEAM_PHOTO_SET = new SocketEventData<>(AssetMetadataDto.class, SocketEventType.ASSETS, "matchTeamPhotoSet");
     public static final SocketEventData<TeamDto> MATCH_TEAM_PHOTO_DELETE = new SocketEventData<>(TeamDto.class, SocketEventType.ASSETS, "matchTeamPhotoDelete");
 
     public static final SocketEventData<ProfileDto> PROFILE_CREATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileCreate");

@@ -186,29 +186,31 @@ public class SeasonService {
         return NullablePair.of(groupRepository.findById(groupId).orElse(null), seasonRepository.findById(seasonId).orElse(null));
     }
 
-    public <T> ResponseEntity<ResponseEnvelope<T>> validateSeason(Class<T> dtoClass, NullablePair<Group, Season> pair) {
+    public ServiceResponse<NullablePair<Group, Season>> validateSeason(String groupId, String seasonId) {
+        var pair = getSeasonAndGroup(groupId, seasonId);
+
         if (pair.getFirst() == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+            return ServiceResponse.error(ErrorCodes.GROUP_NOT_FOUND);
         } else if (pair.getSecond() == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
+            return ServiceResponse.error(ErrorCodes.SEASON_NOT_FOUND);
         } else if (!pair.getFirst().getId().equals(pair.getSecond().getGroup().getId())) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+            return ServiceResponse.error(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        return null;
+        return ServiceResponse.ok(pair);
     }
 
-    public <T> ResponseEntity<ResponseEnvelope<T>> validateActiveSeason(Class<T> dtoClass, NullablePair<Group, Season> pair) {
-        var err = validateSeason(dtoClass, pair);
+    public ServiceResponse<NullablePair<Group, Season>> validateActiveSeason(String groupId, String seasonId) {
+        var res = validateSeason(groupId, seasonId);
 
-        if (err != null) {
-            return err;
+        if (res.isError()) {
+            return ServiceResponse.error(res.getErrorCode());
         }
 
-        if (pair.getSecond().getEndDate() != null) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
+        if (res.getData().getSecond().getEndDate() != null) {
+            return ServiceResponse.error(ErrorCodes.SEASON_ALREADY_ENDED);
         }
 
-        return null;
+        return ServiceResponse.ok(res.getData());
     }
 }

@@ -8,6 +8,6 @@ import pro.beerpong.api.model.dto.seasons.SeasonDto;
 @Mapper(componentModel = "spring", uses = AssetMapper.class)
 public interface SeasonMapper {
     @Mapping(source = "group.id", target = "groupId")
-    @Mapping(source = "createdBy.id", target = "createdBy")
+    @Mapping(source = "createdBy.id", target = "createdById")
     SeasonDto seasonToSeasonDto(Season season);
 }

@@ -3,6 +3,8 @@ package pro.beerpong.api.service;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dto.groups.GroupDto;
@@ -36,20 +38,22 @@ public class LeaderboardService {
 
     private final RuleMoveRepository ruleMoveRepository;
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
+    public ServiceResponse<LeaderboardDto> generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
         return this.generateLeaderboard(group, scope, false, seasonId);
     }
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId) {
+    public ServiceResponse<LeaderboardDto> generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId) {
         return this.generateLeaderboard(group, scope, useOld, seasonId, null);
     }
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean includeExistingStats, @Nullable String seasonId, @Nullable List<String> playerIds) {
-        var context = buildContext(group, scope, seasonId, playerIds);
+    public ServiceResponse<LeaderboardDto> generateLeaderboard(GroupDto group, String scope, boolean includeExistingStats, @Nullable String seasonId, @Nullable List<String> playerIds) {
+        var contextRes = buildContext(group, scope, seasonId, playerIds);
 
-        if (context == null) {
-            return null;
+        if (contextRes.isError()) {
+            return ServiceResponse.error(contextRes.getErrorCode());
         }
+
+        var context = contextRes.getData();
 
         // load all rule moves for this season
         var ruleMoves = loadRuleMoves(context.matches);
@@ -68,7 +72,7 @@ public class LeaderboardService {
 
         entries.values().forEach(p -> p.getStatistics().calculate());
 
-        return buildLeaderboardDto(entries, scope, context.startedAt(), numMatches.get(), group);
+        return ServiceResponse.ok(buildLeaderboardDto(entries, scope, context.startedAt(), numMatches.get(), group));
     }
 
     private void processMatch(MatchDtoExtended match, Map<String, PlayerDtoExtended> entries,
@@ -153,39 +157,39 @@ public class LeaderboardService {
                 blueStats, redStats, playerPoints);
     }
 
-    private LeaderboardContext buildContext(GroupDto group, String scope, @Nullable String seasonId, @Nullable List<String> playerIds) {
+    private ServiceResponse<LeaderboardContext> buildContext(GroupDto group, String scope, @Nullable String seasonId, @Nullable List<String> playerIds) {
         return switch (scope) {
-            case "all-time" -> (group.getActiveSeasonId() != null ? new LeaderboardContext(
+            case "all-time" -> ServiceResponse.ok((group.getActiveSeasonId() != null ? new LeaderboardContext(
                     matchService.getFullMatchesBySeasonId(group.getActiveSeasonId()),
                     matchService.getAllPlayers(group.getId(), playerIds),
                     group.getCreatedAt()) : null
-            );
+            ));
             case "season" -> {
                 if (seasonId == null) {
-                    yield null;
+                    yield ServiceResponse.error(ErrorCodes.LEADERBOARD_SEASON_NOT_FOUND);
                 }
 
                 var season = seasonRepository.findById(seasonId).orElse(null);
 
                 if (season == null) {
-                    yield null;
+                    yield ServiceResponse.error(ErrorCodes.SEASON_NOT_FOUND);
                 }
 
-                yield new LeaderboardContext(
+                yield ServiceResponse.ok(new LeaderboardContext(
                         matchService.getFullMatchesBySeasonId(seasonId),
                         matchService.getAllPlayersInSeason(seasonId, playerIds),
                         season.getStartDate()
-                );
+                ));
             }
             case "today" -> {
                 if (group.getActiveSeasonId() == null) {
-                    yield null;
+                    yield ServiceResponse.error(ErrorCodes.GROUP_HAS_NO_RUNNING_SEASON);
                 }
 
                 var season = seasonRepository.findById(group.getActiveSeasonId()).orElse(null);
 
                 if (season == null) {
-                    yield null;
+                    yield ServiceResponse.error(ErrorCodes.GROUP_HAS_NO_RUNNING_SEASON);
                 }
 
                 var since = switch (season.getSeasonSettings().getDailyLeaderboard()) {
@@ -194,13 +198,13 @@ public class LeaderboardService {
                     case WAKE_TIME -> matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTime());
                 };
 
-                yield new LeaderboardContext(
+                yield ServiceResponse.ok(new LeaderboardContext(
                         matchService.getFullMatchesSince(season.getId(), since),
                         matchService.getAllPlayersInSeason(season.getId(), playerIds),
                         season.getStartDate()
-                );
+                ));
             }
-            default -> new LeaderboardContext(List.of(), List.of(), ZonedDateTime.now());
+            default -> ServiceResponse.error(ErrorCodes.LEADERBOARD_SCOPE_NOT_FOUND);
         };
     }
 

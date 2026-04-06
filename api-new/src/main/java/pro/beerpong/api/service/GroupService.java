@@ -12,10 +12,10 @@ import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
 import pro.beerpong.api.model.dto.assets.AssetCropDto;
-import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 import pro.beerpong.api.model.dto.groups.GroupCreateDto;
 import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.dto.groups.GroupWithStats;
 import pro.beerpong.api.model.dto.profile.ProfileCreateDto;
 import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.*;
@@ -25,6 +25,8 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
@@ -104,10 +106,6 @@ public class GroupService {
                 .map(groupMapper::groupToGroupDto);
     }
 
-    public GroupDto getGroupByIdWithStats(String id) {
-        return withStats(getGroupById(id));
-    }
-
     public GroupDto getGroupById(String id) {
         return groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
@@ -130,6 +128,31 @@ public class GroupService {
                     return dto;
                 })
                 .orElse(null);
+    }
+
+    public List<GroupDto> findGroupsByUser(UserDto user) {
+        return findGroupsWithStats(groupMemberRepository.findGroupsByUserId(user.getId()));
+    }
+
+    public Optional<GroupDto> findGroupWithStats(String groupId) {
+        return groupRepository.findByIdWithStats(groupId)
+                .map(this::toGroupDto);
+
+    }
+
+    public List<GroupDto> findGroupsWithStats(List<String> groupIds) {
+        return groupRepository.findByIdInWithStats(groupIds).stream()
+                .map(this::toGroupDto)
+                .toList();
+    }
+
+    private GroupDto toGroupDto(GroupWithStats withStats) {
+        var dto = groupMapper.groupToGroupDto(withStats.group());
+        dto.setNumberOfMatches(withStats.matches());
+        dto.setNumberOfPlayers(withStats.players());
+        dto.setNumberOfSeasons(withStats.seasons());
+
+        return dto;
     }
 
     @Transactional
@@ -169,20 +192,5 @@ public class GroupService {
         }
 
         return assetService.uploadAsset(uploadResponse);
-    }
-
-    private GroupDto withStats(@Nullable GroupDto groupDto) {
-        if (groupDto == null) {
-            return null;
-        } else if (groupDto.getActiveSeasonId() == null) {
-            return groupDto;
-        }
-
-        //TODO should this be num of all time matches?
-        groupDto.setNumberOfMatches(matchRepository.countBySeasonId(groupDto.getActiveSeasonId()));
-        groupDto.setNumberOfPlayers(playerRepository.countBySeasonId(groupDto.getActiveSeasonId()));
-        groupDto.setNumberOfSeasons(seasonRepository.countByGroupId(groupDto.getId()));
-
-        return groupDto;
     }
 }

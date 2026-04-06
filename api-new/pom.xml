@@ -12,7 +12,7 @@
     <groupId>pro.beerpong</groupId>
     <artifactId>api-new</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>api</name>
+    <name>api-new</name>
     <description>API for beerpong sache</description>
     <properties>
         <java.version>21</java.version>

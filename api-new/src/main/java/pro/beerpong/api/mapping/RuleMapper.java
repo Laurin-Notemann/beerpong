@@ -10,7 +10,7 @@ import pro.beerpong.api.model.dto.rules.RuleDto;
 public interface RuleMapper {
     Rule ruleCreateDtoToRule(RuleCreateDto dto);
 
-    @Mapping(source = "createdBy.id", target = "createdBy")
+    @Mapping(source = "createdBy.id", target = "createdById")
     @Mapping(source = "season.id", target = "seasonId")
     RuleDto ruleToRuleDto(Rule rule);
 }

@@ -29,4 +29,6 @@ public interface MatchRepository extends JpaRepository<Match, String> {
 
     @Query("SELECT m FROM Match m WHERE m.season.id = :seasonId AND m.date >= :since")
     List<Match> findBySeasonIdAndDateAfter(@Param("seasonId") String seasonId, @Param("since") ZonedDateTime since);
+
+    boolean existsByIdAndSeasonId(String matchId, String seasonId);
 }

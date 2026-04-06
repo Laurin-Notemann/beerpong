@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import pro.beerpong.api.control.GroupController;
 import pro.beerpong.api.service.AuthService;
 
 import java.io.IOException;
@@ -18,16 +19,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    //TODO move somewhere else
-    public static final String USER_GROUPS_ENDPOINT = "user";
-    public static final String JOIN_GROUP_ENDPOINT = "join";
-
     private static final String GROUPS_PATTERN = "/groups/**";
     private static final String GROUP_ID_PATTERN = "/groups/{groupId}/**";
     private static final List<String> NO_VALIDATION_ENDPOINTS = List.of(
             "/groups",
-            "/groups/" + USER_GROUPS_ENDPOINT,
-            "/groups/{groupId}/" + JOIN_GROUP_ENDPOINT
+            "/groups/" + GroupController.USER_GROUPS_ENDPOINT,
+            "/groups/{groupId}/" + GroupController.JOIN_GROUP_ENDPOINT
     );
 
     private final AuthService authService;

@@ -8,6 +8,7 @@ import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dao.Team;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TeamRepository extends JpaRepository<Team, String> {
     List<Team> findByMatchId(String matchId);
@@ -23,4 +24,8 @@ public interface TeamRepository extends JpaRepository<Team, String> {
     @Modifying
     @Query("DELETE FROM Team t WHERE t.match.id = :matchId")
     void deleteByMatchId(@Param("matchId") String matchId);
+
+    Optional<Team> findByIdAndMatchId(String id, String matchId);
+
+    boolean existsByIdAndMatchId(String id, String matchId);
 }
