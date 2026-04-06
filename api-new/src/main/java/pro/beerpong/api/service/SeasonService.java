@@ -26,6 +26,7 @@ import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.NullablePair;
 
+import javax.swing.text.html.Option;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -180,6 +181,16 @@ public class SeasonService {
                     return seasonDto;
                 })
                 .orElse(null);
+    }
+
+    public List<SeasonDto> getSeasonsByGroupId(String groupId) {
+        return seasonRepository.findByGroupId(groupId).stream()
+                .map(seasonMapper::seasonToSeasonDto)
+                .toList();
+    }
+
+    public Optional<SeasonDto> getSeasonById(String seasonId) {
+        return seasonRepository.findById(seasonId).map(seasonMapper::seasonToSeasonDto);
     }
 
     public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId) {
