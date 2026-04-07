@@ -6,6 +6,7 @@ import lombok.Data;
 public class RuleMoveDto {
     private String id;
     private String name;
+    private String seasonId;
     private int pointsForTeam;
     private int pointsForScorer;
     private boolean finishingMove;

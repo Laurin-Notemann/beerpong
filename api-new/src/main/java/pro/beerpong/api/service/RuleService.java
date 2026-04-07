@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RuleService {
-    private static final List<DefaultRule> DEFAULT_RULES = List.of(
+    public static final List<DefaultRule> DEFAULT_RULES = List.of(
             buildRule("Teams", "The two teams can have any size, and they don't have to have the same number of players."),
             buildRule("Cup Setup", "Ten cups per side are to be arranged in a pyramid pointing towards the opponent. The back row must be no further from the table edge than one cup diameter. All cups are to be filled with the same amount of liquid, preferably halfway full."),
             buildRule("Number of Balls", "Each side throws at least two balls. If there are three or more players per side, increase the ball count by one per extra player."),
@@ -121,5 +121,5 @@ public class RuleService {
         return new DefaultRule(title, description);
     }
 
-    private record DefaultRule(String title, String descr) { }
+    public record DefaultRule(String title, String descr) { }
 }

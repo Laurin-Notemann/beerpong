@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class RuleMoveService {
-    private static final List<DefaultRuleMove> DEFAULT_BEERPONG_MOVES = List.of(
+    public static final List<DefaultRuleMove> DEFAULT_BEERPONG_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Bomb", 2, 0, false),
             buildRuleMove("Bouncer", 2, 0, false),
@@ -36,7 +36,7 @@ public class RuleMoveService {
             buildRuleMove("Finish - Ring of fire", 1, 10, true)
     );
 
-    private static final List<DefaultRuleMove> DEFAULT_MOVES = List.of(
+    public static final List<DefaultRuleMove> DEFAULT_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Finish - Normal", 1, 3, true)
     );
@@ -158,5 +158,5 @@ public class RuleMoveService {
         return new DefaultRuleMove(name, pointsForScorer, pointsForTeam, finish);
     }
 
-    private record DefaultRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) { }
+    public record DefaultRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) { }
 }
