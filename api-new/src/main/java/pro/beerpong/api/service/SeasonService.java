@@ -55,6 +55,7 @@ public class SeasonService {
     private final GroupService groupService;
     private final PlayerService playerService;
     private final PlayerMapper playerMapper;
+    private final SeasonSettingsRepository seasonSettingsRepository;
 
     public ServiceResponse<SeasonDto> startNewSeason(@NotNull SeasonCreateDto dto, @NotNull String groupId, @NotNull UserDto user) {
         var createdByOptional = authService.getMemberInGroup(user.getId(), groupId);
@@ -87,6 +88,8 @@ public class SeasonService {
             newSeason.getSeasonSettings().setDailyLeaderboard(oldSeason.getSeasonSettings().getDailyLeaderboard());
             newSeason.getSeasonSettings().setWakeTime(oldSeason.getSeasonSettings().getWakeTime());
         }
+
+        newSeason.setSeasonSettings(seasonSettingsRepository.save(newSeason.getSeasonSettings()));
 
         var season = seasonRepository.save(newSeason);
 

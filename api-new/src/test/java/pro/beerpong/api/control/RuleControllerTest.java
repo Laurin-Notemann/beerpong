@@ -62,7 +62,7 @@ public class RuleControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
 
         var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/rules", List.class, RuleDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, "test", "beerpong");
 

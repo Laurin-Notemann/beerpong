@@ -17,20 +17,19 @@ public interface PlayerRepository extends JpaRepository<Player, String> {
     @Query("SELECT p.id FROM Player p WHERE p.season.id = :seasonId")
     List<String> findAllPlayerIdsInSeason(@Param("seasonId") String seasonId);
 
-    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.id = :seasonId")
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.season.id = :seasonId")
     List<Player> findBySeasonIdWithStatistics(@Param("seasonId") String seasonId);
 
-
-    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.id = :seasonId AND p.id IN :ids")
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.season.id = :seasonId AND p.id IN :ids")
     List<Player> findBySeasonIdWithStatisticsIn(@Param("seasonId") String seasonId, @Param("ids") List<String> ids);
 
-    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.id IN :ids")
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.id IN :ids")
     List<Player> findByIdInWithStatistics(@Param("ids") List<String> ids);
 
-    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.group.id = :groupId")
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.season.group.id = :groupId")
     List<Player> findByGroupIdWithStatistics(@Param("groupId") String groupId);
 
-    @Query("SELECT p FROM Player p JOIN FETCH p.statistics, p.season WHERE p.season.group.id = :groupId AND p.id IN :ids")
+    @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.season.group.id = :groupId AND p.id IN :ids")
     List<Player> findByGroupIdWithStatisticsIn(@Param("groupId") String groupId, @Param("ids") List<String> ids);
 
     long countBySeasonId(String seasonId);

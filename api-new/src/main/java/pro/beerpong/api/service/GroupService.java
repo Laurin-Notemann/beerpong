@@ -51,6 +51,7 @@ public class GroupService {
 
     private final GroupMapper groupMapper;
     private final PlayerRepository playerRepository;
+    private final SeasonSettingsRepository seasonSettingsRepository;
 
     @Transactional
     public ServiceResponse<GroupDto> createGroup(GroupCreateDto groupCreateDto, UserDto user) {
@@ -83,6 +84,8 @@ public class GroupService {
 
         season.setCreatedBy(groupMember);
         season.setGroup(group);
+
+        season.setSeasonSettings(seasonSettingsRepository.save(season.getSeasonSettings()));
 
         season = seasonRepository.save(season);
         group = groupRepository.save(group);
