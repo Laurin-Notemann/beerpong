@@ -67,7 +67,7 @@ public class ProfileService {
             } else {
                 var lastPlayer = playerService.findLatestPlayer(existing.getId());
 
-                lastPlayer.ifPresent(player -> playerService.createPlayer(season, existing, player));
+                lastPlayer.ifPresent(player -> playerService.createPlayer(season.getId(), existing, player));
 
                 return ServiceResponse.ok(new ProfileCreatedDto(
                         profileMapper.profileToProfileDto(existing),
@@ -98,12 +98,11 @@ public class ProfileService {
         var savedProfile = profileRepository.save(profile);
 
         if (createPlayer) {
-            seasonRepository.findById(savedProfile.getGroup().getId()).ifPresent(season ->
-                    playerService.createPlayer(
-                            season,
-                            savedProfile,
-                            null
-                    ));
+            playerService.createPlayer(
+                    savedProfile.getGroup().getActiveSeason().getId(),
+                    savedProfile,
+                    null
+            );
         }
 
         return profileMapper.profileToProfileDto(savedProfile);

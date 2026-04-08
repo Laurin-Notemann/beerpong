@@ -50,13 +50,13 @@ public class SeasonControllerTest {
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
         var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/someIdThatNotExists", SeasonDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup2 = testUtils.createTestGroup(port);
 
         // season form other group
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup2.getActiveSeasonId(), SeasonDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
     }
 
     @Test
@@ -347,7 +347,7 @@ public class SeasonControllerTest {
 
         // test season id that not exists
         var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists", seasonDto, SeasonDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup2 = testUtils.createTestGroup(port);
 

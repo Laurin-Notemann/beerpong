@@ -10,6 +10,7 @@ import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
 import pro.beerpong.api.model.dto.profile.ProfileDto;
 import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
 import pro.beerpong.api.model.dto.seasons.SeasonDto;
@@ -85,19 +86,19 @@ public class PlayerControllerTest {
 
         for (PlayerDto playerDto : players) {
             assertTrue(playerDto.isActiveThisSeason());
-            assertNull(playerDto.getStatisticsId());
+            assertNotNull(playerDto.getStatisticsId());
             assertEquals(prerequisiteGroup.getActiveSeasonId(), playerDto.getSeasonId());
         }
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players?showStats=true", List.class, PlayerDto.class);
-        players = (List<PlayerDto>) requestUtils.assertSuccess(response, ArrayList.class);
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/extended", List.class, PlayerDtoExtended.class);
+        var extPlayers = (List<PlayerDtoExtended>) requestUtils.assertSuccess(extResponse, ArrayList.class);
 
-        assertEquals(profileNames.size(), players.size());
+        assertEquals(profileNames.size(), extPlayers.size());
 
-        for (PlayerDto playerDto : players) {
+        for (PlayerDtoExtended playerDto : extPlayers) {
             assertTrue(playerDto.isActiveThisSeason());
-            assertNotNull(playerDto.getStatisticsId());
-            assertEquals(prerequisiteGroup.getActiveSeasonId(), playerDto.getSeasonId());
+            assertNotNull(playerDto.getStatistics());
+            assertEquals(prerequisiteGroup.getActiveSeasonId(), playerDto.getSeason().getId());
         }
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players?showInactive=true", List.class, PlayerDto.class);
@@ -107,19 +108,19 @@ public class PlayerControllerTest {
 
         for (PlayerDto playerDto : players) {
             assertTrue(playerDto.isActiveThisSeason());
-            assertNull(playerDto.getStatisticsId());
+            assertNotNull(playerDto.getStatisticsId());
             assertEquals(prerequisiteGroup.getActiveSeasonId(), playerDto.getSeasonId());
         }
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players?showInactive=true&showStats=true", List.class, PlayerDto.class);
-        players = (List<PlayerDto>) requestUtils.assertSuccess(response, ArrayList.class);
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/extended?showInactive=true", List.class, PlayerDtoExtended.class);
+        extPlayers = (List<PlayerDtoExtended>) requestUtils.assertSuccess(extResponse, ArrayList.class);
 
-        assertEquals(profileNames.size(), players.size());
+        assertEquals(profileNames.size(), extPlayers.size());
 
-        for (PlayerDto playerDto : players) {
+        for (PlayerDtoExtended playerDto : extPlayers) {
             assertTrue(playerDto.isActiveThisSeason());
-            assertNotNull(playerDto.getStatisticsId());
-            assertEquals(prerequisiteGroup.getActiveSeasonId(), playerDto.getSeasonId());
+            assertNotNull(playerDto.getStatistics());
+            assertEquals(prerequisiteGroup.getActiveSeasonId(), playerDto.getSeason().getId());
         }
 
         var player = players.getFirst();
@@ -145,12 +146,12 @@ public class PlayerControllerTest {
     public void players_findAll_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/players", List.class, PlayerDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/players", List.class, PlayerDtoExtended.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/players", List.class, PlayerDtoExtended.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
     }
 
@@ -207,7 +208,7 @@ public class PlayerControllerTest {
         requestUtils.assertFailure(response, ErrorCodes.PLAYER_NOT_FOUND);
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/players/" + player.getId(), null, String.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
@@ -219,7 +220,7 @@ public class PlayerControllerTest {
         var otherPlayer = otherPlayers.getFirst();
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + otherPlayer.getId(), null, String.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
+        requestUtils.assertFailure(response, ErrorCodes.PLAYER_NOT_OF_GROUP);
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + player.getId(), null, String.class);
         var result = requestUtils.assertSuccess(response, String.class);

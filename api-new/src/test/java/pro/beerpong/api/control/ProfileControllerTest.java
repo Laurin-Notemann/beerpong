@@ -166,7 +166,7 @@ public class ProfileControllerTest {
         var prerequisiteGroup1 = testUtils.createTestGroup(port, "test", profileNames);
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/profiles/" + profiles.getFirst().getId(), ProfileDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_FOUND);
     }
 
     @Test
@@ -214,6 +214,6 @@ public class ProfileControllerTest {
         var prerequisiteGroup1 = testUtils.createTestGroup(port, "test", profileNames);
 
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup1.getId() + "/profiles/" + profiles.getFirst().getId(), profileDto, ProfileDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_OF_GROUP);
     }
 }

@@ -34,6 +34,7 @@ public class PlayerService {
     private final PlayerStatisticsRepository playerStatisticsRepository;
 
     private final PlayerMapper playerMapper;
+    private final SeasonRepository seasonRepository;
 
     public List<String> getPlayerIdsInSeason(String seasonId, boolean withInactive) {
         if (withInactive) {
@@ -57,7 +58,7 @@ public class PlayerService {
         var player = optional.get();
 
         if (player.isActiveThisSeason()) {
-            return DefaultServiceResponse.error(ErrorCodes.PLAYER_ALREADY_DELETED);
+            return DefaultServiceResponse.error(ErrorCodes.PROFILE_ALREADY_EXISTS);
         }
 
         player.setActiveThisSeason(true);
@@ -91,18 +92,18 @@ public class PlayerService {
 
             player.setActiveThisSeason(false);
             playerRepository.save(player);
+
+            return DefaultServiceResponse.ok();
         } else {
             return DefaultServiceResponse.error(ErrorCodes.SEASON_ALREADY_ENDED);
         }
-
-        return DefaultServiceResponse.ok();
     }
 
-    public PlayerDto createPlayer(Season season, Profile profile, @Nullable Player lastPlayer) {
+    public PlayerDto createPlayer(String seasonId, Profile profile, @Nullable Player lastPlayer) {
         Player player = new Player(
                 null,
                 profile,
-                season,
+                seasonRepository.getReferenceById(seasonId),
                 null,
                 true
         );

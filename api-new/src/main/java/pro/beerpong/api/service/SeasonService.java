@@ -141,25 +141,26 @@ public class SeasonService {
         return ServiceResponse.ok(newDto);
     }
 
-    public List<PlayerDtoExtended> getPlayersWithStats(String groupId, String seasonId, boolean showInactive, boolean showStats) {
+    public List<PlayerDtoExtended> getPlayersWithStats(String groupId, String seasonId, boolean showInactive) {
         var players = playerService.getPlayerIdsInSeason(seasonId, showInactive);
 
-        if (showStats) {
-            var leaderBoard = leaderboardService.generateLeaderboard(
-                    groupService.getGroupById(groupId),
-                    "season",
-                    true,
-                    seasonId,
-                    players
-            );
+        var leaderBoard = leaderboardService.generateLeaderboard(
+                groupService.getGroupById(groupId),
+                "season",
+                true,
+                seasonId,
+                players
+        );
 
-            return (leaderBoard.isOk() ? leaderBoard.getData().getEntries() : List.of());
-        } else {
-            return playerRepository.findByIdInWithStatistics(players).stream()
-                    .peek(playerDto -> playerDto.setStatistics(null))
-                    .map(playerMapper::playerToPlayerDtoExtended)
-                    .toList();
-        }
+        return (leaderBoard.isOk() ? leaderBoard.getData().getEntries() : List.of());
+    }
+
+    public List<PlayerDto> getPlayers(String seasonId, boolean showInactive) {
+        var players = playerService.getPlayerIdsInSeason(seasonId, showInactive);
+
+        return playerRepository.findByIdIn(players).stream()
+                .map(playerMapper::playerToPlayerDto)
+                .toList();
     }
 
     public SeasonDto updateSeason(Season season, SeasonUpdateDto dto) {
@@ -201,12 +202,14 @@ public class SeasonService {
         return seasonRepository.findById(seasonId).map(seasonMapper::seasonToSeasonDto);
     }
 
-    public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId) {
-        return NullablePair.of(groupRepository.findById(groupId).orElse(null), seasonRepository.findById(seasonId).orElse(null));
+    public NullablePair<Group, Season> getSeasonAndGroup(String groupId, String seasonId, boolean withSettings) {
+        return NullablePair.of(groupRepository.findById(groupId).orElse(null),
+                (withSettings ? seasonRepository.findSeasonById(seasonId).orElse(null) :
+                        seasonRepository.findById(seasonId).orElse(null)));
     }
 
-    public ServiceResponse<NullablePair<Group, Season>> validateSeason(String groupId, String seasonId) {
-        var pair = getSeasonAndGroup(groupId, seasonId);
+    public ServiceResponse<NullablePair<Group, Season>> validateSeason(String groupId, String seasonId, boolean withSettings) {
+        var pair = getSeasonAndGroup(groupId, seasonId, withSettings);
 
         if (pair.getFirst() == null) {
             return ServiceResponse.error(ErrorCodes.GROUP_NOT_FOUND);
@@ -220,7 +223,11 @@ public class SeasonService {
     }
 
     public ServiceResponse<NullablePair<Group, Season>> validateActiveSeason(String groupId, String seasonId) {
-        var res = validateSeason(groupId, seasonId);
+        return validateActiveSeason(groupId, seasonId, false);
+    }
+
+    public ServiceResponse<NullablePair<Group, Season>> validateActiveSeason(String groupId, String seasonId, boolean withSettings) {
+        var res = validateSeason(groupId, seasonId, withSettings);
 
         if (res.isError()) {
             return ServiceResponse.error(res.getErrorCode());

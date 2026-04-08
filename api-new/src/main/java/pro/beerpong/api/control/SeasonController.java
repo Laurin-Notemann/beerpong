@@ -77,7 +77,11 @@ public class SeasonController {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        var response = seasonService.validateActiveSeason(groupId, id);
+        if (dto.getSeasonSettings() == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_DTO);
+        }
+
+        var response = seasonService.validateActiveSeason(groupId, id, true);
 
         if (response.isError()) {
             return ResponseEnvelope.notOk(response.getErrorCode());

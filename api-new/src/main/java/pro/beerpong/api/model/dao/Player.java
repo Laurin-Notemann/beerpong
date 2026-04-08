@@ -26,7 +26,7 @@ public class Player {
     private Season season;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "statistics_id", unique = true)
+    @JoinColumn(name = "statistics_id")
     private PlayerStatistics statistics;
 
     @Column(nullable = false, columnDefinition = "boolean default true")

@@ -26,6 +26,8 @@ public interface PlayerRepository extends JpaRepository<Player, String> {
     @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.id IN :ids")
     List<Player> findByIdInWithStatistics(@Param("ids") List<String> ids);
 
+    List<Player> findByIdIn(List<String> ids);
+
     @Query("SELECT p FROM Player p JOIN FETCH p.statistics JOIN FETCH p.season WHERE p.season.group.id = :groupId")
     List<Player> findByGroupIdWithStatistics(@Param("groupId") String groupId);
 
