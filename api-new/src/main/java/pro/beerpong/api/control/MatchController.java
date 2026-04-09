@@ -46,7 +46,7 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
         }
 
-        var response = seasonService.validateActiveSeason(groupId, seasonId);
+        var response = seasonService.validateActiveSeason(groupId, seasonId, true);
 
         if (response.isError()) {
             return ResponseEnvelope.notOk(response.getErrorCode());

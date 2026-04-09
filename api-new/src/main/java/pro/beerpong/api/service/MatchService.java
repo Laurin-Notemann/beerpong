@@ -76,6 +76,7 @@ public class MatchService {
                 .toList();
         var ruleMoveIds = moves.stream()
                 .map(MatchMoveDto::getMoveId)
+                .distinct()
                 .toList();
 
         var finishingRuleMoveIds = new HashSet<>(ruleMoveRepository.findFinishingMoveIds(ruleMoveIds));
@@ -87,6 +88,7 @@ public class MatchService {
                 finishMoves.size() != 1 ||
                 finishMoves.getFirst().getCount() != 1 ||
                 !ruleMoveIds.equals(ruleMoveRepository.findMovesByIdAndSeason(ruleMoveIds, seasonId)) ||
+                //TODO fix n+1 query
                 !dto.getTeams().stream().allMatch(teamCreateDto ->
                         teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
                             var player = playerRepository.findById(memberDto.getPlayerId());
@@ -476,11 +478,13 @@ public class MatchService {
     }
 
     public boolean hasWrongTeamSizes(@NotNull Season season, @NotNull MatchCreateDto dto) {
-        var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(new SeasonSettings());
+        var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(SeasonSettings.createDefault());
 
-        return !dto.getTeams().stream()
-                .allMatch(teamCreateDto -> teamCreateDto.getTeamMembers().size() >= settings.getMinTeamSize() &&
-                        teamCreateDto.getTeamMembers().size() <= settings.getMaxTeamSize());
+        return dto.getTeams().stream()
+                .anyMatch(teamCreateDto ->
+                        teamCreateDto.getTeamMembers().size() < settings.getMinTeamSize() ||
+                                teamCreateDto.getTeamMembers().size() > settings.getMaxTeamSize()
+                );
     }
 
     public MatchDto matchToMatchDto(@NotNull Match match) {

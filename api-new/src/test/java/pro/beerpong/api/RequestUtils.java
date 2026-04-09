@@ -28,6 +28,7 @@ public class RequestUtils {
     private static String REFRESH_TOKEN;
     private static String AUTH_TOKEN;
     private static boolean RESET_FOR_NEXT_REQUEST = false;
+    private static boolean DEBUG = false;
 
     private final TestRestTemplate restTemplate;
     private final JwtTokenProvider jwtTokenProvider;
@@ -35,6 +36,10 @@ public class RequestUtils {
     public RequestUtils(TestRestTemplate restTemplate, JwtTokenProvider jwtTokenProvider) {
         this.restTemplate = restTemplate;
         this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    public static void withDebug() {
+        DEBUG = true;
     }
 
     public ResponseEntity<Object> performGet(int port, String path, Class<?> firstClazz, Class<?>... classes) {
@@ -211,6 +216,10 @@ public class RequestUtils {
 
     @SuppressWarnings("unchecked")
     public <T> T assertSuccess(ResponseEntity<Object> response, Class<T> tClass) {
+        if (DEBUG) {
+            log.info("Received response: {} with code {} which is expected to SUCCEED", response.getBody(), response.getStatusCode().value());
+        }
+
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
 
@@ -227,6 +236,10 @@ public class RequestUtils {
 
     @SuppressWarnings("unchecked")
     public void assertFailure(ResponseEntity<Object> response, ErrorCodes error) {
+        if (DEBUG) {
+            log.info("Received response: {} with code {} which is expected to FAIL!", response.getBody(), response.getStatusCode().value());
+        }
+
         assertNotNull(response);
         assertEquals(error.getHttpStatus().value(), response.getStatusCode().value());
 
@@ -241,6 +254,10 @@ public class RequestUtils {
     }
 
     public void assertFailure(ResponseEntity<Object> response, HttpStatus status, String message) {
+        if (DEBUG) {
+            log.info("Received response: {} with code {} which is expected to FAIL!", response.getBody(), response.getStatusCode().value());
+        }
+
         assertNotNull(response);
         assertEquals(status.value(), response.getStatusCode().value());
 
