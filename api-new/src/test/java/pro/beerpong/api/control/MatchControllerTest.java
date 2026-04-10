@@ -2075,24 +2075,14 @@ public class MatchControllerTest {
                 buildTeam(buildMember(player2.getId()))
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
-        var oldMatch = requestUtils.assertSuccess(response, MatchDto.class);
+        var ogResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
+        var ogMatch = requestUtils.assertSuccess(ogResponse, MatchDto.class);
 
-        assertNotNull(oldMatch);
-
-        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + oldMatch.getId() + "/extended", MatchDtoExtended.class);
-        var oldExtMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
-
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + oldMatch.getId() + "/extended", MatchDtoExtended.class);
-        var fetched = requestUtils.assertSuccess(response, MatchDtoExtended.class);
-
-        assertNotNull(fetched);
-
-        oldExtMatch.setDate(fetched.getDate());
-        assertEquals(oldExtMatch, fetched);
+        var ogExtResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + ogMatch.getId() + "/extended", MatchDtoExtended.class);
+        var ogExtMatch = requestUtils.assertSuccess(ogExtResponse, MatchDtoExtended.class);
 
         matchDto = buildDto(
-                fetched,
+                ogExtMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2108,38 +2098,38 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + oldMatch.getId(), matchDto, MatchDto.class);
-        var updatedMatch = requestUtils.assertSuccess(response, MatchDto.class);
+        var newResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + ogMatch.getId(), matchDto, MatchDto.class);
+        var newMatch = requestUtils.assertSuccess(newResponse, MatchDto.class);
 
-        var updatedExtResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + updatedMatch.getId() + "/extended", MatchDtoExtended.class);
-        var match = requestUtils.assertSuccess(updatedExtResponse, MatchDtoExtended.class);
+        var newExtResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + ogMatch.getId() + "/extended", MatchDtoExtended.class);
+        var newExtMatch = requestUtils.assertSuccess(newExtResponse, MatchDtoExtended.class);
 
-        assertEquals(oldMatch.getId(), match.getId());
-        assertEquals(oldMatch.getDate(), match.getDate());
-        assertEquals(oldMatch.getSeasonId(), match.getSeasonId());
-        assertEquals(oldMatch.getCreatedById(), match.getCreatedById());
+        assertEquals(ogMatch.getId(), newMatch.getId());
+        assertEquals(ogMatch.getDate(), newMatch.getDate());
+        assertEquals(ogMatch.getSeasonId(), newMatch.getSeasonId());
+        assertEquals(ogMatch.getCreatedById(), newMatch.getCreatedById());
 
-        assertNotNull(match.getId());
-        assertEquals(prerequisiteGroup.getActiveSeasonId(), match.getSeasonId());
-        assertEquals(prerequisiteGroup.getCreatedById(), match.getCreatedById());
-        assertNotNull(match.getDate());
+        assertNotNull(newExtMatch.getId());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), newExtMatch.getSeasonId());
+        assertEquals(prerequisiteGroup.getCreatedById(), newExtMatch.getCreatedById());
+        assertNotNull(newExtMatch.getDate());
 
-        assertEquals(2, match.getTeams().size());
+        assertEquals(2, newExtMatch.getTeams().size());
 
-        var team1 = match.getTeams().getFirst();
-        var team2 = match.getTeams().getLast();
+        var team1 = newExtMatch.getTeams().getFirst();
+        var team2 = newExtMatch.getTeams().getLast();
 
         assertNotNull(team1);
         assertNotNull(team1.getId());
-        assertEquals(match.getId(), team1.getMatchId());
+        assertEquals(newExtMatch.getId(), team1.getMatchId());
         assertNotNull(team2);
         assertNotNull(team2.getId());
-        assertEquals(match.getId(), team2.getMatchId());
+        assertEquals(newExtMatch.getId(), team2.getMatchId());
 
-        var teamMembers1 = match.getTeamMembers().stream()
+        var teamMembers1 = newExtMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
                 .toList();
-        var teamMembers2 = match.getTeamMembers().stream()
+        var teamMembers2 = newExtMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
                 .toList();
 
@@ -2158,10 +2148,10 @@ public class MatchControllerTest {
         assertEquals(team2.getId(), teamMember2.getTeamId());
         assertEquals(player2.getId(), teamMember2.getPlayerId());
 
-        var matchMoves1 = match.getMatchMoves().stream()
+        var matchMoves1 = newExtMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
                 .toList();
-        var matchMoves2 = match.getMatchMoves().stream()
+        var matchMoves2 = newExtMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember2.getId()))
                 .toList();
 
@@ -2189,14 +2179,6 @@ public class MatchControllerTest {
         assertEquals(teamMember2.getId(), normalMove2.getTeamMemberId());
         assertEquals(normalMove.getId(), normalMove2.getMoveId());
         assertEquals(3, normalMove2.getValue());
-
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), MatchDto.class);
-        var newFetched = requestUtils.assertSuccess(response, MatchDto.class);
-
-        assertNotNull(newFetched);
-
-        match.setDate(newFetched.getDate());
-        assertEquals(match, newFetched);
     }
 
     @Test

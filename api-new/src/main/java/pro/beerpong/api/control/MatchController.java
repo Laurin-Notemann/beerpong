@@ -182,7 +182,7 @@ public class MatchController {
 
         if (!matchRepository.existsByIdAndSeasonId(id, seasonId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
-        } else if (matchService.invalidCreateDto(pair.getFirst().getId(), matchCreateDto)) {
+        } else if (matchService.invalidCreateDto(pair.getSecond().getId(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 

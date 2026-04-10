@@ -133,10 +133,6 @@ public class MatchService {
             return ServiceResponse.error(ErrorCodes.MATCH_NOT_FOUND);
         }
 
-        if (invalidCreateDto(match.getSeason().getId(), matchCreateDto)) {
-            return ServiceResponse.error(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
-        }
-
         // save old team photos to reuse them
         var teamAssets = teamRepository.findByMatchIdWithPhoto(match.getId()).stream()
                 .collect(Collectors.toMap(Team::getId, Team::getPhoto));

@@ -57,7 +57,7 @@ public class TeamService {
         if (teamAssets == null && dto.isSavePhoto()) {
             var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
 
-            //TODO fix asset uploading
+            //TODO somehow we have to give this to the app
             assetService.uploadAsset(asset);
 
             return asset;

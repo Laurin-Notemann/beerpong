@@ -15,7 +15,7 @@ public interface TeamRepository extends JpaRepository<Team, String> {
 
     List<Team> findByMatchIdIn(List<String> matchIds);
 
-    @Query("SELECT t FROM Team t LEFT JOIN FETCH t.photo WHERE t.match.id = :matchId")
+    @Query("SELECT t FROM Team t JOIN FETCH t.photo WHERE t.match.id = :matchId")
     List<Team> findByMatchIdWithPhoto(@Param("matchId") String matchId);
 
     @Query("SELECT t.photo.id FROM Team t WHERE t.match.id = :matchId AND t.photo IS NOT NULL")
