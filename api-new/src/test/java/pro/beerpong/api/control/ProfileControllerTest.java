@@ -49,6 +49,8 @@ public class ProfileControllerTest {
     @Transactional
     @SuppressWarnings("unchecked")
     public void profiles_create_success() {
+        RequestUtils.withDebug();
+
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
@@ -72,12 +74,15 @@ public class ProfileControllerTest {
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playersResponse, ArrayList.class);
         var player = players.getFirst();
 
+        var profileResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/profiles/" + player.getProfileId(), ProfileDto.class);
+        var profile = requestUtils.assertSuccess(profileResponse, ProfileDto.class);
+
         var deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + player.getId(), null, String.class);
         var deleteResult = requestUtils.assertSuccess(deleteResponse, String.class);
 
         assertEquals("OK",  deleteResult);
 
-        profileDto.setName(profileNames.getFirst());
+        profileDto.setName(profile.getName());
 
         response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
         result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);
@@ -91,9 +96,12 @@ public class ProfileControllerTest {
         // test linking to old profile if no player exists in the current season
         playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         players = (List<PlayerDto>) requestUtils.assertSuccess(playersResponse, ArrayList.class);
-        var first = players.getFirst();
+        player = players.getFirst();
 
-        deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + first.getId(), null, String.class);
+        profileResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/profiles/" + player.getProfileId(), ProfileDto.class);
+        profile = requestUtils.assertSuccess(profileResponse, ProfileDto.class);
+
+        deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + player.getId(), null, String.class);
         deleteResult = requestUtils.assertSuccess(deleteResponse, String.class);
 
         assertEquals("OK",  deleteResult);
@@ -108,7 +116,7 @@ public class ProfileControllerTest {
         var seasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
         requestUtils.assertSuccess(seasonResponse, SeasonDto.class);
 
-        profileDto.setName(profileNames.getFirst());
+        profileDto.setName(profile.getName());
 
         response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
         result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);

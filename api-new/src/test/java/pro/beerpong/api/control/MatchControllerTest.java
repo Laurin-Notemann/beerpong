@@ -39,11 +39,6 @@ public class MatchControllerTest {
     @Autowired
     private TestUtils testUtils;
 
-    @BeforeAll
-    public static void setup() {
-        RequestUtils.withDebug();
-    }
-
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
