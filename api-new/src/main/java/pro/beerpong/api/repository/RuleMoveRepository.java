@@ -20,4 +20,11 @@ public interface RuleMoveRepository extends JpaRepository<RuleMove, String> {
 
     @Query("SELECT rm.id FROM RuleMove rm WHERE rm.id IN :ids AND rm.season.id = :seasonId")
     List<String> findMovesByIdAndSeason(@Param("ids") List<String> ids, @Param("seasonId") String seasonId);
+
+    default boolean allExistInSeason(List<String> ids, String seasonId) {
+        return allExistInSeason(ids, seasonId, ids.size());
+    }
+
+    @Query("SELECT COUNT(rm) = :expectedCount FROM RuleMove rm WHERE rm.id IN :ids AND rm.season.id = :seasonId")
+    boolean allExistInSeason(@Param("ids") List<String> ids, @Param("seasonId") String seasonId, @Param("expectedCount") long expectedCount);
 }

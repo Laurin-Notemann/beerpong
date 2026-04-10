@@ -87,7 +87,7 @@ public class MatchService {
         return playerIds.stream().distinct().count() != playerIds.size() ||
                 finishMoves.size() != 1 ||
                 finishMoves.getFirst().getCount() != 1 ||
-                !ruleMoveIds.equals(ruleMoveRepository.findMovesByIdAndSeason(ruleMoveIds, seasonId)) ||
+                !ruleMoveRepository.allExistInSeason(ruleMoveIds, seasonId) ||
                 //TODO fix n+1 query
                 !dto.getTeams().stream().allMatch(teamCreateDto ->
                         teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
