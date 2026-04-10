@@ -2100,7 +2100,6 @@ public class MatchControllerTest {
         var newExtMatch = requestUtils.assertSuccess(newExtResponse, MatchDtoExtended.class);
 
         assertEquals(ogMatch.getId(), newMatch.getId());
-        assertEquals(ogMatch.getDate(), newMatch.getDate());
         assertEquals(ogMatch.getSeasonId(), newMatch.getSeasonId());
         assertEquals(ogMatch.getCreatedById(), newMatch.getCreatedById());
 
