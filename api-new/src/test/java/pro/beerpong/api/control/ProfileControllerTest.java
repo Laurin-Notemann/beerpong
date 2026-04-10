@@ -49,8 +49,6 @@ public class ProfileControllerTest {
     @Transactional
     @SuppressWarnings("unchecked")
     public void profiles_create_success() {
-        RequestUtils.withDebug();
-
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
