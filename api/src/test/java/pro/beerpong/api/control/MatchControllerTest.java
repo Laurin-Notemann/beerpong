@@ -703,7 +703,7 @@ public class MatchControllerTest {
         );
 
         var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
                 buildTeam(
@@ -713,7 +713,7 @@ public class MatchControllerTest {
         );
 
         response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
                 buildTeam(
@@ -2303,7 +2303,7 @@ public class MatchControllerTest {
         );
 
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
                 buildTeam(
@@ -2313,7 +2313,7 @@ public class MatchControllerTest {
         );
 
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+        requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
                 buildTeam(

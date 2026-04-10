@@ -108,7 +108,7 @@ public class MatchService {
         var createdBy = createdByOptional.get();
 
         if (invalidCreateDto(seasonId, matchCreateDto)) {
-            return ServiceResponse.error(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+            return ServiceResponse.error(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 
         var match = new Match(
@@ -134,7 +134,7 @@ public class MatchService {
         }
 
         if (invalidCreateDto(match.getSeason().getId(), matchCreateDto)) {
-            return ServiceResponse.error(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+            return ServiceResponse.error(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 
         // save old team photos to reuse them

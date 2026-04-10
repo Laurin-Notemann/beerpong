@@ -47,7 +47,7 @@ public class MatchController {
         }
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
-            return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 
         if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
@@ -136,7 +136,7 @@ public class MatchController {
         }
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
-            return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 
         if (matchCreateDto.getTeams().size() < MIN_TEAM_AMOUNT || matchCreateDto.getTeams().size() > MAX_TEAM_AMOUNT) {
