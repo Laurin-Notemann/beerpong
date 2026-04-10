@@ -44,7 +44,7 @@ public class AuthService {
                 null,
                 dto.getInstallationType(),
                 dto.getDeviceId(),
-                //TODO
+                //TODO push notifications
                 null,
                 user
         );
