@@ -17,7 +17,7 @@ jobs:
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
-          POSTGRES_DB: beerpong
+          POSTGRES_DB_NAME: beerpong
         ports:
           - 5432:5432
         options: >-
