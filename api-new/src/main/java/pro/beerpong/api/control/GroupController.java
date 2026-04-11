@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import pro.beerpong.api.auth.JwtAuthenticationFilter;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.ResponseEnvelope;
 import pro.beerpong.api.model.dto.assets.AssetCropDto;
@@ -158,10 +159,6 @@ public class GroupController {
     public ResponseEntity<ResponseEnvelope<String>> joinGroup(@PathVariable String id, @AuthenticationPrincipal UserDto user) {
         if (user == null) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
-        }
-
-        if (id == null || id.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
         var groupMember = authService.joinGroup(user, id);

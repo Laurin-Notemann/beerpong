@@ -16,7 +16,11 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, String
 
     List<GroupMember> findByGroupId(String groupId);
 
-    Optional<GroupMember> findByUserIdAndGroupId(String userId, String groupId);
+    @Query("SELECT gm FROM GroupMember gm WHERE gm.user.id = :userId AND gm.group.id = :groupId AND gm.active = true")
+    Optional<GroupMember> findByUserIdAndGroupId(@Param("userId") String userId, @Param("groupId") String groupId);
+
+    @Query("SELECT gm FROM GroupMember gm WHERE gm.user.id = :userId AND gm.group.id = :groupId")
+    Optional<GroupMember> findByUserIdAndGroupIdInactive(@Param("userId") String userId, @Param("groupId") String groupId);
 
     boolean existsByUserIdAndGroupId(String userId, String groupId);
 

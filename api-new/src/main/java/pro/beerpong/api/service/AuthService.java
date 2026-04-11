@@ -111,7 +111,7 @@ public class AuthService {
 
     @Transactional
     public GroupMember joinGroup(UserDto user, String groupId) {
-        var optional = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+        var optional = groupMemberRepository.findByUserIdAndGroupIdInactive(user.getId(), groupId);
 
         if (optional.isPresent()) {
             var member = optional.get();
