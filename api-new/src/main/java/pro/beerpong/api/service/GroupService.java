@@ -159,25 +159,6 @@ public class GroupService {
     }
 
     @Transactional
-    public GroupDto unsetWallpaper(String groupId) {
-        var group = groupRepository.findById(groupId).orElse(null);
-        if (group == null) return null;
-
-        if (group.getWallpaper() != null) {
-            var assetId = group.getWallpaper().getId();
-
-            group.setWallpaper(null);
-            groupRepository.save(group);
-
-            assetService.deleteAsset(assetId);
-
-            return groupMapper.groupToGroupDto(group);
-        } else {
-            return null;
-        }
-    }
-
-    @Transactional
     public AssetUploadResponse storeWallpaper(String groupId, @Nullable AssetCropDto assetCropDto) {
         var groupOptional = groupRepository.findById(groupId);
 
@@ -203,5 +184,24 @@ public class GroupService {
         }
 
         return assetService.uploadAsset(uploadResponse);
+    }
+
+    @Transactional
+    public GroupDto unsetWallpaper(String groupId) {
+        var group = groupRepository.findById(groupId).orElse(null);
+        if (group == null) return null;
+
+        if (group.getWallpaper() != null) {
+            var assetId = group.getWallpaper().getId();
+
+            group.setWallpaper(null);
+            groupRepository.save(group);
+
+            assetService.deleteAsset(assetId);
+
+            return groupMapper.groupToGroupDto(group);
+        } else {
+            return null;
+        }
     }
 }

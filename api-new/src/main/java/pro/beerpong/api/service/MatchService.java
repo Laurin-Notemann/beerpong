@@ -1,5 +1,6 @@
 package pro.beerpong.api.service;
 
+import com.google.api.client.util.Lists;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -120,9 +121,15 @@ public class MatchService {
 
         match = matchRepository.save(match);
 
-        teamService.createTeamsForMatch(match.getId(), matchCreateDto.getTeams(), null);
+        List<TeamPhotoDto> teamPhotos = Lists.newArrayList();
 
-        return ServiceResponse.ok(matchToMatchDto(match));
+        teamService.createTeamsForMatch(match.getId(), matchCreateDto.getTeams(), null, teamPhotos);
+
+        var dto = matchToMatchDto(match);
+
+        dto.setPhotoUploads(teamPhotos);
+
+        return ServiceResponse.ok(dto);
     }
 
     @Transactional
@@ -146,9 +153,13 @@ public class MatchService {
         // delete all teams
         teamRepository.deleteByMatchId(match.getId());
 
-        teamService.createTeamsForMatch(match.getId(), matchCreateDto.getTeams(), teamAssets);
+        List<TeamPhotoDto> teamPhotos = Lists.newArrayList();
+
+        teamService.createTeamsForMatch(match.getId(), matchCreateDto.getTeams(), teamAssets, teamPhotos);
 
         var dto = matchToMatchDto(match);
+
+        dto.setPhotoUploads(teamPhotos);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
 
@@ -434,11 +445,17 @@ public class MatchService {
             throw new IllegalArgumentException("Match must have exactly least 2 teams");
         }
 
+        var blueTeam = match.getTeams().getFirst();
+        var redTeam = match.getTeams().get(1);
+
+        var blueTeamId = blueTeam.getId();
+        var redTeamId = redTeam.getId();
+
         var bluePlayers = match.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(match.getTeams().getFirst().getId()))
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId))
                 .toList();
         var redPlayers = match.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(match.getTeams().get(1).getId()))
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeamId))
                 .toList();
 
         var bluePlayerIds = bluePlayers.stream().map(TeamMemberDto::getId).collect(Collectors.toSet());
@@ -460,11 +477,15 @@ public class MatchService {
         var ruleMoves = ruleMovesByIds(match.getMatchMoves().stream().map(MatchMoveDtoComplete::getMoveId).toList());
 
         dto.setBlueTeam(buildOverviewTeam(
+                blueTeamId,
+                blueTeam.getPhotoAssetId(),
                 bluePlayers,
                 blueMoves,
                 ruleMoves
         ));
         dto.setRedTeam(buildOverviewTeam(
+                redTeamId,
+                redTeam.getPhotoAssetId(),
                 redPlayers,
                 redMoves,
                 ruleMoves
@@ -494,9 +515,11 @@ public class MatchService {
         return dto;
     }
 
-    private MatchOverviewTeamDto buildOverviewTeam(@NotNull List<TeamMemberDto> members, @NotNull List<MatchMoveDtoComplete> moves, @NotNull Map<String, RuleMove> ruleMoves) {
+    private MatchOverviewTeamDto buildOverviewTeam(String teamId, @Nullable String assetPhotoId, @NotNull List<TeamMemberDto> members, @NotNull List<MatchMoveDtoComplete> moves, @NotNull Map<String, RuleMove> ruleMoves) {
         var team = new MatchOverviewTeamDto();
 
+        team.setTeamId(teamId);
+        team.setAssetPhotoId(assetPhotoId);
         team.setPoints(countPoints(
                 moves.stream()
                         .map(matchMoveMapper::matchMoveDtoCompleteToMatchMoveDto)

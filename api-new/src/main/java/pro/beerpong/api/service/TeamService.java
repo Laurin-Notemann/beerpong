@@ -9,6 +9,7 @@ import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dao.Team;
 import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
+import pro.beerpong.api.model.dto.matches.TeamPhotoDto;
 import pro.beerpong.api.model.dto.teams.TeamCreateDto;
 import pro.beerpong.api.model.dto.teams.TeamDto;
 import pro.beerpong.api.repository.AssetRepository;
@@ -29,16 +30,15 @@ public class TeamService {
     private final AssetService assetService;
 
     private final TeamMapper teamMapper;
-    private final AssetRepository assetRepository;
 
-    public void createTeamsForMatch(String matchId, List<TeamCreateDto> teams, @Nullable Map<String, Asset> teamAssets) {
+    public void createTeamsForMatch(String matchId, List<TeamCreateDto> teams, @Nullable Map<String, Asset> teamAssets, List<TeamPhotoDto> teamPhotos) {
         var match = matchRepository.getReferenceById(matchId);
 
         List<Team> entities = teams.stream()
                 .map(dto -> new Team(
                         null,
                         match,
-                        resolveTeamPhoto(dto, teamAssets)
+                        resolveTeamPhoto(dto, teamAssets, teamPhotos)
                 ))
                 .toList();
 
@@ -53,16 +53,43 @@ public class TeamService {
         }
     }
 
-    private Asset resolveTeamPhoto(TeamCreateDto dto, @Nullable Map<String, Asset> teamAssets) {
-        if (teamAssets == null && dto.isSavePhoto()) {
-            var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
+    private Asset resolveTeamPhoto(TeamCreateDto dto, @Nullable Map<String, Asset> teamAssets, List<TeamPhotoDto> teamPhotos) {
+        // match create: only save new photo for teams with photos
+        if (dto.getExistingTeamId() == null) {
+            if (dto.isSavePhoto()) {
+                var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
+                var teamPhoto = new TeamPhotoDto();
 
-            //TODO somehow we have to give this to the app
-            assetService.uploadAsset(asset);
+                teamPhoto.setTeamPhoto(assetService.uploadAsset(asset));
+                teamPhotos.add(teamPhoto);
+
+                return asset;
+            } else {
+                return null;
+            }
+        }
+
+        // otherwise match update: delete old photo if photo is overridden or save new photo or use old photo
+        if (teamAssets == null) {
+            return null;
+        }
+
+        if (dto.isSavePhoto()) {
+            // delete old photo if exists
+            if (teamAssets.containsKey(dto.getExistingTeamId())) {
+                assetService.deleteAsset(teamAssets.get(dto.getExistingTeamId()).getId());
+            }
+
+            var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
+            var teamPhoto = new TeamPhotoDto();
+
+            teamPhoto.setTeamId(dto.getExistingTeamId());
+            teamPhoto.setTeamPhoto(assetService.uploadAsset(asset));
+
+            teamPhotos.add(teamPhoto);
 
             return asset;
-        } else if (teamAssets != null && dto.getExistingTeamId() != null &&
-                teamAssets.containsKey(dto.getExistingTeamId())) {
+        } else if (teamAssets.containsKey(dto.getExistingTeamId())) {
             return teamAssets.get(dto.getExistingTeamId());
         }
 
