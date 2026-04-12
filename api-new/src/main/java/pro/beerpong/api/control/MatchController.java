@@ -8,6 +8,7 @@ import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.ResponseEnvelope;
 import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 import pro.beerpong.api.model.dto.matches.*;
+import pro.beerpong.api.model.dto.teams.TeamCreateDto;
 import pro.beerpong.api.model.dto.teams.TeamDto;
 import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.MatchRepository;
@@ -15,6 +16,7 @@ import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.repository.TeamRepository;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.service.TeamService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
@@ -37,6 +39,7 @@ public class MatchController {
 
     private final MatchService matchService;
     private final SeasonService seasonService;
+    private final TeamService teamService;
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
@@ -178,6 +181,19 @@ public class MatchController {
 
         if (matchCreateDto.getTeams().stream().anyMatch(teamCreateDto -> teamCreateDto.getExistingTeamId() == null)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_NEEDS_IDS);
+        }
+
+        if (matchCreateDto.getTeams().stream()
+                .map(TeamCreateDto::getExistingTeamId)
+                .distinct()
+                .count() != matchCreateDto.getTeams().size()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_NOT_UNIQUE);
+        }
+
+        if (teamRepository.countValidIds(matchCreateDto.getTeams().stream()
+                .map(TeamCreateDto::getExistingTeamId)
+                .toList()) != matchCreateDto.getTeams().size()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_NOT_FOUND);
         }
 
         if (!matchRepository.existsByIdAndSeasonId(id, seasonId)) {

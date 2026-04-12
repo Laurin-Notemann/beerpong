@@ -8,8 +8,8 @@ import java.util.List;
 
 @Data
 public class TeamCreateDto {
-    @Nullable
-    private String existingTeamId;
+    private @Nullable String existingTeamId;
+    private boolean deletePhoto;
     private boolean savePhoto;
     private List<TeamMemberCreateDto> teamMembers;
 }

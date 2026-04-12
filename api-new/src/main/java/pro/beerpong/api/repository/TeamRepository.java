@@ -21,6 +21,9 @@ public interface TeamRepository extends JpaRepository<Team, String> {
     @Query("SELECT t.photo.id FROM Team t WHERE t.match.id = :matchId AND t.photo IS NOT NULL")
     List<String> findAssetIdsByMatch(@Param("matchId") String matchId);
 
+    @Query("SELECT COUNT(t.id) FROM Team t WHERE t.id IN :ids")
+    long countValidIds(@Param("ids") List<String> ids);
+
     @Modifying
     @Query("DELETE FROM Team t WHERE t.match.id = :matchId")
     void deleteByMatchId(@Param("matchId") String matchId);
