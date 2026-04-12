@@ -1,7 +1,6 @@
 package pro.beerpong.api.model.dto.leaderboard;
 
 import lombok.Data;
-import pro.beerpong.api.model.dto.player.PlayerDto;
 import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
 
 import java.time.ZonedDateTime;

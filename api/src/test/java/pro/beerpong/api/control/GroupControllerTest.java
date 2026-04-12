@@ -44,7 +44,7 @@ public class GroupControllerTest {
         assertNotNull(group.getCreatedAt());
         assertNull(group.getAssetIdWallpaper());
         assertNull(group.getCustomSportName());
-        assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
+        assertEquals(GroupPresetsController.BEERPONG.id(), group.getSportPreset().id());
         assertNotNull(group.getActiveSeasonId());
 
         group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), null, "test123");
@@ -59,7 +59,7 @@ public class GroupControllerTest {
         // test group creation with other game preset
         assertNotNull(group);
         assertNull(group.getCustomSportName());
-        assertEquals(GroupPresetsController.KICKER.getId(), group.getSportPreset().getId());
+        assertEquals(GroupPresetsController.KICKER.id(), group.getSportPreset().id());
     }
 
     @Test

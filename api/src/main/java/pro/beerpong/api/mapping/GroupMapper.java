@@ -18,7 +18,7 @@ public abstract class GroupMapper {
 
     @Mapping(target = "sportPreset", expression = "java(fromDto(groupDto))")
     public abstract Group groupCreateDtoToGroup(GroupCreateDto groupDto);
-    
+
     @Mapping(target = "sportPreset", expression = "java(groupPreset(group))")
     @Mapping(source = "activeSeason.id", target = "activeSeasonId")
     @Mapping(source = "wallpaper.id", target = "assetIdWallpaper")
@@ -30,7 +30,7 @@ public abstract class GroupMapper {
     }
 
     protected String fromPreset(GroupDto groupDto) {
-        return (groupDto.getSportPreset() == null ? null : groupDto.getSportPreset().getId());
+        return (groupDto.getSportPreset() == null ? null : groupDto.getSportPreset().id());
     }
 
     protected GroupPreset groupPreset(Group group) {

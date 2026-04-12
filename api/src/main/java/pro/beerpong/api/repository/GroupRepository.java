@@ -18,26 +18,27 @@ public interface GroupRepository extends JpaRepository<Group, String> {
     Optional<Group> findByIdWithActiveSeason(@Param("id") String id);
 
     @Query("""
-    SELECT new pro.beerpong.api.model.dto.groups.GroupWithStats(
-        g,
-        (SELECT COUNT(m) FROM Match m WHERE m.season.id = g.activeSeason.id),
-        (SELECT COUNT(p) FROM Player p WHERE p.season.id = g.activeSeason.id),
-        (SELECT COUNT(s) FROM Season s WHERE s.group.id = g.id)
-    )
-    FROM Group g WHERE g.id IN :ids
-    """)
+            SELECT new pro.beerpong.api.model.dto.groups.GroupWithStats(
+                g,
+                (SELECT COUNT(m) FROM Match m WHERE m.season.id = g.activeSeason.id),
+                (SELECT COUNT(p) FROM Player p WHERE p.season.id = g.activeSeason.id),
+                (SELECT COUNT(s) FROM Season s WHERE s.group.id = g.id)
+            )
+            FROM Group g WHERE g.id IN :ids
+            """)
     List<GroupWithStats> findByIdInWithStats(@Param("ids") List<String> ids);
 
     @Query("""
-    SELECT new pro.beerpong.api.model.dto.groups.GroupWithStats(
-        g,
-        (SELECT COUNT(m) FROM Match m WHERE m.season.id = g.activeSeason.id),
-        (SELECT COUNT(p) FROM Player p WHERE p.season.id = g.activeSeason.id),
-        (SELECT COUNT(s) FROM Season s WHERE s.group.id = g.id)
-    )
-    FROM Group g WHERE g.id = :groupId
-    """)
+            SELECT new pro.beerpong.api.model.dto.groups.GroupWithStats(
+                g,
+                (SELECT COUNT(m) FROM Match m WHERE m.season.id = g.activeSeason.id),
+                (SELECT COUNT(p) FROM Player p WHERE p.season.id = g.activeSeason.id),
+                (SELECT COUNT(s) FROM Season s WHERE s.group.id = g.id)
+            )
+            FROM Group g WHERE g.id = :groupId
+            """)
     Optional<GroupWithStats> findByIdWithStats(@Param("groupId") String groupId);
 
-    record GroupStatsProjection(long matches, long players, long seasons) {}
+    record GroupStatsProjection(long matches, long players, long seasons) {
+    }
 }

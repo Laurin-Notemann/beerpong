@@ -4,8 +4,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.lang.Nullable;
-import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
-import pro.beerpong.api.model.dto.groupmembers.GroupMemberDto;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

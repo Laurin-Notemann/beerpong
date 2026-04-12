@@ -4,14 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
-import pro.beerpong.api.mapping.PlayerStatisticsMapper;
 import pro.beerpong.api.model.DefaultServiceResponse;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.PlayerStatistics;
 import pro.beerpong.api.model.dao.Profile;
-import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dto.player.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.PlayerStatisticsRepository;
@@ -20,10 +17,8 @@ import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor

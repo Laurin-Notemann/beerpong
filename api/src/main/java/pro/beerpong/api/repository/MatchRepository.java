@@ -1,15 +1,12 @@
 package pro.beerpong.api.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pro.beerpong.api.model.dao.Match;
-import pro.beerpong.api.model.dao.Player;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface MatchRepository extends JpaRepository<Match, String> {
     List<Match> findBySeasonId(String seasonId);

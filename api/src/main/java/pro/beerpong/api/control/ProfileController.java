@@ -14,8 +14,6 @@ import pro.beerpong.api.model.dto.profile.ProfileDto;
 import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.ProfileRepository;
-import pro.beerpong.api.service.AssetService;
-import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.service.ProfileService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;

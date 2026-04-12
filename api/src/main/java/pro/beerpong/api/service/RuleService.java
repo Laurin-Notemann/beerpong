@@ -102,7 +102,7 @@ public class RuleService {
     }
 
     public void createDefaultRules(Season season, String sportPreset, GroupMember createdBy) {
-        if (sportPreset != null && sportPreset.equals(GroupPresetsController.BEERPONG.getId())) {
+        if (sportPreset != null && sportPreset.equals(GroupPresetsController.BEERPONG.id())) {
             DEFAULT_RULES.stream()
                     .map(rule -> {
                         var rle = new Rule();
@@ -121,5 +121,6 @@ public class RuleService {
         return new DefaultRule(title, description);
     }
 
-    public record DefaultRule(String title, String descr) { }
+    public record DefaultRule(String title, String descr) {
+    }
 }

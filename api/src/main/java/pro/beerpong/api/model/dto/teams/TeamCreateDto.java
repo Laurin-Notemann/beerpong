@@ -9,7 +9,6 @@ import java.util.List;
 @Data
 public class TeamCreateDto {
     private @Nullable String existingTeamId;
-    private boolean deletePhoto;
     private boolean savePhoto;
     private List<TeamMemberCreateDto> teamMembers;
 }

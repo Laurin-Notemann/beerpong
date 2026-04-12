@@ -8,10 +8,10 @@ import org.springframework.web.server.ResponseStatusException;
 import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMoveMapper;
 import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveCreateDto;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
 import pro.beerpong.api.repository.RuleMoveRepository;
@@ -137,7 +137,7 @@ public class RuleMoveService {
     public void createDefaultRuleMoves(Group group, Season season) {
         Stream<DefaultRuleMove> ruleMoves;
 
-        if (group.getSportPreset() != null && group.getSportPreset().equals(GroupPresetsController.BEERPONG.getId())) {
+        if (group.getSportPreset() != null && group.getSportPreset().equals(GroupPresetsController.BEERPONG.id())) {
             ruleMoves = DEFAULT_BEERPONG_MOVES.stream();
         } else {
             ruleMoves = DEFAULT_MOVES.stream();
@@ -159,5 +159,6 @@ public class RuleMoveService {
         return new DefaultRuleMove(name, pointsForScorer, pointsForTeam, finish);
     }
 
-    public record DefaultRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) { }
+    public record DefaultRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {
+    }
 }

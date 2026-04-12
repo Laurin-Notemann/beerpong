@@ -3,7 +3,6 @@ package pro.beerpong.api.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import pro.beerpong.api.model.dao.Device;
 import pro.beerpong.api.model.dao.Profile;
 
 import java.util.List;

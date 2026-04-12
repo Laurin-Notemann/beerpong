@@ -1,6 +1,5 @@
 package pro.beerpong.api.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -8,11 +7,9 @@ import pro.beerpong.api.mapping.TeamMapper;
 import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dao.Team;
-import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.model.dto.matches.TeamPhotoDto;
 import pro.beerpong.api.model.dto.teams.TeamCreateDto;
 import pro.beerpong.api.model.dto.teams.TeamDto;
-import pro.beerpong.api.repository.AssetRepository;
 import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.TeamRepository;
 import pro.beerpong.api.util.AssetType;

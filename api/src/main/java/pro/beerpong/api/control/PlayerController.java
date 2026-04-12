@@ -1,7 +1,6 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.beerpong.api.model.ErrorCodes;
@@ -27,8 +26,8 @@ public class PlayerController {
 
     @GetMapping("/extended")
     public ResponseEntity<ResponseEnvelope<List<PlayerDtoExtended>>> getPlayersExtended(@PathVariable String groupId,
-                                                                                @PathVariable String seasonId,
-                                                                                @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+                                                                                        @PathVariable String seasonId,
+                                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
         if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
@@ -44,8 +43,8 @@ public class PlayerController {
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId,
-                                                                                @PathVariable String seasonId,
-                                                                                @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+                                                                        @PathVariable String seasonId,
+                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
         if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }

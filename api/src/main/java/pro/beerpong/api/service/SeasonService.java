@@ -2,11 +2,9 @@ package pro.beerpong.api.service;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.*;
 import pro.beerpong.api.model.ErrorCodes;
-import pro.beerpong.api.model.ResponseEnvelope;
 import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.Player;
@@ -26,7 +24,6 @@ import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.NullablePair;
 
-import javax.swing.text.html.Option;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.List;

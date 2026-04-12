@@ -1,20 +1,16 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.auth.JwtAuthenticationFilter;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.ResponseEnvelope;
 import pro.beerpong.api.model.dto.assets.AssetCropDto;
-import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 import pro.beerpong.api.model.dto.groups.GroupCreateDto;
 import pro.beerpong.api.model.dto.groups.GroupDto;
 import pro.beerpong.api.model.dto.user.UserDto;
-import pro.beerpong.api.service.AssetService;
 import pro.beerpong.api.service.AuthService;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.sockets.SocketEvent;

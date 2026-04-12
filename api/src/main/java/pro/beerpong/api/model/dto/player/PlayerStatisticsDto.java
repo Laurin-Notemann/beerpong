@@ -2,7 +2,6 @@ package pro.beerpong.api.model.dto.player;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
-import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import pro.beerpong.api.util.EloAlgorithm;

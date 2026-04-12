@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pro.beerpong.api.model.dao.MatchMove;
-import pro.beerpong.api.model.dao.TeamMember;
 
 import java.util.List;
 

@@ -1,9 +1,6 @@
 package pro.beerpong.api.model.dto.player;
 
 import lombok.Data;
-import pro.beerpong.api.model.dao.PlayerStatistics;
-import pro.beerpong.api.model.dto.profile.ProfileDto;
-import pro.beerpong.api.model.dto.seasons.SeasonDto;
 
 @Data
 public class PlayerDto {

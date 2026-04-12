@@ -1,11 +1,9 @@
 package pro.beerpong.api.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.model.dao.MatchMove;
-import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dao.TeamMember;
 import pro.beerpong.api.model.dto.matchmoves.MatchMoveDto;
 import pro.beerpong.api.model.dto.matchmoves.MatchMoveDtoComplete;
@@ -14,7 +12,6 @@ import pro.beerpong.api.repository.MatchMoveRepository;
 import pro.beerpong.api.repository.RuleMoveRepository;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor

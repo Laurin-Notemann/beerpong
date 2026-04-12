@@ -195,7 +195,8 @@ public class LeaderboardService {
                 var since = switch (season.getSeasonSettings().getDailyLeaderboard()) {
                     case LAST_24_HOURS -> ZonedDateTime.now().minusHours(24);
                     case RESET_AT_MIDNIGHT -> ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-                    case WAKE_TIME -> matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTime());
+                    case WAKE_TIME ->
+                            matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTime());
                 };
 
                 yield ServiceResponse.ok(new LeaderboardContext(
@@ -311,7 +312,8 @@ public class LeaderboardService {
 
     private Comparator<PlayerDtoExtended> getRankingComparator(RankingAlgorithm algo) {
         return switch (algo) {
-            case AVERAGE -> (a, b) -> Double.compare(b.getStatistics().getAvgPointsPerMatch(), a.getStatistics().getAvgPointsPerMatch());
+            case AVERAGE ->
+                    (a, b) -> Double.compare(b.getStatistics().getAvgPointsPerMatch(), a.getStatistics().getAvgPointsPerMatch());
             case ELO -> (a, b) -> Double.compare(b.getStatistics().getElo(), a.getStatistics().getElo());
         };
     }

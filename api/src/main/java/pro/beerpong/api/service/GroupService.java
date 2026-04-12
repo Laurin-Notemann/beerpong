@@ -26,7 +26,6 @@ import pro.beerpong.api.util.AssetType;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;

@@ -6,16 +6,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Player;
-import pro.beerpong.api.model.dao.Profile;
 import pro.beerpong.api.model.dto.assets.AssetCropDto;
 import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
-import pro.beerpong.api.model.dto.player.PlayerDto;
 import pro.beerpong.api.model.dto.profile.ProfileCreateDto;
 import pro.beerpong.api.model.dto.profile.ProfileCreatedDto;
 import pro.beerpong.api.model.dto.profile.ProfileDto;
@@ -24,7 +21,6 @@ import pro.beerpong.api.repository.*;
 import pro.beerpong.api.util.AssetType;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

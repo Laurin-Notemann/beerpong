@@ -1,7 +1,5 @@
 package pro.beerpong.api.sockets;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.model.dto.groups.GroupDto;
 import pro.beerpong.api.model.dto.matches.MatchDto;
@@ -13,9 +11,7 @@ import pro.beerpong.api.model.dto.seasons.SeasonDto;
 import pro.beerpong.api.model.dto.seasons.SeasonStartDto;
 import pro.beerpong.api.model.dto.teams.TeamDto;
 
-@Getter
-@RequiredArgsConstructor
-public class SocketEventData<T> {
+public record SocketEventData<T>(Class<T> bodyClass, SocketEventType eventType, String scope) {
     // a group create event is not needed because it is impossible for any client to receive this event.
     // the event is called before a client receives the id for the neewly created group
     // but the client needs to subscribe to events for this group id to receive a create event
@@ -46,7 +42,4 @@ public class SocketEventData<T> {
     public static final SocketEventData<ProfileDto> PROFILE_CREATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileCreate");
     public static final SocketEventData<ProfileDto> PROFILE_UPDATE = new SocketEventData<>(ProfileDto.class, SocketEventType.PROFILES, "profileUpdate");
 
-    private final Class<T> bodyClass;
-    private final SocketEventType eventType;
-    private final String scope;
 }
