@@ -7,15 +7,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
-import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.RequestUtils;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.util.DailyLeaderboard;
-import pro.beerpong.api.util.RankingAlgorithm;
+import pro.beerpong.api.TestUtils;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.dto.groups.GroupCreateDto;
+import pro.beerpong.api.model.dto.groups.GroupDto;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,26 +42,10 @@ public class GroupControllerTest {
         assertEquals(name, group.getName());
         assertNotNull(group.getInviteCode());
         assertNotNull(group.getCreatedAt());
-        assertNull(group.getWallpaperAsset());
+        assertNull(group.getAssetIdWallpaper());
         assertNull(group.getCustomSportName());
         assertEquals(GroupPresetsController.BEERPONG.getId(), group.getSportPreset().getId());
-
-        assertNotNull(group.getActiveSeason());
-        assertNotNull(group.getActiveSeason().getId());
-        assertNull(group.getActiveSeason().getName());
-        assertNotNull(group.getActiveSeason().getStartDate());
-        assertNull(group.getActiveSeason().getEndDate());
-        assertEquals(group.getActiveSeason().getGroupId(), group.getId());
-        assertNotNull(group.getActiveSeason().getSeasonSettings());
-        assertEquals(1, group.getActiveSeason().getSeasonSettings().getMinMatchesToQualify());
-        assertEquals(1, group.getActiveSeason().getSeasonSettings().getMinTeamSize());
-        assertEquals(10, group.getActiveSeason().getSeasonSettings().getMaxTeamSize());
-        assertEquals(RankingAlgorithm.AVERAGE, group.getActiveSeason().getSeasonSettings().getRankingAlgorithm());
-        assertEquals(DailyLeaderboard.WAKE_TIME, group.getActiveSeason().getSeasonSettings().getDailyLeaderboard());
-        assertEquals(LocalTime.of(0, 0), group.getActiveSeason().getSeasonSettings().getWakeTime());
-        assertEquals(requestUtils.currentUserId(), group.getCreatedBy().getUserId());
-        assertEquals(group.getId(), group.getCreatedBy().getGroupId());
-        assertEquals(group.getCreatedBy(), group.getActiveSeason().getCreatedBy());
+        assertNotNull(group.getActiveSeasonId());
 
         group = testUtils.createTestGroup(port, "test", List.of("player1", "player2"), null, "test123");
 
@@ -211,11 +192,11 @@ public class GroupControllerTest {
         assertEquals(prerequisiteGroup.getId(), group.getId());
         assertEquals(createDto.getName(), group.getName());
         assertEquals(prerequisiteGroup.getInviteCode(), group.getInviteCode());
-        assertEquals(prerequisiteGroup.getCreatedBy(), group.getCreatedBy());
-        assertEquals(prerequisiteGroup.getWallpaperAsset(), group.getWallpaperAsset());
+        assertEquals(prerequisiteGroup.getCreatedById(), group.getCreatedById());
+        assertEquals(prerequisiteGroup.getAssetIdWallpaper(), group.getAssetIdWallpaper());
         assertEquals(prerequisiteGroup.getCustomSportName(), group.getCustomSportName());
         assertEquals(prerequisiteGroup.getSportPreset(), group.getSportPreset());
-        testUtils.assertSeasonEquals(prerequisiteGroup.getActiveSeason(), group.getActiveSeason());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), group.getActiveSeasonId());
     }
 
     @Test

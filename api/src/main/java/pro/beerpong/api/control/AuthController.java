@@ -2,13 +2,20 @@ package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.auth.AuthRefreshDto;
+import pro.beerpong.api.model.dto.auth.AuthSignupDto;
+import pro.beerpong.api.model.dto.auth.AuthTokenDto;
 import pro.beerpong.api.service.AuthService;
 
 @RestController
-@RequestMapping("/auth")
 @RequiredArgsConstructor
+@RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
 

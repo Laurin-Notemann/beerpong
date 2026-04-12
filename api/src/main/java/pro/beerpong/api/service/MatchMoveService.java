@@ -1,14 +1,15 @@
 package pro.beerpong.api.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.MatchMoveMapper;
 import pro.beerpong.api.model.dao.MatchMove;
 import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dao.TeamMember;
-import pro.beerpong.api.model.dto.MatchMoveDto;
-import pro.beerpong.api.model.dto.MatchMoveDtoComplete;
-import pro.beerpong.api.model.dto.TeamMemberDto;
+import pro.beerpong.api.model.dto.matchmoves.MatchMoveDto;
+import pro.beerpong.api.model.dto.matchmoves.MatchMoveDtoComplete;
+import pro.beerpong.api.model.dto.teammembers.TeamMemberDto;
 import pro.beerpong.api.repository.MatchMoveRepository;
 import pro.beerpong.api.repository.RuleMoveRepository;
 
@@ -16,44 +17,35 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class MatchMoveService {
-
     private final MatchMoveRepository matchMoveRepository;
-    private final MatchMoveMapper matchMoveMapper;
     private final RuleMoveRepository ruleMoveRepository;
 
-    @Autowired
-    public MatchMoveService(MatchMoveRepository matchMoveRepository,
-                            MatchMoveMapper matchMoveMapper,
-                            RuleMoveRepository ruleMoveRepository) {
-        this.matchMoveRepository = matchMoveRepository;
-        this.matchMoveMapper = matchMoveMapper;
-        this.ruleMoveRepository = ruleMoveRepository;
-    }
+    private final MatchMoveMapper matchMoveMapper;
 
     public void createMatchMoves(TeamMember teamMember, List<MatchMoveDto> moves) {
-        for (MatchMoveDto moveDto : moves) {
-            if (moveDto.getCount() < 1) {
-                continue;
-            }
+        List<MatchMove> entities = moves.stream()
+                .filter(dto -> dto.getCount() >= 1)
+                .map(dto -> new MatchMove(
+                        null,
+                        dto.getCount(),
+                        teamMember,
+                        ruleMoveRepository.getReferenceById(dto.getMoveId())
+                ))
+                .toList();
 
-            RuleMove ruleMove = ruleMoveRepository.findById(moveDto.getMoveId())
-                    .orElseThrow(() -> new IllegalArgumentException("RuleMove not found: " + moveDto.getMoveId()));
-            if (!Objects.equals(ruleMove.getSeason().getId(), teamMember.getTeam().getMatch().getSeason().getId())) {
-                throw new IllegalArgumentException("RuleMove not found: " + moveDto.getMoveId());
-            }
-            MatchMove matchMove = new MatchMove();
-            matchMove.setTeamMember(teamMember);
-            matchMove.setMove(ruleMove);
-            matchMove.setValue(moveDto.getCount());
-
-            matchMoveRepository.save(matchMove);
-        }
+        matchMoveRepository.saveAll(entities);
     }
 
     public List<MatchMoveDtoComplete> buildMatchMoveDtos(List<TeamMemberDto> teamMembers) {
-        return teamMembers.stream()
-                .flatMap(teamMemberDto -> matchMoveRepository.findAllByTeamMemberId(teamMemberDto.getId()).stream().map(matchMoveMapper::matchMoveToMatchMoveDtoComplete))
+        List<String> memberIds = teamMembers.stream()
+                .map(TeamMemberDto::getId)
+                .toList();
+
+        return matchMoveRepository.findByTeamMemberIdIn(memberIds)
+                .stream()
+                .map(matchMoveMapper::matchMoveToMatchMoveDtoComplete)
                 .toList();
     }
 }

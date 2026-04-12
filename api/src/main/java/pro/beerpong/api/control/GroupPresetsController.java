@@ -6,17 +6,15 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.GroupPreset;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.groups.GroupPreset;
 
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/group-presets")
 @RequiredArgsConstructor
+@RequestMapping("/group-presets")
 public class GroupPresetsController {
     public static final GroupPreset BEERPONG = new GroupPreset("beerpong", "Beerpong", "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg");
     public static final GroupPreset KICKER = new GroupPreset("kicker", "Kicker", "https://media.istockphoto.com/id/696594232/photo/foosball-at-modern-office-close-up-view.jpg?s=612x612&w=0&k=20&c=skF0hp5i_9ctZ2MmkqLdaOklvwSGbqEqcAu0JLF8M5c=");

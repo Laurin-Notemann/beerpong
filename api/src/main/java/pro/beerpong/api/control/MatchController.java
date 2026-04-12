@@ -1,12 +1,22 @@
 package pro.beerpong.api.control;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
+import pro.beerpong.api.model.dto.matches.*;
+import pro.beerpong.api.model.dto.teams.TeamCreateDto;
+import pro.beerpong.api.model.dto.teams.TeamDto;
+import pro.beerpong.api.model.dto.user.UserDto;
+import pro.beerpong.api.repository.MatchRepository;
+import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.repository.TeamRepository;
 import pro.beerpong.api.service.MatchService;
 import pro.beerpong.api.service.SeasonService;
+import pro.beerpong.api.service.TeamService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
@@ -14,22 +24,22 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/matches")
 public class MatchController {
     // currently we only support games played with exactly 2 teams
     private static final int MIN_TEAM_AMOUNT = 2;
     private static final int MAX_TEAM_AMOUNT = 2;
 
-    private final MatchService matchService;
-    private final SeasonService seasonService;
     private final SubscriptionHandler subscriptionHandler;
 
-    @Autowired
-    public MatchController(MatchService matchService, SeasonService seasonService, SubscriptionHandler subscriptionHandler) {
-        this.matchService = matchService;
-        this.seasonService = seasonService;
-        this.subscriptionHandler = subscriptionHandler;
-    }
+    private final MatchRepository matchRepository;
+    private final SeasonRepository seasonRepository;
+    private final TeamRepository teamRepository;
+
+    private final MatchService matchService;
+    private final SeasonService seasonService;
+    private final TeamService teamService;
 
     @PostMapping
     public ResponseEntity<ResponseEnvelope<MatchDto>> createMatch(@PathVariable String groupId, @PathVariable String seasonId,
@@ -39,12 +49,13 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
         }
 
-        var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
-        var error = seasonService.validateActiveSeason(MatchDto.class, pair);
+        var response = seasonService.validateActiveSeason(groupId, seasonId, true);
 
-        if (error != null || pair.getFirst() == null || pair.getSecond() == null) {
-            return error;
+        if (response.isError()) {
+            return ResponseEnvelope.notOk(response.getErrorCode());
         }
+
+        var pair = response.getData();
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
@@ -54,40 +65,64 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
         }
 
-        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond(), matchCreateDto, user);
+        var match = matchService.createNewMatch(pair.getFirst(), pair.getSecond().getId(), matchCreateDto, user);
 
-        if (match != null) {
-            if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
-                subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, groupId, match));
+        if (match.isOk()) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_CREATE, groupId, match.getData()));
 
-                return ResponseEnvelope.ok(match);
-            } else {
-                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
-            }
+            return ResponseEnvelope.ok(match.getData());
         } else {
-            return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+            return ResponseEnvelope.notOk(match.getErrorCode());
         }
     }
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getAllMatches(@PathVariable String groupId, @PathVariable String seasonId) {
-        var season = seasonService.getSeasonById(seasonId);
-
-        if (season == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
-        } else if (!season.getId().equals(seasonId) || !season.getGroupId().equals(groupId)) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        return ResponseEnvelope.ok(matchService.streamAllMatchesInSeason(seasonId).toList());
+        return ResponseEnvelope.ok(matchService.getMatchesInSeason(seasonId));
+    }
+
+    @GetMapping("/extended")
+    public ResponseEntity<ResponseEnvelope<List<MatchDtoExtended>>> getAllMatchesExtended(@PathVariable String groupId, @PathVariable String seasonId) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        return ResponseEnvelope.ok(matchService.getFullMatchesBySeasonId(seasonId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<MatchDto>> getMatchById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
         var match = matchService.getMatchById(id);
 
         if (match != null) {
-            if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+            if (match.getSeasonId().equals(seasonId)) {
+                return ResponseEnvelope.ok(match);
+            } else {
+                return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+            }
+        } else {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/{id}/extended")
+    public ResponseEntity<ResponseEnvelope<MatchDtoExtended>> getMatchByIdExtended(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        var match = matchService.getFullMatchById(id);
+
+        if (match != null) {
+            if (match.getSeasonId().equals(seasonId)) {
                 return ResponseEnvelope.ok(match);
             } else {
                 return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
@@ -99,11 +134,7 @@ public class MatchController {
 
     @GetMapping("/overview")
     public ResponseEntity<ResponseEnvelope<List<MatchOverviewDto>>> getAllMatchOverviews(@PathVariable String groupId, @PathVariable String seasonId) {
-        var season = seasonService.getSeasonById(seasonId);
-
-        if (season == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
-        } else if (!season.getId().equals(seasonId) || !season.getGroupId().equals(groupId)) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
@@ -112,10 +143,14 @@ public class MatchController {
 
     @GetMapping("/{id}/overview")
     public ResponseEntity<ResponseEnvelope<MatchOverviewDto>> getMatchOverviewById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
         var match = matchService.getMatchOverviewById(id);
 
         if (match != null) {
-            if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
+            if (match.getSeasonId().equals(seasonId)) {
                 return ResponseEnvelope.ok(match);
             } else {
                 return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
@@ -128,12 +163,13 @@ public class MatchController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<MatchDto>> updateMatch(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id,
                                                                   @RequestBody MatchCreateDto matchCreateDto) {
-        var pair = seasonService.getSeasonAndGroup(groupId, seasonId);
-        var error = seasonService.validateActiveSeason(MatchDto.class, pair);
+        var response = seasonService.validateActiveSeason(groupId, seasonId);
 
-        if (error != null || pair.getFirst() == null || pair.getSecond() == null) {
-            return error;
+        if (response.isError()) {
+            return ResponseEnvelope.notOk(response.getErrorCode());
         }
+
+        var pair = response.getData();
 
         if (matchService.hasWrongTeamSizes(pair.getSecond(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
@@ -147,53 +183,58 @@ public class MatchController {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_CREATE_DTO_NEEDS_IDS);
         }
 
-        var match = matchService.getRawMatchById(id);
+        if (matchCreateDto.getTeams().stream()
+                .map(TeamCreateDto::getExistingTeamId)
+                .distinct()
+                .count() != matchCreateDto.getTeams().size()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_NOT_UNIQUE);
+        }
 
-        if (match == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
-        } else if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
+        if (teamRepository.countValidIds(matchCreateDto.getTeams().stream()
+                .map(TeamCreateDto::getExistingTeamId)
+                .toList()) != matchCreateDto.getTeams().size()) {
+            return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_NOT_FOUND);
+        }
+
+        if (!matchRepository.existsByIdAndSeasonId(id, seasonId)) {
             return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
-        } else if (matchService.invalidCreateDto(pair.getFirst().getId(), pair.getSecond().getId(), matchCreateDto)) {
+        } else if (matchService.invalidCreateDto(pair.getSecond().getId(), matchCreateDto)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
         }
 
-        return ResponseEnvelope.ok(matchService.updateMatch(pair.getFirst(), match, matchCreateDto));
+        var res = matchService.updateMatch(pair.getFirst().getId(), id, matchCreateDto);
+
+        if (res.isError()) {
+            return ResponseEnvelope.notOk(response.getErrorCode());
+        }
+
+        return ResponseEnvelope.ok(res.getData());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<String>> deleteMatchById(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
         var error = matchService.deleteMatch(id, seasonId, groupId);
 
-        if (error == null) {
+        if (error.isOk()) {
             subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_DELETE, groupId, id));
 
             return ResponseEnvelope.ok("OK");
         } else {
-            return ResponseEnvelope.notOk(error);
+            return ResponseEnvelope.notOk(error.getErrorCode());
         }
     }
 
     @PutMapping("/{id}/photos/{teamId}")
-    public ResponseEntity<ResponseEnvelope<TeamDto>> setPhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
-        var match = matchService.getMatchById(id);
-
-        if (match == null) {
+    public ResponseEntity<ResponseEnvelope<AssetUploadResponse>> setPhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
+        if (!matchRepository.existsByIdAndSeasonId(id, seasonId)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
         }
 
-        if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
-            return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
-        }
-
-        var teamOpt = match.getTeams().stream()
-                .filter(teamDto -> teamDto.getId().equals(teamId))
-                .findFirst();
-
-        if (teamOpt.isEmpty()) {
+        if (!teamRepository.existsByIdAndMatchId(teamId, id)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NO_TEAM_FOUND);
         }
 
-        var dto = matchService.saveMatchPhoto(teamOpt.get());
+        var dto = matchService.saveMatchPhoto(teamId);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_TEAM_PHOTO_SET, id, dto));
 
@@ -202,29 +243,19 @@ public class MatchController {
 
     @DeleteMapping("/{id}/photos/{teamId}")
     public ResponseEntity<ResponseEnvelope<TeamDto>> deletePhoto(@PathVariable String groupId, @PathVariable String teamId, @PathVariable String id, @PathVariable String seasonId) {
-        var match = matchService.getMatchById(id);
-
-        if (match == null) {
+        if (!matchRepository.existsByIdAndSeasonId(id, seasonId)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NOT_FOUND);
         }
 
-        if (!match.getSeason().getId().equals(seasonId) || !match.getSeason().getGroupId().equals(groupId)) {
-            return ResponseEnvelope.notOk(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
-        }
-
-        var teamOpt = match.getTeams().stream()
-                .filter(teamDto -> teamDto.getId().equals(teamId))
-                .findFirst();
-
-        if (teamOpt.isEmpty()) {
+        if (!teamRepository.existsByIdAndMatchId(teamId, id)) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_NO_TEAM_FOUND);
         }
 
-        if (teamOpt.get().getPhotoAsset() == null) {
+        var dto = matchService.deleteMatchPhoto(teamId);
+
+        if (dto == null) {
             return ResponseEnvelope.notOk(ErrorCodes.MATCH_TEAM_HAS_NO_PHOTO);
         }
-
-        var dto = matchService.deleteMatchPhoto(teamOpt.get());
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_TEAM_PHOTO_DELETE, id, dto));
 

@@ -6,28 +6,31 @@ import org.springframework.stereotype.Service;
 import pro.beerpong.api.auth.JwtTokenProvider;
 import pro.beerpong.api.mapping.UserMapper;
 import pro.beerpong.api.model.dao.Device;
-import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.User;
-import pro.beerpong.api.model.dto.AuthRefreshDto;
-import pro.beerpong.api.model.dto.AuthSignupDto;
-import pro.beerpong.api.model.dto.AuthTokenDto;
-import pro.beerpong.api.model.dto.UserDto;
+import pro.beerpong.api.model.dto.auth.AuthRefreshDto;
+import pro.beerpong.api.model.dto.auth.AuthSignupDto;
+import pro.beerpong.api.model.dto.auth.AuthTokenDto;
+import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.DeviceRepository;
 import pro.beerpong.api.repository.GroupMemberRepository;
 import pro.beerpong.api.repository.GroupRepository;
 import pro.beerpong.api.repository.UserRepository;
 import pro.beerpong.api.util.TokenType;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
     private final JwtTokenProvider tokenProvider;
+
     private final UserRepository userRepository;
     private final DeviceRepository deviceRepository;
-    private final UserMapper userMapper;
     private final GroupMemberRepository groupMemberRepository;
     private final GroupRepository groupRepository;
+
+    private final UserMapper userMapper;
 
     public AuthTokenDto registerDevice(AuthSignupDto dto) {
         if (dto.getDeviceId() == null || dto.getDeviceId().trim().isEmpty() || dto.getInstallationType() == null) {
@@ -37,10 +40,14 @@ public class AuthService {
         var user = new User();
         user = userRepository.save(user);
 
-        var device = new Device();
-        device.setUser(user);
-        device.setDeviceId(dto.getDeviceId());
-        device.setType(dto.getInstallationType());
+        var device = new Device(
+                null,
+                dto.getInstallationType(),
+                dto.getDeviceId(),
+                //TODO push notifications
+                null,
+                user
+        );
 
         deviceRepository.save(device);
 
@@ -89,43 +96,47 @@ public class AuthService {
                 .orElse(null);
     }
 
-    public boolean hasAccessToGroup(UserDto user, String groupId) {
-        var existing = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
-
-        return existing != null && existing.isActive();
+    public Optional<GroupMember> getMemberInGroup(String userId, String groupId) {
+        return groupMemberRepository.findByUserIdAndGroupId(userId, groupId);
     }
 
-    public GroupMember memberByUser(UserDto user, String groupId) {
-        return groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
-    }
-
-    @Transactional
     public GroupMember buildFirstGroupMember(UserDto user) {
-        var groupMember = new GroupMember();
-        groupMember.setUser(userMapper.userDtoToUser(user));
-        groupMember.setActive(true);
-
-        return groupMember;
+        return new GroupMember(
+                null,
+                true,
+                null,
+                userRepository.getReferenceById(user.getId())
+        );
     }
 
     @Transactional
     public GroupMember joinGroup(UserDto user, String groupId) {
-        var existing = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+        var optional = groupMemberRepository.findByUserIdAndGroupIdInactive(user.getId(), groupId);
 
-        if (existing != null) {
-            if (existing.isActive()) {
+        if (optional.isPresent()) {
+            var member = optional.get();
+
+            if (member.isActive()) {
                 return null;
             } else {
-                existing.setActive(true);
+                member.setActive(true);
 
-                return groupMemberRepository.save(existing);
+                return groupMemberRepository.save(member);
             }
         }
 
-        var groupMember = new GroupMember();
-        groupMember.setUser(userMapper.userDtoToUser(user));
-        groupMember.setGroup(groupRepository.findById(groupId).orElse(null));
-        groupMember.setActive(true);
+        var group = groupRepository.findById(groupId).orElse(null);
+
+        if (group == null) {
+            return null;
+        }
+
+        var groupMember = new GroupMember(
+                null,
+                true,
+                group,
+                userRepository.getReferenceById(user.getId())
+        );
 
         saveMember(groupMember);
 
@@ -138,12 +149,14 @@ public class AuthService {
 
     @Transactional
     public boolean leaveGroup(UserDto user, String groupId) {
-        var groupMember = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
+        var optional = groupMemberRepository.findByUserIdAndGroupId(user.getId(), groupId);
 
-        if (groupMember != null) {
-            groupMember.setActive(false);
+        if (optional.isPresent()) {
+            var member = optional.get();
 
-            saveMember(groupMember);
+            member.setActive(false);
+
+            saveMember(member);
             return true;
         }
         return false;

@@ -9,15 +9,17 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import pro.beerpong.api.auth.JwtTokenProvider;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.auth.AuthRefreshDto;
+import pro.beerpong.api.model.dto.auth.AuthSignupDto;
+import pro.beerpong.api.model.dto.auth.AuthTokenDto;
 import pro.beerpong.api.util.InstallationType;
 import pro.beerpong.api.util.TokenType;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Log4j2
 @Component
@@ -26,6 +28,7 @@ public class RequestUtils {
     private static String REFRESH_TOKEN;
     private static String AUTH_TOKEN;
     private static boolean RESET_FOR_NEXT_REQUEST = false;
+    private static boolean DEBUG = false;
 
     private final TestRestTemplate restTemplate;
     private final JwtTokenProvider jwtTokenProvider;
@@ -33,6 +36,10 @@ public class RequestUtils {
     public RequestUtils(TestRestTemplate restTemplate, JwtTokenProvider jwtTokenProvider) {
         this.restTemplate = restTemplate;
         this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    public static void withDebug() {
+        DEBUG = true;
     }
 
     public ResponseEntity<Object> performGet(int port, String path, Class<?> firstClazz, Class<?>... classes) {
@@ -209,6 +216,10 @@ public class RequestUtils {
 
     @SuppressWarnings("unchecked")
     public <T> T assertSuccess(ResponseEntity<Object> response, Class<T> tClass) {
+        if (DEBUG) {
+            log.info("Received response: {} with code {} which is expected to SUCCEED", response.getBody(), response.getStatusCode().value());
+        }
+
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
 
@@ -225,6 +236,10 @@ public class RequestUtils {
 
     @SuppressWarnings("unchecked")
     public void assertFailure(ResponseEntity<Object> response, ErrorCodes error) {
+        if (DEBUG) {
+            log.info("Received response: {} with code {} which is expected to FAIL!", response.getBody(), response.getStatusCode().value());
+        }
+
         assertNotNull(response);
         assertEquals(error.getHttpStatus().value(), response.getStatusCode().value());
 
@@ -239,6 +254,10 @@ public class RequestUtils {
     }
 
     public void assertFailure(ResponseEntity<Object> response, HttpStatus status, String message) {
+        if (DEBUG) {
+            log.info("Received response: {} with code {} which is expected to FAIL!", response.getBody(), response.getStatusCode().value());
+        }
+
         assertNotNull(response);
         assertEquals(status.value(), response.getStatusCode().value());
 

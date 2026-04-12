@@ -1,267 +1,425 @@
 package pro.beerpong.api.service;
 
-import com.google.common.collect.Maps;
+import com.google.api.client.util.Lists;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.mapping.GroupMemberMapper;
-import pro.beerpong.api.mapping.MatchMoveMapper;
-import pro.beerpong.api.mapping.PlayerMapper;
-import pro.beerpong.api.mapping.TeamMapper;
-import pro.beerpong.api.mapping.SeasonMapper;
+import pro.beerpong.api.mapping.*;
+import pro.beerpong.api.model.DefaultServiceResponse;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.*;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
+import pro.beerpong.api.model.dto.matches.*;
+import pro.beerpong.api.model.dto.matchmoves.MatchMoveDto;
+import pro.beerpong.api.model.dto.matchmoves.MatchMoveDtoComplete;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
+import pro.beerpong.api.model.dto.teammembers.TeamMemberCreateDto;
+import pro.beerpong.api.model.dto.teammembers.TeamMemberDto;
+import pro.beerpong.api.model.dto.teams.TeamDto;
+import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 import pro.beerpong.api.util.AssetType;
 
-import java.time.Duration;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
-import java.util.stream.IntStream;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class MatchService {
-    private static final long MINUTES_IN_DAY = 24 * 60;
-
     /**
      * Feature flag: discuss if this should be enabled in future
+     * <p>
+     * If enabled, the daily leaderboard will include statistics made in matches
+     * that are not part of the current season. This would happen in the 24 hours
+     * following the start of a new season.
      */
     private static final boolean USE_DAILY_MATCHES_FROM_PAST_SEASONS = false;
 
     private final SubscriptionHandler subscriptionHandler;
 
     private final MatchRepository matchRepository;
-    private final TeamMemberService teamMemberService;
     private final PlayerRepository playerRepository;
-    private final MatchMoveService matchMoveService; // new field
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final MatchMoveRepository matchMoveRepository;
     private final RuleMoveRepository ruleMoveRepository;
-    private final MatchMoveMapper matchMoveMapper;
     private final SeasonRepository seasonRepository;
+    private final AssetRepository assetRepository;
 
-    private final TeamService teamService;
-    private final RuleMoveService ruleMoveService;
-    private final PlayerMapper playerMapper;
     private final AuthService authService;
-    private final GroupMemberMapper groupMemberMapper;
-    private final SeasonMapper seasonMapper;
+    private final TeamService teamService;
     private final AssetService assetService;
+
+    private final MatchMoveMapper matchMoveMapper;
+    private final PlayerMapper playerMapper;
     private final TeamMapper teamMapper;
+    private final TeamMemberMapper teamMemberMapper;
 
-    @Autowired
-    public MatchService(SubscriptionHandler subscriptionHandler,
-                        MatchRepository matchRepository,
-                        TeamMemberService teamMemberService,
-                        PlayerRepository playerRepository,
-                        MatchMoveService matchMoveService,
-                        TeamRepository teamRepository,
-                        TeamMemberRepository teamMemberRepository,
-                        MatchMoveRepository matchMoveRepository,
-                        RuleMoveRepository ruleMoveRepository,
-                        MatchMoveMapper matchMoveMapper,
-                        TeamService teamService,
-                        SeasonRepository seasonRepository,
-                        RuleMoveService ruleMoveService,
-                        PlayerMapper playerMapper, AssetService assetService, TeamMapper teamMapper, AuthService authService, GroupMemberMapper groupMemberMapper, SeasonMapper seasonMapper) {
-        this.subscriptionHandler = subscriptionHandler;
-
-        this.matchRepository = matchRepository;
-        this.teamMemberService = teamMemberService;
-        this.playerRepository = playerRepository;
-        this.matchMoveService = matchMoveService;
-        this.teamRepository = teamRepository;
-        this.matchMoveRepository = matchMoveRepository;
-        this.teamMemberRepository = teamMemberRepository;
-        this.ruleMoveRepository = ruleMoveRepository;
-        this.matchMoveMapper = matchMoveMapper;
-        this.seasonRepository = seasonRepository;
-
-        this.teamService = teamService;
-        this.ruleMoveService = ruleMoveService;
-        this.playerMapper = playerMapper;
-        this.authService = authService;
-        this.groupMemberMapper = groupMemberMapper;
-        this.seasonMapper = seasonMapper;
-        this.assetService = assetService;
-        this.teamMapper = teamMapper;
-    }
-
-    public boolean invalidCreateDto(String groupId, String seasonId, MatchCreateDto dto) {
+    public boolean invalidCreateDto(@NotNull String seasonId, @NotNull MatchCreateDto dto) {
         var playerIds = dto.getTeams().stream()
-                .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream().map(TeamMemberCreateDto::getPlayerId))
+                .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream()
+                        .map(TeamMemberCreateDto::getPlayerId))
                 .toList();
 
-        var finishMoves = dto.getTeams().stream()
+        var moves = dto.getTeams().stream()
                 .flatMap(teamCreateDto -> teamCreateDto.getTeamMembers().stream())
                 .flatMap(memberCreateDto -> memberCreateDto.getMoves().stream())
-                .filter(matchMoveDto -> ruleMoveService.isFinish(matchMoveDto.getMoveId()) && matchMoveDto.getCount() > 0)
+                .filter(matchMoveDto -> matchMoveDto.getCount() > 0)
+                .toList();
+        var ruleMoveIds = moves.stream()
+                .map(MatchMoveDto::getMoveId)
+                .distinct()
+                .toList();
+
+        var finishingRuleMoveIds = new HashSet<>(ruleMoveRepository.findFinishingMoveIds(ruleMoveIds));
+        var finishMoves = moves.stream()
+                .filter(matchMoveDto -> finishingRuleMoveIds.contains(matchMoveDto.getMoveId()))
                 .toList();
 
         return playerIds.stream().distinct().count() != playerIds.size() ||
                 finishMoves.size() != 1 ||
                 finishMoves.getFirst().getCount() != 1 ||
+                !ruleMoveRepository.allExistInSeason(ruleMoveIds, seasonId) ||
+                //TODO fix n+1 query
                 !dto.getTeams().stream().allMatch(teamCreateDto ->
                         teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
                             var player = playerRepository.findById(memberDto.getPlayerId());
 
-                            if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId) || !player.get().getSeason().getGroupId().equals(groupId)) {
-                                return false;
-                            }
-                            if (player.isEmpty() || !player.get().getSeason().getId().equals(seasonId)
-                                    || !player.get().getSeason().getGroupId().equals(groupId)) {
-                                return false;
-                            }
-
-                            return memberDto.getMoves().stream().allMatch(matchMoveDto -> {
-                                var move = ruleMoveRepository.findById(matchMoveDto.getMoveId());
-
-                                return move.isPresent() && move.get().getSeason().getId().equals(seasonId) && move.get().getSeason().getGroupId().equals(groupId);
-                            });
+                            return player.isPresent() && player.get().getSeason().getId().equals(seasonId);
                         }));
     }
 
     @Transactional
-    public MatchDto createNewMatch(@NotNull Group group, @NotNull Season season, MatchCreateDto matchCreateDto, UserDto user) {
-        if (!group.getActiveSeason().getId().equals(season.getId()) ||
-                invalidCreateDto(group.getId(), season.getId(), matchCreateDto)) {
-            return null;
+    public ServiceResponse<MatchDto> createNewMatch(@NotNull Group group, @NotNull String seasonId, @NotNull MatchCreateDto matchCreateDto, @NotNull UserDto user) {
+        var createdByOptional = authService.getMemberInGroup(user.getId(), group.getId());
+
+        if (createdByOptional.isEmpty()) {
+            return ServiceResponse.error(ErrorCodes.AUTH_USER_NOT_IN_GROUP);
         }
 
-        var match = new Match();
+        var createdBy = createdByOptional.get();
 
-        match.setDate(ZonedDateTime.now());
-        match.setSeason(season);
-        match.setCreatedBy(authService.memberByUser(user, group.getId()));
+        if (invalidCreateDto(seasonId, matchCreateDto)) {
+            return ServiceResponse.error(ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+        }
+
+        var match = new Match(
+                null,
+                ZonedDateTime.now(),
+                seasonRepository.getReferenceById(seasonId),
+                createdBy
+        );
 
         match = matchRepository.save(match);
 
-        teamService.createTeamsForMatch(match, matchCreateDto.getTeams(), null);
+        List<TeamPhotoDto> teamPhotos = Lists.newArrayList();
 
-        return matchToMatchDto(match);
+        teamService.createTeamsForMatch(match.getId(), matchCreateDto.getTeams(), null, teamPhotos);
+
+        var dto = matchToMatchDto(match);
+
+        dto.setPhotoUploads(teamPhotos);
+
+        return ServiceResponse.ok(dto);
     }
 
-    public MatchDto updateMatch(Group group, Match match, MatchCreateDto matchCreateDto) {
-        if (match == null || matchCreateDto == null || group == null) {
+    @Transactional
+    public ServiceResponse<MatchDto> updateMatch(@NotNull String groupId, @NotNull String matchId, @NotNull MatchCreateDto matchCreateDto) {
+        var match = matchRepository.getMatchById(matchId);
+
+        if (match == null) {
+            return ServiceResponse.error(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
+        // save old team photos to reuse them
+        var teamAssets = teamRepository.findByMatchIdWithPhoto(match.getId()).stream()
+                .collect(Collectors.toMap(Team::getId, Team::getPhoto));
+
+        // delete all match moves
+        matchMoveRepository.deleteByMatchId(match.getId());
+
+        // delete all team members
+        teamMemberRepository.deleteByMatchId(match.getId());
+
+        // delete all teams
+        teamRepository.deleteByMatchId(match.getId());
+
+        List<TeamPhotoDto> teamPhotos = Lists.newArrayList();
+
+        teamService.createTeamsForMatch(match.getId(), matchCreateDto.getTeams(), teamAssets, teamPhotos);
+
+        var dto = matchToMatchDto(match);
+
+        dto.setPhotoUploads(teamPhotos);
+
+        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, groupId, dto));
+
+        return ServiceResponse.ok(dto);
+    }
+
+    @Transactional
+    public DefaultServiceResponse deleteMatch(String matchId, String seasonId, String groupId) {
+        var matchOptional = matchRepository.findById(matchId);
+
+        if (matchOptional.isEmpty()) {
+            return DefaultServiceResponse.error(ErrorCodes.MATCH_NOT_FOUND);
+        }
+
+        var match = matchOptional.get();
+        var seasonOptional = seasonRepository.findById(seasonId);
+
+        if (seasonOptional.isEmpty()) {
+            return DefaultServiceResponse.error(ErrorCodes.SEASON_NOT_FOUND);
+        }
+
+        var season = seasonOptional.get();
+
+        if (!season.getGroup().getId().equals(groupId)) {
+            return DefaultServiceResponse.error(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        if (season.getEndDate() == null) {
+            if (match.getSeason().getId().equals(seasonId)) {
+                var assetIds = teamRepository.findAssetIdsByMatch(matchId);
+
+                // delete all match moves
+                matchMoveRepository.deleteByMatchId(match.getId());
+
+                // delete all team members
+                teamMemberRepository.deleteByMatchId(match.getId());
+
+                // delete all teams
+                teamRepository.deleteByMatchId(match.getId());
+
+                // delete match
+                matchRepository.deleteById(matchId);
+
+                // delete assets
+                assetIds.forEach(assetService::deleteAsset);
+                assetRepository.deleteAllById(assetIds);
+
+                return DefaultServiceResponse.ok();
+            } else {
+                return DefaultServiceResponse.error(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+            }
+        } else {
+            return DefaultServiceResponse.error(ErrorCodes.SEASON_ALREADY_ENDED);
+        }
+    }
+
+    @Transactional
+    public TeamDto deleteMatchPhoto(String teamId) {
+        var team = teamRepository.findById(teamId).orElse(null);
+        if (team == null) return null;
+
+        if (team.getPhoto() != null) {
+            assetService.deleteAsset(team.getPhoto().getId());
+            team.setPhoto(null);
+            teamRepository.save(team);
+
+            return teamMapper.teamToTeamDto(team);
+        } else {
             return null;
         }
+    }
 
-        // Step 1: Find all teams associated with the match
-        List<Team> teams = teamRepository.findAllByMatchId(match.getId());
-        Map<String, Asset> teamAssets = Maps.newHashMap();
+    @Transactional
+    public AssetUploadResponse saveMatchPhoto(String teamId) {
+        var team = teamRepository.findById(teamId).orElse(null);
+        if (team == null) return null;
 
-        // Step 2: Loop through each team
-        for (Team team : teams) {
-            String teamId = team.getId();
+        String oldPhotoId = team.getPhoto() != null ? team.getPhoto().getId() : null;
 
-            // Step 3: Find all team members associated with the team
+        var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
+        team.setPhoto(asset);
+        teamRepository.save(team);
 
-            List<TeamMember> teamMembers = teamMemberRepository.findAllByTeamId(teamId);
-
-            // Step 4: Loop through each team member
-            for (TeamMember teamMember : teamMembers) {
-                String teamMemberId = teamMember.getId();
-
-                // Step 5: Find all match moves associated with the team member
-                List<MatchMove> matchMoves = matchMoveRepository.findAllByTeamMemberId(teamMemberId);
-
-                // Step 6: Delete all match moves
-                matchMoveRepository.deleteAll(matchMoves);
-            }
-
-            // Step 7: Delete all team members
-            teamMemberRepository.deleteAll(teamMembers);
-
-            // Step 8: If the team has a photo, save it to be reused
-            if (team.getPhotoAsset() != null) {
-                teamAssets.put(team.getId(), team.getPhotoAsset());
-            }
+        if (oldPhotoId != null) {
+            assetService.deleteAsset(oldPhotoId);
         }
 
-        // Step 8: Delete all teams
-        teamRepository.deleteAll(teams);
-
-        MatchDto updatedDto = matchToEmptyMatchDto(match);
-
-        teamService.createTeamsForMatch(match, matchCreateDto.getTeams(), teamAssets);
-
-        loadMatchInfo(match, updatedDto);
-
-        subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.MATCH_UPDATE, group.getId(), updatedDto));
-
-        return updatedDto;
-
+        return assetService.uploadAsset(asset);
     }
 
-    public Stream<MatchDto> streamAllMatches(GroupDto group) {
-        return seasonRepository.findByGroupId(group.getId()).stream()
-                .flatMap(season -> matchRepository.findBySeasonId(season.getId()).stream())
+
+    public Stream<MatchDto> streamAllMatches(@NotNull String groupId) {
+        return matchRepository.findByGroupId(groupId).stream()
                 .map(this::matchToMatchDto);
     }
 
-    public Stream<PlayerDto> streamAllPlayers(GroupDto group) {
-        return seasonRepository.findByGroupId(group.getId()).stream()
-                .flatMap(season -> playerRepository.findAllBySeasonId(season.getId()).stream())
-                .map(playerMapper::playerToPlayerDto);
+    public List<PlayerDtoExtended> getAllPlayers(@NotNull String groupId, @Nullable List<String> playerIds) {
+        Stream<Player> playerStream;
+
+        if (playerIds == null) {
+            playerStream = playerRepository.findByGroupIdWithStatistics(groupId).stream();
+        } else {
+            playerStream = playerRepository.findByGroupIdWithStatisticsIn(groupId, playerIds).stream();
+        }
+
+        return playerStream.map(playerMapper::playerToPlayerDtoExtended)
+                .toList();
     }
 
-    public Stream<MatchDto> streamAllMatchesInSeason(String seasonId) {
+    public List<PlayerDtoExtended> getAllPlayersInSeason(@NotNull String seasonId, @Nullable List<String> playerIds) {
+        Stream<Player> playerStream;
+
+        if (playerIds == null) {
+            playerStream = playerRepository.findBySeasonIdWithStatistics(seasonId).stream();
+        } else {
+            playerStream = playerRepository.findBySeasonIdWithStatisticsIn(seasonId, playerIds).stream();
+        }
+
+        return playerStream.map(playerMapper::playerToPlayerDtoExtended)
+                .toList();
+    }
+
+    public MatchDto getMatchById(@NotNull String matchId) {
+        return matchRepository.findById(matchId)
+                .map(this::matchToMatchDto)
+                .orElse(null);
+    }
+
+    public List<MatchDto> getMatchesInSeason(@NotNull String seasonId) {
         return matchRepository.findBySeasonId(seasonId).stream()
-                .map(this::matchToMatchDto);
+                .map(this::matchToMatchDto)
+                .toList();
     }
 
-    public Stream<PlayerDto> streamAllPlayersInSeason(String seasonId) {
-        return playerRepository.findAllBySeasonId(seasonId).stream()
-                .map(playerMapper::playerToPlayerDto);
+    public MatchDtoExtended getFullMatchById(@NotNull String matchId) {
+        var match = matchRepository.findById(matchId).orElse(null);
+        if (match == null) return null;
+        return getFullMatch(match);
     }
 
-    public long numOfMatchesInPastSeasons(GroupDto group) {
-        return seasonRepository.findByGroupId(group.getId()).stream()
-                .filter(season -> season.getEndDate() != null)
-                .map(season -> matchRepository.countBySeasonId(season.getId()))
-                .reduce(0L, Long::sum);
+    public MatchDtoExtended getFullMatch(@NotNull Match match) {
+        var teams = teamRepository.findByMatchId(match.getId()).stream()
+                .map(teamMapper::teamToTeamDto)
+                .toList();
+        var teamIds = teams.stream()
+                .map(TeamDto::getId)
+                .toList();
+
+        var teamMembers = teamMemberRepository.findByTeamIdIn(teamIds).stream()
+                .map(teamMemberMapper::teamMemberToTeamMemberDto)
+                .toList();
+        var teamMemberIds = teamMembers.stream()
+                .map(TeamMemberDto::getId)
+                .toList();
+
+        var matchMoves = matchMoveRepository.findByTeamMemberIdIn(teamMemberIds).stream()
+                .map(matchMoveMapper::matchMoveToMatchMoveDtoComplete)
+                .toList();
+
+        var dto = new MatchDtoExtended();
+
+        dto.setId(match.getId());
+        dto.setDate(match.getDate());
+        dto.setSeasonId(match.getSeason().getId());
+        dto.setCreatedById(match.getCreatedBy().getId());
+        dto.setTeams(teams);
+        dto.setTeamMembers(teamMembers);
+        dto.setMatchMoves(matchMoves);
+
+        return dto;
     }
 
-    public Stream<MatchDto> streamAllMatchesToday(GroupDto group, SeasonDto season) {
+    public List<MatchDtoExtended> getFullMatchesBySeasonId(@NotNull String seasonId) {
+        return getFullMatchesSince(seasonId, null);
+    }
+
+    public List<MatchDtoExtended> getFullMatchesSince(@NotNull String seasonId, @Nullable ZonedDateTime since) {
+        var matches = (since == null ? matchRepository.findBySeasonId(seasonId) :
+                matchRepository.findBySeasonIdAndDateAfter(seasonId, since));
+        var matchIds = matches.stream()
+                .map(Match::getId)
+                .toList();
+
+        var teams = teamRepository.findByMatchIdIn(matchIds).stream()
+                .map(teamMapper::teamToTeamDto)
+                .toList();
+        var teamIds = teams.stream()
+                .map(TeamDto::getId)
+                .toList();
+
+        var teamMembers = teamMemberRepository.findByTeamIdIn(teamIds).stream()
+                .map(teamMemberMapper::teamMemberToTeamMemberDto)
+                .toList();
+        var teamMemberIds = teamMembers.stream()
+                .map(TeamMemberDto::getId)
+                .toList();
+
+        var matchMoves = matchMoveRepository.findByTeamMemberIdIn(teamMemberIds).stream()
+                .map(matchMoveMapper::matchMoveToMatchMoveDtoComplete)
+                .toList();
+
+        return matches.stream().map(match -> {
+            var dto = new MatchDtoExtended();
+            dto.setId(match.getId());
+            dto.setDate(match.getDate());
+            dto.setSeasonId(seasonId);
+            dto.setCreatedById(match.getCreatedBy().getId());
+
+            var matchTeams = teams.stream()
+                    .filter(t -> t.getMatchId().equals(match.getId()))
+                    .toList();
+            dto.setTeams(matchTeams);
+
+            var matchTeamIds = matchTeams.stream()
+                    .map(TeamDto::getId)
+                    .collect(Collectors.toSet());
+            var matchTeamMembers = teamMembers.stream()
+                    .filter(tm -> matchTeamIds.contains(tm.getTeamId()))
+                    .toList();
+            dto.setTeamMembers(matchTeamMembers);
+
+            var matchTeamMemberIds = matchTeamMembers.stream()
+                    .map(TeamMemberDto::getId)
+                    .collect(Collectors.toSet());
+            var matchMatchMoves = matchMoves.stream()
+                    .filter(mm -> matchTeamMemberIds.contains(mm.getTeamMemberId()))
+                    .toList();
+            dto.setMatchMoves(matchMatchMoves);
+
+            return dto;
+        }).toList();
+    }
+
+    public long numOfMatchesInPastSeasons(@NotNull String groupId) {
+        return matchRepository.countMatchesInPastSeasons(groupId);
+    }
+
+    public Stream<MatchDto> streamAllMatchesToday(@NotNull Season season) {
         var now = ZonedDateTime.now();
+        var settings = season.getSeasonSettings();
 
-        Predicate<Match> predicate = switch (season.getSeasonSettings().getDailyLeaderboard()) {
-            case WAKE_TIME ->
-                    match -> match.getDate().isAfter(getWakeTime(now, season.getSeasonSettings().getWakeTime()));
-            case LAST_24_HOURS ->
-                    (match) -> !match.getDate().isAfter(now) && Duration.between(match.getDate(), now).toMinutes() < MINUTES_IN_DAY;
-            case RESET_AT_MIDNIGHT -> (match) -> match.getDate().toLocalDate().equals(now.toLocalDate());
+        ZonedDateTime since = switch (settings.getDailyLeaderboard()) {
+            case WAKE_TIME -> getWakeTime(now, settings.getWakeTime());
+            case LAST_24_HOURS -> now.minusHours(24);
+            case RESET_AT_MIDNIGHT -> now.toLocalDate().atStartOfDay(now.getZone());
         };
 
         if (USE_DAILY_MATCHES_FROM_PAST_SEASONS) {
             // TODO implement: see comment
-            return matchRepository.findBySeasonId(group.getActiveSeason().getId())
-                    .stream()
-                    .filter(predicate)
-                    .map(this::matchToMatchDto);
-        } else {
-            return matchRepository.findBySeasonId(group.getActiveSeason().getId())
-                    .stream()
-                    .filter(predicate)
-                    .map(this::matchToMatchDto);
         }
+
+        return matchRepository.findBySeasonIdAndDateAfter(season.getId(), since).stream()
+                .map(this::matchToMatchDto);
     }
 
-    public ZonedDateTime getWakeTime(ZonedDateTime now, LocalTime wakeTime) {
-        var wakeTimeToday = now.withHour(wakeTime.getHour()).withMinute(wakeTime.getMinute()).withSecond(0).withNano(0);
+    public ZonedDateTime getWakeTime(@NotNull ZonedDateTime now, @NotNull LocalTime wakeTime) {
+        var wakeTimeToday = now.withHour(wakeTime.getHour())
+                .withMinute(wakeTime.getMinute())
+                .withSecond(0)
+                .withNano(0);
 
         if (now.isBefore(wakeTimeToday)) {
             wakeTimeToday = wakeTimeToday.minusDays(1);
@@ -270,203 +428,105 @@ public class MatchService {
         return wakeTimeToday;
     }
 
-    public MatchDto getMatchById(String id) {
-        return matchRepository.findById(id)
-                .map(this::matchToMatchDto)
-                .orElse(null);
-    }
-
-    public List<MatchOverviewDto> getAllMatchOverviews(String seasonId) {
-        return streamAllMatchesInSeason(seasonId)
+    public List<MatchOverviewDto> getAllMatchOverviews(@NotNull String seasonId) {
+        return getFullMatchesBySeasonId(seasonId).stream()
                 .map(this::getMatchOverviewByMatch)
                 .toList();
     }
 
-    public MatchOverviewDto getMatchOverviewById(String id) {
-        var match = getMatchById(id);
-
-        if (match == null || match.getTeams().size() < 2) {
-            return null;
-        }
-
+    public MatchOverviewDto getMatchOverviewById(@NotNull String matchId) {
+        var match = getFullMatchById(matchId);
+        if (match == null) return null;
         return getMatchOverviewByMatch(match);
     }
 
-    public MatchOverviewDto getMatchOverviewByMatch(MatchDto match) {
-        if (match == null || match.getTeams().size() < 2) {
-            return null;
+    public MatchOverviewDto getMatchOverviewByMatch(@NotNull MatchDtoExtended match) {
+        if (match.getTeams().size() != 2) {
+            throw new IllegalArgumentException("Match must have exactly least 2 teams");
         }
 
+        var blueTeam = match.getTeams().getFirst();
+        var redTeam = match.getTeams().get(1);
+
+        var blueTeamId = blueTeam.getId();
+        var redTeamId = redTeam.getId();
+
         var bluePlayers = match.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(match.getTeams().getFirst().getId()))
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId))
                 .toList();
         var redPlayers = match.getTeamMembers().stream()
-                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(match.getTeams().get(1).getId()))
+                .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeamId))
+                .toList();
+
+        var bluePlayerIds = bluePlayers.stream().map(TeamMemberDto::getId).collect(Collectors.toSet());
+        var blueMoves = match.getMatchMoves().stream()
+                .filter(mm -> bluePlayerIds.contains(mm.getTeamMemberId()))
+                .toList();
+
+        var redPlayerIds = redPlayers.stream().map(TeamMemberDto::getId).collect(Collectors.toSet());
+        var redMoves = match.getMatchMoves().stream()
+                .filter(mm -> redPlayerIds.contains(mm.getTeamMemberId()))
                 .toList();
 
         var dto = new MatchOverviewDto();
 
         dto.setId(match.getId());
         dto.setDate(match.getDate());
-        dto.setSeason(match.getSeason());
+        dto.setSeasonId(match.getSeasonId());
+
+        var ruleMoves = ruleMovesByIds(match.getMatchMoves().stream().map(MatchMoveDtoComplete::getMoveId).toList());
 
         dto.setBlueTeam(buildOverviewTeam(
+                blueTeamId,
+                blueTeam.getPhotoAssetId(),
                 bluePlayers,
-                match.getMatchMoves().stream()
-                        .filter(matchMoveDto -> bluePlayers.stream().anyMatch(
-                                teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
-                        .toList()));
-
+                blueMoves,
+                ruleMoves
+        ));
         dto.setRedTeam(buildOverviewTeam(
+                redTeamId,
+                redTeam.getPhotoAssetId(),
                 redPlayers,
-                match.getMatchMoves().stream()
-                        .filter(matchMoveDto -> redPlayers.stream().anyMatch(
-                                teamMemberDto -> matchMoveDto.getTeamMemberId().equals(teamMemberDto.getId())))
-                        .toList()));
+                redMoves,
+                ruleMoves
+        ));
 
         return dto;
     }
 
-    public boolean hasWrongTeamSizes(Season season, MatchCreateDto dto) {
-        var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(new SeasonSettings());
+    public boolean hasWrongTeamSizes(@NotNull Season season, @NotNull MatchCreateDto dto) {
+        var settings = Optional.ofNullable(season.getSeasonSettings()).orElse(SeasonSettings.createDefault());
 
-        return !dto.getTeams().stream()
-                .allMatch(teamCreateDto -> teamCreateDto.getTeamMembers().size() >= settings.getMinTeamSize() &&
-                        teamCreateDto.getTeamMembers().size() <= settings.getMaxTeamSize());
+        return dto.getTeams().stream()
+                .anyMatch(teamCreateDto ->
+                        teamCreateDto.getTeamMembers().size() < settings.getMinTeamSize() ||
+                                teamCreateDto.getTeamMembers().size() > settings.getMaxTeamSize()
+                );
     }
 
-    public Match getRawMatchById(String id) {
-        return matchRepository.findById(id).orElse(null);
-    }
-
-    @Transactional
-    public TeamDto deleteMatchPhoto(TeamDto team) {
-        if (team.getPhotoAsset() != null) {
-            assetService.deleteAsset(team.getPhotoAsset().getId());
-            team.setPhotoAsset(null);
-        }
-
-        teamRepository.save(teamMapper.teamDtoToTeam(team));
-
-        return team;
-    }
-
-    @Transactional
-    public TeamDto saveMatchPhoto(TeamDto team) {
-        String oldWallpaperAssetId = null;
-
-        if (team.getPhotoAsset() != null) {
-            oldWallpaperAssetId = team.getPhotoAsset().getId();
-        }
-
-        var assetMetadataDto = assetService.storeAsset(AssetType.TEAM_PHOTO);
-
-        team.setPhotoAsset(assetMetadataDto);
-
-        teamRepository.save(teamMapper.teamDtoToTeam(team));
-
-        if (oldWallpaperAssetId != null) {
-            assetService.deleteAsset(oldWallpaperAssetId);
-        }
-
-        return team;
-    }
-
-    @Transactional
-    public ErrorCodes deleteMatch(String id, String seasonId, String groupId) {
-        AtomicReference<ErrorCodes> error = new AtomicReference<>();
-
-        Optional.ofNullable(getMatchById(id)).ifPresentOrElse(match -> {
-            var season = seasonRepository.findById(seasonId).orElse(null);
-
-            if (season == null) {
-                error.set(ErrorCodes.SEASON_NOT_FOUND);
-                return;
-            }
-
-            if (!season.getGroupId().equals(groupId)) {
-                error.set(ErrorCodes.SEASON_NOT_OF_GROUP);
-                return;
-            }
-
-            if (season.getEndDate() == null) {
-                if (match.getSeason().getId().equals(seasonId) && match.getSeason().getGroupId().equals(groupId)) {
-                    for (TeamDto team : match.getTeams()) {
-                        String teamId = team.getId();
-
-                        // Step 1: Find all team members associated with the team
-
-                        List<TeamMember> teamMembers = teamMemberRepository.findAllByTeamId(teamId);
-
-                        // Step 2: Loop through each team member
-                        for (TeamMember teamMember : teamMembers) {
-                            String teamMemberId = teamMember.getId();
-
-                            // Step 3: Find all match moves associated with the team member
-                            List<MatchMove> matchMoves = matchMoveRepository.findAllByTeamMemberId(teamMemberId);
-
-                            // Step 4: Delete all match moves
-                            matchMoveRepository.deleteAll(matchMoves);
-                        }
-
-                        // Step 5: Delete all team members
-                        teamMemberRepository.deleteAll(teamMembers);
-                    }
-
-                    // Step 6: Delete all teams
-                    teamRepository.deleteAllById(match.getTeams().stream().map(TeamDto::getId).toList());
-                    matchRepository.deleteById(id);
-                } else {
-                    error.set(ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
-                }
-            } else {
-                error.set(ErrorCodes.SEASON_ALREADY_ENDED);
-            }
-        }, () -> error.set(ErrorCodes.MATCH_NOT_FOUND));
-
-        return error.get();
-    }
-
-    private MatchDto matchToEmptyMatchDto(Match match) {
+    public MatchDto matchToMatchDto(@NotNull Match match) {
         var dto = new MatchDto();
 
         dto.setId(match.getId());
         dto.setDate(match.getDate());
-        dto.setSeason(seasonMapper.seasonToSeasonDto(match.getSeason()));
-        dto.setCreatedBy(groupMemberMapper.groupMemberToGroupMemberDto(match.getCreatedBy()));
+        dto.setSeasonId(match.getSeason().getId());
+        dto.setCreatedById(match.getCreatedBy().getId());
 
         return dto;
     }
 
-    private MatchDto matchToMatchDto(Match match) {
-        var dto = new MatchDto();
-
-        dto.setId(match.getId());
-        dto.setDate(match.getDate());
-        dto.setSeason(seasonMapper.seasonToSeasonDto(match.getSeason()));
-        dto.setCreatedBy(groupMemberMapper.groupMemberToGroupMemberDto(match.getCreatedBy()));
-
-        loadMatchInfo(match, dto);
-
-        return dto;
-    }
-
-    private void loadMatchInfo(Match match, MatchDto dto) {
-        var teams = teamService.buildTeamDtos(match);
-        dto.setTeams(teams);
-
-        var teamMembers = teamMemberService.buildTeamMemberDtos(teams);
-        dto.setTeamMembers(teamMembers);
-
-        dto.setMatchMoves(matchMoveService.buildMatchMoveDtos(teamMembers));
-    }
-
-    private MatchOverviewTeamDto buildOverviewTeam(List<TeamMemberDto> members, List<MatchMoveDtoComplete> moves) {
+    private MatchOverviewTeamDto buildOverviewTeam(String teamId, @Nullable String assetPhotoId, @NotNull List<TeamMemberDto> members, @NotNull List<MatchMoveDtoComplete> moves, @NotNull Map<String, RuleMove> ruleMoves) {
         var team = new MatchOverviewTeamDto();
 
-        team.setPoints(countPoints(moves.stream()
-                .map(matchMoveMapper::matchMoveDtoCompleteToMatchMoveDto)
-                .toList(), members.size()));
+        team.setTeamId(teamId);
+        team.setAssetPhotoId(assetPhotoId);
+        team.setPoints(countPoints(
+                moves.stream()
+                        .map(matchMoveMapper::matchMoveDtoCompleteToMatchMoveDto)
+                        .toList(),
+                members.size(),
+                ruleMoves
+        ));
 
         team.setMembers(members.stream()
                 .map(teamMemberDto -> {
@@ -477,7 +537,7 @@ public class MatchService {
                             .filter(moveDto -> moveDto.getTeamMemberId().equals(teamMemberDto.getId()))
                             .map(matchMoveMapper::matchMoveDtoCompleteToMatchMoveDto)
                             .toList());
-                    teamDto.setPoints(countPoints(teamDto.getMoves(), 1));
+                    teamDto.setPoints(countPoints(teamDto.getMoves(), 1, ruleMoves));
 
                     return teamDto;
                 })
@@ -486,21 +546,18 @@ public class MatchService {
         return team;
     }
 
-    private int countPoints(List<MatchMoveDto> moves, int multiplier) {
-        return moves.stream()
-                .flatMap(moveDto -> {
-                    var ruleMove = ruleMoveRepository.findById(moveDto.getMoveId()).orElse(null);
+    private Map<String, RuleMove> ruleMovesByIds(@NotNull List<String> moveIds) {
+        return ruleMoveRepository.findByIdIn(moveIds).stream()
+                .collect(Collectors.toMap(RuleMove::getId, r -> r));
+    }
 
-                    if (ruleMove != null) {
-                        return IntStream.range(0, moveDto.getCount())
-                                .mapToObj(i -> ruleMove);
-                    } else {
-                        return IntStream.empty().mapToObj(i -> (RuleMove) null);
-                    }
+    private int countPoints(@NotNull List<MatchMoveDto> moves, int multiplier, @NotNull Map<String, RuleMove> ruleMoves) {
+        return moves.stream()
+                .map(moveDto -> {
+                    var ruleMove = ruleMoves.get(moveDto.getMoveId());
+                    if (ruleMove == null) return 0;
+                    return moveDto.getCount() * (ruleMove.getPointsForScorer() + (multiplier * ruleMove.getPointsForTeam()));
                 })
-                .filter(Objects::nonNull)
-                // TODO should the pointsForTeam count only once?
-                .map(ruleMove -> ruleMove.getPointsForScorer() + (multiplier * ruleMove.getPointsForTeam()))
                 .reduce(Integer::sum)
                 .orElse(0);
     }

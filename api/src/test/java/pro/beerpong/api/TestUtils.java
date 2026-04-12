@@ -3,11 +3,20 @@ package pro.beerpong.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.dto.groups.GroupCreateDto;
+import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveCreateDto;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
+import pro.beerpong.api.model.dto.rules.RuleCreateDto;
+import pro.beerpong.api.model.dto.rules.RuleDto;
+import pro.beerpong.api.model.dto.seasons.SeasonDto;
+import pro.beerpong.api.service.RuleMoveService;
+import pro.beerpong.api.service.RuleService;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Component
 public class TestUtils {
@@ -26,7 +35,6 @@ public class TestUtils {
         }
 
         actual.setCreatedAt(expected.getCreatedAt());
-        actual.getActiveSeason().setStartDate(expected.getActiveSeason().getStartDate());
 
         assertEquals(expected, actual);
     }
@@ -84,6 +92,20 @@ public class TestUtils {
         return ruleMove;
     }
 
+    public void assertDefaultRuleMovesEquals(List<RuleMoveService.DefaultRuleMove> expected, List<RuleMoveDto> actual) {
+        List<RuleMoveDto> ruleMoves = expected.stream()
+                .map(defaultRule -> {
+                    var ruleMoveDto = new RuleMoveDto();
+                    ruleMoveDto.setFinishingMove(defaultRule.finish());
+                    ruleMoveDto.setPointsForScorer(defaultRule.pointsForScorer());
+                    ruleMoveDto.setPointsForTeam(defaultRule.pointsForTeam());
+                    ruleMoveDto.setName(defaultRule.name());
+                    return ruleMoveDto;
+                })
+                .toList();
+        assertRuleMovesEquals(ruleMoves, actual);
+    }
+
     public void assertRuleMovesEquals(List<RuleMoveDto> expected, List<RuleMoveDto> actual) {
         assertRuleMovesEquals(expected, actual, false);
     }
@@ -99,7 +121,7 @@ public class TestUtils {
     public void assertRuleMoveEquals(RuleMoveDto expected, RuleMoveDto actual, boolean full) {
         if (full) {
             assertEquals(expected.getId(), actual.getId());
-            assertEquals(expected.getSeason().getId(), actual.getSeason().getId());
+            assertEquals(expected.getSeasonId(), actual.getSeasonId());
         }
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.isFinishingMove(), actual.isFinishingMove());
@@ -123,6 +145,19 @@ public class TestUtils {
     }
 
     /* RULES */
+    public void assertDefaultRulesEquals(List<RuleService.DefaultRule> expected, List<RuleDto> actual) {
+        List<RuleDto> rules = expected.stream()
+                .map(defaultRule -> {
+                   var ruleDto = new RuleDto();
+                   ruleDto.setDescription(defaultRule.descr());
+                   ruleDto.setTitle(defaultRule.title());
+                   return ruleDto;
+                })
+                .toList();
+
+        assertRulesEquals(rules, actual);
+    }
+
     public void assertRulesEquals(List<RuleDto> expected, List<RuleDto> actual) {
         assertRulesEquals(expected, actual, false);
     }
@@ -138,8 +173,8 @@ public class TestUtils {
     public void assertRuleEquals(RuleDto expected, RuleDto actual, boolean full) {
         if (full) {
             assertEquals(expected.getId(), actual.getId());
-            assertEquals(expected.getSeason().getId(), actual.getSeason().getId());
-            assertEquals(expected.getCreatedBy().getUserId(), actual.getCreatedBy().getGroupId());
+            assertEquals(expected.getSeasonId(), actual.getSeasonId());
+            assertEquals(expected.getCreatedById(), actual.getCreatedById());
         }
         assertEquals(expected.getTitle(), actual.getTitle());
         assertEquals(expected.getDescription(), actual.getDescription());

@@ -1,26 +1,28 @@
 package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMapper;
 import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Rule;
 import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.dto.RuleCreateDto;
-import pro.beerpong.api.model.dto.RuleDto;
-import pro.beerpong.api.model.dto.UserDto;
+import pro.beerpong.api.model.dto.rules.RuleCreateDto;
+import pro.beerpong.api.model.dto.rules.RuleDto;
+import pro.beerpong.api.model.dto.user.UserDto;
 import pro.beerpong.api.repository.RuleRepository;
-import pro.beerpong.api.sockets.SocketEvent;
-import pro.beerpong.api.sockets.SocketEventData;
+import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class RuleService {
-    public static final List<RuleDto> DEFAULT_RULES = List.of(
+    public static final List<DefaultRule> DEFAULT_RULES = List.of(
             buildRule("Teams", "The two teams can have any size, and they don't have to have the same number of players."),
             buildRule("Cup Setup", "Ten cups per side are to be arranged in a pyramid pointing towards the opponent. The back row must be no further from the table edge than one cup diameter. All cups are to be filled with the same amount of liquid, preferably halfway full."),
             buildRule("Number of Balls", "Each side throws at least two balls. If there are three or more players per side, increase the ball count by one per extra player."),
@@ -43,41 +45,39 @@ public class RuleService {
     );
 
     private final SubscriptionHandler subscriptionHandler;
+
     private final RuleRepository ruleRepository;
+    private final SeasonRepository seasonRepository;
 
     private final RuleMapper ruleMapper;
+
     private final AuthService authService;
 
-    @Autowired
-    public RuleService(SubscriptionHandler subscriptionHandler, RuleRepository matchRepository, RuleMapper ruleMapper, AuthService authService) {
-        this.subscriptionHandler = subscriptionHandler;
-        this.ruleRepository = matchRepository;
-        this.ruleMapper = ruleMapper;
-        this.authService = authService;
-    }
-
     @Transactional
-    public List<RuleDto> writeRules(String groupId, Season season, List<RuleCreateDto> rules, UserDto user) {
-        ruleRepository.deleteBySeasonId(season.getId());
+    public List<RuleDto> writeRules(String groupId, String seasonId, List<RuleCreateDto> rules, UserDto user) {
+        var createdBy = authService.getMemberInGroup(user.getId(), groupId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
 
-        var createdBy = authService.memberByUser(user, groupId);
+        ruleRepository.deleteBySeasonId(seasonId);
 
         return rules.stream()
                 .map(dto -> {
                     var rule = ruleMapper.ruleCreateDtoToRule(dto);
-                    rule.setSeason(season);
+                    rule.setSeason(seasonRepository.getReferenceById(seasonId));
                     rule.setCreatedBy(createdBy);
                     return rule;
                 })
-                .filter(dto -> dto.getSeason().getId().equals(season.getId()) &&
-                        dto.getSeason().getGroupId().equals(groupId))
                 .map(rule -> ruleMapper.ruleToRuleDto(ruleRepository.save(rule)))
                 .toList();
     }
 
-    public void copyRulesFromOldSeason(Season oldSeason, Season newSeason) {
-        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
-            return;
+    public boolean copyRulesFromOldSeason(String oldSeasonId, String newSeasonId, String groupId) {
+        var oldSeason = seasonRepository.findById(oldSeasonId).orElseThrow();
+        var newSeason = seasonRepository.findById(newSeasonId).orElseThrow();
+
+        if (!oldSeason.getGroup().getId().equals(groupId) ||
+                !newSeason.getGroup().getId().equals(groupId)) {
+            return false;
         }
 
         ruleRepository.findBySeasonId(oldSeason.getId()).forEach(oldRule -> {
@@ -85,11 +85,13 @@ public class RuleService {
 
             rule.setTitle(oldRule.getTitle());
             rule.setDescription(oldRule.getDescription());
-            rule.setSeason(newSeason);
+            rule.setSeason(seasonRepository.getReferenceById(newSeason.getId()));
             rule.setCreatedBy(oldRule.getCreatedBy());
 
             ruleRepository.save(rule);
         });
+
+        return true;
     }
 
     public List<RuleDto> getAllRules(String seasonId) {
@@ -104,22 +106,20 @@ public class RuleService {
             DEFAULT_RULES.stream()
                     .map(rule -> {
                         var rle = new Rule();
-                        rle.setTitle(rule.getTitle());
-                        rle.setDescription(rule.getDescription());
+                        rle.setTitle(rule.title());
+                        rle.setDescription(rule.descr());
                         rle.setSeason(season);
                         rle.setCreatedBy(createdBy);
                         return rle;
                     })
                     .forEach(ruleRepository::save);
         }
+        // TODO create more default rule sets
     }
 
-    private static RuleDto buildRule(String title, String description) {
-        var rule = new RuleDto();
-
-        rule.setTitle(title);
-        rule.setDescription(description);
-
-        return rule;
+    private static DefaultRule buildRule(String title, String description) {
+        return new DefaultRule(title, description);
     }
+
+    public record DefaultRule(String title, String descr) { }
 }

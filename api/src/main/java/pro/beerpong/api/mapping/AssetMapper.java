@@ -4,9 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Value;
 import pro.beerpong.api.model.dao.Asset;
-import pro.beerpong.api.model.dao.GroupMember;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.GroupMemberDto;
+import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 
 @Mapper(componentModel = "spring")
 public abstract class AssetMapper {
@@ -20,9 +19,9 @@ public abstract class AssetMapper {
 
     public abstract Asset assetMetadataDtoToAsset(AssetMetadataDto dto);
 
-    @Mapping(source = "group.id", target = "groupId")
-    @Mapping(source = "user.id", target = "userId")
-    public abstract GroupMemberDto groupMemberToGroupMemberDto(GroupMember groupMember);
+    @Mapping(target = "url", expression = "java(generateUrl(asset))")
+    @Mapping(target = "singleUploadUrl", ignore = true)
+    public abstract AssetUploadResponse assetToUploadResponse(Asset asset);
 
     public String generateUrl(Asset asset) {
         return "https://" + bucket + "." + endpoint + "/" + asset.getId();

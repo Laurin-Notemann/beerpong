@@ -5,15 +5,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.GroupMapper;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.GroupMember;
 import pro.beerpong.api.model.dao.Season;
 import pro.beerpong.api.model.dao.SeasonSettings;
-import pro.beerpong.api.model.dto.*;
-import pro.beerpong.api.repository.GroupMemberRepository;
-import pro.beerpong.api.repository.GroupRepository;
-import pro.beerpong.api.repository.MatchRepository;
-import pro.beerpong.api.repository.SeasonRepository;
+import pro.beerpong.api.model.dto.assets.AssetCropDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
+import pro.beerpong.api.model.dto.groups.GroupCreateDto;
+import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.dto.groups.GroupWithStats;
+import pro.beerpong.api.model.dto.profile.ProfileCreateDto;
+import pro.beerpong.api.model.dto.user.UserDto;
+import pro.beerpong.api.repository.*;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
@@ -22,7 +27,7 @@ import pro.beerpong.api.util.AssetType;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 
@@ -31,21 +36,27 @@ import static pro.beerpong.api.util.RandomStringGenerator.generateRandomString;
 public class GroupService {
     public static int GROUP_INVITE_CODE_LENGTH = 9;
 
-    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
+
     private final GroupRepository groupRepository;
     private final SeasonRepository seasonRepository;
-    private final ProfileService profileService;
-    private final GroupMapper groupMapper;
     private final MatchRepository matchRepository;
-    private final PlayerService playerService;
+    private final GroupMemberRepository groupMemberRepository;
+
+    private final AuthService authService;
+    private final AssetService assetService;
+    private final ProfileService profileService;
     private final RuleMoveService ruleMoveService;
     private final RuleService ruleService;
-    private final GroupMemberRepository groupMemberRepository;
-    private final AuthService authService;
 
-    public GroupDto createGroup(GroupCreateDto groupCreateDto, UserDto user) {
+    private final GroupMapper groupMapper;
+    private final PlayerRepository playerRepository;
+    private final SeasonSettingsRepository seasonSettingsRepository;
+
+    @Transactional
+    public ServiceResponse<GroupDto> createGroup(GroupCreateDto groupCreateDto, UserDto user) {
         Group group = groupMapper.groupCreateDtoToGroup(groupCreateDto);
+
         group.setInviteCode(generateRandomString(GROUP_INVITE_CODE_LENGTH));
         group.setCreatedAt(ZonedDateTime.now());
 
@@ -53,7 +64,7 @@ public class GroupService {
             group.setCustomSportName(null);
         } else if ((group.getCustomSportName() != null && group.getCustomSportName().isBlank()) ||
                 (group.getSportPreset() == null && group.getCustomSportName() == null)) {
-            return null;
+            return ServiceResponse.error(ErrorCodes.INVALID_GROUP_SPORT);
         }
 
         var groupMember = authService.buildFirstGroupMember(user);
@@ -66,16 +77,18 @@ public class GroupService {
         group = groupRepository.save(group);
 
         groupMember.setGroup(group);
+        groupMember = groupMemberRepository.save(groupMember);
 
-        groupMember = authService.saveMember(groupMember);
-
-        // TODO maybe find way to prevent double group saving. but not that big of a deal
+        // future: maybe find way to prevent double group saving. but not that big of a deal
         group.setCreatedBy(groupMember);
-        group = groupRepository.save(group);
 
         season.setCreatedBy(groupMember);
-        season.setGroupId(group.getId());
-        seasonRepository.save(season);
+        season.setGroup(group);
+
+        season.setSeasonSettings(seasonSettingsRepository.save(season.getSeasonSettings()));
+
+        season = seasonRepository.save(season);
+        group = groupRepository.save(group);
 
         Group finalGroup = group;
         GroupMember finalGroupMember = groupMember;
@@ -88,50 +101,26 @@ public class GroupService {
         ruleMoveService.createDefaultRuleMoves(group, season);
         ruleService.createDefaultRules(season, groupCreateDto.getSportPreset(), groupMember);
 
-        return withStats(groupMapper.groupToGroupDto(group));
+        return ServiceResponse.ok(groupMapper.groupToGroupDto(group));
     }
 
-    public List<GroupDto> findGroupsByUser(UserDto user) {
-        return groupMemberRepository.findByUserId(user.getId()).stream()
-                .map(groupMember -> withStats(groupRepository.findById(groupMember.getGroup().getId())
-                        .map(groupMapper::groupToGroupDto)
-                        .orElse(null)))
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
-    public GroupDto findGroupsByInviteCode(String inviteCode) {
-        return withStats(groupRepository.findByInviteCode(inviteCode)
-                .map(groupMapper::groupToGroupDto)
-                .orElse(null));
-    }
-
-    public List<GroupDto> getAllGroups() {
-        return groupRepository.findAll()
-                .stream()
-                .map(groupMapper::groupToGroupDto)
-                .collect(Collectors.toList());
+    public Optional<GroupDto> findGroupsByInviteCode(String inviteCode) {
+        return groupRepository.findByInviteCode(inviteCode)
+                .map(groupMapper::groupToGroupDto);
     }
 
     public GroupDto getGroupById(String id) {
-        return withStats(getRawGroupById(id));
-    }
-
-    public GroupDto getRawGroupById(String id) {
         return groupRepository.findById(id)
                 .map(groupMapper::groupToGroupDto)
                 .orElse(null);
     }
 
-    public Group getDaoById(String id) {
-        return groupRepository.findById(id).orElse(null);
-    }
-
+    @Transactional
     public GroupDto updateGroup(String id, GroupCreateDto groupCreateDto) {
         return groupRepository.findById(id)
                 .map(existingGroup -> {
                     existingGroup.setName(groupCreateDto.getName());
-                    var dto = withStats(groupMapper.groupToGroupDto(groupRepository.save(existingGroup)));
+                    var dto = groupMapper.groupToGroupDto(groupRepository.save(existingGroup));
 
                     if (dto == null) {
                         return null;
@@ -144,45 +133,75 @@ public class GroupService {
                 .orElse(null);
     }
 
-    public GroupDto deleteWallpaper(GroupDto groupDto) {
-        groupDto.setWallpaperAsset(null);
-        groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
+    public List<GroupDto> findGroupsByUser(UserDto user) {
+        return findGroupsWithStats(groupMemberRepository.findGroupsByUserId(user.getId()));
+    }
 
-        return groupDto;
+    public Optional<GroupDto> findGroupWithStats(String groupId) {
+        return groupRepository.findByIdWithStats(groupId)
+                .map(this::toGroupDto);
+
+    }
+
+    public List<GroupDto> findGroupsWithStats(List<String> groupIds) {
+        return groupRepository.findByIdInWithStats(groupIds).stream()
+                .map(this::toGroupDto)
+                .toList();
+    }
+
+    private GroupDto toGroupDto(GroupWithStats withStats) {
+        var dto = groupMapper.groupToGroupDto(withStats.group());
+        dto.setNumberOfMatches(withStats.matches());
+        dto.setNumberOfPlayers(withStats.players());
+        dto.setNumberOfSeasons(withStats.seasons());
+
+        return dto;
     }
 
     @Transactional
-    public AssetMetadataDto storeWallpaper(GroupDto groupDto, @Nullable AssetCropDto assetCropDto) {
+    public AssetUploadResponse storeWallpaper(String groupId, @Nullable AssetCropDto assetCropDto) {
+        var groupOptional = groupRepository.findById(groupId);
+
+        if (groupOptional.isEmpty()) {
+            return null;
+        }
+
+        var group = groupOptional.get();
         String oldWallpaperAssetId = null;
 
-        if (groupDto.getWallpaperAsset() != null) {
-            oldWallpaperAssetId = groupDto.getWallpaperAsset().getId();
+        if (group.getWallpaper() != null) {
+            oldWallpaperAssetId = group.getWallpaper().getId();
         }
 
         var uploadResponse = assetService.storeAsset(AssetType.GROUP_WALLPAPER, assetCropDto);
 
-        groupDto.setWallpaperAsset(uploadResponse);
+        group.setWallpaper(uploadResponse);
 
-        groupRepository.save(groupMapper.groupDtoToGroup(groupDto));
+        groupRepository.save(group);
 
         if (oldWallpaperAssetId != null) {
             assetService.deleteAsset(oldWallpaperAssetId);
         }
 
-        return uploadResponse;
+        return assetService.uploadAsset(uploadResponse);
     }
 
-    private GroupDto withStats(@Nullable GroupDto groupDto) {
-        if (groupDto == null) {
+    @Transactional
+    public GroupDto unsetWallpaper(String groupId) {
+        var group = groupRepository.findById(groupId).orElse(null);
+        if (group == null) return null;
+
+        if (group.getWallpaper() != null) {
+            var assetId = group.getWallpaper().getId();
+
+            group.setWallpaper(null);
+            groupRepository.save(group);
+
+            assetService.deleteAsset(assetId);
+
+            return groupMapper.groupToGroupDto(group);
+        } else {
             return null;
-        } else if (groupDto.getActiveSeason() == null) {
-            return groupDto;
         }
-
-        groupDto.setNumberOfMatches(matchRepository.findBySeasonId(groupDto.getActiveSeason().getId()).size());
-        groupDto.setNumberOfPlayers(playerService.getBySeasonId(groupDto.getActiveSeason().getId()).size());
-        groupDto.setNumberOfSeasons(seasonRepository.findByGroupId(groupDto.getId()).size());
-
-        return groupDto;
     }
 }

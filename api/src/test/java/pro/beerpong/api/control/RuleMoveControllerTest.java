@@ -8,7 +8,11 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveCreateDto;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
+import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
+import pro.beerpong.api.model.dto.seasons.SeasonDto;
 import pro.beerpong.api.service.RuleMoveService;
 
 import java.util.ArrayList;
@@ -33,24 +37,24 @@ public class RuleMoveControllerTest {
     public void ruleMoves_create_groupCreation() {
         var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
 
-        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
-        testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_BEERPONG_MOVES, ruleMoves);
+        testUtils.assertDefaultRuleMovesEquals(RuleMoveService.DEFAULT_BEERPONG_MOVES, ruleMoves);
 
         prerequisiteGroup = testUtils.createTestGroup(port, "test", "kicker");
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
-        testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
+        testUtils.assertDefaultRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
 
         prerequisiteGroup = testUtils.createTestGroup(port, "test", null, "test123");
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
-        testUtils.assertRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
+        testUtils.assertDefaultRuleMovesEquals(RuleMoveService.DEFAULT_MOVES, ruleMoves);
     }
 
     @Test
@@ -59,7 +63,7 @@ public class RuleMoveControllerTest {
     public void ruleMoves_create_seasonStart() {
         var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
 
-        var oldResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var oldResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(oldResponse, ArrayList.class);
 
         var createRuleMoves = List.of(
@@ -89,7 +93,7 @@ public class RuleMoveControllerTest {
     public void ruleMoves_create_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(allMovesResponse, ArrayList.class);
 
         var ruleMoveDto = new RuleMoveCreateDto();
@@ -97,10 +101,10 @@ public class RuleMoveControllerTest {
         ruleMoveDto.setFinishingMove(false);
         ruleMoveDto.setPointsForScorer(3);
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         var ruleMove = requestUtils.assertSuccess(response, RuleMoveDto.class);
 
-        allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(allMovesResponse, ArrayList.class);
 
         assertEquals(oldRuleMoves.size() + 1, ruleMoves.size());
@@ -112,7 +116,6 @@ public class RuleMoveControllerTest {
     @Test
     public void ruleMoves_create_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
         var ruleMoveDto = new RuleMoveCreateDto();
         ruleMoveDto.setName("testing");
@@ -124,7 +127,7 @@ public class RuleMoveControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonCreateDto = new SeasonCreateDto();
@@ -137,42 +140,41 @@ public class RuleMoveControllerTest {
         var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
         requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
     }
 
     @Test
     public void ruleMoves_create_invalidDto() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
         var ruleMoveDto = new RuleMoveCreateDto();
         ruleMoveDto.setName(null);
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("");
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("    ");
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("test");
         ruleMoveDto.setPointsForTeam(-1);
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("test");
         ruleMoveDto.setPointsForTeam(0);
         ruleMoveDto.setPointsForScorer(-1);
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
     }
 
@@ -182,7 +184,7 @@ public class RuleMoveControllerTest {
     public void ruleMoves_update_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(allMovesResponse, ArrayList.class);
 
         assertFalse(oldRuleMoves.isEmpty());
@@ -194,7 +196,7 @@ public class RuleMoveControllerTest {
         ruleMoveDto.setPointsForScorer(3);
         ruleMoveDto.setPointsForScorer(4);
 
-        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         var ruleMove = requestUtils.assertSuccess(response, RuleMoveDto.class);
 
         assertEquals(oldRuleMove.getId(), ruleMove.getId());
@@ -206,9 +208,8 @@ public class RuleMoveControllerTest {
     @SuppressWarnings("unchecked")
     public void ruleMoves_update_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(allMovesResponse, ArrayList.class);
 
         assertFalse(oldRuleMoves.isEmpty());
@@ -225,7 +226,7 @@ public class RuleMoveControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonCreateDto = new SeasonCreateDto();
@@ -238,7 +239,7 @@ public class RuleMoveControllerTest {
         var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
         requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
     }
 
@@ -246,9 +247,8 @@ public class RuleMoveControllerTest {
     @SuppressWarnings("unchecked")
     public void ruleMoves_update_invalidDto() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var allMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldRuleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(allMovesResponse, ArrayList.class);
 
         assertFalse(oldRuleMoves.isEmpty());
@@ -258,42 +258,41 @@ public class RuleMoveControllerTest {
         var ruleMoveDto = new RuleMoveCreateDto();
         ruleMoveDto.setName(null);
 
-        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("");
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("    ");
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("test");
         ruleMoveDto.setPointsForTeam(-1);
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
 
         ruleMoveDto.setName("test");
         ruleMoveDto.setPointsForTeam(0);
         ruleMoveDto.setPointsForScorer(-1);
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/" + oldRuleMove.getId(), ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_INVALID_DTO);
     }
 
     @Test
     public void ruleMoves_update_invalidRuleMove() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
         var ruleMoveDto = new RuleMoveCreateDto();
         ruleMoveDto.setName("test");
 
-        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves/someIdThatNotExists", ruleMoveDto, RuleMoveDto.class);
+        var response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves/someIdThatNotExists", ruleMoveDto, RuleMoveDto.class);
         requestUtils.assertFailure(response, ErrorCodes.RULE_MOVE_NOT_FOUND);
     }
 }

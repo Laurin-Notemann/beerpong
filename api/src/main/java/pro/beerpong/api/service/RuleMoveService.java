@@ -1,15 +1,19 @@
 package pro.beerpong.api.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMoveMapper;
+import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.RuleMove;
 import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.dto.RuleMoveCreateDto;
-import pro.beerpong.api.model.dto.RuleMoveDto;
+import pro.beerpong.api.model.ServiceResponse;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveCreateDto;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
 import pro.beerpong.api.repository.RuleMoveRepository;
 import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.sockets.SocketEvent;
@@ -20,8 +24,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class RuleMoveService {
-    public static final List<RuleMoveDto> DEFAULT_BEERPONG_MOVES = List.of(
+    public static final List<DefaultRuleMove> DEFAULT_BEERPONG_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Bomb", 2, 0, false),
             buildRuleMove("Bouncer", 2, 0, false),
@@ -31,58 +36,53 @@ public class RuleMoveService {
             buildRuleMove("Finish - Ring of fire", 1, 10, true)
     );
 
-    public static final List<RuleMoveDto> DEFAULT_MOVES = List.of(
+    public static final List<DefaultRuleMove> DEFAULT_MOVES = List.of(
             buildRuleMove("Normal", 1, 0, false),
             buildRuleMove("Finish - Normal", 1, 3, true)
     );
 
     private final SubscriptionHandler subscriptionHandler;
+
     private final RuleMoveRepository moveRepository;
     private final SeasonRepository seasonRepository;
 
     private final RuleMoveMapper moveMapper;
 
-    @Autowired
-    public RuleMoveService(SubscriptionHandler subscriptionHandler, RuleMoveRepository moveRepository, SeasonRepository seasonRepository,
-                           RuleMoveMapper moveMapper) {
-        this.subscriptionHandler = subscriptionHandler;
-        this.moveRepository = moveRepository;
-        this.seasonRepository = seasonRepository;
-        this.moveMapper = moveMapper;
-    }
+    public ServiceResponse<RuleMoveDto> createRuleMove(String groupId, Season season, RuleMoveCreateDto createDto, boolean callSocket) {
+        if (createDto.invalidDto()) {
+            return ServiceResponse.error(ErrorCodes.INVALID_RULE_MOVE_CREATE_DTO);
+        }
 
-    public RuleMoveDto createRuleMove(Group group, Season season, RuleMoveCreateDto createDto, boolean callSocket) {
         var rule = moveMapper.ruleMoveCreateDtoToRuleMove(createDto);
         rule.setSeason(season);
-
-        if (!rule.getSeason().getId().equals(season.getId()) || !rule.getSeason().getGroupId().equals(group.getId()) ||
-                createDto.invalidDto()) {
-            return null;
-        }
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(rule));
 
         if (callSocket) {
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_CREATE, group.getId(), dto));
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_CREATE, groupId, dto));
         }
 
-        return dto;
+        return ServiceResponse.ok(dto);
     }
 
-    public boolean validateGroupAndSeason(String groupId, String seasonId, RuleMoveDto dto) {
-        return dto.getSeason().getId().equals(seasonId) && dto.getSeason().getGroupId().equals(groupId);
-    }
+    public ServiceResponse<RuleMoveDto> updateRuleMove(String groupId, String ruleMoveId, RuleMoveCreateDto createDto) {
+        if (createDto.invalidDto()) {
+            return ServiceResponse.error(ErrorCodes.INVALID_RULE_MOVE_CREATE_DTO);
+        }
 
-    public RuleMoveDto updateRuleMove(String groupId, RuleMoveDto move, RuleMoveCreateDto createDto) {
+        var move = moveRepository.findById(ruleMoveId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
         move.setName(createDto.getName());
         move.setPointsForTeam(createDto.getPointsForTeam());
         move.setPointsForScorer(createDto.getPointsForScorer());
+        move.setFinishingMove(createDto.isFinishingMove());
 
-        var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(moveMapper.ruleMoveDtoToRuleMove(move)));
+        var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(move));
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.RULE_MOVE_UPDATE, groupId, dto));
 
-        return dto;
+        return ServiceResponse.ok(dto);
     }
 
     public Pair<Integer, Integer> getPointsById(String ruleMoveId) {
@@ -110,9 +110,13 @@ public class RuleMoveService {
                 .toList();
     }
 
-    public void copyRuleMovesFromOldSeason(Season oldSeason, Season newSeason) {
-        if (oldSeason == null || newSeason == null || !oldSeason.getGroupId().equals(newSeason.getGroupId())) {
-            return;
+    public boolean copyRuleMovesFromOldSeason(String oldSeasonId, String newSeasonId, String groupId) {
+        var oldSeason = seasonRepository.findById(oldSeasonId).orElseThrow();
+        var newSeason = seasonRepository.findById(newSeasonId).orElseThrow();
+
+        if (!oldSeason.getGroup().getId().equals(groupId) ||
+                !newSeason.getGroup().getId().equals(groupId)) {
+            return false;
         }
 
         moveRepository.findBySeasonId(oldSeason.getId()).forEach(oldRuleMove -> {
@@ -126,10 +130,12 @@ public class RuleMoveService {
 
             moveRepository.save(ruleMove);
         });
+
+        return true;
     }
 
     public void createDefaultRuleMoves(Group group, Season season) {
-        Stream<RuleMoveDto> ruleMoves;
+        Stream<DefaultRuleMove> ruleMoves;
 
         if (group.getSportPreset() != null && group.getSportPreset().equals(GroupPresetsController.BEERPONG.getId())) {
             ruleMoves = DEFAULT_BEERPONG_MOVES.stream();
@@ -139,24 +145,19 @@ public class RuleMoveService {
 
         ruleMoves.map(ruleMove -> {
                     var move = new RuleMove();
-                    move.setName(ruleMove.getName());
-                    move.setFinishingMove(ruleMove.isFinishingMove());
-                    move.setPointsForScorer(ruleMove.getPointsForScorer());
-                    move.setPointsForTeam(ruleMove.getPointsForTeam());
+                    move.setName(ruleMove.name());
+                    move.setFinishingMove(ruleMove.finish());
+                    move.setPointsForScorer(ruleMove.pointsForScorer());
+                    move.setPointsForTeam(ruleMove.pointsForTeam());
                     move.setSeason(season);
                     return move;
                 })
                 .forEach(moveRepository::save);
     }
 
-    private static RuleMoveDto buildRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {
-        var ruleMove = new RuleMoveDto();
-
-        ruleMove.setName(name);
-        ruleMove.setPointsForScorer(pointsForScorer);
-        ruleMove.setPointsForTeam(pointsForTeam);
-        ruleMove.setFinishingMove(finish);
-
-        return ruleMove;
+    private static DefaultRuleMove buildRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {
+        return new DefaultRuleMove(name, pointsForScorer, pointsForTeam, finish);
     }
+
+    public record DefaultRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) { }
 }

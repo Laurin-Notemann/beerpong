@@ -3,7 +3,7 @@ package pro.beerpong.api.mapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import pro.beerpong.api.model.dao.SeasonSettings;
-import pro.beerpong.api.model.dto.SeasonSettingsDto;
+import pro.beerpong.api.model.dto.seasons.SeasonSettingsDto;
 import pro.beerpong.api.sockets.LocalTimeAdapter;
 
 import java.time.LocalTime;

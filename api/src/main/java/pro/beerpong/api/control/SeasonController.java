@@ -4,7 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
+import pro.beerpong.api.model.dto.seasons.SeasonDto;
+import pro.beerpong.api.model.dto.seasons.SeasonUpdateDto;
+import pro.beerpong.api.model.dto.user.UserDto;
+import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.service.SeasonService;
 import pro.beerpong.api.sockets.LocalTimeAdapter;
 
@@ -16,10 +22,12 @@ import java.util.List;
 @RequestMapping("/groups/{groupId}")
 public class SeasonController {
     private final SeasonService seasonService;
+    private final SeasonRepository seasonRepository;
 
     @Autowired
-    public SeasonController(SeasonService seasonService) {
+    public SeasonController(SeasonService seasonService, SeasonRepository seasonRepository) {
         this.seasonService = seasonService;
+        this.seasonRepository = seasonRepository;
     }
 
     @PutMapping("/active-season")
@@ -28,10 +36,6 @@ public class SeasonController {
                                                                       @AuthenticationPrincipal UserDto user) {
         if (user == null) {
             return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
-        }
-
-        if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
         if (dto.invalidName()) {
@@ -44,70 +48,53 @@ public class SeasonController {
 
         var season = seasonService.startNewSeason(dto, groupId, user);
 
-        if (season != null) {
-            return ResponseEnvelope.ok(season);
+        if (season.isOk()) {
+            return ResponseEnvelope.ok(season.getData());
         } else {
-            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
+            return ResponseEnvelope.notOk(season.getErrorCode());
         }
     }
 
     @GetMapping("/seasons")
     public ResponseEntity<ResponseEnvelope<List<SeasonDto>>> getAllSeasons(@PathVariable String groupId) {
-        if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
-        }
-
-        return ResponseEnvelope.ok(seasonService.getAllSeasons(groupId));
+        return ResponseEnvelope.ok(seasonService.getSeasonsByGroupId(groupId));
     }
 
     @GetMapping("/seasons/{id}")
     public ResponseEntity<ResponseEnvelope<SeasonDto>> getSeasonById(@PathVariable String groupId, @PathVariable String id) {
-        if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
-        }
-
-        if (id == null || id.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
+        if (!seasonRepository.existsByIdAndGroupId(id, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
         var season = seasonService.getSeasonById(id);
 
-        if (season != null && season.getGroupId().equals(groupId)) {
-            return ResponseEnvelope.ok(season);
-        } else {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
-        }
+        return season.map(ResponseEnvelope::ok).orElseGet(() -> ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND));
     }
 
     @PutMapping("/seasons/{id}")
     public ResponseEntity<ResponseEnvelope<SeasonDto>> updateSeasonById(@PathVariable String groupId, @PathVariable String id, @RequestBody SeasonUpdateDto dto) {
-        if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        if (!seasonRepository.existsByIdAndGroupId(id, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        if (id == null || id.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
-        }
-
-        if (dto == null || dto.getSeasonSettings() == null) {
+        if (dto.getSeasonSettings() == null) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_DTO);
         }
 
-        var season = seasonService.getRawSeasonById(id);
+        var response = seasonService.validateActiveSeason(groupId, id, true);
 
-        if (season.isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
-        } else if (!season.get().getGroupId().equals(groupId)) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
-        } else if (season.get().getEndDate() != null) {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_ALREADY_ENDED);
+        if (response.isError()) {
+            return ResponseEnvelope.notOk(response.getErrorCode());
         }
 
-        var minMatches = (dto.getSeasonSettings().getMinMatchesToQualify() != null ? dto.getSeasonSettings().getMinMatchesToQualify() : season.get().getSeasonSettings().getMinMatchesToQualify());
-        var minTeamSize = (dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : season.get().getSeasonSettings().getMinTeamSize());
-        var maxTeamSize = (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : season.get().getSeasonSettings().getMaxTeamSize());
+        var pair = response.getData();
+        var settings = pair.getSecond().getSeasonSettings();
 
-        LocalTime wakeTime = season.get().getSeasonSettings().getWakeTime();
+        var minMatches = (dto.getSeasonSettings().getMinMatchesToQualify() != null ? dto.getSeasonSettings().getMinMatchesToQualify() : settings.getMinMatchesToQualify());
+        var minTeamSize = (dto.getSeasonSettings().getMinTeamSize() != null ? dto.getSeasonSettings().getMinTeamSize() : settings.getMinTeamSize());
+        var maxTeamSize = (dto.getSeasonSettings().getMaxTeamSize() != null ? dto.getSeasonSettings().getMaxTeamSize() : settings.getMaxTeamSize());
+
+        LocalTime wakeTime = settings.getWakeTime();
 
         if (dto.getSeasonSettings().getWakeTime() != null) {
             try {
@@ -127,7 +114,8 @@ public class SeasonController {
         dto.getSeasonSettings().setMinTeamSize(Math.min(Math.max(minTeamSize, 1), 10));
         dto.getSeasonSettings().setMaxTeamSize(Math.min(Math.max(maxTeamSize, 1), 10));
 
-        SeasonDto updatedSeason = seasonService.updateSeason(season.get(), dto);
+        SeasonDto updatedSeason = seasonService.updateSeason(pair.getSecond(), dto);
+
         if (updatedSeason != null) {
             return ResponseEnvelope.ok(updatedSeason);
         } else {

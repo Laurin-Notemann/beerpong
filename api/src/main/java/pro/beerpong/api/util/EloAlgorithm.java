@@ -1,6 +1,6 @@
 package pro.beerpong.api.util;
 
-import pro.beerpong.api.model.dto.PlayerStatisticsDto;
+import pro.beerpong.api.model.dto.player.PlayerStatisticsDto;
 
 import java.util.HashMap;
 import java.util.List;
@@ -142,10 +142,7 @@ public class EloAlgorithm {
         return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
     }
 
-    public static void expectedShare(
-            List<PlayerStatisticsDto> players,
-            Map<String, Double> out
-    ) {
+    public static void expectedShare(List<PlayerStatisticsDto> players, Map<String, Double> out) {
         if (players.isEmpty()) return;
 
         // Amount of players

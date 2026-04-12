@@ -2,106 +2,114 @@ package pro.beerpong.api.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import pro.beerpong.api.mapping.GroupMapper;
 import pro.beerpong.api.mapping.ProfileMapper;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.GroupMember;
+import pro.beerpong.api.model.dao.Player;
 import pro.beerpong.api.model.dao.Profile;
-import pro.beerpong.api.model.dao.Season;
-import pro.beerpong.api.model.dto.*;
-import pro.beerpong.api.model.dto.ProfileCreateDto;
-import pro.beerpong.api.model.dto.ProfileCreatedDto;
-import pro.beerpong.api.model.dto.ProfileDto;
-import pro.beerpong.api.model.dto.UserDto;
-import pro.beerpong.api.repository.GroupRepository;
-import pro.beerpong.api.repository.ProfileRepository;
+import pro.beerpong.api.model.dto.assets.AssetCropDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
+import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.profile.ProfileCreateDto;
+import pro.beerpong.api.model.dto.profile.ProfileCreatedDto;
+import pro.beerpong.api.model.dto.profile.ProfileDto;
+import pro.beerpong.api.model.dto.user.UserDto;
+import pro.beerpong.api.repository.*;
 import pro.beerpong.api.util.AssetType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
-    private final AssetService assetService;
     private final ProfileRepository profileRepository;
     private final GroupRepository groupRepository;
-    private final GroupMapper groupMapper;
+
     private final ProfileMapper profileMapper;
-    private final PlayerService playerService;
+
     private final AuthService authService;
+    private final AssetService assetService;
+    private final PlayerService playerService;
+    private final PlayerRepository playerRepository;
+    private final GroupMemberRepository groupMemberRepository;
+    private final SeasonRepository seasonRepository;
 
-    public ProfileCreatedDto createPlayer(String groupId, ProfileCreateDto dto, UserDto user) {
-        var existing = this.getProfileByName(groupId, dto.getName());
+    public ServiceResponse<ProfileCreatedDto> createPlayer(String groupId, ProfileCreateDto dto, UserDto user) {
+        var profileOptional = profileRepository.findByGroupIdAndName(groupId, dto.getName());
 
-        if (existing != null) {
-            var groupOptional = groupRepository.findById(groupId);
+        if (profileOptional.isPresent()) {
+            var existing = profileOptional.get();
+            var season = seasonRepository.findActiveSeasonByGroupId(groupId).orElseThrow();
 
-            if (groupOptional.isEmpty() || !existing.getGroupId().equals(groupId)) {
-                return null;
-            }
+            var existingPlayerId = playerRepository.findByProfileIdAndSeasonId(existing.getId(), season.getId())
+                    .map(Player::getId);
 
-            var group = groupOptional.get();
-            var season = group.getActiveSeason();
+            if (existingPlayerId.isPresent()) {
+                var res = playerService.reactivatePlayer(existingPlayerId.get());
 
-            if (season == null) {
-                return null;
-            }
-
-            var existingPlayer = playerService.getBySeasonId(season.getId(), true).stream()
-                    .filter(playerDto -> playerDto.getProfile().getId().equals(existing.getId()))
-                    .findFirst();
-
-            if (existingPlayer.isPresent()) {
-                boolean success = playerService.reactivatePlayer(existingPlayer.get());
-
-                if (!success) {
-                    return null;
+                if (res.isError()) {
+                    return ServiceResponse.error(res.getErrorCode());
                 }
 
-                return new ProfileCreatedDto(existing, true, season.getId());
+                return ServiceResponse.ok(new ProfileCreatedDto(
+                        profileMapper.profileToProfileDto(existing),
+                        true,
+                        season.getId()
+                ));
             } else {
                 var lastPlayer = playerService.findLatestPlayer(existing.getId());
 
-                playerService.createPlayer(season, profileMapper.profileDtoToProfile(existing), lastPlayer);
+                lastPlayer.ifPresent(player -> playerService.createPlayer(season.getId(), existing, player));
 
-                return new ProfileCreatedDto(existing, false, (lastPlayer != null ? lastPlayer.getSeason().getId() : null));
+                return ServiceResponse.ok(new ProfileCreatedDto(
+                        profileMapper.profileToProfileDto(existing),
+                        false,
+                        (lastPlayer.isPresent() ? lastPlayer.get().getSeason().getId() : null)
+                ));
             }
         } else {
-            return new ProfileCreatedDto(this.createProfile(groupId, dto, authService.memberByUser(user, groupId)), false, null);
+            return ServiceResponse.ok(new ProfileCreatedDto(
+                    this.createProfile(groupId, dto, authService.getMemberInGroup(user.getId(), groupId)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN))),
+                    false,
+                    null
+            ));
         }
     }
 
     public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, GroupMember groupMember) {
-        return this.createProfile(groupId, profileCreateDto, true, groupMember);
+        return this.createProfile(groupId, profileCreateDto, true, groupMember.getId());
     }
 
-    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer, GroupMember groupMember) {
-        var groupOptional = groupRepository.findById(groupId);
-
+    public ProfileDto createProfile(String groupId, ProfileCreateDto profileCreateDto, boolean createPlayer, String groupMemberId) {
         var profile = profileMapper.profileCreateDtoToProfile(profileCreateDto);
-        profile.setGroup(groupOptional.orElseThrow());
-        profile.setCreatedBy(groupMember);
+
+        profile.setGroup(groupRepository.getReferenceById(groupId));
+        profile.setCreatedBy(groupMemberRepository.getReferenceById(groupMemberId));
 
         var savedProfile = profileRepository.save(profile);
 
         if (createPlayer) {
-            playerService.createPlayer(savedProfile.getGroup().getActiveSeason(), savedProfile, null);
+            playerService.createPlayer(
+                    savedProfile.getGroup().getActiveSeason().getId(),
+                    savedProfile,
+                    null
+            );
         }
 
         return profileMapper.profileToProfileDto(savedProfile);
     }
 
-    public List<ProfileDto> listAllProfilesOfGroup(String groupId) {
-        return profileRepository.findAllByGroupId(groupId)
-                .stream()
-                .map(profileMapper::profileToProfileDto)
-                .collect(Collectors.toList());
-    }
-
-    public List<ProfileDto> listAllProfiles() {
-        return profileRepository.findAll()
+    public List<ProfileDto> listAllProfiles(String groupId) {
+        return profileRepository.findByGroupId(groupId)
                 .stream()
                 .map(profileMapper::profileToProfileDto)
                 .collect(Collectors.toList());
@@ -113,17 +121,6 @@ public class ProfileService {
                 .orElse(null);
     }
 
-    public Profile getRawProfileById(String id) {
-        return profileRepository.findById(id).orElse(null);
-    }
-
-    public ProfileDto getProfileByName(String groupId, String name) {
-        return listAllProfilesOfGroup(groupId).stream()
-                .filter(profileDto -> profileDto.getName().equals(name))
-                .findFirst()
-                .orElse(null);
-    }
-
     public boolean deleteProfile(String id) {
         if (profileRepository.existsById(id)) {
             profileRepository.deleteById(id);
@@ -132,43 +129,72 @@ public class ProfileService {
         return false;
     }
 
-    public ProfileDto updateProfile(String id, String groupId, ProfileCreateDto profileCreateDto) {
-        var profile = getRawProfileById(id);
+    public ServiceResponse<ProfileDto> updateProfile(String profileId, String groupId, ProfileCreateDto profileCreateDto) {
+        var profileOptional = profileRepository.findById(profileId);
 
-        if (profile == null || !profile.getGroup().getId().equals(groupId)) {
-            return null;
+        if (profileOptional.isEmpty()) {
+            return ServiceResponse.error(ErrorCodes.PROFILE_NOT_FOUND);
+        }
+
+        var profile = profileOptional.get();
+
+        if (!profile.getGroup().getId().equals(groupId)) {
+            return ServiceResponse.error(ErrorCodes.PROFILE_NOT_OF_GROUP);
         }
 
         profile.setName(profileCreateDto.getName());
 
-        return profileMapper.profileToProfileDto(profileRepository.save(profile));
-    }
-
-    public ProfileDto deleteProfilePicture(ProfileDto profileDto) {
-        profileDto.setAvatarAsset(null);
-        profileRepository.save(profileMapper.profileDtoToProfile(profileDto));
-
-        return profileDto;
+        return ServiceResponse.ok(profileMapper.profileToProfileDto(profileRepository.save(profile)));
     }
 
     @Transactional
-    public ProfileDto storeProfilePicture(ProfileDto profileDto, @Nullable AssetCropDto assetCropDto) {
-        String oldProfilePictureAssetId = null;
+    public ProfileDto deleteProfilePicture(String profileId) {
+        var profileOptional = profileRepository.findById(profileId);
 
-        if (profileDto.getAvatarAsset() != null) {
-            oldProfilePictureAssetId = profileDto.getAvatarAsset().getId();
+        if (profileOptional.isEmpty()) {
+            return null;
         }
 
-        var assetMetadataDto = assetService.storeAsset(AssetType.PROFILE_AVATAR, assetCropDto);
+        var profile = profileOptional.get();
 
-        profileDto.setAvatarAsset(assetMetadataDto);
+        if (profile.getAvatar() != null) {
+            var assetId = profile.getAvatar().getId();
 
-        profileRepository.save(profileMapper.profileDtoToProfile(profileDto));
+            profile.setAvatar(null);
+            profileRepository.save(profile);
+
+            assetService.deleteAsset(assetId);
+
+            return profileMapper.profileToProfileDto(profileOptional.get());
+        } else {
+            return null;
+        }
+    }
+
+    @Transactional
+    public AssetUploadResponse storeProfilePicture(String profileId, @Nullable AssetCropDto assetCropDto) {
+        var profileOptional = profileRepository.findById(profileId);
+
+        if (profileOptional.isEmpty()) {
+            return null;
+        }
+
+        var profile = profileOptional.get();
+        String oldProfilePictureAssetId = null;
+
+        if (profile.getAvatar() != null) {
+            oldProfilePictureAssetId = profile.getAvatar().getId();
+        }
+
+        var avatarAsset = assetService.storeAsset(AssetType.PROFILE_AVATAR, assetCropDto);
+
+        profile.setAvatar(avatarAsset);
+        profileRepository.save(profile);
 
         if (oldProfilePictureAssetId != null) {
             assetService.deleteAsset(oldProfilePictureAssetId);
         }
 
-        return profileDto;
+        return assetService.uploadAsset(avatarAsset);
     }
 }

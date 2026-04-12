@@ -1,6 +1,7 @@
 package pro.beerpong.api.control;
 
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,7 +9,18 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.dto.matches.MatchCreateDto;
+import pro.beerpong.api.model.dto.matches.MatchDto;
+import pro.beerpong.api.model.dto.matches.MatchDtoExtended;
+import pro.beerpong.api.model.dto.matches.MatchOverviewDto;
+import pro.beerpong.api.model.dto.matchmoves.MatchMoveDto;
+import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
+import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
+import pro.beerpong.api.model.dto.seasons.SeasonDto;
+import pro.beerpong.api.model.dto.teammembers.TeamMemberCreateDto;
+import pro.beerpong.api.model.dto.teams.TeamCreateDto;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -27,14 +39,17 @@ public class MatchControllerTest {
     @Autowired
     private TestUtils testUtils;
 
+    //TODO test photo upload on create and photo override/reuse on update
+
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
     public void matches_create_success_basic() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
+
 
         assertTrue(players.size() >= 2);
 
@@ -45,7 +60,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -74,18 +89,21 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match.getId());
-        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
-        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), match.getSeasonId());
+        assertEquals(prerequisiteGroup.getCreatedById(), match.getCreatedById());
         assertNotNull(match.getDate());
 
-        assertEquals(2, match.getTeams().size());
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
-        var team1 = match.getTeams().getFirst();
-        var team2 = match.getTeams().getLast();
+        assertEquals(2, extMatch.getTeams().size());
+
+        var team1 = extMatch.getTeams().getFirst();
+        var team2 = extMatch.getTeams().getLast();
 
         assertNotNull(team1);
         assertNotNull(team1.getId());
@@ -94,10 +112,10 @@ public class MatchControllerTest {
         assertNotNull(team2.getId());
         assertEquals(match.getId(), team2.getMatchId());
 
-        var teamMembers1 = match.getTeamMembers().stream()
+        var teamMembers1 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
                 .toList();
-        var teamMembers2 = match.getTeamMembers().stream()
+        var teamMembers2 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
                 .toList();
 
@@ -116,10 +134,10 @@ public class MatchControllerTest {
         assertEquals(team2.getId(), teamMember2.getTeamId());
         assertEquals(player2.getId(), teamMember2.getPlayerId());
 
-        var matchMoves1 = match.getMatchMoves().stream()
+        var matchMoves1 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
                 .toList();
-        var matchMoves2 = match.getMatchMoves().stream()
+        var matchMoves2 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember2.getId()))
                 .toList();
 
@@ -156,7 +174,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -171,7 +189,7 @@ public class MatchControllerTest {
         assertNotNull(player3);
         assertNotNull(player4);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -208,18 +226,21 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match.getId());
-        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
-        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), match.getSeasonId());
+        assertEquals(prerequisiteGroup.getCreatedById(), match.getCreatedById());
         assertNotNull(match.getDate());
 
-        assertEquals(2, match.getTeams().size());
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
-        var team1 = match.getTeams().getFirst();
-        var team2 = match.getTeams().getLast();
+        assertEquals(2, extMatch.getTeams().size());
+
+        var team1 = extMatch.getTeams().getFirst();
+        var team2 = extMatch.getTeams().getLast();
 
         assertNotNull(team1);
         assertNotNull(team1.getId());
@@ -228,10 +249,10 @@ public class MatchControllerTest {
         assertNotNull(team2.getId());
         assertEquals(match.getId(), team2.getMatchId());
 
-        var teamMembers1 = match.getTeamMembers().stream()
+        var teamMembers1 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
                 .toList();
-        var teamMembers2 = match.getTeamMembers().stream()
+        var teamMembers2 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
                 .toList();
 
@@ -260,16 +281,16 @@ public class MatchControllerTest {
         assertEquals(team2.getId(), teamMember4.getTeamId());
         assertEquals(player4.getId(), teamMember4.getPlayerId());
 
-        var matchMoves1 = match.getMatchMoves().stream()
+        var matchMoves1 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
                 .toList();
-        var matchMoves2 = match.getMatchMoves().stream()
+        var matchMoves2 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember2.getId()))
                 .toList();
-        var matchMoves3 = match.getMatchMoves().stream()
+        var matchMoves3 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember3.getId()))
                 .toList();
-        var matchMoves4 = match.getMatchMoves().stream()
+        var matchMoves4 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember4.getId()))
                 .toList();
 
@@ -322,7 +343,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -337,7 +358,7 @@ public class MatchControllerTest {
         assertNotNull(player3);
         assertNotNull(player4);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -387,18 +408,21 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match.getId());
-        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
-        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), match.getSeasonId());
+        assertEquals(prerequisiteGroup.getCreatedById(), match.getCreatedById());
         assertNotNull(match.getDate());
 
-        assertEquals(2, match.getTeams().size());
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
-        var team1 = match.getTeams().getFirst();
-        var team2 = match.getTeams().getLast();
+        assertEquals(2, extMatch.getTeams().size());
+
+        var team1 = extMatch.getTeams().getFirst();
+        var team2 = extMatch.getTeams().getLast();
 
         assertNotNull(team1);
         assertNotNull(team1.getId());
@@ -407,10 +431,10 @@ public class MatchControllerTest {
         assertNotNull(team2.getId());
         assertEquals(match.getId(), team2.getMatchId());
 
-        var teamMembers1 = match.getTeamMembers().stream()
+        var teamMembers1 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
                 .toList();
-        var teamMembers2 = match.getTeamMembers().stream()
+        var teamMembers2 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
                 .toList();
 
@@ -442,16 +466,16 @@ public class MatchControllerTest {
         assertEquals(team2.getId(), teamMember4.getTeamId());
         assertEquals(player4.getId(), teamMember4.getPlayerId());
 
-        var matchMoves1 = match.getMatchMoves().stream()
+        var matchMoves1 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
                 .toList();
-        var matchMoves2 = match.getMatchMoves().stream()
+        var matchMoves2 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember2.getId()))
                 .toList();
-        var matchMoves3 = match.getMatchMoves().stream()
+        var matchMoves3 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember3.getId()))
                 .toList();
-        var matchMoves4 = match.getMatchMoves().stream()
+        var matchMoves4 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember4.getId()))
                 .toList();
 
@@ -518,7 +542,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -533,7 +557,7 @@ public class MatchControllerTest {
         assertNotNull(player3);
         assertNotNull(player4);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -563,30 +587,33 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match.getId());
-        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
-        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), match.getSeasonId());
+        assertEquals(prerequisiteGroup.getCreatedById(), match.getCreatedById());
         assertNotNull(match.getDate());
 
-        assertEquals(2, match.getTeams().size());
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
-        var team1 = match.getTeams().getFirst();
-        var team2 = match.getTeams().getLast();
+        assertEquals(2, extMatch.getTeams().size());
+
+        var team1 = extMatch.getTeams().getFirst();
+        var team2 = extMatch.getTeams().getLast();
 
         assertNotNull(team1);
         assertNotNull(team1.getId());
-        assertEquals(match.getId(), team1.getMatchId());
+        assertEquals(extMatch.getId(), team1.getMatchId());
         assertNotNull(team2);
         assertNotNull(team2.getId());
-        assertEquals(match.getId(), team2.getMatchId());
+        assertEquals(extMatch.getId(), team2.getMatchId());
 
-        var teamMembers1 = match.getTeamMembers().stream()
+        var teamMembers1 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
                 .toList();
-        var teamMembers2 = match.getTeamMembers().stream()
+        var teamMembers2 = extMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
                 .toList();
 
@@ -618,7 +645,7 @@ public class MatchControllerTest {
         assertEquals(team2.getId(), teamMember4.getTeamId());
         assertEquals(player4.getId(), teamMember4.getPlayerId());
 
-        var matchMoves1 = match.getMatchMoves().stream()
+        var matchMoves1 = extMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
                 .toList();
 
@@ -637,7 +664,6 @@ public class MatchControllerTest {
     @Transactional
     public void matches_create_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
         var matchDto = buildDto();
 
@@ -646,7 +672,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonCreateDto = new SeasonCreateDto();
@@ -659,7 +685,7 @@ public class MatchControllerTest {
         var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
         requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
     }
 
@@ -668,14 +694,8 @@ public class MatchControllerTest {
     @SuppressWarnings("unchecked")
     public void matches_create_invalidTeams() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
-        var minTeamSize = oldSeason.getSeasonSettings().getMinTeamSize();
-        var maxTeamSize = oldSeason.getSeasonSettings().getMaxTeamSize();
 
-        assertEquals(1, minTeamSize);
-        assertEquals(10, maxTeamSize);
-
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(2, players.size());
@@ -702,7 +722,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
@@ -712,7 +732,7 @@ public class MatchControllerTest {
                 buildTeam()
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
@@ -727,7 +747,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
 
         matchDto = buildDto(
@@ -736,12 +756,12 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
 
         matchDto = buildDto();
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
     }
 
@@ -751,7 +771,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -778,7 +798,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test non unique players in different teams
@@ -793,7 +813,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
     }
 
@@ -803,7 +823,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -818,7 +838,7 @@ public class MatchControllerTest {
         assertNotNull(player3);
         assertNotNull(player4);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -855,7 +875,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test too many finish moves in same team
@@ -882,7 +902,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test no finish move
@@ -909,7 +929,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test finish move amount!=1
@@ -936,7 +956,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         // test finish move amount!=1
@@ -963,7 +983,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
     }
 
@@ -972,9 +992,8 @@ public class MatchControllerTest {
     public void matches_create_invalidPlayers() {
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var oldPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        var oldPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var oldPlayers = (List<PlayerDto>) requestUtils.assertSuccess(oldPlayerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), oldPlayers.size());
@@ -989,7 +1008,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        var otherPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var otherPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var otherPlayers = (List<PlayerDto>) requestUtils.assertSuccess(otherPlayerResponse, ArrayList.class);
 
         assertEquals(2, otherPlayers.size());
@@ -1126,9 +1145,8 @@ public class MatchControllerTest {
     public void matches_create_invalidMoves() {
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var oldMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var oldMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(oldMovesResponse, ArrayList.class);
 
         assertTrue(oldMoves.size() >= 2);
@@ -1143,7 +1161,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        var otherMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var otherMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var otherMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(otherMovesResponse, ArrayList.class);
 
         assertTrue(otherMoves.size() >= 2);
@@ -1436,13 +1454,13 @@ public class MatchControllerTest {
     public void matches_findAll_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", List.class, MatchDto.class);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", List.class, MatchDto.class);
         var matches = (List<MatchDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         assertNotNull(matches);
         assertTrue(matches.isEmpty());
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -1454,7 +1472,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -1483,7 +1501,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match1 = requestUtils.assertSuccess(response, MatchDto.class);
 
         matchDto = buildDto(
@@ -1502,7 +1520,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match2 = requestUtils.assertSuccess(response, MatchDto.class);
 
         matchDto = buildDto(
@@ -1520,7 +1538,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match3 = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match1);
@@ -1533,7 +1551,7 @@ public class MatchControllerTest {
         match2.setDate(match1.getDate());
         match3.setDate(match1.getDate());
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", List.class, MatchDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", List.class, MatchDto.class);
         matches = (List<MatchDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         assertNotNull(matches);
@@ -1542,6 +1560,7 @@ public class MatchControllerTest {
 
         for (MatchDto match : matches) {
             match.setDate(match1.getDate());
+            match.setPhotoUploads(match1.getPhotoUploads());
             assertTrue(List.of(match1, match2, match3).contains(match));
         }
     }
@@ -1551,11 +1570,11 @@ public class MatchControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches", List.class, MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches", List.class, MatchDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/matches", List.class, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
     }
 
@@ -1565,7 +1584,7 @@ public class MatchControllerTest {
     public void matches_findById_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -1577,7 +1596,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -1606,17 +1625,18 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), MatchDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), MatchDto.class);
         var fetched = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(fetched);
 
         match.setDate(fetched.getDate());
+        match.setPhotoUploads(fetched.getPhotoUploads());
         assertEquals(match, fetched);
     }
 
@@ -1627,13 +1647,13 @@ public class MatchControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port);
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
-        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", List.class, MatchDto.class);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", List.class, MatchDto.class);
         var matches = (List<MatchDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         assertNotNull(matches);
         assertTrue(matches.isEmpty());
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -1645,7 +1665,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -1674,16 +1694,16 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/someIdThatNotExists", MatchDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/someIdThatNotExists", MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), MatchDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), MatchDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonDto = new SeasonCreateDto();
         seasonDto.setOldSeasonName("testing");
@@ -1705,13 +1725,13 @@ public class MatchControllerTest {
     public void matches_overviewAll_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/overview", List.class, MatchOverviewDto.class);
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/overview", List.class, MatchOverviewDto.class);
         var matches = (List<MatchOverviewDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         assertNotNull(matches);
         assertTrue(matches.isEmpty());
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -1723,7 +1743,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -1752,9 +1772,9 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var rawMatch1 = requestUtils.assertSuccess(response, MatchDto.class);
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + rawMatch1.getId() + "/overview", MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + rawMatch1.getId() + "/overview", MatchOverviewDto.class);
         var match1 = requestUtils.assertSuccess(response, MatchOverviewDto.class);
 
         matchDto = buildDto(
@@ -1773,9 +1793,9 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var rawMatch2 = requestUtils.assertSuccess(response, MatchDto.class);
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + rawMatch2.getId() + "/overview", MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + rawMatch2.getId() + "/overview", MatchOverviewDto.class);
         var match2 = requestUtils.assertSuccess(response, MatchOverviewDto.class);
 
         matchDto = buildDto(
@@ -1793,9 +1813,9 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var rawMatch3 = requestUtils.assertSuccess(response, MatchDto.class);
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + rawMatch3.getId() + "/overview", MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + rawMatch3.getId() + "/overview", MatchOverviewDto.class);
         var match3 = requestUtils.assertSuccess(response, MatchOverviewDto.class);
 
         assertNotNull(match1);
@@ -1808,7 +1828,7 @@ public class MatchControllerTest {
         match2.setDate(match1.getDate());
         match3.setDate(match1.getDate());
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/overview", List.class, MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/overview", List.class, MatchOverviewDto.class);
         matches = (List<MatchOverviewDto>) requestUtils.assertSuccess(response, ArrayList.class);
 
         assertNotNull(matches);
@@ -1826,11 +1846,11 @@ public class MatchControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
         var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches/overview", List.class, MatchOverviewDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches/overview", List.class, MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/matches/overview", List.class, MatchOverviewDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
     }
 
@@ -1841,7 +1861,7 @@ public class MatchControllerTest {
         var profileNames = List.of("profile1", "profile2", "profile3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 3);
@@ -1857,7 +1877,7 @@ public class MatchControllerTest {
         assertNotEquals(player2, player3);
         assertNotEquals(player1, player3);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -1890,12 +1910,12 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
         var fetched = requestUtils.assertSuccess(response, MatchOverviewDto.class);
 
         assertNotNull(fetched);
@@ -1904,7 +1924,7 @@ public class MatchControllerTest {
         assertNotNull(fetched.getBlueTeam());
         assertNotNull(fetched.getRedTeam());
         assertEquals(match.getId(), fetched.getId());
-        assertEquals(match.getSeason(), fetched.getSeason());
+        assertEquals(match.getSeasonId(), fetched.getSeasonId());
 
         assertEquals((normalMove.getPointsForScorer() + normalMove.getPointsForTeam() * fetched.getBlueTeam().getMembers().size()) * 5 +
                 (finishMove.getPointsForScorer() + finishMove.getPointsForTeam() * fetched.getBlueTeam().getMembers().size()) /* *1 */, fetched.getBlueTeam().getPoints());
@@ -1948,7 +1968,7 @@ public class MatchControllerTest {
         var prerequisiteGroup = testUtils.createTestGroup(port);
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -1960,7 +1980,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -1989,16 +2009,16 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         assertNotNull(match);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/someIdThatNotExists/overview", MatchOverviewDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/someIdThatNotExists/overview", MatchOverviewDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/overview", MatchOverviewDto.class);
+        requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonDto = new SeasonCreateDto();
         seasonDto.setOldSeasonName("testing");
@@ -2020,7 +2040,7 @@ public class MatchControllerTest {
     public void matches_update_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -2032,7 +2052,7 @@ public class MatchControllerTest {
         assertNotNull(player2);
         assertNotEquals(player1, player2);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -2055,21 +2075,14 @@ public class MatchControllerTest {
                 buildTeam(buildMember(player2.getId()))
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
-        var oldMatch = requestUtils.assertSuccess(response, MatchDto.class);
+        var ogResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
+        var ogMatch = requestUtils.assertSuccess(ogResponse, MatchDto.class);
 
-        assertNotNull(oldMatch);
-
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + oldMatch.getId(), MatchDto.class);
-        var fetched = requestUtils.assertSuccess(response, MatchDto.class);
-
-        assertNotNull(fetched);
-
-        oldMatch.setDate(fetched.getDate());
-        assertEquals(oldMatch, fetched);
+        var ogExtResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + ogMatch.getId() + "/extended", MatchDtoExtended.class);
+        var ogExtMatch = requestUtils.assertSuccess(ogExtResponse, MatchDtoExtended.class);
 
         matchDto = buildDto(
-                fetched,
+                ogExtMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2085,35 +2098,37 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + oldMatch.getId(), matchDto, MatchDto.class);
-        var match = requestUtils.assertSuccess(response, MatchDto.class);
+        var newResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + ogMatch.getId(), matchDto, MatchDto.class);
+        var newMatch = requestUtils.assertSuccess(newResponse, MatchDto.class);
 
-        assertEquals(oldMatch.getId(), match.getId());
-        assertEquals(oldMatch.getDate(), match.getDate());
-        assertEquals(oldMatch.getSeason(), match.getSeason());
-        assertEquals(oldMatch.getCreatedBy(), match.getCreatedBy());
+        var newExtResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + ogMatch.getId() + "/extended", MatchDtoExtended.class);
+        var newExtMatch = requestUtils.assertSuccess(newExtResponse, MatchDtoExtended.class);
 
-        assertNotNull(match.getId());
-        assertEquals(prerequisiteGroup.getActiveSeason().getId(), match.getSeason().getId());
-        assertEquals(prerequisiteGroup.getCreatedBy(), match.getCreatedBy());
-        assertNotNull(match.getDate());
+        assertEquals(ogMatch.getId(), newMatch.getId());
+        assertEquals(ogMatch.getSeasonId(), newMatch.getSeasonId());
+        assertEquals(ogMatch.getCreatedById(), newMatch.getCreatedById());
 
-        assertEquals(2, match.getTeams().size());
+        assertNotNull(newExtMatch.getId());
+        assertEquals(prerequisiteGroup.getActiveSeasonId(), newExtMatch.getSeasonId());
+        assertEquals(prerequisiteGroup.getCreatedById(), newExtMatch.getCreatedById());
+        assertNotNull(newExtMatch.getDate());
 
-        var team1 = match.getTeams().getFirst();
-        var team2 = match.getTeams().getLast();
+        assertEquals(2, newExtMatch.getTeams().size());
+
+        var team1 = newExtMatch.getTeams().getFirst();
+        var team2 = newExtMatch.getTeams().getLast();
 
         assertNotNull(team1);
         assertNotNull(team1.getId());
-        assertEquals(match.getId(), team1.getMatchId());
+        assertEquals(newExtMatch.getId(), team1.getMatchId());
         assertNotNull(team2);
         assertNotNull(team2.getId());
-        assertEquals(match.getId(), team2.getMatchId());
+        assertEquals(newExtMatch.getId(), team2.getMatchId());
 
-        var teamMembers1 = match.getTeamMembers().stream()
+        var teamMembers1 = newExtMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team1.getId()))
                 .toList();
-        var teamMembers2 = match.getTeamMembers().stream()
+        var teamMembers2 = newExtMatch.getTeamMembers().stream()
                 .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(team2.getId()))
                 .toList();
 
@@ -2132,10 +2147,10 @@ public class MatchControllerTest {
         assertEquals(team2.getId(), teamMember2.getTeamId());
         assertEquals(player2.getId(), teamMember2.getPlayerId());
 
-        var matchMoves1 = match.getMatchMoves().stream()
+        var matchMoves1 = newExtMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember1.getId()))
                 .toList();
-        var matchMoves2 = match.getMatchMoves().stream()
+        var matchMoves2 = newExtMatch.getMatchMoves().stream()
                 .filter(matchMove -> matchMove.getTeamMemberId().equals(teamMember2.getId()))
                 .toList();
 
@@ -2163,14 +2178,6 @@ public class MatchControllerTest {
         assertEquals(teamMember2.getId(), normalMove2.getTeamMemberId());
         assertEquals(normalMove.getId(), normalMove2.getMoveId());
         assertEquals(3, normalMove2.getValue());
-
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), MatchDto.class);
-        var newFetched = requestUtils.assertSuccess(response, MatchDto.class);
-
-        assertNotNull(newFetched);
-
-        match.setDate(newFetched.getDate());
-        assertEquals(match, newFetched);
     }
 
     @Test
@@ -2178,9 +2185,8 @@ public class MatchControllerTest {
     @SuppressWarnings("unchecked")
     public void matches_update_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -2188,7 +2194,7 @@ public class MatchControllerTest {
         var player1 = players.getFirst();
         var player2 = players.getLast();
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -2212,7 +2218,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches/" + match.getId(), matchDto, MatchDto.class);
@@ -2220,7 +2226,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonCreateDto = new SeasonCreateDto();
@@ -2233,7 +2239,7 @@ public class MatchControllerTest {
         var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
         requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
     }
 
@@ -2241,14 +2247,8 @@ public class MatchControllerTest {
     @SuppressWarnings("unchecked")
     public void matches_update_invalidTeams() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
-        var minTeamSize = oldSeason.getSeasonSettings().getMinTeamSize();
-        var maxTeamSize = oldSeason.getSeasonSettings().getMaxTeamSize();
 
-        assertEquals(1, minTeamSize);
-        assertEquals(10, maxTeamSize);
-
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -2256,7 +2256,7 @@ public class MatchControllerTest {
         var player1 = players.getFirst();
         var player2 = players.getLast();
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -2280,7 +2280,7 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
         matchDto = buildDto(
@@ -2302,7 +2302,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
@@ -2312,7 +2312,7 @@ public class MatchControllerTest {
                 buildTeam()
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
         matchDto = buildDto(
@@ -2327,7 +2327,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
 
         matchDto = buildDto(
@@ -2336,12 +2336,12 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
 
         matchDto = buildDto();
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_WRONG_AMOUNT_OF_TEAMS);
     }
 
@@ -2351,7 +2351,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -2366,7 +2366,7 @@ public class MatchControllerTest {
         assertNotNull(player3);
         assertNotNull(player4);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -2390,12 +2390,15 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
+
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test non unique players in same team
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(player1.getId()),
                         buildMember(player2.getId())
@@ -2406,12 +2409,15 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test non unique players in different teams
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(player1.getId()),
                         buildMember(player3.getId())
@@ -2422,7 +2428,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
     }
 
@@ -2432,7 +2438,7 @@ public class MatchControllerTest {
         var profileNames = List.of("player1", "player2", "player3", "player4");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), players.size());
@@ -2447,7 +2453,7 @@ public class MatchControllerTest {
         assertNotNull(player3);
         assertNotNull(player4);
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -2476,12 +2482,15 @@ public class MatchControllerTest {
                 )
         );
 
-        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
+
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test too many finish moves in different teams
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2504,12 +2513,15 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test too many finish moves in same team
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2532,12 +2544,15 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test no finish move
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2560,12 +2575,15 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test finish move amount!=1
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2588,12 +2606,15 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
+
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
 
         // test finish move amount!=1
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2616,7 +2637,7 @@ public class MatchControllerTest {
                 )
         );
 
-        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
+        response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
     }
 
@@ -2625,9 +2646,8 @@ public class MatchControllerTest {
     public void matches_update_invalidPlayers() {
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var oldPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        var oldPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var oldPlayers = (List<PlayerDto>) requestUtils.assertSuccess(oldPlayerResponse, ArrayList.class);
 
         assertEquals(profileNames.size(), oldPlayers.size());
@@ -2642,7 +2662,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        var otherPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var otherPlayerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var otherPlayers = (List<PlayerDto>) requestUtils.assertSuccess(otherPlayerResponse, ArrayList.class);
 
         assertEquals(2, otherPlayers.size());
@@ -2708,9 +2728,12 @@ public class MatchControllerTest {
         var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test invalid player id
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember("someIdThatNotExists")
@@ -2723,9 +2746,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test invalid player id
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember("someIdThatNotExists")
                 ),
@@ -2738,9 +2764,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test player from other season
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(oldPlayer1.getId())
@@ -2753,9 +2782,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test player from other season
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(newPlayer2.getId())
@@ -2768,9 +2800,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test player from other group
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(newPlayer2.getId())
@@ -2783,9 +2818,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test player from other group
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(newPlayer1.getId()),
                         buildMember(otherPlayer1.getId())
@@ -2804,9 +2842,8 @@ public class MatchControllerTest {
     public void matches_update_invalidMoves() {
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var oldMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var oldMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var oldMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(oldMovesResponse, ArrayList.class);
 
         assertTrue(oldMoves.size() >= 2);
@@ -2821,7 +2858,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        var otherMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var otherMovesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var otherMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(otherMovesResponse, ArrayList.class);
 
         assertTrue(otherMoves.size() >= 2);
@@ -2889,9 +2926,12 @@ public class MatchControllerTest {
         var response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(response, MatchDto.class);
 
+        var extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        var extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test invalid move id
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2913,9 +2953,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test invalid move id
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2938,9 +2981,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test move from other season
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2963,9 +3009,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test move from other season
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -2988,9 +3037,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test finish move from other season
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3013,9 +3065,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test move from other season
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3037,9 +3092,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test move from other group
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3062,9 +3120,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test move from other group
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3087,9 +3148,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test finish move from other group
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3112,9 +3176,12 @@ public class MatchControllerTest {
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId(), matchDto, MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_DTO_VALIDATION_FAILED);
 
+        extResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + match.getId() + "/extended", MatchDtoExtended.class);
+        extMatch = requestUtils.assertSuccess(extResponse, MatchDtoExtended.class);
+
         // test move from other group
         matchDto = buildDto(
-                match,
+                extMatch,
                 buildTeam(
                         buildMember(
                                 player1.getId(),
@@ -3143,7 +3210,7 @@ public class MatchControllerTest {
     public void matches_delete_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -3151,7 +3218,7 @@ public class MatchControllerTest {
         var player1 = players.getFirst();
         var player2 = players.getLast();
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -3175,15 +3242,15 @@ public class MatchControllerTest {
                 )
         );
 
-        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(matchResponse, MatchDto.class);
 
-        var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), null, String.class);
+        var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), null, String.class);
         var result = requestUtils.assertSuccess(response, String.class);
 
         assertEquals("OK", result);
 
-        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches/" + match.getId(), MatchDto.class);
+        response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), MatchDto.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
     }
 
@@ -3191,9 +3258,8 @@ public class MatchControllerTest {
     @SuppressWarnings("unchecked")
     public void matches_delete_invalidSeason() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -3201,7 +3267,7 @@ public class MatchControllerTest {
         var player1 = players.getFirst();
         var player2 = players.getLast();
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -3218,7 +3284,7 @@ public class MatchControllerTest {
                 buildTeam(buildMember(player2.getId()))
         );
 
-        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var match = requestUtils.assertSuccess(matchResponse, MatchDto.class);
 
         var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/someIdThatNotExists/matches/" + match.getId(), null, String.class);
@@ -3226,7 +3292,7 @@ public class MatchControllerTest {
 
         var prerequisiteGroup1 = testUtils.createTestGroup(port, List.of("player1", "player2"));
 
-        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches/" + match.getId(), null, String.class);
+        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/matches/" + match.getId(), null, String.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_NOT_OF_GROUP);
 
         var seasonCreateDto = new SeasonCreateDto();
@@ -3239,7 +3305,7 @@ public class MatchControllerTest {
         var newSeasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonCreateDto, SeasonDto.class);
         requestUtils.assertSuccess(newSeasonResponse, SeasonDto.class);
 
-        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/" + match.getId(), null, String.class);
+        response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/" + match.getId(), null, String.class);
         requestUtils.assertFailure(response, ErrorCodes.SEASON_ALREADY_ENDED);
     }
 
@@ -3248,9 +3314,8 @@ public class MatchControllerTest {
     @SuppressWarnings("unchecked")
     public void matches_delete_invalidMatch() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
-        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        var playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -3258,7 +3323,7 @@ public class MatchControllerTest {
         var player1 = players.getFirst();
         var player2 = players.getLast();
 
-        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        var movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -3275,11 +3340,11 @@ public class MatchControllerTest {
                 buildTeam(buildMember(player2.getId()))
         );
 
-        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        var matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var oldMatch = requestUtils.assertSuccess(matchResponse, MatchDto.class);
 
         // test invalid match id (not existing)
-        var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/matches/someIdThatNotExists", null, String.class);
+        var response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/matches/someIdThatNotExists", null, String.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_NOT_FOUND);
 
         // test invalid match id (other season than provided)
@@ -3299,7 +3364,7 @@ public class MatchControllerTest {
         // test invalid match id (other group than provided)
         var prerequisiteGroup1 = testUtils.createTestGroup(port);
 
-        playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/players", List.class, PlayerDto.class);
+        playerResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         players = (List<PlayerDto>) requestUtils.assertSuccess(playerResponse, ArrayList.class);
 
         assertTrue(players.size() >= 2);
@@ -3307,7 +3372,7 @@ public class MatchControllerTest {
         player1 = players.getFirst();
         player2 = players.getLast();
 
-        movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/rule-moves", List.class, RuleMoveDto.class);
+        movesResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/rule-moves", List.class, RuleMoveDto.class);
         ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(movesResponse, ArrayList.class);
 
         assertTrue(ruleMoves.size() >= 2);
@@ -3324,7 +3389,7 @@ public class MatchControllerTest {
                 buildTeam(buildMember(player2.getId()))
         );
 
-        matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeason().getId() + "/matches", matchDto, MatchDto.class);
+        matchResponse = requestUtils.performPost(port, "/groups/" + prerequisiteGroup1.getId() + "/seasons/" + prerequisiteGroup1.getActiveSeasonId() + "/matches", matchDto, MatchDto.class);
         var otherGroupMatch = requestUtils.assertSuccess(matchResponse, MatchDto.class);
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + otherGroupMatch.getId(), null, String.class);
@@ -3335,7 +3400,7 @@ public class MatchControllerTest {
         return buildDto(null, teams);
     }
 
-    private MatchCreateDto buildDto(@Nullable MatchDto existing, TeamCreateDto... teams) {
+    private MatchCreateDto buildDto(@Nullable MatchDtoExtended existing, TeamCreateDto... teams) {
         var teamList = List.of(teams);
 
         if (existing != null) {

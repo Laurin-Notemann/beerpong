@@ -8,7 +8,13 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.profile.ProfileCreateDto;
+import pro.beerpong.api.model.dto.profile.ProfileCreatedDto;
+import pro.beerpong.api.model.dto.profile.ProfileDto;
+import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
+import pro.beerpong.api.model.dto.seasons.SeasonDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +51,6 @@ public class ProfileControllerTest {
     public void profiles_create_success() {
         var profileNames = List.of("player1", "player2", "player3");
         var prerequisiteGroup = testUtils.createTestGroup(port, profileNames);
-        var oldSeason = prerequisiteGroup.getActiveSeason();
 
         // test creation of profile with a non existing name
         var profileDto = new ProfileCreateDto();
@@ -56,25 +61,26 @@ public class ProfileControllerTest {
 
         assertEquals(profileDto.getName(), result.getName());
         assertEquals(prerequisiteGroup.getId(), result.getGroupId());
-        assertEquals(prerequisiteGroup.getCreatedBy(), result.getCreatedBy());
-        assertNull(result.getAvatarAsset());
+        assertEquals(prerequisiteGroup.getCreatedById(), result.getCreatedById());
+        assertNull(result.getAssetIdAvatar());
 
         assertFalse(result.isReactivated());
         assertNull(result.getLastActiveSeasonId());
 
         // test reactivating of players when player is deleted
-        var playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        var playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         var players = (List<PlayerDto>) requestUtils.assertSuccess(playersResponse, ArrayList.class);
         var player = players.getFirst();
 
-        assertTrue(profileNames.stream().anyMatch(s -> player.getProfile().getName().equals(s)));
+        var profileResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/profiles/" + player.getProfileId(), ProfileDto.class);
+        var profile = requestUtils.assertSuccess(profileResponse, ProfileDto.class);
 
-        var deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players/" + player.getId(), null, String.class);
+        var deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + player.getId(), null, String.class);
         var deleteResult = requestUtils.assertSuccess(deleteResponse, String.class);
 
         assertEquals("OK",  deleteResult);
 
-        profileDto.setName(player.getProfile().getName());
+        profileDto.setName(profile.getName());
 
         response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
         result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);
@@ -83,14 +89,17 @@ public class ProfileControllerTest {
         assertEquals(prerequisiteGroup.getId(), result.getGroupId());
 
         assertTrue(result.isReactivated());
-        assertEquals(result.getLastActiveSeasonId(), oldSeason.getId());
+        assertEquals(result.getLastActiveSeasonId(), prerequisiteGroup.getActiveSeasonId());
 
         // test linking to old profile if no player exists in the current season
-        playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players", List.class, PlayerDto.class);
+        playersResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players", List.class, PlayerDto.class);
         players = (List<PlayerDto>) requestUtils.assertSuccess(playersResponse, ArrayList.class);
-        var first = players.getFirst();
+        player = players.getFirst();
 
-        deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + oldSeason.getId() + "/players/" + first.getId(), null, String.class);
+        profileResponse = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/profiles/" + player.getProfileId(), ProfileDto.class);
+        profile = requestUtils.assertSuccess(profileResponse, ProfileDto.class);
+
+        deleteResponse = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/players/" + player.getId(), null, String.class);
         deleteResult = requestUtils.assertSuccess(deleteResponse, String.class);
 
         assertEquals("OK",  deleteResult);
@@ -105,7 +114,7 @@ public class ProfileControllerTest {
         var seasonResponse = requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonDto, SeasonDto.class);
         requestUtils.assertSuccess(seasonResponse, SeasonDto.class);
 
-        profileDto.setName(first.getProfile().getName());
+        profileDto.setName(profile.getName());
 
         response = requestUtils.performPost(port, "/groups/" + prerequisiteGroup.getId() + "/profiles", profileDto, ProfileCreatedDto.class);
         result = requestUtils.assertSuccess(response, ProfileCreatedDto.class);
@@ -114,7 +123,7 @@ public class ProfileControllerTest {
         assertEquals(prerequisiteGroup.getId(), result.getGroupId());
 
         assertFalse(result.isReactivated());
-        assertEquals(result.getLastActiveSeasonId(), oldSeason.getId());
+        assertEquals(result.getLastActiveSeasonId(), prerequisiteGroup.getActiveSeasonId());
     }
 
     @Test
@@ -163,7 +172,7 @@ public class ProfileControllerTest {
         var prerequisiteGroup1 = testUtils.createTestGroup(port, "test", profileNames);
 
         response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup1.getId() + "/profiles/" + profiles.getFirst().getId(), ProfileDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_OF_GROUP);
+        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_FOUND);
     }
 
     @Test
@@ -187,7 +196,7 @@ public class ProfileControllerTest {
 
         assertEquals(profileDto.getName(), newProfile.getName());
         assertEquals(oldProfile.getId(), newProfile.getId());
-        assertEquals(oldProfile.getCreatedBy(), newProfile.getCreatedBy());
+        assertEquals(oldProfile.getCreatedById(), newProfile.getCreatedById());
         assertEquals(oldProfile.getGroupId(), newProfile.getGroupId());
     }
 
@@ -211,6 +220,6 @@ public class ProfileControllerTest {
         var prerequisiteGroup1 = testUtils.createTestGroup(port, "test", profileNames);
 
         response = requestUtils.performPut(port, "/groups/" + prerequisiteGroup1.getId() + "/profiles/" + profiles.getFirst().getId(), profileDto, ProfileDto.class);
-        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_FOUND);
+        requestUtils.assertFailure(response, ErrorCodes.PROFILE_NOT_OF_GROUP);
     }
 }

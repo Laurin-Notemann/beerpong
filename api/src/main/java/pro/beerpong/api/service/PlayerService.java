@@ -4,12 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.PlayerMapper;
-import pro.beerpong.api.model.dao.*;
 import pro.beerpong.api.mapping.PlayerStatisticsMapper;
-import pro.beerpong.api.model.dao.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.PlayerCreateDto;
-import pro.beerpong.api.model.dto.PlayerDto;
+import pro.beerpong.api.model.DefaultServiceResponse;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.dao.Player;
+import pro.beerpong.api.model.dao.PlayerStatistics;
+import pro.beerpong.api.model.dao.Profile;
+import pro.beerpong.api.model.dao.Season;
+import pro.beerpong.api.model.ServiceResponse;
+import pro.beerpong.api.model.dto.player.PlayerDto;
 import pro.beerpong.api.repository.PlayerRepository;
 import pro.beerpong.api.repository.PlayerStatisticsRepository;
 import pro.beerpong.api.repository.SeasonRepository;
@@ -19,103 +22,96 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor
 public class PlayerService {
     private final SubscriptionHandler subscriptionHandler;
+
     private final PlayerRepository playerRepository;
-    private final SeasonRepository seasonRepository;
-    private final PlayerMapper playerMapper;
     private final PlayerStatisticsRepository playerStatisticsRepository;
-    private final PlayerStatisticsMapper playerStatisticsMapper;
 
-    public List<PlayerDto> getBySeasonId(String seasonId) {
-        return this.getBySeasonId(seasonId, false);
+    private final PlayerMapper playerMapper;
+    private final SeasonRepository seasonRepository;
+
+    public List<String> getPlayerIdsInSeason(String seasonId, boolean withInactive) {
+        if (withInactive) {
+            return playerRepository.findAllPlayerIdsInSeason(seasonId);
+        } else {
+            return playerRepository.findActivePlayerIdsInSeason(seasonId);
+        }
     }
 
-    public List<PlayerDto> getBySeasonId(String seasonId, boolean showInactive) {
-        return playerRepository.findAllBySeasonId(seasonId)
-                .stream()
-                .filter(player -> showInactive || player.isActiveThisSeason())
-                .map(this::mapPlayer)
-                .toList();
+    public Optional<Player> findLatestPlayer(String profileId) {
+        return playerRepository.findLatestByProfileId(profileId);
     }
 
-    public Player findLatestPlayer(String profileId) {
-        return playerRepository.findAllByProfileId(profileId)
-                .stream()
-                .sorted(Comparator.comparing(player -> player.getSeason().getStartDate()))
-                .toList()
-                .getLast();
-    }
+    public DefaultServiceResponse reactivatePlayer(String playerId) {
+        var optional = playerRepository.findById(playerId);
 
-    public boolean reactivatePlayer(PlayerDto dto) {
-        if (dto.isActiveThisSeason()) {
-            return false;
+        if (optional.isEmpty()) {
+            return DefaultServiceResponse.error(ErrorCodes.PLAYER_NOT_FOUND);
         }
 
-        dto.setActiveThisSeason(true);
+        var player = optional.get();
 
-        playerRepository.save(playerMapper.playerDtoToPlayer(dto));
+        if (player.isActiveThisSeason()) {
+            return DefaultServiceResponse.error(ErrorCodes.PROFILE_ALREADY_EXISTS);
+        }
 
-        return true;
-    }
-
-    public ErrorCodes deletePlayer(String id, String seasonId, String groupId) {
-        AtomicReference<ErrorCodes> error = new AtomicReference<>();
-
-        playerRepository.findById(id).ifPresentOrElse(player -> {
-            var season = seasonRepository.findById(seasonId).orElse(null);
-
-            if (!player.isActiveThisSeason()) {
-                error.set(ErrorCodes.PLAYER_ALREADY_DELETED);
-                return;
-            }
-
-            if (season == null) {
-                error.set(ErrorCodes.SEASON_NOT_FOUND);
-                return;
-            }
-
-            if (!season.getGroupId().equals(groupId)) {
-                error.set(ErrorCodes.SEASON_NOT_OF_GROUP);
-                return;
-            }
-
-            if (season.getEndDate() == null) {
-                if (player.getSeason().getId().equals(seasonId) && player.getSeason().getGroupId().equals(groupId)) {
-                    subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, mapPlayer(player)));
-
-                    player.setActiveThisSeason(false);
-                    playerRepository.save(player);
-                } else {
-                    error.set(ErrorCodes.PLAYER_VALIDATION_FAILED);
-                }
-            } else {
-                error.set(ErrorCodes.SEASON_ALREADY_ENDED);
-            }
-        }, () -> error.set(ErrorCodes.PLAYER_NOT_FOUND));
-
-        return error.get();
-    }
-
-    public PlayerDto createPlayer(Season season, Profile profile, @Nullable Player lastPlayer) {
-        Player player = new Player();
-        player.setProfile(profile);
-        player.setSeason(season);
         player.setActiveThisSeason(true);
-        player.setStatistics(new PlayerStatistics());
 
-        playerStatisticsRepository.save(player.getStatistics());
+        playerRepository.save(player);
 
+        return DefaultServiceResponse.ok();
+    }
+
+    public DefaultServiceResponse deletePlayer(String playerId, String groupId) {
+        var playerOptional = playerRepository.findById(playerId);
+
+        if (playerOptional.isEmpty()) {
+            return DefaultServiceResponse.error(ErrorCodes.PLAYER_NOT_FOUND);
+        }
+
+        var player = playerOptional.get();
+
+        if (!player.isActiveThisSeason()) {
+            return DefaultServiceResponse.error(ErrorCodes.PLAYER_ALREADY_DELETED);
+        }
+
+        var season = player.getSeason();
+
+        if (!season.getGroup().getId().equals(groupId)) {
+            return DefaultServiceResponse.error(ErrorCodes.PLAYER_NOT_OF_GROUP);
+        }
+
+        if (season.getEndDate() == null) {
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PLAYER_DELETE, groupId, mapPlayer(player)));
+
+            player.setActiveThisSeason(false);
+            playerRepository.save(player);
+
+            return DefaultServiceResponse.ok();
+        } else {
+            return DefaultServiceResponse.error(ErrorCodes.SEASON_ALREADY_ENDED);
+        }
+    }
+
+    public PlayerDto createPlayer(String seasonId, Profile profile, @Nullable Player lastPlayer) {
+        Player player = new Player(
+                null,
+                profile,
+                seasonRepository.getReferenceById(seasonId),
+                null,
+                true
+        );
 
         if (lastPlayer != null) {
-            var stats = playerStatisticsMapper.playerStatisticsToPlayerStatisticsDto(lastPlayer.getStatistics());
-            stats.setId(null);
+            var stats = new PlayerStatistics(lastPlayer.getStatistics());
 
-            player.setStatistics(playerStatisticsMapper.playerStatisticsDtoToPlayerStatistics(stats));
+            player.setStatistics(stats);
         } else {
             player.setStatistics(new PlayerStatistics());
         }
