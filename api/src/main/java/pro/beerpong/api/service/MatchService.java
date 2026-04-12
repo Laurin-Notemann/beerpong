@@ -95,13 +95,7 @@ public class MatchService {
                 finishMoves.size() != 1 ||
                 finishMoves.getFirst().getCount() != 1 ||
                 !ruleMoveRepository.allExistInSeason(ruleMoveIds, seasonId) ||
-                //TODO fix n+1 query
-                !dto.getTeams().stream().allMatch(teamCreateDto ->
-                        teamCreateDto.getTeamMembers().stream().allMatch(memberDto -> {
-                            var player = playerRepository.findById(memberDto.getPlayerId());
-
-                            return player.isPresent() && player.get().getSeason().getId().equals(seasonId);
-                        }));
+                playerRepository.findByIdInAndSeasonId(playerIds, seasonId).size() != playerIds.size();
     }
 
     @Transactional
