@@ -16,6 +16,8 @@ import pro.beerpong.api.repository.AssetRepository;
 import pro.beerpong.api.util.AssetType;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
@@ -34,15 +36,6 @@ public class AssetService {
 
     public boolean assetExists(String assetId) {
         return assetRepository.existsById(assetId);
-    }
-
-    public void deleteAsset(String assetId) {
-        client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(assetId)
-                .build());
-
-        assetRepository.deleteById(assetId);
     }
 
     public AssetMetadataDto getAssetData(String assetId) {
@@ -90,7 +83,18 @@ public class AssetService {
         return createPutUpload(asset, resolveImageContentType());
     }
 
-    public AssetUploadResponse createPutUpload(Asset asset, String contentType) {
+    public void deleteAsset(String assetId) {
+        if (existsInBucket(bucket, assetId)) {
+            client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(assetId)
+                    .build());
+        }
+
+        assetRepository.deleteById(assetId);
+    }
+
+    private AssetUploadResponse createPutUpload(Asset asset, String contentType) {
         var putReq = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(asset.getId())
@@ -119,5 +123,17 @@ public class AssetService {
             }
         }
         return "image/png";
+    }
+
+    private boolean existsInBucket(String bucket, String key) {
+        try {
+            client.headObject(HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build());
+            return true;
+        } catch (NoSuchKeyException e) {
+            return false;
+        }
     }
 }
