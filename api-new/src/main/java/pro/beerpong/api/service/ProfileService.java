@@ -147,21 +147,25 @@ public class ProfileService {
         return ServiceResponse.ok(profileMapper.profileToProfileDto(profileRepository.save(profile)));
     }
 
+    @Transactional
     public ProfileDto deleteProfilePicture(String profileId) {
-        var profile = profileRepository.findById(profileId);
+        var profileOptional = profileRepository.findById(profileId);
 
-        if (profile.isEmpty()) {
+        if (profileOptional.isEmpty()) {
             return null;
         }
 
-        if (profile.get().getAvatar() != null) {
-            assetService.deleteAsset(profile.get().getAvatar().getId());
+        var profile = profileOptional.get();
 
-            profile.get().setAvatar(null);
+        if (profile.getAvatar() != null) {
+            var assetId = profile.getAvatar().getId();
 
-            profileRepository.save(profile.get());
+            profile.setAvatar(null);
+            profileRepository.save(profile);
 
-            return profileMapper.profileToProfileDto(profile.get());
+            assetService.deleteAsset(assetId);
+
+            return profileMapper.profileToProfileDto(profileOptional.get());
         } else {
             return null;
         }

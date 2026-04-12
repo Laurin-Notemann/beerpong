@@ -164,10 +164,12 @@ public class GroupService {
         if (group == null) return null;
 
         if (group.getWallpaper() != null) {
-            assetService.deleteAsset(group.getWallpaper().getId());
+            var assetId = group.getWallpaper().getId();
 
             group.setWallpaper(null);
             groupRepository.save(group);
+
+            assetService.deleteAsset(assetId);
 
             return groupMapper.groupToGroupDto(group);
         } else {

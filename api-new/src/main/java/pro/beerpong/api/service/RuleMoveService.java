@@ -76,6 +76,7 @@ public class RuleMoveService {
         move.setName(createDto.getName());
         move.setPointsForTeam(createDto.getPointsForTeam());
         move.setPointsForScorer(createDto.getPointsForScorer());
+        move.setFinishingMove(createDto.isFinishingMove());
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(move));
 

@@ -142,6 +142,10 @@ public class ProfileController {
 
         var profile = profileService.deleteProfilePicture(id);
 
+        if (profile == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_HAS_NO_AVATAR);
+        }
+
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_DELETE, id, profile));
 
         return ResponseEnvelope.ok(profile);

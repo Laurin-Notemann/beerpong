@@ -73,7 +73,6 @@ public class RuleMoveController {
         var res = moveService.updateRuleMove(groupId, ruleMoveId, dto);
 
         if (res.isOk()) {
-
             return ResponseEnvelope.ok(res.getData());
         } else {
             return ResponseEnvelope.notOk(res.getErrorCode());
