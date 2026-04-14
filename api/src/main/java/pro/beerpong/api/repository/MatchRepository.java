@@ -11,6 +11,9 @@ import java.util.List;
 public interface MatchRepository extends JpaRepository<Match, String> {
     List<Match> findBySeasonId(String seasonId);
 
+    @Query("SELECT DISTINCT m FROM Match m JOIN Team t ON t.match.id = m.id JOIN TeamMember tm ON tm.team.id = t.id WHERE m.season.id = :seasonId AND tm.player.id = :playerId")
+    List<Match> findBySeasonIdAndPlayerId(@Param("seasonId") String seasonId, @Param("playerId") String playerId);
+
     long countBySeasonId(String seasonId);
 
     @Query("SELECT m FROM Match m JOIN FETCH m.createdBy WHERE m.season.id = :seasonId ORDER BY m.date DESC")

@@ -11,7 +11,6 @@ public enum ErrorCodes {
     /* GROUPS */,
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "groupNotFound", "The requested group could not be found!"),
     GROUP_INVITE_NOT_FOUND(HttpStatus.NOT_FOUND, "groupInviteNotFound", "No group with the provided invite code could be found!"),
-    GROUP_INVITE_CODE_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "groupInviteCodeNotProvided", "The invite code needs to be provided!"),
     GROUP_ALREADY_IN_GROUP(HttpStatus.FORBIDDEN, "groupAlreadyInGroup", "The user is already a member of this group!"),
     GROUP_HAS_NO_WALLPAPER(HttpStatus.NOT_FOUND, "groupHasNoWallpaper", "The provided group does not have a wallpaper saved!"),
     GROUP_HAS_NO_RUNNING_SEASON(HttpStatus.INTERNAL_SERVER_ERROR, "groupHasNoRunningSeason", "The provided group does not have a running season! Something went very wrong here :("),
