@@ -1,15 +1,15 @@
 import { useLocalSearchParams } from 'expo-router';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
-import {useProfilesQuery} from "@/api/calls/profileHooks";
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export default function Page() {
     const { pageIdx: initialPageIdx } = useLocalSearchParams<{
@@ -40,7 +40,9 @@ export default function Page() {
         const profile = profiles.find((j) => player?.profileId === j.id);
 
         if (!profile || !profile) {
-            ConsoleLogger.error('failed to get profile or player for team member');
+            ConsoleLogger.error(
+                'failed to get profile or player for team member'
+            );
         }
 
         return {

@@ -1,9 +1,10 @@
 /* eslint @typescript-eslint/explicit-function-return-type: ["error"] */
+import { profile } from '@expo/fingerprint/build/utils/Profile';
+
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { Components } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
-import {getAssetUrl} from "@/api/utils/assetUrl";
-import {profile} from "@expo/fingerprint/build/utils/Profile";
 
 // TODO: respect pointsForTeam for point calculation
 
@@ -182,7 +183,10 @@ export class PlayerImpl {
         this.profileId = profile.id;
     }
 
-    constructor(_data: Components.Schemas.PlayerDto, _p: Components.Schemas.ProfileDto) {
+    constructor(
+        _data: Components.Schemas.PlayerDto,
+        _p: Components.Schemas.ProfileDto
+    ) {
         this.id = _data.id!;
 
         this.profileId = _p.id!;
@@ -275,7 +279,13 @@ export class MatchImpl {
         this.blueTeamPhotoUrl = getAssetUrl(_data.teams[0]?.photoAssetId);
         this.redTeamPhotoUrl = getAssetUrl(_data.teams[1]?.photoAssetId);
 
-        const players = _players.map((i) => new PlayerImpl(i, _profiles.find(value => value.id === i.profileId)!));
+        const players = _players.map(
+            (i) =>
+                new PlayerImpl(
+                    i,
+                    _profiles.find((value) => value.id === i.profileId)!
+                )
+        );
         const ruleMoves = _ruleMoves.map((i) => new RuleMoveImpl(i));
 
         this.ruleMoves = ruleMoves;

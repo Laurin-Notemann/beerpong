@@ -13,9 +13,9 @@ export const usePlayersQuery = (
 ) => {
     //TODO change to false
     return useWholePlayersQuery(groupId, seasonId, true);
-}
+};
 
-export const useWholePlayersQuery= (
+export const useWholePlayersQuery = (
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined,
     showInactive: boolean

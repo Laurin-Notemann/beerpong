@@ -5,7 +5,7 @@ import Avatar from '@/components/Avatar';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
-import {PlayerDto, ProfileDto} from "@/openapi/openapi";
+import { PlayerDto, ProfileDto } from '@/openapi/openapi';
 
 export interface CreateNewPlayerProps {
     onCreate: (player: { name: string }) => void;

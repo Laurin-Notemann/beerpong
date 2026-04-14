@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
@@ -15,8 +17,6 @@ import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
-import {useProfilesQuery} from "@/api/calls/profileHooks";
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export default function Page() {
     const cupProp = useLocalSearchParams<{
@@ -50,10 +50,14 @@ export default function Page() {
 
     const teamMembers = players.map<TeamMember>((i) => {
         const player = matchPlayers.find((j) => i.playerId === j.id);
-        const profile = profilesQuery?.data?.data?.find((j) => player?.profileId === j.id);
+        const profile = profilesQuery?.data?.data?.find(
+            (j) => player?.profileId === j.id
+        );
 
         if (!player || !profile) {
-            ConsoleLogger.error('failed to get profile or player for team member');
+            ConsoleLogger.error(
+                'failed to get profile or player for team member'
+            );
         }
 
         return {

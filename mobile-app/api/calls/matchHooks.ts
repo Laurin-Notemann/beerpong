@@ -60,12 +60,22 @@ export const useMatchesByPlayerQuery = (
     const { api } = useApi();
 
     return useQuery<Paths.GetPlayerMatches.Responses.$200 | null>({
-        queryKey: [QK.group, groupId, QK.season, seasonId, QK.players, playerId, QK.matches],
+        queryKey: [
+            QK.group,
+            groupId,
+            QK.season,
+            seasonId,
+            QK.players,
+            playerId,
+            QK.matches,
+        ],
         queryFn: async () => {
             if (!groupId || !seasonId || !playerId) {
                 return null;
             }
-            const res = await (await api).getPlayerMatches({ groupId, seasonId, playerId });
+            const res = await (
+                await api
+            ).getPlayerMatches({ groupId, seasonId, playerId });
 
             return res?.data;
         },

@@ -161,7 +161,10 @@ export const useGroupWithSeason = () => {
     const { selectedGroupId } = useGroupStore();
 
     const { data: groupQueryData } = useGroupQuery(selectedGroupId);
-    const { data: seasonQueryData } = useSeasonQuery(selectedGroupId, groupQueryData?.data?.activeSeasonId!);
+    const { data: seasonQueryData } = useSeasonQuery(
+        selectedGroupId,
+        groupQueryData?.data?.activeSeasonId!
+    );
 
     return {
         groupId: selectedGroupId,

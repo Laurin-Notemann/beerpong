@@ -758,6 +758,21 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
+    namespace GetProfileMatches {
+        namespace Parameters {
+            export type GroupId = string;
+            export type ProfileId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            profileId: Parameters.ProfileId;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeListMatchDto;
+        }
+    }
     namespace GetRules {
         namespace Parameters {
             export type GroupId = string;
@@ -1279,6 +1294,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetMatchByIdExtended.Responses.$200>;
     /**
+     * getProfileMatches
+     */
+    'getProfileMatches'(
+        parameters?: Parameters<Paths.GetProfileMatches.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetProfileMatches.Responses.$200>;
+    /**
      * getPlayerMatches
      */
     'getPlayerMatches'(
@@ -1697,6 +1720,16 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetMatchByIdExtended.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/matches/profile/{profileId}']: {
+        /**
+         * getProfileMatches
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetProfileMatches.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetProfileMatches.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/matches/player/{playerId}']: {
         /**

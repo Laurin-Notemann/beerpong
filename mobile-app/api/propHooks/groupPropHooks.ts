@@ -8,6 +8,7 @@ import {
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -20,7 +21,6 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 // eslint-disable-next-line no-restricted-imports
 import { QK } from '../utils/reactQuery';
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const router = useRouter();

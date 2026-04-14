@@ -3,7 +3,10 @@ import { useRouter } from 'expo-router';
 
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import {useGroupWithSeason, useStartNewSeasonMutation} from '@/api/calls/seasonHooks';
+import {
+    useGroupWithSeason,
+    useStartNewSeasonMutation,
+} from '@/api/calls/seasonHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
@@ -62,12 +65,8 @@ export default function Page() {
 
     const minMatchesRequiredToBeRanked = 1;
 
-    const { currentSeasonPlayers } = useLeaderboardProps(
-        groupId,
-        seasonId
-    );
-    const rankingAlgorithm =
-        season?.data?.seasonSettings?.rankingAlgorithm;
+    const { currentSeasonPlayers } = useLeaderboardProps(groupId, seasonId);
+    const rankingAlgorithm = season?.data?.seasonSettings?.rankingAlgorithm;
 
     const sortedPlayers = currentSeasonPlayers.sort(
         getRankingAlgorithm(rankingAlgorithm).sortFunc
@@ -90,9 +89,7 @@ export default function Page() {
             oldSeasonStartDate={season?.data?.startDate!}
             onCancel={() => nav.goBack()}
             isCreating={newSeasonMutation.isPending}
-            rankingAlgorithm={
-                rankingAlgorithm ?? 'AVERAGE'
-            }
+            rankingAlgorithm={rankingAlgorithm ?? 'AVERAGE'}
         />
     );
 }

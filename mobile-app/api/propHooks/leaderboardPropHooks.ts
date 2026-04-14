@@ -2,9 +2,9 @@ import {
     LeaderboardScope,
     useGetLeaderboardQuery,
 } from '@/api/calls/leaderboardHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { Player, toPlayer } from '@/api/calls/seasonHooks';
 import { ApiId } from '@/api/types';
-import {useProfilesQuery} from "@/api/calls/profileHooks";
 
 export interface LeaderboardProps {
     players: Player[];
@@ -30,21 +30,22 @@ export const useLeaderboardProps = (
         LeaderboardScope.ALL_TIME
     );
 
-    const profiles = useProfilesQuery(
-        groupId
-    );
+    const profiles = useProfilesQuery(groupId);
 
     const dailyPlayers: Player[] =
-        dailyLeaderboardQuery.data?.data?.entries!.map(i =>
-            toPlayer(i, profiles.data?.data?.find(p => p.id === i.profileId)!)) ?? [];
+        dailyLeaderboardQuery.data?.data?.entries!.map((i) =>
+            toPlayer(i, profiles.data?.data?.find((p) => p.id === i.profileId)!)
+        ) ?? [];
 
     const currentSeasonPlayers: Player[] =
-        seasonLeaderboardQuery.data?.data?.entries!.map(i =>
-            toPlayer(i, profiles.data?.data?.find(p => p.id === i.profileId)!)) ?? [];
+        seasonLeaderboardQuery.data?.data?.entries!.map((i) =>
+            toPlayer(i, profiles.data?.data?.find((p) => p.id === i.profileId)!)
+        ) ?? [];
 
     const alltimePlayers: Player[] =
-        alltimeLeaderboardQuery.data?.data?.entries!.map(i =>
-            toPlayer(i, profiles.data?.data?.find(p => p.id === i.profileId)!)) ?? [];
+        alltimeLeaderboardQuery.data?.data?.entries!.map((i) =>
+            toPlayer(i, profiles.data?.data?.find((p) => p.id === i.profileId)!)
+        ) ?? [];
 
     return {
         currentSeasonPlayers,

@@ -71,7 +71,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
             initialFormation: Formation.Pyramid_10,
             currentFormation: Formation.Pyramid_10,
         },
-        savePhoto: false
+        savePhoto: false,
     },
     blueTeam: {
         teamMembers: [],
@@ -80,7 +80,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
             initialFormation: Formation.Pyramid_10,
             currentFormation: Formation.Pyramid_10,
         },
-        savePhoto: false
+        savePhoto: false,
     },
 
     actions: {
@@ -101,7 +101,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         initialFormation: Formation.Pyramid_10,
                         currentFormation: Formation.Pyramid_10,
                     },
-                    savePhoto: false
+                    savePhoto: false,
                 },
                 blueTeam: {
                     teamMembers: [],
@@ -109,7 +109,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         initialFormation: Formation.Pyramid_10,
                         currentFormation: Formation.Pyramid_10,
                     },
-                    savePhoto: false
+                    savePhoto: false,
                 },
                 blueTeamPhotoUri: undefined,
                 redTeamPhotoUri: undefined,
@@ -150,12 +150,12 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                     redTeam: {
                         teamMembers: updatedRedTeam,
                         cups: redTeam.cups,
-                        savePhoto: redTeam.savePhoto
+                        savePhoto: redTeam.savePhoto,
                     },
                     blueTeam: {
                         teamMembers: updatedBlueTeam,
                         cups: blueTeam.cups,
-                        savePhoto: blueTeam.savePhoto
+                        savePhoto: blueTeam.savePhoto,
                     },
                 };
             });
@@ -182,7 +182,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         };
                     }),
                     cups: team.cups,
-                    savePhoto: team.savePhoto
+                    savePhoto: team.savePhoto,
                 });
 
                 return {
@@ -224,7 +224,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                                   ),
                               },
                     },
-                    savePhoto: team.savePhoto
+                    savePhoto: team.savePhoto,
                 });
 
                 return {
@@ -245,7 +245,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         currentFormation: Formation.Pyramid_10,
                     },
                     //TODO check thjis
-                    savePhoto: false
+                    savePhoto: false,
                 },
                 blueTeam: {
                     teamMembers: blueTeam.map((i) => ({
@@ -257,7 +257,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         currentFormation: Formation.Pyramid_10,
                     },
                     //TODO check this
-                    savePhoto: false
+                    savePhoto: false,
                 },
             }));
         },
@@ -266,7 +266,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                 const updateTeam = (team: TeamDraft) => ({
                     teamMembers: team.teamMembers,
                     cups: team.cups,
-                    savePhoto: true
+                    savePhoto: true,
                 });
 
                 return {
@@ -282,7 +282,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                 const updateTeam = (team: TeamDraft) => ({
                     teamMembers: team.teamMembers,
                     cups: team.cups,
-                    savePhoto: false
+                    savePhoto: false,
                 });
 
                 return {

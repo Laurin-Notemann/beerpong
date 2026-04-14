@@ -9,8 +9,9 @@ import {
     useUpdateMatchMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import {useGroupWithSeason} from '@/api/calls/seasonHooks';
+import { useGroupWithSeason } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { AppBackground } from '@/app/Background';
@@ -33,7 +34,6 @@ import { RefreshControl } from '@/components/RefreshControl';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
-import {useProfilesQuery} from "@/api/calls/profileHooks";
 
 /**
  * currently, we need to fetch every single match of the season here, in order to calculate the influence of the viewed match on the
@@ -156,7 +156,9 @@ export default function Page() {
                         })),
                     })),
                     existingTeamId: match.blueTeamId,
-                    savePhoto: !!matchDraft.blueTeamPhotoUri && matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl
+                    savePhoto:
+                        !!matchDraft.blueTeamPhotoUri &&
+                        matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl,
                 },
                 {
                     teamMembers: displayMatch.redTeam.map((i) => ({
@@ -167,7 +169,9 @@ export default function Page() {
                         })),
                     })),
                     existingTeamId: match.redTeamId,
-                    savePhoto: !!matchDraft.redTeamPhotoUri && matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
+                    savePhoto:
+                        !!matchDraft.redTeamPhotoUri &&
+                        matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl,
                 },
             ],
             groupId,
@@ -179,9 +183,15 @@ export default function Page() {
             const res = await updateMatchMutation.mutateAsync(data);
 
             //TODO think about if photo update should  be possible. maybe only delete
-            if (!!res?.data?.photoUploads && res?.data?.photoUploads.length > 0) {
+            if (
+                !!res?.data?.photoUploads &&
+                res?.data?.photoUploads.length > 0
+            ) {
                 //TODO upload photos to s3
-            } else if (!matchDraft.blueTeamPhotoUri || !matchDraft.redTeamPhotoUri) {
+            } else if (
+                !matchDraft.blueTeamPhotoUri ||
+                !matchDraft.redTeamPhotoUri
+            ) {
                 //TODO delete photos from s3
             }
 

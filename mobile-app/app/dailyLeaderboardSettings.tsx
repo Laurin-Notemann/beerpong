@@ -1,5 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
@@ -11,11 +12,10 @@ import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
+import { SeasonSettingsDto } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import {SeasonSettingsDto} from "@/openapi/openapi";
 
 dayjs.extend(customParseFormat);
 
@@ -46,7 +46,10 @@ export default function Page() {
                     : seasonSettings.dailyLeaderboard
             );
             setWakeTimeDate(
-                dayjs(`${seasonSettings?.wakeTime ?? '00:00:00'}`, 'HH:mm:ss').toDate()
+                dayjs(
+                    `${seasonSettings?.wakeTime ?? '00:00:00'}`,
+                    'HH:mm:ss'
+                ).toDate()
             );
         }
     }, [seasonSettings]);

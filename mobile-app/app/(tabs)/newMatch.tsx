@@ -11,8 +11,10 @@ import {
     useMatchesQuery,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import {useGroupWithSeason} from '@/api/calls/seasonHooks';
+import { useGroupWithSeason } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
@@ -28,8 +30,6 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
-import {useProfilesQuery} from "@/api/calls/profileHooks";
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 const { width } = Dimensions.get('window');
 
@@ -95,10 +95,8 @@ export default function NewMatchScreen() {
 
     const seasonId = season?.data?.id;
 
-    const minTeamSize =
-        season?.data?.seasonSettings?.minTeamSize ?? 1;
-    const maxTeamSize =
-        season?.data?.seasonSettings?.maxTeamSize ?? 10;
+    const minTeamSize = season?.data?.seasonSettings?.minTeamSize ?? 1;
+    const maxTeamSize = season?.data?.seasonSettings?.maxTeamSize ?? 10;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -116,13 +114,15 @@ export default function NewMatchScreen() {
 
     const matchesQuery = useMatchesQuery(groupId, seasonId);
 
-    const profiles = useProfilesQuery(
-        groupId
-    );
+    const profiles = useProfilesQuery(groupId);
 
     const matches =
         matchesQuery.data?.data?.map(
-            matchDtoToMatch(playersQuery.data?.data, profiles.data?.data, allowedMoves)
+            matchDtoToMatch(
+                playersQuery.data?.data,
+                profiles.data?.data,
+                allowedMoves
+            )
         ) ?? [];
 
     const swiperRef = useRef<Swiper>(null);
@@ -134,18 +134,21 @@ export default function NewMatchScreen() {
 
     const selectablePlayers = players
         .filter((i) => i.activeThisSeason)
-        .map<Player>(i => {
-            const profile = profiles.data?.data?.find((p) => p.id === i.profileId);
+        .map<Player>((i) => {
+            const profile = profiles.data?.data?.find(
+                (p) => p.id === i.profileId
+            );
 
-            return ({
+            return {
                 id: i.id!,
                 name: profile?.name ?? 'Unknown',
                 team:
-                    matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
-                        ?.team ?? null,
+                    matchDraft.actions
+                        .getPlayers()
+                        .find((j) => i.id === j.playerId)?.team ?? null,
 
                 avatarUrl: getAssetUrl(profile?.assetIdAvatar),
-            });
+            };
         });
 
     const displayMatch = getDisplayMatch(
@@ -187,7 +190,10 @@ export default function NewMatchScreen() {
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
 
-            if (matchRes?.data?.photoUploads && matchRes?.data?.photoUploads.length > 0) {
+            if (
+                matchRes?.data?.photoUploads &&
+                matchRes?.data?.photoUploads.length > 0
+            ) {
                 //TODO use response to save photos to s3
             }
 

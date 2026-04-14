@@ -2,9 +2,9 @@ import { Image } from 'expo-image';
 import { Dimensions, View } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export const AppBackground: React.FC = () => {
     const { width, height } = Dimensions.get('window');

@@ -1,8 +1,9 @@
+import { profile } from '@expo/fingerprint/build/utils/Profile';
+
 import { MatchImpl } from '@/api/entities';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { Components } from '@/openapi/openapi';
-import {profile} from "@expo/fingerprint/build/utils/Profile";
 
 export interface PerformedMove {
     id: string;

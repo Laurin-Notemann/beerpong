@@ -1,13 +1,13 @@
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import {
     getInfluenceOfMatchOnAveragePoints,
     MinimalMatch,
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
-import {PlayerDto, ProfileDto, RuleMoveDto} from '@/openapi/openapi';
+import { PlayerDto, ProfileDto, RuleMoveDto } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
 import { PlayerDraft } from '@/zustand/matchEditDraftStore';
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export function getDisplayMatch(
     draftPlayers: (PlayerDraft & { team: TeamId })[],
@@ -22,7 +22,9 @@ export function getDisplayMatch(
         const profile = profiles.find((j) => player?.profileId === j.id);
 
         if (!profile || !player) {
-            ConsoleLogger.error('failed to get profile or player for team member'); // TODO: this happens sometimes for a split second
+            ConsoleLogger.error(
+                'failed to get profile or player for team member'
+            ); // TODO: this happens sometimes for a split second
         }
 
         const ownTeam = draftPlayers.filter((j) => j.team === i.team);
