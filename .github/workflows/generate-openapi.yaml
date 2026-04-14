@@ -121,7 +121,7 @@ jobs:
 
       - name: Use Node.js
         if: steps.check_authors.outputs.has_bot_author != 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: "npm"
