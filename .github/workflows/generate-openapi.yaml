@@ -91,9 +91,13 @@ jobs:
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
-          POSTGRES_URL: jdbc:postgresql://localhost:5432/beerpong
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB_NAME: beerpong
           API_BASE_URL: http://localhost:8080/
           BACKEND_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          #TODO: add secret for frontend + rename backend secret
+          FRONTEND_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
           AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
