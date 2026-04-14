@@ -60,7 +60,7 @@ jobs:
           echo "Commit messages in range:"
           echo "$COMMIT_MESSAGES"
 
-          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi types"; then
+          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi typesss"; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
             echo "A recent commit contains the version bump message. Stopping the workflow."
             exit 0  # This will stop the workflow without failing it
