@@ -1,71 +1,75 @@
 package pro.beerpong.api.control;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.PlayerDto;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.player.PlayerDto;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
+import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.repository.SeasonRepository;
 import pro.beerpong.api.service.PlayerService;
 import pro.beerpong.api.service.SeasonService;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/groups/{groupId}/seasons/{seasonId}/players")
 public class PlayerController {
+    private final SeasonRepository seasonRepository;
+
     private final PlayerService playerService;
     private final SeasonService seasonService;
+    private final PlayerRepository playerRepository;
 
-    @Autowired
-    public PlayerController(PlayerService playerService, SeasonService seasonService) {
-        this.playerService = playerService;
-        this.seasonService = seasonService;
+    @GetMapping("/extended")
+    public ResponseEntity<ResponseEnvelope<List<PlayerDtoExtended>>> getPlayersExtended(@PathVariable String groupId,
+                                                                                        @PathVariable String seasonId,
+                                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        var players = seasonService.getPlayersWithStats(groupId, seasonId, showInactive);
+
+        if (players != null) {
+            return ResponseEnvelope.ok(players);
+        } else {
+            return ResponseEnvelope.notOk(ErrorCodes.ERROR);
+        }
     }
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<PlayerDto>>> getPlayers(@PathVariable String groupId,
                                                                         @PathVariable String seasonId,
-                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive,
-                                                                        @RequestParam(required = false, defaultValue = "false") boolean showStats) {
-        if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+                                                                        @RequestParam(required = false, defaultValue = "false") boolean showInactive) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        if (seasonId == null || seasonId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
-        }
-
-        var players = seasonService.calcStatsForPlayersInSeason(seasonId, showInactive, showStats);
+        var players = seasonService.getPlayers(seasonId, showInactive);
 
         if (players != null) {
             return ResponseEnvelope.ok(players);
         } else {
-            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_FOUND);
+            return ResponseEnvelope.notOk(ErrorCodes.ERROR);
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<String>> deletePlayer(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String id) {
-        if (groupId == null || groupId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
         }
 
-        if (seasonId == null || seasonId.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_SEASON_ID);
-        }
+        var error = playerService.deletePlayer(id, groupId);
 
-        if (id == null || id.trim().isEmpty()) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_PLAYER_ID);
-        }
-
-        var error = playerService.deletePlayer(id, seasonId, groupId);
-
-        if (error == null) {
+        if (error.isOk()) {
             return ResponseEnvelope.ok("OK");
         } else {
-            return ResponseEnvelope.notOk(error);
+            return ResponseEnvelope.notOk(error.getErrorCode());
         }
     }
 }

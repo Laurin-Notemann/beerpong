@@ -28,6 +28,8 @@ interface MatchEditDraftStore {
     _baseline: {
         redTeam: TeamDraft;
         blueTeam: TeamDraft;
+        blueTeamPhotoUri?: string;
+        redTeamPhotoUri?: string;
     } | null;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
@@ -184,6 +186,8 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                     _baseline: {
                         redTeam,
                         blueTeam,
+                        blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
+                        redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
                     },
                     isDirty: false,
                     blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
@@ -191,21 +195,33 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                 }));
             },
             setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
-                set(() => ({
+                set((state) => ({
                     blueTeamPhotoUri: blueTeamPhotoUri,
                     redTeamPhotoUri: redTeamPhotoUri,
+                    isDirty:
+                        state._baseline?.blueTeamPhotoUri !==
+                            blueTeamPhotoUri ||
+                        state._baseline?.redTeamPhotoUri !== redTeamPhotoUri,
                 }));
             },
             removeTeamPhotos: () => {
-                set(() => ({
+                set((state) => ({
                     blueTeamPhotoUri: undefined,
                     redTeamPhotoUri: undefined,
+                    isDirty:
+                        state._baseline?.blueTeamPhotoUri != null ||
+                        state._baseline?.redTeamPhotoUri != null,
                 }));
             },
             swapTeamPhotos: () => {
                 set((state) => ({
                     blueTeamPhotoUri: state.redTeamPhotoUri,
                     redTeamPhotoUri: state.blueTeamPhotoUri,
+                    isDirty:
+                        state._baseline?.blueTeamPhotoUri !==
+                            state.redTeamPhotoUri ||
+                        state._baseline?.redTeamPhotoUri !==
+                            state.blueTeamPhotoUri,
                 }));
             },
         },

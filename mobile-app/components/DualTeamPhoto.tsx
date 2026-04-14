@@ -99,8 +99,6 @@ export function DualTeamPhoto({
               ? 'blue'
               : 'red';
 
-    const secondary = primary === 'blue' ? 'red' : 'blue';
-
     const areEqualSize = mode === 'equal';
 
     const aspectRatio = 4 / 3;
@@ -173,6 +171,89 @@ export function DualTeamPhoto({
         setTimeout(closeCameraModal, 0);
     };
 
+    const isPrimaryBlue = primary === 'blue';
+    const cardBase = {
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 18,
+        overflow: 'hidden',
+    } as const;
+
+    const BlueCard = (
+        <Animated.View
+            style={[
+                cardBase,
+                {
+                    borderColor: theme.color.team.blue,
+                    borderWidth: 2,
+                    height: areEqualSize ? smallHeight : '100%',
+                },
+                areEqualSize
+                    ? smallSize
+                    : isPrimaryBlue
+                      ? undefined
+                      : {
+                            ...smallSize,
+                            position: 'absolute',
+                            top: 14,
+                            left: 14,
+                        },
+                isPrimaryBlue ? animatedGrowStyle : animatedShrinkStyle,
+                !isPrimaryBlue && { zIndex: 999 },
+            ]}
+        >
+            <Team
+                style={{ opacity: 0.7 }}
+                size={areEqualSize || !isPrimaryBlue ? undefined : 54}
+                centered
+                players={match.blueTeam}
+                color="blue"
+            />
+            <Image
+                source={blueImageSource}
+                style={StyleSheet.absoluteFillObject}
+                resizeMode="cover"
+            />
+        </Animated.View>
+    );
+
+    const RedCard = (
+        <Animated.View
+            style={[
+                cardBase,
+                {
+                    borderColor: theme.color.team.red,
+                    borderWidth: 2,
+                    height: areEqualSize ? smallHeight : '100%',
+                },
+                areEqualSize
+                    ? smallSize
+                    : !isPrimaryBlue
+                      ? undefined
+                      : {
+                            ...smallSize,
+                            position: 'absolute',
+                            top: 14,
+                            left: 14,
+                        },
+                !isPrimaryBlue ? animatedGrowStyle : animatedShrinkStyle,
+            ]}
+        >
+            <Team
+                style={{ opacity: 0.7 }}
+                size={areEqualSize || isPrimaryBlue ? undefined : 54}
+                centered
+                players={match.redTeam}
+                color="red"
+            />
+            <Image
+                source={redImageSource}
+                style={StyleSheet.absoluteFillObject}
+                resizeMode="cover"
+            />
+        </Animated.View>
+    );
+
     return (
         <>
             {cameraModalVisible && (
@@ -230,11 +311,15 @@ export function DualTeamPhoto({
                     },
                 ]}
             >
-                {!isEmpty && editable && (
+                {!isEmpty && (
                     <View
                         style={{
                             flexDirection: 'row',
                             justifyContent: 'flex-end',
+
+                            opacity: editable ? 1 : 0,
+
+                            marginTop: -12,
                         }}
                     >
                         {onSwapTeamColorsPress && (
@@ -305,7 +390,6 @@ export function DualTeamPhoto({
                         alignItems: areEqualSize ? 'center' : undefined,
                         justifyContent: 'space-between',
                         position: 'relative',
-
                         height: isEmpty
                             ? 48
                             : areEqualSize
@@ -314,103 +398,20 @@ export function DualTeamPhoto({
                     }}
                 >
                     {!isEmpty && (
-                        <Animated.View
-                            style={[
-                                {
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-
-                                    borderRadius: 18,
-
-                                    borderColor: theme.color.team[primary],
-                                    borderWidth: 2,
-
-                                    height: '100%',
-
-                                    overflow: 'hidden',
-                                },
-                                areEqualSize && smallSize,
-                                animatedGrowStyle,
-                            ]}
-                        >
-                            <Team
-                                style={{ opacity: 0.7 }}
-                                size={areEqualSize ? undefined : 54}
-                                centered
-                                players={
-                                    primary === 'blue'
-                                        ? match.blueTeam
-                                        : match.redTeam
-                                }
-                                color={primary}
-                            />
-                            <Image
-                                source={
-                                    primary === 'blue'
-                                        ? blueImageSource
-                                        : redImageSource
-                                }
-                                style={StyleSheet.absoluteFillObject}
-                                resizeMode="cover"
-                            />
-                        </Animated.View>
+                        <>
+                            {BlueCard}
+                            {areEqualSize && <ScoreChip />}
+                            {RedCard}
+                        </>
                     )}
-                    {areEqualSize && !isEmpty && <ScoreChip />}
-                    {!isEmpty && (
-                        <Animated.View
-                            style={[
-                                {
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
 
-                                    borderRadius: 18,
-
-                                    borderColor: theme.color.team[secondary],
-                                    borderWidth: 2,
-
-                                    overflow: 'hidden',
-                                },
-                                smallSize,
-                                areEqualSize
-                                    ? undefined
-                                    : {
-                                          position: 'absolute',
-                                          top: 14,
-                                          left: 14,
-                                      },
-                                animatedShrinkStyle,
-                            ]}
-                        >
-                            <Team
-                                style={{ opacity: 0.7 }}
-                                centered
-                                players={
-                                    secondary === 'blue'
-                                        ? match.blueTeam
-                                        : match.redTeam
-                                }
-                                color={secondary}
-                            />
-                            <Image
-                                source={
-                                    secondary === 'blue'
-                                        ? blueImageSource
-                                        : redImageSource
-                                }
-                                style={StyleSheet.absoluteFillObject}
-                                resizeMode="cover"
-                            />
-                        </Animated.View>
-                    )}
                     {isEmpty && (
                         <View
                             style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-
                                 flex: 1,
-
                                 gap: 6,
                             }}
                         >

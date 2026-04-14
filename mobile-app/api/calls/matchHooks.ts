@@ -3,10 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
+import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
 
 export const useMatchQuery = (
@@ -22,6 +23,7 @@ export const useMatchQuery = (
             if (!groupId || !seasonId || !matchId) {
                 return null;
             }
+
             const res = await (
                 await api
             ).getMatchById({ groupId, seasonId, id: matchId });
@@ -97,6 +99,7 @@ export const useCreateMatchMutation = () => {
                 throw err;
             }
         },
+        onError: captureMutationErr('createMatch'),
     });
 };
 
@@ -112,6 +115,7 @@ export const useDeleteMatchMutation = () => {
             const res = await (await api).deleteMatchById(body);
             return res?.data;
         },
+        onError: captureMutationErr('deleteMatch'),
     });
 };
 
@@ -119,7 +123,7 @@ export const useUpdateMatchMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.UpdateMatch.Responses.$200 | null,
+        Paths.UpdateMatch.Responses.$200,
         Error,
         Paths.UpdateMatch.RequestBody & {
             groupId: ApiId;
@@ -129,8 +133,9 @@ export const useUpdateMatchMutation = () => {
     >({
         mutationFn: async (body) => {
             const res = await (await api).updateMatch(body, body);
-            return res?.data;
+            return res.data;
         },
+        onError: captureMutationErr('updateMatch'),
     });
 };
 
@@ -150,45 +155,33 @@ export const useUpdateMatchPhotoMutation = () => {
             teamId: ApiId;
         }
     >({
-        mutationFn: async (body) => {
-            const { byteArray, mimeType } = body;
-
+        mutationFn: async ({
+            byteArray,
+            mimeType,
+            groupId,
+            seasonId,
+            matchId,
+            teamId,
+        }) => {
             const res = await (
                 await api
-            )
-                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setPhoto(
-                    {
-                        groupId: body.groupId,
-                        seasonId: body.seasonId,
-                        id: body.matchId,
-                        teamId: body.teamId,
-                    },
-                    undefined
-                );
-            // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-            const singleUploadUrl = res?.data.data?.photoAsset?.singleUploadUrl;
-
-            if (!singleUploadUrl)
-                throw new Error('No upload URL returned from server');
-
-            const uploadRes = await fetch(singleUploadUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': mimeType,
-                },
-                body: byteArray,
+            ).setPhoto({
+                groupId,
+                seasonId,
+                id: matchId,
+                teamId,
             });
-            if (!uploadRes.ok) {
-                ConsoleLogger.error(
-                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
-                );
-                throw new Error(
-                    'Failed to upload image with status ' + uploadRes.status
-                );
-            }
+
+            await uploadImage(
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
+                res?.data.data?.photoAsset?.singleUploadUrl,
+                byteArray,
+                'matchPhoto',
+                mimeType
+            );
             return res.data;
         },
+        onError: captureMutationErr('updateMatchPhoto'),
     });
 };
 
@@ -203,10 +196,14 @@ export const useDeleteMatchPhotoMutation = () => {
         mutationFn: async ({ groupId, seasonId, matchId, teamId }) => {
             const res = await (
                 await api
-            )
-                // @ts-expect-error TODO: broken typegen for DeletePhoto
-                .deletePhoto(groupId, seasonId, matchId, teamId);
-            return res?.data;
+            ).deletePhoto({
+                groupId,
+                seasonId,
+                id: matchId,
+                teamId,
+            });
+            return res.data;
         },
+        onError: captureMutationErr('deleteMatchPhoto'),
     });
 };

@@ -11,8 +11,8 @@ public class SocketEvent<T> {
 
     public SocketEvent(SocketEventData<T> data, String groupId, T body) {
         this.groupId = groupId;
-        this.eventType = data.getEventType();
-        this.scope = data.getScope();
+        this.eventType = data.eventType();
+        this.scope = data.scope();
         this.body = body;
     }
 }

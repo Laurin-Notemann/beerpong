@@ -1,24 +1,48 @@
 package pro.beerpong.api.model.dao;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.RankingAlgorithm;
 
-@Entity(name = "season_settings")
-@Data
+import java.time.LocalTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "season_settings")
 public class SeasonSettings {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private int minMatchesToQualify = 1;
-    private int minTeamSize = 1;
-    private int maxTeamSize = 10;
-    private RankingAlgorithm rankingAlgorithm = RankingAlgorithm.AVERAGE;
-    private DailyLeaderboard dailyLeaderboard = DailyLeaderboard.WAKE_TIME;
-    private int wakeTimeHour = 0;
+    private int minMatchesToQualify;
+
+    private int minTeamSize;
+
+    private int maxTeamSize;
+
+    private RankingAlgorithm rankingAlgorithm;
+
+    private DailyLeaderboard dailyLeaderboard;
+
+    @Column(columnDefinition = "time default '00:00:00'")
+    private LocalTime wakeTime;
+
+    public static SeasonSettings createDefault() {
+        return new SeasonSettings(
+                null,
+                1,
+                1,
+                10,
+                RankingAlgorithm.AVERAGE,
+                DailyLeaderboard.WAKE_TIME,
+                LocalTime.of(0, 0)
+        );
+    }
 }

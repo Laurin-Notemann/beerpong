@@ -1,12 +1,18 @@
 package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.SneakyThrows;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Entity(name = "rules")
-@Data
-public class Rule implements Cloneable {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "rules")
+public class Rule {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -16,13 +22,12 @@ public class Rule implements Cloneable {
     @Column(length = 9999)
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "seasonId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "season_id")
     private Season season;
 
-    @Override
-    @SneakyThrows
-    public Rule clone() {
-        return (Rule) super.clone();
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private GroupMember createdBy;
+
 }

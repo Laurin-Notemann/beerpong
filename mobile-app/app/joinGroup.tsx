@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { useRouter } from 'expo-router';
 import React from 'react';
 
-import { useJoinGroupMutation } from '@/api/calls/groupHooks';
+import { QK } from '@/api/utils/reactQuery';
+import { useNavigation } from '@/app/navigation/useNavigation';
 import JoinGroup from '@/components/screens/JoinGroup';
 import { showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -10,17 +12,25 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 export default function Page() {
     const router = useRouter();
-    const joinGroupMutation = useJoinGroupMutation();
 
-    const { addGroup, selectGroup } = useGroupStore();
+    const nav = useNavigation();
+
+    const { joinGroupMutation, selectGroup } = useGroupStore();
+
+    const queryClient = useQueryClient();
 
     async function onSubmit(code: string) {
         try {
             const data = await joinGroupMutation.mutateAsync(code);
 
             if (data?.data?.id) {
-                addGroup(data.data.id);
                 selectGroup(data.data.id);
+
+                await queryClient.invalidateQueries({
+                    queryKey: [QK.group, 'myGroups'],
+                });
+
+                nav.navigate('index');
 
                 showSuccessToast(`You joined "${data.data.name}"`);
                 router.dismissAll();

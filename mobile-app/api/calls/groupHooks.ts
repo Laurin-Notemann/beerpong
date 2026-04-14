@@ -1,10 +1,11 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
+import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
 
 export const useGroupPresetsQuery = () => {
     const { api } = useApi();
@@ -35,6 +36,7 @@ export const useGroupQuery = (id: ApiId | null) => {
 
 export const useJoinGroupMutation = () => {
     const { api } = useApi();
+
     return useMutation<
         Paths.FindGroupByInviteCode.Responses.$200 | null,
         Error,
@@ -42,13 +44,44 @@ export const useJoinGroupMutation = () => {
     >({
         mutationFn: async (inviteCode) => {
             const res = await (await api).findGroupByInviteCode({ inviteCode });
+
+            if (res.data.data) {
+                await (await api).joinGroup({ id: res.data.data.id! }, {});
+            }
+            return res?.data;
+        },
+        onError: captureMutationErr('joinGroup'),
+    });
+};
+
+export const useLeaveGroupMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<Paths.LeaveGroup.Responses.$200 | null, Error, string>({
+        mutationFn: async (id) => {
+            const res = await (await api).leaveGroup({ id });
+
             return res?.data;
         },
     });
 };
 
+export const useGetMyGroupsQuery = () => {
+    const { api } = useApi();
+
+    return useQuery<Paths.FindUserGroups.Responses.$200 | null, Error>({
+        queryFn: async () => {
+            const res = await (await api).findUserGroups();
+
+            return res?.data;
+        },
+        queryKey: [QK.group, 'myGroups'],
+    });
+};
+
 export const useCreateGroupMutation = () => {
     const { api } = useApi();
+
     return useMutation<
         Paths.CreateGroup.Responses.$200 | null,
         Error,
@@ -58,6 +91,7 @@ export const useCreateGroupMutation = () => {
             const res = await (await api).createGroup(null, body);
             return res?.data;
         },
+        onError: captureMutationErr('createGroup'),
     });
 };
 
@@ -72,6 +106,7 @@ export const useUpdateGroupMutation = () => {
             const res = await (await api).updateGroup(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('updateGroup'),
     });
 };
 
@@ -79,47 +114,27 @@ export const useUpdateGroupWallpaperMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.UpdateProfile.Responses.$200 | null,
+        Paths.SetWallpaper.Responses.$200 | null,
         Error,
         {
             byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>;
             mimeType: string;
-
             groupId: ApiId;
         }
     >({
-        mutationFn: async (body) => {
-            const { byteArray, mimeType, ...rest } = body;
+        mutationFn: async ({ byteArray, groupId, mimeType }) => {
+            const res = await (await api).setWallpaper({ id: groupId });
 
-            const res = await (
-                await api
-            )
-                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setWallpaper(rest.groupId);
-
-            // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-            const singleUploadUrl = res?.data.data?.singleUploadUrl;
-
-            if (!singleUploadUrl)
-                throw new Error('No upload URL returned from server');
-
-            const uploadRes = await fetch(singleUploadUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': mimeType,
-                },
-                body: byteArray as Uint8Array<ArrayBuffer>,
-            });
-            if (!uploadRes.ok) {
-                ConsoleLogger.error(
-                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
-                );
-                throw new Error(
-                    'Failed to upload image with status ' + uploadRes.status
-                );
-            }
+            await uploadImage(
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
+                res?.data.data?.singleUploadUrl,
+                byteArray,
+                'groupWallpaper',
+                mimeType
+            );
             return res.data;
         },
+        onError: captureMutationErr('updateWallpaper'),
     });
 };
 
@@ -131,9 +146,10 @@ export const useDeleteWallpaperMutation = () => {
         Error,
         { groupId: ApiId }
     >({
-        mutationFn: async (body) => {
-            const res = await (await api).deleteWallpaper(body.groupId);
-            return res?.data;
+        mutationFn: async ({ groupId }) => {
+            const res = await (await api).deleteWallpaper({ id: groupId });
+            return res.data;
         },
+        onError: captureMutationErr('deleteWallpaper'),
     });
 };

@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import { PropsWithChildren } from 'react';
+import React, { memo, PropsWithChildren } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -62,9 +62,11 @@ export interface AvatarProps {
     placement?: number;
     isUnranked?: boolean;
 
+    variant?: 'default' | 'list';
+
     onPress?: () => void;
 }
-export default function Avatar({
+function Avatar({
     url,
     name,
     content,
@@ -75,21 +77,23 @@ export default function Avatar({
     placement,
     isUnranked = false,
 
+    variant = 'default',
+
     onPress,
 }: AvatarProps) {
     const theme = useTheme();
 
+    const Container: any = onPress ? Pressable : View;
+
     return (
-        <Pressable
+        <Container
             style={{
                 width: size,
                 height: size,
 
                 ...style,
             }}
-            onPress={onPress}
-            // so an avatar without an onPress doesn't intercept clicks
-            disabled={onPress == null}
+            {...(onPress ? { onPress } : {})}
         >
             <View
                 style={{
@@ -97,7 +101,7 @@ export default function Avatar({
                     overflow: 'hidden',
                 }}
             >
-                {(theme.blur?.intensity ?? 0) !== 0 && (
+                {(theme.blur?.intensity ?? 0) !== 0 && variant !== 'list' && (
                     <BlurView
                         intensity={theme.blur?.intensity ?? 0}
                         tint={theme.blur?.tint}
@@ -146,30 +150,32 @@ export default function Avatar({
                             }}
                             resizeMode="cover"
                             cachePolicy="memory-disk"
-                            transition={100} // nice fade
+                            // priority={variant === 'list' ? 'low' : 'normal'}
+                            transition={variant === 'list' ? 0 : 100}
                         />
                     )}
+                    {(!url || content) && (
+                        <ThemedText
+                            style={{
+                                lineHeight: size,
+                                fontSize: size / 2.7,
 
-                    <ThemedText
-                        style={{
-                            lineHeight: size,
-                            fontSize: size / 2.7,
+                                fontWeight: 500,
 
-                            fontWeight: 500,
+                                color: theme.avatar.text,
 
-                            color: theme.avatar.text,
-
-                            bottom: borderColor ? 2 : 0,
-                        }}
-                    >
-                        {content || name?.at(0) || (
-                            <Icon
-                                color={theme.avatar.text}
-                                size={size / 1.6}
-                                name="account-outline"
-                            />
-                        )}
-                    </ThemedText>
+                                bottom: borderColor ? 2 : 0,
+                            }}
+                        >
+                            {content || name?.at(0) || (
+                                <Icon
+                                    color={theme.avatar.text}
+                                    size={size / 1.6}
+                                    name="account-outline"
+                                />
+                            )}
+                        </ThemedText>
+                    )}
                 </View>
             </View>
             {canUpload && (
@@ -195,6 +201,20 @@ export default function Avatar({
                     </Text>
                 </Badge>
             )}
-        </Pressable>
+        </Container>
     );
 }
+export default memo(Avatar, (prev, next) => {
+    // Intentionally ignore onPress identity to improve list perf
+    return (
+        prev.url === next.url &&
+        prev.name === next.name &&
+        prev.content === next.content &&
+        prev.size === next.size &&
+        prev.borderColor === next.borderColor &&
+        prev.canUpload === next.canUpload &&
+        prev.placement === next.placement &&
+        prev.isUnranked === next.isUnranked &&
+        prev.variant === next.variant
+    );
+});

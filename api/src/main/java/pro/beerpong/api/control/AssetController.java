@@ -6,14 +6,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.ErrorCodes;
-import pro.beerpong.api.model.dto.ResponseEnvelope;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
 import pro.beerpong.api.service.AssetService;
 
 @RestController
-@RequestMapping("/assets")
 @RequiredArgsConstructor
+@RequestMapping("/assets")
 public class AssetController {
     private final AssetService assetService;
 
@@ -29,20 +29,4 @@ public class AssetController {
     }
 
     //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
-    /*@DeleteMapping("{id}")
-    public ResponseEntity<ResponseEnvelope<Object>> deleteAsset(@PathVariable String id) {
-        if (!assetService.assetExists(id)) {
-            return ResponseEnvelope.notOk(ErrorCodes.ASSET_NOT_FOUND);
-        }
-
-        assetService.deleteAsset(id);
-
-        return ResponseEnvelope.okNoContent();
-    }*/
-
-    //Direct access of writing (POST, DELETE) /assets isn't supported because writing interactions take place directly against business sub-resources
-    /*@PostMapping
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> uploadAsset(HttpServletRequest request, @RequestBody byte[] content) {
-        return ResponseEnvelope.ok(assetService.storeAsset(content, request.getContentType()));
-    }*/
 }

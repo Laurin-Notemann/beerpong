@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { ApiId } from '@/api/types';
+import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
+import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
 
@@ -46,6 +48,7 @@ export const useCreatePlayerMutation = () => {
             const res = await (await api).createProfile(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('createPlayer'),
     });
 };
 
@@ -65,6 +68,7 @@ export const useUpdatePlayerMutation = () => {
             const res = await (await api).updateProfile(body, body);
             return res?.data;
         },
+        onError: captureMutationErr('updatePlayer'),
     });
 };
 
@@ -72,7 +76,7 @@ export const useUpdatePlayerAvatarMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.UpdateProfile.Responses.$200 | null,
+        Paths.SetAvatar.Responses.$200 | null,
         Error,
         {
             byteArray: Uint8Array<ArrayBuffer>;
@@ -83,44 +87,23 @@ export const useUpdatePlayerAvatarMutation = () => {
             profileId: ApiId;
         }
     >({
-        mutationFn: async (body) => {
-            const { byteArray } = body;
-
+        mutationFn: async ({ byteArray, mimeType, groupId, profileId }) => {
             const res = await (
                 await api
-            )
-                // the automatic type gen thinks the endpoint expects a string but it actually has to be a byte array 💀
-                .setAvatar(
-                    {
-                        groupId: body.groupId,
-                        id: body.profileId,
-                    },
-                    undefined
-                );
-            const singleUploadUrl =
-                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-                res?.data.data?.avatarAsset?.singleUploadUrl;
-
-            if (!singleUploadUrl)
-                throw new Error('No upload URL returned from server');
-
-            const uploadRes = await fetch(singleUploadUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': body.mimeType,
-                },
-                body: byteArray,
+            ).setAvatar({
+                groupId,
+                id: profileId,
             });
-            if (!uploadRes.ok) {
-                ConsoleLogger.error(
-                    `Failed to upload: ${uploadRes.status} ${await uploadRes.text()}`
-                );
-                throw new Error(
-                    'Failed to upload image with status ' + uploadRes.status
-                );
-            }
+            await uploadImage(
+                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
+                res?.data.data?.avatarAsset?.singleUploadUrl,
+                byteArray,
+                'profilePicture',
+                mimeType
+            );
             return res.data;
         },
+        onError: captureMutationErr('updateAvatar'),
     });
 };
 
@@ -136,6 +119,7 @@ export const useDeletePlayerMutation = () => {
             const res = await (await api).deletePlayer(body);
             return res?.data;
         },
+        onError: captureMutationErr('deletePlayer'),
     });
 };
 
@@ -147,11 +131,12 @@ export const useDeletePlayerAvatarMutation = () => {
         Error,
         { groupId: ApiId; profileId: ApiId }
     >({
-        mutationFn: async (body) => {
+        mutationFn: async ({ groupId, profileId }) => {
             const res = await (
                 await api
-            ).deleteAvatar(body.groupId, body.profileId);
+            ).deleteAvatar({ groupId, id: profileId });
             return res?.data;
         },
+        onError: captureMutationErr('deleteAvatar'),
     });
 };

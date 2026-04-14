@@ -1,13 +1,19 @@
 package pro.beerpong.api.control;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.service.AssetService;
-import pro.beerpong.api.model.dto.*;
-import pro.beerpong.api.service.GroupService;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.assets.AssetCropDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
+import pro.beerpong.api.model.dto.profile.ProfileCreateDto;
+import pro.beerpong.api.model.dto.profile.ProfileCreatedDto;
+import pro.beerpong.api.model.dto.profile.ProfileDto;
+import pro.beerpong.api.model.dto.user.UserDto;
+import pro.beerpong.api.repository.GroupRepository;
+import pro.beerpong.api.repository.ProfileRepository;
 import pro.beerpong.api.service.ProfileService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
@@ -16,28 +22,34 @@ import pro.beerpong.api.sockets.SubscriptionHandler;
 import java.util.List;
 
 @RestController
-@RequestMapping("/groups/{groupId}/profiles")
 @RequiredArgsConstructor
+@RequestMapping("/groups/{groupId}/profiles")
 public class ProfileController {
-    private final GroupService groupService;
-    private final ProfileService profileService;
-    private final AssetService assetService;
     private final SubscriptionHandler subscriptionHandler;
 
+    private final GroupRepository groupRepository;
+    private final ProfileRepository profileRepository;
+
+    private final ProfileService profileService;
+
     @PostMapping
-    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId, @RequestBody ProfileCreateDto profileCreateDto) {
-        var group = groupService.getGroupById(groupId);
+    public ResponseEntity<ResponseEnvelope<ProfileCreatedDto>> createProfile(@PathVariable String groupId,
+                                                                             @RequestBody ProfileCreateDto profileCreateDto,
+                                                                             @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
 
-        if (group != null) {
-            var dto = profileService.createPlayer(groupId, profileCreateDto);
+        if (groupRepository.existsById(groupId)) {
+            var dto = profileService.createPlayer(groupId, profileCreateDto, user);
 
-            if (dto == null) {
-                return ResponseEnvelope.notOk(ErrorCodes.PROFILE_ALREADY_EXISTS);
+            if (dto.isError()) {
+                return ResponseEnvelope.notOk(dto.getErrorCode());
             }
 
-            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_CREATE, groupId, dto));
+            subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_CREATE, groupId, dto.getData()));
 
-            return ResponseEnvelope.ok(dto);
+            return ResponseEnvelope.ok(dto.getData());
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
@@ -45,10 +57,8 @@ public class ProfileController {
 
     @GetMapping
     public ResponseEntity<ResponseEnvelope<List<ProfileDto>>> listAllProfiles(@PathVariable String groupId) {
-        var group = groupService.getGroupById(groupId);
-
-        if (group != null) {
-            return ResponseEnvelope.ok(profileService.listAllProfilesOfGroup(groupId));
+        if (groupRepository.existsById(groupId)) {
+            return ResponseEnvelope.ok(profileService.listAllProfiles(groupId));
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
@@ -56,16 +66,23 @@ public class ProfileController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<ProfileDto>> getProfileById(@PathVariable String groupId, @PathVariable String id) {
-        var group = groupService.getGroupById(groupId);
+        if (groupRepository.existsById(groupId)) {
+            if (profileRepository.existsByIdAndGroupId(id, groupId)) {
+                var profile = profileService.getProfileById(id);
 
-        if (group != null) {
-            var profile = profileService.getProfileById(id);
-
-            if (profile != null) {
-                return ResponseEnvelope.ok(profile);
+                if (profile != null) {
+                    if (profile.getGroupId().equals(groupId)) {
+                        return ResponseEnvelope.ok(profile);
+                    } else {
+                        return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_OF_GROUP);
+                    }
+                } else {
+                    return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
+                }
             } else {
                 return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
             }
+
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
@@ -73,17 +90,15 @@ public class ProfileController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponseEnvelope<ProfileDto>> updateProfile(@PathVariable String groupId, @PathVariable String id, @RequestBody ProfileCreateDto profileCreateDto) {
-        var group = groupService.getGroupById(groupId);
+        if (groupRepository.existsById(groupId)) {
+            var updatedProfile = profileService.updateProfile(id, groupId, profileCreateDto);
 
-        if (group != null) {
-            var updatedProfile = profileService.updateProfile(id, profileCreateDto);
+            if (updatedProfile.isOk()) {
+                subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_UPDATE, groupId, updatedProfile.getData()));
 
-            if (updatedProfile != null) {
-                subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_UPDATE, groupId, updatedProfile));
-
-                return ResponseEnvelope.ok(updatedProfile);
+                return ResponseEnvelope.ok(updatedProfile.getData());
             } else {
-                return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
+                return ResponseEnvelope.notOk(updatedProfile.getErrorCode());
             }
         } else {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
@@ -91,18 +106,14 @@ public class ProfileController {
     }
 
     @PutMapping("/{id}/avatar")
-    public ResponseEntity<ResponseEnvelope<ProfileDto>> setAvatar(@PathVariable String groupId,
-                                                                  @PathVariable String id,
-                                                                  @RequestBody(required = false) AssetCropDto assetCropDto) {
-        var group = groupService.getGroupById(groupId);
-
-        if (group == null) {
+    public ResponseEntity<ResponseEnvelope<AssetUploadResponse>> setAvatar(@PathVariable String groupId,
+                                                                           @PathVariable String id,
+                                                                           @RequestBody(required = false) AssetCropDto assetCropDto) {
+        if (!groupRepository.existsById(groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
-        var profile = profileService.getProfileById(id);
-
-        if (profile == null) {
+        if (!profileRepository.existsByIdAndGroupId(id, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
         }
 
@@ -110,7 +121,7 @@ public class ProfileController {
             return ResponseEnvelope.notOk(ErrorCodes.ASSET_VALIDATION_FAILED);
         }
 
-        var dto = profileService.storeProfilePicture(profile, assetCropDto);
+        var dto = profileService.storeProfilePicture(id, assetCropDto);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_SET, groupId, dto));
 
@@ -119,30 +130,19 @@ public class ProfileController {
 
     @DeleteMapping("{id}/avatar")
     public ResponseEntity<ResponseEnvelope<ProfileDto>> deleteAvatar(@PathVariable String groupId, @PathVariable String id) {
-        var group = groupService.getGroupById(groupId);
-
-        if (group == null) {
+        if (!groupRepository.existsById(groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
-        var profile = profileService.getProfileById(id);
-
-        if (profile == null) {
+        if (!profileRepository.existsByIdAndGroupId(id, groupId)) {
             return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_FOUND);
         }
 
-        if (!profile.getGroupId().equals(groupId)) {
-            return ResponseEnvelope.notOk(ErrorCodes.PROFILE_NOT_OF_GROUP);
-        }
+        var profile = profileService.deleteProfilePicture(id);
 
-        var asset = profile.getAvatarAsset();
-
-        if (asset == null) {
+        if (profile == null) {
             return ResponseEnvelope.notOk(ErrorCodes.PROFILE_HAS_NO_AVATAR);
         }
-
-        profile = profileService.deleteProfilePicture(profile);
-        assetService.deleteAsset(asset.getId());
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.PROFILE_AVATAR_DELETE, id, profile));
 

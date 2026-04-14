@@ -87,7 +87,7 @@ export function PastSeasonsSwiper() {
                             rankingAlgorithm={rankingAlgorithm}
                             onPlayerPress={onPlayerPress}
                             style={{
-                                paddingBottom: insets.bottom - 24,
+                                paddingBottom: insets.bottom,
                             }}
                         />
                     </ScrollView>

@@ -1,6 +1,6 @@
 package pro.beerpong.api.util;
 
-import pro.beerpong.api.model.dto.PlayerStatisticsDto;
+import pro.beerpong.api.model.dto.player.PlayerStatisticsDto;
 
 import java.util.HashMap;
 import java.util.List;
@@ -96,7 +96,7 @@ public class EloAlgorithm {
 
         // Deltas anwenden und Elo berechnen
         applyDeltas(blueTeamStats, resultBlue, eloAvgRed, expShare, actShare, teamBluePoints, teamRedPoints);
-        applyDeltas(redTeamStats,  resultRed,  eloAvgBlue, expShare, actShare, teamRedPoints, teamBluePoints);
+        applyDeltas(redTeamStats, resultRed, eloAvgBlue, expShare, actShare, teamRedPoints, teamBluePoints);
     }
 
     private static void applyDeltas(
@@ -111,7 +111,7 @@ public class EloAlgorithm {
         long m = Math.max(0, teamPoints + oppPoints);
 
         double wPoints = m / (m + PERF_POINTS_SCALE_C);
-        double wRatio  = (teamPoints + oppPoints) > 0
+        double wRatio = (teamPoints + oppPoints) > 0
                 ? (double) teamPoints / (teamPoints + oppPoints)
                 : 0.5;
 
@@ -142,10 +142,7 @@ public class EloAlgorithm {
         return 1.0D / (1.0D + Math.pow(10.0D, (elo2 - elo1) / ELO_DIVIDER));
     }
 
-    public static void expectedShare(
-            List<PlayerStatisticsDto> players,
-            Map<String, Double> out
-    ) {
+    public static void expectedShare(List<PlayerStatisticsDto> players, Map<String, Double> out) {
         if (players.isEmpty()) return;
 
         // Amount of players
@@ -170,7 +167,7 @@ public class EloAlgorithm {
         for (int i = 0; i < n; i++) {
             double soft = logits[i] / (sumExp > 0 ? sumExp : 1.0);
             double blended = (1.0 - ALPHA) * (1.0 / n) + ALPHA * soft;
-            //TODO maybe make clamp floor/ceil dynamic based on team size
+            //TODO future: maybe make clamp floor/ceil dynamic based on team size
 //            double floor = Math.max(0.02, 0.25 / n);   // ca. 12.5% bei 2er-Team, 8.3% bei 3er, 5% bei 5er, 2.5% bei 10er
 //            double ceil  = Math.min(0.90, 1.0 - (n - 1) * floor);  // garantiert machbar
 

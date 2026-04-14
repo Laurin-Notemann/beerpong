@@ -1,32 +1,43 @@
 package pro.beerpong.api.control;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import pro.beerpong.api.model.dto.*;
-import pro.beerpong.api.service.AssetService;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ResponseEnvelope;
+import pro.beerpong.api.model.dto.assets.AssetCropDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
+import pro.beerpong.api.model.dto.groups.GroupCreateDto;
+import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.dto.user.UserDto;
+import pro.beerpong.api.service.AuthService;
 import pro.beerpong.api.service.GroupService;
 import pro.beerpong.api.sockets.SocketEvent;
 import pro.beerpong.api.sockets.SocketEventData;
 import pro.beerpong.api.sockets.SubscriptionHandler;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/groups")
 public class GroupController {
-    private final GroupService groupService;
-    private final AssetService assetService;
+    public static final String USER_GROUPS_ENDPOINT = "user";
+    public static final String JOIN_GROUP_ENDPOINT = "join";
+
     private final SubscriptionHandler subscriptionHandler;
 
-    @Autowired
-    public GroupController(GroupService groupService, AssetService assetService, SubscriptionHandler subscriptionHandler) {
-        this.groupService = groupService;
-        this.assetService = assetService;
-        this.subscriptionHandler = subscriptionHandler;
-    }
+    private final GroupService groupService;
+    private final AuthService authService;
 
     @PostMapping
-    public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto) {
+    public ResponseEntity<ResponseEnvelope<GroupDto>> createGroup(@RequestBody GroupCreateDto groupCreateDto,
+                                                                  @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
         if (groupCreateDto.invalidName()) {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_NAME);
         }
@@ -35,13 +46,24 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_PROFILE_NAMES);
         }
 
-        var group = groupService.createGroup(groupCreateDto);
+        var group = groupService.createGroup(groupCreateDto, user);
 
-        if (group == null) {
-            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_SPORT);
+        if (group.isError()) {
+            return ResponseEnvelope.notOk(group.getErrorCode());
         }
 
-        return ResponseEnvelope.ok(group);
+        return ResponseEnvelope.ok(group.getData());
+    }
+
+    @GetMapping(USER_GROUPS_ENDPOINT)
+    public ResponseEntity<ResponseEnvelope<List<GroupDto>>> findUserGroups(@AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
+        var groups = groupService.findGroupsByUser(user);
+
+        return ResponseEnvelope.ok(groups);
     }
 
     @GetMapping
@@ -50,13 +72,9 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_INVITE_CODE);
         }
 
-        var group = groupService.findGroupsByInviteCode(inviteCode);
-
-        if (group != null) {
-            return ResponseEnvelope.ok(group);
-        } else {
-            return ResponseEnvelope.notOk(ErrorCodes.GROUP_INVITE_NOT_FOUND);
-        }
+        return groupService.findGroupsByInviteCode(inviteCode)
+                .map(ResponseEnvelope::ok)
+                .orElseGet(() -> ResponseEnvelope.notOk(ErrorCodes.GROUP_INVITE_NOT_FOUND));
     }
 
     @GetMapping("/{id}")
@@ -93,8 +111,8 @@ public class GroupController {
     }
 
     @PutMapping("/{id}/wallpaper")
-    public ResponseEntity<ResponseEnvelope<AssetMetadataDto>> setWallpaper(@PathVariable String id,
-                                                                           @RequestBody(required = false) AssetCropDto assetCropDto) {
+    public ResponseEntity<ResponseEnvelope<AssetUploadResponse>> setWallpaper(@PathVariable String id,
+                                                                              @RequestBody(required = false) AssetCropDto assetCropDto) {
         var group = groupService.getGroupById(id);
 
         if (group == null) {
@@ -105,7 +123,7 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.ASSET_VALIDATION_FAILED);
         }
 
-        var dto = groupService.storeWallpaper(group, assetCropDto);
+        var dto = groupService.storeWallpaper(group.getId(), assetCropDto);
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_SET, id, dto));
 
@@ -120,17 +138,48 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
         }
 
-        var asset = group.getWallpaperAsset();
+        var assetId = group.getAssetIdWallpaper();
 
-        if (asset == null) {
+        if (assetId == null) {
             return ResponseEnvelope.notOk(ErrorCodes.GROUP_HAS_NO_WALLPAPER);
         }
 
-        group = groupService.deleteWallpaper(group);
-        assetService.deleteAsset(asset.getId());
+        group = groupService.unsetWallpaper(group.getId());
 
         subscriptionHandler.callEvent(new SocketEvent<>(SocketEventData.GROUP_WALLPAPER_DELETE, id, group));
 
         return ResponseEnvelope.ok(group);
+    }
+
+    @PostMapping("/{id}/" + JOIN_GROUP_ENDPOINT)
+    public ResponseEntity<ResponseEnvelope<String>> joinGroup(@PathVariable String id, @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
+        var groupMember = authService.joinGroup(user, id);
+
+        if (groupMember != null) {
+            return ResponseEnvelope.ok("OK");
+        } else {
+            return ResponseEnvelope.notOk(ErrorCodes.GROUP_ALREADY_IN_GROUP);
+        }
+    }
+
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<ResponseEnvelope<String>> leaveGroup(@PathVariable String id, @AuthenticationPrincipal UserDto user) {
+        if (user == null) {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_INVALID_USER);
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
+        }
+
+        if (authService.leaveGroup(user, id)) {
+            return ResponseEnvelope.ok("OK");
+        } else {
+            return ResponseEnvelope.notOk(ErrorCodes.AUTH_USER_NOT_IN_GROUP);
+        }
     }
 }

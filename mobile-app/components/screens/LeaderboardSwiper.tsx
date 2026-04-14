@@ -124,6 +124,8 @@ export function LeaderboardSwiper() {
     if (isLoading) return <LoadingScreen />;
     if (seasonsQuery.isError) return <ErrorScreen error={seasonsQuery.error} />;
 
+    const spacing = { marginTop: 32, marginBottom: 67 };
+
     return (
         <Swiper {...swiper}>
             <LayoutScrollView refreshControl={<RefreshControl {...refresh} />}>
@@ -137,7 +139,7 @@ export function LeaderboardSwiper() {
                 <Leaderboard
                     rankingAlgorithm={rankingAlgorithm}
                     ListEmptyComponent={
-                        <LeaderboardEmptyComponent message="No matches played yet today." />
+                        <LeaderboardEmptyComponent message="No players qualified yet today." />
                     }
                     players={dailyPlayers}
                     onPlayerPress={onPlayerPress}
@@ -146,7 +148,7 @@ export function LeaderboardSwiper() {
                 <Text
                     color="secondary"
                     variant="fineprint"
-                    style={{ marginTop: 32, marginBottom: 32 }}
+                    style={spacing}
                     onPress={() => {
                         nav.navigate('dailyLeaderboardSettings');
                     }}
@@ -165,17 +167,13 @@ export function LeaderboardSwiper() {
                 <Leaderboard
                     rankingAlgorithm={rankingAlgorithm}
                     ListEmptyComponent={
-                        <LeaderboardEmptyComponent message="No matches played yet this season." />
+                        <LeaderboardEmptyComponent message="No players qualified this season." />
                     }
                     players={currentSeasonPlayers}
                     onPlayerPress={onPlayerPress}
                     minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
                 />
-                <Text
-                    color="secondary"
-                    variant="fineprint"
-                    style={{ marginTop: 32, marginBottom: 32 }}
-                >
+                <Text color="secondary" variant="fineprint" style={spacing}>
                     {group.data?.activeSeason?.startDate
                         ? `Season started ${env.format.date.seasonStartAndEnd(
                               dayjs(group.data.activeSeason.startDate)
@@ -194,7 +192,7 @@ export function LeaderboardSwiper() {
                     <Leaderboard
                         rankingAlgorithm={rankingAlgorithm}
                         ListEmptyComponent={
-                            <LeaderboardEmptyComponent message="No matches played yet in this group." />
+                            <LeaderboardEmptyComponent message="No players qualified in this group." />
                         }
                         players={alltimePlayers}
                         onPlayerPress={onPlayerPress}
@@ -202,11 +200,7 @@ export function LeaderboardSwiper() {
                             minMatchesRequiredToBeRanked
                         }
                     />
-                    <Text
-                        color="secondary"
-                        variant="fineprint"
-                        style={{ marginTop: 32, marginBottom: 32 }}
-                    >
+                    <Text color="secondary" variant="fineprint" style={spacing}>
                         {group.data?.activeSeason?.startDate
                             ? `Group created ${env.format.date.seasonStartAndEnd(
                                   dayjs(pastSeasons[0].startDate)

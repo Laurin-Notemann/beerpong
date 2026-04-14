@@ -405,6 +405,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                             iconName="cards"
                             onPress={() => {
                                 startTransition(() => {
+                                    triggerHapticBump('light');
                                     scopePicker.setIsPastSeasonsMode(
                                         !isPastSeasonsMode
                                     );

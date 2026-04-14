@@ -2,21 +2,27 @@ package pro.beerpong.api.mapping;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.springframework.web.util.UriComponentsBuilder;
 import pro.beerpong.api.control.GroupPresetsController;
-import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dao.Group;
-import pro.beerpong.api.model.dto.GroupCreateDto;
-import pro.beerpong.api.model.dto.GroupDto;
-import pro.beerpong.api.model.dto.GroupPreset;
+import pro.beerpong.api.model.dto.groups.GroupCreateDto;
+import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.dto.groups.GroupPreset;
 
-@Mapper(componentModel = "spring", uses = AssetMapper.class)
+@Mapper(componentModel = "spring")
 public abstract class GroupMapper {
     @Mapping(target = "sportPreset", expression = "java(fromPreset(groupDto))")
+    @Mapping(source = "activeSeasonId", target = "activeSeason.id")
+    @Mapping(source = "assetIdWallpaper", target = "wallpaper.id")
+    @Mapping(source = "createdById", target = "createdBy.id")
     public abstract Group groupDtoToGroup(GroupDto groupDto);
+
     @Mapping(target = "sportPreset", expression = "java(fromDto(groupDto))")
     public abstract Group groupCreateDtoToGroup(GroupCreateDto groupDto);
+
     @Mapping(target = "sportPreset", expression = "java(groupPreset(group))")
+    @Mapping(source = "activeSeason.id", target = "activeSeasonId")
+    @Mapping(source = "wallpaper.id", target = "assetIdWallpaper")
+    @Mapping(source = "createdBy.id", target = "createdById")
     public abstract GroupDto groupToGroupDto(Group group);
 
     protected String fromDto(GroupCreateDto groupDto) {
@@ -24,7 +30,7 @@ public abstract class GroupMapper {
     }
 
     protected String fromPreset(GroupDto groupDto) {
-        return (groupDto.getSportPreset() == null ? null : groupDto.getSportPreset().getId());
+        return (groupDto.getSportPreset() == null ? null : groupDto.getSportPreset().id());
     }
 
     protected GroupPreset groupPreset(Group group) {

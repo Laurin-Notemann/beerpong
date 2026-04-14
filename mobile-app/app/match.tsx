@@ -15,7 +15,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { uriToByteArray } from '@/app/(tabs)/newMatch';
+import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
@@ -35,7 +35,6 @@ import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
 
 /**
@@ -81,7 +80,7 @@ export default function Page() {
 
     const nav = useNavigation();
 
-    const insets = useInsets();
+    const insets = useInsets(true, true);
 
     const match = USE_MATCH_QUERY
         ? matchQuery.data?.data
@@ -125,18 +124,6 @@ export default function Page() {
         }
     }
 
-    function setMoveCount(userId: string, moveId: string, count: number) {
-        // setPlayers((prev) => {
-        //     const copy: typeof prev = JSON.parse(JSON.stringify(prev));
-        //     const player = copy.find((i) => i.id === userId);
-        //     if (!player) return prev;
-        //     const move = player?.moves.find((i) => i.id === moveId);
-        //     if (!move) return prev;
-        //     move.count = count;
-        //     return copy;
-        // });
-    }
-
     const { invalidateMatches } = useQueryInvalidation();
 
     const refresh = usePullToRefresh(() =>
@@ -149,6 +136,8 @@ export default function Page() {
     const updateMatchPhotoMutation = useUpdateMatchPhotoMutation();
 
     const deleteMatchPhotoMutation = useDeleteMatchPhotoMutation();
+
+    const [isSaving, setIsSaving] = useState(false);
 
     async function updateMatch() {
         if (!groupId || !seasonId || !match?.id || !displayMatch) {
@@ -169,6 +158,7 @@ export default function Page() {
                             count: j.count,
                         })),
                     })),
+                    existingTeamId: match.blueTeamId,
                 },
                 {
                     teamMembers: displayMatch.redTeam.map((i) => ({
@@ -178,14 +168,20 @@ export default function Page() {
                             count: j.count,
                         })),
                     })),
+                    existingTeamId: match.redTeamId,
                 },
             ],
             groupId,
             seasonId,
         };
+        setIsSaving(true);
 
         try {
-            await updateMatchMutation.mutateAsync(data);
+            const res = await updateMatchMutation.mutateAsync(data);
+
+            const newBlueTeamId = res.data!.teams![0].id!;
+            const newRedTeamId = res.data!.teams![1].id!;
+
             if (
                 matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl ||
                 matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
@@ -198,13 +194,13 @@ export default function Page() {
                         groupId,
                         seasonId,
                         matchId: match.id,
-                        teamId: match.blueTeamId,
+                        teamId: newBlueTeamId,
                     });
                     await deleteMatchPhotoMutation.mutateAsync({
                         groupId,
                         seasonId,
                         matchId: match.id,
-                        teamId: match.redTeamId,
+                        teamId: newRedTeamId,
                     });
                 } else {
                     const blueByteArray = await uriToByteArray(
@@ -220,7 +216,7 @@ export default function Page() {
                         matchId: match.id,
                         mimeType: 'image/png',
                         byteArray: blueByteArray,
-                        teamId: match.blueTeamId,
+                        teamId: newBlueTeamId,
                     });
 
                     await updateMatchPhotoMutation.mutateAsync({
@@ -229,12 +225,13 @@ export default function Page() {
                         matchId: match.id,
                         mimeType: 'image/png',
                         byteArray: redByteArray,
-                        teamId: match.redTeamId,
+                        teamId: newRedTeamId,
                     });
                 }
             }
             showSuccessToast('Updated match.');
             setIsEditing(false);
+            invalidateMatches(groupId, seasonId);
         } catch (err) {
             ConsoleLogger.error(
                 'failed to update match:',
@@ -242,9 +239,10 @@ export default function Page() {
                 JSON.stringify(data, null, 2)
             );
             showErrorToast('Failed to update match.');
+        } finally {
+            setIsSaving(false);
         }
     }
-    const experiments = useLocalSettings();
 
     const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
 
@@ -273,6 +271,15 @@ export default function Page() {
     }
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
+    const headerItemWidth = 54;
+
+    async function onEditCancel() {
+        if (matchDraft.isDirty) {
+            // TODO: show confirmation dialog
+        }
+        setIsEditing(false);
+    }
+
     return (
         <>
             <ConfirmationModal
@@ -300,13 +307,37 @@ export default function Page() {
                 options={{
                     ...navStyles,
                     title: '',
+
+                    headerLeft: isEditing
+                        ? () => (
+                              <HeaderItem
+                                  left
+                                  width={headerItemWidth}
+                                  noMargin
+                                  onPress={onEditCancel}
+                              >
+                                  Cancel
+                              </HeaderItem>
+                          )
+                        : () => (
+                              <HeaderItem
+                                  left
+                                  width={headerItemWidth}
+                                  noMargin
+                                  onPress={() => nav.goBack()}
+                                  backButton
+                              />
+                          ),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerRight: () =>
                         isCurrentSeason ? (
                             <HeaderItem
+                                right
+                                width={headerItemWidth}
+                                noMargin
                                 disabled={isEditing && !matchDraft.isDirty}
                                 isLoading={
-                                    updateMatchMutation.isPending ||
-                                    deleteMatchMutation.isPending
+                                    isSaving || deleteMatchMutation.isPending
                                 }
                                 onPress={async () => {
                                     if (!isEditing) {
@@ -321,31 +352,9 @@ export default function Page() {
                                 {isEditing ? 'Save' : 'Edit'}
                             </HeaderItem>
                         ) : undefined,
-                    headerLeft: isEditing
-                        ? () => (
-                              <HeaderItem
-                                  onPress={async () => {
-                                      if (matchDraft.isDirty) {
-                                          // TODO: show confirmation dialog
-                                      }
-                                      setIsEditing(false);
-                                  }}
-                              >
-                                  Cancel
-                              </HeaderItem>
-                          )
-                        : undefined,
-                    headerTitle: () =>
-                        match ? (
-                            <MatchVsHeader
-                                match={match}
-                                style={{
-                                    bottom: 4,
-                                }}
-                            />
-                        ) : (
-                            ''
-                        ),
+                    headerTitle: () => (
+                        <MatchVsHeader variant="header" match={match} />
+                    ),
                 }}
             />
             <AppBackground />
@@ -360,38 +369,36 @@ export default function Page() {
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
-                {experiments.matchPhotos &&
-                    (isEditing ||
-                        (match?.blueTeamPhotoUrl &&
-                            match?.redTeamPhotoUrl)) && (
-                        <DualTeamPhoto
-                            match={displayMatch}
-                            editable={isEditing}
-                            onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                            onRemovePress={() => setShowDeletePhotoPrompt(true)}
-                            onSwapTeamColorsPress={
-                                matchDraft.actions.swapTeamPhotos
-                            }
-                            blueImageSource={
-                                isEditing
-                                    ? matchDraft?.blueTeamPhotoUri
-                                        ? { uri: matchDraft?.blueTeamPhotoUri }
-                                        : undefined
-                                    : match?.blueTeamPhotoUrl
-                                      ? { uri: match?.blueTeamPhotoUrl }
-                                      : undefined
-                            }
-                            redImageSource={
-                                isEditing
-                                    ? matchDraft?.redTeamPhotoUri
-                                        ? { uri: matchDraft?.redTeamPhotoUri }
-                                        : undefined
-                                    : match?.redTeamPhotoUrl
-                                      ? { uri: match?.redTeamPhotoUrl }
-                                      : undefined
-                            }
-                        />
-                    )}
+                {(isEditing ||
+                    (match?.blueTeamPhotoUrl && match?.redTeamPhotoUrl)) && (
+                    <DualTeamPhoto
+                        match={displayMatch}
+                        editable={isEditing}
+                        onPhotoTaken={matchDraft.actions.setTeamPhotos}
+                        onRemovePress={() => setShowDeletePhotoPrompt(true)}
+                        onSwapTeamColorsPress={
+                            matchDraft.actions.swapTeamPhotos
+                        }
+                        blueImageSource={
+                            isEditing
+                                ? matchDraft?.blueTeamPhotoUri
+                                    ? { uri: matchDraft?.blueTeamPhotoUri }
+                                    : undefined
+                                : match?.blueTeamPhotoUrl
+                                  ? { uri: match?.blueTeamPhotoUrl }
+                                  : undefined
+                        }
+                        redImageSource={
+                            isEditing
+                                ? matchDraft?.redTeamPhotoUri
+                                    ? { uri: matchDraft?.redTeamPhotoUri }
+                                    : undefined
+                                : match?.redTeamPhotoUrl
+                                  ? { uri: match?.redTeamPhotoUrl }
+                                  : undefined
+                        }
+                    />
+                )}
                 <MatchPlayers
                     onPlayerPress={(player) => {
                         if (isEditing) {
@@ -410,7 +417,7 @@ export default function Page() {
                     }}
                     editable={isEditing}
                     players={teamMembers}
-                    setMoveCount={setMoveCount}
+                    setMoveCount={() => {}} // TODO: remove unused prop
                 />
                 {isEditing && (
                     <MenuSection

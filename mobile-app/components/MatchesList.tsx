@@ -1,23 +1,17 @@
-import React from 'react';
-import { FlatList, FlatListProps } from 'react-native';
+import { FlashList, FlashListProps } from '@shopify/flash-list';
+import React, { useCallback, useMemo } from 'react';
+import { StyleSheet, ViewStyle } from 'react-native';
 
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
-import MenuSection from '@/components/Menu/MenuSection';
+import { Heading } from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
 
 export interface MatchesListProps
-    extends Omit<
-        FlatListProps<{
-            matches: Match[];
-            title: string;
-            date: Date;
-        }>,
-        'data' | 'renderItem'
-    > {
+    extends Omit<FlashListProps<MatchesListRow>, 'data' | 'renderItem'> {
     refresh: RefreshProps;
     matches: Match[];
 
@@ -34,6 +28,18 @@ export interface MatchesListProps
 
     background?: boolean;
 }
+type MatchesListRow =
+    | {
+          type: 'header';
+          title: string;
+          date: Date;
+      }
+    | {
+          type: 'match';
+          match: Match;
+          isFirstOfDay: boolean;
+      };
+
 export default function MatchesList({
     matches,
     refresh,
@@ -46,47 +52,67 @@ export default function MatchesList({
 }: MatchesListProps) {
     const days = groupMatchesByDay(matches);
 
+    const rows: MatchesListRow[] = useMemo(() => {
+        const out: MatchesListRow[] = [];
+        for (const day of days) {
+            out.push({ type: 'header', title: day.title, date: day.date });
+            day.matches.forEach((m, idx) => {
+                out.push({ type: 'match', match: m, isFirstOfDay: idx === 0 });
+            });
+        }
+        return out;
+    }, [days]);
+
+    const handleMatchPress = useCallback(
+        (match: Match) => onMatchPress(match),
+        [onMatchPress]
+    );
+
+    const {
+        style: restStyle,
+        contentContainerStyle: restContentContainerStyle,
+        ...listProps
+    } = rest as any;
+
+    const containerStyle = StyleSheet.flatten([
+        { paddingBottom: 32 },
+        restContentContainerStyle,
+    ]) as ViewStyle | undefined;
+    const listStyle = StyleSheet.flatten([
+        {
+            alignSelf: 'stretch',
+            paddingHorizontal: 16,
+        },
+        restStyle,
+    ]) as ViewStyle | undefined;
+
     return (
-        <FlatList
+        <FlashList<MatchesListRow>
             ListEmptyComponent={<NoMatchesPlayedYet />}
-            {...rest}
-            contentContainerStyle={[
-                { paddingBottom: 32 },
-                rest.contentContainerStyle,
-            ]}
-            style={[
-                {
-                    alignSelf: 'stretch',
-                    paddingHorizontal: 16,
-                },
-                rest.style,
-            ]}
-            data={days}
-            keyExtractor={(item) => item.date.toISOString()}
-            initialNumToRender={1}
-            maxToRenderPerBatch={3}
-            windowSize={5}
-            updateCellsBatchingPeriod={50}
-            removeClippedSubviews
+            {...listProps}
+            contentContainerStyle={containerStyle as any}
+            style={listStyle as any}
+            data={rows}
+            keyExtractor={(item) =>
+                item.type === 'header'
+                    ? `${item.date.toISOString()}-header`
+                    : item.match.id
+            }
+            getItemType={(item) => item.type}
             refreshControl={<RefreshControl {...refresh} />}
-            renderItem={({ item, index }) => (
-                <MenuSection
-                    key={index}
-                    title={item.title}
-                    containerStyle={{ marginHorizontal: forPlayer ? 8 : 0 }}
-                    background={background}
-                >
-                    {item.matches.map((match, idx) => (
-                        <MatchesListItem
-                            border={idx !== 0}
-                            key={idx}
-                            match={match}
-                            onPress={() => onMatchPress(match)}
-                            highlightedId={forPlayer?.profileId}
-                        />
-                    ))}
-                </MenuSection>
-            )}
+            renderItem={({ item }) => {
+                if (item.type === 'header') {
+                    return <Heading title={item.title} border={false} />;
+                }
+                return (
+                    <MatchesListItem
+                        border={!item.isFirstOfDay}
+                        match={item.match}
+                        onPress={() => handleMatchPress(item.match)}
+                        highlightedId={forPlayer?.profileId}
+                    />
+                );
+            }}
         />
     );
 }

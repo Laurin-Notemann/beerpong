@@ -1,344 +1,324 @@
 package pro.beerpong.api.service;
 
-import com.google.api.client.util.Lists;
-import com.google.common.collect.Maps;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import pro.beerpong.api.mapping.SeasonMapper;
+import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.Player;
-import pro.beerpong.api.model.dao.PlayerStatistics;
-import pro.beerpong.api.model.dao.TeamMember;
-import pro.beerpong.api.model.dto.*;
+import pro.beerpong.api.model.dao.RuleMove;
+import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.dto.leaderboard.LeaderboardDto;
+import pro.beerpong.api.model.dto.matches.MatchDtoExtended;
+import pro.beerpong.api.model.dto.matchmoves.MatchMoveDtoComplete;
+import pro.beerpong.api.model.dto.player.PlayerDtoExtended;
+import pro.beerpong.api.model.dto.player.PlayerStatisticsDto;
+import pro.beerpong.api.model.dto.teammembers.TeamMemberDto;
 import pro.beerpong.api.repository.PlayerRepository;
+import pro.beerpong.api.repository.RuleMoveRepository;
 import pro.beerpong.api.repository.SeasonRepository;
-import pro.beerpong.api.sockets.SubscriptionHandler;
-import pro.beerpong.api.util.DailyLeaderboard;
 import pro.beerpong.api.util.EloAlgorithm;
 import pro.beerpong.api.util.RankingAlgorithm;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class LeaderboardService {
-    private final RuleMoveService ruleMoveService;
-    private final MatchService matchService;
     private final PlayerRepository playerRepository;
     private final SeasonRepository seasonRepository;
-    private final SeasonMapper seasonMapper;
 
-    @Autowired
-    public LeaderboardService(RuleMoveService ruleMoveService, MatchService matchService, PlayerRepository playerRepository, SeasonRepository seasonRepository, SeasonMapper seasonMapper) {
-        this.ruleMoveService = ruleMoveService;
-        this.matchService = matchService;
-        this.playerRepository = playerRepository;
-        this.seasonRepository = seasonRepository;
-        this.seasonMapper = seasonMapper;
-    }
+    private final MatchService matchService;
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
+    private final RuleMoveRepository ruleMoveRepository;
+
+    public ServiceResponse<LeaderboardDto> generateLeaderboard(GroupDto group, String scope, @Nullable String seasonId) {
         return this.generateLeaderboard(group, scope, false, seasonId);
     }
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId) {
+    public ServiceResponse<LeaderboardDto> generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId) {
         return this.generateLeaderboard(group, scope, useOld, seasonId, null);
     }
 
-    public LeaderboardDto generateLeaderboard(GroupDto group, String scope, boolean useOld, @Nullable String seasonId, @Nullable Stream<PlayerDto> players) {
-        Stream<MatchDto> matches;
-        ZonedDateTime startedAt;
+    public ServiceResponse<LeaderboardDto> generateLeaderboard(GroupDto group, String scope, boolean includeExistingStats, @Nullable String seasonId, @Nullable List<String> playerIds) {
+        var contextRes = buildContext(group, scope, seasonId, playerIds);
 
-        switch (scope) {
-            case "all-time" -> {
-                if (group.getActiveSeason() == null) {
-                    return null;
-                }
-
-                matches = matchService.streamAllMatchesInSeason(group.getActiveSeason().getId());
-
-                if (players == null) {
-                    players = matchService.streamAllPlayers(group);
-                }
-
-                startedAt = group.getCreatedAt();
-            }
-            case "season" -> {
-                if (seasonId == null) {
-                    return null;
-                }
-
-                var season = seasonRepository.findById(seasonId)
-                        .map(seasonMapper::seasonToSeasonDto)
-                        .orElse(null);
-
-                if (season == null) {
-                    return null;
-                }
-
-                matches = matchService.streamAllMatchesInSeason(seasonId);
-
-                if (players == null) {
-                    players = matchService.streamAllPlayersInSeason(seasonId);
-                }
-
-                startedAt = season.getStartDate();
-            }
-            case "today" -> {
-                var season = group.getActiveSeason();
-
-                if (season == null) {
-                    return null;
-                }
-
-                matches = matchService.streamAllMatchesToday(group, season);
-
-                if (players == null) {
-                    players = matchService.streamAllPlayersInSeason(season.getId());
-                }
-
-                if (season.getSeasonSettings().getDailyLeaderboard() == DailyLeaderboard.LAST_24_HOURS) {
-                    startedAt = ZonedDateTime.now().minusHours(24);
-                } else if (season.getSeasonSettings().getDailyLeaderboard() == DailyLeaderboard.RESET_AT_MIDNIGHT) {
-                    startedAt = ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-                } else {
-                    startedAt = matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTimeHour());
-                }
-            }
-            default -> {
-                matches = Stream.of();
-
-                if (players == null) {
-                    players = Stream.of();
-                }
-
-                startedAt = ZonedDateTime.now();
-            }
+        if (contextRes.isError()) {
+            return ServiceResponse.error(contextRes.getErrorCode());
         }
 
-        Map<String, PlayerDto> entries = Maps.newHashMap();
-        Map<String, String> memberToProfile = Maps.newHashMap();
+        var context = contextRes.getData();
 
-        AtomicInteger numMatches = new AtomicInteger(0);
+        // load all rule moves for this season
+        var ruleMoves = loadRuleMoves(context.matches);
 
-        // create dtos for all players
-        players.forEach(playerDto -> {
-            var dto = entries.get(playerDto.getProfile().getId());
+        // build player lookup: profileId -> PlayerDto
+        var entries = buildPlayerEntries(context.players, scope, includeExistingStats);
 
-            // we always want to use the newest player of a profile (the player that played in the most recent season)
-            // if no player is saved we set the player...
-            if (dto == null ||
-                    // or if the current player is from the active season we set him...
-                    playerDto.getSeason().getEndDate() == null ||
-                    // or if the season of the current player is closer to now than the season of the player saved in the map we set the current player
-                    dto.getSeason().getEndDate() != null && Duration.between(
-                                    ZonedDateTime.now(), playerDto.getSeason().getEndDate())
-                            .compareTo(Duration.between(
-                                    ZonedDateTime.now(), dto.getSeason().getEndDate()
-                            )) < 0) {
-                if ((!scope.equals("all-time") && !useOld) || playerDto.getStatistics() == null) {
-                    playerDto.setStatistics(new PlayerStatisticsDto());
-                }
+        // build memberToProfile lookup
+        var memberToProfile = buildMemberToProfileMap(context.matches);
 
-                playerDto.getStatistics().setId(null);
-                playerDto.getStatistics().setPlayerId(playerDto.getId());
-                entries.put(playerDto.getProfile().getId(), playerDto);
-            }
-        });
+        var numMatches = new AtomicInteger(0);
 
-        // go through all matches sorted by date, starting with the earliest
-        matches.sorted(Comparator.comparing(MatchDto::getDate)).forEach(matchDto -> {
-            if (matchDto.getTeams().size() < 2) {
-                return;
-            }
+        context.matches().stream()
+                .sorted(Comparator.comparing(MatchDtoExtended::getDate))
+                .forEach(match -> processMatch(match, entries, memberToProfile, ruleMoves, numMatches));
 
-            // increment the player count
-            numMatches.incrementAndGet();
+        entries.values().forEach(p -> p.getStatistics().calculate());
 
-            var blueTeamId = matchDto.getTeams().getFirst().getId();
-            var redTeamId = matchDto.getTeams().get(1).getId();
+        return ServiceResponse.ok(buildLeaderboardDto(entries, scope, context.startedAt(), numMatches.get(), group));
+    }
 
-            var blueTeamPoints = new AtomicLong();
-            var redTeamPoints = new AtomicLong();
+    private void processMatch(MatchDtoExtended match, Map<String, PlayerDtoExtended> entries,
+                              Map<String, String> memberToProfile, Map<String, RuleMove> ruleMoves,
+                              AtomicInteger numMatches) {
+        if (match.getTeams().size() < 2) {
+            return;
+        }
 
-            var playerPoints = new HashMap<String, Long>();
+        numMatches.incrementAndGet();
 
-            var winningTeam = new AtomicReference<String>();
+        var blueTeamId = match.getTeams().getFirst().getId();
+        var redTeamId = match.getTeams().get(1).getId();
 
-            // go through all teams
-            matchDto.getTeams().forEach(teamDto -> {
-                // collect team members
-                var teamMembers = matchDto.getTeamMembers().stream()
-                        .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(teamDto.getId()))
-                        .collect(Collectors.toCollection(Lists::newArrayList));
-                var toAdd = (teamDto.getId().equals(blueTeamId) ? blueTeamPoints : redTeamPoints);
+        long blueTeamPoints = 0;
+        long redTeamPoints = 0;
+        String winningTeamId = null;
+        var playerPoints = new HashMap<String, Long>();
 
-                // go through all team members
-                teamMembers.forEach(teamMemberDto -> {
-                    // save player id by member id
-                    if (!memberToProfile.containsKey(teamMemberDto.getId())) {
-                        var player = playerRepository.findById(teamMemberDto.getPlayerId()).orElse(null);
+        for (var team : match.getTeams()) {
+            var teamMembers = match.getTeamMembers().stream()
+                    .filter(tm -> tm.getTeamId().equals(team.getId()))
+                    .toList();
 
-                        if (player == null) {
-                            return;
-                        }
-
-                        memberToProfile.put(teamMemberDto.getId(), player.getProfile().getId());
-                    }
-
-                    var profileId = memberToProfile.get(teamMemberDto.getId());
-
-                    // add game and team size to entry
+            teamMembers.forEach(tm -> {
+                var profileId = memberToProfile.get(tm.getId());
+                if (profileId != null && entries.containsKey(profileId)) {
                     entries.get(profileId).getStatistics().addMatch();
                     entries.get(profileId).getStatistics().addTotalTeamSize(teamMembers.size());
-                });
-
-                // go through all moves made by this team
-                matchDto.getMatchMoves().stream()
-                        .filter(dto -> teamMembers.stream().anyMatch(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId())))
-                        .forEach(dto -> {
-                            if (!memberToProfile.containsKey(dto.getTeamMemberId()) ||
-                                    !entries.containsKey(memberToProfile.get(dto.getTeamMemberId()))) {
-                                return;
-                            }
-
-                            // get entry and points for this move
-                            var member = teamMembers.stream()
-                                    .filter(teamMemberDto -> teamMemberDto.getId().equals(dto.getTeamMemberId()))
-                                    .findFirst()
-                                    .orElse(null);
-                            var entry = entries.get(memberToProfile.get(dto.getTeamMemberId()));
-                            var points = ruleMoveService.getPointsById(dto.getMoveId());
-
-                            if (points == null || member == null) {
-                                return;
-                            }
-
-                            // save winning team
-                            if (ruleMoveService.isFinish(dto.getMoveId())) {
-                                winningTeam.set(member.getTeamId());
-                            }
-
-                            var ownPoints = points.getFirst() * dto.getValue();
-
-                            // add total moves and gained points to the scorers entry
-                            entry.getStatistics().addMoves(dto.getValue());
-                            entry.getStatistics().addPoints(ownPoints);
-
-                            // if pointsForTeam > 0 add gained pointsForTeam to every team members entry
-                            if (points.getSecond() > 0) {
-                                teamMembers.forEach(teamMemberDto -> {
-                                    if (memberToProfile.containsKey(teamMemberDto.getId())) {
-                                        var profileId = memberToProfile.get(teamMemberDto.getId());
-
-                                        if (entries.containsKey(profileId)) {
-                                            entries.get(profileId).getStatistics().addPoints(points.getSecond() * dto.getValue());
-                                        }
-                                    }
-                                });
-                            }
-
-                            // add gained points to the total team points
-                            playerPoints.merge(entry.getStatistics().getPlayerId(), (long) ownPoints, Long::sum);
-                            toAdd.addAndGet(ownPoints);
-                        });
-
-                // clear members cache
-                teamMembers.clear();
+                }
             });
 
-            var blueTeamMembers = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(blueTeamId) &&
-                            memberToProfile.containsKey(teamMemberDto.getId()) &&
-                            entries.containsKey(memberToProfile.get(teamMemberDto.getId())))
-                    .toList();
-            var blueTeamMemberStatistics = blueTeamMembers.stream()
-                    .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
+            var teamMemberIds = teamMembers.stream().map(TeamMemberDto::getId).collect(Collectors.toSet());
+
+            var teamMoves = match.getMatchMoves().stream()
+                    .filter(mm -> teamMemberIds.contains(mm.getTeamMemberId()))
                     .toList();
 
-            var redTeamMembers = matchDto.getTeamMembers().stream()
-                    .filter(teamMemberDto -> teamMemberDto.getTeamId().equals(redTeamId) &&
-                            memberToProfile.containsKey(teamMemberDto.getId()) &&
-                            entries.containsKey(memberToProfile.get(teamMemberDto.getId())))
-                    .toList();
-            var redTeamMemberStatistics = redTeamMembers.stream()
-                    .map(teamMemberDto -> entries.get(memberToProfile.get(teamMemberDto.getId())).getStatistics())
-                    .toList();
+            for (var move : teamMoves) {
+                var profileId = memberToProfile.get(move.getTeamMemberId());
+                if (profileId == null || !entries.containsKey(profileId)) continue;
 
-            List<PlayerStatisticsDto> winners;
+                var ruleMove = ruleMoves.get(move.getMoveId());
+                if (ruleMove == null) continue;
 
-            // add wins to winner team
-            if (winningTeam.get() == null) {
-                return;
-            } else if (winningTeam.get().equals(blueTeamId)) {
-                winners = blueTeamMemberStatistics;
-            } else {
-                winners = redTeamMemberStatistics;
+                var entry = entries.get(profileId);
+                var ownPoints = ruleMove.getPointsForScorer() * move.getValue();
+
+                entry.getStatistics().addMoves(move.getValue());
+                entry.getStatistics().addPoints(ownPoints);
+
+                if (ruleMove.getPointsForTeam() > 0) {
+                    teamMembers.forEach(tm -> {
+                        var pid = memberToProfile.get(tm.getId());
+                        if (pid != null && entries.containsKey(pid)) {
+                            entries.get(pid).getStatistics().addPoints(ruleMove.getPointsForTeam() * move.getValue());
+                        }
+                    });
+                }
+
+                if (ruleMove.isFinishingMove()) {
+                    winningTeamId = team.getId();
+                }
+
+                playerPoints.merge(entry.getStatistics().getPlayerId(), (long) ownPoints, Long::sum);
+                if (team.getId().equals(blueTeamId)) blueTeamPoints += ownPoints;
+                else redTeamPoints += ownPoints;
             }
-
-            winners.forEach(PlayerStatisticsDto::addWin);
-
-            // calculate elo for both teams
-            EloAlgorithm.calculateElo(
-                    winningTeam.get(),
-                    blueTeamId,
-                    blueTeamPoints.get(),
-                    redTeamPoints.get(),
-                    blueTeamMemberStatistics,
-                    redTeamMemberStatistics,
-                    playerPoints
-            );
-
-            playerPoints.clear();
-        });
-
-        // calculate averages for all entries
-        entries.values().forEach(playerDto -> playerDto.getStatistics().calculate());
-
-        // create dto and set entries
-        var dto = new LeaderboardDto();
-        dto.setEntries(entries.values().stream()
-                .filter(playerDto -> scope.equals("all-time") || playerDto.isActiveThisSeason())
-                .toList());
-        dto.setStartedAt(startedAt);
-        dto.setNumMatches(numMatches.get() + (scope.equals("all-time") ? matchService.numOfMatchesInPastSeasons(group) : 0L));
-        dto.setNumPlayers(dto.getEntries().size());
-
-        // calculate ranking for all possible algorithms
-        for (RankingAlgorithm value : RankingAlgorithm.values()) {
-            var ranking = new AtomicInteger();
-
-            var stream = dto.getEntries().stream();
-
-            // sort the stream based on the current algorithm
-            switch (value) {
-                case AVERAGE ->
-                        stream = stream.sorted((o1, o2) -> Double.compare(o2.getStatistics().getAvgPointsPerMatch(),
-                                o1.getStatistics().getAvgPointsPerMatch()));
-                case ELO -> stream = stream.sorted((o1, o2) -> Double.compare(o2.getStatistics().getElo(), o1.getStatistics().getElo()));
-            }
-
-            // set ranking for current algorithm
-            stream.forEach(entry -> entry.getStatistics().getRankBy().put(value, ranking.incrementAndGet()));
         }
 
-        // clear caches
-        entries.clear();
-        memberToProfile.clear();
+        if (winningTeamId == null) {
+            throw new IllegalStateException("Match " + match.getId() + " has no winning team! That is weird!");
+        }
+
+        var blueStats = getTeamStats(match, blueTeamId, memberToProfile, entries);
+        var redStats = getTeamStats(match, redTeamId, memberToProfile, entries);
+
+        String finalWinningTeamId = winningTeamId;
+        (finalWinningTeamId.equals(blueTeamId) ? blueStats : redStats).forEach(PlayerStatisticsDto::addWin);
+
+        EloAlgorithm.calculateElo(winningTeamId, blueTeamId, blueTeamPoints, redTeamPoints,
+                blueStats, redStats, playerPoints);
+    }
+
+    private ServiceResponse<LeaderboardContext> buildContext(GroupDto group, String scope, @Nullable String seasonId, @Nullable List<String> playerIds) {
+        return switch (scope) {
+            case "all-time" -> ServiceResponse.ok((group.getActiveSeasonId() != null ? new LeaderboardContext(
+                    matchService.getFullMatchesBySeasonId(group.getActiveSeasonId()),
+                    matchService.getAllPlayers(group.getId(), playerIds),
+                    group.getCreatedAt()) : null
+            ));
+            case "season" -> {
+                if (seasonId == null) {
+                    yield ServiceResponse.error(ErrorCodes.LEADERBOARD_SEASON_NOT_FOUND);
+                }
+
+                var season = seasonRepository.findById(seasonId).orElse(null);
+
+                if (season == null) {
+                    yield ServiceResponse.error(ErrorCodes.SEASON_NOT_FOUND);
+                }
+
+                yield ServiceResponse.ok(new LeaderboardContext(
+                        matchService.getFullMatchesBySeasonId(seasonId),
+                        matchService.getAllPlayersInSeason(seasonId, playerIds),
+                        season.getStartDate()
+                ));
+            }
+            case "today" -> {
+                if (group.getActiveSeasonId() == null) {
+                    yield ServiceResponse.error(ErrorCodes.GROUP_HAS_NO_RUNNING_SEASON);
+                }
+
+                var season = seasonRepository.findById(group.getActiveSeasonId()).orElse(null);
+
+                if (season == null) {
+                    yield ServiceResponse.error(ErrorCodes.GROUP_HAS_NO_RUNNING_SEASON);
+                }
+
+                var since = switch (season.getSeasonSettings().getDailyLeaderboard()) {
+                    case LAST_24_HOURS -> ZonedDateTime.now().minusHours(24);
+                    case RESET_AT_MIDNIGHT -> ZonedDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+                    case WAKE_TIME ->
+                            matchService.getWakeTime(ZonedDateTime.now(), season.getSeasonSettings().getWakeTime());
+                };
+
+                yield ServiceResponse.ok(new LeaderboardContext(
+                        matchService.getFullMatchesSince(season.getId(), since),
+                        matchService.getAllPlayersInSeason(season.getId(), playerIds),
+                        season.getStartDate()
+                ));
+            }
+            default -> ServiceResponse.error(ErrorCodes.LEADERBOARD_SCOPE_NOT_FOUND);
+        };
+    }
+
+    private Map<String, RuleMove> loadRuleMoves(List<MatchDtoExtended> matches) {
+        var moveIds = matches.stream()
+                .flatMap(m -> m.getMatchMoves().stream())
+                .map(MatchMoveDtoComplete::getMoveId)
+                .distinct()
+                .toList();
+
+        return ruleMoveRepository.findAllById(moveIds).stream()
+                .collect(Collectors.toMap(RuleMove::getId, r -> r));
+    }
+
+    private Map<String, String> buildMemberToProfileMap(List<MatchDtoExtended> matches) {
+        var playerIds = matches.stream()
+                .flatMap(m -> m.getTeamMembers().stream())
+                .map(TeamMemberDto::getPlayerId)
+                .distinct()
+                .toList();
+        var players = playerRepository.findAllById(playerIds).stream()
+                .collect(Collectors.toMap(Player::getId, player -> player.getProfile().getId()));
+        var memberToProfile = new HashMap<String, String>();
+
+        matches.stream()
+                .flatMap(m -> m.getTeamMembers().stream())
+                .forEach(tm -> {
+                    var profileId = players.get(tm.getPlayerId());
+                    if (profileId != null) {
+                        memberToProfile.put(tm.getId(), profileId);
+                    }
+                });
+
+        return memberToProfile;
+    }
+
+    private Map<String, PlayerDtoExtended> buildPlayerEntries(List<PlayerDtoExtended> players, String scope, boolean includeExistingStats) {
+        Map<String, PlayerDtoExtended> entries = new HashMap<>();
+
+        players.forEach(playerDto -> {
+            var existing = entries.get(playerDto.getProfileId());
+
+            if (existing == null || isNewerPlayer(playerDto, existing)) {
+                if ((!scope.equals("all-time") && !includeExistingStats) || playerDto.getStatistics() == null) {
+                    playerDto.setStatistics(new PlayerStatisticsDto());
+                }
+                playerDto.getStatistics().setId(null);
+                playerDto.getStatistics().setPlayerId(playerDto.getId());
+                entries.put(playerDto.getProfileId(), playerDto);
+            }
+        });
+
+        return entries;
+    }
+
+    private List<PlayerStatisticsDto> getTeamStats(MatchDtoExtended match, String teamId,
+                                                   Map<String, String> memberToProfile,
+                                                   Map<String, PlayerDtoExtended> entries) {
+        return match.getTeamMembers().stream()
+                .filter(tm -> tm.getTeamId().equals(teamId))
+                .map(tm -> memberToProfile.get(tm.getId()))
+                .filter(pid -> pid != null && entries.containsKey(pid))
+                .map(pid -> entries.get(pid).getStatistics())
+                .toList();
+    }
+
+    private boolean isNewerPlayer(PlayerDtoExtended candidate, PlayerDtoExtended existing) {
+        // spieler der aktiven season sind automatisch die neusten
+        if (candidate.getSeason().getId() == null) {
+            return true;
+        }
+
+        // ebenso is der zu überprüfende spieler automatisch älter als der aktuelle spieler, wenn dieser aus der aktuellen season ist
+        if (existing.getSeason().getEndDate() == null) {
+            return false;
+        }
+
+        return candidate.getSeason().getEndDate().isAfter(existing.getSeason().getEndDate());
+    }
+
+    private LeaderboardDto buildLeaderboardDto(Map<String, PlayerDtoExtended> entries,
+                                               String scope,
+                                               ZonedDateTime startedAt,
+                                               int numMatches,
+                                               GroupDto group) {
+        var dto = new LeaderboardDto();
+        dto.setEntries(entries.values().stream()
+                .filter(p -> scope.equals("all-time") || p.isActiveThisSeason())
+                .toList());
+        dto.setStartedAt(startedAt);
+        dto.setNumMatches(numMatches + (scope.equals("all-time") ? matchService.numOfMatchesInPastSeasons(group.getId()) : 0L));
+        dto.setNumPlayers(dto.getEntries().size());
+
+        for (var algo : RankingAlgorithm.values()) {
+            var ranking = new AtomicInteger();
+
+            dto.getEntries().stream()
+                    .sorted(getRankingComparator(algo))
+                    .forEach(entry -> entry.getStatistics().getRankBy().put(algo, ranking.incrementAndGet()));
+        }
 
         return dto;
+    }
+
+    private Comparator<PlayerDtoExtended> getRankingComparator(RankingAlgorithm algo) {
+        return switch (algo) {
+            case AVERAGE ->
+                    (a, b) -> Double.compare(b.getStatistics().getAvgPointsPerMatch(), a.getStatistics().getAvgPointsPerMatch());
+            case ELO -> (a, b) -> Double.compare(b.getStatistics().getElo(), a.getStatistics().getElo());
+        };
+    }
+
+    private record LeaderboardContext(List<MatchDtoExtended> matches, List<PlayerDtoExtended> players,
+                                      ZonedDateTime startedAt) {
     }
 }
