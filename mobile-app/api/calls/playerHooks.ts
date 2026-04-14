@@ -8,6 +8,21 @@ import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
 
+export const useProfilesQuery = (groupId: ApiId | null) => {
+    const { api } = useApi();
+
+    return useQuery<Paths.ListAllProfiles.Responses.$200 | null>({
+        queryKey: [QK.group, groupId ?? 'NULL', 'profiles'],
+        queryFn: async () => {
+            if (!groupId) {
+                return null;
+            }
+            const res = await (await api).listAllProfiles(groupId);
+            return res?.data;
+        },
+    });
+};
+
 export const usePlayersQuery = (
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined
@@ -95,8 +110,7 @@ export const useUpdatePlayerAvatarMutation = () => {
                 id: profileId,
             });
             await uploadImage(
-                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-                res?.data.data?.avatarAsset?.singleUploadUrl,
+                res?.data.data?.singleUploadUrl!,
                 byteArray,
                 'profilePicture',
                 mimeType

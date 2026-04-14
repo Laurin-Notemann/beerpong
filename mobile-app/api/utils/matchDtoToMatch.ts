@@ -37,8 +37,8 @@ export type Match = {
 
     winnerTeamId: string | null;
 
-    blueTeamPhotoUrl?: string | null;
-    redTeamPhotoUrl?: string | null;
+    blueTeamPhotoAssetId?: string | null;
+    redTeamPhotoAssetId?: string | null;
 };
 
 export const matchDtoToMatch =
@@ -46,7 +46,7 @@ export const matchDtoToMatch =
         players: Components.Schemas.PlayerDto[] = [],
         allowedMoves: Components.Schemas.RuleMoveDto[] = []
     ) =>
-    (i: Components.Schemas.MatchDto): Match => {
+    (i: Components.Schemas.MatchDtoExtended): Match => {
         return new MatchImpl(i, players, allowedMoves).toJSON();
     };
 

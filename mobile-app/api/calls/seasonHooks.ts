@@ -7,12 +7,13 @@ import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import {
-    MatchDto,
+    MatchDtoExtended,
     Paths,
-    PlayerDto,
+    PlayerDtoExtended,
+    ProfileDto,
     RuleMoveDto,
     SeasonDto,
-    SeasonSettings,
+    SeasonSettingsDto,
 } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
@@ -49,8 +50,8 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
               data?: (SeasonDto & {
                   numMatches: number;
                   players: Player[];
-                  rawPlayers: PlayerDto[];
-                  matches: MatchDto[];
+                  rawPlayers: PlayerDtoExtended[];
+                  matches: MatchDtoExtended[];
                   ruleMoves: RuleMoveDto[] | undefined;
               })[];
           })
@@ -65,11 +66,14 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
 
             const rawSeasons = res.data.data ?? [];
 
+            const profiles = await (await api).listAllProfiles(groupId);
+            const profileList = profiles.data.data ?? [];
+
             const seasons = await Promise.all(
                 rawSeasons.map(async (season) => {
                     const matches = await (
                         await api
-                    ).getAllMatches({
+                    ).getAllMatchesExtended({
                         groupId,
                         seasonId: season.id!,
                     });
@@ -94,7 +98,9 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                     return {
                         ...season,
                         numMatches: matches.data.data?.length ?? 0,
-                        players: players.map(toPlayer),
+                        players: players.map((p) =>
+                            toPlayer(p, profileList)
+                        ),
                         rawPlayers: players,
                         matches: matches.data.data ?? [],
                         ruleMoves: ruleMoves.data.data,
@@ -127,19 +133,32 @@ export const useStartNewSeasonMutation = () => {
 /**
  * returns information about the group we're currently in
  *
- * mainly used for getting `groupId` and `seasonId` since we need these for so many queries
+ * mainly used for getting `groupId` and `seasonId` since we need these for so many queries.
+ * Also fetches the active season separately (since GroupDto only contains activeSeasonId).
  */
 export const useGroup = () => {
     const { selectedGroupId } = useGroupStore();
 
     const { data: groupQueryData } = useGroupQuery(selectedGroupId);
 
-    const seasonId = groupQueryData?.data?.activeSeason?.id;
+    const seasonId = groupQueryData?.data?.activeSeasonId;
+
+    const { data: seasonData } = useSeasonQuery(selectedGroupId, seasonId ?? null);
+
+    const groupDataWithSeason = groupQueryData?.data
+        ? {
+              ...groupQueryData.data,
+              activeSeason: seasonData?.data,
+          }
+        : undefined;
 
     return {
         groupId: selectedGroupId,
         seasonId,
-        group: { ...(groupQueryData ?? {}) },
+        group: {
+            ...(groupQueryData ?? {}),
+            data: groupDataWithSeason,
+        },
     };
 };
 
@@ -170,11 +189,11 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
     const seasonQuery = useSeasonQuery(groupId, seasonId);
 
     const seasonSettings = seasonQuery.data?.data?.seasonSettings as
-        | Required<SeasonSettings>
+        | Required<SeasonSettingsDto>
         | undefined;
 
     const updateSeasonSettingsMutation = useMutation({
-        mutationFn: async (partialUpdate: Omit<SeasonSettings, 'id'>) => {
+        mutationFn: async (partialUpdate: Omit<SeasonSettingsDto, 'id'>) => {
             if (!groupId || !seasonId || !seasonSettings) return;
 
             qc.setQueryData([QK.group, groupId, QK.seasons, seasonId], {
@@ -222,16 +241,20 @@ export interface Player {
     cups: number;
 }
 
-export const toPlayer = (i: PlayerDto): Player => {
+export const toPlayer = (
+    i: PlayerDtoExtended,
+    profiles: ProfileDto[] = []
+): Player => {
+    const profile = profiles.find((p) => p.id === i.profileId);
     return {
         id: i!.id!,
         elo: i.statistics?.elo ?? 0, // actually nullable from the backend
         matches: i.statistics?.matches!,
         points: i.statistics?.points!,
         matchesWon: i.statistics?.wins!,
-        name: i.profile?.name!,
-        avatarUrl: i!.profile?.avatarAsset?.url,
-        profileId: i!.profile?.id!,
+        name: profile?.name ?? 'Unknown',
+        avatarUrl: profile?.assetIdAvatar ?? null,
+        profileId: i.profileId!,
         cups: i.statistics?.moves ?? 0,
     };
 };

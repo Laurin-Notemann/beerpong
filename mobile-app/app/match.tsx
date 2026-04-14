@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { useAssetQuery } from '@/api/calls/assetHooks';
 import {
     useDeleteMatchMutation,
     useDeleteMatchPhotoMutation,
@@ -10,7 +11,7 @@ import {
     useUpdateMatchMutation,
     useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
-import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { usePlayersQuery, useProfilesQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';

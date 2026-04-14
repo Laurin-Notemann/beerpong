@@ -38,13 +38,15 @@ export const useMatchesQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
+    return useQuery<Paths.GetAllMatchesExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
             }
-            const res = await (await api).getAllMatches({ groupId, seasonId });
+            const res = await (
+                await api
+            ).getAllMatchesExtended({ groupId, seasonId });
 
             return res?.data;
         },
@@ -172,8 +174,7 @@ export const useUpdateMatchPhotoMutation = () => {
             });
 
             await uploadImage(
-                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-                res?.data.data?.photoAsset?.singleUploadUrl,
+                res?.data.data?.singleUploadUrl!,
                 byteArray,
                 'matchPhoto',
                 mimeType

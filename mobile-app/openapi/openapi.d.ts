@@ -94,7 +94,7 @@ declare namespace Components {
         }
         export interface PlayerDto {
             id?: string;
-            profile?: ProfileDto;
+            profileId?: string;
             season?: SeasonDto;
             activeThisSeason?: boolean;
             statistics?: PlayerStatisticsDto;
@@ -128,8 +128,9 @@ declare namespace Components {
         export interface ProfileDto {
             id?: string;
             name?: string;
-            avatarAsset?: AssetMetadataDto;
+            assetIdAvatar?: string;
             groupId?: string;
+            createdById?: string;
         }
         export interface ResponseEnvelopeAssetMetadataDto {
             status?: 'OK' | 'ERROR';

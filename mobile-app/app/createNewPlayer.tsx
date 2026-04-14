@@ -1,6 +1,7 @@
 import {
     useCreatePlayerMutation,
     usePlayersQuery,
+    useProfilesQuery,
 } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -17,7 +18,14 @@ export default function Page() {
 
     const players = playersQuery.data?.data ?? [];
 
-    const existingPlayers = players.map((i) => i.profile!.name!);
+    const profilesQuery = useProfilesQuery(groupId);
+
+    const profilesList = profilesQuery.data?.data ?? [];
+
+    const existingPlayers = players.map((i) => {
+        const profile = profilesList.find((j) => j.id === i.profileId);
+        return profile?.name ?? '';
+    });
 
     const createPlayerMutation = useCreatePlayerMutation();
 

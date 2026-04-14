@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 
-import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { usePlayersQuery, useProfilesQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
@@ -40,22 +40,27 @@ export default function Page() {
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
-    const profiles = playersQuery.data?.data ?? [];
+    const playersList = playersQuery.data?.data ?? [];
+
+    const profilesQuery = useProfilesQuery(groupId);
+
+    const profilesList = profilesQuery.data?.data ?? [];
 
     const players = matchDraft.actions.getPlayers();
 
     const teamMembers = players.map<TeamMember>((i) => {
-        const profile = profiles.find((j) => i.playerId === j.id);
+        const player = playersList.find((j) => i.playerId === j.id);
+        const profile = profilesList.find((j) => j.id === player?.profileId);
 
-        if (!profile?.profile?.name) {
+        if (!profile?.name) {
             ConsoleLogger.error('failed to get profile for team member');
         }
 
         return {
             id: i.playerId,
             team: i.team,
-            avatarUrl: profile?.profile?.avatarAsset?.url,
-            name: profile?.profile?.name || 'Unknown',
+            avatarUrl: profile?.assetIdAvatar,
+            name: profile?.name || 'Unknown',
             points: i.moves.reduce(
                 (sum, j) =>
                     sum +

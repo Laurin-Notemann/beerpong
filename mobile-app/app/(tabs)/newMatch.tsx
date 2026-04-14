@@ -11,7 +11,7 @@ import {
     useMatchesQuery,
     useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
-import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { usePlayersQuery, useProfilesQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
@@ -100,6 +100,10 @@ export default function NewMatchScreen() {
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
+    const profilesQuery = useProfilesQuery(groupId);
+
+    const profilesList = profilesQuery.data?.data ?? [];
+
     const matchDraft = useMatchDraftStore();
 
     const hasValidTeams =
@@ -124,24 +128,28 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    const profiles = playersQuery.data?.data ?? [];
+    const players = playersQuery.data?.data ?? [];
 
-    const selectablePlayers = profiles
+    const selectablePlayers = players
         .filter((i) => i.activeThisSeason)
-        .map<Player>((i) => ({
-            id: i.id!,
-            name: i.profile?.name || 'Unknown',
-            team:
-                matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
-                    ?.team ?? null,
+        .map<Player>((i) => {
+            const profile = profilesList.find((j) => j.id === i.profileId);
+            return {
+                id: i.id!,
+                name: profile?.name || 'Unknown',
+                team:
+                    matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
+                        ?.team ?? null,
 
-            avatarUrl: i.profile?.avatarAsset?.url,
-        }));
+                avatarUrl: profile?.assetIdAvatar,
+            };
+        });
 
     const displayMatch = getDisplayMatch(
         matchDraft.actions.getPlayers(),
         group.data?.activeSeason?.seasonSettings?.rankingAlgorithm,
         playersQuery.data?.data ?? [],
+        profilesList,
         matches,
         movesQuery.data?.data ?? []
     );

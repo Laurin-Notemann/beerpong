@@ -1580,10 +1580,9 @@
                 "properties": {
                     "id": { "type": "string" },
                     "name": { "type": "string" },
-                    "avatarAsset": {
-                        "$ref": "#/components/schemas/AssetMetadataDto"
-                    },
-                    "groupId": { "type": "string" }
+                    "assetIdAvatar": { "type": "string" },
+                    "groupId": { "type": "string" },
+                    "createdById": { "type": "string" }
                 }
             },
             "ResponseEnvelopeProfileDto": {
@@ -1668,7 +1667,7 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "profile": { "$ref": "#/components/schemas/ProfileDto" },
+                    "profileId": { "type": "string" },
                     "season": { "$ref": "#/components/schemas/SeasonDto" },
                     "activeThisSeason": { "type": "boolean" },
                     "statistics": {
