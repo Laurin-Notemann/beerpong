@@ -6,7 +6,6 @@ import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
