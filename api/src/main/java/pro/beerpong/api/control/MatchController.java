@@ -97,6 +97,15 @@ public class MatchController {
         return ResponseEnvelope.ok(matchService.getMatchesWithPlayer(seasonId, playerId));
     }
 
+    @GetMapping("/profile/{profileId}")
+    public ResponseEntity<ResponseEnvelope<List<MatchDto>>> getProfileMatches(@PathVariable String groupId, @PathVariable String seasonId, @PathVariable String profileId) {
+        if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
+            return ResponseEnvelope.notOk(ErrorCodes.SEASON_NOT_OF_GROUP);
+        }
+
+        return ResponseEnvelope.ok(matchService.getMatchesWithProfile(seasonId, profileId));
+    }
+
     @GetMapping("/extended")
     public ResponseEntity<ResponseEnvelope<List<MatchDtoExtended>>> getAllMatchesExtended(@PathVariable String groupId, @PathVariable String seasonId) {
         if (!seasonRepository.existsByIdAndGroupId(seasonId, groupId)) {
