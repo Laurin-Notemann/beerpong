@@ -1,10 +1,17 @@
 package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Entity(name = "match_moves")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "match_moves")
 public class MatchMove {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -12,11 +19,11 @@ public class MatchMove {
 
     private int value;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_member_id")
     private TeamMember teamMember;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "move_id")
-    private RuleMove move;
+    private RuleMove ruleMove;
 }

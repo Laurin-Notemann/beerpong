@@ -1,0 +1,29 @@
+package pro.beerpong.api.model.dto.profile;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.springframework.lang.Nullable;
+
+@EqualsAndHashCode(callSuper = true)
+@Data
+@NoArgsConstructor
+public class ProfileCreatedDto extends ProfileDto {
+    private boolean reactivated;
+    @Nullable
+    private String lastActiveSeasonId;
+
+    public ProfileCreatedDto(String id, String name, String asset, String groupId, String createdBy, boolean reactivated, @Nullable String lastActiveSeasonId) {
+        setId(id);
+        setName(name);
+        setAssetIdAvatar(asset);
+        setGroupId(groupId);
+        setCreatedById(createdBy);
+        this.reactivated = reactivated;
+        this.lastActiveSeasonId = lastActiveSeasonId;
+    }
+
+    public ProfileCreatedDto(ProfileDto profile, boolean reactivated, @Nullable String lastActiveSeasonId) {
+        this(profile.getId(), profile.getName(), profile.getAssetIdAvatar(), profile.getGroupId(), profile.getCreatedById(), reactivated, lastActiveSeasonId);
+    }
+}

@@ -1,15 +1,16 @@
 package pro.beerpong.api.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import pro.beerpong.api.mapping.TeamMapper;
 import pro.beerpong.api.model.dao.Asset;
 import pro.beerpong.api.model.dao.Match;
 import pro.beerpong.api.model.dao.Team;
-import pro.beerpong.api.model.dto.AssetCropDto;
-import pro.beerpong.api.model.dto.TeamCreateDto;
-import pro.beerpong.api.model.dto.TeamDto;
+import pro.beerpong.api.model.dto.matches.TeamPhotoDto;
+import pro.beerpong.api.model.dto.teams.TeamCreateDto;
+import pro.beerpong.api.model.dto.teams.TeamDto;
+import pro.beerpong.api.repository.MatchRepository;
 import pro.beerpong.api.repository.TeamRepository;
 import pro.beerpong.api.util.AssetType;
 
@@ -17,45 +18,83 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class TeamService {
     private final TeamRepository teamRepository;
+    private final MatchRepository matchRepository;
+
     private final TeamMemberService teamMemberService;
     private final AssetService assetService;
+
     private final TeamMapper teamMapper;
 
-    @Autowired
-    public TeamService(TeamRepository teamRepository, TeamMemberService teamMemberService, AssetService assetService, TeamMapper teamMapper) {
-        this.teamRepository = teamRepository;
-        this.teamMemberService = teamMemberService;
-        this.assetService = assetService;
-        this.teamMapper = teamMapper;
+    public void createTeamsForMatch(String matchId, List<TeamCreateDto> teams, @Nullable Map<String, Asset> teamAssets, List<TeamPhotoDto> teamPhotos) {
+        var match = matchRepository.getReferenceById(matchId);
+
+        List<Team> entities = teams.stream()
+                .map(dto -> new Team(
+                        null,
+                        match,
+                        resolveTeamPhoto(dto, teamAssets, teamPhotos)
+                ))
+                .toList();
+
+        List<Team> saved = teamRepository.saveAll(entities);
+
+        for (int i = 0; i < saved.size(); i++) {
+            var members = teams.get(i).getTeamMembers();
+
+            if (members != null && !members.isEmpty()) {
+                teamMemberService.createTeamMembersForTeam(saved.get(i).getId(), members);
+            }
+        }
     }
 
-    public void createTeamsForMatch(Match match, List<TeamCreateDto> teams, @Nullable Map<String, Asset> teamAssets) {
-        teams.forEach(teamCreateDto -> {
-            Team team = new Team();
-
-            team.setMatch(match);
-
-            if (teamAssets == null && teamCreateDto.isSavePhoto()) {
+    private Asset resolveTeamPhoto(TeamCreateDto dto, @Nullable Map<String, Asset> teamAssets, List<TeamPhotoDto> teamPhotos) {
+        // match create: only save new photo for teams with photos
+        if (dto.getExistingTeamId() == null) {
+            if (dto.isSavePhoto()) {
                 var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
+                var teamPhoto = new TeamPhotoDto();
 
-                team.setPhotoAsset(assetService.map(asset));
-            } else if (teamAssets != null && teamCreateDto.getExistingTeamId() != null && teamAssets.containsKey(teamCreateDto.getExistingTeamId())) {
-                var asset = teamAssets.get(teamCreateDto.getExistingTeamId());
+                teamPhoto.setTeamPhoto(assetService.uploadAsset(asset));
+                teamPhotos.add(teamPhoto);
 
-                team.setPhotoAsset(asset);
+                return asset;
+            } else {
+                return null;
+            }
+        }
+
+        // otherwise match update: delete old photo if photo is overridden or save new photo or use old photo
+        if (teamAssets == null) {
+            return null;
+        }
+
+        if (dto.isSavePhoto()) {
+            // delete old photo if exists
+            if (teamAssets.containsKey(dto.getExistingTeamId())) {
+                assetService.deleteAsset(teamAssets.get(dto.getExistingTeamId()).getId());
             }
 
-            Team savedTeam = teamRepository.save(team);
+            var asset = assetService.storeAsset(AssetType.TEAM_PHOTO);
+            var teamPhoto = new TeamPhotoDto();
 
-            // Erstelle TeamMembers für das Team
-            teamMemberService.createTeamMembersForTeam(savedTeam, teamCreateDto.getTeamMembers());
-        });
+            teamPhoto.setTeamId(dto.getExistingTeamId());
+            teamPhoto.setTeamPhoto(assetService.uploadAsset(asset));
+
+            teamPhotos.add(teamPhoto);
+
+            return asset;
+        } else if (teamAssets.containsKey(dto.getExistingTeamId())) {
+            return teamAssets.get(dto.getExistingTeamId());
+        }
+
+        return null;
     }
 
     public List<TeamDto> buildTeamDtos(Match match) {
-        return teamRepository.findAllByMatchId(match.getId()).stream()
+        return teamRepository.findByMatchId(match.getId()).stream()
                 .map(this.teamMapper::teamToTeamDto)
                 .toList();
     }

@@ -43,7 +43,7 @@ export default function OnboardingModal() {
                 Welcome to{' '}
                 <Text
                     variant="h3"
-                    color="branding"
+                    color="emphasis"
                     bold
                     style={{
                         fontSize: 16 * 2,

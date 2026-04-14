@@ -1,25 +1,27 @@
 package pro.beerpong.api.model.dao;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.List;
-
-@Entity(name = "teams")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "teams")
 public class Team {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id")
     private Match match;
 
-    @OneToMany(mappedBy = "team")
-    private List<TeamMember> teamMembers;
-
-    @OneToOne
-    @JoinColumn(name = "assetIdPhoto")
-    private Asset photoAsset;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asset_id_photo", unique = true)
+    private Asset photo;
 }

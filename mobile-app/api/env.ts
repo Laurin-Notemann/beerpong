@@ -49,7 +49,7 @@ export const env = {
     },
     isDev: __DEV__,
     sentry: {
-        dsn: 'https://48d0726c7648ee3dc2ae1c6f0238d7ed@o4508333440892928.ingest.de.sentry.io/4508333445152848',
+        dsn: process.env.FRONTEND_SENTRY_DSN!,
 
         enabled: !__DEV__,
     },

@@ -9,13 +9,15 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import pro.beerpong.api.mapping.AssetMapper;
 import pro.beerpong.api.model.dao.Asset;
-import pro.beerpong.api.model.dto.AssetCropDto;
-import pro.beerpong.api.model.dto.AssetMetadataDto;
-import pro.beerpong.api.model.dto.AssetUploadResponse;
+import pro.beerpong.api.model.dto.assets.AssetCropDto;
+import pro.beerpong.api.model.dto.assets.AssetMetadataDto;
+import pro.beerpong.api.model.dto.assets.AssetUploadResponse;
 import pro.beerpong.api.repository.AssetRepository;
 import pro.beerpong.api.util.AssetType;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
@@ -36,49 +38,63 @@ public class AssetService {
         return assetRepository.existsById(assetId);
     }
 
-    public void deleteAsset(String assetId) {
-        client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(assetId)
-                .build());
-
-        assetRepository.deleteById(assetId);
-    }
-
     public AssetMetadataDto getAssetData(String assetId) {
-        return assetMapper.assetToAssetMetadataDto(assetRepository.findById(assetId).orElse(null));
+        return assetRepository.findById(assetId)
+                .map(assetMapper::assetToAssetMetadataDto)
+                .orElse(null);
     }
 
     public Asset map(AssetMetadataDto dto) {
         return assetMapper.assetMetadataDtoToAsset(dto);
     }
 
-    public AssetUploadResponse storeAsset(AssetType assetType, @Nullable AssetCropDto assetCropDto) {
+    public Asset storeAsset(AssetType assetType, @Nullable AssetCropDto assetCropDto) {
         if (assetCropDto != null) {
-            return this.storeAsset(assetType, assetCropDto.getOffsetX(), assetCropDto.getOffsetY(),
-                    assetCropDto.getZoom());
+            return this.storeAsset(
+                    assetType,
+                    assetCropDto.getOffsetX(),
+                    assetCropDto.getOffsetY(),
+                    assetCropDto.getZoom()
+            );
         } else {
             return this.storeAsset(assetType);
         }
     }
 
-    public AssetUploadResponse storeAsset(AssetType assetType) {
+    public Asset storeAsset(AssetType assetType) {
         return this.storeAsset(assetType, 0.0D, 0.0D, 0.0D);
     }
 
-    public AssetUploadResponse storeAsset(AssetType assetType, double offsetX, double offsetY, double zoom) {
-        var asset = new Asset();
-        asset.setType(assetType);
-        asset.setOffsetX(offsetX);
-        asset.setOffsetY(offsetY);
-        asset.setZoom(zoom);
+    public Asset storeAsset(AssetType assetType, double offsetX, double offsetY, double zoom) {
+        var asset = new Asset(
+                null,
+                assetType,
+                offsetX,
+                offsetY,
+                zoom
+        );
 
         asset = assetRepository.save(asset);
 
-        return createPutUpload(assetRepository.save(asset), resolveImageContentType());
+        return asset;
     }
 
-    public AssetUploadResponse createPutUpload(Asset asset, String contentType) {
+    public AssetUploadResponse uploadAsset(Asset asset) {
+        return createPutUpload(asset, resolveImageContentType());
+    }
+
+    public void deleteAsset(String assetId) {
+        if (existsInBucket(bucket, assetId)) {
+            client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(assetId)
+                    .build());
+        }
+
+        assetRepository.deleteById(assetId);
+    }
+
+    private AssetUploadResponse createPutUpload(Asset asset, String contentType) {
         var putReq = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(asset.getId())
@@ -88,17 +104,9 @@ public class AssetService {
         var presigned = presigner.presignPutObject(b -> b
                 .signatureDuration(Duration.ofMinutes(5))
                 .putObjectRequest(putReq));
+        var response = assetMapper.assetToUploadResponse(asset);
 
-        var response = new AssetUploadResponse();
-        response.setId(asset.getId());
-        response.setUrl(assetMapper.generateUrl(asset));
         response.setSingleUploadUrl(presigned.url().toString());
-
-        response.setZoom(asset.getZoom());
-        response.setOffsetX(asset.getOffsetX());
-        response.setOffsetY(asset.getOffsetY());
-
-        response.setType(asset.getType());
 
         return response;
     }
@@ -115,5 +123,17 @@ public class AssetService {
             }
         }
         return "image/png";
+    }
+
+    private boolean existsInBucket(String bucket, String key) {
+        try {
+            client.headObject(HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build());
+            return true;
+        } catch (NoSuchKeyException e) {
+            return false;
+        }
     }
 }
