@@ -4,8 +4,6 @@ name: Generate OpenApi
 
 on:
   pull_request:
-    paths:
-      - "api/**"
   workflow_dispatch:
 
 jobs:
@@ -37,40 +35,138 @@ jobs:
           token: ${{ secrets.PAT }}
           fetch-depth: 0
 
-      - name: Check recent commit authors
-        id: check_authors
+      - name: Determine effective HEAD SHA
+        id: head_sha
         shell: bash
         run: |
-          # For pull requests, use the base ref
-          if [[ -n "${{ github.base_ref }}" ]]; then
-            # Fetch the PR base branch
-            git fetch origin ${{ github.base_ref }}
-            
-            # Get the merge base between the PR head and base
-            MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
-            
-            # Check the commits between the merge base and HEAD
-            COMMIT_RANGE="$MERGE_BASE..HEAD"
+          set -euo pipefail
+          HEAD_SHA="${{ github.event.pull_request.head.sha || '' }}"
+          if [[ -z "$HEAD_SHA" ]]; then
+            HEAD_SHA="${{ github.sha }}"
+          fi
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "Effective head SHA: $HEAD_SHA"
+
+      # Gate: proceed only if latest change set touched api/**
+      - name: Gate on changed paths (api/**)
+        id: changed_paths_gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEAD_SHA="${{ steps.head_sha.outputs.head_sha }}"
+          PARENT_SHA="$(git rev-list --first-parent -n 2 "$HEAD_SHA" | tail -n1 || true)"
+          if [[ -n "$PARENT_SHA" ]]; then
+            RANGE="$PARENT_SHA..$HEAD_SHA"
           else
-            # For direct pushes or workflow_dispatch, check last few commits
-            COMMIT_RANGE="HEAD~10..HEAD"
+            RANGE="$HEAD_SHA"
+          fi
+          echo "Evaluating latest change set range: $RANGE"
+          if [[ "$RANGE" == "$HEAD_SHA" ]]; then
+            API_CHANGED="$(git diff --name-only "$HEAD_SHA" -- 'api/**' || true)"
+            MOBILE_CHANGED="$(git diff --name-only "$HEAD_SHA" -- 'mobile-app/**' || true)"
+          else
+            API_CHANGED="$(git diff --name-only $RANGE -- 'api/**' || true)"
+            MOBILE_CHANGED="$(git diff --name-only $RANGE -- 'mobile-app/**' || true)"
           fi
 
-          COMMIT_MESSAGES=$(git log $COMMIT_RANGE --format='%s')
-          echo "Commit messages in range:"
-          echo "$COMMIT_MESSAGES"
-
-          if echo "$COMMIT_MESSAGES" | grep -q "chore: update openapi typesss"; then
+          if [[ -z "$API_CHANGED" ]]; then
+            echo "continue_job=false" >> "$GITHUB_OUTPUT"
+            echo "No api/** changes in the latest change set."
+          else
+            echo "continue_job=true" >> "$GITHUB_OUTPUT"
+            echo "api/** changed in the latest change set."
+          fi
+          
+      # Bot-commit guard: check most recent non-merge commit message
+      - name: Check most recent non-merge commit message
+        id: check_authors
+        if: steps.changed_paths_gate.outputs.continue_job == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEAD_SHA="${{ steps.head_sha.outputs.head_sha }}"
+          LAST_MSG="$(git log --first-parent -1 --no-merges --format='%s' "$HEAD_SHA" || true)"
+          if [[ -z "$LAST_MSG" ]]; then
+            LAST_MSG="$(git log -1 --format='%s' "$HEAD_SHA" || true)"
+          fi
+          echo "Most recent non-merge commit message: $LAST_MSG"
+          if echo "$LAST_MSG" | grep -qE '^chore: update openapi types$'; then
             echo "has_bot_author=true" >> $GITHUB_OUTPUT
-            echo "A recent commit contains the version bump message. Stopping the workflow."
-            exit 0  # This will stop the workflow without failing it
+            echo "Latest non-merge commit is the bot update. Skipping."
           else
             echo "has_bot_author=false" >> $GITHUB_OUTPUT
-            echo "No version bump commit found. Continuing the workflow."
+            echo "Proceed."
+          fi
+
+      - name: Restore openapi state cache
+        id: openapi_state_cache
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true'
+        uses: actions/cache@v4
+        with:
+          path: .ci/openapi-state
+          key: openapi-state-${{ github.ref_name }}
+
+      - name: Determine last processed commit
+        id: last_sha
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/openapi-state
+          STATE_FILE=".ci/openapi-state/last-sha"
+          if [[ -f "$STATE_FILE" ]]; then
+            LAST_SHA="$(cat "$STATE_FILE" || true)"
+          else
+            LAST_SHA=""
+          fi
+          if [[ -z "${LAST_SHA}" ]]; then
+            echo "first_run=true" >> $GITHUB_OUTPUT
+            echo "No previous state found for this branch. First run will proceed."
+          else
+            echo "first_run=false" >> $GITHUB_OUTPUT
+            echo "last_sha=$LAST_SHA" >> $GITHUB_OUTPUT
+            echo "Found previous last SHA: $LAST_SHA"
+          fi
+
+      - name: Detect api/** changes since last run
+        id: detect_api_changes
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEAD_SHA="${{ steps.head_sha.outputs.head_sha }}"
+          if [[ "${{ steps.last_sha.outputs.first_run }}" == "true" ]]; then
+            echo "api_changed=true" >> $GITHUB_OUTPUT
+            echo "First run on this branch. Proceeding with generation."
+            exit 0
+          fi
+
+          CACHED_LAST_SHA="${{ steps.last_sha.outputs.last_sha }}"
+          if ! git cat-file -e "${CACHED_LAST_SHA}^{commit}" 2>/dev/null; then
+            echo "Cached last SHA ${CACHED_LAST_SHA} not reachable; falling back."
+            if [[ -n "${{ github.base_ref }}" ]]; then
+              git fetch origin "${{ github.base_ref }}" --depth=200 || true
+              BASE_SHA="$(git merge-base "$HEAD_SHA" "origin/${{ github.base_ref }}")" || true
+            else
+              BASE_SHA="$(git rev-list --max-parents=0 "$HEAD_SHA" | tail -n1)"
+            fi
+          else
+            BASE_SHA="${CACHED_LAST_SHA}"
+          fi
+
+          echo "Diffing api/** between $BASE_SHA and $HEAD_SHA"
+          CHANGED="$(git diff --name-only "${BASE_SHA}".."${HEAD_SHA}" -- 'api/**' || true)"
+          if [[ -z "$CHANGED" ]]; then
+            echo "api_changed=false" >> $GITHUB_OUTPUT
+            echo "No api/** changes since last processed base."
+          else
+            echo "api_changed=true" >> $GITHUB_OUTPUT
+            echo "Changed files:"
+            echo "$CHANGED"
           fi
 
       - name: Set up JDK 21 corretto
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: "21"
@@ -78,16 +174,16 @@ jobs:
           cache: "maven"
 
       - name: Cache Maven packages
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      # spin up the backend including database, which is needed for the openapi generation
-      - run: mvn verify
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+      - name: Build backend and generate OpenAPI
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        run: mvn verify
         env:
           POSTGRES_USER: admin
           POSTGRES_PASSWORD: user
@@ -106,12 +202,12 @@ jobs:
           JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
         working-directory: api
 
-      # replace all occurences of "*/*" with "application/json" in the openapi.json file
-      - run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+      - name: Fix content-type in generated OpenAPI
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        run: sed -i 's#"\*/\*"#"application/json"#g' ./mobile-app/api/generated/openapi.json
 
       - name: Cache npm packages
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.npm
@@ -120,19 +216,39 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Use Node.js
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: "mobile-app/package-lock.json"
 
-      - run: npm ci && npm run gen-types && npm run format
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+      - name: Generate client types
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         working-directory: mobile-app
+        run: |
+          npm ci
+          npm run gen-types
+          npm run format
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        if: steps.check_authors.outputs.has_bot_author != 'true'
+      - name: Update last processed SHA
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci/openapi-state
+          git rev-parse "${{ steps.head_sha.outputs.head_sha }}" > .ci/openapi-state/last-sha
+
+      - name: Save openapi state cache
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .ci/openapi-state
+          key: openapi-state-${{ github.ref_name }}
+
+      - name: Commit generated types
+        if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update openapi types"
           skip_checkout: true
