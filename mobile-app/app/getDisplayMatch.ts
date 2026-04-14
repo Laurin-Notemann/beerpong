@@ -4,22 +4,25 @@ import {
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
-import { PlayerDto, RuleMoveDto } from '@/openapi/openapi';
+import {PlayerDto, ProfileDto, RuleMoveDto} from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
 import { PlayerDraft } from '@/zustand/matchEditDraftStore';
+import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export function getDisplayMatch(
     draftPlayers: (PlayerDraft & { team: TeamId })[],
     rankingAlgorithm: 'AVERAGE' | 'ELO' | undefined,
-    profiles: PlayerDto[],
+    players: PlayerDto[],
+    profiles: ProfileDto[],
     matches: MinimalMatch[],
     allowedMoves: RuleMoveDto[]
 ): Omit<MinimalMatch, 'id' | 'date'> {
     const teamMembers = draftPlayers.map<TeamMember>((i) => {
-        const profile = profiles.find((j) => i.playerId === j.id);
+        const player = players.find((j) => i.playerId === j.id);
+        const profile = profiles.find((j) => player?.profileId === j.id);
 
-        if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member'); // TODO: this happens sometimes for a split second
+        if (!profile || !player) {
+            ConsoleLogger.error('failed to get profile or player for team member'); // TODO: this happens sometimes for a split second
         }
 
         const ownTeam = draftPlayers.filter((j) => j.team === i.team);
@@ -60,9 +63,10 @@ export function getDisplayMatch(
                 };
             }),
 
-            avatarUrl: profile?.profile?.avatarAsset?.url,
-            name: profile?.profile?.name || 'Unknown',
+            avatarUrl: getAssetUrl(profile?.assetIdAvatar),
+            name: profile?.name || 'Unknown',
             profileId: profile?.id || '#',
+            playerId: player?.id || '#',
         };
     });
     const displayMatch: MinimalMatch = {
