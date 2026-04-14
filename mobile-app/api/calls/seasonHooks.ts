@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { ApiId } from '@/api/types';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
@@ -17,7 +18,6 @@ import {
     SeasonSettingsDto,
 } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export const useSeasonQuery = (
     groupId: ApiId | null,
@@ -97,14 +97,20 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                     const profiles = await (
                         await api
                     ).listAllProfiles({
-                        groupId
+                        groupId,
                     });
 
                     return {
                         ...season,
                         numMatches: matches.data.data?.length ?? 0,
                         players: players.map((p) =>
-                            toPlayer(p, profiles.data?.data?.find(pr => pr.id === p.profileId)!)),
+                            toPlayer(
+                                p,
+                                profiles.data?.data?.find(
+                                    (pr) => pr.id === p.profileId
+                                )!
+                            )
+                        ),
                         rawPlayers: players,
                         matches: matches.data.data ?? [],
                         ruleMoves: ruleMoves.data.data,
