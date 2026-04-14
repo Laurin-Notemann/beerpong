@@ -3,7 +3,10 @@ import { useRouter } from 'expo-router';
 
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
+import {
+    useGroupWithSeason,
+    useStartNewSeasonMutation,
+} from '@/api/calls/seasonHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
@@ -17,7 +20,7 @@ export default function Page() {
     const nav = useNavigation();
     const router = useRouter();
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, season } = useGroupWithSeason();
 
     const newSeasonMutation = useStartNewSeasonMutation();
 
@@ -54,18 +57,16 @@ export default function Page() {
         }
     }
 
+    const seasonId = season?.data?.id ?? null;
+
     const movesQuery = useMoves(groupId, seasonId);
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
     const minMatchesRequiredToBeRanked = 1;
 
-    const { currentSeasonPlayers } = useLeaderboardProps(
-        groupId,
-        seasonId ?? null
-    );
-    const rankingAlgorithm =
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm;
+    const { currentSeasonPlayers } = useLeaderboardProps(groupId, seasonId);
+    const rankingAlgorithm = season?.data?.seasonSettings?.rankingAlgorithm;
 
     const sortedPlayers = currentSeasonPlayers.sort(
         getRankingAlgorithm(rankingAlgorithm).sortFunc
@@ -85,13 +86,10 @@ export default function Page() {
             numMatches={matches.length}
             players={rankedPlayers}
             oldSeasonMoves={allowedMoves}
-            oldSeasonStartDate={group.data?.activeSeason?.startDate!}
+            oldSeasonStartDate={season?.data?.startDate!}
             onCancel={() => nav.goBack()}
             isCreating={newSeasonMutation.isPending}
-            rankingAlgorithm={
-                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-                'AVERAGE'
-            }
+            rankingAlgorithm={rankingAlgorithm ?? 'AVERAGE'}
         />
     );
 }

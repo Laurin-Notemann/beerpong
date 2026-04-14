@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
@@ -40,22 +42,29 @@ export default function Page() {
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
-    const profiles = playersQuery.data?.data ?? [];
+    const profilesQuery = useProfilesQuery(groupId);
+
+    const matchPlayers = playersQuery.data?.data ?? [];
 
     const players = matchDraft.actions.getPlayers();
 
     const teamMembers = players.map<TeamMember>((i) => {
-        const profile = profiles.find((j) => i.playerId === j.id);
+        const player = matchPlayers.find((j) => i.playerId === j.id);
+        const profile = profilesQuery?.data?.data?.find(
+            (j) => player?.profileId === j.id
+        );
 
-        if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member');
+        if (!player || !profile) {
+            ConsoleLogger.error(
+                'failed to get profile or player for team member'
+            );
         }
 
         return {
             id: i.playerId,
             team: i.team,
-            avatarUrl: profile?.profile?.avatarAsset?.url,
-            name: profile?.profile?.name || 'Unknown',
+            avatarUrl: getAssetUrl(profile?.assetIdAvatar),
+            name: profile?.name || 'Unknown',
             points: i.moves.reduce(
                 (sum, j) =>
                     sum +
@@ -75,6 +84,7 @@ export default function Page() {
                     isFinish: j.finishingMove!,
                 };
             }),
+            playerId: player?.id!,
             profileId: profile?.id!,
         };
     });

@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Dimensions, View } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
@@ -14,7 +15,7 @@ export const AppBackground: React.FC = () => {
 
     const theme = useTheme();
 
-    const customWallpaperUrl = group.data?.wallpaperAsset?.url;
+    const customWallpaperUrl = getAssetUrl(group?.data?.assetIdWallpaper);
 
     const customWallpaperSource = customWallpaperUrl
         ? { uri: customWallpaperUrl }

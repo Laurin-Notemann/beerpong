@@ -8,6 +8,7 @@ import {
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -18,6 +19,7 @@ import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
+// eslint-disable-next-line no-restricted-imports
 import { QK } from '../utils/reactQuery';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
@@ -113,7 +115,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               onUploadWallpaperPress,
               onDeleteWallpaperPress,
               onLeaveGroup,
-              wallpaperAsset: data.data.wallpaperAsset,
+              wallpaperAssetUrl: getAssetUrl(data.data.assetIdWallpaper),
               isUpdatingWallpaper: updateGroupWallpaperMutation.isPending,
           }
         : null;

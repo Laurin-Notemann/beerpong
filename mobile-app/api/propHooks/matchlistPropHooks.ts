@@ -1,5 +1,6 @@
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
@@ -14,6 +15,7 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const nav = useNavigation();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
+    const profilesQuery = useProfilesQuery(groupId);
 
     const matchesQuery = useMatchesQuery(groupId, seasonId);
 
@@ -37,7 +39,11 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const allowedMoves = movesQuery.data?.data ?? [];
 
     const matches = matchesQuery.data.data.map(
-        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        matchDtoToMatch(
+            playersQuery.data?.data,
+            profilesQuery.data?.data,
+            allowedMoves
+        )
     );
 
     function onMatchPress(match: Match) {

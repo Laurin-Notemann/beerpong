@@ -6,11 +6,19 @@ import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined
+) => {
+    //TODO change to false
+    return useWholePlayersQuery(groupId, seasonId, true);
+};
+
+export const useWholePlayersQuery = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null | undefined,
+    showInactive: boolean
 ) => {
     const { api } = useApi();
 
@@ -29,7 +37,7 @@ export const usePlayersQuery = (
 
             const res = await (
                 await api
-            ).getPlayers({ groupId, seasonId, showInactive: true });
+            ).getPlayers({ groupId, seasonId, showInactive });
 
             return res?.data;
         },

@@ -9,13 +9,13 @@ import Swiper from 'react-native-swiper';
 import {
     useCreateMatchMutation,
     useMatchesQuery,
-    useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import { useGroup } from '@/api/calls/seasonHooks';
+import { useGroupWithSeason } from '@/api/calls/seasonHooks';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -91,12 +91,12 @@ export default function NewMatchScreen() {
 
     const nav = useNavigation();
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, season } = useGroupWithSeason();
 
-    const minTeamSize =
-        group.data?.activeSeason?.seasonSettings?.minTeamSize ?? 1;
-    const maxTeamSize =
-        group.data?.activeSeason?.seasonSettings?.maxTeamSize ?? 10;
+    const seasonId = season?.data?.id;
+
+    const minTeamSize = season?.data?.seasonSettings?.minTeamSize ?? 1;
+    const maxTeamSize = season?.data?.seasonSettings?.maxTeamSize ?? 10;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -114,9 +114,15 @@ export default function NewMatchScreen() {
 
     const matchesQuery = useMatchesQuery(groupId, seasonId);
 
+    const profiles = useProfilesQuery(groupId);
+
     const matches =
         matchesQuery.data?.data?.map(
-            matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+            matchDtoToMatch(
+                playersQuery.data?.data,
+                profiles.data?.data,
+                allowedMoves
+            )
         ) ?? [];
 
     const swiperRef = useRef<Swiper>(null);
@@ -124,23 +130,30 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    const profiles = playersQuery.data?.data ?? [];
+    const players = playersQuery.data?.data ?? [];
 
-    const selectablePlayers = profiles
+    const selectablePlayers = players
         .filter((i) => i.activeThisSeason)
-        .map<Player>((i) => ({
-            id: i.id!,
-            name: i.profile?.name || 'Unknown',
-            team:
-                matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
-                    ?.team ?? null,
+        .map<Player>((i) => {
+            const profile = profiles.data?.data?.find(
+                (p) => p.id === i.profileId
+            );
 
-            avatarUrl: i.profile?.avatarAsset?.url,
-        }));
+            return {
+                id: i.id!,
+                name: profile?.name ?? 'Unknown',
+                team:
+                    matchDraft.actions
+                        .getPlayers()
+                        .find((j) => i.id === j.playerId)?.team ?? null,
+
+                avatarUrl: getAssetUrl(profile?.assetIdAvatar),
+            };
+        });
 
     const displayMatch = getDisplayMatch(
         matchDraft.actions.getPlayers(),
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm,
+        season?.data?.seasonSettings?.rankingAlgorithm,
         playersQuery.data?.data ?? [],
         matches,
         movesQuery.data?.data ?? []
@@ -148,8 +161,6 @@ export default function NewMatchScreen() {
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
     const createMatchMutation = useCreateMatchMutation();
-
-    const updateMatchPhotoMutation = useUpdateMatchPhotoMutation();
 
     const finishes = teamMembers
         .flatMap((i) => i.moves)
@@ -178,32 +189,14 @@ export default function NewMatchScreen() {
                 seasonId,
                 teams: [matchDraft.blueTeam, matchDraft.redTeam],
             });
-            if (matchDraft.blueTeamPhotoUri && matchDraft.redTeamPhotoUri) {
-                const blueByteArray = await uriToByteArray(
-                    matchDraft.blueTeamPhotoUri
-                );
-                const redByteArray = await uriToByteArray(
-                    matchDraft.redTeamPhotoUri
-                );
 
-                await updateMatchPhotoMutation.mutateAsync({
-                    groupId,
-                    seasonId,
-                    matchId: matchRes?.data?.id!,
-                    mimeType: 'image/png',
-                    byteArray: blueByteArray,
-                    teamId: matchRes?.data?.teams?.[0].id!,
-                });
-
-                await updateMatchPhotoMutation.mutateAsync({
-                    groupId,
-                    seasonId,
-                    matchId: matchRes?.data?.id!,
-                    mimeType: 'image/png',
-                    byteArray: redByteArray,
-                    teamId: matchRes?.data?.teams?.[1].id!,
-                });
+            if (
+                matchRes?.data?.photoUploads &&
+                matchRes?.data?.photoUploads.length > 0
+            ) {
+                //TODO use response to save photos to s3
             }
+
             matchDraft.actions.clear();
             showSuccessToast('Created match.');
 

@@ -1,3 +1,5 @@
+import { profile } from '@expo/fingerprint/build/utils/Profile';
+
 import { MatchImpl } from '@/api/entities';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
@@ -15,6 +17,7 @@ export interface PerformedMove {
 export interface TeamMember {
     id: string;
     profileId: string;
+    playerId: string;
     team: TeamId;
     avatarUrl?: string | null;
     name: string;
@@ -44,10 +47,11 @@ export type Match = {
 export const matchDtoToMatch =
     (
         players: Components.Schemas.PlayerDto[] = [],
+        profiles: Components.Schemas.ProfileDto[] = [],
         allowedMoves: Components.Schemas.RuleMoveDto[] = []
     ) =>
     (i: Components.Schemas.MatchDto): Match => {
-        return new MatchImpl(i, players, allowedMoves).toJSON();
+        return new MatchImpl(i, players, profiles, allowedMoves).toJSON();
     };
 
 export type MinimalMatch = Pick<

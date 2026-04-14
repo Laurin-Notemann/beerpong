@@ -1,5 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
@@ -11,10 +12,12 @@ import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+
+dayjs.extend(customParseFormat);
 
 export default function Page() {
     const nav = useNavigation();
@@ -32,10 +35,7 @@ export default function Page() {
             : seasonSettings?.dailyLeaderboard!
     );
     const [wakeTimeDate, setWakeTimeDate] = useState(
-        dayjs()
-            .startOf('day')
-            .add(seasonSettings?.wakeTimeHour ?? 0, 'hours')
-            .toDate()
+        dayjs(`${seasonSettings?.wakeTime ?? '00:00:00'}`, 'HH:mm:ss').toDate()
     );
 
     useEffect(() => {
@@ -46,10 +46,10 @@ export default function Page() {
                     : seasonSettings.dailyLeaderboard
             );
             setWakeTimeDate(
-                dayjs()
-                    .startOf('day')
-                    .add(seasonSettings.wakeTimeHour ?? 0, 'hours')
-                    .toDate()
+                dayjs(
+                    `${seasonSettings?.wakeTime ?? '00:00:00'}`,
+                    'HH:mm:ss'
+                ).toDate()
             );
         }
     }, [seasonSettings]);
@@ -58,7 +58,7 @@ export default function Page() {
 
     const isDirty =
         dailyLeaderboard !== seasonSettings?.dailyLeaderboard ||
-        wakeTimeDate.getHours() !== seasonSettings?.wakeTimeHour;
+        wakeTimeDate.toTimeString() !== seasonSettings?.wakeTime;
 
     const theme = useTheme();
 
@@ -81,9 +81,9 @@ export default function Page() {
                                         await updateSeasonSettingsMutation.mutateAsync(
                                             {
                                                 dailyLeaderboard:
-                                                    dailyLeaderboard as SeasonSettings['dailyLeaderboard'],
-                                                wakeTimeHour:
-                                                    wakeTimeDate.getHours(),
+                                                    dailyLeaderboard as SeasonSettingsDto['dailyLeaderboard'],
+                                                wakeTime:
+                                                    wakeTimeDate.toTimeString(),
                                             }
                                         );
                                     }

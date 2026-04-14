@@ -57,18 +57,29 @@ export const useMatchesByPlayerQuery = (
     seasonId: ApiId | null | undefined,
     playerId: ApiId | null | undefined
 ) => {
-    const matchesQuery = useMatchesQuery(groupId, seasonId);
+    const { api } = useApi();
 
-    if (!matchesQuery.data?.data) return matchesQuery;
+    return useQuery<Paths.GetPlayerMatches.Responses.$200 | null>({
+        queryKey: [
+            QK.group,
+            groupId,
+            QK.season,
+            seasonId,
+            QK.players,
+            playerId,
+            QK.matches,
+        ],
+        queryFn: async () => {
+            if (!groupId || !seasonId || !playerId) {
+                return null;
+            }
+            const res = await (
+                await api
+            ).getPlayerMatches({ groupId, seasonId, playerId });
 
-    const matchesForPlayer = matchesQuery.data.data.filter((i) =>
-        i.teamMembers!.find((j) => j.playerId === playerId)
-    );
-
-    return {
-        ...matchesQuery,
-        data: { data: matchesForPlayer },
-    };
+            return res?.data;
+        },
+    });
 };
 
 export const useCreateMatchMutation = () => {

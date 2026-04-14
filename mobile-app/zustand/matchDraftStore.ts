@@ -13,7 +13,7 @@ interface PlayerDraft {
 }
 interface TeamDraft {
     teamMembers: PlayerDraft[];
-
+    savePhoto: boolean;
     cups: CupsState;
 }
 
@@ -71,6 +71,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
             initialFormation: Formation.Pyramid_10,
             currentFormation: Formation.Pyramid_10,
         },
+        savePhoto: false,
     },
     blueTeam: {
         teamMembers: [],
@@ -79,6 +80,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
             initialFormation: Formation.Pyramid_10,
             currentFormation: Formation.Pyramid_10,
         },
+        savePhoto: false,
     },
 
     actions: {
@@ -99,6 +101,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         initialFormation: Formation.Pyramid_10,
                         currentFormation: Formation.Pyramid_10,
                     },
+                    savePhoto: false,
                 },
                 blueTeam: {
                     teamMembers: [],
@@ -106,6 +109,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         initialFormation: Formation.Pyramid_10,
                         currentFormation: Formation.Pyramid_10,
                     },
+                    savePhoto: false,
                 },
                 blueTeamPhotoUri: undefined,
                 redTeamPhotoUri: undefined,
@@ -146,10 +150,12 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                     redTeam: {
                         teamMembers: updatedRedTeam,
                         cups: redTeam.cups,
+                        savePhoto: redTeam.savePhoto,
                     },
                     blueTeam: {
                         teamMembers: updatedBlueTeam,
                         cups: blueTeam.cups,
+                        savePhoto: blueTeam.savePhoto,
                     },
                 };
             });
@@ -176,6 +182,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         };
                     }),
                     cups: team.cups,
+                    savePhoto: team.savePhoto,
                 });
 
                 return {
@@ -217,6 +224,7 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                                   ),
                               },
                     },
+                    savePhoto: team.savePhoto,
                 });
 
                 return {
@@ -236,6 +244,8 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         initialFormation: Formation.Pyramid_10,
                         currentFormation: Formation.Pyramid_10,
                     },
+                    //TODO check thjis
+                    savePhoto: false,
                 },
                 blueTeam: {
                     teamMembers: blueTeam.map((i) => ({
@@ -246,20 +256,42 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                         initialFormation: Formation.Pyramid_10,
                         currentFormation: Formation.Pyramid_10,
                     },
+                    //TODO check this
+                    savePhoto: false,
                 },
             }));
         },
         setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
-            set(() => ({
-                blueTeamPhotoUri: blueTeamPhotoUri,
-                redTeamPhotoUri: redTeamPhotoUri,
-            }));
+            set((state) => {
+                const updateTeam = (team: TeamDraft) => ({
+                    teamMembers: team.teamMembers,
+                    cups: team.cups,
+                    savePhoto: true,
+                });
+
+                return {
+                    blueTeamPhotoUri,
+                    redTeamPhotoUri,
+                    redTeam: updateTeam(state.redTeam),
+                    blueTeam: updateTeam(state.blueTeam),
+                };
+            });
         },
         removeTeamPhotos: () => {
-            set(() => ({
-                blueTeamPhotoUri: undefined,
-                redTeamPhotoUri: undefined,
-            }));
+            set((state) => {
+                const updateTeam = (team: TeamDraft) => ({
+                    teamMembers: team.teamMembers,
+                    cups: team.cups,
+                    savePhoto: false,
+                });
+
+                return {
+                    blueTeamPhotoUri: undefined,
+                    redTeamPhotoUri: undefined,
+                    redTeam: updateTeam(state.redTeam),
+                    blueTeam: updateTeam(state.blueTeam),
+                };
+            });
         },
         swapTeamPhotos: () => {
             set((state) => ({

@@ -5,6 +5,7 @@ import {
     usePlayersQuery,
     useUpdatePlayerMutation,
 } from '@/api/calls/playerHooks';
+import { useProfilesQuery } from '@/api/calls/profileHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
@@ -18,14 +19,18 @@ export default function Page() {
     const router = useRouter();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
+    const profilesQuery = useProfilesQuery(groupId);
 
     const { id } = useLocalSearchParams<{ id: string }>();
 
     const player = playersQuery.data?.data?.find((i) => i.id === id);
+    const profile = profilesQuery.data?.data?.find(
+        (i) => i.id === player?.profileId
+    );
 
-    const profileId = player?.profile?.id;
+    const profileId = player?.profileId;
 
-    const [value, setValue] = useState(player?.profile?.name || '');
+    const [value, setValue] = useState(profile?.name || '');
 
     const updatePlayerMutation = useUpdatePlayerMutation();
 

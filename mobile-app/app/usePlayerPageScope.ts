@@ -1,3 +1,4 @@
+import { useMatchesByPlayerQuery } from '@/api/calls/matchHooks';
 import {
     Player,
     useAllSeasonsQuery,
@@ -9,7 +10,7 @@ import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { ScopeInfo } from '@/components/screens/Player';
 import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
 
 // TODO: additional seasons
 // TODO: minMatchesRequiredToBeRanked, placement, elo, points, rankingAlgorithm
@@ -32,6 +33,8 @@ export function usePlayerPageScope(profileId: string) {
         seasonsQuery.data?.data?.flatMap((i) =>
             i.players.filter((j) => j.profileId === profileId).map((i) => i.id)
         ) ?? [];
+
+    const playerMatches = useMatchesByPlayerQuery(groupId, seasonId);
 
     const currentSeasonMatches =
         activeSeason?.ruleMoves && activeSeason?.rawPlayers

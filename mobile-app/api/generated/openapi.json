@@ -1267,6 +1267,82 @@
                 }
             }
         },
+        "/groups/{groupId}/seasons/{seasonId}/matches/profile/{profileId}": {
+            "get": {
+                "tags": ["match-controller"],
+                "operationId": "getProfileMatches",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "profileId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/seasons/{seasonId}/matches/player/{playerId}": {
+            "get": {
+                "tags": ["match-controller"],
+                "operationId": "getPlayerMatches",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "playerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/seasons/{seasonId}/matches/overview": {
             "get": {
                 "tags": ["match-controller"],
@@ -1532,10 +1608,7 @@
                 "properties": {
                     "offsetX": { "type": "number", "format": "double" },
                     "offsetY": { "type": "number", "format": "double" },
-                    "zoom": { "type": "number", "format": "double" },
-                    "width": { "type": "number", "format": "double" },
-                    "height": { "type": "number", "format": "double" },
-                    "originX": { "type": "number", "format": "double" }
+                    "zoom": { "type": "number", "format": "double" }
                 }
             },
             "AssetUploadResponse": {
