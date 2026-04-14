@@ -1,5 +1,4 @@
 import { ScrollView, Text, View, ViewProps } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBackground } from '@/app/Background';
 import { useInsets } from '@/app/useInsets';
