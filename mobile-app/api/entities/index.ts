@@ -2,6 +2,8 @@
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { Components } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
+import {getAssetUrl} from "@/api/utils/assetUrl";
+import {profile} from "@expo/fingerprint/build/utils/Profile";
 
 // TODO: respect pointsForTeam for point calculation
 
@@ -76,7 +78,7 @@ export class ProfileImpl {
 
     constructor(_data: Components.Schemas.ProfileDto) {
         this.name = _data.name!;
-        this.avatarUrl = _data.avatarAsset?.url ?? null;
+        this.avatarUrl = getAssetUrl(_data.assetIdAvatar);
         this.id = _data.id!;
     }
 }
@@ -157,6 +159,7 @@ export class TeamMemberImpl {
     public toJSON(): TeamMember {
         return {
             id: this.playerId,
+            playerId: this.player?.id!,
             profileId: this.player?.profileId!,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
@@ -179,11 +182,11 @@ export class PlayerImpl {
         this.profileId = profile.id;
     }
 
-    constructor(_data: Components.Schemas.PlayerDto) {
+    constructor(_data: Components.Schemas.PlayerDto, _p: Components.Schemas.ProfileDto) {
         this.id = _data.id!;
 
-        this.profileId = _data.profile!.id!;
-        this.profile = new ProfileImpl(_data.profile!);
+        this.profileId = _p.id!;
+        this.profile = new ProfileImpl(_p);
     }
 }
 
@@ -252,10 +255,11 @@ export class MatchImpl {
     private ruleMoves: RuleMoveImpl[];
 
     constructor(
-        _data: Omit<Components.Schemas.MatchDto, 'date'> & {
+        _data: Omit<Components.Schemas.MatchDtoExtended, 'date'> & {
             date?: string | Date;
         },
         _players: Components.Schemas.PlayerDto[],
+        _profiles: Components.Schemas.ProfileDto[],
         _ruleMoves: Components.Schemas.RuleMoveDto[]
     ) {
         if (_data.teams?.length !== 2) {
@@ -264,14 +268,14 @@ export class MatchImpl {
             );
         }
 
-        this.seasonId = _data.season!.id!;
+        this.seasonId = _data.seasonId!;
         this.id = _data.id!;
         this.date = new Date(_data.date!);
         this.teams = _data.teams!.map((i) => new TeamImpl(i));
-        this.blueTeamPhotoUrl = _data.teams[0]?.photoAsset?.url ?? null;
-        this.redTeamPhotoUrl = _data.teams[1]?.photoAsset?.url ?? null;
+        this.blueTeamPhotoUrl = getAssetUrl(_data.teams[0]?.photoAssetId);
+        this.redTeamPhotoUrl = getAssetUrl(_data.teams[1]?.photoAssetId);
 
-        const players = _players.map((i) => new PlayerImpl(i));
+        const players = _players.map((i) => new PlayerImpl(i, _profiles.find(value => value.id === i.profileId)!));
         const ruleMoves = _ruleMoves.map((i) => new RuleMoveImpl(i));
 
         this.ruleMoves = ruleMoves;

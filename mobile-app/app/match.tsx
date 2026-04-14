@@ -4,18 +4,15 @@ import { ScrollView, View } from 'react-native';
 
 import {
     useDeleteMatchMutation,
-    useDeleteMatchPhotoMutation,
     useMatchesQuery,
     useMatchQuery,
     useUpdateMatchMutation,
-    useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import { useGroup } from '@/api/calls/seasonHooks';
+import {useGroupWithSeason} from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
@@ -36,6 +33,7 @@ import { RefreshControl } from '@/components/RefreshControl';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
+import {useProfilesQuery} from "@/api/calls/profileHooks";
 
 /**
  * currently, we need to fetch every single match of the season here, in order to calculate the influence of the viewed match on the
@@ -48,18 +46,20 @@ const USE_MATCH_QUERY = false;
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
 
-    const { groupId, group } = useGroup();
+    const { groupId, group, season } = useGroupWithSeason();
 
     const { id, seasonId } = useLocalSearchParams<{
         id: string;
         seasonId: string;
     }>();
 
-    const isCurrentSeason = group.data?.activeSeason?.id === seasonId;
+    const isCurrentSeason = group.data?.activeSeasonId === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
+    const profilesQuery = useProfilesQuery(groupId);
 
-    const profiles = playersQuery.data?.data ?? [];
+    const players = playersQuery.data?.data ?? [];
+    const profiles = profilesQuery.data?.data ?? [];
 
     const matchQuery = useMatchQuery(groupId, seasonId, id);
 
@@ -100,8 +100,9 @@ export default function Page() {
     const displayMatch = isEditing
         ? getDisplayMatch(
               matchDraft.actions.getPlayers(),
-              group.data?.activeSeason?.seasonSettings?.rankingAlgorithm,
-              playersQuery.data?.data ?? [],
+              season?.data?.seasonSettings?.rankingAlgorithm,
+              players,
+              profiles,
               matches,
               movesQuery.data?.data ?? []
           )
@@ -133,10 +134,6 @@ export default function Page() {
 
     const updateMatchMutation = useUpdateMatchMutation();
 
-    const updateMatchPhotoMutation = useUpdateMatchPhotoMutation();
-
-    const deleteMatchPhotoMutation = useDeleteMatchPhotoMutation();
-
     const [isSaving, setIsSaving] = useState(false);
 
     async function updateMatch() {
@@ -159,6 +156,7 @@ export default function Page() {
                         })),
                     })),
                     existingTeamId: match.blueTeamId,
+                    savePhoto: !!matchDraft.blueTeamPhotoUri && matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl
                 },
                 {
                     teamMembers: displayMatch.redTeam.map((i) => ({
@@ -169,6 +167,7 @@ export default function Page() {
                         })),
                     })),
                     existingTeamId: match.redTeamId,
+                    savePhoto: !!matchDraft.redTeamPhotoUri && matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
                 },
             ],
             groupId,
@@ -179,56 +178,13 @@ export default function Page() {
         try {
             const res = await updateMatchMutation.mutateAsync(data);
 
-            const newBlueTeamId = res.data!.teams![0].id!;
-            const newRedTeamId = res.data!.teams![1].id!;
-
-            if (
-                matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl ||
-                matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
-            ) {
-                if (
-                    !matchDraft.blueTeamPhotoUri ||
-                    !matchDraft.redTeamPhotoUri
-                ) {
-                    await deleteMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        teamId: newBlueTeamId,
-                    });
-                    await deleteMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        teamId: newRedTeamId,
-                    });
-                } else {
-                    const blueByteArray = await uriToByteArray(
-                        matchDraft.blueTeamPhotoUri
-                    );
-                    const redByteArray = await uriToByteArray(
-                        matchDraft.redTeamPhotoUri
-                    );
-
-                    await updateMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        mimeType: 'image/png',
-                        byteArray: blueByteArray,
-                        teamId: newBlueTeamId,
-                    });
-
-                    await updateMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        mimeType: 'image/png',
-                        byteArray: redByteArray,
-                        teamId: newRedTeamId,
-                    });
-                }
+            //TODO think about if photo update should  be possible. maybe only delete
+            if (!!res?.data?.photoUploads && res?.data?.photoUploads.length > 0) {
+                //TODO upload photos to s3
+            } else if (!matchDraft.blueTeamPhotoUri || !matchDraft.redTeamPhotoUri) {
+                //TODO delete photos from s3
             }
+
             showSuccessToast('Updated match.');
             setIsEditing(false);
             invalidateMatches(groupId, seasonId);

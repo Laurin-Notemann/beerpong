@@ -7,6 +7,7 @@ import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { MatchesListProps } from '@/components/MatchesList';
+import {useProfilesQuery} from "@/api/calls/profileHooks";
 
 export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const { groupId, seasonId } = useGroup();
@@ -14,6 +15,7 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const nav = useNavigation();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
+    const profilesQuery = useProfilesQuery(groupId);
 
     const matchesQuery = useMatchesQuery(groupId, seasonId);
 
@@ -37,7 +39,7 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const allowedMoves = movesQuery.data?.data ?? [];
 
     const matches = matchesQuery.data.data.map(
-        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+        matchDtoToMatch(playersQuery.data?.data, profilesQuery.data?.data, allowedMoves)
     );
 
     function onMatchPress(match: Match) {

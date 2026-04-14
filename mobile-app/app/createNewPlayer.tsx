@@ -7,6 +7,7 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import CreateNewPlayer from '@/components/screens/CreateNewPlayer';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import {useProfilesQuery} from "@/api/calls/profileHooks";
 
 export default function Page() {
     const nav = useNavigation();
@@ -14,10 +15,10 @@ export default function Page() {
     const { groupId, seasonId } = useGroup();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
+    const profilesQuery = useProfilesQuery(groupId);
 
     const players = playersQuery.data?.data ?? [];
-
-    const existingPlayers = players.map((i) => i.profile!.name!);
+    const profiles = profilesQuery.data?.data ?? [];
 
     const createPlayerMutation = useCreatePlayerMutation();
 
@@ -41,7 +42,8 @@ export default function Page() {
     return (
         <CreateNewPlayer
             onCreate={onSubmit}
-            existingPlayers={existingPlayers}
+            players={players}
+            profiles={profiles}
             isPending={createPlayerMutation.isPending}
         />
     );

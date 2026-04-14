@@ -17,11 +17,11 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
 import { formatGroupCode } from '@/utils/groupCode';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
-const formatTeamSize = (seasonSettings?: SeasonSettings) => {
+const formatTeamSize = (seasonSettings?: SeasonSettingsDto) => {
     if (seasonSettings?.minTeamSize === seasonSettings?.maxTeamSize) {
         if (seasonSettings?.minTeamSize === 1) {
             return 'Exactly One Person';
@@ -44,7 +44,7 @@ export interface GroupSettingsProps {
     onUploadWallpaperPress: () => void;
     onDeleteWallpaperPress: () => void;
     onLeaveGroup: () => void;
-    wallpaperAsset?: { url?: string | null } | null;
+    wallpaperAssetUrl?: string | null;
 
     isUpdatingWallpaper?: boolean;
 }
@@ -57,7 +57,7 @@ export default function GroupSettingsScreen({
     groupCode,
     onLeaveGroup,
 
-    wallpaperAsset,
+    wallpaperAssetUrl,
     onUploadWallpaperPress,
     onDeleteWallpaperPress,
     isUpdatingWallpaper = false,
@@ -112,7 +112,7 @@ export default function GroupSettingsScreen({
                             />
                         )}
                         {experiments.showWallpaper &&
-                            (wallpaperAsset?.url ? (
+                            (wallpaperAssetUrl ? (
                                 <MenuItem
                                     title="Change Wallpaper"
                                     headIcon="image-multiple"

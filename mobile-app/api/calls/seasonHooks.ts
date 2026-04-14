@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
 import { ApiId } from '@/api/types';
+import { getAssetUrl } from '@/api/utils/assetUrl';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
@@ -10,9 +11,11 @@ import {
     MatchDto,
     Paths,
     PlayerDto,
+    PlayerDtoExtended,
+    ProfileDto,
     RuleMoveDto,
     SeasonDto,
-    SeasonSettings,
+    SeasonSettingsDto,
 } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
@@ -91,10 +94,23 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
 
                     const players = leaderboard.data.data?.entries ?? [];
 
+                    const profiles = await (
+                        await api
+                    ).listAllProfiles({
+                        groupId,
+                    });
+
                     return {
                         ...season,
                         numMatches: matches.data.data?.length ?? 0,
-                        players: players.map(toPlayer),
+                        players: players.map((p) =>
+                            toPlayer(
+                                p,
+                                profiles.data?.data?.find(
+                                    (pr) => pr.id === p.profileId
+                                )!
+                            )
+                        ),
                         rawPlayers: players,
                         matches: matches.data.data ?? [],
                         ruleMoves: ruleMoves.data.data,
@@ -134,11 +150,22 @@ export const useGroup = () => {
 
     const { data: groupQueryData } = useGroupQuery(selectedGroupId);
 
-    const seasonId = groupQueryData?.data?.activeSeason?.id;
+    return {
+        groupId: selectedGroupId,
+        seasonId: groupQueryData?.data?.activeSeasonId,
+        group: { ...(groupQueryData ?? {}) },
+    };
+};
+
+export const useGroupWithSeason = () => {
+    const { selectedGroupId } = useGroupStore();
+
+    const { data: groupQueryData } = useGroupQuery(selectedGroupId);
+    const { data: seasonQueryData } = useSeasonQuery(selectedGroupId, groupQueryData?.data?.activeSeasonId!);
 
     return {
         groupId: selectedGroupId,
-        seasonId,
+        season: seasonQueryData,
         group: { ...(groupQueryData ?? {}) },
     };
 };
@@ -170,11 +197,11 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
     const seasonQuery = useSeasonQuery(groupId, seasonId);
 
     const seasonSettings = seasonQuery.data?.data?.seasonSettings as
-        | Required<SeasonSettings>
+        | Required<SeasonSettingsDto>
         | undefined;
 
     const updateSeasonSettingsMutation = useMutation({
-        mutationFn: async (partialUpdate: Omit<SeasonSettings, 'id'>) => {
+        mutationFn: async (partialUpdate: Omit<SeasonSettingsDto, 'id'>) => {
             if (!groupId || !seasonId || !seasonSettings) return;
 
             qc.setQueryData([QK.group, groupId, QK.seasons, seasonId], {
@@ -222,16 +249,16 @@ export interface Player {
     cups: number;
 }
 
-export const toPlayer = (i: PlayerDto): Player => {
+export const toPlayer = (i: PlayerDtoExtended, p: ProfileDto): Player => {
     return {
-        id: i!.id!,
+        id: i.id!,
         elo: i.statistics?.elo ?? 0, // actually nullable from the backend
-        matches: i.statistics?.matches!,
-        points: i.statistics?.points!,
-        matchesWon: i.statistics?.wins!,
-        name: i.profile?.name!,
-        avatarUrl: i!.profile?.avatarAsset?.url,
-        profileId: i!.profile?.id!,
+        matches: i.statistics?.matches ?? 0,
+        points: i.statistics?.points ?? 0,
+        matchesWon: i.statistics?.wins ?? 0,
+        name: p.name!,
+        avatarUrl: getAssetUrl(p.assetIdAvatar),
+        profileId: p.id!,
         cups: i.statistics?.moves ?? 0,
     };
 };

@@ -294,6 +294,18 @@ public class MatchService {
                 .toList();
     }
 
+    public List<MatchDto> getMatchesWithPlayer(@NotNull String seasonId, @NotNull String playerId) {
+        return matchRepository.findBySeasonIdAndPlayerId(seasonId, playerId).stream()
+                .map(this::matchToMatchDto)
+                .toList();
+    }
+
+    public List<MatchDto> getMatchesWithProfile(@NotNull String seasonId, @NotNull String profileId) {
+        return matchRepository.findBySeasonIdAndProfileId(seasonId, profileId).stream()
+                .map(this::matchToMatchDto)
+                .toList();
+    }
+
     public MatchDtoExtended getFullMatchById(@NotNull String matchId) {
         var match = matchRepository.findById(matchId).orElse(null);
         if (match == null) return null;

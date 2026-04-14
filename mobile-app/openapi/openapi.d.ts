@@ -12,9 +12,6 @@ declare namespace Components {
             offsetX?: number; // double
             offsetY?: number; // double
             zoom?: number; // double
-            width?: number; // double
-            height?: number; // double
-            originX?: number; // double
         }
         export interface AssetMetadataDto {
             id?: string;
@@ -692,6 +689,21 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeMatchOverviewDto;
         }
     }
+    namespace GetPlayerMatches {
+        namespace Parameters {
+            export type GroupId = string;
+            export type PlayerId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+            playerId: Parameters.PlayerId;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeListMatchDto;
+        }
+    }
     namespace GetPlayers {
         namespace Parameters {
             export type GroupId = string;
@@ -1267,6 +1279,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetMatchByIdExtended.Responses.$200>;
     /**
+     * getPlayerMatches
+     */
+    'getPlayerMatches'(
+        parameters?: Parameters<Paths.GetPlayerMatches.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetPlayerMatches.Responses.$200>;
+    /**
      * getAllMatchOverviews
      */
     'getAllMatchOverviews'(
@@ -1677,6 +1697,16 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetMatchByIdExtended.Responses.$200>;
+    };
+    ['/groups/{groupId}/seasons/{seasonId}/matches/player/{playerId}']: {
+        /**
+         * getPlayerMatches
+         */
+        'get'(
+            parameters?: Parameters<Paths.GetPlayerMatches.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetPlayerMatches.Responses.$200>;
     };
     ['/groups/{groupId}/seasons/{seasonId}/matches/overview']: {
         /**

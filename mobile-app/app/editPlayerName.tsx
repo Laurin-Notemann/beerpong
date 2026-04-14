@@ -12,20 +12,23 @@ import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import {useProfilesQuery} from "@/api/calls/profileHooks";
 
 export default function Page() {
     const { groupId, seasonId } = useGroup();
     const router = useRouter();
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
+    const profilesQuery = useProfilesQuery(groupId);
 
     const { id } = useLocalSearchParams<{ id: string }>();
 
     const player = playersQuery.data?.data?.find((i) => i.id === id);
+    const profile = profilesQuery.data?.data?.find((i) => i.id === player?.profileId);
 
-    const profileId = player?.profile?.id;
+    const profileId = player?.profileId;
 
-    const [value, setValue] = useState(player?.profile?.name || '');
+    const [value, setValue] = useState(profile?.name || '');
 
     const updatePlayerMutation = useUpdatePlayerMutation();
 

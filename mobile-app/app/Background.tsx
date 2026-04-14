@@ -4,6 +4,7 @@ import { Dimensions, View } from 'react-native';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { useTheme } from '@/theme';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
+import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export const AppBackground: React.FC = () => {
     const { width, height } = Dimensions.get('window');
@@ -14,7 +15,7 @@ export const AppBackground: React.FC = () => {
 
     const theme = useTheme();
 
-    const customWallpaperUrl = group.data?.wallpaperAsset?.url;
+    const customWallpaperUrl = getAssetUrl(group?.data?.assetIdWallpaper);
 
     const customWallpaperSource = customWallpaperUrl
         ? { uri: customWallpaperUrl }

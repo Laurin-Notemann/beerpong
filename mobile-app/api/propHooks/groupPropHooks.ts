@@ -18,7 +18,9 @@ import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
+// eslint-disable-next-line no-restricted-imports
 import { QK } from '../utils/reactQuery';
+import {getAssetUrl} from "@/api/utils/assetUrl";
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const router = useRouter();
@@ -113,7 +115,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               onUploadWallpaperPress,
               onDeleteWallpaperPress,
               onLeaveGroup,
-              wallpaperAsset: data.data.wallpaperAsset,
+              wallpaperAssetUrl: getAssetUrl(data.data.assetIdWallpaper),
               isUpdatingWallpaper: updateGroupWallpaperMutation.isPending,
           }
         : null;
