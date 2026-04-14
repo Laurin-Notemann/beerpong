@@ -71,7 +71,7 @@ jobs:
 
       - name: Set up JDK 21 corretto
         if: steps.check_authors.outputs.has_bot_author != 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: "21"
           distribution: "corretto"
