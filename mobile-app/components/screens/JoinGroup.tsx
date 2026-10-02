@@ -94,7 +94,7 @@ export default function JoinGroup({
         setValue: onCodeChange,
     });
 
-    const fillFromClipboard = useEffectEvent((clipboardContents: string) => {
+    const fillFromClipboard = (clipboardContents: string) => {
         const withoutWhitespace = clipboardContents
             .replace(nonAlphaNumericChars, '')
             .toUpperCase();
@@ -108,14 +108,15 @@ export default function JoinGroup({
 
         showSuccessToast('Filled in from clipboard');
         return true;
-    });
+    };
+    const fillFromClipboardOnOpen = useEffectEvent(fillFromClipboard);
 
     // Reading the clipboard on iOS asks for permission every time; the system paste button
     // below doesn't. Android reads without asking, so it fills the code in right away.
     useEffect(() => {
         if (Clipboard.isPasteButtonAvailable) return;
         Clipboard.getStringAsync().then((contents) =>
-            fillFromClipboard(contents)
+            fillFromClipboardOnOpen(contents)
         );
     }, []);
 
