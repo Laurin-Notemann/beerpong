@@ -1,0 +1,107 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Empty",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Empty",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/\u003cid5\u003e",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/extended",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season\u0026seasonId=\u003cid1\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [],
+        "numMatches": 0,
+        "numPlayers": 0,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

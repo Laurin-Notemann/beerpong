@@ -1,0 +1,196 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Lookup",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Lookup",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Lookup",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups?inviteCode=\u003cinviteCode\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Lookup",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups?inviteCode=\u003cinviteCode\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "groupInviteNotFound",
+        "description": "No group with the provided invite code could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups?inviteCode=",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidGroupInviteCode",
+        "description": "Group invite code must be non-null and non-empty!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups?inviteCode=%20%20",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidGroupInviteCode",
+        "description": "Group invite code must be non-null and non-empty!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/groups",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  }
+]

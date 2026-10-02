@@ -1,0 +1,121 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "installationType": "IOS"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRegisterInvalidDto",
+        "description": "The installationType or deviceId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "",
+      "installationType": "IOS"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRegisterInvalidDto",
+        "description": "The installationType or deviceId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "   ",
+      "installationType": "IOS"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRegisterInvalidDto",
+        "description": "The installationType or deviceId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "device"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRegisterInvalidDto",
+        "description": "The installationType or deviceId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "device",
+      "installationType": null
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRegisterInvalidDto",
+        "description": "The installationType or deviceId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {},
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRegisterInvalidDto",
+        "description": "The installationType or deviceId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "x",
+      "installationType": "WINDOWS"
+    },
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/auth/signup",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "x",
+      "installationType": "ios"
+    },
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/auth/signup",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  }
+]

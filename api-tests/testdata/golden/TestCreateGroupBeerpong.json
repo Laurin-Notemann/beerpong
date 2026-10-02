@@ -1,0 +1,409 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Beer Friends",
+      "profileNames": [
+        "Anna",
+        "Ben",
+        "Cleo"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Beer Friends",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/rules",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "(1) If you hit with every ball in a round, you earn “balls back” and throw again—multiple times per round if you keep clearing.\n  (2) You may combine bouncers and balls back; cups to drink are cumulative.\n  (3) If balls back leaves 6, 3, or another racking number of cups, re-racking waits until the next round start.",
+          "id": "\u003cid17\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Balls Back"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "All players on one team throw their balls, then all players on the other team, alternating back and forth. Within a team, there's no fixed order.",
+          "id": "\u003cid18\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Turn Order"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Any special rules for bouncers, multiple hits, or balls back apply only when at least 4 cups remain at the start of the round—not when 3 cups are left for re-racking.",
+          "id": "\u003cid19\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Special Rules for ≤ 3 Cups"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "At any point, any player may allow anyone to use their turn, and throw a ball for their team. This includes non-players, players of their own team, or even the opponent.",
+          "id": "\u003cid20\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Guest Throws"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Balls may bounce on the table any number of times. A ball that bounces once and is then caught or swatted does not count. A successful \"bouncer\" counts as two hits, and you choose one extra cup for the opponent to remove. If the ball hits anything other than a player, cup, or table, it doesn't count at all.",
+          "id": "\u003cid21\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Bouncers"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Balls that bounce off opponent cups may be caught by the throwing side and re-thrown, provided the ball hasn't hit the floor and you haven't stepped around the table edge to catch it.",
+          "id": "\u003cid22\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Rebounds"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Each side throws at least two balls. If there are three or more players per side, increase the ball count by one per extra player.",
+          "id": "\u003cid23\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Number of Balls"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Each team can tell their opponent to rearrange their cups exactly once a match, into any shape they’d like. The formation must not be longer than four cups in a line, otherwise the cups would be too close to the opponent.",
+          "id": "\u003cid24\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Rearranging"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "If an opponent's cup is knocked over but still contains liquid, they may place it back. It does not count as hit, even if the ball is inside. Only a fully emptied cup counts as hit.",
+          "id": "\u003cid25\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Knocking Over a Opponent's Cup"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "If two or more balls land in the same cup, you may select one additional cup per extra ball to count as hit. Only applies if ≥ 4 cups remained at the start of the round and follows any balls back. With ≤ 3 cups at start, each ball must hit its own cup.",
+          "id": "\u003cid26\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Multiple Hits in One Cup"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "If you hit only the three corner cups plus the center cup, that's a “Ring of Death.” The defender drinks every cup and loses immediately—no extra throws. Only possible with an even number of pyramid rows (e.g., 10 or 21 cups).\n  (1) No re-rolls after a Ring of Death. If achieved on extra throws, the opponent must drink 6 cups, then play a sudden-death overtime with 1 cup each.",
+          "id": "\u003cid27\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Ring of Death"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "If you hit your own cup or a rebound off an opponent hits your cup you drink it, even if the ball bounced outside the table first. If it bounced on the table before rebounding, it counts as a bouncer.",
+          "id": "\u003cid28\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Hitting Your Own Cup"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "If you knock over your own cup, it always counts as a hit.",
+          "id": "\u003cid29\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Knocking Over Your Own Cup"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Ten cups per side are to be arranged in a pyramid pointing towards the opponent. The back row must be no further from the table edge than one cup diameter. All cups are to be filled with the same amount of liquid, preferably halfway full.",
+          "id": "\u003cid30\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Cup Setup"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "The two teams can have any size, and they don't have to have the same number of players.",
+          "id": "\u003cid31\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Teams"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "When a team's last cup is hit, this is not a game over! They have one last full turn to hit all of their opponent's cups in return. If they are successful, both teams place one cup back on the table, and the game continues.",
+          "id": "\u003cid32\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Saves"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "You may blow spinning balls out of your own cups, without touching the ball. In order to count, the ball must not have touched the liquid, and opponents may inspect it to confirm that it's dry.",
+          "id": "\u003cid33\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Blowing"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "You may distract opponents by moving beside, behind, or over the cups—but must stop as the throw happens. If you distract over the table and hit an opponent's body, you assign a penalty cup for them to drink. If the ball touches a defender then hits a cup, that cup is drunk (bouncer rules apply). A rebound off a defender behind the table that hits a cup is not a penalty—only the cup is drunk (with bouncer rules).",
+          "id": "\u003cid34\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Distractions"
+        },
+        {
+          "createdById": "\u003cid2\u003e",
+          "description": "Your elbow must be behind the edge of the table when you throw a ball.",
+          "id": "\u003cid35\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "title": "Elbow Rule"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/rule-moves",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "finishingMove": false,
+          "id": "\u003cid10\u003e",
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0,
+          "seasonId": "\u003cid1\u003e"
+        },
+        {
+          "finishingMove": false,
+          "id": "\u003cid11\u003e",
+          "name": "Bouncer",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0,
+          "seasonId": "\u003cid1\u003e"
+        },
+        {
+          "finishingMove": false,
+          "id": "\u003cid14\u003e",
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0,
+          "seasonId": "\u003cid1\u003e"
+        },
+        {
+          "finishingMove": false,
+          "id": "\u003cid15\u003e",
+          "name": "Save",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0,
+          "seasonId": "\u003cid1\u003e"
+        },
+        {
+          "finishingMove": false,
+          "id": "\u003cid16\u003e",
+          "name": "Trickshot",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0,
+          "seasonId": "\u003cid1\u003e"
+        },
+        {
+          "finishingMove": true,
+          "id": "\u003cid12\u003e",
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3,
+          "seasonId": "\u003cid1\u003e"
+        },
+        {
+          "finishingMove": true,
+          "id": "\u003cid13\u003e",
+          "name": "Finish - Ring of fire",
+          "pointsForScorer": 1,
+          "pointsForTeam": 10,
+          "seasonId": "\u003cid1\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "WAKE_TIME",
+            "maxTeamSize": 10,
+            "minMatchesToQualify": 1,
+            "minTeamSize": 1,
+            "rankingAlgorithm": "AVERAGE",
+            "wakeTime": "00:00:00"
+          },
+          "startDate": "\u003cts\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/extended",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid9\u003e",
+          "profileId": "\u003cid6\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

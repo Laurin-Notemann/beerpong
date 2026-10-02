@@ -1,0 +1,147 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Seasons",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Seasons",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid13\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid14\u003e",
+        "customSportName": null,
+        "id": "\u003cid15\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid13\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/nope",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  }
+]

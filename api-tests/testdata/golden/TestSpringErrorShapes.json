@@ -1,0 +1,74 @@
+[
+  {
+    "request": "GET /nope",
+    "status": 404,
+    "response": {
+      "error": "Not Found",
+      "path": "/nope",
+      "status": 404,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "GET /healthcheck/",
+    "status": 404,
+    "response": {
+      "error": "Not Found",
+      "path": "/healthcheck/",
+      "status": 404,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "DELETE /healthcheck",
+    "status": 405,
+    "response": {
+      "error": "Method Not Allowed",
+      "path": "/healthcheck",
+      "status": 405,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /group-presets",
+    "status": 405,
+    "response": {
+      "error": "Method Not Allowed",
+      "path": "/group-presets",
+      "status": 405,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": "{bad",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/auth/signup",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/auth/signup",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": "{\"installationType\":\"IOS\",\"deviceId\":\"x\"}",
+    "status": 415,
+    "response": {
+      "error": "Unsupported Media Type",
+      "path": "/auth/signup",
+      "status": 415,
+      "timestamp": "\u003cts\u003e"
+    }
+  }
+]

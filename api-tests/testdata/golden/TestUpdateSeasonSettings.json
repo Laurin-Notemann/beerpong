@@ -1,0 +1,758 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Settings",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Settings",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "dailyLeaderboard": "LAST_24_HOURS",
+        "minMatchesToQualify": 3,
+        "rankingAlgorithm": "ELO",
+        "wakeTime": "08:30"
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 3,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "08:30:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "LAST_24_HOURS",
+            "maxTeamSize": 10,
+            "minMatchesToQualify": 3,
+            "minTeamSize": 1,
+            "rankingAlgorithm": "ELO",
+            "wakeTime": "08:30:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "maxTeamSize": 4
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 4,
+          "minMatchesToQualify": 3,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "LAST_24_HOURS",
+            "maxTeamSize": 4,
+            "minMatchesToQualify": 3,
+            "minTeamSize": 1,
+            "rankingAlgorithm": "ELO",
+            "wakeTime": "00:00:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": "06:15"
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 4,
+          "minMatchesToQualify": 3,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "06:15:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "LAST_24_HOURS",
+            "maxTeamSize": 4,
+            "minMatchesToQualify": 3,
+            "minTeamSize": 1,
+            "rankingAlgorithm": "ELO",
+            "wakeTime": "06:15:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "minTeamSize": 2,
+        "wakeTime": null
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 4,
+          "minMatchesToQualify": 3,
+          "minTeamSize": 2,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "06:15:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "LAST_24_HOURS",
+            "maxTeamSize": 4,
+            "minMatchesToQualify": 3,
+            "minTeamSize": 2,
+            "rankingAlgorithm": "ELO",
+            "wakeTime": "06:15:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "maxTeamSize": 20,
+        "minMatchesToQualify": -5,
+        "minTeamSize": 0
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 0,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "LAST_24_HOURS",
+            "maxTeamSize": 10,
+            "minMatchesToQualify": 0,
+            "minTeamSize": 1,
+            "rankingAlgorithm": "ELO",
+            "wakeTime": "00:00:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "maxTeamSize": 15,
+        "minMatchesToQualify": 5000,
+        "minTeamSize": 12
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1000,
+          "minTeamSize": 10,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "LAST_24_HOURS",
+            "maxTeamSize": 10,
+            "minMatchesToQualify": 1000,
+            "minTeamSize": 10,
+            "rankingAlgorithm": "ELO",
+            "wakeTime": "00:00:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": "25:00"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTimeFormat",
+        "description": "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": "8:00"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTimeFormat",
+        "description": "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": "08:00:00"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTimeFormat",
+        "description": "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": "noon"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTimeFormat",
+        "description": "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": ""
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTimeFormat",
+        "description": "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "wakeTime": "12:60"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTimeFormat",
+        "description": "The wake time has to be supplied in the following format: HH:mm and be a valid hour and minute"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "maxTeamSize": 3,
+        "minTeamSize": 5
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTeamSizes",
+        "description": "The min team size has to be less then or equal to the max team size!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "minTeamSize": 11
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "seasonWrongTeamSizes",
+        "description": "The min team size has to be less then or equal to the max team size!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {},
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonDto",
+        "description": "Season update dto must be non-null and have non-null seasonSettings!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": null
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonDto",
+        "description": "Season update dto must be non-null and have non-null seasonSettings!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "rankingAlgorithm": "GLICKO"
+      }
+    },
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "events": []
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid13\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid14\u003e",
+        "customSportName": null,
+        "id": "\u003cid15\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid13\u003e",
+    "body": {
+      "seasonSettings": {}
+    },
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "First",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid25\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1000,
+          "minTeamSize": 10,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "newSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": null,
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid25\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "LAST_24_HOURS",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1000,
+              "minTeamSize": 10,
+              "rankingAlgorithm": "ELO",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "oldSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": "\u003cts\u003e",
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid1\u003e",
+            "name": "First",
+            "seasonSettings": {
+              "dailyLeaderboard": "LAST_24_HOURS",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1000,
+              "minTeamSize": 10,
+              "rankingAlgorithm": "ELO",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          }
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonStart"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {}
+    },
+    "status": 403,
+    "response": {
+      "error": {
+        "code": "seasonAlreadyEnded",
+        "description": "Past seasons are immutable!"
+      },
+      "httpCode": 403,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid25\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid25\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "LAST_24_HOURS",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1000,
+          "minTeamSize": 10,
+          "rankingAlgorithm": "ELO",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

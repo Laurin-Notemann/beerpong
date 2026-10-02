@@ -1,0 +1,795 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Matches",
+      "profileNames": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Matches",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                },
+                {
+                  "count": 2,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid14\u003e"
+                },
+                {
+                  "count": 0,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid9\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 3,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid10\u003e"
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid18\u003e"
+                }
+              ],
+              "playerId": "\u003cid11\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid19\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "date": "\u003cts\u003e",
+          "id": "\u003cid19\u003e",
+          "photoUploads": [],
+          "seasonId": "\u003cid1\u003e"
+        },
+        "eventType": "MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "matchCreate"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid19\u003e",
+        "photoUploads": null,
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e/extended",
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid19\u003e",
+        "matchMoves": [
+          {
+            "id": "\u003cid20\u003e",
+            "moveId": "\u003cid12\u003e",
+            "teamMemberId": "\u003cid21\u003e",
+            "value": 1
+          },
+          {
+            "id": "\u003cid22\u003e",
+            "moveId": "\u003cid14\u003e",
+            "teamMemberId": "\u003cid23\u003e",
+            "value": 1
+          },
+          {
+            "id": "\u003cid24\u003e",
+            "moveId": "\u003cid16\u003e",
+            "teamMemberId": "\u003cid21\u003e",
+            "value": 2
+          },
+          {
+            "id": "\u003cid25\u003e",
+            "moveId": "\u003cid16\u003e",
+            "teamMemberId": "\u003cid26\u003e",
+            "value": 3
+          },
+          {
+            "id": "\u003cid27\u003e",
+            "moveId": "\u003cid18\u003e",
+            "teamMemberId": "\u003cid28\u003e",
+            "value": 1
+          }
+        ],
+        "photoUploads": null,
+        "seasonId": "\u003cid1\u003e",
+        "teamMembers": [
+          {
+            "id": "\u003cid26\u003e",
+            "playerId": "\u003cid10\u003e",
+            "teamId": "\u003cid29\u003e"
+          },
+          {
+            "id": "\u003cid28\u003e",
+            "playerId": "\u003cid11\u003e",
+            "teamId": "\u003cid29\u003e"
+          },
+          {
+            "id": "\u003cid21\u003e",
+            "playerId": "\u003cid8\u003e",
+            "teamId": "\u003cid30\u003e"
+          },
+          {
+            "id": "\u003cid23\u003e",
+            "playerId": "\u003cid9\u003e",
+            "teamId": "\u003cid30\u003e"
+          }
+        ],
+        "teams": [
+          {
+            "id": "\u003cid30\u003e",
+            "matchId": "\u003cid19\u003e",
+            "photoAssetId": null
+          },
+          {
+            "id": "\u003cid29\u003e",
+            "matchId": "\u003cid19\u003e",
+            "photoAssetId": null
+          }
+        ]
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e/overview",
+    "status": 200,
+    "response": {
+      "data": {
+        "blueTeam": {
+          "assetPhotoId": null,
+          "members": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                },
+                {
+                  "count": 2,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e",
+              "points": 4
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid14\u003e"
+                }
+              ],
+              "playerId": "\u003cid9\u003e",
+              "points": 4
+            }
+          ],
+          "points": 11,
+          "teamId": "\u003cid30\u003e"
+        },
+        "date": "\u003cts\u003e",
+        "id": "\u003cid19\u003e",
+        "redTeam": {
+          "assetPhotoId": null,
+          "members": [
+            {
+              "moves": [
+                {
+                  "count": 3,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid10\u003e",
+              "points": 3
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid18\u003e"
+                }
+              ],
+              "playerId": "\u003cid11\u003e",
+              "points": 2
+            }
+          ],
+          "points": 5,
+          "teamId": "\u003cid29\u003e"
+        },
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "createdById": "\u003cid2\u003e",
+          "date": "\u003cts\u003e",
+          "id": "\u003cid19\u003e",
+          "photoUploads": null,
+          "seasonId": "\u003cid1\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/extended",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "createdById": "\u003cid2\u003e",
+          "date": "\u003cts\u003e",
+          "id": "\u003cid19\u003e",
+          "matchMoves": [
+            {
+              "id": "\u003cid20\u003e",
+              "moveId": "\u003cid12\u003e",
+              "teamMemberId": "\u003cid21\u003e",
+              "value": 1
+            },
+            {
+              "id": "\u003cid22\u003e",
+              "moveId": "\u003cid14\u003e",
+              "teamMemberId": "\u003cid23\u003e",
+              "value": 1
+            },
+            {
+              "id": "\u003cid24\u003e",
+              "moveId": "\u003cid16\u003e",
+              "teamMemberId": "\u003cid21\u003e",
+              "value": 2
+            },
+            {
+              "id": "\u003cid25\u003e",
+              "moveId": "\u003cid16\u003e",
+              "teamMemberId": "\u003cid26\u003e",
+              "value": 3
+            },
+            {
+              "id": "\u003cid27\u003e",
+              "moveId": "\u003cid18\u003e",
+              "teamMemberId": "\u003cid28\u003e",
+              "value": 1
+            }
+          ],
+          "photoUploads": null,
+          "seasonId": "\u003cid1\u003e",
+          "teamMembers": [
+            {
+              "id": "\u003cid21\u003e",
+              "playerId": "\u003cid8\u003e",
+              "teamId": "\u003cid30\u003e"
+            },
+            {
+              "id": "\u003cid23\u003e",
+              "playerId": "\u003cid9\u003e",
+              "teamId": "\u003cid30\u003e"
+            },
+            {
+              "id": "\u003cid26\u003e",
+              "playerId": "\u003cid10\u003e",
+              "teamId": "\u003cid29\u003e"
+            },
+            {
+              "id": "\u003cid28\u003e",
+              "playerId": "\u003cid11\u003e",
+              "teamId": "\u003cid29\u003e"
+            }
+          ],
+          "teams": [
+            {
+              "id": "\u003cid29\u003e",
+              "matchId": "\u003cid19\u003e",
+              "photoAssetId": null
+            },
+            {
+              "id": "\u003cid30\u003e",
+              "matchId": "\u003cid19\u003e",
+              "photoAssetId": null
+            }
+          ]
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/overview",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "blueTeam": {
+            "assetPhotoId": null,
+            "members": [
+              {
+                "moves": [
+                  {
+                    "count": 1,
+                    "moveId": "\u003cid12\u003e"
+                  },
+                  {
+                    "count": 2,
+                    "moveId": "\u003cid16\u003e"
+                  }
+                ],
+                "playerId": "\u003cid8\u003e",
+                "points": 4
+              },
+              {
+                "moves": [
+                  {
+                    "count": 1,
+                    "moveId": "\u003cid14\u003e"
+                  }
+                ],
+                "playerId": "\u003cid9\u003e",
+                "points": 4
+              }
+            ],
+            "points": 11,
+            "teamId": "\u003cid30\u003e"
+          },
+          "date": "\u003cts\u003e",
+          "id": "\u003cid19\u003e",
+          "redTeam": {
+            "assetPhotoId": null,
+            "members": [
+              {
+                "moves": [
+                  {
+                    "count": 1,
+                    "moveId": "\u003cid18\u003e"
+                  }
+                ],
+                "playerId": "\u003cid11\u003e",
+                "points": 2
+              },
+              {
+                "moves": [
+                  {
+                    "count": 3,
+                    "moveId": "\u003cid16\u003e"
+                  }
+                ],
+                "playerId": "\u003cid10\u003e",
+                "points": 3
+              }
+            ],
+            "points": 5,
+            "teamId": "\u003cid29\u003e"
+          },
+          "seasonId": "\u003cid1\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/nope",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "matchNotFound",
+        "description": "The requested match could not be found or its season id does not match the provided group id!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/nope/extended",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "matchNotFound",
+        "description": "The requested match could not be found or its season id does not match the provided group id!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/nope/overview",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "matchNotFound",
+        "description": "The requested match could not be found or its season id does not match the provided group id!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid31\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid32\u003e",
+        "customSportName": null,
+        "id": "\u003cid33\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid31\u003e/matches",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid31\u003e/matches/\u003cid19\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Old",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid43\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "newSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": null,
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid43\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "oldSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": "\u003cts\u003e",
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid1\u003e",
+            "name": "Old",
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          }
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonStart"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches/\u003cid19\u003e",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchGroupOrSeasonIdDontMatch",
+        "description": "The provided season id doesnt match the season id of the provided match!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches/\u003cid19\u003e/extended",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchGroupOrSeasonIdDontMatch",
+        "description": "The provided season id doesnt match the season id of the provided match!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches/\u003cid19\u003e/overview",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchGroupOrSeasonIdDontMatch",
+        "description": "The provided season id doesnt match the season id of the provided match!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e/overview",
+    "status": 200,
+    "response": {
+      "data": {
+        "blueTeam": {
+          "assetPhotoId": null,
+          "members": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                },
+                {
+                  "count": 2,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e",
+              "points": 4
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid14\u003e"
+                }
+              ],
+              "playerId": "\u003cid9\u003e",
+              "points": 4
+            }
+          ],
+          "points": 11,
+          "teamId": "\u003cid30\u003e"
+        },
+        "date": "\u003cts\u003e",
+        "id": "\u003cid19\u003e",
+        "redTeam": {
+          "assetPhotoId": null,
+          "members": [
+            {
+              "moves": [
+                {
+                  "count": 3,
+                  "moveId": "\u003cid16\u003e"
+                }
+              ],
+              "playerId": "\u003cid10\u003e",
+              "points": 3
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid18\u003e"
+                }
+              ],
+              "playerId": "\u003cid11\u003e",
+              "points": 2
+            }
+          ],
+          "points": 5,
+          "teamId": "\u003cid29\u003e"
+        },
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

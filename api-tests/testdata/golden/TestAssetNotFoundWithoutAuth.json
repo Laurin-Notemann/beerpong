@@ -1,0 +1,26 @@
+[
+  {
+    "request": "GET /assets/\u003cid1\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /assets/not-a-uuid",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  }
+]

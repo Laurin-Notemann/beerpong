@@ -1,0 +1,76 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRefreshInvalidToken",
+        "description": "The refreshToken is either no refresh-token, invalid or the subject-userId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "authRefreshInvalidToken",
+        "description": "The refreshToken is either no refresh-token, invalid or the subject-userId is invalid!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 500,
+    "response": {
+      "error": "Internal Server Error",
+      "path": "/auth/refresh",
+      "status": 500,
+      "timestamp": "\u003cts\u003e"
+    }
+  }
+]

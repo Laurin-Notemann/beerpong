@@ -1,0 +1,224 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Kicker",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "kicker"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Kicker",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "kicker",
+          "imageUrl": "https://media.istockphoto.com/id/696594232/photo/foosball-at-modern-office-close-up-view.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=skF0hp5i_9ctZ2MmkqLdaOklvwSGbqEqcAu0JLF8M5c=",
+          "title": "Kicker"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/rules",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "customSportName": "Darts",
+      "name": "Darts",
+      "profileNames": [
+        "a"
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid8\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid9\u003e",
+        "customSportName": "Darts",
+        "id": "\u003cid10\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Darts",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": null
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "customSportName": "Ignored",
+      "name": "Both",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "chess"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid11\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid12\u003e",
+        "customSportName": null,
+        "id": "\u003cid13\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Both",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "chess",
+          "imageUrl": "https://media.istockphoto.com/id/1128789429/photo/plan-leading-strategy-of-successful-business-competition-leader-concept-hand-of-player-chess.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=srlCT0xWXduYvZsQgGVYl6B4QAaBjoPjpsceTQrP5XQ=",
+          "title": "Chess"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "None",
+      "profileNames": [
+        "a"
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidGroupSport",
+        "description": "Either a valid preset-id has to be set to 'sportPreset' or a non-null, non-empty 'customSportName' has to be supplied!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Unknown",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "curling"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidGroupSport",
+        "description": "Either a valid preset-id has to be set to 'sportPreset' or a non-null, non-empty 'customSportName' has to be supplied!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "customSportName": "  ",
+      "name": "Blank",
+      "profileNames": [
+        "a"
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidGroupSport",
+        "description": "Either a valid preset-id has to be set to 'sportPreset' or a non-null, non-empty 'customSportName' has to be supplied!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "customSportName": "Curling",
+      "name": "Fallback",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "curling"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid14\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid15\u003e",
+        "customSportName": "Curling",
+        "id": "\u003cid16\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Fallback",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": null
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

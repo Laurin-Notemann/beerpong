@@ -1,0 +1,323 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Wallpaper",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Wallpaper",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/wallpaper",
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid13\u003e",
+        "offsetX": 0,
+        "offsetY": 0,
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "type": "GROUP_WALLPAPER",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+        "zoom": 0
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "id": "\u003cid13\u003e",
+          "offsetX": 0,
+          "offsetY": 0,
+          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+          "type": "GROUP_WALLPAPER",
+          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+          "zoom": 0
+        },
+        "eventType": "ASSETS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "groupWallpaperSet"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": "\u003cid13\u003e",
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Wallpaper",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /assets/\u003cid13\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid13\u003e",
+        "offsetX": 0,
+        "offsetY": 0,
+        "type": "GROUP_WALLPAPER",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+        "zoom": 0
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/wallpaper",
+    "body": {
+      "offsetX": 1.5,
+      "offsetY": 2,
+      "zoom": 1.25
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid14\u003e",
+        "offsetX": 1.5,
+        "offsetY": 2,
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "type": "GROUP_WALLPAPER",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
+        "zoom": 1.25
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "id": "\u003cid14\u003e",
+          "offsetX": 1.5,
+          "offsetY": 2,
+          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+          "type": "GROUP_WALLPAPER",
+          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
+          "zoom": 1.25
+        },
+        "eventType": "ASSETS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "groupWallpaperSet"
+      }
+    ]
+  },
+  {
+    "request": "GET /assets/\u003cid13\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /assets/\u003cid14\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid14\u003e",
+        "offsetX": 1.5,
+        "offsetY": 2,
+        "type": "GROUP_WALLPAPER",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
+        "zoom": 1.25
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/wallpaper",
+    "body": {
+      "offsetX": -1,
+      "offsetY": 0,
+      "zoom": 1
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "assetValidationFailed",
+        "description": "The provided asset offsets or zoom have to be \u003e= 0!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/wallpaper",
+    "body": {
+      "zoom": -0.5
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "assetValidationFailed",
+        "description": "The provided asset offsets or zoom have to be \u003e= 0!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/wallpaper",
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Wallpaper",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "activeSeasonId": "\u003cid1\u003e",
+          "assetIdWallpaper": null,
+          "createdAt": "\u003cts\u003e",
+          "createdById": "\u003cid2\u003e",
+          "customSportName": null,
+          "id": "\u003cid3\u003e",
+          "inviteCode": "\u003cinviteCode\u003e",
+          "name": "Wallpaper",
+          "numberOfMatches": 0,
+          "numberOfPlayers": 0,
+          "numberOfSeasons": 0,
+          "sportPreset": {
+            "id": "beerpong",
+            "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+            "title": "Beerpong"
+          }
+        },
+        "eventType": "ASSETS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "groupWallpaperDelete"
+      }
+    ]
+  },
+  {
+    "request": "GET /assets/\u003cid14\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/wallpaper",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "groupHasNoWallpaper",
+        "description": "The provided group does not have a wallpaper saved!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "events": []
+  }
+]

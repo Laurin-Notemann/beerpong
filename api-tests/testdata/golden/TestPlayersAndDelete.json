@@ -1,0 +1,670 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Players",
+      "profileNames": [
+        "a",
+        "b",
+        "c"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Players",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid17\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid18\u003e",
+        "customSportName": null,
+        "id": "\u003cid19\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid29\u003e"
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid30\u003e"
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid9\u003e",
+          "profileId": "\u003cid6\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid31\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/\u003cid9\u003e",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "activeThisSeason": true,
+          "id": "\u003cid9\u003e",
+          "profileId": "\u003cid6\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid31\u003e"
+        },
+        "eventType": "PLAYERS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "playerDelete"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid29\u003e"
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid30\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players?showInactive=true",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": false,
+          "id": "\u003cid9\u003e",
+          "profileId": "\u003cid6\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid31\u003e"
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid29\u003e"
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid30\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players?showInactive=false",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid29\u003e"
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "seasonId": "\u003cid1\u003e",
+          "statisticsId": "\u003cid30\u003e"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players?showInactive=maybe",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/extended",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/extended?showInactive=true",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": null,
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/\u003cid9\u003e",
+    "status": 403,
+    "response": {
+      "error": {
+        "code": "playerAlreadyDeleted",
+        "description": "This player has been deleted!"
+      },
+      "httpCode": 403,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/nope",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "playerNotFound",
+        "description": "The requested player could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/\u003cid21\u003e",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "playerNotOfGroup",
+        "description": "The provided player and group id do not match!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid17\u003e/players/\u003cid7\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid17\u003e/players",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid17\u003e/players/extended",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "events": []
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Old",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid32\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "newSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": null,
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid32\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "oldSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": "\u003cts\u003e",
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid1\u003e",
+            "name": "Old",
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          }
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonStart"
+      }
+    ]
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/\u003cid7\u003e",
+    "status": 403,
+    "response": {
+      "error": {
+        "code": "seasonAlreadyEnded",
+        "description": "Past seasons are immutable!"
+      },
+      "httpCode": 403,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/\u003cid34\u003e",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "activeThisSeason": true,
+          "id": "\u003cid34\u003e",
+          "profileId": "\u003cid5\u003e",
+          "seasonId": "\u003cid32\u003e",
+          "statisticsId": "\u003cid38\u003e"
+        },
+        "eventType": "PLAYERS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "playerDelete"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/players/extended",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid7\u003e",
+          "profileId": "\u003cid4\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": "\u003cts\u003e",
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": "Old",
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        },
+        {
+          "activeThisSeason": true,
+          "id": "\u003cid8\u003e",
+          "profileId": "\u003cid5\u003e",
+          "season": {
+            "createdById": null,
+            "endDate": "\u003cts\u003e",
+            "groupId": null,
+            "id": "\u003cid1\u003e",
+            "name": "Old",
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "statistics": {
+            "avgPointsPerMatch": 0,
+            "avgTeamSize": 0,
+            "elo": 1500,
+            "id": null,
+            "matches": 0,
+            "moves": 0,
+            "points": 0,
+            "totalTeamSize": 0,
+            "wins": 0
+          }
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

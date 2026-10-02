@@ -1,0 +1,37 @@
+[
+  {
+    "request": "GET /group-presets",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        },
+        {
+          "id": "kicker",
+          "imageUrl": "https://media.istockphoto.com/id/696594232/photo/foosball-at-modern-office-close-up-view.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=skF0hp5i_9ctZ2MmkqLdaOklvwSGbqEqcAu0JLF8M5c=",
+          "title": "Kicker"
+        },
+        {
+          "id": "tabletennis",
+          "imageUrl": "https://media.istockphoto.com/id/1425158165/photo/table-tennis-ping-pong-paddles-and-white-ball-on-blue-board.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=KSdi4bEGoxdhaGMnl6CZaqTLbKbobArgrrpLem3oN98=",
+          "title": "Table Tennis"
+        },
+        {
+          "id": "chess",
+          "imageUrl": "https://media.istockphoto.com/id/1128789429/photo/plan-leading-strategy-of-successful-business-competition-leader-concept-hand-of-player-chess.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=srlCT0xWXduYvZsQgGVYl6B4QAaBjoPjpsceTQrP5XQ=",
+          "title": "Chess"
+        },
+        {
+          "id": "billiards",
+          "imageUrl": "https://media.istockphoto.com/id/1370682737/photo/a-group-of-young-people-came-to-play-billiards-and-in-the-young-hands-was-a-cane-and-layers.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=monjVEGbEEjeau83cCqBScfiR1n9SOaqlZpDEB3-Ioo=",
+          "title": "Billiards"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

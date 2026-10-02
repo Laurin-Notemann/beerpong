@@ -1,0 +1,453 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Season validation",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Season validation",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": null,
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonName",
+        "description": "Season name must be non-null, non-empty and between 2 and 50 characters!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonName",
+        "description": "Season name must be non-null, non-empty and between 2 and 50 characters!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "  ",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonName",
+        "description": "Season name must be non-null, non-empty and between 2 and 50 characters!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "x",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonName",
+        "description": "Season name must be non-null, non-empty and between 2 and 50 characters!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidSeasonName",
+        "description": "Season name must be non-null, non-empty and between 2 and 50 characters!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": null
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": []
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": [
+        {
+          "finishingMove": true,
+          "name": "Finish",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": [
+        {
+          "finishingMove": true,
+          "name": "Finish",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish 2"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        },
+        {
+          "name": " ",
+          "pointsForScorer": 1
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Valid",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        },
+        {
+          "name": "Neg",
+          "pointsForTeam": -1
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidRuleMoves",
+        "description": "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam \u003e 0)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "ab",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid13\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

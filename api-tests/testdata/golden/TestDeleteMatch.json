@@ -1,0 +1,448 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Delete",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Delete",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z",
+        "y"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid15\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid16\u003e",
+        "customSportName": null,
+        "id": "\u003cid17\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "savePhoto": true,
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid10\u003e"
+                }
+              ],
+              "playerId": "\u003cid6\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid29\u003e",
+        "photoUploads": [
+          {
+            "teamId": null,
+            "teamPhoto": {
+              "id": "\u003cid30\u003e",
+              "offsetX": 0,
+              "offsetY": 0,
+              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid30\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+              "type": "TEAM_PHOTO",
+              "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid30\u003e",
+              "zoom": 0
+            }
+          }
+        ],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "date": "\u003cts\u003e",
+          "id": "\u003cid29\u003e",
+          "photoUploads": [
+            {
+              "teamId": null,
+              "teamPhoto": {
+                "id": "\u003cid30\u003e",
+                "offsetX": 0,
+                "offsetY": 0,
+                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid30\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+                "type": "TEAM_PHOTO",
+                "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid30\u003e",
+                "zoom": 0
+              }
+            }
+          ],
+          "seasonId": "\u003cid1\u003e"
+        },
+        "eventType": "MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "matchCreate"
+      }
+    ]
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/nope",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "matchNotFound",
+        "description": "The requested match could not be found or its season id does not match the provided group id!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/nope/matches/\u003cid29\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonNotFound",
+        "description": "This season could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid15\u003e/matches/\u003cid29\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid29\u003e",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": "\u003cid29\u003e",
+        "eventType": "MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "matchDelete"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid29\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "matchNotFound",
+        "description": "The requested match could not be found or its season id does not match the provided group id!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /assets/\u003cid30\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid29\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "matchNotFound",
+        "description": "The requested match could not be found or its season id does not match the provided group id!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid10\u003e"
+                }
+              ],
+              "playerId": "\u003cid6\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid31\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "date": "\u003cts\u003e",
+          "id": "\u003cid31\u003e",
+          "photoUploads": [],
+          "seasonId": "\u003cid1\u003e"
+        },
+        "eventType": "MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "matchCreate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Old",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid32\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "newSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": null,
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid32\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "oldSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": "\u003cts\u003e",
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid1\u003e",
+            "name": "Old",
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          }
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonStart"
+      }
+    ]
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid31\u003e",
+    "status": 403,
+    "response": {
+      "error": {
+        "code": "seasonAlreadyEnded",
+        "description": "Past seasons are immutable!"
+      },
+      "httpCode": 403,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/seasons/\u003cid32\u003e/matches/\u003cid31\u003e",
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchGroupOrSeasonIdDontMatch",
+        "description": "The provided season id doesnt match the season id of the provided match!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "events": []
+  }
+]

@@ -1,0 +1,316 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Avatars",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Avatars",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid13\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid14\u003e",
+        "customSportName": null,
+        "id": "\u003cid15\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid4\u003e/avatar",
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid25\u003e",
+        "offsetX": 0,
+        "offsetY": 0,
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid25\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "type": "PROFILE_AVATAR",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid25\u003e",
+        "zoom": 0
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "id": "\u003cid25\u003e",
+          "offsetX": 0,
+          "offsetY": 0,
+          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid25\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+          "type": "PROFILE_AVATAR",
+          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid25\u003e",
+          "zoom": 0
+        },
+        "eventType": "ASSETS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "profileAvatarSet"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/profiles/\u003cid4\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "assetIdAvatar": "\u003cid25\u003e",
+        "createdById": "\u003cid2\u003e",
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid4\u003e",
+        "name": "a"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid4\u003e/avatar",
+    "body": {
+      "offsetX": 3,
+      "offsetY": 4,
+      "zoom": 2
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid26\u003e",
+        "offsetX": 3,
+        "offsetY": 4,
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid26\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "type": "PROFILE_AVATAR",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid26\u003e",
+        "zoom": 2
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "id": "\u003cid26\u003e",
+          "offsetX": 3,
+          "offsetY": 4,
+          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid26\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+          "type": "PROFILE_AVATAR",
+          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid26\u003e",
+          "zoom": 2
+        },
+        "eventType": "ASSETS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "profileAvatarSet"
+      }
+    ]
+  },
+  {
+    "request": "GET /assets/\u003cid25\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /assets/\u003cid26\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "id": "\u003cid26\u003e",
+        "offsetX": 3,
+        "offsetY": 4,
+        "type": "PROFILE_AVATAR",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid26\u003e",
+        "zoom": 2
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid4\u003e/avatar",
+    "body": {
+      "offsetX": 0,
+      "offsetY": -1,
+      "zoom": 0
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "assetValidationFailed",
+        "description": "The provided asset offsets or zoom have to be \u003e= 0!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid16\u003e/avatar",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "profileNotFound",
+        "description": "The requested profile could not be found or the provided group id does not match the profiles group!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/profiles/\u003cid16\u003e/avatar",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "profileNotFound",
+        "description": "The requested profile could not be found or the provided group id does not match the profiles group!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/profiles/\u003cid4\u003e/avatar",
+    "status": 200,
+    "response": {
+      "data": {
+        "assetIdAvatar": null,
+        "createdById": "\u003cid2\u003e",
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid4\u003e",
+        "name": "a"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": []
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "assetIdAvatar": null,
+          "createdById": "\u003cid2\u003e",
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid4\u003e",
+          "name": "a"
+        },
+        "eventType": "ASSETS",
+        "groupId": "\u003cid4\u003e",
+        "scope": "profileAvatarDelete"
+      }
+    ]
+  },
+  {
+    "request": "GET /assets/\u003cid26\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "assetNotFound",
+        "description": "The requested asset could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "DELETE /groups/\u003cid3\u003e/profiles/\u003cid4\u003e/avatar",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "profileHasNoAvatar",
+        "description": "The provided profiles does not have an avatar saved!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  }
+]

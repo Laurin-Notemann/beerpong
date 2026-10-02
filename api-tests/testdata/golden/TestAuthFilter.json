@@ -1,0 +1,259 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "auth filter",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "auth filter",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 401,
+    "response": "Invalid access token or invalid user-id!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 401,
+    "response": "Invalid access token or invalid user-id!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 401,
+    "response": "No access to this group!"
+  },
+  {
+    "request": "GET /groups/does-not-exist",
+    "status": 401,
+    "response": "No access to this group!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/seasons",
+    "status": 401,
+    "response": "No access to this group!"
+  },
+  {
+    "request": "GET /groups/user/",
+    "status": 401,
+    "response": "No access to this group!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/nope",
+    "status": 404,
+    "response": {
+      "error": "Not Found",
+      "path": "/groups/\u003cid3\u003e/nope",
+      "status": 404,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/",
+    "status": 404,
+    "response": {
+      "error": "Not Found",
+      "path": "/groups/\u003cid3\u003e/",
+      "status": 404,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/nope",
+    "status": 401,
+    "response": "No access to this group!"
+  },
+  {
+    "request": "GET /groups/user",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups?inviteCode=\u003cinviteCode\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "auth filter",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/user",
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "GET /groups?inviteCode=\u003cinviteCode\u003e",
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "POST /groups",
+    "body": {},
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/join",
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  },
+  {
+    "request": "GET /group-presets",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        },
+        {
+          "id": "kicker",
+          "imageUrl": "https://media.istockphoto.com/id/696594232/photo/foosball-at-modern-office-close-up-view.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=skF0hp5i_9ctZ2MmkqLdaOklvwSGbqEqcAu0JLF8M5c=",
+          "title": "Kicker"
+        },
+        {
+          "id": "tabletennis",
+          "imageUrl": "https://media.istockphoto.com/id/1425158165/photo/table-tennis-ping-pong-paddles-and-white-ball-on-blue-board.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=KSdi4bEGoxdhaGMnl6CZaqTLbKbobArgrrpLem3oN98=",
+          "title": "Table Tennis"
+        },
+        {
+          "id": "chess",
+          "imageUrl": "https://media.istockphoto.com/id/1128789429/photo/plan-leading-strategy-of-successful-business-competition-leader-concept-hand-of-player-chess.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=srlCT0xWXduYvZsQgGVYl6B4QAaBjoPjpsceTQrP5XQ=",
+          "title": "Chess"
+        },
+        {
+          "id": "billiards",
+          "imageUrl": "https://media.istockphoto.com/id/1370682737/photo/a-group-of-young-people-came-to-play-billiards-and-in-the-young-hands-was-a-cane-and-layers.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=monjVEGbEEjeau83cCqBScfiR1n9SOaqlZpDEB3-Ioo=",
+          "title": "Billiards"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

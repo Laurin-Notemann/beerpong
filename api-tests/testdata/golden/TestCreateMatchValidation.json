@@ -1,0 +1,827 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Match validation",
+      "profileNames": [
+        "a",
+        "b",
+        "c"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Match validation",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid17\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid18\u003e",
+        "customSportName": null,
+        "id": "\u003cid19\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": []
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchWrongAmountOfTeams",
+        "description": "The amount of teams has to be exactly 2!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid9\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchWrongAmountOfTeams",
+        "description": "The amount of teams has to be exactly 2!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "duplicate player"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "no finish"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid14\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "two finishes"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "two finish kinds"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                },
+                {
+                  "count": 1,
+                  "moveId": "\u003cid13\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "finish count two"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 2,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "finish count zero"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 0,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid26\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "nope"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 0,
+                  "moveId": "nope"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid29\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "date": "\u003cts\u003e",
+          "id": "\u003cid29\u003e",
+          "photoUploads": [],
+          "seasonId": "\u003cid1\u003e"
+        },
+        "eventType": "MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "matchCreate"
+      }
+    ]
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid21\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "nope"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
+    "body": {
+      "seasonSettings": {
+        "maxTeamSize": 2,
+        "minTeamSize": 2
+      }
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid1\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 2,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 2,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "createdById": "\u003cid2\u003e",
+          "endDate": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid1\u003e",
+          "name": null,
+          "seasonSettings": {
+            "dailyLeaderboard": "WAKE_TIME",
+            "maxTeamSize": 2,
+            "minMatchesToQualify": 1,
+            "minTeamSize": 2,
+            "rankingAlgorithm": "AVERAGE",
+            "wakeTime": "00:00:00"
+          },
+          "startDate": "\u003cts\u003e"
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonUpdate"
+      }
+    ]
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "matchDtoValidationFailed",
+        "description": "The validation of the match create dto failed (invalid player, rulemove, season or group id, double player, or no/more than exactly one finish move)"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {},
+    "status": 500,
+    "response": {
+      "error": "Internal Server Error",
+      "path": "/groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+      "status": 500,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {},
+        {}
+      ]
+    },
+    "status": 500,
+    "response": {
+      "error": "Internal Server Error",
+      "path": "/groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+      "status": 500,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid17\u003e/matches",
+    "body": {
+      "teams": []
+    },
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/nope/matches",
+    "body": {
+      "teams": []
+    },
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonNotFound",
+        "description": "This season could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "events": []
+  }
+]

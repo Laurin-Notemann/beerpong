@@ -1,0 +1,260 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/user",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Stats",
+      "profileNames": [
+        "a",
+        "b",
+        "c"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Stats",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                },
+                {
+                  "count": 2,
+                  "moveId": "\u003cid14\u003e"
+                }
+              ],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid14\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid17\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Second",
+      "profileNames": [
+        "x"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid18\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid19\u003e",
+        "customSportName": null,
+        "id": "\u003cid20\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Second",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/user",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeSeasonId": "\u003cid18\u003e",
+          "assetIdWallpaper": null,
+          "createdAt": "\u003cts\u003e",
+          "createdById": "\u003cid19\u003e",
+          "customSportName": null,
+          "id": "\u003cid20\u003e",
+          "inviteCode": "\u003cinviteCode\u003e",
+          "name": "Second",
+          "numberOfMatches": 0,
+          "numberOfPlayers": 1,
+          "numberOfSeasons": 1,
+          "sportPreset": {
+            "id": "beerpong",
+            "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+            "title": "Beerpong"
+          }
+        },
+        {
+          "activeSeasonId": "\u003cid1\u003e",
+          "assetIdWallpaper": null,
+          "createdAt": "\u003cts\u003e",
+          "createdById": "\u003cid2\u003e",
+          "customSportName": null,
+          "id": "\u003cid3\u003e",
+          "inviteCode": "\u003cinviteCode\u003e",
+          "name": "Stats",
+          "numberOfMatches": 1,
+          "numberOfPlayers": 3,
+          "numberOfSeasons": 1,
+          "sportPreset": {
+            "id": "beerpong",
+            "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+            "title": "Beerpong"
+          }
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/leave",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/user",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "activeSeasonId": "\u003cid18\u003e",
+          "assetIdWallpaper": null,
+          "createdAt": "\u003cts\u003e",
+          "createdById": "\u003cid19\u003e",
+          "customSportName": null,
+          "id": "\u003cid20\u003e",
+          "inviteCode": "\u003cinviteCode\u003e",
+          "name": "Second",
+          "numberOfMatches": 0,
+          "numberOfPlayers": 1,
+          "numberOfSeasons": 1,
+          "sportPreset": {
+            "id": "beerpong",
+            "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+            "title": "Beerpong"
+          }
+        },
+        {
+          "activeSeasonId": "\u003cid1\u003e",
+          "assetIdWallpaper": null,
+          "createdAt": "\u003cts\u003e",
+          "createdById": "\u003cid2\u003e",
+          "customSportName": null,
+          "id": "\u003cid3\u003e",
+          "inviteCode": "\u003cinviteCode\u003e",
+          "name": "Stats",
+          "numberOfMatches": 1,
+          "numberOfPlayers": 3,
+          "numberOfSeasons": 1,
+          "sportPreset": {
+            "id": "beerpong",
+            "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+            "title": "Beerpong"
+          }
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

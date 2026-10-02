@@ -1,0 +1,272 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Profile CRUD",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Profile CRUD",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid15\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid16\u003e",
+        "customSportName": null,
+        "id": "\u003cid17\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/profiles/\u003cid4\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "assetIdAvatar": null,
+        "createdById": "\u003cid2\u003e",
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid4\u003e",
+        "name": "a"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/profiles/\u003cid18\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "profileNotFound",
+        "description": "The requested profile could not be found or the provided group id does not match the profiles group!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/profiles/nope",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "profileNotFound",
+        "description": "The requested profile could not be found or the provided group id does not match the profiles group!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid4\u003e",
+    "body": {
+      "name": "Alpha"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "assetIdAvatar": null,
+        "createdById": "\u003cid2\u003e",
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid4\u003e",
+        "name": "Alpha"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "assetIdAvatar": null,
+          "createdById": "\u003cid2\u003e",
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid4\u003e",
+          "name": "Alpha"
+        },
+        "eventType": "PROFILES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "profileUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid5\u003e",
+    "body": {
+      "name": "Alpha"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "assetIdAvatar": null,
+        "createdById": "\u003cid2\u003e",
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid5\u003e",
+        "name": "Alpha"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "assetIdAvatar": null,
+          "createdById": "\u003cid2\u003e",
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid5\u003e",
+          "name": "Alpha"
+        },
+        "eventType": "PROFILES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "profileUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid5\u003e",
+    "body": {},
+    "status": 200,
+    "response": {
+      "data": {
+        "assetIdAvatar": null,
+        "createdById": "\u003cid2\u003e",
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid5\u003e",
+        "name": null
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "assetIdAvatar": null,
+          "createdById": "\u003cid2\u003e",
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid5\u003e",
+          "name": null
+        },
+        "eventType": "PROFILES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "profileUpdate"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid18\u003e",
+    "body": {
+      "name": "x"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "profileNotOfGroup",
+        "description": "The provided profile and group id do not match!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/profiles/nope",
+    "body": {
+      "name": "x"
+    },
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "profileNotFound",
+        "description": "The requested profile could not be found or the provided group id does not match the profiles group!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "events": []
+  }
+]

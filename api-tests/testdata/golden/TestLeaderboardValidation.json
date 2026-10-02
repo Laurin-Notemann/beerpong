@@ -1,0 +1,298 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "LB validation",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "LB validation",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid13\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid14\u003e",
+        "customSportName": null,
+        "id": "\u003cid15\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/groups/\u003cid3\u003e/leaderboard",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=weekly",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "leaderboardScopeNotFound",
+        "description": "The leaderboard scope has to be one of: all-time, today, season"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "leaderboardScopeNotFound",
+        "description": "The scope 'season' requires a seasonId param!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season\u0026seasonId=nope",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonNotFound",
+        "description": "This season could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season\u0026seasonId=\u003cid13\u003e",
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season\u0026seasonId=\u003cid1\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid5\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 0,
+              "avgTeamSize": 0,
+              "elo": 1500,
+              "id": null,
+              "matches": 0,
+              "moves": 0,
+              "points": 0,
+              "totalTeamSize": 0,
+              "wins": 0
+            }
+          }
+        ],
+        "numMatches": 0,
+        "numPlayers": 1,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=today\u0026seasonId=ignored",
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid5\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 0,
+              "avgTeamSize": 0,
+              "elo": 1500,
+              "id": null,
+              "matches": 0,
+              "moves": 0,
+              "points": 0,
+              "totalTeamSize": 0,
+              "wins": 0
+            }
+          }
+        ],
+        "numMatches": 0,
+        "numPlayers": 1,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=all-time",
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid5\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 0,
+              "avgTeamSize": 0,
+              "elo": 1500,
+              "id": null,
+              "matches": 0,
+              "moves": 0,
+              "points": 0,
+              "totalTeamSize": 0,
+              "wins": 0
+            }
+          }
+        ],
+        "numMatches": 0,
+        "numPlayers": 1,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

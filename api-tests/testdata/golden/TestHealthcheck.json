@@ -1,0 +1,11 @@
+[
+  {
+    "request": "GET /healthcheck",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]
