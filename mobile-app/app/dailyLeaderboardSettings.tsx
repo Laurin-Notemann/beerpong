@@ -1,12 +1,11 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -33,25 +32,17 @@ export default function Page() {
         seasonId!
     );
 
-    const [dailyLeaderboard, setDailyLeaderboard] = useState<string>(
-        seasonSettings?.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
-            ? 'WAKE_TIME'
-            : seasonSettings?.dailyLeaderboard!
-    );
-    const [wakeTimeDate, setWakeTimeDate] = useState(
-        wakeTimeToDate(seasonSettings?.wakeTime)
-    );
+    // Unedited fields show the saved settings.
+    const [editedDailyLeaderboard, setDailyLeaderboard] = useState<string>();
+    const [editedWakeTimeDate, setWakeTimeDate] = useState<Date>();
 
-    useEffect(() => {
-        if (seasonSettings) {
-            setDailyLeaderboard(
-                seasonSettings.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
-                    ? 'WAKE_TIME'
-                    : seasonSettings.dailyLeaderboard
-            );
-            setWakeTimeDate(wakeTimeToDate(seasonSettings.wakeTime));
-        }
-    }, [seasonSettings]);
+    const dailyLeaderboard =
+        editedDailyLeaderboard ??
+        (seasonSettings?.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
+            ? 'WAKE_TIME'
+            : seasonSettings?.dailyLeaderboard!);
+    const wakeTimeDate =
+        editedWakeTimeDate ?? wakeTimeToDate(seasonSettings?.wakeTime);
 
     const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -63,45 +54,38 @@ export default function Page() {
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Daily Leaderboard',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            noMargin
-                            onPress={async () => {
-                                try {
-                                    if (isDirty) {
-                                        await updateSeasonSettingsMutation.mutateAsync(
-                                            {
-                                                dailyLeaderboard:
-                                                    dailyLeaderboard as SeasonSettingsDto['dailyLeaderboard'],
-                                                wakeTime:
-                                                    toWakeTime(wakeTimeDate),
-                                            }
-                                        );
-                                    }
-                                    nav.goBack();
-                                } catch (err) {
-                                    ConsoleLogger.error(
-                                        'failed to update settings:',
-                                        err
-                                    );
-                                    showErrorToast('Failed to update settings');
-                                }
-                            }}
-                            isLoading={updateSeasonSettingsMutation.isPending}
-                        >
-                            Save
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Daily Leaderboard' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button onPress={() => nav.goBack()}>
+                    Cancel
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={updateSeasonSettingsMutation.isPending}
+                    onPress={async () => {
+                        try {
+                            if (isDirty) {
+                                await updateSeasonSettingsMutation.mutateAsync({
+                                    dailyLeaderboard:
+                                        dailyLeaderboard as SeasonSettingsDto['dailyLeaderboard'],
+                                    wakeTime: toWakeTime(wakeTimeDate),
+                                });
+                            }
+                            nav.goBack();
+                        } catch (err) {
+                            ConsoleLogger.error(
+                                'failed to update settings:',
+                                err
+                            );
+                            showErrorToast('Failed to update settings');
+                        }
+                    }}
+                >
+                    Save
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <Select
                     noFlex

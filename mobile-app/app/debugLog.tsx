@@ -1,7 +1,8 @@
+import { LegendList } from '@legendapp/list/react-native';
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -56,7 +57,7 @@ export default function Page() {
                     headerTitle: 'Debug Logs',
                 }}
             />
-            <ScrollView
+            <LegendList
                 style={{
                     flex: 1,
 
@@ -68,42 +69,50 @@ export default function Page() {
                     paddingTop: insets.top,
                     paddingBottom: insets.bottom + 128,
                 }}
-            >
-                <Heading
-                    title={
-                        <>
-                            Web Socket{' '}
-                            {isRealtimeOpen
-                                ? 'connected ✅'
-                                : 'disconnected ❌'}
-                        </>
-                    }
-                />
-                <Heading
-                    title="Debug Logs"
-                    titleTailIcon={
-                        <TouchableOpacity
-                            onPress={() =>
-                                copyToClipboard(JSON.stringify(logs))
+                ListHeaderComponent={
+                    <>
+                        <Heading
+                            title={
+                                <>
+                                    Web Socket{' '}
+                                    {isRealtimeOpen
+                                        ? 'connected ✅'
+                                        : 'disconnected ❌'}
+                                </>
                             }
-                        >
-                            <Icon
-                                color={theme.color.text.primary}
-                                name="content-copy"
-                                size={16}
-                            />
-                        </TouchableOpacity>
-                    }
-                />
-                {logs.map((i, idx) => (
-                    <Text color="primary" key={idx} style={{ fontSize: 12 }}>
+                        />
+                        <Heading
+                            title="Debug Logs"
+                            titleTailIcon={
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        copyToClipboard(JSON.stringify(logs))
+                                    }
+                                >
+                                    <Icon
+                                        color={theme.color.text.primary}
+                                        name="content-copy"
+                                        size={16}
+                                    />
+                                </TouchableOpacity>
+                            }
+                        />
+                    </>
+                }
+                data={logs}
+                // logs are append-only, so the index is a stable key
+                keyExtractor={(_, idx) => String(idx)}
+                estimatedItemSize={16}
+                recycleItems
+                renderItem={({ item }) => (
+                    <Text color="primary" style={{ fontSize: 12 }}>
                         <Text color="secondary" style={{ fontSize: 12 }}>
-                            {dayjs(i.date).format('HH:mm:ss')}{' '}
+                            {dayjs(item.date).format('HH:mm:ss')}{' '}
                         </Text>
-                        {stringifyLogs(i.data)}
+                        {stringifyLogs(item.data)}
                     </Text>
-                ))}
-            </ScrollView>
+                )}
+            />
         </GestureHandlerRootView>
     );
 }

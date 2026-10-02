@@ -42,7 +42,7 @@ export default function LiveMatchCupControls({
                     borderRadius: 4,
                 },
             }),
-        [theme, insets]
+        [insets]
     );
 
     return (

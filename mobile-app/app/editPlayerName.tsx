@@ -6,7 +6,6 @@ import {
     useUpdatePlayerMutation,
 } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';
@@ -52,17 +51,6 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            isLoading={updatePlayerMutation.isPending}
-                            disabled={value.length < 1}
-                            noMargin
-                            onPress={onSubmit}
-                        >
-                            Done
-                        </HeaderItem>
-                    ),
-
                     headerTitle: 'Player Name',
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
@@ -75,6 +63,17 @@ export default function Page() {
                     },
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={
+                        value.length < 1 || updatePlayerMutation.isPending
+                    }
+                    onPress={onSubmit}
+                >
+                    Done
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <TextInput
                     required

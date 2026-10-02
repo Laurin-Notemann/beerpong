@@ -4,6 +4,7 @@ import {
     TextInputProps as ReactNativeTextInputProps,
     View,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
@@ -15,7 +16,7 @@ export interface TextInputProps extends ReactNativeTextInputProps {
     errorMessage?: string;
 }
 
-const TextInput = forwardRef<ReactNativeTextInput, TextInputProps>(
+const TextInput = forwardRef<TextInputInstance, TextInputProps>(
     function TextInput(
         {
             required = false,

@@ -1,16 +1,11 @@
 import { Stack } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import {
-    TextInput as B,
-    ScrollView,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Avatar from '@/components/Avatar';
-import { HeaderItem } from '@/components/HeaderItem';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import Text from '@/components/Text';
 import TextInput from '@/components/TextInput';
@@ -32,7 +27,7 @@ export default function CreateGroupAddMembers({
 
     const [value, setValue] = useState('');
 
-    const inputRef = useRef<B>(null);
+    const inputRef = useRef<TextInputInstance>(null);
 
     useAutoFocus(inputRef);
 
@@ -63,23 +58,6 @@ export default function CreateGroupAddMembers({
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    headerRight: () =>
-                        value.length > 0 || members.length < 2 ? (
-                            <HeaderItem
-                                disabled={!canSubmit}
-                                onPress={onAddMember}
-                            >
-                                Add
-                            </HeaderItem>
-                        ) : (
-                            <HeaderItem
-                                disabled={!canBeCreated}
-                                onPress={() => onSubmit(members)}
-                            >
-                                Next
-                            </HeaderItem>
-                        ),
-
                     headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
@@ -92,6 +70,23 @@ export default function CreateGroupAddMembers({
                     },
                 }}
             />
+            <Stack.Toolbar placement="right">
+                {value.length > 0 || members.length < 2 ? (
+                    <Stack.Toolbar.Button
+                        disabled={!canSubmit}
+                        onPress={onAddMember}
+                    >
+                        Add
+                    </Stack.Toolbar.Button>
+                ) : (
+                    <Stack.Toolbar.Button
+                        disabled={!canBeCreated}
+                        onPress={() => onSubmit(members)}
+                    >
+                        Next
+                    </Stack.Toolbar.Button>
+                )}
+            </Stack.Toolbar>
             <View
                 style={{
                     backgroundColor: theme.color.bg,

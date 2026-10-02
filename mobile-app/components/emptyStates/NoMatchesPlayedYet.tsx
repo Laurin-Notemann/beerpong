@@ -1,13 +1,12 @@
+import { router } from 'expo-router';
 import { View } from 'react-native';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import IconHead from '@/components/IconHead';
 
 export const NoMatchesPlayedYet: React.FC<{ message?: string }> = ({
     message = 'No Matches Played',
 }) => {
-    const nav = useNavigation();
     return (
         <View style={{ paddingTop: 64 }}>
             <IconHead
@@ -18,7 +17,7 @@ export const NoMatchesPlayedYet: React.FC<{ message?: string }> = ({
                         style={{
                             marginTop: 24,
                         }}
-                        onPress={() => nav.navigate('newMatch')}
+                        onPress={() => router.navigate('/newMatch')}
                         title="Create match"
                         variant="primary"
                     />

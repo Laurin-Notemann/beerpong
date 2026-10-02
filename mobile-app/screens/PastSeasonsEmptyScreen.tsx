@@ -1,5 +1,4 @@
 import { ScrollView, Text, View, ViewProps } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBackground } from '@/app/Background';
 import { useInsets } from '@/app/useInsets';
@@ -207,7 +206,9 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 ...(style ?? {}),
             }}
         >
+            {/* only used as a decorative card inside the empty screen's ScrollView */}
             <Leaderboard
+                scrollEnabled={false}
                 players={players}
                 showUnranked={false}
                 season={{ ...season, numPlayers: players.length, numMatches }}

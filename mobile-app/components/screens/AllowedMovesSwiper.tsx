@@ -3,7 +3,6 @@ import React from 'react';
 import { ScrollView, Switch, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';
@@ -36,16 +35,12 @@ export default function AllowedMovesSwiper({
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Allowed Moves',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Close
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Allowed Moves' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button icon="xmark" onPress={() => nav.goBack()}>
+                    Close
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <Swiper
                 {...swiper}
                 style={{ backgroundColor: theme.panel.dark.bg }}

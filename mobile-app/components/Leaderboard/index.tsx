@@ -1,5 +1,7 @@
+import { LegendList, LegendListProps } from '@legendapp/list/react-native';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, View, ViewProps } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -11,7 +13,6 @@ import MenuItem from '@/components/Menu/MenuItem';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
-import { ThemedView } from '@/components/ThemedView';
 import {
     getRankingAlgorithm,
     type RankingAlgorithm,
@@ -21,7 +22,15 @@ const MODAL_ON_LONG_PRESS = false;
 
 const NEW_UNRANKED_ITEM = false;
 
-export interface LeaderboardProps extends ViewProps {
+type LeaderboardRow =
+    | { type: 'player'; player: Player; placement: number; unranked: boolean }
+    | { type: 'unrankedHeader' };
+
+export interface LeaderboardProps
+    extends Pick<
+        LegendListProps<LeaderboardRow>,
+        'style' | 'contentContainerStyle' | 'refreshControl' | 'scrollEnabled'
+    > {
     players: Player[];
 
     withPodium?: boolean;
@@ -37,7 +46,11 @@ export interface LeaderboardProps extends ViewProps {
         numMatches: number;
     };
     minMatchesRequiredToBeRanked: number;
-    ListEmptyComponent?: React.ReactNode;
+    /** rendered above the season info and podium */
+    ListHeaderComponent?: React.ReactElement;
+    ListFooterComponent?: React.ReactElement;
+    /** shown instead of the podium while nobody is ranked */
+    podiumEmptyComponent?: React.ReactNode;
     rankingAlgorithm?: RankingAlgorithm;
 }
 
@@ -48,8 +61,11 @@ export default function Leaderboard({
     showUnranked = true,
     season,
     minMatchesRequiredToBeRanked,
-    ListEmptyComponent = <LeaderboardEmptyComponent />,
+    ListHeaderComponent,
+    ListFooterComponent,
+    podiumEmptyComponent = <LeaderboardEmptyComponent />,
     rankingAlgorithm = 'AVERAGE',
+    style,
     ...rest
 }: LeaderboardProps) {
     const [playerPreviewModalId, setPlayerPreviewModalId] = useState<
@@ -75,11 +91,31 @@ export default function Leaderboard({
         (i) => i.matches < minMatchesRequiredToBeRanked
     );
 
+    const rows: LeaderboardRow[] = nonPodiumPlayers.map((player, idx) => ({
+        type: 'player',
+        player,
+        placement: idx + (withPodium ? 4 : 1),
+        unranked: false,
+    }));
+    if (showUnranked && unrankedPlayers.length) {
+        rows.push({ type: 'unrankedHeader' });
+        for (const player of unrankedPlayers) {
+            rows.push({
+                type: 'player',
+                player,
+                placement:
+                    sortedPlayers.findIndex((j) => j.id === player.id) + 1,
+                unranked: true,
+            });
+        }
+    }
+
+    const onPlayerLongPress = MODAL_ON_LONG_PRESS
+        ? (id: string) => setPlayerPreviewModalId(id)
+        : undefined;
+
     return (
-        <View
-            {...rest}
-            style={[rest.style, { width: '100%', alignItems: 'center' }]}
-        >
+        <>
             {MODAL_ON_LONG_PRESS && (
                 <LongPressModal
                     isVisible={playerPreviewModalId}
@@ -111,53 +147,78 @@ export default function Leaderboard({
                     }
                 />
             )}
-            {season && <LeaderBoardSeasonInfo {...season} />}
-            {withPodium &&
-                (rankedPlayers[0] ? (
-                    <Podium
-                        firstPlace={rankedPlayers[0]}
-                        secondPlace={rankedPlayers[1]}
-                        thirdPlace={rankedPlayers[2]}
-                        onPlayerPress={onPlayerPress}
-                        onPlayerLongPress={
-                            MODAL_ON_LONG_PRESS
-                                ? (id) => setPlayerPreviewModalId(id)
-                                : undefined
-                        }
-                        rankingAlgorithm={rankingAlgorithm}
-                    />
-                ) : (
-                    ListEmptyComponent
-                ))}
-            <ThemedView
-                style={{
-                    alignSelf: 'stretch',
-                    paddingTop: 14,
-                }}
-            >
-                {nonPodiumPlayers.map((i, idx) => (
-                    <LeaderboardPlayerItem
-                        key={idx}
-                        name={i.name}
-                        cups={i.cups}
-                        id={i.id}
-                        placement={idx + (withPodium ? 4 : 1)}
-                        points={i.points}
-                        matches={i.matches}
-                        elo={i.elo}
-                        matchesWon={i.matchesWon}
-                        avatarUrl={i.avatarUrl}
-                        onPlayerPress={onPlayerPress}
-                        onPlayerLongPress={
-                            MODAL_ON_LONG_PRESS
-                                ? (id) => setPlayerPreviewModalId(id)
-                                : undefined
-                        }
-                        rankingAlgorithm={rankingAlgorithm}
-                    />
-                ))}
-                {showUnranked && unrankedPlayers.length ? (
-                    NEW_UNRANKED_ITEM ? (
+            <LegendList
+                {...rest}
+                style={[{ flex: 1 }, style]}
+                data={rows}
+                keyExtractor={(item) =>
+                    item.type === 'player' ? item.player.id : item.type
+                }
+                getItemType={(item) => item.type}
+                estimatedItemSize={60.5}
+                recycleItems
+                ListHeaderComponent={
+                    <View style={{ alignItems: 'center', paddingBottom: 14 }}>
+                        {ListHeaderComponent}
+                        {season && <LeaderBoardSeasonInfo {...season} />}
+                        {withPodium &&
+                            (rankedPlayers[0] ? (
+                                <Podium
+                                    firstPlace={rankedPlayers[0]}
+                                    secondPlace={rankedPlayers[1]}
+                                    thirdPlace={rankedPlayers[2]}
+                                    onPlayerPress={onPlayerPress}
+                                    onPlayerLongPress={onPlayerLongPress}
+                                    rankingAlgorithm={rankingAlgorithm}
+                                />
+                            ) : (
+                                podiumEmptyComponent
+                            ))}
+                    </View>
+                }
+                ListEmptyComponent={
+                    players.length < 1 ? (
+                        <Pressable onPress={() => router.navigate('/newMatch')}>
+                            <Text
+                                color="secondary"
+                                style={{
+                                    textAlign: 'center',
+                                    paddingTop: 64,
+                                    lineHeight: 32,
+                                }}
+                            >
+                                No matches played yet. {'\n'}
+                                <Text
+                                    color="primary"
+                                    style={{
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    Create match
+                                </Text>
+                            </Text>
+                        </Pressable>
+                    ) : null
+                }
+                ListFooterComponent={ListFooterComponent}
+                renderItem={({ item }) =>
+                    item.type === 'player' ? (
+                        <LeaderboardPlayerItem
+                            name={item.player.name}
+                            cups={item.player.cups}
+                            id={item.player.id}
+                            placement={item.placement}
+                            points={item.player.points}
+                            matches={item.player.matches}
+                            elo={item.player.elo}
+                            matchesWon={item.player.matchesWon}
+                            avatarUrl={item.player.avatarUrl}
+                            unranked={item.unranked}
+                            onPlayerPress={onPlayerPress}
+                            onPlayerLongPress={onPlayerLongPress}
+                            rankingAlgorithm={rankingAlgorithm}
+                        />
+                    ) : NEW_UNRANKED_ITEM ? (
                         <MenuItem
                             title="Unranked"
                             subtitle={
@@ -201,56 +262,8 @@ export default function Leaderboard({
                             </Text>
                         </View>
                     )
-                ) : null}
-                {showUnranked &&
-                    unrankedPlayers.map((i, idx) => (
-                        <LeaderboardPlayerItem
-                            key={idx}
-                            cups={i.cups}
-                            name={i.name}
-                            id={i.id}
-                            placement={
-                                sortedPlayers.findIndex((j) => j.id === i.id) +
-                                1
-                            }
-                            points={i.points}
-                            matches={i.matches}
-                            elo={i.elo}
-                            matchesWon={i.matchesWon}
-                            avatarUrl={i.avatarUrl}
-                            unranked
-                            onPlayerPress={onPlayerPress}
-                            onPlayerLongPress={
-                                MODAL_ON_LONG_PRESS
-                                    ? (id) => setPlayerPreviewModalId(id)
-                                    : undefined
-                            }
-                            rankingAlgorithm={rankingAlgorithm}
-                        />
-                    ))}
-                {players.length < 1 && (
-                    <Pressable onPress={() => nav.navigate('newMatch')}>
-                        <Text
-                            color="secondary"
-                            style={{
-                                textAlign: 'center',
-                                paddingTop: 64,
-                                lineHeight: 32,
-                            }}
-                        >
-                            No matches played yet. {'\n'}
-                            <Text
-                                color="primary"
-                                style={{
-                                    fontWeight: 500,
-                                }}
-                            >
-                                Create match
-                            </Text>
-                        </Text>
-                    </Pressable>
-                )}
-            </ThemedView>
-        </View>
+                }
+            />
+        </>
     );
 }

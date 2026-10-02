@@ -2,8 +2,7 @@ import { Stack } from 'expo-router';
 import { SharedValue } from 'react-native-reanimated';
 
 import { useNavStyles } from '@/app/navigation/navStyles';
-import { HeaderItem, HeaderTitle } from '@/components/HeaderItem';
-import { SwipeButtons } from '@/components/SwipeButtons';
+import { useSwiperPage } from '@/hooks/useSwiperPage';
 
 export const SaveSeasonStack: React.FC<{
     oldSeasonIsEmpty: boolean;
@@ -32,68 +31,50 @@ export const SaveSeasonStack: React.FC<{
     isCreateDisabled,
     oldSeasonIsEmpty,
 }) => {
+    const page = useSwiperPage(animationProgress);
+
+    // with an empty old season there is no "Save Old Season" page, only the new season's rules
+    const isOldSeasonPage = !oldSeasonIsEmpty && page === 0;
+
     return (
-        <Stack.Screen
-            options={{
-                ...useNavStyles(),
-                headerLeft: () =>
-                    oldSeasonIsEmpty ? (
-                        <HeaderItem onPress={onClear}>Cancel</HeaderItem>
-                    ) : (
-                        <SwipeButtons
-                            animationProgress={animationProgress}
-                            slot1={
-                                <HeaderItem onPress={onClear}>
-                                    Cancel
-                                </HeaderItem>
-                            }
-                            slot2={
-                                <HeaderItem onPress={onBack}>Back</HeaderItem>
-                            }
-                        />
-                    ),
-                headerRight: () =>
-                    oldSeasonIsEmpty ? (
-                        <HeaderItem
-                            onPress={onCreate}
-                            disabled={isCreateDisabled}
-                            isLoading={isCreating}
-                        >
-                            Save
-                        </HeaderItem>
-                    ) : (
-                        <SwipeButtons
-                            animationProgress={animationProgress}
-                            slot1={
-                                <HeaderItem
-                                    onPress={onNext}
-                                    disabled={isNextDisabled}
-                                >
-                                    Next
-                                </HeaderItem>
-                            }
-                            slot2={
-                                <HeaderItem
-                                    onPress={onCreate}
-                                    disabled={isCreateDisabled}
-                                    isLoading={isCreating}
-                                >
-                                    Save
-                                </HeaderItem>
-                            }
-                        />
-                    ),
-                headerTitle: () =>
-                    oldSeasonIsEmpty ? (
-                        <HeaderTitle title="Start New Season" />
-                    ) : (
-                        <SwipeButtons
-                            animationProgress={animationProgress}
-                            slot1={<HeaderTitle title="Save Old Season" />}
-                            slot2={<HeaderTitle title="Start New Season" />}
-                        />
-                    ),
-            }}
-        />
+        <>
+            <Stack.Screen
+                options={{
+                    ...useNavStyles(),
+                    headerTitle: isOldSeasonPage
+                        ? 'Save Old Season'
+                        : 'Start New Season',
+                }}
+            />
+            <Stack.Toolbar placement="left">
+                {page === 0 ? (
+                    <Stack.Toolbar.Button onPress={onClear}>
+                        Cancel
+                    </Stack.Toolbar.Button>
+                ) : (
+                    <Stack.Toolbar.Button onPress={onBack}>
+                        Back
+                    </Stack.Toolbar.Button>
+                )}
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                {isOldSeasonPage ? (
+                    <Stack.Toolbar.Button
+                        disabled={isNextDisabled}
+                        onPress={onNext}
+                    >
+                        Next
+                    </Stack.Toolbar.Button>
+                ) : (
+                    <Stack.Toolbar.Button
+                        variant="done"
+                        disabled={isCreateDisabled || isCreating}
+                        onPress={onCreate}
+                    >
+                        Save
+                    </Stack.Toolbar.Button>
+                )}
+            </Stack.Toolbar>
+        </>
     );
 };

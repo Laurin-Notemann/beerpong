@@ -19,10 +19,7 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 export function PastMatchesSwiper() {
     const scopePicker = useScopePicker();
 
-    const swiper = useControlledSwiper(
-        scopePicker.pastSeasonsSwiperProgress,
-        'pastMatches'
-    );
+    const swiper = useControlledSwiper(scopePicker.pastSeasonsSwiperProgress);
 
     const theme = useTheme();
 
@@ -46,7 +43,7 @@ export function PastMatchesSwiper() {
     if (seasons.length === 0) return <PastSeasonsEmptyScreen />;
 
     return (
-        <Swiper {...swiper} withPeek>
+        <Swiper {...swiper}>
             {seasons.map((season) => {
                 return (
                     <MatchesList

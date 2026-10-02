@@ -1,6 +1,8 @@
+import { MenuView } from '@expo/ui/community/menu';
 import { BlurView } from 'expo-blur';
 import { startTransition, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useDerivedValue,
@@ -10,10 +12,9 @@ import Animated, {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
-import Select from '@/components/Select';
+import { scrollControlledSwipers } from '@/components/Swiper';
 import Text from '@/components/Text';
 import {
     RankingAlgorithm,
@@ -23,9 +24,35 @@ import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
-const USE_SELECT_IN_SORT_MODAL = false;
-
 const pastSeasonsColor = 'gray';
+
+type PickerOption = {
+    id: string;
+    label?: string;
+    size?: 'square';
+    icon?: string;
+};
+
+function getSegmentWidths(
+    options: PickerOption[],
+    containerWidth: number,
+    sidePadding: number
+) {
+    if (containerWidth === 0) return [];
+
+    const squareWidth = 48;
+    const squareCount = options.filter((opt) => opt.size === 'square').length;
+    const fillCount = options.length - squareCount;
+    const availableWidth = containerWidth - sidePadding * 2;
+    const fillWidth =
+        fillCount > 0
+            ? (availableWidth - squareCount * squareWidth) / fillCount
+            : 0;
+
+    return options.map((opt) =>
+        opt.size === 'square' ? squareWidth : fillWidth
+    );
+}
 
 export interface LeaderboardScopePickerProps {
     hasPastSeasonsButton?: boolean;
@@ -51,31 +78,25 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     function onChange(scope: string) {
-        return; // TODO: make this work again
-
-        // Navigate controlled swipers when clicking on tabs
         const optionIndex = ['today', 'season', 'all-time'].indexOf(scope);
         if (optionIndex !== -1) {
-            scopePicker.leaderboardSwiperProgress.value = optionIndex;
-            scopePicker.setLeaderboardPageIndex(optionIndex);
+            scrollControlledSwipers(
+                scopePicker.leaderboardSwiperProgress,
+                optionIndex
+            );
             return;
         }
 
         const pastIdx = pastSeasons.findIndex((i) => i.id === scope);
         if (pastIdx !== -1) {
-            scopePicker.pastSeasonsSwiperProgress.value = pastIdx;
-            scopePicker.setPastSeasonsPageIndex(pastIdx);
+            scrollControlledSwipers(
+                scopePicker.pastSeasonsSwiperProgress,
+                pastIdx
+            );
         }
     }
 
     const groupHasPastSeasons = pastSeasons.length > 0;
-
-    type PickerOption = {
-        id: string;
-        label?: string;
-        size?: 'square';
-        icon?: string;
-    };
 
     const options: PickerOption[] = onlyShowSeason
         ? (
@@ -105,39 +126,24 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const sidePadding = 8;
 
-    const containerRef = useRef<View>(null);
+    const containerRef = useRef<ViewInstance>(null);
 
     const [containerWidth, setContainerWidth] = useState(0);
 
     // Calculate actual segment widths considering square vs fill sizes
-    const segmentWidths = useMemo(() => {
-        if (containerWidth === 0) return [];
-
-        const squareWidth = 48;
-        const squareCount = options.filter(
-            (opt) => opt.size === 'square'
-        ).length;
-        const fillCount = options.length - squareCount;
-        const availableWidth = containerWidth - sidePadding * 2;
-        const fillWidth =
-            fillCount > 0
-                ? (availableWidth - squareCount * squareWidth) / fillCount
-                : 0;
-
-        return options.map((opt) =>
-            opt.size === 'square' ? squareWidth : fillWidth
-        );
-    }, [containerWidth, options, sidePadding]);
+    const segmentWidths = getSegmentWidths(
+        options,
+        containerWidth,
+        sidePadding
+    );
 
     // Calculate cumulative positions for each segment
-    const segmentPositions = useMemo(() => {
-        let cumulative = sidePadding;
-        return segmentWidths.map((width) => {
-            const position = cumulative;
-            cumulative += width;
-            return position;
-        });
-    }, [segmentWidths, sidePadding]);
+    const segmentPositions: number[] = [];
+    let cumulative = sidePadding;
+    for (const width of segmentWidths) {
+        segmentPositions.push(cumulative);
+        cumulative += width;
+    }
 
     const localStaticProgress = useSharedValue(0);
 
@@ -193,8 +199,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const theme = useTheme();
 
-    const [showSortModal, setShowSortModal] = useState(false);
-
     const isPastSeasonsMode = isPastSeason ?? scopePicker.isPastSeasonsMode;
 
     const styles = useMemo(
@@ -233,11 +237,14 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                     height: '100%',
                 },
             }),
-        [theme, isPastSeasonsMode, hasPastSeasonsButton]
+        [theme, isPastSeasonsMode]
     );
 
     const groupRankingAlgorithm =
         activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
+
+    const activeRankingAlgorithm =
+        scopePicker.rankingAlgorithm ?? groupRankingAlgorithm;
 
     const sortOptions = Object.entries(rankingAlgorithms)
         .filter((i) => i[1].showInSelect)
@@ -253,70 +260,49 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     return (
         <>
-            <ConfirmationModal
-                onClose={() => setShowSortModal(false)}
-                title="Sort Players By"
-                actions={
-                    USE_SELECT_IN_SORT_MODAL
-                        ? undefined
-                        : sortOptions.map((i) => ({
-                              title: i.title,
-                              onPress: () => {
-                                  scopePicker.setRankingAlgorithm(
-                                      i.value as RankingAlgorithm
-                                  );
-                                  setShowSortModal(false);
-                              },
-                          }))
-                }
-                content={
-                    USE_SELECT_IN_SORT_MODAL ? (
-                        <Select
-                            color="light"
-                            value={scopePicker.rankingAlgorithm}
-                            style={{
-                                marginHorizontal: 16,
-                            }}
-                            onChange={(id) => {
-                                scopePicker.setRankingAlgorithm(
-                                    id as RankingAlgorithm
-                                );
-                                setShowSortModal(false);
-                            }}
-                            items={sortOptions}
-                        />
-                    ) : undefined
-                }
-                isVisible={showSortModal}
-            />
             <View style={{ gap: 4 }}>
                 {options.length > 0 && hasSortButton && (
                     <View style={{ flexDirection: 'row', paddingLeft: 4 }}>
-                        <PillButton
-                            backgroundColor={
-                                isPastSeasonsMode ? '#555' : undefined
-                            }
-                            blur={!isPastSeasonsMode}
-                            label={
-                                scopePicker.rankingAlgorithm
-                                    ? `Sorted by ${sortOptions.find((i) => i.value === scopePicker.rankingAlgorithm)?.buttonTitle}`
-                                    : 'Sort'
-                            }
-                            iconName="swap-vertical"
-                            onPress={() => setShowSortModal(true)}
-                            onRemove={
-                                scopePicker.rankingAlgorithm
-                                    ? () => {
-                                          startTransition(() => {
-                                              scopePicker.setRankingAlgorithm(
-                                                  undefined
-                                              );
-                                          });
-                                          triggerHapticBump('toast:success');
-                                      }
-                                    : undefined
-                            }
-                        />
+                        <MenuView
+                            title="Sort Players By"
+                            actions={sortOptions.map((option) => ({
+                                id: option.value,
+                                title: option.title,
+                                state:
+                                    option.value === activeRankingAlgorithm
+                                        ? 'on'
+                                        : 'off',
+                            }))}
+                            onPressAction={({ nativeEvent }) => {
+                                const picked =
+                                    nativeEvent.event as RankingAlgorithm;
+                                startTransition(() => {
+                                    // picking the group's own algorithm clears the override
+                                    scopePicker.setRankingAlgorithm(
+                                        picked === groupRankingAlgorithm
+                                            ? undefined
+                                            : picked
+                                    );
+                                });
+                                triggerHapticBump('selection');
+                            }}
+                        >
+                            {/* the native menu owns the tap; the pill is only its label */}
+                            <View pointerEvents="none">
+                                <PillButton
+                                    backgroundColor={
+                                        isPastSeasonsMode ? '#555' : undefined
+                                    }
+                                    blur={!isPastSeasonsMode}
+                                    label={
+                                        scopePicker.rankingAlgorithm
+                                            ? `Sorted by ${sortOptions.find((i) => i.value === scopePicker.rankingAlgorithm)?.buttonTitle}`
+                                            : 'Sort'
+                                    }
+                                    iconName="swap-vertical"
+                                />
+                            </View>
+                        </MenuView>
                     </View>
                 )}
 

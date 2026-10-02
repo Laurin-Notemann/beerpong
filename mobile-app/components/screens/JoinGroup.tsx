@@ -1,12 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import { Stack } from 'expo-router';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useEffectEvent, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
     SafeAreaView,
     Text,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import {
     CodeField,
     useBlurOnFulfill,
@@ -16,7 +17,6 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import Button from '@/components/Button';
-import { HeaderItem } from '@/components/HeaderItem';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
@@ -74,7 +74,7 @@ export default function JoinGroup({
         }
     }
     function onResetCode() {
-        codeInputRef.current?.focus();
+        codeInput()?.focus();
         onCodeChange('');
     }
 
@@ -82,16 +82,19 @@ export default function JoinGroup({
         value: code,
         cellCount: env.groupCode.length,
     });
-    useAutoFocus(codeInputRef);
+    // react-native-confirmation-code-field still types its ref as the pre-0.88 TextInput class.
+    const codeInput = () =>
+        codeInputRef.current as unknown as TextInputInstance | null;
+    useAutoFocus(
+        codeInputRef as unknown as React.RefObject<TextInputInstance | null>
+    );
 
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value: code,
         setValue: onCodeChange,
     });
 
-    const attemptPasteFromClipboard = async () => {
-        // will ask for confirmation to access clipboard
-        const clipboardContents = await Clipboard.getStringAsync();
+    const fillFromClipboard = useEffectEvent((clipboardContents: string) => {
         const withoutWhitespace = clipboardContents
             .replace(nonAlphaNumericChars, '')
             .toUpperCase();
@@ -104,10 +107,13 @@ export default function JoinGroup({
         onCodeChange(withoutWhitespace, true);
 
         showSuccessToast('Filled in from clipboard');
-    };
+    });
 
     useEffect(() => {
-        attemptPasteFromClipboard();
+        // will ask for confirmation to access clipboard
+        Clipboard.getStringAsync().then((contents) =>
+            fillFromClipboard(contents)
+        );
     }, []);
 
     const theme = useTheme();
@@ -127,9 +133,6 @@ export default function JoinGroup({
                         color: theme.color.text.primary,
                     },
                     headerShown: true,
-                    headerRight: isLoading
-                        ? () => <HeaderItem isLoading>awer</HeaderItem>
-                        : undefined,
                 }}
             />
             <SafeAreaView

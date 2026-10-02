@@ -1,9 +1,8 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
@@ -13,9 +12,9 @@ import { ConsoleLogger } from '@/utils/logging';
 export default function Page() {
     const nav = useNavigation();
 
-    const [rankingAlgorithm, setRankingAlgorithm] = useState<'AVERAGE' | 'ELO'>(
-        'AVERAGE'
-    );
+    const [editedRankingAlgorithm, setRankingAlgorithm] = useState<
+        'AVERAGE' | 'ELO'
+    >();
 
     const { groupId, seasonId } = useGroup();
 
@@ -24,52 +23,44 @@ export default function Page() {
         seasonId!
     );
 
-    useEffect(() => {
-        if (seasonSettings) {
-            setRankingAlgorithm(seasonSettings.rankingAlgorithm);
-        }
-    }, [seasonSettings]);
+    // Unedited, this shows the saved setting.
+    const rankingAlgorithm =
+        editedRankingAlgorithm ?? seasonSettings?.rankingAlgorithm ?? 'AVERAGE';
 
     const isDirty = rankingAlgorithm !== seasonSettings?.rankingAlgorithm;
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Rank Players By',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            noMargin
-                            onPress={async () => {
-                                try {
-                                    if (isDirty) {
-                                        await updateSeasonSettingsMutation.mutateAsync(
-                                            {
-                                                rankingAlgorithm,
-                                            }
-                                        );
-                                    }
-                                    nav.goBack();
-                                } catch (err) {
-                                    ConsoleLogger.error(
-                                        'failed to update settings:',
-                                        err
-                                    );
-                                    showErrorToast('Failed to update settings');
-                                }
-                            }}
-                            isLoading={updateSeasonSettingsMutation.isPending}
-                        >
-                            Save
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Rank Players By' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button onPress={() => nav.goBack()}>
+                    Cancel
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={updateSeasonSettingsMutation.isPending}
+                    onPress={async () => {
+                        try {
+                            if (isDirty) {
+                                await updateSeasonSettingsMutation.mutateAsync({
+                                    rankingAlgorithm,
+                                });
+                            }
+                            nav.goBack();
+                        } catch (err) {
+                            ConsoleLogger.error(
+                                'failed to update settings:',
+                                err
+                            );
+                            showErrorToast('Failed to update settings');
+                        }
+                    }}
+                >
+                    Save
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <Select
                     items={[

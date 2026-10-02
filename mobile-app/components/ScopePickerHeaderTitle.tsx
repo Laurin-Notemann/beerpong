@@ -1,5 +1,5 @@
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import { HeaderTitle } from '@/components/HeaderItem';
+import { HeaderTitle } from '@/components/HeaderTitle';
 import { SwipeChildren } from '@/components/SwipeChildren';
 import { useScopePicker } from '@/zustand/useScopePicker';
 

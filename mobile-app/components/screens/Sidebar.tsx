@@ -1,15 +1,11 @@
+import { LegendList } from '@legendapp/list/react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { useEffect, useRef } from 'react';
-import {
-    Animated,
-    ScrollView,
-    TouchableHighlight,
-    TouchableOpacity,
-} from 'react-native';
+import { useEffect } from 'react';
+import { Animated, TouchableHighlight, TouchableOpacity } from 'react-native';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -56,9 +52,9 @@ export function SidebarGroupItem({
         data?.data?.numberOfMatches == null;
 
     // width of the square around the delete button that slides out when the sidebar is in edit mode
-    const deleteActionWidth = useRef(
-        new Animated.Value(showDeleteButton ? 40 : 0)
-    ).current;
+    const [deleteActionWidth] = useState(
+        () => new Animated.Value(showDeleteButton ? 40 : 0)
+    );
 
     useEffect(() => {
         Animated.timing(deleteActionWidth, {
@@ -66,7 +62,7 @@ export function SidebarGroupItem({
             duration: 150,
             useNativeDriver: false, // width property needs JS driver to animate
         }).start();
-    }, [showDeleteButton]);
+    }, [deleteActionWidth, showDeleteButton]);
 
     const theme = useTheme();
 
@@ -267,10 +263,14 @@ export function Sidebar(props: DrawerContentComponentProps) {
                     flex: 1,
                 }}
             >
-                <ScrollView>
-                    {groupIds.map((id) => (
+                <LegendList
+                    data={groupIds}
+                    keyExtractor={(id) => id}
+                    estimatedItemSize={58}
+                    // items render from these, not just from `data`
+                    extraData={`${selectedGroupId}:${isEditMode}`}
+                    renderItem={({ item: id }) => (
                         <SidebarGroupItem
-                            key={id}
                             id={id}
                             isActive={id === selectedGroupId}
                             onPress={() => {
@@ -289,8 +289,8 @@ export function Sidebar(props: DrawerContentComponentProps) {
                             showDeleteButton={isEditMode}
                             onDelete={setGroupIdToBeDeleted}
                         />
-                    ))}
-                    {groupIds.length < 1 && (
+                    )}
+                    ListEmptyComponent={
                         <Text
                             color="secondary"
                             style={{
@@ -326,8 +326,8 @@ export function Sidebar(props: DrawerContentComponentProps) {
                             </Link>{' '}
                             one.
                         </Text>
-                    )}
-                </ScrollView>
+                    }
+                />
             </MenuSection>
             <View
                 style={{

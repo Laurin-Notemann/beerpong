@@ -1,9 +1,8 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -20,15 +19,11 @@ export default function Page() {
         seasonId!
     );
 
-    const [minTeamSize, setMinTeamSize] = useState(seasonSettings?.minTeamSize);
-    const [maxTeamSize, setMaxTeamSize] = useState(seasonSettings?.maxTeamSize);
-
-    useEffect(() => {
-        if (seasonSettings) {
-            setMinTeamSize(seasonSettings.minTeamSize);
-            setMaxTeamSize(seasonSettings.maxTeamSize);
-        }
-    }, [seasonSettings]);
+    // Unedited fields show the saved settings.
+    const [editedMinTeamSize, setMinTeamSize] = useState<number>();
+    const [editedMaxTeamSize, setMaxTeamSize] = useState<number>();
+    const minTeamSize = editedMinTeamSize ?? seasonSettings?.minTeamSize;
+    const maxTeamSize = editedMaxTeamSize ?? seasonSettings?.maxTeamSize;
 
     const isDirty =
         minTeamSize !== seasonSettings?.minTeamSize ||
@@ -36,43 +31,37 @@ export default function Page() {
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Team Size',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            noMargin
-                            onPress={async () => {
-                                try {
-                                    if (isDirty) {
-                                        await updateSeasonSettingsMutation.mutateAsync(
-                                            {
-                                                minTeamSize,
-                                                maxTeamSize,
-                                            }
-                                        );
-                                    }
-                                    nav.goBack();
-                                } catch (err) {
-                                    ConsoleLogger.error(
-                                        'failed to update settings:',
-                                        err
-                                    );
-                                    showErrorToast('Failed to update settings');
-                                }
-                            }}
-                            isLoading={updateSeasonSettingsMutation.isPending}
-                        >
-                            Save
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Team Size' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button onPress={() => nav.goBack()}>
+                    Cancel
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={updateSeasonSettingsMutation.isPending}
+                    onPress={async () => {
+                        try {
+                            if (isDirty) {
+                                await updateSeasonSettingsMutation.mutateAsync({
+                                    minTeamSize,
+                                    maxTeamSize,
+                                });
+                            }
+                            nav.goBack();
+                        } catch (err) {
+                            ConsoleLogger.error(
+                                'failed to update settings:',
+                                err
+                            );
+                            showErrorToast('Failed to update settings');
+                        }
+                    }}
+                >
+                    Save
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <MenuSection>
                     <MenuItemNumberInput

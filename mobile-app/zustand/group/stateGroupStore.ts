@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useEffectEvent, useMemo } from 'react';
 import { create } from 'zustand';
 
 import {
@@ -39,7 +39,7 @@ export function useGroupStore() {
     // if this changes we either left, created, or joined a group.
     const groupsKey = myGroupsQuery.data?.data?.map((i) => i.id)?.join();
 
-    useEffect(() => {
+    const selectFirstGroupIfNoneSelected = useEffectEvent(() => {
         if (!store.selectedGroupId && myGroupsQuery.data) {
             const groupId = myGroupsQuery.data.data?.[0]?.id ?? null;
             if (groupId) {
@@ -48,6 +48,9 @@ export function useGroupStore() {
                 nav.navigate('onboarding');
             }
         }
+    });
+    useEffect(() => {
+        selectFirstGroupIfNoneSelected();
     }, [groupsKey]);
 
     return {

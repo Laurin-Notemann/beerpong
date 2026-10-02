@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { TextInput } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { AppBackground } from '@/app/Background';
@@ -47,11 +47,17 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 pointsForTeam: i.pointsForTeam!,
             }))
         );
-    }, [oldSeasonMoves]);
+    }, [newSeasonDraft.actions, oldSeasonMoves]);
 
     const oldSeasonIsEmpty = numMatches < 1;
 
-    const swiper = useSwiperWithPageState({ initialPage: 0 });
+    const {
+        ref: swiperRef,
+        swiperProgress,
+        swiperPage,
+        onPageChange,
+        defaultIndex,
+    } = useSwiperWithPageState({ initialPage: 0 });
 
     const hasValidName =
         oldSeasonIsEmpty || newSeasonDraft.oldSeasonName.length > 0;
@@ -60,7 +66,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const nav = useNavigation();
 
-    const oldSeasonNameInputRef = useRef<TextInput>(null);
+    const oldSeasonNameInputRef = useRef<TextInputInstance>(null);
 
     return (
         <>
@@ -68,13 +74,13 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 oldSeasonIsEmpty={oldSeasonIsEmpty}
                 isNextDisabled={!hasValidName}
                 isCreateDisabled={!(hasValidName && hasValidMoves)}
-                animationProgress={swiper.swiperProgress}
+                animationProgress={swiperProgress}
                 onClear={onCancel}
                 onBack={() => {
-                    swiper.ref.current?.prev();
+                    swiperRef.current?.prev();
                 }}
                 onNext={() => {
-                    swiper.ref.current?.next();
+                    swiperRef.current?.next();
                 }}
                 onCreate={() =>
                     onStartNewSeason(
@@ -88,8 +94,11 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
             />
             <AppBackground />
             <Swiper
-                {...swiper}
-                enabled={!(swiper.swiperPage === 0 && !hasValidName)}
+                ref={swiperRef}
+                swiperProgress={swiperProgress}
+                defaultIndex={defaultIndex}
+                onPageChange={onPageChange}
+                enabled={!(swiperPage === 0 && !hasValidName)}
                 onScrollStart={() => {
                     oldSeasonNameInputRef.current?.blur();
                 }}

@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Animated,
     Modal,
@@ -17,7 +17,7 @@ export const BlurredBackdrop: React.FC<{
 }> = ({ opacity, onPress }) => {
     return (
         <TouchableWithoutFeedback onPress={onPress}>
-            <Animated.View style={[StyleSheet.absoluteFillObject, { opacity }]}>
+            <Animated.View style={[StyleSheet.absoluteFill, { opacity }]}>
                 <BlurView
                     intensity={50}
                     tint="dark"
@@ -38,9 +38,13 @@ export const LongPressModal: React.FC<any> = ({
     onPress = () => {},
 }) => {
     const theme = useTheme();
+    // Stays true after `isVisible` turns false until the close animation finishes.
     const [show, setShow] = useState(isVisible);
-    const fade = useRef(new Animated.Value(0)).current;
-    const scale = useRef(new Animated.Value(0)).current;
+    if (isVisible && !show) {
+        setShow(true);
+    }
+    const [fade] = useState(() => new Animated.Value(0));
+    const [scale] = useState(() => new Animated.Value(0));
 
     const styles = useMemo(
         () =>
@@ -58,7 +62,6 @@ export const LongPressModal: React.FC<any> = ({
 
     useEffect(() => {
         if (isVisible) {
-            setShow(true);
             Animated.parallel([
                 Animated.timing(fade, {
                     toValue: 1,

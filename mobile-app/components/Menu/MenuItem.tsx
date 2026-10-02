@@ -1,9 +1,7 @@
 import React from 'react';
-import { Pressable, Text, TouchableHighlight, View } from 'react-native';
+import { Alert, Pressable, Text, TouchableHighlight, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import ConfirmationModal from '@/components/ConfirmationModal';
-import useBoolean from '@/components/useBoolean';
 import { useTheme } from '@/theme';
 
 export interface MenuItemProps {
@@ -16,7 +14,7 @@ export interface MenuItemProps {
     tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked' | 'draghandle';
     onPress?: () => void;
 
-    tailContent?: JSX.Element | string | number;
+    tailContent?: React.JSX.Element | string | number;
 
     color?: 'light' | 'dark'; // | "transparent";
 
@@ -51,38 +49,29 @@ export default function MenuItem({
     border = true,
     onDrag,
 }: MenuItemProps) {
-    const [isPromptShown, showPrompt, hidePrompt] = useBoolean(false);
+    // Native confirmation. For "confirm" prompts (e.g. starting a season) backing out is the
+    // destructive choice; for "danger" prompts (e.g. deleting) the action itself is.
+    const showPrompt = () => {
+        if (!confirmationPrompt) return;
+        const isDanger =
+            (confirmationPrompt.type ?? 'dangerRed') === 'dangerRed';
+        Alert.alert(confirmationPrompt.title, confirmationPrompt.description, [
+            {
+                text: 'Cancel',
+                style: isDanger ? 'cancel' : 'destructive',
+            },
+            {
+                text: confirmationPrompt.buttonText || 'Delete',
+                style: isDanger ? 'destructive' : 'default',
+                onPress,
+            },
+        ]);
+    };
 
     const theme = useTheme();
 
     return (
         <>
-            {confirmationPrompt && (
-                <ConfirmationModal
-                    isVisible={isPromptShown}
-                    onClose={hidePrompt}
-                    title={confirmationPrompt.title}
-                    description={confirmationPrompt.description}
-                    actions={[
-                        {
-                            type: (
-                                {
-                                    dangerRed: 'danger',
-                                    confirmBlue: 'confirm',
-                                    default: 'default',
-                                } as const
-                            )[confirmationPrompt.type ?? 'dangerRed'],
-                            title: confirmationPrompt.buttonText || 'Delete',
-                            onPress: () => {
-                                onPress?.();
-                                hidePrompt();
-                            },
-                        },
-                        { title: 'Cancel', onPress: hidePrompt },
-                    ]}
-                />
-            )}
-
             <TouchableHighlight
                 style={{
                     flexDirection: 'row',

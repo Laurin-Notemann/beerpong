@@ -1,11 +1,12 @@
 import React, { forwardRef, useRef } from 'react';
 import { TextInput as ReactNativeTextInput } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 
 import MenuItem, { MenuItemProps } from '@/components/Menu/MenuItem';
 import { useTheme } from '@/theme';
 
 const NumberInput = forwardRef<
-    ReactNativeTextInput,
+    TextInputInstance,
     {
         defaultValue: number;
         onChange: (value: number) => void;
@@ -16,12 +17,7 @@ const NumberInput = forwardRef<
             if (!ref || typeof ref === 'function') {
                 throw new Error('NumberInput expected a useRef');
             }
-            ref.current?.setNativeProps({
-                selection: {
-                    start: 0,
-                    end: defaultValue.toString().length,
-                },
-            });
+            ref.current?.setSelection(0, defaultValue.toString().length);
         }, 0);
     }
     const theme = useTheme();
@@ -68,7 +64,7 @@ export const MenuItemNumberInput: React.FC<
         onChange: (value: number) => void;
     }
 > = ({ defaultValue = 0, onChange, ...props }) => {
-    const ref = useRef<ReactNativeTextInput>(null);
+    const ref = useRef<TextInputInstance>(null);
 
     return (
         <MenuItem

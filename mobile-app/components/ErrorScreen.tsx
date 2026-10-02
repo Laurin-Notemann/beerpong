@@ -1,10 +1,11 @@
+import type React from 'react';
 import { View, ViewProps } from 'react-native';
 
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
 export interface ErrorScreenProps extends ViewProps {
-    message?: string | JSX.Element;
+    message?: string | React.JSX.Element;
     error?: unknown;
 }
 export default function ErrorScreen({

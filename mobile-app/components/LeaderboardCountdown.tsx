@@ -1,8 +1,9 @@
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { View } from 'react-native';
 
-import { useRerenderEverySecond } from '@/components/LiveMatchIndicator';
 import Text from '@/components/Text';
+import { useInterval } from '@/components/useInterval';
 
 const ENDSPURT_MINUTES = 60 * 10;
 
@@ -13,15 +14,16 @@ export function LeaderboardCountdown({
     endDate: dayjs.Dayjs;
     type: 'today' | 'season';
 }) {
-    const dailyLeaderboardResetsIn = endDate.diff(dayjs());
+    const [now, setNow] = useState(() => Date.now());
+    useInterval(() => setNow(Date.now()), 1000);
+
+    const dailyLeaderboardResetsIn = endDate.diff(now);
 
     const isOneDayOrMoreAway = dailyLeaderboardResetsIn >= 24 * 60 * 60 * 1000;
 
     const resetStr = dayjs
         .duration(dailyLeaderboardResetsIn)
         .format(isOneDayOrMoreAway ? 'D HH:mm:ss' : 'HH:mm:ss');
-
-    useRerenderEverySecond();
 
     const isEndspurt = dailyLeaderboardResetsIn < ENDSPURT_MINUTES * 60 * 1000;
 

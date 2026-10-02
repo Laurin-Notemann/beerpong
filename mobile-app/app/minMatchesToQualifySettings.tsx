@@ -1,9 +1,8 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -20,56 +19,47 @@ export default function Page() {
         seasonId!
     );
 
-    const [minMatchesToQualify, setMinMatchesToQualify] = useState(
-        seasonSettings?.minMatchesToQualify
-    );
+    const [editedMinMatchesToQualify, setMinMatchesToQualify] =
+        useState<number>();
 
-    useEffect(() => {
-        if (seasonSettings) {
-            setMinMatchesToQualify(seasonSettings.minMatchesToQualify);
-        }
-    }, [seasonSettings]);
+    // Unedited, this shows the saved setting.
+    const minMatchesToQualify =
+        editedMinMatchesToQualify ?? seasonSettings?.minMatchesToQualify;
 
     const isDirty = minMatchesToQualify !== seasonSettings?.minMatchesToQualify;
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Min Matches to Qualify',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            noMargin
-                            onPress={async () => {
-                                try {
-                                    if (isDirty) {
-                                        await updateSeasonSettingsMutation.mutateAsync(
-                                            {
-                                                minMatchesToQualify,
-                                            }
-                                        );
-                                    }
-                                    nav.goBack();
-                                } catch (err) {
-                                    ConsoleLogger.error(
-                                        'failed to update settings:',
-                                        err
-                                    );
-                                    showErrorToast('Failed to update settings');
-                                }
-                            }}
-                            isLoading={updateSeasonSettingsMutation.isPending}
-                        >
-                            Save
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Min Matches to Qualify' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button onPress={() => nav.goBack()}>
+                    Cancel
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={updateSeasonSettingsMutation.isPending}
+                    onPress={async () => {
+                        try {
+                            if (isDirty) {
+                                await updateSeasonSettingsMutation.mutateAsync({
+                                    minMatchesToQualify,
+                                });
+                            }
+                            nav.goBack();
+                        } catch (err) {
+                            ConsoleLogger.error(
+                                'failed to update settings:',
+                                err
+                            );
+                            showErrorToast('Failed to update settings');
+                        }
+                    }}
+                >
+                    Save
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <MenuSection>
                     <MenuItemNumberInput

@@ -20,5 +20,7 @@ module.exports = {
         ],
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/no-non-null-asserted-optional-chain': 'warn',
+        // eslint-plugin-import can't resolve package "exports" subpaths; TypeScript checks these.
+        'import/no-unresolved': ['error', { ignore: ['^@legendapp/list/'] }],
     },
 };

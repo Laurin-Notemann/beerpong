@@ -10,6 +10,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
@@ -28,6 +29,8 @@ import { LoggingProvider } from '@/utils/useLogging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { ScopePickerProvider } from '@/zustand/useScopePicker';
 
+export const unstable_settings = { initialRouteName: '(tabs)' };
+
 const Drawer = createDrawerNavigator();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -40,12 +43,12 @@ function Everything() {
 
     useEffect(() => {
         connectRealtime(groupIds);
-    }, [groupIds]);
+    }, [connectRealtime, groupIds]);
 
     const modalStyles = useModalStyles();
 
     return (
-        <Stack initialRouteName="(tabs)">
+        <Stack>
             <Stack.Screen
                 name="onboarding"
                 options={{ title: '', headerShown: false }}
@@ -114,38 +117,40 @@ function RootLayout() {
     if (!loaded) return <LoadingScreen />;
 
     return (
-        <PersistQueryClientProvider
-            client={queryClient}
-            persistOptions={{ persister }}
-        >
-            <LoggingProvider>
-                <ApiProvider>
-                    <ThemeProvider value={appTheme}>
-                        <ScopePickerProvider>
-                            <PortalProvider>
-                                <RootSiblingParent>
-                                    <StatusBar barStyle={theme.barStyle} />
-                                    <Drawer.Navigator
-                                        screenOptions={{
-                                            drawerStyle: {
-                                                width: 256,
-                                            },
-                                            headerShown: false,
-                                        }}
-                                        drawerContent={Sidebar}
-                                    >
-                                        <Drawer.Screen
-                                            name="static/aboutPremium"
-                                            component={Everything}
-                                        />
-                                    </Drawer.Navigator>
-                                </RootSiblingParent>
-                            </PortalProvider>
-                        </ScopePickerProvider>
-                    </ThemeProvider>
-                </ApiProvider>
-            </LoggingProvider>
-        </PersistQueryClientProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={{ persister }}
+            >
+                <LoggingProvider>
+                    <ApiProvider>
+                        <ThemeProvider value={appTheme}>
+                            <ScopePickerProvider>
+                                <PortalProvider>
+                                    <RootSiblingParent>
+                                        <StatusBar barStyle={theme.barStyle} />
+                                        <Drawer.Navigator
+                                            screenOptions={{
+                                                drawerStyle: {
+                                                    width: 256,
+                                                },
+                                                headerShown: false,
+                                            }}
+                                            drawerContent={Sidebar}
+                                        >
+                                            <Drawer.Screen
+                                                name="static/aboutPremium"
+                                                component={Everything}
+                                            />
+                                        </Drawer.Navigator>
+                                    </RootSiblingParent>
+                                </PortalProvider>
+                            </ScopePickerProvider>
+                        </ThemeProvider>
+                    </ApiProvider>
+                </LoggingProvider>
+            </PersistQueryClientProvider>
+        </GestureHandlerRootView>
     );
 }
 

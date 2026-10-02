@@ -172,12 +172,12 @@ export function useScopePicker() {
         setLeaderboardPageIndex: (pageIdx: number) => {
             actions.setLeaderboardPageIndex(groupId!, pageIdx);
 
-            leaderboardSwiperProgress.value = pageIdx;
+            leaderboardSwiperProgress.set(pageIdx);
         },
         setPastSeasonsPageIndex: (pageIdx: number) => {
             actions.setPastSeasonsPageIndex(groupId!, pageIdx);
 
-            pastSeasonsSwiperProgress.value = pageIdx;
+            pastSeasonsSwiperProgress.set(pageIdx);
         },
         leaderboardSwiperProgress,
         pastSeasonsSwiperProgress,

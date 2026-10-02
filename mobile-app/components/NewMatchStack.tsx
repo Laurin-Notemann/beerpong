@@ -4,9 +4,8 @@ import { SharedValue } from 'react-native-reanimated';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { MinimalMatch } from '@/api/utils/matchDtoToMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
-import { HeaderItem } from '@/components/HeaderItem';
 import MatchVsHeader from '@/components/MatchVsHeader';
-import { SwipeButtons } from '@/components/SwipeButtons';
+import { useSwiperPage } from '@/hooks/useSwiperPage';
 
 export const NewMatchStack: React.FC<{
     onCreateRandomTeams: () => void;
@@ -49,77 +48,80 @@ export const NewMatchStack: React.FC<{
 
     const isRandomTeamsMode = randomTeamsMode !== null;
 
+    const page = useSwiperPage(animationProgress);
+
     return (
-        <Stack.Screen
-            options={{
-                ...useNavStyles(),
-                headerLeft: () => (
-                    <SwipeButtons
-                        animationProgress={animationProgress}
-                        slot1={
-                            isRandomTeamsMode ? (
-                                <HeaderItem onPress={onExitRandomTeamsMode}>
-                                    Cancel
-                                </HeaderItem>
-                            ) : (
-                                !bothTeamsEmpty && (
-                                    <HeaderItem onPress={onClear}>
-                                        Clear
-                                    </HeaderItem>
-                                )
-                            )
-                        }
-                        slot2={<HeaderItem onPress={onBack}>Back</HeaderItem>}
-                    />
-                ),
-                headerRight: () => (
-                    <SwipeButtons
-                        animationProgress={animationProgress}
-                        slot1={
-                            isRandomTeamsMode ? (
-                                <HeaderItem
-                                    onPress={onCreateRandomTeams}
-                                    disabled={
-                                        randomTeamsMode.players.length <
-                                            minTeamSize * 2 ||
-                                        randomTeamsMode.players.length >
-                                            maxTeamSize * 2
-                                    }
-                                >
-                                    Generate
-                                </HeaderItem>
-                            ) : (
-                                <HeaderItem
-                                    onPress={onNext}
-                                    disabled={!hasValidTeams}
-                                >
-                                    Next
-                                </HeaderItem>
-                            )
-                        }
-                        slot2={
-                            <HeaderItem
-                                onPress={onCreate}
-                                isLoading={isCreating}
-                            >
-                                Create
-                            </HeaderItem>
-                        }
-                    />
-                ),
-                headerTitle: isRandomTeamsMode
-                    ? 'Random Teams'
-                    : bothTeamsEmpty
-                      ? 'Assign Teams'
-                      : () => (
-                            <MatchVsHeader
-                                match={match}
-                                style={{
-                                    bottom: 4,
-                                }}
-                            />
-                        ),
-            }}
-        />
+        <>
+            <Stack.Screen
+                options={{
+                    ...useNavStyles(),
+                    headerTitle: isRandomTeamsMode
+                        ? 'Random Teams'
+                        : bothTeamsEmpty
+                          ? 'Assign Teams'
+                          : () => (
+                                <MatchVsHeader
+                                    match={match}
+                                    style={{
+                                        bottom: 4,
+                                    }}
+                                />
+                            ),
+                }}
+            />
+            {/* On the first page the tab's Groups button keeps the left side, so Clear and
+                Cancel sit next to Next. Later pages replace it with Back. */}
+            {page === 0 ? (
+                <Stack.Toolbar placement="right">
+                    {isRandomTeamsMode ? (
+                        <Stack.Toolbar.Button onPress={onExitRandomTeamsMode}>
+                            Cancel
+                        </Stack.Toolbar.Button>
+                    ) : (
+                        !bothTeamsEmpty && (
+                            <Stack.Toolbar.Button onPress={onClear}>
+                                Clear
+                            </Stack.Toolbar.Button>
+                        )
+                    )}
+                    {isRandomTeamsMode ? (
+                        <Stack.Toolbar.Button
+                            onPress={onCreateRandomTeams}
+                            disabled={
+                                randomTeamsMode.players.length <
+                                    minTeamSize * 2 ||
+                                randomTeamsMode.players.length > maxTeamSize * 2
+                            }
+                        >
+                            Generate
+                        </Stack.Toolbar.Button>
+                    ) : (
+                        <Stack.Toolbar.Button
+                            onPress={onNext}
+                            disabled={!hasValidTeams}
+                        >
+                            Next
+                        </Stack.Toolbar.Button>
+                    )}
+                </Stack.Toolbar>
+            ) : (
+                <>
+                    <Stack.Toolbar placement="left">
+                        <Stack.Toolbar.Button onPress={onBack}>
+                            Back
+                        </Stack.Toolbar.Button>
+                    </Stack.Toolbar>
+                    <Stack.Toolbar placement="right">
+                        <Stack.Toolbar.Button
+                            variant="done"
+                            disabled={isCreating}
+                            onPress={onCreate}
+                        >
+                            Create
+                        </Stack.Toolbar.Button>
+                    </Stack.Toolbar>
+                </>
+            )}
+        </>
     );
 };

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import {
     Animated,
     StyleProp,
@@ -83,7 +83,7 @@ export default function Player({
     setMoveCount,
     onPress,
 }: PlayerProps) {
-    const animation = useRef(new Animated.Value(0)).current; // start with height 0
+    const [animation] = useState(() => new Animated.Value(0)); // start with height 0
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toggleCollapse = () => {
