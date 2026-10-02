@@ -1,11 +1,10 @@
-import { Dimensions, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import Carousel from 'react-native-reanimated-carousel';
+import { useSharedValue } from 'react-native-reanimated';
 
 import Button from '@/components/Button';
+import { Swiper } from '@/components/Swiper';
 import { useTheme } from '@/theme';
-
-const { width } = Dimensions.get('window');
 
 interface PremiumPerk {
     title: string;
@@ -42,6 +41,7 @@ const perks: PremiumPerk[] = [
 
 const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
     const theme = useTheme();
+    const swiperProgress = useSharedValue(0);
 
     return (
         <View
@@ -104,6 +104,7 @@ export const PremiumPerksCarousel = ({
     onSecondaryActionPress: () => void;
 }) => {
     const theme = useTheme();
+    const swiperProgress = useSharedValue(0);
 
     return (
         <View
@@ -111,30 +112,25 @@ export const PremiumPerksCarousel = ({
                 height: 512 + 8,
             }}
         >
-            <Carousel
-                data={perks}
-                height={400}
-                loop={false}
-                width={
-                    width - theme.carousel.peekGap - theme.carousel.peekSize * 2
-                }
-                style={{ width }}
-                renderItem={(perk) => (
-                    <ScrollView
-                        style={{
-                            marginHorizontal: theme.carousel.peekGap / 2,
-                            left:
-                                theme.carousel.peekGap / 2 +
-                                theme.carousel.peekSize,
-                        }}
-                    >
-                        <PremiumPerkCard
-                            title={perk.item.title}
-                            description={perk.item.description}
-                        />
-                    </ScrollView>
-                )}
-            />
+            <View style={{ height: 400 }}>
+                <Swiper swiperProgress={swiperProgress}>
+                    {perks.map((perk) => (
+                        <ScrollView
+                            key={perk.title}
+                            contentContainerStyle={{
+                                paddingHorizontal:
+                                    theme.carousel.peekGap +
+                                    theme.carousel.peekSize,
+                            }}
+                        >
+                            <PremiumPerkCard
+                                title={perk.title}
+                                description={perk.description}
+                            />
+                        </ScrollView>
+                    ))}
+                </Swiper>
+            </View>
             <View
                 style={{
                     gap: 8,

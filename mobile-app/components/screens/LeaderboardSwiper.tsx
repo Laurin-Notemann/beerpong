@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { AnimatedScrollViewProps } from 'react-native-reanimated';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
@@ -31,26 +31,22 @@ export function LayoutScrollView({
     style,
     contentContainerStyle,
     ...props
-}: AnimatedScrollViewProps) {
+}: ScrollViewProps) {
     const insets = useInsets(true);
     return (
         <ScrollView
-            style={{
-                flex: 1,
-                // @ts-expect-error fix style type
-                ...(style ?? {}),
-            }}
-            contentContainerStyle={{
-                alignItems: 'center',
+            style={[{ flex: 1 }, style]}
+            contentContainerStyle={[
+                {
+                    alignItems: 'center',
 
-                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
-                // @ts-expect-error fix style type
-                ...(contentContainerStyle ?? {}),
-            }}
+                    paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                    paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
+                },
+                contentContainerStyle,
+            ]}
             {...props}
         >
-            {/* @ts-expect-error fix children type */}
             {children}
         </ScrollView>
     );
@@ -70,10 +66,7 @@ export function LeaderboardSwiper() {
         alltimeLeaderboard,
     } = useLeaderboardProps(groupId, seasonId ?? null);
 
-    const swiper = useControlledSwiper(
-        scopePicker.leaderboardSwiperProgress,
-        'leaderboard'
-    );
+    const swiper = useControlledSwiper(scopePicker.leaderboardSwiperProgress);
 
     const { invalidatePlayers } = useQueryInvalidation();
 

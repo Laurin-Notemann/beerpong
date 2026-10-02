@@ -13,6 +13,7 @@ import {
     View,
     ViewStyle,
 } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 
 import Dot from '@/components/PaginationDots/component/Dot';
 import EmptyDot, {
@@ -49,7 +50,7 @@ const DotContainer: React.FC<IDotContainerProps> = (props) => {
         };
     }, [props.curPage]);
 
-    const refScrollView = useRef<ScrollView>(null);
+    const refScrollView = useRef<ScrollViewInstance>(null);
     const prevPage = usePrevious(props.curPage);
 
     const getSizeRatio = useCallback<() => number>(() => {

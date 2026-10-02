@@ -4,6 +4,7 @@ import {
     TextInput as RNTextInput,
     View,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { useInsets } from '@/app/useInsets';
@@ -12,7 +13,7 @@ import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
 
 export const OldSeasonNameInput: React.FC<{
-    oldSeasonNameInputRef: React.RefObject<RNTextInput | null>;
+    oldSeasonNameInputRef: React.RefObject<TextInputInstance | null>;
     numMatches: number;
     numPlayers: number;
     startDate: string;

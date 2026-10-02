@@ -21,10 +21,7 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 export function PastSeasonsSwiper() {
     const scopePicker = useScopePicker();
 
-    const swiper = useControlledSwiper(
-        scopePicker.pastSeasonsSwiperProgress,
-        'pastSeasons'
-    );
+    const swiper = useControlledSwiper(scopePicker.pastSeasonsSwiperProgress);
 
     const theme = useTheme();
 
@@ -51,7 +48,7 @@ export function PastSeasonsSwiper() {
     if (seasons.length === 0) return <PastSeasonsEmptyScreen />;
 
     return (
-        <Swiper {...swiper} withPeek>
+        <Swiper {...swiper}>
             {seasons.map((season) => {
                 const rankingAlgorithm =
                     scopePicker.rankingAlgorithm ??

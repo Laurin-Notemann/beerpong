@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -32,7 +33,7 @@ export default function CreateGroupAddMembers({
 
     const [value, setValue] = useState('');
 
-    const inputRef = useRef<B>(null);
+    const inputRef = useRef<TextInputInstance>(null);
 
     useAutoFocus(inputRef);
 

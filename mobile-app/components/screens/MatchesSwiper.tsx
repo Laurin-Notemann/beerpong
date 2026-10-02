@@ -28,8 +28,7 @@ export function MatchesSwiper() {
     const groupHasPastSeasons = pastSeasons.length > 0;
 
     const leaderboardSwiper = useControlledSwiper(
-        scopePicker.leaderboardSwiperProgress,
-        'matches'
+        scopePicker.leaderboardSwiperProgress
     );
 
     const wakeTime = activeSeason?.seasonSettings?.wakeTime;

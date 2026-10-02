@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { TextInstance } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -45,7 +46,7 @@ export const Rule: React.FC<RuleProps> = ({
     selected = false,
 }) => {
     // used to measure the height of the text for the collapse / expand animation
-    const descriptionTextRef = useRef<Text>(null);
+    const descriptionTextRef = useRef<TextInstance>(null);
 
     const [descriptionTextHeight, setDescriptionTextHeight] = useState(0);
 

@@ -1,6 +1,7 @@
 import { useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 import { Animated } from 'react-native';
 import { Portal } from 'react-native-portalize';
 import Svg, { Path } from 'react-native-svg';
@@ -46,7 +47,7 @@ export const TutorialBubble: React.FC<{
         ]).start();
     }, []);
 
-    const parentRef = useRef<View>(null);
+    const parentRef = useRef<ViewInstance>(null);
     const [coords, setCoords] = useState({ x: 0, y: 0 });
 
     useEffect(() => {

@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { startTransition, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useDerivedValue,
@@ -14,6 +15,7 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
 import Select from '@/components/Select';
+import { scrollControlledSwipers } from '@/components/Swiper';
 import Text from '@/components/Text';
 import {
     RankingAlgorithm,
@@ -51,20 +53,21 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     function onChange(scope: string) {
-        return; // TODO: make this work again
-
-        // Navigate controlled swipers when clicking on tabs
         const optionIndex = ['today', 'season', 'all-time'].indexOf(scope);
         if (optionIndex !== -1) {
-            scopePicker.leaderboardSwiperProgress.value = optionIndex;
-            scopePicker.setLeaderboardPageIndex(optionIndex);
+            scrollControlledSwipers(
+                scopePicker.leaderboardSwiperProgress,
+                optionIndex
+            );
             return;
         }
 
         const pastIdx = pastSeasons.findIndex((i) => i.id === scope);
         if (pastIdx !== -1) {
-            scopePicker.pastSeasonsSwiperProgress.value = pastIdx;
-            scopePicker.setPastSeasonsPageIndex(pastIdx);
+            scrollControlledSwipers(
+                scopePicker.pastSeasonsSwiperProgress,
+                pastIdx
+            );
         }
     }
 
@@ -105,7 +108,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const sidePadding = 8;
 
-    const containerRef = useRef<View>(null);
+    const containerRef = useRef<ViewInstance>(null);
 
     const [containerWidth, setContainerWidth] = useState(0);
 

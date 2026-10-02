@@ -17,7 +17,7 @@ export const BlurredBackdrop: React.FC<{
 }> = ({ opacity, onPress }) => {
     return (
         <TouchableWithoutFeedback onPress={onPress}>
-            <Animated.View style={[StyleSheet.absoluteFillObject, { opacity }]}>
+            <Animated.View style={[StyleSheet.absoluteFill, { opacity }]}>
                 <BlurView
                     intensity={50}
                     tint="dark"

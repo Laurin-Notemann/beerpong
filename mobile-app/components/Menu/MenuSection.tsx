@@ -76,15 +76,15 @@ export function Heading({
 }
 
 export interface MenuSectionProps extends PropsWithChildren {
-    title?: JSX.Element | string;
-    titleHeadIcon?: JSX.Element;
-    titleTailIcon?: JSX.Element;
+    title?: React.JSX.Element | string;
+    titleHeadIcon?: React.JSX.Element;
+    titleTailIcon?: React.JSX.Element;
 
     background?: boolean;
 
     style?: any;
 
-    footer?: string | JSX.Element;
+    footer?: string | React.JSX.Element;
 
     color?: 'light' | 'dark'; // | "transparent";
 

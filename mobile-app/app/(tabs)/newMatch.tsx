@@ -2,9 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useDerivedValue, useSharedValue } from 'react-native-reanimated';
-import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
-import Swiper from 'react-native-swiper';
+import { useSharedValue } from 'react-native-reanimated';
 
 import {
     uploadTeamPhoto,
@@ -24,6 +22,7 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
+import { Swiper, SwiperRef } from '@/components/Swiper';
 import { triggerHapticBump } from '@/haptics';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -80,13 +79,8 @@ export default function NewMatchScreen() {
     const router = useRouter();
     const { beerpongProMode } = useLocalSettings();
 
-    const scrollX = useSharedValue(0);
-
-    // float between 0 and 1
-    const animationProgress = useDerivedValue(
-        () => (scrollX.value / width ** 2) * -1,
-        [scrollX]
-    );
+    // page progress of the swiper, float between 0 and the last page index
+    const animationProgress = useSharedValue(0);
 
     const nav = useNavigation();
 
@@ -116,8 +110,7 @@ export default function NewMatchScreen() {
             matchDtoToMatch(playersQuery.data?.data, allowedMoves)
         ) ?? [];
 
-    const swiperRef = useRef<Swiper>(null);
-    const carouselRef = useRef<ICarouselInstance>(null);
+    const carouselRef = useRef<SwiperRef>(null);
 
     const [swiperPage, setSwiperPage] = useState(0);
 
@@ -193,7 +186,6 @@ export default function NewMatchScreen() {
 
             router.dismissAll();
             router.replace('/');
-            swiperRef.current?.scrollBy(-1);
             carouselRef.current?.prev();
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
@@ -261,17 +253,15 @@ export default function NewMatchScreen() {
                     triggerHapticBump('selection');
                 }}
                 onBack={() => {
-                    swiperRef.current?.scrollBy(-1);
                     carouselRef.current?.prev();
                 }}
                 onNext={() => {
-                    swiperRef.current?.scrollBy(1);
                     carouselRef.current?.next();
                 }}
                 onCreate={onCreateMatch}
                 isCreating={createMatchMutation.isPending}
             />
-            <Carousel
+            <Swiper
                 // kinda hacky, this is how we get the carousel to re-mount when switching groups or seasons.
                 // it needs to re-mount so it starts at the first page again.
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
@@ -279,10 +269,8 @@ export default function NewMatchScreen() {
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
                 key={groupId + ':' + seasonId}
                 ref={carouselRef}
-                onProgressChange={(relativeOffset) => {
-                    scrollX.value = relativeOffset * width;
-                }}
-                onSnapToItem={(pageIdx) => {
+                swiperProgress={animationProgress}
+                onPageChange={(pageIdx) => {
                     if (pageIdx === 1 && !matchDraft.hasBeenOnPageTwo) {
                         nav.navigate('assignPointsToPlayerModal', {
                             pageIdx: 0,
@@ -291,11 +279,10 @@ export default function NewMatchScreen() {
                     }
                     setSwiperPage(pageIdx);
                 }}
-                loop={false}
-                width={width}
                 enabled={!(swiperPage === 0 && !hasValidTeams)}
-                data={beerpongProMode ? [null, null, null] : [null, null]}
-                renderItem={(item) => {
+            >
+                {(beerpongProMode ? [0, 1, 2] : [0, 1]).map((index) => {
+                    const item = { index };
                     if (item.index === 0) {
                         return (
                             <NewMatchAssignTeams
@@ -359,8 +346,8 @@ export default function NewMatchScreen() {
                         return <Cups />;
                     }
                     throw new Error('Invalid swiper index');
-                }}
-            />
+                })}
+            </Swiper>
         </GestureHandlerRootView>
     );
 }

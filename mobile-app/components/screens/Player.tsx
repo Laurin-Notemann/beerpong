@@ -120,12 +120,10 @@ export default function PlayerScreen({
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const leaderboardSwiper = useControlledSwiper(
-        scopePicker.leaderboardSwiperProgress,
-        'player'
+        scopePicker.leaderboardSwiperProgress
     );
     const pastSeasonsSwiper = useControlledSwiper(
-        scopePicker.pastSeasonsSwiperProgress,
-        'pastPlayer'
+        scopePicker.pastSeasonsSwiperProgress
     );
 
     const groupHasPastSeasons = pastSeasons > 0;

@@ -7,6 +7,7 @@ import {
     SafeAreaView,
     Text,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import {
     CodeField,
     useBlurOnFulfill,
@@ -74,7 +75,7 @@ export default function JoinGroup({
         }
     }
     function onResetCode() {
-        codeInputRef.current?.focus();
+        codeInput()?.focus();
         onCodeChange('');
     }
 
@@ -82,7 +83,12 @@ export default function JoinGroup({
         value: code,
         cellCount: env.groupCode.length,
     });
-    useAutoFocus(codeInputRef);
+    // react-native-confirmation-code-field still types its ref as the pre-0.88 TextInput class.
+    const codeInput = () =>
+        codeInputRef.current as unknown as TextInputInstance | null;
+    useAutoFocus(
+        codeInputRef as unknown as React.RefObject<TextInputInstance | null>
+    );
 
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value: code,

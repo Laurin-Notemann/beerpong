@@ -1,6 +1,7 @@
 import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import { TextInput } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 
 /**
  * no matter what i tried, i couldn't get `<TextInput autoFocus>` to work on `createGroup` or `joinGroup`.
@@ -10,7 +11,9 @@ import { TextInput } from 'react-native';
  *
  * TODO: this solution is not ideal, because it's overengineered and takes longer for the keyboard to show up than the `autoFocus` property.
  */
-export function useAutoFocus(inputRef: React.RefObject<TextInput | null>) {
+export function useAutoFocus(
+    inputRef: React.RefObject<TextInputInstance | null>
+) {
     const navigation = useNavigation();
 
     useEffect(() => {

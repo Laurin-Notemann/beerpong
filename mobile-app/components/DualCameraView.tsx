@@ -211,7 +211,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             >
                 <View
                     style={[
-                        StyleSheet.absoluteFillObject,
+                        StyleSheet.absoluteFill,
                         {
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -303,7 +303,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 </View>
                 <Animated.View
                     style={[
-                        StyleSheet.absoluteFillObject,
+                        StyleSheet.absoluteFill,
                         {
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -339,7 +339,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             </View>
             <Animated.View
                 style={[
-                    StyleSheet.absoluteFillObject,
+                    StyleSheet.absoluteFill,
                     {
                         backgroundColor: 'rgba(0,0,0,0.5)',
                         opacity: overlayOpacity,

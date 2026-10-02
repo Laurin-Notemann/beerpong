@@ -211,7 +211,7 @@ export function DualTeamPhoto({
             />
             <Image
                 source={blueImageSource}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 resizeMode="cover"
             />
         </Animated.View>
@@ -248,7 +248,7 @@ export function DualTeamPhoto({
             />
             <Image
                 source={redImageSource}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 resizeMode="cover"
             />
         </Animated.View>
@@ -265,7 +265,7 @@ export function DualTeamPhoto({
                 >
                     <Animated.View
                         style={[
-                            StyleSheet.absoluteFillObject,
+                            StyleSheet.absoluteFill,
                             {
                                 backgroundColor: 'black',
                                 opacity: cameraOpacity,
@@ -278,7 +278,7 @@ export function DualTeamPhoto({
                             <DualCameraView onResult={_onCameraResult} />
                             <View
                                 style={[
-                                    StyleSheet.absoluteFillObject,
+                                    StyleSheet.absoluteFill,
                                     {
                                         flexDirection: 'row',
                                         justifyContent: 'flex-end',

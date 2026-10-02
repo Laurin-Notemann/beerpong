@@ -22,7 +22,7 @@ const DarkBackdrop: React.FC<{
         <TouchableWithoutFeedback onPress={onPress}>
             <Animated.View
                 style={[
-                    StyleSheet.absoluteFillObject,
+                    StyleSheet.absoluteFill,
                     { backgroundColor: 'black', opacity },
                 ]}
             />
@@ -43,7 +43,7 @@ export interface ConfirmationModalProps {
         title: string;
         onPress: () => void;
     }[];
-    content?: JSX.Element | string;
+    content?: React.JSX.Element | string;
 }
 
 export default function ConfirmationModal({

@@ -16,7 +16,7 @@ export interface MenuItemProps {
     tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked' | 'draghandle';
     onPress?: () => void;
 
-    tailContent?: JSX.Element | string | number;
+    tailContent?: React.JSX.Element | string | number;
 
     color?: 'light' | 'dark'; // | "transparent";
 

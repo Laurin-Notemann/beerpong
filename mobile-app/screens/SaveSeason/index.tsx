@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { TextInput } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { AppBackground } from '@/app/Background';
@@ -60,7 +61,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
 
     const nav = useNavigation();
 
-    const oldSeasonNameInputRef = useRef<TextInput>(null);
+    const oldSeasonNameInputRef = useRef<TextInputInstance>(null);
 
     return (
         <>
@@ -88,7 +89,10 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
             />
             <AppBackground />
             <Swiper
-                {...swiper}
+                ref={swiper.ref}
+                swiperProgress={swiper.swiperProgress}
+                defaultIndex={swiper.defaultIndex}
+                onPageChange={swiper.onPageChange}
                 enabled={!(swiper.swiperPage === 0 && !hasValidName)}
                 onScrollStart={() => {
                     oldSeasonNameInputRef.current?.blur();
