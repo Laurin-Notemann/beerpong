@@ -74,7 +74,6 @@
         "react-native-draggable-flatlist": "^4.0.1",
         "react-native-drawer-layout": "^4.2.11",
         "react-native-gesture-handler": "~3.2.1",
-        "react-native-insta-pagination-dots": "^1.0.5",
         "react-native-pager-view": "9.0.4",
         "react-native-portalize": "^1.0.7",
         "react-native-reanimated": "4.7.0",
