@@ -5,6 +5,7 @@
 # Changes vs. the template, all marked "mobile-app:" below: run steps default to
 # mobile-app/, cache/artifact paths and the lockfile hash are prefixed with it,
 # the gate is read from the repo root, and the build gets the app's public env.
+# Also (not mobile-app specific): @expo/serve-sim is pinned to 0.4.0.
 # When updating native-sim, diff its new template against this file.
 #
 # Boots an iOS Simulator on a GitHub-hosted macOS
@@ -283,7 +284,9 @@ jobs:
             )
           fi
 
-          npx --yes @expo/serve-sim@latest "${ARGS[@]}" | tee serve-sim.json
+          # Pinned, not @latest as in the template: serve-sim 0.5.0 (2026-10-02)
+          # answers 403 for any Host but localhost/IPs, which breaks the tunnel.
+          npx --yes @expo/serve-sim@0.4.0 "${ARGS[@]}" | tee serve-sim.json
 
           # /readyz blocks until the simulator and the native capture session are up.
           for _ in $(seq 1 90); do
