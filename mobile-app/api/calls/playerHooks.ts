@@ -1,12 +1,12 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { ApiId } from '@/api/types';
+import { fetchProfiles, withProfiles } from '@/api/calls/profileHooks';
+import { ApiId, WithProfile } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
-import { Paths } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
+import { Paths, PlayerDto } from '@/openapi/openapi';
 
 export const usePlayersQuery = (
     groupId: ApiId | null,
@@ -14,7 +14,14 @@ export const usePlayersQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetPlayers.Responses.$200 | null>({
+    const qc = useQueryClient();
+
+    return useQuery<
+        | (Omit<Paths.GetPlayers.Responses.$200, 'data'> & {
+              data?: WithProfile<PlayerDto>[];
+          })
+        | null
+    >({
         queryKey: [
             QK.group,
             groupId ?? 'NULL',
@@ -27,11 +34,19 @@ export const usePlayersQuery = (
                 return null;
             }
 
-            const res = await (
-                await api
-            ).getPlayers({ groupId, seasonId, showInactive: true });
+            const [res, profiles] = await Promise.all([
+                (await api).getPlayers({
+                    groupId,
+                    seasonId,
+                    showInactive: true,
+                }),
+                fetchProfiles(qc, api, groupId),
+            ]);
 
-            return res?.data;
+            return {
+                ...res.data,
+                data: withProfiles(res.data.data ?? [], profiles),
+            };
         },
     });
 };
@@ -95,8 +110,7 @@ export const useUpdatePlayerAvatarMutation = () => {
                 id: profileId,
             });
             await uploadImage(
-                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-                res?.data.data?.avatarAsset?.singleUploadUrl,
+                res.data.data?.singleUploadUrl ?? '',
                 byteArray,
                 'profilePicture',
                 mimeType

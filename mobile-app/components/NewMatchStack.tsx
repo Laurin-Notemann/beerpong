@@ -37,12 +37,10 @@ export const NewMatchStack: React.FC<{
     onNext,
     onCreate,
 }) => {
-    const { group } = useGroup();
+    const { activeSeason } = useGroup();
 
-    const minTeamSize =
-        group.data?.activeSeason?.seasonSettings?.minTeamSize ?? 1;
-    const maxTeamSize =
-        group.data?.activeSeason?.seasonSettings?.maxTeamSize ?? 10;
+    const minTeamSize = activeSeason?.seasonSettings?.minTeamSize ?? 1;
+    const maxTeamSize = activeSeason?.seasonSettings?.maxTeamSize ?? 10;
 
     const bothTeamsEmpty =
         match.blueTeam.length === 0 && match.redTeam.length === 0;

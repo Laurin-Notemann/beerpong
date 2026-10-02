@@ -126,8 +126,7 @@ export const useUpdateGroupWallpaperMutation = () => {
             const res = await (await api).setWallpaper({ id: groupId });
 
             await uploadImage(
-                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-                res?.data.data?.singleUploadUrl,
+                res.data.data?.singleUploadUrl ?? '',
                 byteArray,
                 'groupWallpaper',
                 mimeType

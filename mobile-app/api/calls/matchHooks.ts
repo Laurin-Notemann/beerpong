@@ -7,7 +7,8 @@ import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
-import { Paths } from '@/openapi/openapi';
+import { uriToByteArray } from '@/api/utils/uriToByteArray';
+import { Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
 export const useMatchQuery = (
@@ -17,7 +18,7 @@ export const useMatchQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetMatchById.Responses.$200 | null>({
+    return useQuery<Paths.GetMatchByIdExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches, matchId],
         queryFn: async () => {
             if (!groupId || !seasonId || !matchId) {
@@ -26,7 +27,7 @@ export const useMatchQuery = (
 
             const res = await (
                 await api
-            ).getMatchById({ groupId, seasonId, id: matchId });
+            ).getMatchByIdExtended({ groupId, seasonId, id: matchId });
 
             return res?.data;
         },
@@ -39,13 +40,15 @@ export const useMatchesQuery = (
 ) => {
     const { api } = useApi();
 
-    return useQuery<Paths.GetAllMatches.Responses.$200 | null>({
+    return useQuery<Paths.GetAllMatchesExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
             }
-            const res = await (await api).getAllMatches({ groupId, seasonId });
+            const res = await (
+                await api
+            ).getAllMatchesExtended({ groupId, seasonId });
 
             return res?.data;
         },
@@ -139,51 +142,23 @@ export const useUpdateMatchMutation = () => {
     });
 };
 
-export const useUpdateMatchPhotoMutation = () => {
-    const { api } = useApi();
+/**
+ * creating/updating a match with `TeamCreateDto.savePhoto` returns upload urls for the team photos in `MatchDto.photoUploads`.
+ * this uploads a team photo to such a url.
+ */
+export async function uploadTeamPhoto(
+    photoUpload: TeamPhotoDto | undefined,
+    photoUri: string
+): Promise<void> {
+    const byteArray = await uriToByteArray(photoUri);
 
-    return useMutation<
-        Paths.SetPhoto.Responses.$200 | null,
-        Error,
-        {
-            byteArray: Uint8Array<ArrayBuffer>;
-            mimeType: string;
-
-            groupId: ApiId;
-            seasonId: ApiId;
-            matchId: ApiId;
-            teamId: ApiId;
-        }
-    >({
-        mutationFn: async ({
-            byteArray,
-            mimeType,
-            groupId,
-            seasonId,
-            matchId,
-            teamId,
-        }) => {
-            const res = await (
-                await api
-            ).setPhoto({
-                groupId,
-                seasonId,
-                id: matchId,
-                teamId,
-            });
-
-            await uploadImage(
-                // @ts-expect-error TODO: broken typegen for AssetUploadResponse
-                res?.data.data?.photoAsset?.singleUploadUrl,
-                byteArray,
-                'matchPhoto',
-                mimeType
-            );
-            return res.data;
-        },
-        onError: captureMutationErr('updateMatchPhoto'),
-    });
-};
+    await uploadImage(
+        photoUpload?.teamPhoto?.singleUploadUrl ?? '',
+        byteArray,
+        'matchPhoto',
+        'image/png'
+    );
+}
 
 export const useDeleteMatchPhotoMutation = () => {
     const { api } = useApi();
