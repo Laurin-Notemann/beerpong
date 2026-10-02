@@ -17,6 +17,7 @@
     <properties>
         <java.version>21</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <sentry.version>8.59.0</sentry.version>
     </properties>
     <dependencies>
         <!-- SPRING -->
@@ -68,12 +69,12 @@
         <dependency>
             <groupId>io.sentry</groupId>
             <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
-            <version>7.8.0</version>
+            <version>${sentry.version}</version>
         </dependency>
         <dependency>
             <groupId>io.sentry</groupId>
             <artifactId>sentry-logback</artifactId>
-            <version>7.8.0</version>
+            <version>${sentry.version}</version>
         </dependency>
 
         <!-- UTILS -->

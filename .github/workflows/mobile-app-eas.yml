@@ -1,0 +1,45 @@
+name: Mobile App EAS
+
+# Starts the EAS workflow (mobile-app/.eas/workflows/staging.yml), which decides per platform
+# whether to publish an OTA update or make a new native build. All build logic lives there.
+
+on:
+  push:
+    branches:
+      - staging
+    paths:
+      - "mobile-app/**"
+      - ".github/workflows/mobile-app-eas.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-app-eas
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: mobile-app
+
+jobs:
+  run-eas-workflow:
+    name: Run EAS staging workflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "mobile-app/package-lock.json"
+
+      # eas-cli evaluates the app config, which resolves config plugins from node_modules.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start EAS workflow
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx --yes eas-cli@latest workflow:run .eas/workflows/staging.yml --non-interactive -F git_commit=${{ github.sha }}

@@ -1,0 +1,99 @@
+# Ships every staging push of the mobile app. Triggered by .github/workflows/mobile-app-eas.yml
+# (the repo isn't linked to Expo's GitHub app, so GitHub Actions starts the run).
+#
+# Per platform: if a build with the same native fingerprint already exists, only an OTA update is
+# published to that build's channel; otherwise a new native build is made.
+#   iOS     -> profile/channel "production": store build, submitted to TestFlight
+#   Android -> profile/channel "preview":    internal APK
+name: Mobile Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_commit:
+        type: string
+        required: false
+        description: Source commit, used for update messages and Sentry tags
+
+jobs:
+  fingerprint:
+    name: Calculate Fingerprint
+    type: fingerprint
+    environment: production
+
+  get_ios_build:
+    name: Find Matching iOS Build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: ios
+      profile: production
+      channel: production
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      wait_for_in_progress: true
+
+  get_android_build:
+    name: Find Matching Android Build
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: android
+      profile: preview
+      channel: preview
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      wait_for_in_progress: true
+
+  # Runtime unchanged -> OTA update
+
+  publish_ios_update:
+    name: Publish iOS Update
+    needs: [get_ios_build]
+    if: ${{ needs.get_ios_build.outputs.build_id }}
+    type: update
+    environment: production
+    params:
+      platform: ios
+      channel: production
+      upload_sentry_sourcemaps: true
+      message: 'staging ${{ inputs.git_commit || github.sha }}'
+
+  publish_android_update:
+    name: Publish Android Update
+    needs: [get_android_build]
+    if: ${{ needs.get_android_build.outputs.build_id }}
+    type: update
+    environment: preview
+    params:
+      platform: android
+      channel: preview
+      upload_sentry_sourcemaps: true
+      message: 'staging ${{ inputs.git_commit || github.sha }}'
+
+  # Runtime changed -> native build
+
+  build_ios:
+    name: Build iOS (TestFlight)
+    needs: [get_ios_build]
+    if: ${{ !needs.get_ios_build.outputs.build_id }}
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  submit_ios:
+    name: Submit iOS to TestFlight
+    needs: [build_ios]
+    if: ${{ needs.build_ios.outputs.build_id }}
+    type: submit
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
+
+  build_android:
+    name: Build Android (Preview APK)
+    needs: [get_android_build]
+    if: ${{ !needs.get_android_build.outputs.build_id }}
+    type: build
+    params:
+      platform: android
+      profile: preview

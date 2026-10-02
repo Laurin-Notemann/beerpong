@@ -13,8 +13,20 @@ spring:
 server:
   max-http-request-header-size: 64KB
 sentry:
-  dsn: ${BACKEND_SENTRY_DSN}
+  dsn: ${BACKEND_SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:staging}
   debug: false
+  in-app-includes: pro.beerpong
+  send-default-pii: true
+  # Traces: sample every request while traffic is low.
+  traces-sample-rate: 1.0
+  # Logs: info+ goes to Sentry Logs, error+ also becomes an issue.
+  logs:
+    enabled: true
+  logging:
+    minimum-level: info
+    minimum-breadcrumb-level: info
+    minimum-event-level: error
 app:
   aws:
     region: ${AWS_REGION}

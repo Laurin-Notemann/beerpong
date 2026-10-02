@@ -99,8 +99,8 @@ jobs:
             # Pull the latest image
             docker compose pull beerpong-api-staging
 
-            # Restart only the API service
-            docker compose up -d --force-recreate beerpong-api-staging
+            # Restart only the API service (SENTRY_RELEASE ties Sentry events to this commit)
+            SENTRY_RELEASE=${{ github.sha }} docker compose up -d --force-recreate beerpong-api-staging
 
             # Clean up old images
             docker image prune -af

@@ -49,8 +49,8 @@ export const env = {
     },
     isDev: __DEV__,
     sentry: {
-        dsn: process.env.FRONTEND_SENTRY_DSN!,
+        dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
 
-        enabled: !__DEV__,
+        enabled: !__DEV__ && !!process.env.EXPO_PUBLIC_SENTRY_DSN,
     },
 };

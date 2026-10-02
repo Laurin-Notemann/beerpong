@@ -6,3 +6,5 @@ build*
 
 .gen-builds/**
 .DS_Store
+
+.claude/worktrees/
