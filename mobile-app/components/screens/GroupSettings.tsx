@@ -17,11 +17,12 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
 import { formatGroupCode } from '@/utils/groupCode';
+import { formatWakeTime } from '@/utils/wakeTime';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
-const formatTeamSize = (seasonSettings?: SeasonSettings) => {
+const formatTeamSize = (seasonSettings?: SeasonSettingsDto) => {
     if (seasonSettings?.minTeamSize === seasonSettings?.maxTeamSize) {
         if (seasonSettings?.minTeamSize === 1) {
             return 'Exactly One Person';
@@ -69,7 +70,7 @@ export default function GroupSettingsScreen({
 
     const experiments = useLocalSettings();
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, seasonId, activeSeason } = useGroup();
 
     const movesQuery = useMoves(groupId, seasonId);
 
@@ -215,7 +216,7 @@ export default function GroupSettingsScreen({
                             headIcon="division"
                             tailIconType="next"
                             tailContent={
-                                group.data?.activeSeason?.seasonSettings
+                                activeSeason?.seasonSettings
                                     ?.rankingAlgorithm === 'AVERAGE'
                                     ? 'Average Points Scored'
                                     : 'Elo'
@@ -227,7 +228,7 @@ export default function GroupSettingsScreen({
                             headIcon="account-lock-open"
                             tailIconType="next"
                             tailContent={
-                                group.data?.activeSeason?.seasonSettings
+                                activeSeason?.seasonSettings
                                     ?.minMatchesToQualify
                             }
                             onPress={() =>
@@ -238,7 +239,7 @@ export default function GroupSettingsScreen({
                             title="Team Size"
                             headIcon="account-group-outline"
                             tailContent={formatTeamSize(
-                                group.data?.activeSeason?.seasonSettings
+                                activeSeason?.seasonSettings
                             )}
                             tailIconType="next"
                             onPress={() => nav.navigate('teamSizeSettings')}
@@ -248,20 +249,20 @@ export default function GroupSettingsScreen({
                             headIcon="calendar-today"
                             tailContent={(() => {
                                 if (
-                                    group.data?.activeSeason?.seasonSettings
+                                    activeSeason?.seasonSettings
                                         ?.dailyLeaderboard === 'WAKE_TIME'
                                 ) {
-                                    return `Resets at ${group.data?.activeSeason?.seasonSettings.wakeTimeHour}:00`;
+                                    return `Resets at ${formatWakeTime(activeSeason?.seasonSettings.wakeTime)}`;
                                 }
                                 if (
-                                    group.data?.activeSeason?.seasonSettings
+                                    activeSeason?.seasonSettings
                                         ?.dailyLeaderboard ===
                                     'RESET_AT_MIDNIGHT'
                                 ) {
                                     return 'Resets at 0:00';
                                 }
                                 if (
-                                    group.data?.activeSeason?.seasonSettings
+                                    activeSeason?.seasonSettings
                                         ?.dailyLeaderboard === 'LAST_24_HOURS'
                                 ) {
                                     return 'Last 24h';

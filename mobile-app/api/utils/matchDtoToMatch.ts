@@ -1,4 +1,4 @@
-import { MatchImpl } from '@/api/entities';
+import { MatchImpl, PlayerWithProfile } from '@/api/entities';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { Components } from '@/openapi/openapi';
@@ -37,16 +37,20 @@ export type Match = {
 
     winnerTeamId: string | null;
 
+    blueTeamPhotoAssetId?: string | null;
+    redTeamPhotoAssetId?: string | null;
+    /** has to be resolved from `blueTeamPhotoAssetId` */
     blueTeamPhotoUrl?: string | null;
+    /** has to be resolved from `redTeamPhotoAssetId` */
     redTeamPhotoUrl?: string | null;
 };
 
 export const matchDtoToMatch =
     (
-        players: Components.Schemas.PlayerDto[] = [],
+        players: PlayerWithProfile[] = [],
         allowedMoves: Components.Schemas.RuleMoveDto[] = []
     ) =>
-    (i: Components.Schemas.MatchDto): Match => {
+    (i: Components.Schemas.MatchDtoExtended): Match => {
         return new MatchImpl(i, players, allowedMoves).toJSON();
     };
 

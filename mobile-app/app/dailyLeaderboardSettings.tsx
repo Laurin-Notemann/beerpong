@@ -11,10 +11,17 @@ import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+import { formatWakeTime, parseWakeTime, toWakeTime } from '@/utils/wakeTime';
+
+const wakeTimeToDate = (wakeTime: string | undefined) => {
+    const { hour, minute } = parseWakeTime(wakeTime);
+
+    return dayjs().startOf('day').hour(hour).minute(minute).toDate();
+};
 
 export default function Page() {
     const nav = useNavigation();
@@ -32,10 +39,7 @@ export default function Page() {
             : seasonSettings?.dailyLeaderboard!
     );
     const [wakeTimeDate, setWakeTimeDate] = useState(
-        dayjs()
-            .startOf('day')
-            .add(seasonSettings?.wakeTimeHour ?? 0, 'hours')
-            .toDate()
+        wakeTimeToDate(seasonSettings?.wakeTime)
     );
 
     useEffect(() => {
@@ -45,12 +49,7 @@ export default function Page() {
                     ? 'WAKE_TIME'
                     : seasonSettings.dailyLeaderboard
             );
-            setWakeTimeDate(
-                dayjs()
-                    .startOf('day')
-                    .add(seasonSettings.wakeTimeHour ?? 0, 'hours')
-                    .toDate()
-            );
+            setWakeTimeDate(wakeTimeToDate(seasonSettings.wakeTime));
         }
     }, [seasonSettings]);
 
@@ -58,7 +57,7 @@ export default function Page() {
 
     const isDirty =
         dailyLeaderboard !== seasonSettings?.dailyLeaderboard ||
-        wakeTimeDate.getHours() !== seasonSettings?.wakeTimeHour;
+        toWakeTime(wakeTimeDate) !== seasonSettings?.wakeTime;
 
     const theme = useTheme();
 
@@ -81,9 +80,9 @@ export default function Page() {
                                         await updateSeasonSettingsMutation.mutateAsync(
                                             {
                                                 dailyLeaderboard:
-                                                    dailyLeaderboard as SeasonSettings['dailyLeaderboard'],
-                                                wakeTimeHour:
-                                                    wakeTimeDate.getHours(),
+                                                    dailyLeaderboard as SeasonSettingsDto['dailyLeaderboard'],
+                                                wakeTime:
+                                                    toWakeTime(wakeTimeDate),
                                             }
                                         );
                                     }
@@ -128,7 +127,7 @@ export default function Page() {
                         border={false}
                         title="Reset time"
                         headIcon="alarm"
-                        tailContent={wakeTimeDate.getHours() + ':00'}
+                        tailContent={formatWakeTime(toWakeTime(wakeTimeDate))}
                         tailIconType="next"
                         onPress={() => setShowTimePicker(true)}
                     />

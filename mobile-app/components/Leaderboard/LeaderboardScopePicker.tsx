@@ -41,7 +41,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 }) => {
     const scopePicker = useScopePicker();
 
-    const { groupId, group } = useGroup();
+    const { groupId, activeSeason } = useGroup();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
@@ -94,7 +94,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                 { id: 'today', label: 'Today' },
                 {
                     id: 'season',
-                    label: group.data?.activeSeason?.name || 'This Season',
+                    label: activeSeason?.name || 'This Season',
                 },
                 ...(groupHasPastSeasons
                     ? ([
@@ -237,7 +237,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     );
 
     const groupRankingAlgorithm =
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
+        activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
 
     const sortOptions = Object.entries(rankingAlgorithms)
         .filter((i) => i[1].showInSelect)
