@@ -39,6 +39,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # EAS runs can sit in the queue for a long time. Without this, an older run can finish
+      # after a newer one and publish stale code as the newest OTA update.
+      - name: Cancel older EAS workflow runs
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          for status in NEW WAITING IN_PROGRESS; do
+            npx --yes eas-cli@latest workflow:runs --workflow staging.yml --status "$status" --json --limit 50 \
+              | jq -r '.[].id' \
+              | while read -r id; do
+                  echo "cancelling $id ($status)"
+                  npx --yes eas-cli@latest workflow:cancel "$id" --non-interactive || true
+                done
+          done
+
       - name: Start EAS workflow
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
