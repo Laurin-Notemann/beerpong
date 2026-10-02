@@ -55,7 +55,7 @@ export default function Page() {
                                 'failed to update settings:',
                                 err
                             );
-                            showErrorToast('Failed to update settings');
+                            showErrorToast('Failed to update settings.', err);
                         }
                     }}
                 >

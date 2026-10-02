@@ -108,8 +108,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
             {hasTutorial && (
                 <TutorialBubble
                     text="Try pulling this to the right!"
-                    left={12}
-                    top={-140}
+                    left={64}
                 />
             )}
             <GestureDetector

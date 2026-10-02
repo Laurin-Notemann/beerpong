@@ -6,8 +6,8 @@ import Animated, {
     useSharedValue,
     withTiming,
 } from 'react-native-reanimated';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon } from '@/components/Icon';
 import { useAnimatedSideActionStyle } from '@/components/Rules/useAnimatedSideActionStyle';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';

@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { env } from '@/api/env';
+import { Icon } from '@/components/Icon';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';

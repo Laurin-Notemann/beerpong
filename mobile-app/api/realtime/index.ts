@@ -1,17 +1,5 @@
-import { TextEncoder } from 'text-encoding';
-
 import { BackOff, FIBONACCI_TIMEOUTS } from '@/api/utils/BackOff';
 import { ScopedLogger } from '@/utils/logging';
-
-/**
- * stompjs is an abstraction layer on top of websocket that uses the global TextEncoder class.
- *
- * for react-native, it needs a polyfill: https://github.com/stomp-js/stompjs/issues/565#issuecomment-2197853028
- */
-function mountPolyfillForStompJs() {
-    global.TextEncoder = TextEncoder;
-}
-mountPolyfillForStompJs();
 
 export type RealtimeAffectedEntity =
     | 'GROUPS'

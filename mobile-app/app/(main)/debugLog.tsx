@@ -4,10 +4,10 @@ import { Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useApi } from '@/api/utils/create-api';
 import copyToClipboard from '@/components/copyToClipboard';
+import { Icon } from '@/components/Icon';
 import { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { useNavStyles } from '@/lib/navigation/navStyles';

@@ -34,7 +34,7 @@ export default function Page() {
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to create player:', err);
-            showErrorToast('Failed to create player.');
+            showErrorToast('Failed to create player.', err);
         }
     }
 

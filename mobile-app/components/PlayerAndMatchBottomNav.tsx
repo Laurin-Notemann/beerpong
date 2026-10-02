@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon } from '@/components/Icon';
 import { useTheme } from '@/theme';
 
 export function PlayerAndMatchBottomNav({

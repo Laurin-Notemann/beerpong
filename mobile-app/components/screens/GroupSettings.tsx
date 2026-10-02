@@ -5,7 +5,6 @@ import {
     ScrollView,
     Switch,
 } from 'react-native';
-import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
@@ -79,7 +78,7 @@ export default function GroupSettingsScreen({
     const allowedMoves = movesQuery.data?.data ?? [];
 
     return (
-        <RootSiblingParent>
+        <>
             <AppBackground />
             <ScrollView
                 style={{
@@ -333,6 +332,6 @@ export default function GroupSettingsScreen({
                     </MenuSection>
                 </SafeAreaView>
             </ScrollView>
-        </RootSiblingParent>
+        </>
     );
 }

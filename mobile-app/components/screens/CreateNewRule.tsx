@@ -1,8 +1,8 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon } from '@/components/Icon';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';

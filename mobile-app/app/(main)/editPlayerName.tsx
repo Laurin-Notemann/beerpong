@@ -43,7 +43,7 @@ export default function Page() {
             router.back();
         } catch (err) {
             ConsoleLogger.error('failed to update player:', err);
-            showErrorToast('Failed to update player.');
+            showErrorToast('Failed to update player.', err);
         }
     }
 

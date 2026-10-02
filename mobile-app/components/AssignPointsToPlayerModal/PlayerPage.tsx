@@ -1,8 +1,8 @@
 import { ScrollView, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import { ScoredMoveInputRow } from '@/components/ScoredMoveInputRow';
 import Stepper from '@/components/Stepper';
 import Text from '@/components/Text';

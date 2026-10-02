@@ -60,7 +60,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             showSuccessToast('Updated group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to upload group wallpaper:', err);
-            showErrorToast('Failed to upload group wallpaper.');
+            showErrorToast('Failed to upload group wallpaper.', err);
         }
     }
 
@@ -73,7 +73,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             showSuccessToast('Removed group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to remove group wallpaper:', err);
-            showErrorToast('Failed to remove group wallpaper.');
+            showErrorToast('Failed to remove group wallpaper.', err);
         }
     }
 
@@ -100,7 +100,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             router.replace('/');
         } catch (err) {
             ConsoleLogger.error('failed to leave group:', err);
-            showErrorToast('Failed to leave group.');
+            showErrorToast('Failed to leave group.', err);
         }
     }
 

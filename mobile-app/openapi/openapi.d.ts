@@ -362,9 +362,7 @@ declare namespace Components {
             maxTeamSize?: number; // int32
             rankingAlgorithm?: 'AVERAGE' | 'ELO';
             dailyLeaderboard?:
-                | 'RESET_AT_MIDNIGHT'
-                | 'WAKE_TIME'
-                | 'LAST_24_HOURS';
+                'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS';
             wakeTime?: string;
         }
         export interface SeasonUpdateDto {
@@ -965,7 +963,7 @@ export interface OperationMethods {
     /**
      * getGroupById
      */
-    'getGroupById'(
+    getGroupById(
         parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -973,7 +971,7 @@ export interface OperationMethods {
     /**
      * updateGroup
      */
-    'updateGroup'(
+    updateGroup(
         parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
         data?: Paths.UpdateGroup.RequestBody,
         config?: AxiosRequestConfig
@@ -981,7 +979,7 @@ export interface OperationMethods {
     /**
      * setWallpaper
      */
-    'setWallpaper'(
+    setWallpaper(
         parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
         data?: Paths.SetWallpaper.RequestBody,
         config?: AxiosRequestConfig
@@ -989,7 +987,7 @@ export interface OperationMethods {
     /**
      * deleteWallpaper
      */
-    'deleteWallpaper'(
+    deleteWallpaper(
         parameters?: Parameters<Paths.DeleteWallpaper.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -997,7 +995,7 @@ export interface OperationMethods {
     /**
      * getRules
      */
-    'getRules'(
+    getRules(
         parameters?: Parameters<Paths.GetRules.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1005,7 +1003,7 @@ export interface OperationMethods {
     /**
      * writeRules
      */
-    'writeRules'(
+    writeRules(
         parameters?: Parameters<Paths.WriteRules.PathParameters> | null,
         data?: Paths.WriteRules.RequestBody,
         config?: AxiosRequestConfig
@@ -1013,7 +1011,7 @@ export interface OperationMethods {
     /**
      * updateRuleMove
      */
-    'updateRuleMove'(
+    updateRuleMove(
         parameters?: Parameters<Paths.UpdateRuleMove.PathParameters> | null,
         data?: Paths.UpdateRuleMove.RequestBody,
         config?: AxiosRequestConfig
@@ -1021,7 +1019,7 @@ export interface OperationMethods {
     /**
      * getMatchById
      */
-    'getMatchById'(
+    getMatchById(
         parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1029,7 +1027,7 @@ export interface OperationMethods {
     /**
      * updateMatch
      */
-    'updateMatch'(
+    updateMatch(
         parameters?: Parameters<Paths.UpdateMatch.PathParameters> | null,
         data?: Paths.UpdateMatch.RequestBody,
         config?: AxiosRequestConfig
@@ -1037,7 +1035,7 @@ export interface OperationMethods {
     /**
      * deleteMatchById
      */
-    'deleteMatchById'(
+    deleteMatchById(
         parameters?: Parameters<Paths.DeleteMatchById.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1045,7 +1043,7 @@ export interface OperationMethods {
     /**
      * setPhoto
      */
-    'setPhoto'(
+    setPhoto(
         parameters?: Parameters<Paths.SetPhoto.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1053,7 +1051,7 @@ export interface OperationMethods {
     /**
      * deletePhoto
      */
-    'deletePhoto'(
+    deletePhoto(
         parameters?: Parameters<Paths.DeletePhoto.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1061,7 +1059,7 @@ export interface OperationMethods {
     /**
      * getSeasonById
      */
-    'getSeasonById'(
+    getSeasonById(
         parameters?: Parameters<Paths.GetSeasonById.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1069,7 +1067,7 @@ export interface OperationMethods {
     /**
      * updateSeasonById
      */
-    'updateSeasonById'(
+    updateSeasonById(
         parameters?: Parameters<Paths.UpdateSeasonById.PathParameters> | null,
         data?: Paths.UpdateSeasonById.RequestBody,
         config?: AxiosRequestConfig
@@ -1077,7 +1075,7 @@ export interface OperationMethods {
     /**
      * getProfileById
      */
-    'getProfileById'(
+    getProfileById(
         parameters?: Parameters<Paths.GetProfileById.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1085,7 +1083,7 @@ export interface OperationMethods {
     /**
      * updateProfile
      */
-    'updateProfile'(
+    updateProfile(
         parameters?: Parameters<Paths.UpdateProfile.PathParameters> | null,
         data?: Paths.UpdateProfile.RequestBody,
         config?: AxiosRequestConfig
@@ -1093,7 +1091,7 @@ export interface OperationMethods {
     /**
      * setAvatar
      */
-    'setAvatar'(
+    setAvatar(
         parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
         data?: Paths.SetAvatar.RequestBody,
         config?: AxiosRequestConfig
@@ -1101,7 +1099,7 @@ export interface OperationMethods {
     /**
      * deleteAvatar
      */
-    'deleteAvatar'(
+    deleteAvatar(
         parameters?: Parameters<Paths.DeleteAvatar.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1109,7 +1107,7 @@ export interface OperationMethods {
     /**
      * startNewSeason
      */
-    'startNewSeason'(
+    startNewSeason(
         parameters?: Parameters<Paths.StartNewSeason.PathParameters> | null,
         data?: Paths.StartNewSeason.RequestBody,
         config?: AxiosRequestConfig
@@ -1117,7 +1115,7 @@ export interface OperationMethods {
     /**
      * findGroupByInviteCode
      */
-    'findGroupByInviteCode'(
+    findGroupByInviteCode(
         parameters?: Parameters<Paths.FindGroupByInviteCode.QueryParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1125,7 +1123,7 @@ export interface OperationMethods {
     /**
      * createGroup
      */
-    'createGroup'(
+    createGroup(
         parameters?: Parameters<UnknownParamsObject> | null,
         data?: Paths.CreateGroup.RequestBody,
         config?: AxiosRequestConfig
@@ -1133,7 +1131,7 @@ export interface OperationMethods {
     /**
      * leaveGroup
      */
-    'leaveGroup'(
+    leaveGroup(
         parameters?: Parameters<Paths.LeaveGroup.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1141,7 +1139,7 @@ export interface OperationMethods {
     /**
      * joinGroup
      */
-    'joinGroup'(
+    joinGroup(
         parameters?: Parameters<Paths.JoinGroup.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1149,7 +1147,7 @@ export interface OperationMethods {
     /**
      * getAllRuleMoves
      */
-    'getAllRuleMoves'(
+    getAllRuleMoves(
         parameters?: Parameters<Paths.GetAllRuleMoves.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1157,7 +1155,7 @@ export interface OperationMethods {
     /**
      * createRuleMove
      */
-    'createRuleMove'(
+    createRuleMove(
         parameters?: Parameters<Paths.CreateRuleMove.PathParameters> | null,
         data?: Paths.CreateRuleMove.RequestBody,
         config?: AxiosRequestConfig
@@ -1165,7 +1163,7 @@ export interface OperationMethods {
     /**
      * getAllMatches
      */
-    'getAllMatches'(
+    getAllMatches(
         parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1173,7 +1171,7 @@ export interface OperationMethods {
     /**
      * createMatch
      */
-    'createMatch'(
+    createMatch(
         parameters?: Parameters<Paths.CreateMatch.PathParameters> | null,
         data?: Paths.CreateMatch.RequestBody,
         config?: AxiosRequestConfig
@@ -1181,7 +1179,7 @@ export interface OperationMethods {
     /**
      * listAllProfiles
      */
-    'listAllProfiles'(
+    listAllProfiles(
         parameters?: Parameters<Paths.ListAllProfiles.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1189,7 +1187,7 @@ export interface OperationMethods {
     /**
      * createProfile
      */
-    'createProfile'(
+    createProfile(
         parameters?: Parameters<Paths.CreateProfile.PathParameters> | null,
         data?: Paths.CreateProfile.RequestBody,
         config?: AxiosRequestConfig
@@ -1197,7 +1195,7 @@ export interface OperationMethods {
     /**
      * signup
      */
-    'signup'(
+    signup(
         parameters?: Parameters<UnknownParamsObject> | null,
         data?: Paths.Signup.RequestBody,
         config?: AxiosRequestConfig
@@ -1205,7 +1203,7 @@ export interface OperationMethods {
     /**
      * refreshAuth
      */
-    'refreshAuth'(
+    refreshAuth(
         parameters?: Parameters<UnknownParamsObject> | null,
         data?: Paths.RefreshAuth.RequestBody,
         config?: AxiosRequestConfig
@@ -1213,7 +1211,7 @@ export interface OperationMethods {
     /**
      * getHealthcheck
      */
-    'getHealthcheck'(
+    getHealthcheck(
         parameters?: Parameters<UnknownParamsObject> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1221,7 +1219,7 @@ export interface OperationMethods {
     /**
      * getAllSeasons
      */
-    'getAllSeasons'(
+    getAllSeasons(
         parameters?: Parameters<Paths.GetAllSeasons.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1229,7 +1227,7 @@ export interface OperationMethods {
     /**
      * getPlayers
      */
-    'getPlayers'(
+    getPlayers(
         parameters?: Parameters<
             Paths.GetPlayers.QueryParameters & Paths.GetPlayers.PathParameters
         > | null,
@@ -1239,7 +1237,7 @@ export interface OperationMethods {
     /**
      * getPlayersExtended
      */
-    'getPlayersExtended'(
+    getPlayersExtended(
         parameters?: Parameters<
             Paths.GetPlayersExtended.QueryParameters &
                 Paths.GetPlayersExtended.PathParameters
@@ -1250,7 +1248,7 @@ export interface OperationMethods {
     /**
      * getMatchOverviewById
      */
-    'getMatchOverviewById'(
+    getMatchOverviewById(
         parameters?: Parameters<Paths.GetMatchOverviewById.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1258,7 +1256,7 @@ export interface OperationMethods {
     /**
      * getMatchByIdExtended
      */
-    'getMatchByIdExtended'(
+    getMatchByIdExtended(
         parameters?: Parameters<Paths.GetMatchByIdExtended.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1266,7 +1264,7 @@ export interface OperationMethods {
     /**
      * getAllMatchOverviews
      */
-    'getAllMatchOverviews'(
+    getAllMatchOverviews(
         parameters?: Parameters<Paths.GetAllMatchOverviews.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1274,7 +1272,7 @@ export interface OperationMethods {
     /**
      * getAllMatchesExtended
      */
-    'getAllMatchesExtended'(
+    getAllMatchesExtended(
         parameters?: Parameters<Paths.GetAllMatchesExtended.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1282,7 +1280,7 @@ export interface OperationMethods {
     /**
      * getLeaderboard
      */
-    'getLeaderboard'(
+    getLeaderboard(
         parameters?: Parameters<
             Paths.GetLeaderboard.QueryParameters &
                 Paths.GetLeaderboard.PathParameters
@@ -1293,7 +1291,7 @@ export interface OperationMethods {
     /**
      * findUserGroups
      */
-    'findUserGroups'(
+    findUserGroups(
         parameters?: Parameters<UnknownParamsObject> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1301,7 +1299,7 @@ export interface OperationMethods {
     /**
      * getPresets
      */
-    'getPresets'(
+    getPresets(
         parameters?: Parameters<UnknownParamsObject> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1309,7 +1307,7 @@ export interface OperationMethods {
     /**
      * getAsset
      */
-    'getAsset'(
+    getAsset(
         parameters?: Parameters<Paths.GetAsset.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1317,7 +1315,7 @@ export interface OperationMethods {
     /**
      * deletePlayer
      */
-    'deletePlayer'(
+    deletePlayer(
         parameters?: Parameters<Paths.DeletePlayer.PathParameters> | null,
         data?: any,
         config?: AxiosRequestConfig
@@ -1329,7 +1327,7 @@ export interface PathsDictionary {
         /**
          * getGroupById
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetGroupById.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1337,7 +1335,7 @@ export interface PathsDictionary {
         /**
          * updateGroup
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.UpdateGroup.PathParameters> | null,
             data?: Paths.UpdateGroup.RequestBody,
             config?: AxiosRequestConfig
@@ -1347,7 +1345,7 @@ export interface PathsDictionary {
         /**
          * setWallpaper
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.SetWallpaper.PathParameters> | null,
             data?: Paths.SetWallpaper.RequestBody,
             config?: AxiosRequestConfig
@@ -1355,7 +1353,7 @@ export interface PathsDictionary {
         /**
          * deleteWallpaper
          */
-        'delete'(
+        delete(
             parameters?: Parameters<Paths.DeleteWallpaper.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1365,7 +1363,7 @@ export interface PathsDictionary {
         /**
          * getRules
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetRules.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1373,7 +1371,7 @@ export interface PathsDictionary {
         /**
          * writeRules
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.WriteRules.PathParameters> | null,
             data?: Paths.WriteRules.RequestBody,
             config?: AxiosRequestConfig
@@ -1383,7 +1381,7 @@ export interface PathsDictionary {
         /**
          * updateRuleMove
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.UpdateRuleMove.PathParameters> | null,
             data?: Paths.UpdateRuleMove.RequestBody,
             config?: AxiosRequestConfig
@@ -1393,7 +1391,7 @@ export interface PathsDictionary {
         /**
          * getMatchById
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetMatchById.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1401,7 +1399,7 @@ export interface PathsDictionary {
         /**
          * updateMatch
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.UpdateMatch.PathParameters> | null,
             data?: Paths.UpdateMatch.RequestBody,
             config?: AxiosRequestConfig
@@ -1409,7 +1407,7 @@ export interface PathsDictionary {
         /**
          * deleteMatchById
          */
-        'delete'(
+        delete(
             parameters?: Parameters<Paths.DeleteMatchById.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1419,7 +1417,7 @@ export interface PathsDictionary {
         /**
          * setPhoto
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.SetPhoto.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1427,7 +1425,7 @@ export interface PathsDictionary {
         /**
          * deletePhoto
          */
-        'delete'(
+        delete(
             parameters?: Parameters<Paths.DeletePhoto.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1437,7 +1435,7 @@ export interface PathsDictionary {
         /**
          * getSeasonById
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetSeasonById.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1445,7 +1443,7 @@ export interface PathsDictionary {
         /**
          * updateSeasonById
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.UpdateSeasonById.PathParameters> | null,
             data?: Paths.UpdateSeasonById.RequestBody,
             config?: AxiosRequestConfig
@@ -1455,7 +1453,7 @@ export interface PathsDictionary {
         /**
          * getProfileById
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetProfileById.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1463,7 +1461,7 @@ export interface PathsDictionary {
         /**
          * updateProfile
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.UpdateProfile.PathParameters> | null,
             data?: Paths.UpdateProfile.RequestBody,
             config?: AxiosRequestConfig
@@ -1473,7 +1471,7 @@ export interface PathsDictionary {
         /**
          * setAvatar
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.SetAvatar.PathParameters> | null,
             data?: Paths.SetAvatar.RequestBody,
             config?: AxiosRequestConfig
@@ -1481,7 +1479,7 @@ export interface PathsDictionary {
         /**
          * deleteAvatar
          */
-        'delete'(
+        delete(
             parameters?: Parameters<Paths.DeleteAvatar.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1491,7 +1489,7 @@ export interface PathsDictionary {
         /**
          * startNewSeason
          */
-        'put'(
+        put(
             parameters?: Parameters<Paths.StartNewSeason.PathParameters> | null,
             data?: Paths.StartNewSeason.RequestBody,
             config?: AxiosRequestConfig
@@ -1501,7 +1499,7 @@ export interface PathsDictionary {
         /**
          * findGroupByInviteCode
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.FindGroupByInviteCode.QueryParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1509,7 +1507,7 @@ export interface PathsDictionary {
         /**
          * createGroup
          */
-        'post'(
+        post(
             parameters?: Parameters<UnknownParamsObject> | null,
             data?: Paths.CreateGroup.RequestBody,
             config?: AxiosRequestConfig
@@ -1519,7 +1517,7 @@ export interface PathsDictionary {
         /**
          * leaveGroup
          */
-        'post'(
+        post(
             parameters?: Parameters<Paths.LeaveGroup.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1529,7 +1527,7 @@ export interface PathsDictionary {
         /**
          * joinGroup
          */
-        'post'(
+        post(
             parameters?: Parameters<Paths.JoinGroup.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1539,7 +1537,7 @@ export interface PathsDictionary {
         /**
          * getAllRuleMoves
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetAllRuleMoves.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1547,7 +1545,7 @@ export interface PathsDictionary {
         /**
          * createRuleMove
          */
-        'post'(
+        post(
             parameters?: Parameters<Paths.CreateRuleMove.PathParameters> | null,
             data?: Paths.CreateRuleMove.RequestBody,
             config?: AxiosRequestConfig
@@ -1557,7 +1555,7 @@ export interface PathsDictionary {
         /**
          * getAllMatches
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetAllMatches.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1565,7 +1563,7 @@ export interface PathsDictionary {
         /**
          * createMatch
          */
-        'post'(
+        post(
             parameters?: Parameters<Paths.CreateMatch.PathParameters> | null,
             data?: Paths.CreateMatch.RequestBody,
             config?: AxiosRequestConfig
@@ -1575,7 +1573,7 @@ export interface PathsDictionary {
         /**
          * listAllProfiles
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.ListAllProfiles.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1583,7 +1581,7 @@ export interface PathsDictionary {
         /**
          * createProfile
          */
-        'post'(
+        post(
             parameters?: Parameters<Paths.CreateProfile.PathParameters> | null,
             data?: Paths.CreateProfile.RequestBody,
             config?: AxiosRequestConfig
@@ -1593,7 +1591,7 @@ export interface PathsDictionary {
         /**
          * signup
          */
-        'post'(
+        post(
             parameters?: Parameters<UnknownParamsObject> | null,
             data?: Paths.Signup.RequestBody,
             config?: AxiosRequestConfig
@@ -1603,7 +1601,7 @@ export interface PathsDictionary {
         /**
          * refreshAuth
          */
-        'post'(
+        post(
             parameters?: Parameters<UnknownParamsObject> | null,
             data?: Paths.RefreshAuth.RequestBody,
             config?: AxiosRequestConfig
@@ -1613,7 +1611,7 @@ export interface PathsDictionary {
         /**
          * getHealthcheck
          */
-        'get'(
+        get(
             parameters?: Parameters<UnknownParamsObject> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1623,7 +1621,7 @@ export interface PathsDictionary {
         /**
          * getAllSeasons
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetAllSeasons.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1633,7 +1631,7 @@ export interface PathsDictionary {
         /**
          * getPlayers
          */
-        'get'(
+        get(
             parameters?: Parameters<
                 Paths.GetPlayers.QueryParameters &
                     Paths.GetPlayers.PathParameters
@@ -1646,7 +1644,7 @@ export interface PathsDictionary {
         /**
          * getPlayersExtended
          */
-        'get'(
+        get(
             parameters?: Parameters<
                 Paths.GetPlayersExtended.QueryParameters &
                     Paths.GetPlayersExtended.PathParameters
@@ -1659,7 +1657,7 @@ export interface PathsDictionary {
         /**
          * getMatchOverviewById
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetMatchOverviewById.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1669,7 +1667,7 @@ export interface PathsDictionary {
         /**
          * getMatchByIdExtended
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetMatchByIdExtended.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1679,7 +1677,7 @@ export interface PathsDictionary {
         /**
          * getAllMatchOverviews
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetAllMatchOverviews.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1689,7 +1687,7 @@ export interface PathsDictionary {
         /**
          * getAllMatchesExtended
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetAllMatchesExtended.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1699,7 +1697,7 @@ export interface PathsDictionary {
         /**
          * getLeaderboard
          */
-        'get'(
+        get(
             parameters?: Parameters<
                 Paths.GetLeaderboard.QueryParameters &
                     Paths.GetLeaderboard.PathParameters
@@ -1712,7 +1710,7 @@ export interface PathsDictionary {
         /**
          * findUserGroups
          */
-        'get'(
+        get(
             parameters?: Parameters<UnknownParamsObject> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1722,7 +1720,7 @@ export interface PathsDictionary {
         /**
          * getPresets
          */
-        'get'(
+        get(
             parameters?: Parameters<UnknownParamsObject> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1732,7 +1730,7 @@ export interface PathsDictionary {
         /**
          * getAsset
          */
-        'get'(
+        get(
             parameters?: Parameters<Paths.GetAsset.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig
@@ -1742,7 +1740,7 @@ export interface PathsDictionary {
         /**
          * deletePlayer
          */
-        'delete'(
+        delete(
             parameters?: Parameters<Paths.DeletePlayer.PathParameters> | null,
             data?: any,
             config?: AxiosRequestConfig

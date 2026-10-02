@@ -186,7 +186,7 @@ export default function NewMatchScreen() {
             carouselRef.current?.prev();
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
-            showErrorToast('Failed to create match.');
+            showErrorToast('Failed to create match.', err);
         }
     }
 
@@ -283,6 +283,7 @@ export default function NewMatchScreen() {
                     if (item.index === 0) {
                         return (
                             <NewMatchAssignTeams
+                                key={index}
                                 onRandomTeamSelect={(playerId) =>
                                     setRandomTeamsMode((prev) => ({
                                         players: prev!.players.includes(
@@ -321,6 +322,7 @@ export default function NewMatchScreen() {
                     if (item.index === 1) {
                         return (
                             <CreateMatchAssignPoints
+                                key={index}
                                 isPending={createMatchMutation.isPending}
                                 players={teamMembers}
                                 setMoveCount={matchDraft.actions.setMoveCount}
@@ -340,7 +342,7 @@ export default function NewMatchScreen() {
                         );
                     }
                     if (item.index === 2) {
-                        return <Cups />;
+                        return <Cups key={index} />;
                     }
                     throw new Error('Invalid swiper index');
                 })}

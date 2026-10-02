@@ -1,9 +1,9 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import copyToClipboard from '@/components/copyToClipboard';
+import { Icon } from '@/components/Icon';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';

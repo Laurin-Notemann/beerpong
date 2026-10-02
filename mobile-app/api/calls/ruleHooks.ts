@@ -126,7 +126,7 @@ export function useRules() {
             });
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
-            showErrorToast('Failed to update rules.');
+            showErrorToast('Failed to update rules.', err);
         }
     }
 

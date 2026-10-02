@@ -37,11 +37,6 @@
             "permissions": ["android.permission.RECORD_AUDIO"],
             "package": "com.linusbolls.mobileapp"
         },
-        "web": {
-            "bundler": "metro",
-            "output": "static",
-            "favicon": "./assets/images/favicon.png"
-        },
         "plugins": [
             "expo-router",
             "expo-updates",

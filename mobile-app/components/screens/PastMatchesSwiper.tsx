@@ -47,6 +47,7 @@ export function PastMatchesSwiper() {
             {seasons.map((season) => {
                 return (
                     <MatchesList
+                        key={season.id}
                         background={false}
                         contentContainerStyle={{
                             paddingBottom: insets.bottom + 48,

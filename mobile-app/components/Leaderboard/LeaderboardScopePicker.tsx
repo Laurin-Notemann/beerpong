@@ -9,9 +9,9 @@ import Animated, {
     useSharedValue,
     withSpring,
 } from 'react-native-reanimated';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import { Icon, IconName } from '@/components/Icon';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
 import { scrollControlledSwipers } from '@/components/Swiper';
@@ -30,7 +30,7 @@ type PickerOption = {
     id: string;
     label?: string;
     size?: 'square';
-    icon?: string;
+    icon?: IconName;
 };
 
 function getSegmentWidths(

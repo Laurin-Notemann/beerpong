@@ -8,14 +8,14 @@ import {
     View,
     ViewStyle,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon, IconName } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
 const PillButton: React.FC<{
     label: string;
-    iconName?: string;
+    iconName?: IconName;
     onPress?: () => void;
     onRemove?: () => void;
     backgroundColor?: string;

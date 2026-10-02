@@ -1,8 +1,8 @@
 import { Stack, useNavigation } from 'expo-router';
 import React from 'react';
 import { ScrollView, Switch, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon } from '@/components/Icon';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Pressable, ScrollView, TouchableHighlight, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
@@ -163,8 +163,7 @@ function PlayerItem({
                 {hasTutorial && (
                     <TutorialBubble
                         text="Try double-tapping a players name!"
-                        left={-12}
-                        top={-12}
+                        left={64}
                     />
                 )}
             </View>

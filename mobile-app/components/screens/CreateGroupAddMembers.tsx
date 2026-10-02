@@ -3,9 +3,9 @@ import React, { useRef, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import Text from '@/components/Text';
 import TextInput from '@/components/TextInput';

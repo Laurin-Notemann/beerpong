@@ -8,12 +8,12 @@ import { useEffect } from 'react';
 import { Animated, TouchableHighlight, TouchableOpacity } from 'react-native';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { env } from '@/api/env';
 import { QK } from '@/api/utils/reactQuery';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';

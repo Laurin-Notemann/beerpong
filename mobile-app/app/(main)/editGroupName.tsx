@@ -29,7 +29,7 @@ export default function Page() {
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to update group:', err);
-            showErrorToast('Failed to update group.');
+            showErrorToast('Failed to update group.', err);
         }
     }
     const theme = useTheme();

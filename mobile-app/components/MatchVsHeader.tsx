@@ -1,9 +1,9 @@
 import React from 'react';
 import { Text, View, ViewProps } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { useTheme } from '@/theme';
 

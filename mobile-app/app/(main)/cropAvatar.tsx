@@ -153,7 +153,7 @@ export default function Page() {
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to upload player avatar:', err);
-            showErrorToast('Failed to upload player avatar.');
+            showErrorToast('Failed to upload player avatar.', err);
         } finally {
             setIsLoading(false);
         }

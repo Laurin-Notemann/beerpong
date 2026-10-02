@@ -58,7 +58,7 @@ export default function Page() {
             router.replace('/');
         } catch (err) {
             ConsoleLogger.error('failed to create group:', err);
-            showErrorToast('Failed to create group.');
+            showErrorToast('Failed to create group.', err);
         }
     }
 

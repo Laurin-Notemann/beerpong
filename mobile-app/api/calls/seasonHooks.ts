@@ -185,8 +185,7 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
     const seasonQuery = useSeasonQuery(groupId, seasonId);
 
     const seasonSettings = seasonQuery.data?.data?.seasonSettings as
-        | Required<SeasonSettingsDto>
-        | undefined;
+        Required<SeasonSettingsDto> | undefined;
 
     const updateSeasonSettingsMutation = useMutation({
         mutationFn: async (partialUpdate: SeasonSettingsDto) => {

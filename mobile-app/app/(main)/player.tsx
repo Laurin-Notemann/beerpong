@@ -85,7 +85,7 @@ export default function Page() {
             router.back();
         } catch (err) {
             ConsoleLogger.error('failed to delete player:', err);
-            showErrorToast('Failed to delete player.');
+            showErrorToast('Failed to delete player.', err);
         }
     }
 
@@ -129,7 +129,7 @@ export default function Page() {
             nav.navigate('cropAvatar', { imageKey, profileId });
         } catch (err) {
             ConsoleLogger.error('failed to process image:', err);
-            showErrorToast('Failed to process image.');
+            showErrorToast('Failed to process image.', err);
         } finally {
             setIsUploadingAvatar(false);
         }
@@ -148,7 +148,7 @@ export default function Page() {
             showSuccessToast('Player avatar deleted.');
         } catch (err) {
             ConsoleLogger.error('failed to delete player avatar:', err);
-            showErrorToast('Failed to delete player avatar.');
+            showErrorToast('Failed to delete player avatar.', err);
         } finally {
             setIsUploadingAvatar(false);
         }

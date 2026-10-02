@@ -3,9 +3,9 @@ import * as Application from 'expo-application';
 import { isAxiosError } from 'axios';
 // import * as Notifications from 'expo-notifications';
 // import * as Permissions from 'expo-permissions';
-import jwt, { JWTBody, JWTDefaultBody } from 'expo-jwt';
 import { Platform } from 'react-native';
 
+import { decodeJwt, JwtPayload } from '@/lib/auth/decodeJwt';
 import { versusDeviceStorage } from '@/lib/deviceStorage';
 import { Client as BeerPongClient } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
@@ -111,7 +111,7 @@ const isRefreshTokenRejected = (err: unknown) =>
 
 interface GetAccessTokenResult {
     accessToken: string;
-    accessTokenPayload: JWTBody<JWTDefaultBody>;
+    accessTokenPayload: JwtPayload;
 }
 
 async function getAccessToken(
@@ -131,7 +131,7 @@ async function getAccessToken(
             throw new Error('response.data.data.token is null');
         }
         try {
-            const accessTokenPayload = jwt.decode(accessToken, null);
+            const accessTokenPayload = decodeJwt(accessToken);
 
             return { accessToken, accessTokenPayload };
         } catch (err) {

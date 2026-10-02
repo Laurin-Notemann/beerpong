@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon, IconName } from '@/components/Icon';
 import PressableScale from '@/components/PressableScale';
 import { useTheme } from '@/theme';
 
@@ -15,7 +15,7 @@ export function OverlayIconButton({
     blur = true,
     size = 'medium',
 }: {
-    iconName: string;
+    iconName: IconName;
     onPress?: () => void;
     onPressIn?: () => void;
     onPressOut?: () => void;

@@ -1,39 +1,45 @@
-import Toast, { ToastOptions } from 'react-native-root-toast';
+import { isAxiosError } from 'axios';
+import { toast } from 'sonner-native';
 
 import { triggerHapticBump } from '@/haptics';
 
 /**
- * TODO: refactor these into a useToast hook so we can use useTheme in here
+ * Why a request failed, in words a player at the table understands. Network problems
+ * (server down, no signal, timeout) get one message; otherwise the server's own error
+ * description (`ResponseEnvelope.error.description`) when it sent one.
  */
-const getToastOptions = (): ToastOptions => {
-    return {
-        duration: 1500,
-        position: 1,
-        opacity: 1,
-        containerStyle: {
-            top: 39 + 4,
-            // backgroundColor: 'white',
-        },
-        // textColor: '#222',
-    };
-};
+export function describeError(error: unknown): string | undefined {
+    if (isAxiosError(error)) {
+        if (!error.response) {
+            return "Can't reach the server. Check your connection and try again.";
+        }
+        const description = error.response.data?.error?.description;
+        if (typeof description === 'string' && description) return description;
+        if (error.response.status >= 500) {
+            return 'The server ran into a problem. Try again in a moment.';
+        }
+    }
+    return undefined;
+}
 
-export function showErrorToast(message: string) {
+/**
+ * Shows `message`, with the reason from `error` underneath. Error toasts share one id, so a
+ * burst of failures (e.g. every refetch while the server is down) shows a single toast.
+ */
+export function showErrorToast(message: string, error?: unknown) {
     triggerHapticBump('toast:error');
-    return Toast.show(message, getToastOptions());
+    toast.error(message, { id: 'error', description: describeError(error) });
 }
 
 export function showSuccessToast(message: string) {
     triggerHapticBump('toast:success');
-    return Toast.show(message, getToastOptions());
+    toast.success(message);
 }
 
 export function showCopiedToClipboardToast() {
-    triggerHapticBump('toast:success');
-    return Toast.show('Copied to clipboard.', getToastOptions());
+    showSuccessToast('Copied to clipboard.');
 }
 
 export function showYouLeftGroupToast(groupName: string) {
-    triggerHapticBump('toast:success');
-    return Toast.show(`You left "${groupName}".`, getToastOptions());
+    showSuccessToast(`You left "${groupName}".`);
 }

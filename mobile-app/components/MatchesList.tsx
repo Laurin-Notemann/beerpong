@@ -9,14 +9,13 @@ import { MatchesListItem } from '@/components/MatchesListItem';
 import { Heading } from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
 
-export interface MatchesListProps
-    extends Pick<
-        LegendListProps<MatchesListRow>,
-        | 'style'
-        | 'contentContainerStyle'
-        | 'ListHeaderComponent'
-        | 'ListEmptyComponent'
-    > {
+export interface MatchesListProps extends Pick<
+    LegendListProps<MatchesListRow>,
+    | 'style'
+    | 'contentContainerStyle'
+    | 'ListHeaderComponent'
+    | 'ListEmptyComponent'
+> {
     refresh: RefreshProps;
     matches: Match[];
 

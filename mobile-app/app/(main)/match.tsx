@@ -135,7 +135,7 @@ export default function Page() {
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to delete match:', err);
-            showErrorToast('Failed to delete match.');
+            showErrorToast('Failed to delete match.', err);
         }
     }
 
@@ -244,7 +244,7 @@ export default function Page() {
                 err,
                 JSON.stringify(data, null, 2)
             );
-            showErrorToast('Failed to update match.');
+            showErrorToast('Failed to update match.', err);
         } finally {
             setIsSaving(false);
         }

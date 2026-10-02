@@ -8,13 +8,13 @@ import {
     StyleSheet,
     View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
 import {
     DualCameraView,
     DualCameraViewProps,
 } from '@/components/DualCameraView';
+import { Icon } from '@/components/Icon';
 import { ScoreChip, Team } from '@/components/MatchVsHeader';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PressableScale from '@/components/PressableScale';

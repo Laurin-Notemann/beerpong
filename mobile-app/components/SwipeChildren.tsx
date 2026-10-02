@@ -62,6 +62,7 @@ const SwipeChildItem = React.memo<SwipeChildItemProps>(
         );
     }
 );
+SwipeChildItem.displayName = 'SwipeChildItem';
 
 export const SwipeChildren: React.FC<SwipeChildrenProps> = ({
     progress,

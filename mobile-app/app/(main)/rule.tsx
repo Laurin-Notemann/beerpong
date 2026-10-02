@@ -23,7 +23,7 @@ export default function Page() {
             showSuccessToast(`Updated rules.`);
         } catch (err) {
             ConsoleLogger.error('failed to update rules:', err);
-            showErrorToast('Failed to update rules.');
+            showErrorToast('Failed to update rules.', err);
         }
     }
 

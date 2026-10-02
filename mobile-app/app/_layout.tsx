@@ -1,6 +1,5 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { useFonts } from 'expo-font';
 import { ErrorBoundary as ExpoErrorBoundary } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import {
@@ -11,15 +10,14 @@ import {
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
-import { RootSiblingParent } from 'react-native-root-siblings';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Toaster } from 'sonner-native';
 
 import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
 import { CrashFallback } from '@/components/CrashFallback';
-import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useOtaUpdates } from '@/hooks/useOtaUpdates';
@@ -40,12 +38,8 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
     const appTheme = useColorScheme() === 'dark' ? DarkTheme : DefaultTheme;
-
-    const [fontLoaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    });
-    const loaded = fontLoaded;
 
     const [queryClient] = useState(() => createQueryClient());
 
@@ -53,10 +47,8 @@ function RootLayout() {
     useOtaUpdates();
 
     useEffect(() => {
-        if (loaded) SplashScreen.hideAsync();
-    }, [loaded]);
-
-    if (!loaded) return <LoadingScreen />;
+        SplashScreen.hideAsync();
+    }, []);
 
     return (
         // Catches render errors and fatal global errors (timers, handlers, native calls) for the
@@ -79,22 +71,25 @@ function RootLayout() {
                         <ApiProvider>
                             <ThemeProvider value={appTheme}>
                                 <ScopePickerProvider>
-                                    <PortalProvider>
-                                        <RootSiblingParent>
-                                            <StatusBar
-                                                barStyle={theme.barStyle}
-                                            />
-                                            <Drawer
-                                                screenOptions={{
-                                                    drawerStyle: { width: 256 },
-                                                    headerShown: false,
-                                                }}
-                                                drawerContent={Sidebar}
-                                            >
-                                                <Drawer.Screen name="(main)" />
-                                            </Drawer>
-                                        </RootSiblingParent>
-                                    </PortalProvider>
+                                    <StatusBar barStyle={theme.barStyle} />
+                                    <Drawer
+                                        screenOptions={{
+                                            drawerStyle: { width: 256 },
+                                            headerShown: false,
+                                        }}
+                                        drawerContent={Sidebar}
+                                    >
+                                        <Drawer.Screen name="(main)" />
+                                    </Drawer>
+                                    <Toaster
+                                        theme={
+                                            theme.barStyle === 'light-content'
+                                                ? 'dark'
+                                                : 'light'
+                                        }
+                                        offset={insets.top + 52}
+                                        duration={3000}
+                                    />
                                 </ScopePickerProvider>
                             </ThemeProvider>
                         </ApiProvider>

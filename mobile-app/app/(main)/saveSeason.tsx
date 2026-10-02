@@ -50,7 +50,7 @@ export default function Page() {
             router.replace('/');
         } catch (err) {
             ConsoleLogger.error('failed to start new season:', err);
-            showErrorToast('Failed to create start new season.');
+            showErrorToast("Couldn't start the new season.", err);
         }
     }
 

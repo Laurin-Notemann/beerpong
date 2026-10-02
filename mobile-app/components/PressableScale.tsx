@@ -86,5 +86,6 @@ const PressableScale = React.forwardRef<PressableScaleHandle, Props>(
         );
     }
 );
+PressableScale.displayName = 'PressableScale';
 
 export default PressableScale;

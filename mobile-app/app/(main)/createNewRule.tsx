@@ -22,7 +22,7 @@ export default function Page() {
             nav.goBack();
         } catch (err) {
             ConsoleLogger.error('failed to create rule:', err);
-            showErrorToast('Failed to create rule.');
+            showErrorToast('Failed to create rule.', err);
         }
     }
 

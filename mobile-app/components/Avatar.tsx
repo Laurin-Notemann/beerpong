@@ -2,8 +2,8 @@ import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import React, { memo, PropsWithChildren } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon } from '@/components/Icon';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';

@@ -23,6 +23,8 @@ const ApiContext = createContext<ApiContextType | undefined>(undefined);
 const openApiConfig = {
     axiosConfigDefaults: {
         baseURL: env.apiBaseUrl,
+        // A server that accepts connections but never answers would otherwise spin forever.
+        timeout: 15_000,
     },
     definition: beerpongDefinition as Document,
 };

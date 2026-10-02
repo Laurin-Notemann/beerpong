@@ -1,7 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Host as PortalProvider } from 'react-native-portalize';
 
 import {
     MinimalMatch,
@@ -108,7 +107,7 @@ export default function AssignPointsToPlayerModal({
                     </Stack.Toolbar.Button>
                 </Stack.Toolbar>
             )}
-            <PortalProvider>
+            <>
                 <View
                     style={{
                         backgroundColor: theme.panel.dark.bg,
@@ -165,7 +164,7 @@ export default function AssignPointsToPlayerModal({
                         })}
                     </Swiper>
                 </View>
-            </PortalProvider>
+            </>
         </>
     );
 }

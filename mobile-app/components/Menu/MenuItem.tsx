@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Pressable, Text, TouchableHighlight, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon, IconName } from '@/components/Icon';
 import { useTheme } from '@/theme';
 
 export interface MenuItemProps {
@@ -10,7 +10,7 @@ export interface MenuItemProps {
 
     type?: 'default' | 'danger';
 
-    headIcon?: string | React.ReactElement;
+    headIcon?: IconName | React.ReactElement;
     tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked' | 'draghandle';
     onPress?: () => void;
 
@@ -30,6 +30,14 @@ export interface MenuItemProps {
     border?: boolean;
     onDrag?: () => void;
 }
+const tailIcons = {
+    next: 'chevron-right',
+    copy: 'content-copy',
+    checked: 'circle-slice-8',
+    unchecked: 'circle-outline',
+    draghandle: 'drag-horizontal-variant',
+} satisfies Record<NonNullable<MenuItemProps['tailIconType']>, IconName>;
+
 export default function MenuItem({
     title,
     subtitle,
@@ -204,15 +212,7 @@ export default function MenuItem({
                                     : theme.icon.secondary
                             }
                             size={24}
-                            name={
-                                {
-                                    next: 'chevron-right',
-                                    copy: 'content-copy',
-                                    checked: 'circle-slice-8', // "check",
-                                    unchecked: 'circle-outline',
-                                    draghandle: 'drag-horizontal-variant',
-                                }[tailIconType]
-                            }
+                            name={tailIcons[tailIconType]}
                         />
                     )}
                     {onDrag && (

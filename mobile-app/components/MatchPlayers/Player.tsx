@@ -7,10 +7,10 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 import { formatRatingChange } from '@/utils/format';

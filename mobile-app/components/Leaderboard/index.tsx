@@ -26,11 +26,10 @@ type LeaderboardRow =
     | { type: 'player'; player: Player; placement: number; unranked: boolean }
     | { type: 'unrankedHeader' };
 
-export interface LeaderboardProps
-    extends Pick<
-        LegendListProps<LeaderboardRow>,
-        'style' | 'contentContainerStyle' | 'refreshControl' | 'scrollEnabled'
-    > {
+export interface LeaderboardProps extends Pick<
+    LegendListProps<LeaderboardRow>,
+    'style' | 'contentContainerStyle' | 'refreshControl' | 'scrollEnabled'
+> {
     players: Player[];
 
     withPodium?: boolean;

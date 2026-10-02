@@ -218,7 +218,7 @@ jobs:
         if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: "mobile-app/package-lock.json"
 
