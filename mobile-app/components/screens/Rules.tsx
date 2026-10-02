@@ -10,9 +10,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { AppBackground } from '@/app/Background';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
@@ -21,6 +18,9 @@ import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
+import { AppBackground } from '@/lib/Background';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 

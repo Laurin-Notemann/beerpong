@@ -1,9 +1,9 @@
-import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import { DrawerActions, useNavigation } from 'expo-router/react-navigation';
 import React from 'react';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
-import { useNavStyles } from '@/app/navigation/navStyles';
+import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 /**

@@ -1,13 +1,12 @@
 import * as SplashScreen from 'expo-splash-screen';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { useFonts } from 'expo-font';
+import { Drawer } from 'expo-router/drawer';
 import {
     DarkTheme,
     DefaultTheme,
     ThemeProvider,
-} from '@react-navigation/native';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+} from 'expo-router/react-navigation';
 import { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,10 +14,9 @@ import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
-import { ApiProvider, useApi } from '@/api/utils/create-api';
+import { ApiProvider } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
-import { useModalStyles } from '@/app/navigation/modalStyles';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -26,75 +24,12 @@ import { useOtaUpdates } from '@/hooks/useOtaUpdates';
 import { useTheme } from '@/theme';
 import { Sentry } from '@/utils/sentry';
 import { LoggingProvider } from '@/utils/useLogging';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { ScopePickerProvider } from '@/zustand/useScopePicker';
 
-export const unstable_settings = { initialRouteName: '(tabs)' };
-
-const Drawer = createDrawerNavigator();
+export const unstable_settings = { initialRouteName: '(main)' };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
-function Everything() {
-    const { connectRealtime } = useApi();
-
-    const { groupIds } = useGroupStore();
-
-    useEffect(() => {
-        connectRealtime(groupIds);
-    }, [connectRealtime, groupIds]);
-
-    const modalStyles = useModalStyles();
-
-    return (
-        <Stack>
-            <Stack.Screen
-                name="onboarding"
-                options={{ title: '', headerShown: false }}
-            />
-            <Stack.Screen
-                name="(tabs)"
-                options={{ title: '', headerShown: false }}
-            />
-            <Stack.Screen name="+not-found" />
-
-            <Stack.Screen name="createNewPlayer" options={modalStyles} />
-            <Stack.Screen name="createNewRule" options={modalStyles} />
-            <Stack.Screen name="rule" options={modalStyles} />
-            <Stack.Screen name="allowedMove" options={modalStyles} />
-
-            <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
-            <Stack.Screen
-                name="dailyLeaderboardSettings"
-                options={modalStyles}
-            />
-
-            <Stack.Screen name="teamSizeSettings" options={modalStyles} />
-            <Stack.Screen
-                name="minMatchesToQualifySettings"
-                options={modalStyles}
-            />
-
-            <Stack.Screen
-                name="createGroupCustomGameModal"
-                options={modalStyles}
-            />
-            <Stack.Screen
-                name="cropAvatar"
-                options={{
-                    animation: 'fade',
-                }}
-            />
-            <Stack.Screen
-                name="assignPointsToPlayerModal"
-                options={modalStyles}
-            />
-            <Stack.Screen name="assignCupHitModal" options={modalStyles} />
-            <Stack.Screen name="editMatchPoints" options={modalStyles} />
-        </Stack>
-    );
-}
 
 function RootLayout() {
     const theme = useTheme();
@@ -129,20 +64,15 @@ function RootLayout() {
                                 <PortalProvider>
                                     <RootSiblingParent>
                                         <StatusBar barStyle={theme.barStyle} />
-                                        <Drawer.Navigator
+                                        <Drawer
                                             screenOptions={{
-                                                drawerStyle: {
-                                                    width: 256,
-                                                },
+                                                drawerStyle: { width: 256 },
                                                 headerShown: false,
                                             }}
                                             drawerContent={Sidebar}
                                         >
-                                            <Drawer.Screen
-                                                name="static/aboutPremium"
-                                                component={Everything}
-                                            />
-                                        </Drawer.Navigator>
+                                            <Drawer.Screen name="(main)" />
+                                        </Drawer>
                                     </RootSiblingParent>
                                 </PortalProvider>
                             </ScopePickerProvider>

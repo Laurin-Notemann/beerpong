@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { SharedValue } from 'react-native-reanimated';
 
-import { useNavStyles } from '@/app/navigation/navStyles';
 import { useSwiperPage } from '@/hooks/useSwiperPage';
+import { useNavStyles } from '@/lib/navigation/navStyles';
 
 export const SaveSeasonStack: React.FC<{
     oldSeasonIsEmpty: boolean;

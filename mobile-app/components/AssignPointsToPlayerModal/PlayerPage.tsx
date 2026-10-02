@@ -2,11 +2,11 @@ import { ScrollView, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Avatar from '@/components/Avatar';
 import { ScoredMoveInputRow } from '@/components/ScoredMoveInputRow';
 import Stepper from '@/components/Stepper';
 import Text from '@/components/Text';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 
 export default function PlayerPage({

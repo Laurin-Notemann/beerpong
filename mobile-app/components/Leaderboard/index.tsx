@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
@@ -17,6 +16,7 @@ import {
     getRankingAlgorithm,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 
 const MODAL_ON_LONG_PRESS = false;
 

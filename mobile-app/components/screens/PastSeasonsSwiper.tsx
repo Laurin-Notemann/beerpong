@@ -1,12 +1,12 @@
 import * as React from 'react';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import ErrorScreen from '@/components/ErrorScreen';
 import Leaderboard from '@/components/Leaderboard';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';

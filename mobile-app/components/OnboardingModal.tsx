@@ -1,8 +1,8 @@
 import { Image, ScrollView, View } from 'react-native';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Button from '@/components/Button';
 import Text from '@/components/Text';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 
 // eslint-disable-next-line no-empty-pattern

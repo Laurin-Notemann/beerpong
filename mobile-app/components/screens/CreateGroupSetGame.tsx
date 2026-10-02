@@ -7,8 +7,8 @@ import {
     View,
 } from 'react-native';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
 import Text from '@/components/Text';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
 

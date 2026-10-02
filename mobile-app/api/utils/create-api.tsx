@@ -6,7 +6,7 @@ import { env } from '@/api/env';
 import beerpongDefinition from '@/api/generated/openapi.json';
 import { RealtimeClient } from '@/api/realtime';
 import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
-import { useAuth } from '@/app/auth/useAuth';
+import { useAuth } from '@/lib/auth/useAuth';
 import { Client as BeerPongClient } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 

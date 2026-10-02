@@ -2,11 +2,11 @@ import { Stack } from 'expo-router';
 import React, { PropsWithChildren } from 'react';
 import { ScrollView } from 'react-native';
 
-import { AppBackground } from '@/app/Background';
-import { useNavStyles } from '@/app/navigation/navStyles';
-import { useInsets } from '@/app/useInsets';
 import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
+import { AppBackground } from '@/lib/Background';
+import { useNavStyles } from '@/lib/navigation/navStyles';
+import { useInsets } from '@/lib/useInsets';
 
 /** Layout shared by the internal debug screens (Settings → Debug). */
 export function DebugScreen({
