@@ -1,3 +1,4 @@
+import { MenuView } from '@expo/ui/community/menu';
 import { BlurView } from 'expo-blur';
 import { startTransition, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -11,10 +12,8 @@ import Animated, {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
-import Select from '@/components/Select';
 import { scrollControlledSwipers } from '@/components/Swiper';
 import Text from '@/components/Text';
 import {
@@ -24,8 +23,6 @@ import {
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-const USE_SELECT_IN_SORT_MODAL = false;
 
 const pastSeasonsColor = 'gray';
 
@@ -196,8 +193,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const theme = useTheme();
 
-    const [showSortModal, setShowSortModal] = useState(false);
-
     const isPastSeasonsMode = isPastSeason ?? scopePicker.isPastSeasonsMode;
 
     const styles = useMemo(
@@ -242,6 +237,9 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     const groupRankingAlgorithm =
         activeSeason?.seasonSettings?.rankingAlgorithm ?? 'ELO';
 
+    const activeRankingAlgorithm =
+        scopePicker.rankingAlgorithm ?? groupRankingAlgorithm;
+
     const sortOptions = Object.entries(rankingAlgorithms)
         .filter((i) => i[1].showInSelect)
         .map(([id, i]) => {
@@ -256,70 +254,49 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     return (
         <>
-            <ConfirmationModal
-                onClose={() => setShowSortModal(false)}
-                title="Sort Players By"
-                actions={
-                    USE_SELECT_IN_SORT_MODAL
-                        ? undefined
-                        : sortOptions.map((i) => ({
-                              title: i.title,
-                              onPress: () => {
-                                  scopePicker.setRankingAlgorithm(
-                                      i.value as RankingAlgorithm
-                                  );
-                                  setShowSortModal(false);
-                              },
-                          }))
-                }
-                content={
-                    USE_SELECT_IN_SORT_MODAL ? (
-                        <Select
-                            color="light"
-                            value={scopePicker.rankingAlgorithm}
-                            style={{
-                                marginHorizontal: 16,
-                            }}
-                            onChange={(id) => {
-                                scopePicker.setRankingAlgorithm(
-                                    id as RankingAlgorithm
-                                );
-                                setShowSortModal(false);
-                            }}
-                            items={sortOptions}
-                        />
-                    ) : undefined
-                }
-                isVisible={showSortModal}
-            />
             <View style={{ gap: 4 }}>
                 {options.length > 0 && hasSortButton && (
                     <View style={{ flexDirection: 'row', paddingLeft: 4 }}>
-                        <PillButton
-                            backgroundColor={
-                                isPastSeasonsMode ? '#555' : undefined
-                            }
-                            blur={!isPastSeasonsMode}
-                            label={
-                                scopePicker.rankingAlgorithm
-                                    ? `Sorted by ${sortOptions.find((i) => i.value === scopePicker.rankingAlgorithm)?.buttonTitle}`
-                                    : 'Sort'
-                            }
-                            iconName="swap-vertical"
-                            onPress={() => setShowSortModal(true)}
-                            onRemove={
-                                scopePicker.rankingAlgorithm
-                                    ? () => {
-                                          startTransition(() => {
-                                              scopePicker.setRankingAlgorithm(
-                                                  undefined
-                                              );
-                                          });
-                                          triggerHapticBump('toast:success');
-                                      }
-                                    : undefined
-                            }
-                        />
+                        <MenuView
+                            title="Sort Players By"
+                            actions={sortOptions.map((option) => ({
+                                id: option.value,
+                                title: option.title,
+                                state:
+                                    option.value === activeRankingAlgorithm
+                                        ? 'on'
+                                        : 'off',
+                            }))}
+                            onPressAction={({ nativeEvent }) => {
+                                const picked =
+                                    nativeEvent.event as RankingAlgorithm;
+                                startTransition(() => {
+                                    // picking the group's own algorithm clears the override
+                                    scopePicker.setRankingAlgorithm(
+                                        picked === groupRankingAlgorithm
+                                            ? undefined
+                                            : picked
+                                    );
+                                });
+                                triggerHapticBump('selection');
+                            }}
+                        >
+                            {/* the native menu owns the tap; the pill is only its label */}
+                            <View pointerEvents="none">
+                                <PillButton
+                                    backgroundColor={
+                                        isPastSeasonsMode ? '#555' : undefined
+                                    }
+                                    blur={!isPastSeasonsMode}
+                                    label={
+                                        scopePicker.rankingAlgorithm
+                                            ? `Sorted by ${sortOptions.find((i) => i.value === scopePicker.rankingAlgorithm)?.buttonTitle}`
+                                            : 'Sort'
+                                    }
+                                    iconName="swap-vertical"
+                                />
+                            </View>
+                        </MenuView>
                     </View>
                 )}
 
