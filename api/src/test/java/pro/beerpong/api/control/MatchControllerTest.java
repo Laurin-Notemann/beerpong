@@ -21,6 +21,8 @@ import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
 import pro.beerpong.api.model.dto.seasons.SeasonDto;
 import pro.beerpong.api.model.dto.teammembers.TeamMemberCreateDto;
 import pro.beerpong.api.model.dto.teams.TeamCreateDto;
+import pro.beerpong.api.model.dto.leaderboard.LeaderboardDto;
+import pro.beerpong.api.repository.MatchRepository;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -38,6 +40,8 @@ public class MatchControllerTest {
     private RequestUtils requestUtils;
     @Autowired
     private TestUtils testUtils;
+    @Autowired
+    private MatchRepository matchRepository;
 
     //TODO test photo upload on create and photo override/reuse on update
 
@@ -3394,6 +3398,37 @@ public class MatchControllerTest {
 
         response = requestUtils.performDelete(port, "/groups/" + prerequisiteGroup.getId() + "/seasons/" + newSeason.getId() + "/matches/" + otherGroupMatch.getId(), null, String.class);
         requestUtils.assertFailure(response, ErrorCodes.MATCH_GROUP_OR_SEASON_ID_DONT_MATCH);
+    }
+
+    // Matches recorded before accounts existed have no creator (created_by is null).
+    @Test
+    @SuppressWarnings("unchecked")
+    public void matches_withoutCreator_stillListedAndRanked() {
+        var prerequisiteGroup = testUtils.createTestGroup(port);
+        var seasonPath = "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId();
+
+        var players = (List<PlayerDto>) requestUtils.assertSuccess(requestUtils.performGet(port, seasonPath + "/players", List.class, PlayerDto.class), ArrayList.class);
+        var ruleMoves = (List<RuleMoveDto>) requestUtils.assertSuccess(requestUtils.performGet(port, seasonPath + "/rule-moves", List.class, RuleMoveDto.class), ArrayList.class);
+        var finishMove = ruleMoves.stream().filter(RuleMoveDto::isFinishingMove).findFirst().orElseThrow();
+
+        var matchDto = buildDto(
+                buildTeam(buildMember(players.getFirst().getId(), buildMove(finishMove.getId(), 1))),
+                buildTeam(buildMember(players.getLast().getId()))
+        );
+        var match = requestUtils.assertSuccess(requestUtils.performPost(port, seasonPath + "/matches", matchDto, MatchDto.class), MatchDto.class);
+
+        var legacyMatch = matchRepository.findById(match.getId()).orElseThrow();
+        legacyMatch.setCreatedBy(null);
+        matchRepository.saveAndFlush(legacyMatch);
+
+        var extended = (List<MatchDtoExtended>) requestUtils.assertSuccess(requestUtils.performGet(port, seasonPath + "/matches/extended", List.class, MatchDtoExtended.class), ArrayList.class);
+        assertEquals(1, extended.size());
+        assertNull(extended.getFirst().getCreatedById());
+
+        var single = requestUtils.assertSuccess(requestUtils.performGet(port, seasonPath + "/matches/" + match.getId(), MatchDto.class), MatchDto.class);
+        assertNull(single.getCreatedById());
+
+        requestUtils.assertSuccess(requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/leaderboard?scope=all-time", LeaderboardDto.class), LeaderboardDto.class);
     }
 
     private MatchCreateDto buildDto(TeamCreateDto... teams) {

@@ -35,7 +35,12 @@ export type RootStackParamList = {
     'static/privacyPolicy': undefined;
     'static/aboutPremium': undefined;
     'static/aboutUs': undefined;
+    debug: undefined;
     debugLog: undefined;
+    debugUpdates: undefined;
+    debugSession: undefined;
+    debugQueries: undefined;
+    debugStorage: undefined;
     experimentalFeatures: undefined;
 
     createGroupCustomGameModal: undefined;

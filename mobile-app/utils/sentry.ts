@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react-native';
 import * as Updates from 'expo-updates';
 
 import { env } from '@/api/env';
+import { releaseInfo } from '@/utils/releaseInfo';
 
 const escapeRegExp = (value: string) =>
     value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -32,5 +33,6 @@ Sentry.init({
 
 Sentry.setTag('update_id', Updates.updateId ?? 'embedded');
 Sentry.setTag('runtime_version', Updates.runtimeVersion ?? 'unknown');
+Sentry.setTag('git_commit', releaseInfo.gitCommit ?? 'unknown');
 
 export { Sentry };

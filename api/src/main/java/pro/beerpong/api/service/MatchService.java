@@ -324,7 +324,7 @@ public class MatchService {
         dto.setId(match.getId());
         dto.setDate(match.getDate());
         dto.setSeasonId(match.getSeason().getId());
-        dto.setCreatedById(match.getCreatedBy().getId());
+        dto.setCreatedById(createdById(match));
         dto.setTeams(teams);
         dto.setTeamMembers(teamMembers);
         dto.setMatchMoves(matchMoves);
@@ -366,7 +366,7 @@ public class MatchService {
             dto.setId(match.getId());
             dto.setDate(match.getDate());
             dto.setSeasonId(seasonId);
-            dto.setCreatedById(match.getCreatedBy().getId());
+            dto.setCreatedById(createdById(match));
 
             var matchTeams = teams.stream()
                     .filter(t -> t.getMatchId().equals(match.getId()))
@@ -510,7 +510,7 @@ public class MatchService {
         dto.setId(match.getId());
         dto.setDate(match.getDate());
         dto.setSeasonId(match.getSeason().getId());
-        dto.setCreatedById(match.getCreatedBy().getId());
+        dto.setCreatedById(createdById(match));
 
         return dto;
     }
@@ -560,5 +560,10 @@ public class MatchService {
                 })
                 .reduce(Integer::sum)
                 .orElse(0);
+    }
+
+    /** Matches recorded before accounts existed have no creator. */
+    private static String createdById(Match match) {
+        return match.getCreatedBy() != null ? match.getCreatedBy().getId() : null;
     }
 }

@@ -15,7 +15,7 @@ const REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS = 60;
 /**
  * should be unique for every device, even across reinstalls
  */
-async function getInstallationId() {
+export async function getInstallationId() {
     // important: the platform-specific Application methods throw an error if they're called on the wrong platform!
     const installationId =
         Platform.OS === 'ios'
@@ -216,6 +216,14 @@ export async function getValidAccessToken(
     }
     return pendingAccessToken;
 }
+
+/** Current session as seen by the token cache, for the debug menu. */
+export const getSessionDebugInfo = () => ({
+    userId: cachedAccessToken?.accessTokenPayload.sub ?? null,
+    accessTokenExpiresAt: cachedAccessToken?.accessTokenPayload.exp
+        ? new Date(cachedAccessToken.accessTokenPayload.exp * 1000)
+        : null,
+});
 
 export function useAuth() {
     return { getAccessToken: getValidAccessToken };

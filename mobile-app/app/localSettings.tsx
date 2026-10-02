@@ -75,10 +75,10 @@ export default function Page() {
                         }}
                     />
                     <MenuItem
-                        title="Debug Logs"
+                        title="Debug"
                         headIcon="dev-to"
                         tailIconType="next"
-                        onPress={() => nav.navigate('debugLog')}
+                        onPress={() => nav.navigate('debug')}
                     />
                     {env.isDev && (
                         <>
