@@ -1,4 +1,5 @@
 /* eslint @typescript-eslint/explicit-function-return-type: ["error"] */
+import { Profile, WithProfile } from '@/api/types';
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { Components } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
@@ -74,9 +75,9 @@ export class ProfileImpl {
     public name: string;
     public avatarUrl: string | null;
 
-    constructor(_data: Components.Schemas.ProfileDto) {
+    constructor(_data: Profile) {
         this.name = _data.name!;
-        this.avatarUrl = _data.avatarAsset?.url ?? null;
+        this.avatarUrl = _data.avatarUrl;
         this.id = _data.id!;
     }
 }
@@ -86,7 +87,7 @@ export class TeamMemberImpl {
     public team!: 'red' | 'blue';
 
     public get name(): string {
-        return this.player?.profile?.name;
+        return this.player?.profile?.name ?? 'Unknown';
     }
     // TODO: implement this
     public get change(): number {
@@ -126,7 +127,7 @@ export class TeamMemberImpl {
     }
 
     public get avatarUrl(): string | null {
-        return this.player?.profile?.avatarUrl;
+        return this.player?.profile?.avatarUrl ?? null;
     }
 
     public setTeamColor(color: 'red' | 'blue'): void {
@@ -168,22 +169,27 @@ export class TeamMemberImpl {
     }
 }
 
+/** the backend only sends `profileId`, the profile has to be resolved separately */
+export type PlayerWithProfile = WithProfile<
+    Pick<Components.Schemas.PlayerDto, 'id' | 'profileId'>
+>;
+
 export class PlayerImpl {
     public id: string;
 
     public profileId: string;
-    public profile: ProfileImpl;
+    public profile: ProfileImpl | null;
 
     public setProfile(profile: ProfileImpl): void {
         this.profile = profile;
         this.profileId = profile.id;
     }
 
-    constructor(_data: Components.Schemas.PlayerDto) {
+    constructor(_data: PlayerWithProfile) {
         this.id = _data.id!;
 
-        this.profileId = _data.profile!.id!;
-        this.profile = new ProfileImpl(_data.profile!);
+        this.profileId = _data.profileId!;
+        this.profile = _data.profile ? new ProfileImpl(_data.profile) : null;
     }
 }
 
@@ -211,8 +217,8 @@ export class MatchImpl {
     public id: string;
     public date: Date;
     public seasonId: string;
-    public blueTeamPhotoUrl?: string | null;
-    public redTeamPhotoUrl?: string | null;
+    public blueTeamPhotoAssetId: string | null;
+    public redTeamPhotoAssetId: string | null;
 
     public teams: TeamImpl[];
 
@@ -252,10 +258,10 @@ export class MatchImpl {
     private ruleMoves: RuleMoveImpl[];
 
     constructor(
-        _data: Omit<Components.Schemas.MatchDto, 'date'> & {
+        _data: Omit<Components.Schemas.MatchDtoExtended, 'date'> & {
             date?: string | Date;
         },
-        _players: Components.Schemas.PlayerDto[],
+        _players: PlayerWithProfile[],
         _ruleMoves: Components.Schemas.RuleMoveDto[]
     ) {
         if (_data.teams?.length !== 2) {
@@ -264,12 +270,12 @@ export class MatchImpl {
             );
         }
 
-        this.seasonId = _data.season!.id!;
+        this.seasonId = _data.seasonId!;
         this.id = _data.id!;
         this.date = new Date(_data.date!);
         this.teams = _data.teams!.map((i) => new TeamImpl(i));
-        this.blueTeamPhotoUrl = _data.teams[0]?.photoAsset?.url ?? null;
-        this.redTeamPhotoUrl = _data.teams[1]?.photoAsset?.url ?? null;
+        this.blueTeamPhotoAssetId = _data.teams[0]?.photoAssetId ?? null;
+        this.redTeamPhotoAssetId = _data.teams[1]?.photoAssetId ?? null;
 
         const players = _players.map((i) => new PlayerImpl(i));
         const ruleMoves = _ruleMoves.map((i) => new RuleMoveImpl(i));
@@ -339,8 +345,8 @@ export class MatchImpl {
             redCups: this.redCups,
             blueTeamId: this._blueTeam.id,
             redTeamId: this._redTeam.id,
-            blueTeamPhotoUrl: this.blueTeamPhotoUrl,
-            redTeamPhotoUrl: this.redTeamPhotoUrl,
+            blueTeamPhotoAssetId: this.blueTeamPhotoAssetId,
+            redTeamPhotoAssetId: this.redTeamPhotoAssetId,
 
             blueTeam: this.blueTeam.map((i) => {
                 const player = i.toJSON();

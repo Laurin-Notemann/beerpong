@@ -17,7 +17,7 @@ export default function Page() {
 
     const players = playersQuery.data?.data ?? [];
 
-    const existingPlayers = players.map((i) => i.profile!.name!);
+    const existingPlayers = players.map((i) => i.profile?.name ?? '');
 
     const createPlayerMutation = useCreatePlayerMutation();
 

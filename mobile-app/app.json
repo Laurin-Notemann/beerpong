@@ -1,7 +1,7 @@
 {
     "expo": {
         "name": "Versus",
-        "slug": "mobile-app",
+        "slug": "versus",
         "version": "1.0.93",
         "orientation": "default",
         "icon": "./assets/images/icon.png",
@@ -44,12 +44,19 @@
         },
         "plugins": [
             "expo-router",
+            "expo-updates",
             [
                 "@sentry/react-native/expo",
                 {
                     "url": "https://sentry.io/",
-                    "project": "beerpong",
-                    "organization": "sackverein"
+                    "organization": "versus-zr",
+                    "project": "mobile",
+                    "useNativeInit": true,
+                    "options": {
+                        "dsn": "https://0c7498a1386febbd359e91162e64f90d@o4512187370766336.ingest.de.sentry.io/4512187421622352",
+                        "tracesSampleRate": 1.0,
+                        "enableAutoSessionTracking": true
+                    }
                 }
             ],
             [
@@ -68,9 +75,18 @@
         },
         "extra": {
             "eas": {
-                "projectId": "8dbfe974-43ce-4f4e-b3d8-cf6f77109412"
-            }
+                "projectId": "abdb043b-f685-426e-ba1f-9d4c13107187"
+            },
+            "router": {}
         },
-        "owner": "beerpong"
+        "owner": "laurinnotemann27",
+        "runtimeVersion": {
+            "policy": "fingerprint"
+        },
+        "updates": {
+            "url": "https://u.expo.dev/abdb043b-f685-426e-ba1f-9d4c13107187",
+            "checkAutomatically": "ON_LOAD",
+            "fallbackToCacheTimeout": 0
+        }
     }
 }

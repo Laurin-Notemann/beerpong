@@ -17,7 +17,7 @@ export default function Page() {
     const nav = useNavigation();
     const router = useRouter();
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, seasonId, activeSeason } = useGroup();
 
     const newSeasonMutation = useStartNewSeasonMutation();
 
@@ -64,8 +64,7 @@ export default function Page() {
         groupId,
         seasonId ?? null
     );
-    const rankingAlgorithm =
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm;
+    const rankingAlgorithm = activeSeason?.seasonSettings?.rankingAlgorithm;
 
     const sortedPlayers = currentSeasonPlayers.sort(
         getRankingAlgorithm(rankingAlgorithm).sortFunc
@@ -85,12 +84,11 @@ export default function Page() {
             numMatches={matches.length}
             players={rankedPlayers}
             oldSeasonMoves={allowedMoves}
-            oldSeasonStartDate={group.data?.activeSeason?.startDate!}
+            oldSeasonStartDate={activeSeason?.startDate!}
             onCancel={() => nav.goBack()}
             isCreating={newSeasonMutation.isPending}
             rankingAlgorithm={
-                group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
-                'AVERAGE'
+                activeSeason?.seasonSettings?.rankingAlgorithm ?? 'AVERAGE'
             }
         />
     );

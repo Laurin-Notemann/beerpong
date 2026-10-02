@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
+import { useAssetQuery } from '@/api/calls/assetHooks';
 import {
     useDeleteWallpaperMutation,
     useGroupQuery,
@@ -38,6 +39,8 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const { data, ...screenState } = useGroupQuery(groupId);
+
+    const wallpaperQuery = useAssetQuery(data?.data?.assetIdWallpaper);
 
     async function onUploadWallpaperPress() {
         const [result] = await launchImageLibrary({
@@ -113,7 +116,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               onUploadWallpaperPress,
               onDeleteWallpaperPress,
               onLeaveGroup,
-              wallpaperAsset: data.data.wallpaperAsset,
+              wallpaperAsset: wallpaperQuery.data?.data,
               isUpdatingWallpaper: updateGroupWallpaperMutation.isPending,
           }
         : null;

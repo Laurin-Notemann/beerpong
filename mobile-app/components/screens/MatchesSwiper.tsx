@@ -7,6 +7,7 @@ import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchesList from '@/components/MatchesList';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
+import { getWakeTimeDayStart } from '@/utils/wakeTime';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 export function MatchesSwiper() {
@@ -14,7 +15,7 @@ export function MatchesSwiper() {
 
     const insets = useInsets(true, true);
 
-    const { groupId, group } = useGroup();
+    const { groupId, activeSeason } = useGroup();
     const scopePicker = useScopePicker();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
@@ -31,22 +32,18 @@ export function MatchesSwiper() {
         'matches'
     );
 
-    const wakeTime =
-        group.data?.activeSeason?.seasonSettings?.wakeTimeHour ?? 0;
+    const wakeTime = activeSeason?.seasonSettings?.wakeTime;
 
     if (isLoading) return <LoadingScreen />;
     if (!props) return <ErrorScreen error={error} />;
 
-    const todayMatches = props.matches.filter((m) => {
-        const matchDate = new Date(m.date);
-        const now = new Date();
-        if (now.getHours() < wakeTime) now.setDate(now.getDate() - 1);
-        now.setHours(wakeTime, 0, 0, 0);
-        if (matchDate.getHours() < wakeTime)
-            matchDate.setDate(matchDate.getDate() - 1);
-        matchDate.setHours(wakeTime, 0, 0, 0);
-        return matchDate.getTime() === now.getTime();
-    });
+    const todayStart = getWakeTimeDayStart(new Date(), wakeTime).getTime();
+
+    const todayMatches = props.matches.filter(
+        (m) =>
+            getWakeTimeDayStart(new Date(m.date), wakeTime).getTime() ===
+            todayStart
+    );
 
     const allTimeMatches = (seasonsQuery.data?.data ?? []).flatMap(
         (s) =>

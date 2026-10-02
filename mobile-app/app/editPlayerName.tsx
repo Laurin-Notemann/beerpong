@@ -23,7 +23,7 @@ export default function Page() {
 
     const player = playersQuery.data?.data?.find((i) => i.id === id);
 
-    const profileId = player?.profile?.id;
+    const profileId = player?.profileId;
 
     const [value, setValue] = useState(player?.profile?.name || '');
 

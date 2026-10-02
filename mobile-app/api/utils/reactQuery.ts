@@ -11,6 +11,8 @@ export const QK = {
     seasons: 'seasons',
     rules: 'rules',
     ruleMoves: 'ruleMoves',
+    profiles: 'profiles',
+    assets: 'assets',
 
     groupCode: 'groupCode',
 };

@@ -1,3 +1,4 @@
+import { WithProfile } from '@/api/types';
 import {
     getInfluenceOfMatchOnAveragePoints,
     MinimalMatch,
@@ -11,7 +12,7 @@ import { PlayerDraft } from '@/zustand/matchEditDraftStore';
 export function getDisplayMatch(
     draftPlayers: (PlayerDraft & { team: TeamId })[],
     rankingAlgorithm: 'AVERAGE' | 'ELO' | undefined,
-    profiles: PlayerDto[],
+    profiles: WithProfile<PlayerDto>[],
     matches: MinimalMatch[],
     allowedMoves: RuleMoveDto[]
 ): Omit<MinimalMatch, 'id' | 'date'> {
@@ -60,9 +61,9 @@ export function getDisplayMatch(
                 };
             }),
 
-            avatarUrl: profile?.profile?.avatarAsset?.url,
+            avatarUrl: profile?.profile?.avatarUrl,
             name: profile?.profile?.name || 'Unknown',
-            profileId: profile?.id || '#',
+            profileId: profile?.profileId || '#',
         };
     });
     const displayMatch: MinimalMatch = {

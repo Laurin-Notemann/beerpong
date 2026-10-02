@@ -54,7 +54,7 @@ export default function Page() {
         return {
             id: i.playerId,
             team: i.team,
-            avatarUrl: profile?.profile?.avatarAsset?.url,
+            avatarUrl: profile?.profile?.avatarUrl,
             name: profile?.profile?.name || 'Unknown',
             points: i.moves.reduce(
                 (sum, j) =>
@@ -75,7 +75,7 @@ export default function Page() {
                     isFinish: j.finishingMove!,
                 };
             }),
-            profileId: profile?.id!,
+            profileId: profile?.profileId!,
         };
     });
 

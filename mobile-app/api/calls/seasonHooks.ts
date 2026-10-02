@@ -2,17 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
-import { ApiId } from '@/api/types';
+import { fetchProfiles, withProfiles } from '@/api/calls/profileHooks';
+import { ApiId, WithProfile } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import {
-    MatchDto,
+    MatchDtoExtended,
     Paths,
-    PlayerDto,
+    PlayerDtoExtended,
     RuleMoveDto,
     SeasonDto,
-    SeasonSettings,
+    SeasonSettingsDto,
 } from '@/openapi/openapi';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
@@ -44,13 +45,15 @@ export const useSeasonQuery = (
 export const useAllSeasonsQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
+    const qc = useQueryClient();
+
     return useQuery<
         | (Omit<Paths.GetAllSeasons.Responses.$200, 'data'> & {
               data?: (SeasonDto & {
                   numMatches: number;
                   players: Player[];
-                  rawPlayers: PlayerDto[];
-                  matches: MatchDto[];
+                  rawPlayers: WithProfile<PlayerDtoExtended>[];
+                  matches: MatchDtoExtended[];
                   ruleMoves: RuleMoveDto[] | undefined;
               })[];
           })
@@ -61,7 +64,10 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
             if (!groupId) {
                 return null;
             }
-            const res = await (await api).getAllSeasons(groupId);
+            const [res, profiles] = await Promise.all([
+                (await api).getAllSeasons(groupId),
+                fetchProfiles(qc, api, groupId),
+            ]);
 
             const rawSeasons = res.data.data ?? [];
 
@@ -69,7 +75,7 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                 rawSeasons.map(async (season) => {
                     const matches = await (
                         await api
-                    ).getAllMatches({
+                    ).getAllMatchesExtended({
                         groupId,
                         seasonId: season.id!,
                     });
@@ -89,7 +95,10 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
                         scope: LeaderboardScope.SEASON,
                     });
 
-                    const players = leaderboard.data.data?.entries ?? [];
+                    const players = withProfiles(
+                        leaderboard.data.data?.entries ?? [],
+                        profiles
+                    );
 
                     return {
                         ...season,
@@ -134,12 +143,18 @@ export const useGroup = () => {
 
     const { data: groupQueryData } = useGroupQuery(selectedGroupId);
 
-    const seasonId = groupQueryData?.data?.activeSeason?.id;
+    const seasonId = groupQueryData?.data?.activeSeasonId;
+
+    const { data: activeSeasonQueryData } = useSeasonQuery(
+        selectedGroupId,
+        seasonId ?? null
+    );
 
     return {
         groupId: selectedGroupId,
         seasonId,
         group: { ...(groupQueryData ?? {}) },
+        activeSeason: activeSeasonQueryData?.data,
     };
 };
 
@@ -170,21 +185,26 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
     const seasonQuery = useSeasonQuery(groupId, seasonId);
 
     const seasonSettings = seasonQuery.data?.data?.seasonSettings as
-        | Required<SeasonSettings>
+        | Required<SeasonSettingsDto>
         | undefined;
 
     const updateSeasonSettingsMutation = useMutation({
-        mutationFn: async (partialUpdate: Omit<SeasonSettings, 'id'>) => {
+        mutationFn: async (partialUpdate: SeasonSettingsDto) => {
             if (!groupId || !seasonId || !seasonSettings) return;
 
-            qc.setQueryData([QK.group, groupId, QK.seasons, seasonId], {
-                data: {
-                    seasonSettings: {
-                        ...seasonSettings,
-                        ...partialUpdate,
+            qc.setQueryData<Paths.GetSeasonById.Responses.$200 | null>(
+                [QK.group, groupId, QK.seasons, seasonId],
+                (prev) => ({
+                    ...prev,
+                    data: {
+                        ...prev?.data,
+                        seasonSettings: {
+                            ...seasonSettings,
+                            ...partialUpdate,
+                        },
                     },
-                },
-            });
+                })
+            );
             await settingsMutation.mutateAsync({
                 groupId,
                 id: seasonId,
@@ -222,7 +242,7 @@ export interface Player {
     cups: number;
 }
 
-export const toPlayer = (i: PlayerDto): Player => {
+export const toPlayer = (i: WithProfile<PlayerDtoExtended>): Player => {
     return {
         id: i!.id!,
         elo: i.statistics?.elo ?? 0, // actually nullable from the backend
@@ -230,8 +250,8 @@ export const toPlayer = (i: PlayerDto): Player => {
         points: i.statistics?.points!,
         matchesWon: i.statistics?.wins!,
         name: i.profile?.name!,
-        avatarUrl: i!.profile?.avatarAsset?.url,
-        profileId: i!.profile?.id!,
+        avatarUrl: i.profile?.avatarUrl,
+        profileId: i.profileId!,
         cups: i.statistics?.moves ?? 0,
     };
 };

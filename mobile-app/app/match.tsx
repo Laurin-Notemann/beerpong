@@ -2,20 +2,20 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { useAssetQuery } from '@/api/calls/assetHooks';
 import {
+    uploadTeamPhoto,
     useDeleteMatchMutation,
     useDeleteMatchPhotoMutation,
     useMatchesQuery,
     useMatchQuery,
     useUpdateMatchMutation,
-    useUpdateMatchPhotoMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { AppBackground } from '@/app/Background';
 import { getDisplayMatch } from '@/app/getDisplayMatch';
 import { useNavStyles } from '@/app/navigation/navStyles';
@@ -48,14 +48,14 @@ const USE_MATCH_QUERY = false;
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
 
-    const { groupId, group } = useGroup();
+    const { groupId, seasonId: activeSeasonId, activeSeason } = useGroup();
 
     const { id, seasonId } = useLocalSearchParams<{
         id: string;
         seasonId: string;
     }>();
 
-    const isCurrentSeason = group.data?.activeSeason?.id === seasonId;
+    const isCurrentSeason = activeSeasonId === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
@@ -82,11 +82,24 @@ export default function Page() {
 
     const insets = useInsets(true, true);
 
-    const match = USE_MATCH_QUERY
+    const matchWithoutPhotos = USE_MATCH_QUERY
         ? matchQuery.data?.data
             ? matchDtoToMatch(profiles, allowedMoves)(matchQuery.data.data)
             : null
         : matches.find((i) => i.id === id);
+
+    const bluePhotoQuery = useAssetQuery(
+        matchWithoutPhotos?.blueTeamPhotoAssetId
+    );
+    const redPhotoQuery = useAssetQuery(
+        matchWithoutPhotos?.redTeamPhotoAssetId
+    );
+
+    const match = matchWithoutPhotos && {
+        ...matchWithoutPhotos,
+        blueTeamPhotoUrl: bluePhotoQuery.data?.data?.url ?? null,
+        redTeamPhotoUrl: redPhotoQuery.data?.data?.url ?? null,
+    };
 
     useEffect(() => {
         if (match) {
@@ -100,7 +113,7 @@ export default function Page() {
     const displayMatch = isEditing
         ? getDisplayMatch(
               matchDraft.actions.getPlayers(),
-              group.data?.activeSeason?.seasonSettings?.rankingAlgorithm,
+              activeSeason?.seasonSettings?.rankingAlgorithm,
               playersQuery.data?.data ?? [],
               matches,
               movesQuery.data?.data ?? []
@@ -133,8 +146,6 @@ export default function Page() {
 
     const updateMatchMutation = useUpdateMatchMutation();
 
-    const updateMatchPhotoMutation = useUpdateMatchPhotoMutation();
-
     const deleteMatchPhotoMutation = useDeleteMatchPhotoMutation();
 
     const [isSaving, setIsSaving] = useState(false);
@@ -146,6 +157,15 @@ export default function Page() {
             );
             return;
         }
+
+        const { blueTeamPhotoUri, redTeamPhotoUri } = matchDraft;
+
+        const photosChanged =
+            (blueTeamPhotoUri ?? null) !== match.blueTeamPhotoUrl ||
+            (redTeamPhotoUri ?? null) !== match.redTeamPhotoUrl;
+
+        const savePhoto =
+            photosChanged && !!blueTeamPhotoUri && !!redTeamPhotoUri;
 
         const data = {
             id: match.id,
@@ -159,6 +179,7 @@ export default function Page() {
                         })),
                     })),
                     existingTeamId: match.blueTeamId,
+                    savePhoto,
                 },
                 {
                     teamMembers: displayMatch.redTeam.map((i) => ({
@@ -169,6 +190,7 @@ export default function Page() {
                         })),
                     })),
                     existingTeamId: match.redTeamId,
+                    savePhoto,
                 },
             ],
             groupId,
@@ -177,57 +199,39 @@ export default function Page() {
         setIsSaving(true);
 
         try {
-            const res = await updateMatchMutation.mutateAsync(data);
-
-            const newBlueTeamId = res.data!.teams![0].id!;
-            const newRedTeamId = res.data!.teams![1].id!;
-
-            if (
-                matchDraft.blueTeamPhotoUri !== match.blueTeamPhotoUrl ||
-                matchDraft.redTeamPhotoUri !== match.redTeamPhotoUrl
-            ) {
-                if (
-                    !matchDraft.blueTeamPhotoUri ||
-                    !matchDraft.redTeamPhotoUri
-                ) {
+            if (photosChanged && !savePhoto) {
+                // updating a match re-creates its teams (and keeps their photos), so the photos are removed beforehand
+                const teams = [
+                    {
+                        id: match.blueTeamId,
+                        hasPhoto: !!match.blueTeamPhotoUrl,
+                    },
+                    { id: match.redTeamId, hasPhoto: !!match.redTeamPhotoUrl },
+                ];
+                for (const team of teams.filter((i) => i.hasPhoto)) {
                     await deleteMatchPhotoMutation.mutateAsync({
                         groupId,
                         seasonId,
                         matchId: match.id,
-                        teamId: newBlueTeamId,
-                    });
-                    await deleteMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        teamId: newRedTeamId,
-                    });
-                } else {
-                    const blueByteArray = await uriToByteArray(
-                        matchDraft.blueTeamPhotoUri
-                    );
-                    const redByteArray = await uriToByteArray(
-                        matchDraft.redTeamPhotoUri
-                    );
-
-                    await updateMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        mimeType: 'image/png',
-                        byteArray: blueByteArray,
-                        teamId: newBlueTeamId,
-                    });
-
-                    await updateMatchPhotoMutation.mutateAsync({
-                        groupId,
-                        seasonId,
-                        matchId: match.id,
-                        mimeType: 'image/png',
-                        byteArray: redByteArray,
-                        teamId: newRedTeamId,
+                        teamId: team.id,
                     });
                 }
+            }
+
+            const res = await updateMatchMutation.mutateAsync(data);
+
+            if (savePhoto && blueTeamPhotoUri && redTeamPhotoUri) {
+                // the upload urls reference the teams by their id before the update
+                const photoUploads = res.data?.photoUploads ?? [];
+
+                await uploadTeamPhoto(
+                    photoUploads.find((i) => i.teamId === match.blueTeamId),
+                    blueTeamPhotoUri
+                );
+                await uploadTeamPhoto(
+                    photoUploads.find((i) => i.teamId === match.redTeamId),
+                    redTeamPhotoUri
+                );
             }
             showSuccessToast('Updated match.');
             setIsEditing(false);
@@ -252,6 +256,8 @@ export default function Page() {
         matchesQuery.isLoading ||
         playersQuery.isLoading ||
         movesQuery.isLoading ||
+        bluePhotoQuery.isLoading ||
+        redPhotoQuery.isLoading ||
         (USE_MATCH_QUERY && matchQuery.isLoading);
 
     if (isLoading) return <LoadingScreen />;

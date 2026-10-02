@@ -9,13 +9,14 @@ import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { ScopeInfo } from '@/components/screens/Player';
 import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
+import { getWakeTimeDayStart } from '@/utils/wakeTime';
 
 // TODO: additional seasons
 // TODO: minMatchesRequiredToBeRanked, placement, elo, points, rankingAlgorithm
 
 export function usePlayerPageScope(profileId: string) {
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, seasonId, activeSeason: groupActiveSeason } = useGroup();
 
     const { alltimePlayers, dailyPlayers } = useLeaderboardProps(
         groupId,
@@ -51,21 +52,18 @@ export function usePlayerPageScope(profileId: string) {
 
     const { seasonSettings } = useSeasonSettings(groupId!, seasonId!);
 
-    const todayMatches = currentSeasonMatches.filter((i) => {
-        const wakeTime = seasonSettings?.wakeTimeHour ?? 0;
+    const todayStart = getWakeTimeDayStart(
+        new Date(),
+        seasonSettings?.wakeTime
+    ).getTime();
 
-        const matchDate = new Date(i.date);
-        const now = new Date();
-        if (now.getHours() < wakeTime) {
-            now.setDate(now.getDate() - 1);
-        }
-        now.setHours(wakeTime, 0, 0, 0);
-        if (matchDate.getHours() < wakeTime) {
-            matchDate.setDate(matchDate.getDate() - 1);
-        }
-        matchDate.setHours(wakeTime, 0, 0, 0);
-        return matchDate.getTime() === now.getTime();
-    });
+    const todayMatches = currentSeasonMatches.filter(
+        (i) =>
+            getWakeTimeDayStart(
+                new Date(i.date),
+                seasonSettings?.wakeTime
+            ).getTime() === todayStart
+    );
 
     const allTimeMatches = (seasonsQuery.data?.data ?? []).flatMap((i) =>
         i.ruleMoves && i.rawPlayers
@@ -111,7 +109,7 @@ export function usePlayerPageScope(profileId: string) {
         getScope(
             profileId,
             todayMatches,
-            group.data?.activeSeason?.seasonSettings,
+            groupActiveSeason?.seasonSettings,
             dailyPlayers,
             'Today'
         )
@@ -122,7 +120,7 @@ export function usePlayerPageScope(profileId: string) {
         getScope(
             profileId,
             allTimeMatches,
-            group.data?.activeSeason?.seasonSettings,
+            groupActiveSeason?.seasonSettings,
             alltimePlayers,
             'All Time'
         )
@@ -157,7 +155,7 @@ const getAllTimeCups = (profileId: string | undefined, matches: Match[]) => {
 const getScope = (
     profileId: string | undefined,
     matches: Match[],
-    seasonSettings: SeasonSettings | undefined,
+    seasonSettings: SeasonSettingsDto | undefined,
     seasonPlayers: Player[],
     name: string
 ): ScopeInfo => {

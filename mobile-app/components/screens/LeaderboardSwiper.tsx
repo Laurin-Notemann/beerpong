@@ -18,7 +18,8 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import Text from '@/components/Text';
-import { SeasonSettings } from '@/openapi/openapi';
+import { SeasonSettingsDto } from '@/openapi/openapi';
+import { formatWakeTime, parseWakeTime } from '@/utils/wakeTime';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 dayjs.extend(duration);
@@ -58,7 +59,7 @@ export function LayoutScrollView({
 export function LeaderboardSwiper() {
     const scopePicker = useScopePicker();
 
-    const { groupId, seasonId, group } = useGroup();
+    const { groupId, seasonId, group, activeSeason } = useGroup();
 
     const {
         currentSeasonPlayers,
@@ -93,7 +94,7 @@ export function LeaderboardSwiper() {
 
     const rankingAlgorithm =
         scopePicker.rankingAlgorithm ??
-        group.data?.activeSeason?.seasonSettings?.rankingAlgorithm ??
+        activeSeason?.seasonSettings?.rankingAlgorithm ??
         'ELO';
 
     function onPlayerPress(id: string) {
@@ -101,7 +102,7 @@ export function LeaderboardSwiper() {
     }
 
     const minMatchesRequiredToBeRanked =
-        group.data?.activeSeason?.seasonSettings?.minMatchesToQualify ?? 0;
+        activeSeason?.seasonSettings?.minMatchesToQualify ?? 0;
 
     const isLoading = !group || seasonsQuery.isLoading;
 
@@ -109,15 +110,14 @@ export function LeaderboardSwiper() {
         dailyPlayers.filter((i) => i.matches > 0).length === 0;
 
     const hasDailyLeaderboardCountdown =
-        group.data?.activeSeason?.seasonSettings?.dailyLeaderboard ===
-            'WAKE_TIME' && !dailyLeaderboardIsEmpty;
+        activeSeason?.seasonSettings?.dailyLeaderboard === 'WAKE_TIME' &&
+        !dailyLeaderboardIsEmpty;
 
-    const wakeTimeHour =
-        group.data?.activeSeason?.seasonSettings?.wakeTimeHour ?? 0;
+    const wakeTime = parseWakeTime(activeSeason?.seasonSettings?.wakeTime);
 
     const dailyLeaderboardResetDate = dayjs()
-        .hour(wakeTimeHour)
-        .minute(0)
+        .hour(wakeTime.hour)
+        .minute(wakeTime.minute)
         .second(0)
         .add(1, 'day');
 
@@ -153,7 +153,7 @@ export function LeaderboardSwiper() {
                         nav.navigate('dailyLeaderboardSettings');
                     }}
                 >
-                    {getDayStartedAt(group.data?.activeSeason?.seasonSettings)}{' '}
+                    {getDayStartedAt(activeSeason?.seasonSettings)}{' '}
                     <Text color="link" style={{ fontSize: 13 }}>
                         Learn more
                     </Text>
@@ -174,9 +174,9 @@ export function LeaderboardSwiper() {
                     minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
                 />
                 <Text color="secondary" variant="fineprint" style={spacing}>
-                    {group.data?.activeSeason?.startDate
+                    {activeSeason?.startDate
                         ? `Season started ${env.format.date.seasonStartAndEnd(
-                              dayjs(group.data.activeSeason.startDate)
+                              dayjs(activeSeason.startDate)
                           )}`
                         : null}
                 </Text>
@@ -201,7 +201,7 @@ export function LeaderboardSwiper() {
                         }
                     />
                     <Text color="secondary" variant="fineprint" style={spacing}>
-                        {group.data?.activeSeason?.startDate
+                        {activeSeason?.startDate
                             ? `Group created ${env.format.date.seasonStartAndEnd(
                                   dayjs(pastSeasons[0].startDate)
                               )}`
@@ -213,10 +213,10 @@ export function LeaderboardSwiper() {
     );
 }
 
-const getDayStartedAt = (settings: SeasonSettings | undefined) => {
+const getDayStartedAt = (settings: SeasonSettingsDto | undefined) => {
     if (!settings) return 'Daily leaderboard.';
 
     return settings?.dailyLeaderboard === 'LAST_24_HOURS'
         ? `Day started yesterday at ${dayjs().subtract(24, 'hours').format('H:mm')}.`
-        : `Day started at ${settings?.wakeTimeHour + ':00'}.`;
+        : `Day started at ${formatWakeTime(settings?.wakeTime)}.`;
 };
