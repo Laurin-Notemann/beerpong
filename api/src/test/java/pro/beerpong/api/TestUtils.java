@@ -35,6 +35,10 @@ public class TestUtils {
         }
 
         actual.setCreatedAt(expected.getCreatedAt());
+        // counts are only filled in by the endpoints that query them
+        actual.setNumberOfPlayers(expected.getNumberOfPlayers());
+        actual.setNumberOfMatches(expected.getNumberOfMatches());
+        actual.setNumberOfSeasons(expected.getNumberOfSeasons());
 
         assertEquals(expected, actual);
     }

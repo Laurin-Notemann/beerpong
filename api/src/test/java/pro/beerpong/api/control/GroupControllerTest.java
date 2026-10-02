@@ -163,6 +163,10 @@ public class GroupControllerTest {
 
         // test group by id
         assertNotNull(group);
+        // the drawer shows these counts from this endpoint
+        assertEquals(2, group.getNumberOfPlayers());
+        assertEquals(0, group.getNumberOfMatches());
+        assertEquals(1, group.getNumberOfSeasons());
         testUtils.assertGroupEquals(prerequisiteGroup, group);
     }
 

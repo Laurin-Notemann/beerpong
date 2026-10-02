@@ -83,12 +83,9 @@ public class GroupController {
             return ResponseEnvelope.notOk(ErrorCodes.INVALID_GROUP_ID);
         }
 
-        GroupDto group = groupService.getGroupById(id);
-        if (group != null) {
-            return ResponseEnvelope.ok(group);
-        } else {
-            return ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND);
-        }
+        return groupService.findGroupWithStats(id)
+                .map(ResponseEnvelope::ok)
+                .orElseGet(() -> ResponseEnvelope.notOk(ErrorCodes.GROUP_NOT_FOUND));
     }
 
     @PutMapping("/{id}")
