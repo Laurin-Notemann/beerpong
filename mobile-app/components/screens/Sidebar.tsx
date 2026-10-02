@@ -1,7 +1,7 @@
 import { LegendList } from '@legendapp/list/react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { Link } from 'expo-router';
+import { Href, Link, router } from 'expo-router';
 import type { DrawerContentComponentProps } from 'expo-router/drawer';
 import React, { useState } from 'react';
 import { useEffect } from 'react';
@@ -179,6 +179,12 @@ export interface SidebarGroup {
 
 // eslint-disable-next-line no-empty-pattern
 export function Sidebar(props: DrawerContentComponentProps) {
+    // The drawer wraps the app's stack; close it, then go to the screen by path.
+    const openScreen = (href: Href) => {
+        props.navigation.closeDrawer();
+        router.navigate(href);
+    };
+
     const { groupIds, selectedGroupId, selectGroup, leaveGroupMutation } =
         useGroupStore();
 
@@ -344,32 +350,20 @@ export function Sidebar(props: DrawerContentComponentProps) {
                         border={false}
                         title="Settings"
                         headIcon="cog-outline"
-                        onPress={() =>
-                            props.navigation.navigate('static/aboutPremium', {
-                                screen: 'localSettings',
-                            })
-                        }
+                        onPress={() => openScreen('/localSettings')}
                         tailIconType="next"
                     />
 
                     <MenuItem
                         title="Privacy Policy"
                         headIcon="shield-lock"
-                        onPress={() =>
-                            props.navigation.navigate('static/aboutPremium', {
-                                screen: 'static/privacyPolicy',
-                            })
-                        }
+                        onPress={() => openScreen('/static/privacyPolicy')}
                         tailIconType="next"
                     />
                     <MenuItem
                         title="About Us"
                         headIcon="information-outline"
-                        onPress={() =>
-                            props.navigation.navigate('static/aboutPremium', {
-                                screen: 'static/aboutUs',
-                            })
-                        }
+                        onPress={() => openScreen('/static/aboutUs')}
                         tailIconType="next"
                     />
                 </MenuSection>
@@ -384,12 +378,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 type: 'default',
 
                                 onPress: () => {
-                                    props.navigation.navigate(
-                                        'static/aboutPremium',
-                                        {
-                                            screen: 'createGroup',
-                                        }
-                                    );
+                                    openScreen('/createGroup');
                                     setShowAddGroupModal(false);
                                 },
                             },
@@ -398,12 +387,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 type: 'default',
 
                                 onPress: () => {
-                                    props.navigation.navigate(
-                                        'static/aboutPremium',
-                                        {
-                                            screen: 'joinGroup',
-                                        }
-                                    );
+                                    openScreen('/joinGroup');
                                     setShowAddGroupModal(false);
                                 },
                             },

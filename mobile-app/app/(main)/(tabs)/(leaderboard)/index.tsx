@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { InviteMenu } from '@/components/InviteMenu';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
@@ -15,7 +15,7 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 const swiperAtTop = false;
 
 export default function Page() {
-    const insets = useInsets(true, true, true);
+    const insets = useInsets(true, true);
 
     const scopePicker = useScopePicker();
 
@@ -30,7 +30,7 @@ export default function Page() {
             <AppBackground />
             {!scopePicker.isPastSeasonsMode && <LeaderboardSwiper />}
             {scopePicker.isPastSeasonsMode && <PastSeasonsSwiper />}
-            <SafeAreaView
+            <View
                 key="scope-picker"
                 pointerEvents="box-none"
                 style={{
@@ -43,7 +43,7 @@ export default function Page() {
                 }}
             >
                 <LeaderboardScopePicker />
-            </SafeAreaView>
+            </View>
         </GestureHandlerRootView>
     );
 }

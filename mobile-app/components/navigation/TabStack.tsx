@@ -27,7 +27,6 @@ export function TabStack({ root }: { root: string }) {
             >
                 <Stack.Toolbar placement="left">
                     <Stack.Toolbar.Button
-                        icon="person.3"
                         onPress={() =>
                             navigation.dispatch(DrawerActions.openDrawer())
                         }
