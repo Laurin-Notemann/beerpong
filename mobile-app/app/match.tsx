@@ -24,7 +24,6 @@ import { useInsets } from '@/app/useInsets';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import ErrorScreen from '@/components/ErrorScreen';
-import { HeaderItem } from '@/components/HeaderItem';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchPlayers from '@/components/MatchPlayers';
@@ -277,8 +276,6 @@ export default function Page() {
     }
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
-    const headerItemWidth = 54;
-
     async function onEditCancel() {
         if (matchDraft.isDirty) {
             // TODO: show confirmation dialog
@@ -313,56 +310,43 @@ export default function Page() {
                 options={{
                     ...navStyles,
                     title: '',
-
-                    headerLeft: isEditing
-                        ? () => (
-                              <HeaderItem
-                                  left
-                                  width={headerItemWidth}
-                                  noMargin
-                                  onPress={onEditCancel}
-                              >
-                                  Cancel
-                              </HeaderItem>
-                          )
-                        : () => (
-                              <HeaderItem
-                                  left
-                                  width={headerItemWidth}
-                                  noMargin
-                                  onPress={() => nav.goBack()}
-                                  backButton
-                              />
-                          ),
                     headerBackButtonDisplayMode: 'minimal',
-                    headerRight: () =>
-                        isCurrentSeason ? (
-                            <HeaderItem
-                                right
-                                width={headerItemWidth}
-                                noMargin
-                                disabled={isEditing && !matchDraft.isDirty}
-                                isLoading={
-                                    isSaving || deleteMatchMutation.isPending
-                                }
-                                onPress={async () => {
-                                    if (!isEditing) {
-                                        setIsEditing(true);
-                                        return;
-                                    }
-                                    if (matchDraft.isDirty) {
-                                        await updateMatch();
-                                    }
-                                }}
-                            >
-                                {isEditing ? 'Save' : 'Edit'}
-                            </HeaderItem>
-                        ) : undefined,
                     headerTitle: () => (
                         <MatchVsHeader variant="header" match={match} />
                     ),
                 }}
             />
+            {/* While editing, Cancel replaces the native back button. */}
+            {isEditing && (
+                <Stack.Toolbar placement="left">
+                    <Stack.Toolbar.Button onPress={onEditCancel}>
+                        Cancel
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
+            )}
+            {isCurrentSeason && (
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        variant={isEditing ? 'done' : 'plain'}
+                        disabled={
+                            (isEditing && !matchDraft.isDirty) ||
+                            isSaving ||
+                            deleteMatchMutation.isPending
+                        }
+                        onPress={async () => {
+                            if (!isEditing) {
+                                setIsEditing(true);
+                                return;
+                            }
+                            if (matchDraft.isDirty) {
+                                await updateMatch();
+                            }
+                        }}
+                    >
+                        {isEditing ? 'Save' : 'Edit'}
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
+            )}
             <AppBackground />
             <ScrollView
                 style={{

@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
@@ -45,16 +44,6 @@ export const CreateGroupSetGame: React.FC<{
         <ScrollView style={{ flex: 1, backgroundColor: theme.color.bg }}>
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            onPress={() => onSubmit(sport!)}
-                            disabled={!sport}
-                            isLoading={isPending}
-                        >
-                            Create
-                        </HeaderItem>
-                    ),
-
                     headerTitle: 'Create Group',
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
@@ -67,6 +56,15 @@ export const CreateGroupSetGame: React.FC<{
                     },
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={!sport || isPending}
+                    onPress={() => onSubmit(sport!)}
+                >
+                    Create
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <Text
                 color="secondary"
                 style={{

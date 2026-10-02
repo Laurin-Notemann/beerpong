@@ -1,7 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';
@@ -15,8 +14,6 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    headerRight: () => <HeaderItem noMargin>Done</HeaderItem>,
-
                     headerTitle: 'Formation Name',
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
@@ -29,6 +26,9 @@ export default function Page() {
                     },
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button variant="done">Done</Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <TextInput
                     required

@@ -17,7 +17,6 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import Button from '@/components/Button';
-import { HeaderItem } from '@/components/HeaderItem';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
@@ -133,9 +132,6 @@ export default function JoinGroup({
                         color: theme.color.text.primary,
                     },
                     headerShown: true,
-                    headerRight: isLoading
-                        ? () => <HeaderItem isLoading>awer</HeaderItem>
-                        : undefined,
                 }}
             />
             <SafeAreaView

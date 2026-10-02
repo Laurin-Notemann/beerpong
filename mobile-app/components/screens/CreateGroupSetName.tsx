@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { HeaderItem } from '@/components/HeaderItem';
 import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';
 
@@ -25,16 +24,6 @@ export default function CreateGroupSetName({
             <>
                 <Stack.Screen
                     options={{
-                        headerRight: () => (
-                            <HeaderItem
-                                disabled={name.length < 1}
-                                isLoading={isPending}
-                                onPress={() => onSubmit({ name })}
-                            >
-                                Next
-                            </HeaderItem>
-                        ),
-
                         headerTitle: 'Set Group Name',
                         headerBackVisible: true,
                         headerTintColor: theme.color.text.primary,
@@ -47,6 +36,14 @@ export default function CreateGroupSetName({
                         },
                     }}
                 />
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        disabled={name.length < 1 || isPending}
+                        onPress={() => onSubmit({ name })}
+                    >
+                        Next
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
                 <View
                     style={{
                         backgroundColor: theme.color.bg,

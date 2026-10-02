@@ -16,7 +16,6 @@ import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import copyToClipboard from '@/components/copyToClipboard';
-import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { RefreshControl } from '@/components/RefreshControl';
@@ -113,24 +112,25 @@ export default function Rules({
             <AppBackground />
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            onPress={() => {
-                                if (isEditing) {
-                                    setSelectedIds([]);
-                                }
-                                setIsEditing((prev) => !prev);
-                            }}
-                        >
-                            {isEditing ? 'Done' : 'Edit'}
-                        </HeaderItem>
-                    ),
                     headerTitle:
                         selectedIds.length > 0
                             ? `${selectedIds.length} Selected`
                             : undefined,
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant={isEditing ? 'done' : 'plain'}
+                    onPress={() => {
+                        if (isEditing) {
+                            setSelectedIds([]);
+                        }
+                        setIsEditing((prev) => !prev);
+                    }}
+                >
+                    {isEditing ? 'Done' : 'Edit'}
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
 
             <ConfirmationModal
                 onClose={() => setModalId(null)}

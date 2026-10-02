@@ -20,7 +20,6 @@ import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
-import { HeaderItem } from '@/components/HeaderItem';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
 import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
@@ -169,16 +168,17 @@ export default function PlayerScreen({
                     title: '',
                     headerTitle: 'Player',
                     headerLeft: undefined,
-                    headerRight: () => (
-                        <HeaderItem
-                            isLoading={isPending}
-                            onPress={() => setEditable((prev) => !prev)}
-                        >
-                            {editable ? 'Done' : 'Edit'}
-                        </HeaderItem>
-                    ),
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant={editable ? 'done' : 'plain'}
+                    disabled={isPending}
+                    onPress={() => setEditable((prev) => !prev)}
+                >
+                    {editable ? 'Done' : 'Edit'}
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <AppBackground />
             {!editable &&
                 (scopePicker.isPastSeasonsMode ? (

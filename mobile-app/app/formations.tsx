@@ -7,7 +7,6 @@ import { useNavStyles } from '@/app/navigation/navStyles';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import CupGrid from '@/components/CupGrid';
-import { HeaderItem } from '@/components/HeaderItem';
 import { useTheme } from '@/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -65,9 +64,11 @@ export default function Formations() {
                 options={{
                     ...useNavStyles(),
                     headerTitle: 'Formations',
-                    headerRight: () => <HeaderItem>Edit</HeaderItem>,
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button>Edit</Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <GestureHandlerRootView
                 style={{
                     flex: 1,

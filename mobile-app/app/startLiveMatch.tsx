@@ -24,21 +24,6 @@ export default function Screen() {
     const insets = useInsets(true, true);
 
     return (
-        // <>
-        //     <Stack.Screen
-        //         options={{
-        //             ...navStyles,
-        //             headerTitle: 'Start Live Match',
-        //             headerLeft: () => (
-        //                 <HeaderItem onPress={() => nav.goBack()}>
-        //                     Cancel
-        //                 </HeaderItem>
-        //             ),
-        //             headerRight: () => (
-        //                 <HeaderItem onPress={() => {}}>Create</HeaderItem>
-        //             ),
-        //         }}
-        //     />
         <View
             style={{
                 alignItems: 'center',
@@ -116,6 +101,5 @@ export default function Screen() {
                 </View>
             </GestureHandlerRootView>
         </View>
-        // </>
     );
 }

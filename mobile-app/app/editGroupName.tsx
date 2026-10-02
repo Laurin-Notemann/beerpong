@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 
 import { useGroupQuery, useUpdateGroupMutation } from '@/api/calls/groupHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';
@@ -39,17 +38,6 @@ export default function Page() {
         <>
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            isLoading={updateGroupMutation.isPending}
-                            disabled={value.length < 1}
-                            noMargin
-                            onPress={onSubmit}
-                        >
-                            Done
-                        </HeaderItem>
-                    ),
-
                     headerTitle: 'Group Name',
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
@@ -62,6 +50,15 @@ export default function Page() {
                     },
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={value.length < 1 || updateGroupMutation.isPending}
+                    onPress={onSubmit}
+                >
+                    Done
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <TextInput
                     required
