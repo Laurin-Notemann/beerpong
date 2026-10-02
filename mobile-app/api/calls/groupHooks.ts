@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { ApiId } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
+import { migrateLegacyGroups } from '@/api/utils/migrateLegacyGroups';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
@@ -71,7 +72,9 @@ export const useGetMyGroupsQuery = () => {
 
     return useQuery<Paths.FindUserGroups.Responses.$200 | null, Error>({
         queryFn: async () => {
-            const res = await (await api).findUserGroups();
+            const client = await api;
+            await migrateLegacyGroups(client);
+            const res = await client.findUserGroups();
 
             return res?.data;
         },

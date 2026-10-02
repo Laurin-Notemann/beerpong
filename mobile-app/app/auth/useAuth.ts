@@ -4,14 +4,13 @@ import { isAxiosError } from 'axios';
 // import * as Notifications from 'expo-notifications';
 // import * as Permissions from 'expo-permissions';
 import jwt, { JWTBody, JWTDefaultBody } from 'expo-jwt';
-import { useState } from 'react';
 import { Platform } from 'react-native';
 
 import { versusDeviceStorage } from '@/app/deviceStorage';
 import { Client as BeerPongClient } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
 
-const REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS = 10;
+const REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS = 60;
 
 /**
  * should be unique for every device, even across reinstalls
@@ -99,6 +98,17 @@ async function getRefreshToken(api: BeerPongClient): Promise<string> {
     }
 }
 
+class RefreshTokenRejectedError extends Error {
+    constructor() {
+        super(
+            'Failed to get access token: refresh token not accepted by backend'
+        );
+    }
+}
+
+const isRefreshTokenRejected = (err: unknown) =>
+    err instanceof RefreshTokenRejectedError;
+
 interface GetAccessTokenResult {
     accessToken: string;
     accessTokenPayload: JWTBody<JWTDefaultBody>;
@@ -131,12 +141,7 @@ async function getAccessToken(
             );
         }
     } catch (err) {
-        ConsoleLogger.error(
-            'Failed to get access token:',
-            err,
-            'with refreshToken',
-            refreshToken
-        );
+        ConsoleLogger.error('Failed to get access token:', err);
         if (isAxiosError(err)) {
             // more detailed error response returned by the backend, can be found in ErrorCodes.java
             const customErrorCode = err.response?.data.error?.code;
@@ -148,14 +153,12 @@ async function getAccessToken(
                 customErrorCode === 'authRefreshInvalidToken';
 
             if (isInvalidRefreshToken) {
-                ConsoleLogger.error(
-                    'Failed to get access token: refresh token not accepted by backend'
+                ConsoleLogger.warn(
+                    'Refresh token not accepted by backend, signing up again'
                 );
                 await versusDeviceStorage.removeRefreshToken();
 
-                err = new Error(
-                    'Failed to get access token: refresh token not accepted by backend'
-                );
+                err = new RefreshTokenRejectedError();
             } else {
                 const message = customErrorCode ?? httpErrorCode ?? err.message;
 
@@ -171,59 +174,49 @@ async function getAccessToken(
                 ((err as Error).message ?? 'Unknown error');
         }
 
-        Sentry.captureException(err, {
-            extra: {
-                refreshToken,
-                installationId: getInstallationId(),
-            },
-        });
+        // A rejected refresh token is recovered from by signing up again.
+        if (!isRefreshTokenRejected(err)) Sentry.captureException(err);
         throw err;
     }
 }
 
+// One token cache for every request in the app; access tokens expire after an hour.
+let cachedAccessToken: GetAccessTokenResult | null = null;
+let pendingAccessToken: Promise<GetAccessTokenResult> | null = null;
+
+const isFresh = (token: GetAccessTokenResult) =>
+    (token.accessTokenPayload.exp ?? 0) * 1000 - Date.now() >
+    REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS * 1000;
+
+/** Returns a valid access token, refreshing (or signing up again) when needed. */
+export async function getValidAccessToken(
+    api: BeerPongClient
+): Promise<GetAccessTokenResult> {
+    if (cachedAccessToken && isFresh(cachedAccessToken)) {
+        return cachedAccessToken;
+    }
+    if (!pendingAccessToken) {
+        ConsoleLogger.info('refreshing access token');
+
+        pendingAccessToken = getAccessToken(api)
+            .catch((err) => {
+                if (!isRefreshTokenRejected(err)) throw err;
+                // The stored refresh token belongs to a user the backend doesn't know
+                // (e.g. a Keychain entry from an older build). It was removed, so this
+                // signs the device up again.
+                return getAccessToken(api);
+            })
+            .then((token) => {
+                cachedAccessToken = token;
+                return token;
+            })
+            .finally(() => {
+                pendingAccessToken = null;
+            });
+    }
+    return pendingAccessToken;
+}
+
 export function useAuth() {
-    const [fetchingPromise, setFetchingPromise] =
-        useState<Promise<GetAccessTokenResult> | null>(null);
-    const [accessToken, setAccessToken] = useState<GetAccessTokenResult | null>(
-        null
-    );
-
-    return {
-        getAccessToken: async (api: BeerPongClient) => {
-            const isAboutToExpire =
-                (accessToken?.accessTokenPayload.exp ?? 0) <
-                Date.now() -
-                    REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS *
-                        1000;
-
-            if (accessToken && !isAboutToExpire) {
-                return accessToken;
-            }
-            if (fetchingPromise) return await fetchingPromise;
-
-            try {
-                ConsoleLogger.info('refreshing access token');
-
-                const promise = getAccessToken(api);
-
-                setFetchingPromise(promise);
-
-                const value = await promise;
-
-                setAccessToken(value);
-
-                return value;
-            } catch (err) {
-                ConsoleLogger.error(
-                    'Failed to resolve access token promise:',
-                    err
-                );
-                setFetchingPromise(null);
-                (err as Error).message =
-                    'Failed to retrieve access token: ' +
-                    (err instanceof Error ? err.message : 'Unknown error');
-                throw err;
-            }
-        },
-    };
+    return { getAccessToken: getValidAccessToken };
 }
