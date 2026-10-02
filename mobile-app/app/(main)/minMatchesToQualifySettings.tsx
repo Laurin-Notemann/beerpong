@@ -30,7 +30,7 @@ export default function Page() {
 
     return (
         <>
-            <Stack.Screen options={{ headerTitle: 'Min Matches to Qualify' }} />
+            <Stack.Screen options={{ headerTitle: 'Qualification' }} />
             <Stack.Toolbar placement="left">
                 <Stack.Toolbar.Button onPress={() => nav.goBack()}>
                     Cancel

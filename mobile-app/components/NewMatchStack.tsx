@@ -18,7 +18,6 @@ export const NewMatchStack: React.FC<{
 
     isCreating: boolean;
 
-    onClear: () => void;
     onBack: () => void;
     onNext: () => void;
     onCreate: () => void;
@@ -31,7 +30,6 @@ export const NewMatchStack: React.FC<{
 
     isCreating,
 
-    onClear,
     onBack,
     onNext,
     onCreate,
@@ -60,29 +58,19 @@ export const NewMatchStack: React.FC<{
                         : bothTeamsEmpty
                           ? 'Assign Teams'
                           : () => (
-                                <MatchVsHeader
-                                    match={match}
-                                    style={{
-                                        bottom: 4,
-                                    }}
-                                />
+                                <MatchVsHeader match={match} variant="header" />
                             ),
                 }}
             />
-            {/* On the first page the tab's Groups button keeps the left side, so Clear and
-                Cancel sit next to Next. Later pages replace it with Back. */}
+            {/* On the first page the tab's Groups button keeps the left side; one button on
+                the right leaves room for the teams in the title. Later pages replace Groups
+                with Back. */}
             {page === 0 ? (
                 <Stack.Toolbar placement="right">
-                    {isRandomTeamsMode ? (
+                    {isRandomTeamsMode && (
                         <Stack.Toolbar.Button onPress={onExitRandomTeamsMode}>
                             Cancel
                         </Stack.Toolbar.Button>
-                    ) : (
-                        !bothTeamsEmpty && (
-                            <Stack.Toolbar.Button onPress={onClear}>
-                                Clear
-                            </Stack.Toolbar.Button>
-                        )
                     )}
                     {isRandomTeamsMode ? (
                         <Stack.Toolbar.Button

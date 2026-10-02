@@ -24,7 +24,7 @@ export default function Page() {
             <Stack.Screen
                 options={{
                     ...useNavStyles(),
-                    headerTitle: '',
+                    headerTitle: 'Experimental Features',
                 }}
             />
             <AppBackground />
@@ -39,7 +39,7 @@ export default function Page() {
                     paddingBottom: 128,
                 }}
             >
-                <MenuSection title="Experimental Features">
+                <MenuSection>
                     <MenuItem
                         border={false}
                         title="Beerpong Pro Mode"

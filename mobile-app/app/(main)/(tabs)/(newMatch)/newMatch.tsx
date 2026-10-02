@@ -18,7 +18,11 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import { Swiper, SwiperRef } from '@/components/Swiper';
+import {
+    scrollControlledSwipers,
+    Swiper,
+    SwiperRef,
+} from '@/components/Swiper';
 import { triggerHapticBump } from '@/haptics';
 import { AppBackground } from '@/lib/Background';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
@@ -27,6 +31,7 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
+import { useScopePicker } from '@/zustand/useScopePicker';
 
 function getRandomPlayers(ids: string[]) {
     const shuffledPlayers = ids
@@ -89,6 +94,7 @@ export default function NewMatchScreen() {
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
     const matchDraft = useMatchDraftStore();
+    const scopePicker = useScopePicker();
 
     const hasValidTeams =
         matchDraft.redTeam.teamMembers.length >= minTeamSize &&
@@ -133,6 +139,7 @@ export default function NewMatchScreen() {
         movesQuery.data?.data ?? []
     );
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
+    const bothTeamsEmpty = teamMembers.length === 0;
 
     const createMatchMutation = useCreateMatchMutation();
 
@@ -170,20 +177,31 @@ export default function NewMatchScreen() {
                     { ...matchDraft.redTeam, savePhoto },
                 ],
             });
+            matchDraft.actions.clear();
+            // show the new match where it lands: the current season, today
+            scopePicker.setIsPastSeasonsMode(false);
+            scrollControlledSwipers(scopePicker.leaderboardSwiperProgress, 0);
+            router.dismissAll();
+            router.replace('/');
+            carouselRef.current?.prev();
+
             if (blueTeamPhotoUri && redTeamPhotoUri) {
                 // the upload urls are returned in the same order as the teams
                 const [bluePhotoUpload, redPhotoUpload] =
                     matchRes?.data?.photoUploads ?? [];
-
-                await uploadTeamPhoto(bluePhotoUpload, blueTeamPhotoUri);
-                await uploadTeamPhoto(redPhotoUpload, redTeamPhotoUri);
+                try {
+                    await uploadTeamPhoto(bluePhotoUpload, blueTeamPhotoUri);
+                    await uploadTeamPhoto(redPhotoUpload, redTeamPhotoUri);
+                } catch (err) {
+                    ConsoleLogger.error('failed to upload team photos:', err);
+                    showErrorToast(
+                        "Match created, but the team photos couldn't be uploaded.",
+                        err
+                    );
+                    return;
+                }
             }
-            matchDraft.actions.clear();
             showSuccessToast('Created match.');
-
-            router.dismissAll();
-            router.replace('/');
-            carouselRef.current?.prev();
         } catch (err) {
             ConsoleLogger.error('failed to create match:', err);
             showErrorToast('Failed to create match.', err);
@@ -245,10 +263,6 @@ export default function NewMatchScreen() {
                 onExitRandomTeamsMode={() => setRandomTeamsMode(null)}
                 animationProgress={animationProgress}
                 match={displayMatch}
-                onClear={() => {
-                    matchDraft.actions.clear();
-                    triggerHapticBump('selection');
-                }}
                 onBack={() => {
                     carouselRef.current?.prev();
                 }}
@@ -284,6 +298,14 @@ export default function NewMatchScreen() {
                         return (
                             <NewMatchAssignTeams
                                 key={index}
+                                onClear={
+                                    bothTeamsEmpty
+                                        ? undefined
+                                        : () => {
+                                              matchDraft.actions.clear();
+                                              triggerHapticBump('selection');
+                                          }
+                                }
                                 onRandomTeamSelect={(playerId) =>
                                     setRandomTeamsMode((prev) => ({
                                         players: prev!.players.includes(

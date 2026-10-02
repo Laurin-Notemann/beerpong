@@ -19,7 +19,7 @@ import { env } from '@/api/env';
 import Button from '@/components/Button';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import { useTheme } from '@/theme';
-import { showSuccessToast } from '@/toast';
+import { showErrorToast, showSuccessToast } from '@/toast';
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 
@@ -102,15 +102,18 @@ export default function JoinGroup({
             withoutWhitespace.length !== env.groupCode.length ||
             !withoutWhitespace.match(/^[a-zA-Z0-9]+$/)
         ) {
-            return;
+            return false;
         }
         onCodeChange(withoutWhitespace, true);
 
         showSuccessToast('Filled in from clipboard');
+        return true;
     });
 
+    // Reading the clipboard on iOS asks for permission every time; the system paste button
+    // below doesn't. Android reads without asking, so it fills the code in right away.
     useEffect(() => {
-        // will ask for confirmation to access clipboard
+        if (Clipboard.isPasteButtonAvailable) return;
         Clipboard.getStringAsync().then((contents) =>
             fillFromClipboard(contents)
         );
@@ -189,6 +192,28 @@ export default function JoinGroup({
                             </Fragment>
                         )}
                     />
+                    {Clipboard.isPasteButtonAvailable && code.length === 0 && (
+                        <Clipboard.ClipboardPasteButton
+                            acceptedContentTypes={['plain-text']}
+                            displayMode="iconAndLabel"
+                            onPress={(data) => {
+                                if (
+                                    data.type !== 'text' ||
+                                    !fillFromClipboard(data.text)
+                                ) {
+                                    showErrorToast(
+                                        "The clipboard doesn't contain a group code."
+                                    );
+                                }
+                            }}
+                            style={{
+                                alignSelf: 'center',
+                                width: 110,
+                                height: 40,
+                                marginTop: 16,
+                            }}
+                        />
+                    )}
                     <TouchableOpacity
                         onPress={onResetCode}
                         style={{

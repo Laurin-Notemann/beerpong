@@ -101,6 +101,7 @@ export default function MenuItem({
                 }}
                 underlayColor={theme.panel[color].active}
                 onPress={confirmationPrompt ? showPrompt : onPress}
+                accessibilityRole={onPress ? 'button' : undefined}
             >
                 <View
                     style={{

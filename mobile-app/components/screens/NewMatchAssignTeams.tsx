@@ -181,6 +181,8 @@ export interface NewMatchAssignTeamsProps {
     maxTeamSize: number;
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
+    /** shown while any player is on a team */
+    onClear?: () => void;
 }
 export default function NewMatchAssignTeams({
     randomTeamsMode,
@@ -190,6 +192,7 @@ export default function NewMatchAssignTeams({
     maxTeamSize,
     players,
     setTeam,
+    onClear,
 }: NewMatchAssignTeamsProps) {
     const insets = useInsets(true, true);
 
@@ -264,15 +267,20 @@ export default function NewMatchAssignTeams({
                                 tailIconType="next"
                                 onPress={onRandomTeamsPress}
                             />
-                        </MenuSection>
-                        <MenuSection style={{ marginBottom: 20 }}>
                             <MenuItem
-                                border={false}
                                 headIcon="account-plus-outline"
                                 title="Create new Player"
                                 tailIconType="next"
                                 onPress={() => nav.navigate('createNewPlayer')}
                             />
+                            {onClear && (
+                                <MenuItem
+                                    headIcon="close-circle-outline"
+                                    title="Clear Teams"
+                                    type="danger"
+                                    onPress={onClear}
+                                />
+                            )}
                         </MenuSection>
                     </>
                 )}

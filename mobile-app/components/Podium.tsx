@@ -10,7 +10,7 @@ import {
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { formatPlacement, plural } from '@/utils/format';
 
 const Description: React.FC<{
     detailed?: boolean;
@@ -50,7 +50,7 @@ const Description: React.FC<{
                             marginTop: 13,
                         }}
                     >
-                        {player.points} points
+                        {plural(player.points, 'point', 'points')}
                     </ThemedText>
 
                     <ThemedText
@@ -60,7 +60,7 @@ const Description: React.FC<{
                             marginTop: -8,
                         }}
                     >
-                        {player.matches} matches
+                        {plural(player.matches, 'match', 'matches')}
                     </ThemedText>
                 </>
             )}

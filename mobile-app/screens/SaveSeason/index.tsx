@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Keyboard } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
@@ -80,6 +81,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                     swiperRef.current?.prev();
                 }}
                 onNext={() => {
+                    Keyboard.dismiss();
                     swiperRef.current?.next();
                 }}
                 onCreate={() =>

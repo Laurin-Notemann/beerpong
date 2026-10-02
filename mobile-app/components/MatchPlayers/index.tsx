@@ -3,6 +3,7 @@ import React from 'react';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Player from '@/components/MatchPlayers/Player';
 import MenuSection from '@/components/Menu/MenuSection';
+import { plural } from '@/utils/format';
 
 export interface MatchPlayersProps {
     editable?: boolean;
@@ -30,7 +31,9 @@ export default function MatchPlayers({
 
     return (
         <>
-            <MenuSection title={`Blue Team - ${blueTeamCups} cups`}>
+            <MenuSection
+                title={`Blue Team - ${plural(blueTeamCups, 'cup', 'cups')}`}
+            >
                 {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
@@ -45,7 +48,9 @@ export default function MatchPlayers({
                 ))}
             </MenuSection>
 
-            <MenuSection title={`Red Team - ${redTeamCups} cups`}>
+            <MenuSection
+                title={`Red Team - ${plural(redTeamCups, 'cup', 'cups')}`}
+            >
                 {redTeam.map((i, idx) => (
                     <Player
                         key={idx}

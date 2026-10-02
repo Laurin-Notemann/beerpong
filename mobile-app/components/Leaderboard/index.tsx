@@ -17,6 +17,7 @@ import {
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { plural } from '@/utils/format';
 
 const MODAL_ON_LONG_PRESS = false;
 
@@ -227,11 +228,7 @@ export default function Leaderboard({
                     ) : NEW_UNRANKED_ITEM ? (
                         <MenuItem
                             title="Unranked"
-                            subtitle={
-                                minMatchesRequiredToBeRanked > 1
-                                    ? `${minMatchesRequiredToBeRanked} matches required to qualify`
-                                    : `1 match required to qualify`
-                            }
+                            subtitle={`${plural(minMatchesRequiredToBeRanked, 'match', 'matches')} required to qualify`}
                             border={false}
                             onPress={() =>
                                 nav.navigate('minMatchesToQualifySettings')
@@ -262,9 +259,7 @@ export default function Leaderboard({
                                     fontSize: 12,
                                 }}
                             >
-                                {minMatchesRequiredToBeRanked > 1
-                                    ? `${minMatchesRequiredToBeRanked} matches required to qualify`
-                                    : `${minMatchesRequiredToBeRanked} match required to qualify`}
+                                {`${plural(minMatchesRequiredToBeRanked, 'match', 'matches')} required to qualify`}
                             </Text>
                         </View>
                     )

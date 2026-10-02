@@ -190,13 +190,6 @@ export default function GroupSettingsScreen({
                                 type: 'confirmBlue',
                             }}
                         />
-                        {env.isDev && (
-                            <MenuItem
-                                title="View Statistics"
-                                headIcon="equalizer"
-                                tailIconType="next"
-                            />
-                        )}
                         <MenuItem
                             title="Create new Player"
                             headIcon="account-plus-outline"

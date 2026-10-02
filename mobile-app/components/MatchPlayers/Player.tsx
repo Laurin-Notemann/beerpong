@@ -14,6 +14,7 @@ import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 import { formatRatingChange } from '@/utils/format';
+import { plural } from '@/utils/format';
 
 function Change({
     value,
@@ -150,7 +151,8 @@ export default function Player({
                         >
                             {editable ? (
                                 <Text variant="body2" color="tertiary">
-                                    {points} points{'  '}
+                                    {plural(points, 'point', 'points')}
+                                    {'  '}
                                     <Change
                                         value={change}
                                         style={{

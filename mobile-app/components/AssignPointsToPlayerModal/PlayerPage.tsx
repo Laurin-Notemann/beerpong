@@ -54,7 +54,7 @@ export default function PlayerPage({
                     }}
                 >
                     If {player.name} scored the last cup of the match, please
-                    don't add it here. There is a seperate page for the winning
+                    don't add it here. There is a separate page for the winning
                     throw.
                 </Text>
             </View>

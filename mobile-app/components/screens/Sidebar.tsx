@@ -19,6 +19,7 @@ import MenuSection from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
+import { plural } from '@/utils/format';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
@@ -75,7 +76,7 @@ export function SidebarGroupItem({
                         ? ''
                         : failedToLoad
                           ? 'Failed to load'
-                          : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`
+                          : `${plural(data?.data?.numberOfPlayers ?? 0, 'Player', 'Players')} · ${plural(data?.data?.numberOfMatches ?? 0, 'Match', 'Matches')}`
                 }
                 onPress={() => onPress(id)}
                 border={false}
@@ -162,7 +163,7 @@ export function SidebarGroupItem({
                             ? ''
                             : failedToLoad
                               ? 'Failed to load'
-                              : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`}
+                              : `${plural(data?.data?.numberOfPlayers ?? 0, 'Player', 'Players')} · ${plural(data?.data?.numberOfMatches ?? 0, 'Match', 'Matches')}`}
                     </Text>
                 </View>
             </TouchableHighlight>
@@ -177,7 +178,6 @@ export interface SidebarGroup {
     matchesCount: number;
 }
 
-// eslint-disable-next-line no-empty-pattern
 export function Sidebar(props: DrawerContentComponentProps) {
     // The drawer wraps the app's stack; close it, then go to the screen by path.
     const openScreen = (href: Href) => {
@@ -286,10 +286,6 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 while (nav.canGoBack()) {
                                     nav.goBack();
                                 }
-
-                                // eslint-disable-next-line
-                                console.log(Object.keys(nav));
-                                // nav.closeDrawer();
                                 props.navigation.closeDrawer();
                             }}
                             showDeleteButton={isEditMode}
