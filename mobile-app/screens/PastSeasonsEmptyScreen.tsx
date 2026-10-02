@@ -1,10 +1,10 @@
 import { ScrollView, Text, View, ViewProps } from 'react-native';
 
-import { AppBackground } from '@/app/Background';
-import { useInsets } from '@/app/useInsets';
 import Leaderboard from '@/components/Leaderboard';
 import { ThemedView } from '@/components/ThemedView';
 import { RankingAlgorithm } from '@/constants/rankingAlgorithms';
+import { AppBackground } from '@/lib/Background';
+import { useInsets } from '@/lib/useInsets';
 import { mockSeasons } from '@/screens/mockSeasons';
 import { useTheme } from '@/theme';
 

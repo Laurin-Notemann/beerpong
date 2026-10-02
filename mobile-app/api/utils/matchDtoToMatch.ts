@@ -1,6 +1,6 @@
 import { MatchImpl, PlayerWithProfile } from '@/api/entities';
-import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
+import { eloAlgorithm } from '@/lib/EloAlgorithm';
 import { Components } from '@/openapi/openapi';
 
 export interface PerformedMove {

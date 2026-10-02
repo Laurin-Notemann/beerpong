@@ -6,7 +6,7 @@ import {
     useJoinGroupMutation,
     useLeaveGroupMutation,
 } from '@/api/calls/groupHooks';
-import { useNavigation } from '@/app/navigation/useNavigation';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 
 const useStore = create<{
     selectedGroupId: string | null;

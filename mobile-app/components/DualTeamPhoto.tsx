@@ -11,7 +11,6 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
-import { useInsets } from '@/app/useInsets';
 import {
     DualCameraView,
     DualCameraViewProps,
@@ -21,6 +20,7 @@ import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PressableScale from '@/components/PressableScale';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
 
 const FADE_CAMERA_IN_OUT_ANIMATION_SPEED = 200;

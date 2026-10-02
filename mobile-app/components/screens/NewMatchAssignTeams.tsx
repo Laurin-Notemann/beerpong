@@ -3,14 +3,14 @@ import { Pressable, ScrollView, TouchableHighlight, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
 import { useTutorials } from '@/zustand/tutorialStore';
 

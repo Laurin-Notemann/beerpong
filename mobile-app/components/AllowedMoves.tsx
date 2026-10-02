@@ -4,13 +4,13 @@ import DraggableFlatList, {
     RenderItemParams,
 } from 'react-native-draggable-flatlist';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 import PillButton from '@/components/PillButton';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 
 const formatStats = (move: Move): string => {
     const pointsForScorer = move.pointsForScorer

@@ -3,9 +3,9 @@ import { SharedValue } from 'react-native-reanimated';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { MinimalMatch } from '@/api/utils/matchDtoToMatch';
-import { useNavStyles } from '@/app/navigation/navStyles';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { useSwiperPage } from '@/hooks/useSwiperPage';
+import { useNavStyles } from '@/lib/navigation/navStyles';
 
 export const NewMatchStack: React.FC<{
     onCreateRandomTeams: () => void;

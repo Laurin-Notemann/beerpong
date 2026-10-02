@@ -1,9 +1,9 @@
 import { ScrollView } from 'react-native';
 
-import { useInsets } from '@/app/useInsets';
 import { AllowedMoves, AllowedMovesProps } from '@/components/AllowedMoves';
 import InputModal from '@/components/InputModal';
 import Text from '@/components/Text';
+import { useInsets } from '@/lib/useInsets';
 
 export const NewSeasonRulesInput: React.FC<AllowedMovesProps> = (props) => {
     const insets = useInsets(true);

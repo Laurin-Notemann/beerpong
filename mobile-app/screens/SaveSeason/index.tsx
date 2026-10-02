@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
-import { AppBackground } from '@/app/Background';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
+import { AppBackground } from '@/lib/Background';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 import { Components } from '@/openapi/openapi';
 import { NewSeasonRulesInput } from '@/screens/SaveSeason/NewSeasonRulesInput';
 import { OldSeasonNameInput } from '@/screens/SaveSeason/OldSeasonNameInput';

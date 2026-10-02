@@ -1,12 +1,12 @@
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import { useInsets } from '@/app/useInsets';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchesList from '@/components/MatchesList';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
+import { useInsets } from '@/lib/useInsets';
 import { getWakeTimeDayStart } from '@/utils/wakeTime';
 import { useScopePicker } from '@/zustand/useScopePicker';
 

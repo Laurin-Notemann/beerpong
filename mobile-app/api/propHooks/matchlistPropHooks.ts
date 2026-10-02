@@ -5,8 +5,8 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { MatchesListProps } from '@/components/MatchesList';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 
 export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const { groupId, seasonId } = useGroup();

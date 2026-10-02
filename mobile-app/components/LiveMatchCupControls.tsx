@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
 
 export interface LiveMatchCupControlsProps {
