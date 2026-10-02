@@ -2,7 +2,6 @@ import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 
 import Avatar from '@/components/Avatar';
-import { HeaderItem } from '@/components/HeaderItem';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 
@@ -26,28 +25,25 @@ export default function CreateNewPlayer({
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Create new Player',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={
-                                name.length < 1 ||
-                                (existingPlayerName?.length ?? 0) > 0
-                            }
-                            isLoading={isPending}
-                            onPress={() => onCreate({ name })}
-                        >
-                            Create
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Create new Player' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button onPress={() => nav.goBack()}>
+                    Cancel
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={
+                        name.length < 1 ||
+                        (existingPlayerName?.length ?? 0) > 0 ||
+                        isPending
+                    }
+                    onPress={() => onCreate({ name })}
+                >
+                    Create
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <Avatar
                     name={name}

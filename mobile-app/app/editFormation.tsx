@@ -8,7 +8,6 @@ import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import CupGrid from '@/components/CupGrid';
 import { Formation } from '@/components/CupGrid/Formation';
-import { HeaderItem } from '@/components/HeaderItem';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { useTheme } from '@/theme';
@@ -28,9 +27,11 @@ export default function EditFormation() {
                 options={{
                     ...useNavStyles(),
                     headerTitle: 'Edit Formation',
-                    headerRight: () => <HeaderItem>Done</HeaderItem>,
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button variant="done">Done</Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <ScrollView
                 style={{
                     backgroundColor: theme.color.bg,

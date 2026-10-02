@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import React from 'react';
 
 import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
@@ -15,16 +14,15 @@ export default function Page() {
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Custom Game',
-                    headerRight: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Done
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Custom Game' }} />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    onPress={() => nav.goBack()}
+                >
+                    Done
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <IconHead
                     iconName="information-outline"
