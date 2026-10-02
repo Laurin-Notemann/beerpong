@@ -24,6 +24,7 @@
     "dependencies": {
         "@expo/metro-runtime": "~58.0.10",
         "@expo/vector-icons": "^15.0.3",
+        "@legendapp/list": "^3.6.0",
         "@openspacelabs/react-native-zoomable-view": "^2.4.2",
         "@react-native-async-storage/async-storage": "^2.1.0",
         "@react-native-community/datetimepicker": "9.2.1",
@@ -31,7 +32,6 @@
         "@react-navigation/drawer": "^7.14.3",
         "@react-navigation/native": "^7.5.0",
         "@sentry/react-native": "^8.29.0",
-        "@shopify/flash-list": "2.3.2",
         "@tanstack/query-async-storage-persister": "^5.60.5",
         "@tanstack/react-query": "^5.60.5",
         "@tanstack/react-query-persist-client": "^5.60.5",

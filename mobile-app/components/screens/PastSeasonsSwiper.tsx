@@ -1,16 +1,13 @@
 import * as React from 'react';
-import { ScrollView } from 'react-native';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
 import { useInsets } from '@/app/useInsets';
 import ErrorScreen from '@/components/ErrorScreen';
+import Leaderboard from '@/components/Leaderboard';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
-import {
-    PastSeasonsEmptyScreen,
-    SeasonCard,
-} from '@/screens/PastSeasonsEmptyScreen';
+import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
@@ -56,7 +53,8 @@ export function PastSeasonsSwiper() {
                     'ELO';
 
                 return (
-                    <ScrollView
+                    <Leaderboard
+                        key={season.id}
                         style={{
                             marginTop: insets.top,
                             marginBottom: insets.bottom + 8,
@@ -69,25 +67,24 @@ export function PastSeasonsSwiper() {
                             borderRadius: theme.borderRadius.card,
                             backgroundColor: theme.color.modal.bg,
                         }}
-                    >
-                        <SeasonCard
-                            minMatchesRequiredToBeRanked={
-                                season.seasonSettings?.minMatchesToQualify ?? 0
-                            }
-                            season={{
-                                name: season.name!,
-                                startDate: season.startDate!,
-                                endDate: season.endDate!,
-                            }}
-                            numMatches={season.numMatches!}
-                            players={season.players}
-                            rankingAlgorithm={rankingAlgorithm}
-                            onPlayerPress={onPlayerPress}
-                            style={{
-                                paddingBottom: insets.bottom,
-                            }}
-                        />
-                    </ScrollView>
+                        contentContainerStyle={{
+                            paddingBottom: insets.bottom,
+                        }}
+                        players={season.players}
+                        showUnranked={false}
+                        season={{
+                            name: season.name!,
+                            startDate: season.startDate!,
+                            endDate: season.endDate!,
+                            numPlayers: season.players.length,
+                            numMatches: season.numMatches!,
+                        }}
+                        minMatchesRequiredToBeRanked={
+                            season.seasonSettings?.minMatchesToQualify ?? 0
+                        }
+                        rankingAlgorithm={rankingAlgorithm}
+                        onPlayerPress={onPlayerPress}
+                    />
                 );
             })}
         </Swiper>

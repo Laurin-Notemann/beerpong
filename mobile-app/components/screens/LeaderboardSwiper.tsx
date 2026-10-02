@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import type { ScrollViewProps } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { View } from 'react-native';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
@@ -25,32 +24,6 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 dayjs.extend(duration);
 
 const swiperAtTop = false;
-
-export function LayoutScrollView({
-    children,
-    style,
-    contentContainerStyle,
-    ...props
-}: ScrollViewProps) {
-    const insets = useInsets(true);
-    return (
-        <ScrollView
-            style={[{ flex: 1 }, style]}
-            contentContainerStyle={[
-                {
-                    alignItems: 'center',
-
-                    paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                    paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
-                },
-                contentContainerStyle,
-            ]}
-            {...props}
-        >
-            {children}
-        </ScrollView>
-    );
-}
 
 export function LeaderboardSwiper() {
     const scopePicker = useScopePicker();
@@ -77,6 +50,8 @@ export function LeaderboardSwiper() {
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
     const nav = useNavigation();
+
+    const insets = useInsets(true);
 
     const pastSeasons =
         seasonsQuery.data?.data
@@ -119,88 +94,114 @@ export function LeaderboardSwiper() {
 
     const spacing = { marginTop: 32, marginBottom: 67 };
 
+    const listProps = {
+        refreshControl: <RefreshControl {...refresh} />,
+        contentContainerStyle: {
+            paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+            paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
+        },
+        rankingAlgorithm,
+        onPlayerPress,
+        minMatchesRequiredToBeRanked,
+    };
+
     return (
         <Swiper {...swiper}>
-            <LayoutScrollView refreshControl={<RefreshControl {...refresh} />}>
-                <LeaderBoardSeasonInfo {...dailyLeaderboard} isCurrentSeason />
-                {hasDailyLeaderboardCountdown && (
-                    <LeaderboardCountdown
-                        type="today"
-                        endDate={dailyLeaderboardResetDate}
-                    />
-                )}
-                <Leaderboard
-                    rankingAlgorithm={rankingAlgorithm}
-                    ListEmptyComponent={
-                        <LeaderboardEmptyComponent message="No players qualified yet today." />
-                    }
-                    players={dailyPlayers}
-                    onPlayerPress={onPlayerPress}
-                    minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
-                />
-                <Text
-                    color="secondary"
-                    variant="fineprint"
-                    style={spacing}
-                    onPress={() => {
-                        nav.navigate('dailyLeaderboardSettings');
-                    }}
-                >
-                    {getDayStartedAt(activeSeason?.seasonSettings)}{' '}
-                    <Text color="link" style={{ fontSize: 13 }}>
-                        Learn more
-                    </Text>
-                </Text>
-            </LayoutScrollView>
-            <LayoutScrollView refreshControl={<RefreshControl {...refresh} />}>
-                <LeaderBoardSeasonInfo
-                    {...currentSeasonLeaderboard}
-                    isCurrentSeason
-                />
-                <Leaderboard
-                    rankingAlgorithm={rankingAlgorithm}
-                    ListEmptyComponent={
-                        <LeaderboardEmptyComponent message="No players qualified this season." />
-                    }
-                    players={currentSeasonPlayers}
-                    onPlayerPress={onPlayerPress}
-                    minMatchesRequiredToBeRanked={minMatchesRequiredToBeRanked}
-                />
-                <Text color="secondary" variant="fineprint" style={spacing}>
-                    {activeSeason?.startDate
-                        ? `Season started ${env.format.date.seasonStartAndEnd(
-                              dayjs(activeSeason.startDate)
-                          )}`
-                        : null}
-                </Text>
-            </LayoutScrollView>
-            {groupHasPastSeasons && (
-                <LayoutScrollView
-                    refreshControl={<RefreshControl {...refresh} />}
-                >
+            <Leaderboard
+                {...listProps}
+                ListHeaderComponent={
+                    <>
+                        <LeaderBoardSeasonInfo
+                            {...dailyLeaderboard}
+                            isCurrentSeason
+                        />
+                        {hasDailyLeaderboardCountdown && (
+                            <LeaderboardCountdown
+                                type="today"
+                                endDate={dailyLeaderboardResetDate}
+                            />
+                        )}
+                    </>
+                }
+                podiumEmptyComponent={
+                    <LeaderboardEmptyComponent message="No players qualified yet today." />
+                }
+                players={dailyPlayers}
+                ListFooterComponent={
+                    <View style={{ alignItems: 'center' }}>
+                        <Text
+                            color="secondary"
+                            variant="fineprint"
+                            style={spacing}
+                            onPress={() => {
+                                nav.navigate('dailyLeaderboardSettings');
+                            }}
+                        >
+                            {getDayStartedAt(activeSeason?.seasonSettings)}{' '}
+                            <Text color="link" style={{ fontSize: 13 }}>
+                                Learn more
+                            </Text>
+                        </Text>
+                    </View>
+                }
+            />
+            <Leaderboard
+                {...listProps}
+                ListHeaderComponent={
                     <LeaderBoardSeasonInfo
-                        {...alltimeLeaderboard}
+                        {...currentSeasonLeaderboard}
                         isCurrentSeason
                     />
-                    <Leaderboard
-                        rankingAlgorithm={rankingAlgorithm}
-                        ListEmptyComponent={
-                            <LeaderboardEmptyComponent message="No players qualified in this group." />
-                        }
-                        players={alltimePlayers}
-                        onPlayerPress={onPlayerPress}
-                        minMatchesRequiredToBeRanked={
-                            minMatchesRequiredToBeRanked
-                        }
-                    />
-                    <Text color="secondary" variant="fineprint" style={spacing}>
-                        {activeSeason?.startDate
-                            ? `Group created ${env.format.date.seasonStartAndEnd(
-                                  dayjs(pastSeasons[0].startDate)
-                              )}`
-                            : null}
-                    </Text>
-                </LayoutScrollView>
+                }
+                podiumEmptyComponent={
+                    <LeaderboardEmptyComponent message="No players qualified this season." />
+                }
+                players={currentSeasonPlayers}
+                ListFooterComponent={
+                    <View style={{ alignItems: 'center' }}>
+                        <Text
+                            color="secondary"
+                            variant="fineprint"
+                            style={spacing}
+                        >
+                            {activeSeason?.startDate
+                                ? `Season started ${env.format.date.seasonStartAndEnd(
+                                      dayjs(activeSeason.startDate)
+                                  )}`
+                                : null}
+                        </Text>
+                    </View>
+                }
+            />
+            {groupHasPastSeasons && (
+                <Leaderboard
+                    {...listProps}
+                    ListHeaderComponent={
+                        <LeaderBoardSeasonInfo
+                            {...alltimeLeaderboard}
+                            isCurrentSeason
+                        />
+                    }
+                    podiumEmptyComponent={
+                        <LeaderboardEmptyComponent message="No players qualified in this group." />
+                    }
+                    players={alltimePlayers}
+                    ListFooterComponent={
+                        <View style={{ alignItems: 'center' }}>
+                            <Text
+                                color="secondary"
+                                variant="fineprint"
+                                style={spacing}
+                            >
+                                {activeSeason?.startDate
+                                    ? `Group created ${env.format.date.seasonStartAndEnd(
+                                          dayjs(pastSeasons[0].startDate)
+                                      )}`
+                                    : null}
+                            </Text>
+                        </View>
+                    }
+                />
             )}
         </Swiper>
     );
