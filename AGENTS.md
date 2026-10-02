@@ -115,7 +115,7 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 ## Where code lives
 
 - `api/` - Spring Boot 3 API (Java 21, Maven). `control` (REST controllers), `service`, `repository`, `model/dao` + `model/dto`, `mapping` (MapStruct), `sockets` (realtime), `auth` (JWT). Config in `src/main/resources/application.yml`.
-- `mobile-app/` - Expo / React Native app with expo-router. `app/` (routes and screens), `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
+- `mobile-app/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `mobile-app/.eas/workflows/` - the EAS workflow that builds and updates the app.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the trigger for the EAS workflow.
 - `docker/` - local compose files for the database and backend.
@@ -124,6 +124,8 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 
 - Complexity belongs at the boundaries (API mapping, client hooks). Screens stay dumb.
 - Inferred types over annotations. `any` is the enemy. Imports use the `@/` alias; eslint forbids relative imports.
+- Never import `@react-navigation/*` in the app. Expo Router bundles its own React Navigation; use `expo-router/react-navigation`, the `Drawer`/`Stack`/`NativeTabs` layouts and `Stack.Toolbar`. A second copy builds and type-checks fine but crashes at launch ("Couldn't register the navigator").
+- Native UI over JS imitations: header buttons are `Stack.Toolbar` items, menus are native (`Stack.Toolbar.Menu` / `@expo/ui` `MenuView`), confirmations are `Alert.alert`.
 - Comments describe how a thing is used, and move when the code moves.
 - No `console.*` in app code outside `utils/logging.ts`. Use a `ScopedLogger`; its output also reaches Sentry Logs.
 - If a rule here fights the task in front of you, say so loudly and get a human sign-off before breaking it.
