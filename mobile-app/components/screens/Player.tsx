@@ -101,6 +101,8 @@ export default function PlayerScreen({
     const [editable, setEditable] = useState(false);
 
     const insets = useInsets(true);
+    // Clears the scope picker and bottom bar that float over the end of the list.
+    const listPaddingBottom = insets.bottom + (swiperAtTop ? 0 : 48 + 64);
 
     const [fade] = useState(() => new Animated.Value(0));
     const [scale] = useState(() => new Animated.Value(0));
@@ -200,9 +202,7 @@ export default function PlayerScreen({
                                     contentContainerStyle={{
                                         paddingTop:
                                             insets.top + (swiperAtTop ? 48 : 0),
-                                        paddingBottom:
-                                            insets.bottom +
-                                            (swiperAtTop ? 0 : 48 + 64),
+                                        paddingBottom: listPaddingBottom,
                                     }}
                                     ListHeaderComponent={
                                         <>
@@ -252,8 +252,7 @@ export default function PlayerScreen({
                             style={{ paddingHorizontal: 0 }}
                             contentContainerStyle={{
                                 paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                                paddingBottom:
-                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                                paddingBottom: listPaddingBottom,
                             }}
                             ListHeaderComponent={
                                 <>
@@ -291,8 +290,7 @@ export default function PlayerScreen({
                             style={{ paddingHorizontal: 0 }}
                             contentContainerStyle={{
                                 paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                                paddingBottom:
-                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                                paddingBottom: listPaddingBottom,
                             }}
                             ListHeaderComponent={
                                 <>
@@ -334,8 +332,7 @@ export default function PlayerScreen({
                                 contentContainerStyle={{
                                     paddingTop:
                                         insets.top + (swiperAtTop ? 48 : 0),
-                                    paddingBottom:
-                                        insets.bottom + (swiperAtTop ? 0 : 48),
+                                    paddingBottom: listPaddingBottom,
                                 }}
                                 ListHeaderComponent={
                                     <>

@@ -28,7 +28,7 @@ import { Sentry } from '@/utils/sentry';
 import { LoggingProvider } from '@/utils/useLogging';
 import { ScopePickerProvider } from '@/zustand/useScopePicker';
 
-export const unstable_settings = { initialRouteName: '(main)' };
+export const unstable_settings = { anchor: '(main)' };
 
 // Render errors inside a route are reported with the route attached, and only that route shows
 // the error UI (expo-router renders the exported boundary per route).

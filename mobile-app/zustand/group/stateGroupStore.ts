@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useEffectEvent, useMemo } from 'react';
 import { create } from 'zustand';
 
@@ -6,7 +7,6 @@ import {
     useJoinGroupMutation,
     useLeaveGroupMutation,
 } from '@/api/calls/groupHooks';
-import { useNavigation } from '@/lib/navigation/useNavigation';
 
 const useStore = create<{
     selectedGroupId: string | null;
@@ -34,25 +34,6 @@ export function useGroupStore() {
     );
     const isLoadingGroups = myGroupsQuery.isLoading;
 
-    const nav = useNavigation();
-
-    // if this changes we either left, created, or joined a group.
-    const groupsKey = myGroupsQuery.data?.data?.map((i) => i.id)?.join();
-
-    const selectFirstGroupIfNoneSelected = useEffectEvent(() => {
-        if (!store.selectedGroupId && myGroupsQuery.data) {
-            const groupId = myGroupsQuery.data.data?.[0]?.id ?? null;
-            if (groupId) {
-                store.selectGroup(myGroupsQuery.data.data?.[0]?.id ?? null);
-            } else {
-                nav.navigate('onboarding');
-            }
-        }
-    });
-    useEffect(() => {
-        selectFirstGroupIfNoneSelected();
-    }, [groupsKey]);
-
     return {
         groupIds,
         selectedGroupId: store.selectedGroupId,
@@ -63,4 +44,36 @@ export function useGroupStore() {
         leaveGroupMutation,
         isLoadingGroups,
     };
+}
+
+/**
+ * Keeps a group selected: picks the first group when none (or a left one) is selected, and sends
+ * users without any group to onboarding. Mounted once, in the app's stack layout; screens that
+ * read the group store must not redirect on their own.
+ */
+export function useEnsureGroupSelected() {
+    const { selectedGroupId, selectGroup } = useStore();
+    const myGroupsQuery = useGetMyGroupsQuery();
+
+    const groups = myGroupsQuery.data?.data;
+    // if this changes we either left, created, or joined a group.
+    const groupsKey = groups?.map((i) => i.id).join();
+
+    const ensureSelection = useEffectEvent(() => {
+        if (!groups) return;
+        if (selectedGroupId && groups.some((g) => g.id === selectedGroupId)) {
+            return;
+        }
+        const firstGroupId = groups[0]?.id ?? null;
+        if (firstGroupId) {
+            selectGroup(firstGroupId);
+        } else {
+            selectGroup(null);
+            router.navigate('/onboarding');
+        }
+    });
+
+    useEffect(() => {
+        ensureSelection();
+    }, [groupsKey]);
 }

@@ -238,9 +238,9 @@ export default function NewMatchAssignTeams({
         >
             {/* empty <View> bc otherwise the items are spaced apart  */}
             <View>
-                <Heading
-                    title={
-                        errorMessage ? (
+                {errorMessage ? (
+                    <Heading
+                        title={
                             <Text
                                 color="negative"
                                 style={{
@@ -252,9 +252,9 @@ export default function NewMatchAssignTeams({
                             >
                                 {errorMessage}
                             </Text>
-                        ) : undefined
-                    }
-                />
+                        }
+                    />
+                ) : null}
                 {!isRandomTeamsMode && (
                     <>
                         <MenuSection style={{ marginBottom: 20 }}>

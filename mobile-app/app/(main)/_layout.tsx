@@ -3,15 +3,19 @@ import { useEffect } from 'react';
 
 import { useApi } from '@/api/utils/create-api';
 import { useModalStyles } from '@/lib/navigation/modalStyles';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import {
+    useEnsureGroupSelected,
+    useGroupStore,
+} from '@/zustand/group/stateGroupStore';
 
-export const unstable_settings = { initialRouteName: '(tabs)' };
+export const unstable_settings = { anchor: '(tabs)' };
 
 /** Every screen lives in this stack; the root layout wraps it in the group drawer. */
 export default function MainLayout() {
     const { connectRealtime } = useApi();
 
     const { groupIds } = useGroupStore();
+    useEnsureGroupSelected();
 
     useEffect(() => {
         connectRealtime(groupIds);
@@ -29,7 +33,6 @@ export default function MainLayout() {
                 name="(tabs)"
                 options={{ title: '', headerShown: false }}
             />
-            <Stack.Screen name="+not-found" />
 
             <Stack.Screen name="createNewPlayer" options={modalStyles} />
             <Stack.Screen name="createNewRule" options={modalStyles} />

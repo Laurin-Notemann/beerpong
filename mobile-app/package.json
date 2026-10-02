@@ -71,7 +71,7 @@
         "react-native-confirmation-code-field": "^7.4.0",
         "react-native-draggable-flatlist": "^4.0.1",
         "react-native-gesture-handler": "~3.2.1",
-        "react-native-pager-view": "9.0.4",
+        "react-native-pager-view": "9.0.6",
         "react-native-portalize": "^1.0.7",
         "react-native-reanimated": "4.7.0",
         "react-native-root-toast": "^3.6.0",
@@ -107,7 +107,8 @@
     "expo": {
         "install": {
             "exclude": [
-                "@sentry/react-native"
+                "@sentry/react-native",
+                "react-native-pager-view"
             ]
         }
     }
