@@ -62,6 +62,11 @@ export default function Page() {
         state?.routes.map((r) => r.name)
     );
     const [isSending, setIsSending] = useState(false);
+    const [throwInRender, setThrowInRender] = useState(false);
+
+    if (throwInRender) {
+        throw new Error('Debug: test render error');
+    }
 
     const shareDeviceInfo = async () => {
         await Share.share({
@@ -144,6 +149,20 @@ export default function Page() {
                     }
                     headIcon="bug-outline"
                     onPress={isSending ? undefined : sendDiagnostic}
+                />
+                <MenuItem
+                    title="Test: render error (route boundary)"
+                    headIcon="alert-outline"
+                    onPress={() => setThrowInRender(true)}
+                />
+                <MenuItem
+                    title="Test: fatal JS error (global boundary)"
+                    headIcon="alert-octagon-outline"
+                    onPress={() =>
+                        setTimeout(() => {
+                            throw new Error('Debug: test fatal JS error');
+                        }, 0)
+                    }
                 />
             </MenuSection>
         </DebugScreen>
