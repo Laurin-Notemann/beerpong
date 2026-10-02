@@ -1,6 +1,5 @@
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -28,8 +27,6 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
-
-const { width } = Dimensions.get('window');
 
 function getRandomPlayers(ids: string[]) {
     const shuffledPlayers = ids

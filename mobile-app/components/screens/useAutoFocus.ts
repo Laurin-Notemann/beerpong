@@ -1,6 +1,5 @@
 import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
-import { TextInput } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 
 /**

@@ -41,7 +41,6 @@ const perks: PremiumPerk[] = [
 
 const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
     const theme = useTheme();
-    const swiperProgress = useSharedValue(0);
 
     return (
         <View

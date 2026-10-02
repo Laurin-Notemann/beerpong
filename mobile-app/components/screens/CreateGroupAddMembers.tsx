@@ -1,11 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import {
-    TextInput as B,
-    ScrollView,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
