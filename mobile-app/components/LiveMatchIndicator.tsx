@@ -1,8 +1,8 @@
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import { MinimalMatch } from '@/api/utils/matchDtoToMatch';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import PressableScale from '@/components/PressableScale';
 import Text from '@/components/Text';
@@ -71,8 +71,6 @@ export function LiveMatchIndicator() {
 
     useRerenderEverySecond();
 
-    const nav = useNavigation();
-
     if (matchesInProgress.length === 0) return null;
 
     const focusedMatch = matchesInProgress[0];
@@ -80,7 +78,7 @@ export function LiveMatchIndicator() {
     if (!EXPERIMENTAL_LIVE_MATCHES) return null;
 
     return (
-        <PressableScale onPress={() => nav.navigate('newMatch')}>
+        <PressableScale onPress={() => router.navigate('/newMatch')}>
             <View
                 style={{
                     borderRadius: 8,

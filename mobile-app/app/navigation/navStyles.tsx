@@ -1,39 +1,27 @@
-import { BlurView } from 'expo-blur';
-import { StyleSheet } from 'react-native';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import type { NativeStackNavigationOptions } from 'expo-router';
+import { Platform } from 'react-native';
 
 import { useTheme } from '@/theme';
 
+/**
+ * Native, translucent header shared by every stack screen: Liquid Glass on iOS 26+,
+ * the system chrome blur on older iOS, and an opaque bar on Android.
+ */
 export function useNavStyles() {
     const theme = useTheme();
+    const isIos = Platform.OS === 'ios';
 
     return {
-        headerStyle: {
-            backgroundColor: 'transparent',
-
-            elevation: 0, // For Android
-            shadowOpacity: 0, // For iOS
-            borderBottomWidth: 0, // Removes the border for both platforms
-        },
-        headerTitleStyle: {
-            color: theme.color.text.primary,
-        },
-
-        tabBarActiveTintColor: theme.color.text.primary,
-        tabBarInactiveTintColor: theme.tabBarInactiveTintColor,
-        tabBarStyle: {
-            backgroundColor: 'transparent',
-
-            borderTopWidth: 0,
-        },
+        headerTransparent: isIos,
+        headerBlurEffect:
+            isIos && !isLiquidGlassAvailable()
+                ? 'systemChromeMaterial'
+                : undefined,
+        headerShadowVisible: false,
+        headerStyle: isIos ? undefined : { backgroundColor: theme.color.bg },
+        headerTitleStyle: { color: theme.color.text.primary },
         headerTintColor: theme.color.text.primary,
-
-        headerBackground: () => (
-            <BlurView
-                intensity={theme.blur?.intensity || 50}
-                tint={theme.blur?.tint}
-                style={StyleSheet.absoluteFill}
-            />
-        ),
-        headerTransparent: true,
-    };
+        headerBackButtonDisplayMode: 'minimal',
+    } satisfies NativeStackNavigationOptions;
 }

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, View, ViewProps } from 'react-native';
 
@@ -229,7 +230,7 @@ export default function Leaderboard({
                         />
                     ))}
                 {players.length < 1 && (
-                    <Pressable onPress={() => nav.navigate('newMatch')}>
+                    <Pressable onPress={() => router.navigate('/newMatch')}>
                         <Text
                             color="secondary"
                             style={{

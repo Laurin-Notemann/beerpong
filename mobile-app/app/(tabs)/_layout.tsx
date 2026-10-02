@@ -1,166 +1,65 @@
-import { BottomTabBar } from '@react-navigation/bottom-tabs';
-import { BlurView } from 'expo-blur';
-import { Tabs } from 'expo-router';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import { NativeTabs } from 'expo-router/native-tabs';
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { useGroupQuery } from '@/api/calls/groupHooks';
-import { useNavStyles } from '@/app/navigation/navStyles';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { HeaderItem } from '@/components/HeaderItem';
-import { LeaderboardIcon } from '@/components/LeaderboardIcon';
-import { LiveMatchIndicator } from '@/components/LiveMatchIndicator';
-import Text from '@/components/Text';
 import { useTheme } from '@/theme';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
-
-const CUSTOM_LEADERBOARD_ICON = false;
-
-const GroupsButton = () => {
-    const nav = useNavigation();
-
-    // @ts-expect-error nav.openDrawer exists
-    return <HeaderItem onPress={() => nav.openDrawer()}>Groups</HeaderItem>;
-};
 
 export default function TabLayout() {
-    const { selectedGroupId } = useGroupStore();
-
-    const selectedGroup = useGroupQuery(selectedGroupId);
-
-    const navStyles = useNavStyles();
-
     const theme = useTheme();
 
-    const headerTitleIfGroupIsLoading = '';
-    const headerTitleIfGroupCantBeFound = '';
-
-    const groupHeader = {
-        ...navStyles,
-        headerTitle: selectedGroup.isLoading
-            ? headerTitleIfGroupIsLoading
-            : (selectedGroup.data?.data?.name ?? headerTitleIfGroupCantBeFound),
-        headerShown: true,
-        headerLeft: GroupsButton,
-    };
-
-    const isOffline = false;
-
     return (
-        <Tabs
-            tabBar={(props) => {
-                return (
-                    <>
-                        <View
-                            style={{
-                                position: 'absolute',
-
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                            }}
-                        >
-                            {/* {hasScopePicker && (
-                                <SafeAreaView
-                                    edges={['left', 'right']}
-                                    pointerEvents="box-none"
-                                >
-                                    <LeaderboardScopePicker
-                                        hasSortButton={!isMatches}
-                                    />
-                                </SafeAreaView>
-                            )} */}
-                            <LiveMatchIndicator />
-                            <View>
-                                <BlurView
-                                    intensity={theme.blur?.intensity || 50}
-                                    tint={theme.blur?.tint}
-                                    style={StyleSheet.absoluteFill}
-                                />
-                                <BottomTabBar {...props} />
-                            </View>
-                        </View>
-                        {isOffline && (
-                            <View
-                                style={{
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    height: 52,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <Text color="secondary" variant="fineprint">
-                                    You're offline
-                                </Text>
-                            </View>
-                        )}
-                    </>
-                );
+        <NativeTabs
+            // Liquid Glass floats its own bar; older iOS keeps a solid bar on short lists.
+            disableTransparentOnScrollEdge={!isLiquidGlassAvailable()}
+            iconColor={{
+                default: theme.tabBarInactiveTintColor,
+                selected: theme.color.text.primary,
             }}
+            labelStyle={{
+                default: { color: theme.tabBarInactiveTintColor },
+                selected: { color: theme.color.text.primary },
+            }}
+            labelVisibilityMode="labeled"
+            tintColor={theme.color.text.primary}
         >
-            <Tabs.Screen
-                name="index"
-                options={{
-                    title: 'Leaderboard',
-                    tabBarIcon: ({ color, size }) =>
-                        CUSTOM_LEADERBOARD_ICON ? (
-                            <LeaderboardIcon color={color} size={size} />
-                        ) : (
-                            <Icon color={color} size={size} name="home" />
-                        ),
-                    ...groupHeader,
-                }}
-            />
-            <Tabs.Screen
-                name="matches"
-                options={{
-                    title: 'Matches',
-
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon
-                            color={color}
-                            size={size}
-                            name="format-list-bulleted"
-                        />
-                    ),
-                    ...groupHeader,
-                }}
-            />
-            <Tabs.Screen
-                name="newMatch"
-                options={{
-                    title: 'New Match',
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon color={color} size={size} name="pencil-outline" />
-                    ),
-                    ...groupHeader,
-                }}
-            />
-            <Tabs.Screen
-                name="rules"
-                options={{
-                    title: 'Rules',
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon color={color} size={size} name="format-section" />
-                    ),
-                    ...groupHeader,
-                }}
-            />
-            <Tabs.Screen
-                name="settings"
-                options={{
-                    title: 'Settings',
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon color={color} size={size} name="cog-outline" />
-                    ),
-                    ...groupHeader,
-                }}
-            />
-        </Tabs>
+            <NativeTabs.Trigger name="(leaderboard)">
+                <NativeTabs.Trigger.Icon
+                    sf={{ default: 'trophy', selected: 'trophy.fill' }}
+                    md="leaderboard"
+                />
+                <NativeTabs.Trigger.Label>Leaderboard</NativeTabs.Trigger.Label>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="(matches)">
+                <NativeTabs.Trigger.Icon
+                    sf="list.bullet"
+                    md="format_list_bulleted"
+                />
+                <NativeTabs.Trigger.Label>Matches</NativeTabs.Trigger.Label>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="(newMatch)">
+                <NativeTabs.Trigger.Icon
+                    sf={{
+                        default: 'plus.circle',
+                        selected: 'plus.circle.fill',
+                    }}
+                    md="add_circle"
+                />
+                <NativeTabs.Trigger.Label>New Match</NativeTabs.Trigger.Label>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="(rules)">
+                <NativeTabs.Trigger.Icon
+                    sf={{ default: 'book', selected: 'book.fill' }}
+                    md="gavel"
+                />
+                <NativeTabs.Trigger.Label>Rules</NativeTabs.Trigger.Label>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="(settings)">
+                <NativeTabs.Trigger.Icon
+                    sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
+                    md="settings"
+                />
+                <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+            </NativeTabs.Trigger>
+        </NativeTabs>
     );
 }

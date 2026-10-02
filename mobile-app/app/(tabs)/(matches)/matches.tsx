@@ -1,14 +1,13 @@
 import { useIsFocused } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppBackground } from '@/app/Background';
 import { useInsets } from '@/app/useInsets';
-import { InviteModal } from '@/components/InviteModal';
+import { InviteMenu } from '@/components/InviteMenu';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
-import PillButton from '@/components/PillButton';
 import { ScopePickerHeaderTitle } from '@/components/ScopePickerHeaderTitle';
 import { MatchesSwiper } from '@/components/screens/MatchesSwiper';
 import { PastMatchesSwiper } from '@/components/screens/PastMatchesSwiper';
@@ -29,29 +28,14 @@ export default function Page() {
     const insets = useInsets(true, true, true);
     const isFocused = useIsFocused();
 
-    const [showInviteModal, setShowInviteModal] = useState(false);
-
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <InviteModal
-                isVisible={showInviteModal}
-                onClose={() => setShowInviteModal(false)}
-            />
             <Stack.Screen
                 options={{
                     headerTitle: () => <ScopePickerHeaderTitle />,
-
-                    headerRight: () => (
-                        <PillButton
-                            blur
-                            style={{ marginRight: 4 }}
-                            label="Invite"
-                            iconName="share-outline"
-                            onPress={() => setShowInviteModal(true)}
-                        />
-                    ),
                 }}
             />
+            <InviteMenu />
             <AppBackground />
             {isFocused ? <FocusedMatchesContent /> : null}
             {isFocused ? (
