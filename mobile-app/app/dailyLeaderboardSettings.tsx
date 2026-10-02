@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -32,25 +32,17 @@ export default function Page() {
         seasonId!
     );
 
-    const [dailyLeaderboard, setDailyLeaderboard] = useState<string>(
-        seasonSettings?.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
-            ? 'WAKE_TIME'
-            : seasonSettings?.dailyLeaderboard!
-    );
-    const [wakeTimeDate, setWakeTimeDate] = useState(
-        wakeTimeToDate(seasonSettings?.wakeTime)
-    );
+    // Unedited fields show the saved settings.
+    const [editedDailyLeaderboard, setDailyLeaderboard] = useState<string>();
+    const [editedWakeTimeDate, setWakeTimeDate] = useState<Date>();
 
-    useEffect(() => {
-        if (seasonSettings) {
-            setDailyLeaderboard(
-                seasonSettings.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
-                    ? 'WAKE_TIME'
-                    : seasonSettings.dailyLeaderboard
-            );
-            setWakeTimeDate(wakeTimeToDate(seasonSettings.wakeTime));
-        }
-    }, [seasonSettings]);
+    const dailyLeaderboard =
+        editedDailyLeaderboard ??
+        (seasonSettings?.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
+            ? 'WAKE_TIME'
+            : seasonSettings?.dailyLeaderboard!);
+    const wakeTimeDate =
+        editedWakeTimeDate ?? wakeTimeToDate(seasonSettings?.wakeTime);
 
     const [showTimePicker, setShowTimePicker] = useState(false);
 

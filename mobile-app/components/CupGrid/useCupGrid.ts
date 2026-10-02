@@ -189,7 +189,8 @@ export function useCupGrid({
 
         if (closestGridPoint.distance < Infinity) {
             const newCup = {
-                id: Math.random(),
+                // the index this cup gets once `cups` is rebuilt from the formation
+                id: cups.length,
                 x: closestGridPoint.x,
                 y: closestGridPoint.y,
                 pos: closestGridPoint,

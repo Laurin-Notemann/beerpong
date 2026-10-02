@@ -20,7 +20,7 @@ export function useAnimatedSideActionStyle(
         margin.value = withTiming(isExpanded ? 12 : 0, {
             duration: 150,
         });
-    }, [isExpanded]);
+    }, [deleteActionWidth, expandedWidth, isExpanded, margin]);
 
     const animatedStyle = useAnimatedStyle(() => ({
         width: deleteActionWidth.value,

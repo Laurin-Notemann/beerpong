@@ -35,6 +35,7 @@ const authApi = new OpenAPIClientAxios(openApiConfig);
 
 export function ApiProvider({ children }: { children: ReactNode }) {
     const auth = useAuth();
+    const { writeLog } = useLogging();
 
     // Resolves as soon as the client is set up; auth happens per request, so a failed
     // login surfaces as a failed (and retried) query instead of a dead client.
@@ -99,7 +100,6 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     });
 
     const { realtime, connectRealtime } = useRealtimeConnection();
-    const { writeLog } = useLogging();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isLoading, setIsLoading] = useState(true);

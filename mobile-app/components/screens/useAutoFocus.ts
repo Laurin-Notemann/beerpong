@@ -21,5 +21,5 @@ export function useAutoFocus(
             inputRef.current?.focus();
         });
         return unsubscribe;
-    }, [navigation]);
+    }, [inputRef, navigation]);
 }

@@ -85,8 +85,9 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
                 initialPage={defaultIndex}
                 scrollEnabled={enabled}
                 onPageScroll={(e: PagerViewOnPageScrollEvent) => {
-                    swiperProgress.value =
-                        e.nativeEvent.position + e.nativeEvent.offset;
+                    swiperProgress.set(
+                        e.nativeEvent.position + e.nativeEvent.offset
+                    );
                 }}
                 onPageScrollStateChanged={(
                     e: PageScrollStateChangedNativeEvent

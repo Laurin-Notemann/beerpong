@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -19,15 +19,12 @@ export default function Page() {
         seasonId!
     );
 
-    const [minMatchesToQualify, setMinMatchesToQualify] = useState(
-        seasonSettings?.minMatchesToQualify
-    );
+    const [editedMinMatchesToQualify, setMinMatchesToQualify] =
+        useState<number>();
 
-    useEffect(() => {
-        if (seasonSettings) {
-            setMinMatchesToQualify(seasonSettings.minMatchesToQualify);
-        }
-    }, [seasonSettings]);
+    // Unedited, this shows the saved setting.
+    const minMatchesToQualify =
+        editedMinMatchesToQualify ?? seasonSettings?.minMatchesToQualify;
 
     const isDirty = minMatchesToQualify !== seasonSettings?.minMatchesToQualify;
 

@@ -9,6 +9,7 @@ import {
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
+import { QK } from '@/api/utils/reactQuery';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -18,8 +19,6 @@ import {
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-
-import { QK } from '../utils/reactQuery';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const router = useRouter();

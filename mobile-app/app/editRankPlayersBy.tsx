@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -12,9 +12,9 @@ import { ConsoleLogger } from '@/utils/logging';
 export default function Page() {
     const nav = useNavigation();
 
-    const [rankingAlgorithm, setRankingAlgorithm] = useState<'AVERAGE' | 'ELO'>(
-        'AVERAGE'
-    );
+    const [editedRankingAlgorithm, setRankingAlgorithm] = useState<
+        'AVERAGE' | 'ELO'
+    >();
 
     const { groupId, seasonId } = useGroup();
 
@@ -23,11 +23,9 @@ export default function Page() {
         seasonId!
     );
 
-    useEffect(() => {
-        if (seasonSettings) {
-            setRankingAlgorithm(seasonSettings.rankingAlgorithm);
-        }
-    }, [seasonSettings]);
+    // Unedited, this shows the saved setting.
+    const rankingAlgorithm =
+        editedRankingAlgorithm ?? seasonSettings?.rankingAlgorithm ?? 'AVERAGE';
 
     const isDirty = rankingAlgorithm !== seasonSettings?.rankingAlgorithm;
 

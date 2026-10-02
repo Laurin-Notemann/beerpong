@@ -29,8 +29,8 @@ export const TutorialBubble: React.FC<{
     top?: number;
     left?: number;
 }> = ({ text, onPress, top, left }) => {
-    const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(8)).current; // start 8px lower
+    const [opacity] = useState(() => new Animated.Value(0));
+    const [translateY] = useState(() => new Animated.Value(8)); // start 8px lower
 
     useEffect(() => {
         Animated.parallel([
@@ -45,7 +45,7 @@ export const TutorialBubble: React.FC<{
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [opacity, translateY]);
 
     const parentRef = useRef<ViewInstance>(null);
     const [coords, setCoords] = useState({ x: 0, y: 0 });

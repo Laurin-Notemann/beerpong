@@ -1,5 +1,5 @@
 import { useCameraPermissions } from 'expo-camera';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     Animated,
     Image,
@@ -64,8 +64,8 @@ export function DualTeamPhoto({
 
     const [mode, setMode] = useState<DualTeamPhotoMode>(initialMode);
 
-    const primaryScale = useRef(new Animated.Value(1)).current;
-    const secondaryScale = useRef(new Animated.Value(1)).current;
+    const [primaryScale] = useState(() => new Animated.Value(1));
+    const [secondaryScale] = useState(() => new Animated.Value(1));
 
     const animatedShrinkStyle = useMemo(
         () => [{ transform: [{ scale: secondaryScale }] }],
@@ -77,27 +77,17 @@ export function DualTeamPhoto({
     );
 
     const [cameraModalVisible, setCameraModalVisible] = useState(false);
-    const cameraOpacity = useRef(new Animated.Value(0)).current;
+    const [cameraOpacity] = useState(() => new Animated.Value(0));
 
     const isEmpty = blueImageSource == null && redImageSource == null;
 
-    const primaryTeamRef = useRef<'blue' | 'red'>(
+    // the team that was large last, so equal mode keeps its card stacking
+    const [lastPrimary, setLastPrimary] = useState<'blue' | 'red'>(
         initialMode === 'redLarge' ? 'red' : 'blue'
     );
 
-    // keep ref in sync whenever we’re NOT in equal mode
-    useEffect(() => {
-        if (mode === 'blueLarge') primaryTeamRef.current = 'blue';
-        else if (mode === 'redLarge') primaryTeamRef.current = 'red';
-    }, [mode]);
-
-    // replace your `primary` derivation with this:
     const primary =
-        mode === 'equal'
-            ? primaryTeamRef.current
-            : mode === 'blueLarge'
-              ? 'blue'
-              : 'red';
+        mode === 'equal' ? lastPrimary : mode === 'blueLarge' ? 'blue' : 'red';
 
     const areEqualSize = mode === 'equal';
 
@@ -147,21 +137,18 @@ export function DualTeamPhoto({
     }
 
     function _onCycleMode() {
-        setMode((current) => {
-            if (current === 'equal') {
-                triggerHapticBump('light');
-                return 'blueLarge';
-            }
-            if (current === 'blueLarge') {
-                triggerHapticBump('light');
-                return 'redLarge';
-            }
-            if (current === 'redLarge') {
-                triggerHapticBump('selection');
-                return 'equal';
-            }
-            throw new Error('unreachable');
-        });
+        if (mode === 'equal') {
+            triggerHapticBump('light');
+            setMode('blueLarge');
+            setLastPrimary('blue');
+        } else if (mode === 'blueLarge') {
+            triggerHapticBump('light');
+            setMode('redLarge');
+            setLastPrimary('red');
+        } else {
+            triggerHapticBump('selection');
+            setMode('equal');
+        }
     }
 
     const _onCameraResult: DualCameraViewProps['onResult'] = (result) => {
@@ -438,24 +425,11 @@ export function DualTeamPhoto({
 function useRequestCameraPermission(onceWeHavePermission: () => void) {
     const [camPerm, requestCamPerm] = useCameraPermissions();
 
-    const [
-        openCameraAsSoonAsWeHavePermission,
-        setOpenCameraAsSoonAsWeHavePermission,
-    ] = useState(false);
-
-    useEffect(() => {
-        setOpenCameraAsSoonAsWeHavePermission((shouldOpen) => {
-            if (shouldOpen && camPerm?.granted) onceWeHavePermission();
-
-            return false;
-        });
-    }, [camPerm, openCameraAsSoonAsWeHavePermission]);
-
-    function wrappedCallback() {
+    async function wrappedCallback() {
         if (camPerm?.granted) return onceWeHavePermission();
 
-        requestCamPerm();
-        setOpenCameraAsSoonAsWeHavePermission(true);
+        const response = await requestCamPerm();
+        if (response.granted) onceWeHavePermission();
     }
     return wrappedCallback;
 }

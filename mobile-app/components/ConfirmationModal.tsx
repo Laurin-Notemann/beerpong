@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -56,9 +56,13 @@ export default function ConfirmationModal({
     content,
 }: ConfirmationModalProps) {
     const theme = useTheme();
+    // Stays true after `isVisible` turns false until the close animation finishes.
     const [show, setShow] = useState(isVisible);
-    const fade = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+    if (isVisible && !show) {
+        setShow(true);
+    }
+    const [fade] = useState(() => new Animated.Value(0));
+    const [translateY] = useState(() => new Animated.Value(SCREEN_HEIGHT));
 
     const styles = useMemo(
         () =>
@@ -119,7 +123,6 @@ export default function ConfirmationModal({
 
     useEffect(() => {
         if (isVisible) {
-            setShow(true);
             Animated.parallel([
                 Animated.timing(fade, {
                     toValue: 0.5,

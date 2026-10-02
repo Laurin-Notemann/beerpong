@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -102,12 +102,16 @@ export default function PlayerScreen({
 
     const insets = useInsets(true);
 
-    const fade = useRef(new Animated.Value(0)).current;
-    const scale = useRef(new Animated.Value(0)).current;
+    const [fade] = useState(() => new Animated.Value(0));
+    const [scale] = useState(() => new Animated.Value(0));
 
     const [inspectAvatar, setInspectAvatar] = useState(false);
 
+    // Stays true after `inspectAvatar` turns false until the close animation finishes.
     const [show, setShow] = useState(false);
+    if (inspectAvatar && !show) {
+        setShow(true);
+    }
 
     const { groupId } = useGroup();
 
@@ -129,7 +133,6 @@ export default function PlayerScreen({
 
     useEffect(() => {
         if (inspectAvatar) {
-            setShow(true);
             Animated.parallel([
                 Animated.timing(fade, {
                     toValue: 1,

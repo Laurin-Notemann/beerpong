@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/react-native';
 import * as Updates from 'expo-updates';
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import { AppState } from 'react-native';
 
 /**
@@ -11,39 +11,30 @@ import { AppState } from 'react-native';
 export function useOtaUpdates() {
     const { isUpdatePending, isChecking, isDownloading } = Updates.useUpdates();
 
-    // AppState listeners are registered once, so read the latest flags via a ref.
-    const state = useRef({ isUpdatePending, isChecking, isDownloading });
-    state.current = { isUpdatePending, isChecking, isDownloading };
+    // AppState listeners are registered once; effect events read the latest flags.
+    const applyPending = useEffectEvent(() => {
+        if (!isUpdatePending || AppState.currentState !== 'background') return;
+        Updates.reloadAsync().catch((error: unknown) => {
+            Sentry.captureException(error, {
+                tags: { ota: 'reload' },
+            });
+        });
+    });
+
+    const checkForUpdate = useEffectEvent(async () => {
+        if (isUpdatePending || isChecking || isDownloading) return;
+        try {
+            const result = await Updates.checkForUpdateAsync();
+            if (result.isAvailable || result.isRollBackToEmbedded) {
+                await Updates.fetchUpdateAsync();
+            }
+        } catch (error) {
+            Sentry.captureException(error, { tags: { ota: 'check' } });
+        }
+    });
 
     useEffect(() => {
         if (__DEV__ || !Updates.isEnabled) return;
-
-        const applyPending = () => {
-            if (
-                !state.current.isUpdatePending ||
-                AppState.currentState !== 'background'
-            )
-                return;
-            Updates.reloadAsync().catch((error: unknown) => {
-                Sentry.captureException(error, {
-                    tags: { ota: 'reload' },
-                });
-            });
-        };
-
-        const checkForUpdate = async () => {
-            const { isUpdatePending, isChecking, isDownloading } =
-                state.current;
-            if (isUpdatePending || isChecking || isDownloading) return;
-            try {
-                const result = await Updates.checkForUpdateAsync();
-                if (result.isAvailable || result.isRollBackToEmbedded) {
-                    await Updates.fetchUpdateAsync();
-                }
-            } catch (error) {
-                Sentry.captureException(error, { tags: { ota: 'check' } });
-            }
-        };
 
         const subscription = AppState.addEventListener('change', (next) => {
             if (next === 'active') checkForUpdate();

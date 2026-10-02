@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Animated, TouchableHighlight, TouchableOpacity } from 'react-native';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -52,9 +52,9 @@ export function SidebarGroupItem({
         data?.data?.numberOfMatches == null;
 
     // width of the square around the delete button that slides out when the sidebar is in edit mode
-    const deleteActionWidth = useRef(
-        new Animated.Value(showDeleteButton ? 40 : 0)
-    ).current;
+    const [deleteActionWidth] = useState(
+        () => new Animated.Value(showDeleteButton ? 40 : 0)
+    );
 
     useEffect(() => {
         Animated.timing(deleteActionWidth, {
@@ -62,7 +62,7 @@ export function SidebarGroupItem({
             duration: 150,
             useNativeDriver: false, // width property needs JS driver to animate
         }).start();
-    }, [showDeleteButton]);
+    }, [deleteActionWidth, showDeleteButton]);
 
     const theme = useTheme();
 

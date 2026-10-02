@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Animated,
     Pressable,
@@ -30,7 +30,7 @@ const PillButton: React.FC<{
     backgroundColor = '#333',
     style,
 }) => {
-    const scale = useRef(new Animated.Value(1)).current;
+    const [scale] = useState(() => new Animated.Value(1));
 
     const removable = typeof onRemove === 'function';
 

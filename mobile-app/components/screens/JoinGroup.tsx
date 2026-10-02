@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import { Stack } from 'expo-router';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useEffectEvent, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -94,9 +94,7 @@ export default function JoinGroup({
         setValue: onCodeChange,
     });
 
-    const attemptPasteFromClipboard = async () => {
-        // will ask for confirmation to access clipboard
-        const clipboardContents = await Clipboard.getStringAsync();
+    const fillFromClipboard = useEffectEvent((clipboardContents: string) => {
         const withoutWhitespace = clipboardContents
             .replace(nonAlphaNumericChars, '')
             .toUpperCase();
@@ -109,10 +107,13 @@ export default function JoinGroup({
         onCodeChange(withoutWhitespace, true);
 
         showSuccessToast('Filled in from clipboard');
-    };
+    });
 
     useEffect(() => {
-        attemptPasteFromClipboard();
+        // will ask for confirmation to access clipboard
+        Clipboard.getStringAsync().then((contents) =>
+            fillFromClipboard(contents)
+        );
     }, []);
 
     const theme = useTheme();

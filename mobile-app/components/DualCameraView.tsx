@@ -42,8 +42,9 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
 
     const [isCapturing, setIsCapturing] = useState(false);
 
-    const overlayOpacity = useRef(new Animated.Value(0)).current;
+    const [overlayOpacity] = useState(() => new Animated.Value(0));
 
+    // Set with `isCapturing`, cleared once the overlay has faded out.
     const [overlayBlocking, setOverlayBlocking] = useState(false);
 
     // Resolve when camera is ready after facing switch
@@ -88,11 +89,10 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             if (timeoutId) clearTimeout(timeoutId);
             resolveNextReadyRef.current = null;
         }
-    }, []);
+    }, [waitForNextCameraReady]);
 
     useEffect(() => {
         if (isCapturing) {
-            setOverlayBlocking(true);
             Animated.timing(overlayOpacity, {
                 toValue: 1,
                 duration: IN_PROGRESS_FADE_ANIMATION_SPEED,
@@ -146,6 +146,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
 
         setErr(null);
         setIsCapturing(true);
+        setOverlayBlocking(true);
 
         try {
             // 1) Shot on current lens

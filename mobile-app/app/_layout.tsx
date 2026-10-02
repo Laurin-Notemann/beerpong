@@ -43,7 +43,7 @@ function Everything() {
 
     useEffect(() => {
         connectRealtime(groupIds);
-    }, [groupIds]);
+    }, [connectRealtime, groupIds]);
 
     const modalStyles = useModalStyles();
 

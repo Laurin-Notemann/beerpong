@@ -26,6 +26,34 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 
 const pastSeasonsColor = 'gray';
 
+type PickerOption = {
+    id: string;
+    label?: string;
+    size?: 'square';
+    icon?: string;
+};
+
+function getSegmentWidths(
+    options: PickerOption[],
+    containerWidth: number,
+    sidePadding: number
+) {
+    if (containerWidth === 0) return [];
+
+    const squareWidth = 48;
+    const squareCount = options.filter((opt) => opt.size === 'square').length;
+    const fillCount = options.length - squareCount;
+    const availableWidth = containerWidth - sidePadding * 2;
+    const fillWidth =
+        fillCount > 0
+            ? (availableWidth - squareCount * squareWidth) / fillCount
+            : 0;
+
+    return options.map((opt) =>
+        opt.size === 'square' ? squareWidth : fillWidth
+    );
+}
+
 export interface LeaderboardScopePickerProps {
     hasPastSeasonsButton?: boolean;
     hasSortButton?: boolean;
@@ -70,13 +98,6 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 
-    type PickerOption = {
-        id: string;
-        label?: string;
-        size?: 'square';
-        icon?: string;
-    };
-
     const options: PickerOption[] = onlyShowSeason
         ? (
               seasonsQuery.data?.data?.filter((i) => i.id === onlyShowSeason) ??
@@ -110,34 +131,19 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
     const [containerWidth, setContainerWidth] = useState(0);
 
     // Calculate actual segment widths considering square vs fill sizes
-    const segmentWidths = useMemo(() => {
-        if (containerWidth === 0) return [];
-
-        const squareWidth = 48;
-        const squareCount = options.filter(
-            (opt) => opt.size === 'square'
-        ).length;
-        const fillCount = options.length - squareCount;
-        const availableWidth = containerWidth - sidePadding * 2;
-        const fillWidth =
-            fillCount > 0
-                ? (availableWidth - squareCount * squareWidth) / fillCount
-                : 0;
-
-        return options.map((opt) =>
-            opt.size === 'square' ? squareWidth : fillWidth
-        );
-    }, [containerWidth, options, sidePadding]);
+    const segmentWidths = getSegmentWidths(
+        options,
+        containerWidth,
+        sidePadding
+    );
 
     // Calculate cumulative positions for each segment
-    const segmentPositions = useMemo(() => {
-        let cumulative = sidePadding;
-        return segmentWidths.map((width) => {
-            const position = cumulative;
-            cumulative += width;
-            return position;
-        });
-    }, [segmentWidths, sidePadding]);
+    const segmentPositions: number[] = [];
+    let cumulative = sidePadding;
+    for (const width of segmentWidths) {
+        segmentPositions.push(cumulative);
+        cumulative += width;
+    }
 
     const localStaticProgress = useSharedValue(0);
 
@@ -231,7 +237,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                     height: '100%',
                 },
             }),
-        [theme, isPastSeasonsMode, hasPastSeasonsButton]
+        [theme, isPastSeasonsMode]
     );
 
     const groupRankingAlgorithm =

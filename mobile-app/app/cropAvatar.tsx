@@ -188,7 +188,7 @@ export default function Page() {
                 ConsoleLogger.error('Failed to get image size:', err);
             }
         );
-    }, [uri, width]);
+    }, [circleDiameter, uri, width]);
 
     useEffect(() => {
         return () => {

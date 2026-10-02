@@ -1,9 +1,4 @@
-import {
-    KeyboardAvoidingView,
-    Platform,
-    TextInput as RNTextInput,
-    View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';

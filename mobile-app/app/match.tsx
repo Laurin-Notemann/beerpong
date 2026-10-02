@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useEffectEvent, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { useAssetQuery } from '@/api/calls/assetHooks';
@@ -100,10 +100,13 @@ export default function Page() {
         redTeamPhotoUrl: redPhotoQuery.data?.data?.url ?? null,
     };
 
-    useEffect(() => {
+    const loadMatchIntoDraft = useEffectEvent(() => {
         if (match) {
             matchDraft.actions.setMatch(match);
         }
+    });
+    useEffect(() => {
+        loadMatchIntoDraft();
     }, [isEditing]);
 
     const prevMatchId = undefined; // TODO

@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
 import { useNavigation } from '@/app/navigation/useNavigation';
@@ -19,15 +19,11 @@ export default function Page() {
         seasonId!
     );
 
-    const [minTeamSize, setMinTeamSize] = useState(seasonSettings?.minTeamSize);
-    const [maxTeamSize, setMaxTeamSize] = useState(seasonSettings?.maxTeamSize);
-
-    useEffect(() => {
-        if (seasonSettings) {
-            setMinTeamSize(seasonSettings.minTeamSize);
-            setMaxTeamSize(seasonSettings.maxTeamSize);
-        }
-    }, [seasonSettings]);
+    // Unedited fields show the saved settings.
+    const [editedMinTeamSize, setMinTeamSize] = useState<number>();
+    const [editedMaxTeamSize, setMaxTeamSize] = useState<number>();
+    const minTeamSize = editedMinTeamSize ?? seasonSettings?.minTeamSize;
+    const maxTeamSize = editedMaxTeamSize ?? seasonSettings?.maxTeamSize;
 
     const isDirty =
         minTeamSize !== seasonSettings?.minTeamSize ||

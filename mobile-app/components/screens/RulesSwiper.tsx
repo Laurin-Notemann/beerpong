@@ -40,7 +40,7 @@ export default function RulesSwiper({
 
     useEffect(() => {
         editRulesStore.actions.initialize(rules);
-    }, [rules]);
+    }, [editRulesStore.actions, rules]);
 
     const theme = useTheme();
 
