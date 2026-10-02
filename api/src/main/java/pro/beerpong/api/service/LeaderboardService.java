@@ -273,8 +273,8 @@ public class LeaderboardService {
     }
 
     private boolean isNewerPlayer(PlayerDtoExtended candidate, PlayerDtoExtended existing) {
-        // spieler der aktiven season sind automatisch die neusten
-        if (candidate.getSeason().getId() == null) {
+        // spieler der aktiven season (ohne enddatum) sind automatisch die neusten
+        if (candidate.getSeason().getId() == null || candidate.getSeason().getEndDate() == null) {
             return true;
         }
 

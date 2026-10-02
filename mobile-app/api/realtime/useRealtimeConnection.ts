@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { env } from '@/api/env';
 import {
@@ -16,7 +16,10 @@ import { RealtimeClient, RealtimeEventHandler } from '.';
 export function useRealtimeConnection() {
     const qc = useQueryClient();
 
+    // One socket for the whole app; `client.current` is read by the event handler.
+    const [realtime, setRealtime] = useState<RealtimeClient | null>(null);
     const client = useRef<RealtimeClient | null>(null);
+    client.current = realtime;
 
     const { writeLog } = useLogging();
 
@@ -188,18 +191,15 @@ export function useRealtimeConnection() {
     };
 
     useEffect(() => {
-        if (client.current) {
-            client.current.logger.addEventListener('*', writeLogs);
+        if (!realtime) return;
 
-            client.current.on.event(onRealtimeEvent);
+        realtime.logger.addEventListener('*', writeLogs);
+        realtime.on.event(onRealtimeEvent);
 
-            return () => {
-                if (client.current) {
-                    client.current.logger.removeEventListener('*', writeLogs);
-                }
-            };
-        }
-    }, [client.current]);
+        return () => {
+            realtime.logger.removeEventListener('*', writeLogs);
+        };
+    }, [realtime]);
 
     function refetchGroup(groupId: string) {
         qc.invalidateQueries({
@@ -207,9 +207,16 @@ export function useRealtimeConnection() {
             exact: true,
         });
     }
+    /** Opens the socket on first call; later calls only change the subscribed groups. */
     function connectRealtime(groupIds: string[]) {
-        client.current = new RealtimeClient(env.realtimeBaseUrl, groupIds);
+        if (client.current) {
+            client.current.subscribeToGroups(groupIds);
+            return;
+        }
+        const created = new RealtimeClient(env.realtimeBaseUrl, groupIds);
+        client.current = created;
+        setRealtime(created);
     }
 
-    return { realtime: client.current, connectRealtime };
+    return { realtime, connectRealtime };
 }

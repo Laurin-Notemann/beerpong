@@ -39,10 +39,12 @@ export default function Page() {
     const insets = useInsets(true);
 
     useEffect(() => {
-        // we need to keep this in state because `realtime` is a ref and will not cause a rerender if it changes,
-        // so the indicator could be misleading
-        setIsRealtimeOpen(realtime?.isOpen ?? false);
-    }, [realtime?.isOpen]);
+        // the socket isn't React state, so poll it
+        const update = () => setIsRealtimeOpen(realtime?.isOpen ?? false);
+        update();
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
+    }, [realtime]);
 
     const theme = useTheme();
 

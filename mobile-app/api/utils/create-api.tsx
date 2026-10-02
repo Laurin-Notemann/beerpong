@@ -12,6 +12,7 @@ import { useLogging } from '@/utils/useLogging';
 
 type ApiContextType = {
     realtime: RealtimeClient | null;
+    connectRealtime: (groupIds: string[]) => void;
     api: Promise<BeerPongClient>;
     isLoading: boolean;
     error: Error | null;
@@ -97,7 +98,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
         return client;
     });
 
-    const { realtime } = useRealtimeConnection();
+    const { realtime, connectRealtime } = useRealtimeConnection();
     const { writeLog } = useLogging();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -107,6 +108,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
 
     const contextValue: ApiContextType = {
         realtime,
+        connectRealtime,
         api,
         isLoading,
         error,

@@ -14,8 +14,7 @@ import { Host as PortalProvider } from 'react-native-portalize';
 import 'react-native-reanimated';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
-import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
-import { ApiProvider } from '@/api/utils/create-api';
+import { ApiProvider, useApi } from '@/api/utils/create-api';
 import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
 import { useModalStyles } from '@/app/navigation/modalStyles';
@@ -35,7 +34,7 @@ const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
 
 function Everything() {
-    const { connectRealtime } = useRealtimeConnection();
+    const { connectRealtime } = useApi();
 
     const { groupIds } = useGroupStore();
 

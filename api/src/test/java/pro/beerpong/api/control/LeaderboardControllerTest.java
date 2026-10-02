@@ -11,6 +11,8 @@ import pro.beerpong.api.RequestUtils;
 import pro.beerpong.api.TestUtils;
 import pro.beerpong.api.model.ErrorCodes;
 import pro.beerpong.api.model.dto.leaderboard.LeaderboardDto;
+import pro.beerpong.api.model.dto.seasons.SeasonCreateDto;
+import pro.beerpong.api.model.dto.seasons.SeasonDto;
 
 import java.util.List;
 
@@ -39,6 +41,26 @@ public class LeaderboardControllerTest {
         assertEquals(0, leaderboard.getNumMatches());
         assertEquals(3, leaderboard.getNumPlayers());
         assertEquals(prerequisiteGroup.getCreatedAt().toEpochSecond(), leaderboard.getStartedAt().toEpochSecond());
+    }
+
+    // A profile has one player per season; the active season's player has no end date.
+    @Test
+    public void leaderboard_get_Alltime_afterSeasonEnded() {
+        var profileNames = List.of("player1", "player2", "player3");
+        var prerequisiteGroup = testUtils.createTestGroup(port, "test", profileNames);
+
+        var seasonDto = new SeasonCreateDto();
+        seasonDto.setOldSeasonName("first");
+        seasonDto.setRuleMoves(List.of(
+                testUtils.buildRuleMove("Normal", false, 1, 0),
+                testUtils.buildRuleMove("Finish", true, 1, 3)
+        ));
+        requestUtils.assertSuccess(requestUtils.performPut(port, "/groups/" + prerequisiteGroup.getId() + "/active-season", seasonDto, SeasonDto.class), SeasonDto.class);
+
+        var response = requestUtils.performGet(port, "/groups/" + prerequisiteGroup.getId() + "/leaderboard?scope=all-time", LeaderboardDto.class);
+        var leaderboard = requestUtils.assertSuccess(response, LeaderboardDto.class);
+
+        assertEquals(3, leaderboard.getNumPlayers());
     }
 
     @Test
