@@ -1,10 +1,9 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext } from 'react';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
 import { create } from 'zustand';
 
-import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
-import { useGroup } from '@/api/calls/seasonHooks';
 import { RankingAlgorithm } from '@/constants/rankingAlgorithms';
+import { useSelectedGroupId } from '@/zustand/group/stateGroupStore';
 
 const ScopePickerContext = createContext<{
     leaderboardSwiperProgress: SharedValue<number>;
@@ -31,155 +30,51 @@ export function ScopePickerProvider({
     );
 }
 
-interface ScopePickerStore {
-    groups: Record<
-        string,
-        {
-            rankingAlgorithm: RankingAlgorithm | undefined;
-            globalScope: LeaderboardScope;
-            pastSeasonId: string | undefined;
-            isPastSeasonsMode: boolean;
-            leaderboardPageIndex: number | undefined;
-            pastSeasonsPageIndex: number | undefined;
-        }
-    >;
-    actions: {
-        setRankingAlgorithm: (
-            groupId: string,
-            rankingAlgorithm: RankingAlgorithm | undefined
-        ) => void;
-        setGlobalScope: (groupId: string, scope: LeaderboardScope) => void;
-        setPastSeasonId: (groupId: string, seasonId: string) => void;
-        setIsPastSeasonsMode: (
-            groupId: string,
-            isPastSeasonsMode: boolean
-        ) => void;
-        setLeaderboardPageIndex: (groupId: string, pageIdx: number) => void;
-        setPastSeasonsPageIndex: (groupId: string, pageIdx: number) => void;
-    };
+type GroupScope = {
+    /** overrides the season's own ranking algorithm while browsing */
+    rankingAlgorithm?: RankingAlgorithm;
+    isPastSeasonsMode?: boolean;
+};
+
+const useScopePickerStore = create<{ groups: Record<string, GroupScope> }>()(
+    () => ({ groups: {} })
+);
+
+function updateGroup(groupId: string, update: GroupScope) {
+    useScopePickerStore.setState(({ groups }) => ({
+        groups: { ...groups, [groupId]: { ...groups[groupId], ...update } },
+    }));
 }
 
-const useScopePickerStore = create<ScopePickerStore>()((set, get) => ({
-    groups: {},
-    actions: {
-        setRankingAlgorithm: (groupId, rankingAlgorithm) =>
-            set({
-                groups: {
-                    ...get().groups,
-                    [groupId]: {
-                        ...(get().groups[groupId] ?? {}),
-                        rankingAlgorithm: rankingAlgorithm,
-                    },
-                },
-            }),
-        setGlobalScope: (groupId, scope) =>
-            set({
-                groups: {
-                    ...get().groups,
-                    [groupId]: {
-                        ...(get().groups[groupId] ?? {}),
-                        globalScope: scope,
-                    },
-                },
-            }),
-        setPastSeasonId: (groupId, seasonId) =>
-            set({
-                groups: {
-                    ...get().groups,
-                    [groupId]: {
-                        ...(get().groups[groupId] ?? {}),
-                        pastSeasonId: seasonId,
-                    },
-                },
-            }),
-        setIsPastSeasonsMode: (groupId, isPastSeasonsMode) =>
-            set({
-                groups: {
-                    ...get().groups,
-                    [groupId]: {
-                        ...(get().groups[groupId] ?? {}),
-                        isPastSeasonsMode,
-                    },
-                },
-            }),
-        setLeaderboardPageIndex: (groupId, pageIdx) =>
-            set({
-                groups: {
-                    ...get().groups,
-                    [groupId]: {
-                        ...(get().groups[groupId] ?? {}),
-                        leaderboardPageIndex: pageIdx,
-                    },
-                },
-            }),
-        setPastSeasonsPageIndex: (groupId, pageIdx) =>
-            set({
-                groups: {
-                    ...get().groups,
-                    [groupId]: {
-                        ...(get().groups[groupId] ?? {}),
-                        pastSeasonsPageIndex: pageIdx,
-                    },
-                },
-            }),
-    },
-}));
+const noScope: GroupScope = {};
 
+/** The leaderboard/matches scope of the selected group, shared by every screen that shows it. */
 export function useScopePicker() {
-    const { groupId } = useGroup();
+    const groupId = useSelectedGroupId();
 
-    const { groups, actions } = useScopePickerStore();
+    const scope = useScopePickerStore(
+        (s) => (groupId ? s.groups[groupId] : undefined) ?? noScope
+    );
 
     const context = useContext(ScopePickerContext);
-
     if (!context) {
         throw new Error(
             'useScopePicker must be used within a ScopePickerProvider'
         );
     }
 
-    const leaderboardSwiperProgress = context.leaderboardSwiperProgress;
-    const pastSeasonsSwiperProgress = context.pastSeasonsSwiperProgress;
-
-    // when switching groups
-    useEffect(() => {
-        // TODO: without the timeout, this is glitchy, and with the timeout it does nothing (maybe because of the defaultPageIdx in useControlledSwiper?)
-        // setTimeout(() => {
-        //     leaderboardSwiperProgress.value =
-        //         groups[groupId!]?.leaderboardPageIndex ?? 0;
-        //     pastSeasonsSwiperProgress.value =
-        //         groups[groupId!]?.pastSeasonsPageIndex ?? 0;
-        // }, 0);
-    }, [groupId]);
-
-    const defaults = {
-        isPastSeasonsMode: false,
-        leaderboardPageIndex: 0,
-        pastSeasonsPageIndex: 0,
-    } as const;
-
     return {
-        ...defaults,
-        ...(groups[groupId!] ?? {}),
-        setRankingAlgorithm: (rankingAlgorithm: RankingAlgorithm | undefined) =>
-            actions.setRankingAlgorithm(groupId!, rankingAlgorithm),
-        setGlobalScope: (scope: LeaderboardScope) =>
-            actions.setGlobalScope(groupId!, scope),
-        setPastSeasonId: (seasonId: string) =>
-            actions.setPastSeasonId(groupId!, seasonId),
-        setIsPastSeasonsMode: (isPastSeasonsMode: boolean) =>
-            actions.setIsPastSeasonsMode(groupId!, isPastSeasonsMode),
-        setLeaderboardPageIndex: (pageIdx: number) => {
-            actions.setLeaderboardPageIndex(groupId!, pageIdx);
-
-            leaderboardSwiperProgress.set(pageIdx);
+        isPastSeasonsMode: scope.isPastSeasonsMode ?? false,
+        rankingAlgorithm: scope.rankingAlgorithm,
+        setRankingAlgorithm: (
+            rankingAlgorithm: RankingAlgorithm | undefined
+        ) => {
+            if (groupId) updateGroup(groupId, { rankingAlgorithm });
         },
-        setPastSeasonsPageIndex: (pageIdx: number) => {
-            actions.setPastSeasonsPageIndex(groupId!, pageIdx);
-
-            pastSeasonsSwiperProgress.set(pageIdx);
+        setIsPastSeasonsMode: (isPastSeasonsMode: boolean) => {
+            if (groupId) updateGroup(groupId, { isPastSeasonsMode });
         },
-        leaderboardSwiperProgress,
-        pastSeasonsSwiperProgress,
+        leaderboardSwiperProgress: context.leaderboardSwiperProgress,
+        pastSeasonsSwiperProgress: context.pastSeasonsSwiperProgress,
     };
 }

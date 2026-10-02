@@ -302,8 +302,7 @@ export class MatchImpl {
                 if (!player) {
                     // this has been observed in the wild: https://sackverein.sentry.io/issues/41383161/?project=4508333445152848&query=is%3Aunresolved%20issue.priority%3A%5Bhigh%2C%20medium%5D&referrer=issue-stream&stream_index=0
                     ConsoleLogger.error(
-                        `MatchImpl failed to resolve profile with id "$${member.playerId}" for match`,
-                        JSON.stringify({ _data, _players }, null, 2)
+                        `MatchImpl failed to resolve player "${member.playerId}" for match "${_data.id}"`
                     );
                 }
                 if (player) member.setPlayer(player);

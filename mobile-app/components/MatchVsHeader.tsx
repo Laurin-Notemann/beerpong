@@ -42,8 +42,6 @@ export function ScoreChip({
             <Text
                 style={{
                     color: theme.color.text.primary,
-                    backgroundColor: theme.color.bg,
-                    borderRadius: 2,
                     paddingHorizontal: 5,
                     paddingVertical: 2,
                     fontSize: 16,

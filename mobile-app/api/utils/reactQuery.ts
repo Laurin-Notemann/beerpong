@@ -47,7 +47,7 @@ export function useQueryInvalidation() {
     function invalidateMatches(groupId: string, seasonId: string) {
         ConsoleLogger.info('useQueryInvalidation.invalidateMatches');
 
-        qc.invalidateQueries({
+        return qc.invalidateQueries({
             predicate: queryKeyStartsWith([
                 QK.group,
                 groupId,
@@ -60,7 +60,7 @@ export function useQueryInvalidation() {
     function invalidatePlayers(groupId: string, seasonId: string) {
         ConsoleLogger.info('useQueryInvalidation.invalidatePlayers');
 
-        qc.invalidateQueries({
+        return qc.invalidateQueries({
             predicate: queryKeyStartsWith([
                 QK.group,
                 groupId,
@@ -73,7 +73,7 @@ export function useQueryInvalidation() {
     function invalidateRules(groupId: string, seasonId: string) {
         ConsoleLogger.info('useQueryInvalidation.invalidateRules');
 
-        qc.invalidateQueries({
+        return qc.invalidateQueries({
             predicate: queryKeyStartsWith([
                 QK.group,
                 groupId,
@@ -86,7 +86,7 @@ export function useQueryInvalidation() {
     function invalidateLeaderboard(groupId: string) {
         ConsoleLogger.info('useQueryInvalidation.invalidateLeaderboard');
 
-        qc.invalidateQueries({
+        return qc.invalidateQueries({
             predicate: replaceWildcards([
                 QK.group,
                 groupId,
@@ -113,7 +113,9 @@ export interface RefreshProps {
     onRefresh?: () => void;
 }
 
-export function usePullToRefresh(func: () => void): RefreshProps {
+export function usePullToRefresh(
+    func: () => Promise<unknown> | void
+): RefreshProps {
     const [refreshing, setRefreshing] = useState(false);
 
     const onRefresh = async () => {

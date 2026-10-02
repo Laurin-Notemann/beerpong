@@ -1,3 +1,4 @@
+import { useIsFocused } from 'expo-router/react-navigation';
 import type React from 'react';
 import {
     forwardRef,
@@ -37,6 +38,12 @@ export interface SwiperProps {
     swiperProgress: SharedValue<number>;
 
     style?: StyleProp<ViewStyle>;
+
+    /**
+     * Only mount pages within this distance of the current page; pages stay mounted once
+     * visited. Keeps opening a screen with many heavy pages (one list per season) cheap.
+     */
+    lazyWindow?: number;
 }
 
 /**
@@ -53,6 +60,7 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
             onScrollStart,
             swiperProgress,
             style,
+            lazyWindow,
         },
         ref
     ) => {
@@ -63,8 +71,18 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
         const pager = useRef<PagerView>(null);
         const currentIndex = useRef(defaultIndex);
 
+        const [visited, setVisited] = useState(() => new Set([defaultIndex]));
+        const isMounted = (idx: number) =>
+            lazyWindow == null ||
+            visited.has(idx) ||
+            [...visited].some((v) => Math.abs(v - idx) <= lazyWindow);
+
         const goTo = (index: number, animated = true) => {
             const clamped = Math.max(0, Math.min(index, pages.length - 1));
+            // mount the target first, so it isn't blank while the pager animates there
+            if (lazyWindow != null && !visited.has(clamped)) {
+                setVisited((prev) => new Set(prev).add(clamped));
+            }
             if (animated) pager.current?.setPage(clamped);
             else pager.current?.setPageWithoutAnimation(clamped);
         };
@@ -96,14 +114,18 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
                         onScrollStart?.();
                 }}
                 onPageSelected={(e: PagerViewOnPageSelectedEvent) => {
-                    currentIndex.current = e.nativeEvent.position;
-                    onPageChange?.(e.nativeEvent.position);
+                    const idx = e.nativeEvent.position;
+                    currentIndex.current = idx;
+                    if (lazyWindow != null && !visited.has(idx)) {
+                        setVisited((prev) => new Set(prev).add(idx));
+                    }
+                    onPageChange?.(idx);
                 }}
             >
                 {pages.map((page, idx) => (
                     // PagerView needs one plain native view per page
                     <View key={idx} collapsable={false} style={{ flex: 1 }}>
-                        {page}
+                        {isMounted(idx) ? page : null}
                     </View>
                 ))}
             </PagerView>
@@ -133,42 +155,68 @@ export function useSwiper(options?: { initialPage?: number | null }) {
 }
 
 // Swipers that show the same scope (leaderboard, matches, player) share one progress value.
-const controlledSwipers = new Map<
-    SharedValue<number>,
-    Set<RefObject<SwiperRef | null>>
->();
+type ControlledSwiper = {
+    ref: RefObject<SwiperRef | null>;
+    isFocused: RefObject<boolean>;
+};
+const controlledSwipers = new Map<SharedValue<number>, Set<ControlledSwiper>>();
+// The last settled page per scope, kept in JS so a newly mounted swiper can start there
+// without reading the shared value during render.
+const lastPages = new Map<SharedValue<number>, number>();
 
-/** Moves every mounted swiper driven by `progress` to `index` (e.g. a scope tab was tapped). */
+/**
+ * Moves every mounted swiper driven by `progress` to `index` (e.g. a scope tab was tapped).
+ * Only the swiper on the focused screen animates; the hidden ones jump, so a single pager
+ * drives the shared progress.
+ */
 export function scrollControlledSwipers(
     progress: SharedValue<number>,
     index: number
 ) {
+    lastPages.set(progress, index);
     controlledSwipers
         .get(progress)
-        ?.forEach((ref) => ref.current?.scrollTo({ index, animated: true }));
+        ?.forEach(({ ref, isFocused }) =>
+            ref.current?.scrollTo({ index, animated: isFocused.current })
+        );
 }
 
 export function useControlledSwiper(progress: SharedValue<number>) {
     const ref = useRef<SwiperRef>(null);
+    const focused = useIsFocused();
+    const isFocused = useRef(focused);
+    useEffect(() => {
+        isFocused.current = focused;
+    }, [focused]);
 
     useEffect(() => {
+        const swiper = { ref, isFocused };
         const group = controlledSwipers.get(progress) ?? new Set();
-        group.add(ref);
+        group.add(swiper);
         controlledSwipers.set(progress, group);
         return () => {
-            group.delete(ref);
+            group.delete(swiper);
         };
     }, [progress]);
 
+    const [defaultIndex] = useState(() => lastPages.get(progress) ?? 0);
+
     return {
-        defaultIndex: Math.round(progress.value),
+        defaultIndex,
         swiperProgress: progress,
         ref,
         // keep the other swipers of this scope on the same page
         onPageChange: (idx: number) => {
+            lastPages.set(progress, idx);
             controlledSwipers.get(progress)?.forEach((other) => {
-                if (other !== ref && other.current?.getCurrentIndex() !== idx)
-                    other.current?.scrollTo({ index: idx, animated: false });
+                if (
+                    other.ref !== ref &&
+                    other.ref.current?.getCurrentIndex() !== idx
+                )
+                    other.ref.current?.scrollTo({
+                        index: idx,
+                        animated: false,
+                    });
             });
         },
     };

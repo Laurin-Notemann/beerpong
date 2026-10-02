@@ -29,8 +29,6 @@ export interface MatchesListProps extends Pick<
         profileId: string;
     };
     onMatchPress: (match: Match) => void;
-
-    background?: boolean;
 }
 type MatchesListRow =
     | {
@@ -49,8 +47,6 @@ export default function MatchesList({
     refresh,
     forPlayer,
     onMatchPress,
-
-    background,
 
     style,
     contentContainerStyle,

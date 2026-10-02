@@ -8,28 +8,26 @@ import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScop
 import { ScopePickerHeaderTitle } from '@/components/ScopePickerHeaderTitle';
 import { LeaderboardSwiper } from '@/components/screens/LeaderboardSwiper';
 import { PastSeasonsSwiper } from '@/components/screens/PastSeasonsSwiper';
+import { SeasonModeSwitch } from '@/components/screens/SeasonModeSwitch';
 import { AppBackground } from '@/lib/Background';
 import { useInsets } from '@/lib/useInsets';
-import { useScopePicker } from '@/zustand/useScopePicker';
 
 const swiperAtTop = false;
+
+const screenOptions = { headerTitle: () => <ScopePickerHeaderTitle /> };
 
 export default function Page() {
     const insets = useInsets(true, true);
 
-    const scopePicker = useScopePicker();
-
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <Stack.Screen
-                options={{
-                    headerTitle: () => <ScopePickerHeaderTitle />,
-                }}
-            />
+            <Stack.Screen options={screenOptions} />
             <InviteMenu />
             <AppBackground />
-            {!scopePicker.isPastSeasonsMode && <LeaderboardSwiper />}
-            {scopePicker.isPastSeasonsMode && <PastSeasonsSwiper />}
+            <SeasonModeSwitch
+                current={<LeaderboardSwiper />}
+                past={<PastSeasonsSwiper />}
+            />
             <View
                 key="scope-picker"
                 pointerEvents="box-none"

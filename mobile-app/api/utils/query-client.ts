@@ -63,7 +63,7 @@ export const createQueryClient = () => {
 export const persister = createAsyncStoragePersister({
     storage: AsyncStorage,
     key: 'QUERY_CACHE_KEY', // Key used in AsyncStorage
-    throttleTime: 1000, // Minimum time (in ms) between storage operations
+    throttleTime: 2000, // Minimum time (in ms) between storage operations; each write serializes the whole cache
     serialize: JSON.stringify,
     deserialize: JSON.parse,
 });

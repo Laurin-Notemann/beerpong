@@ -148,9 +148,10 @@ function Avatar({
                                 borderWidth: borderColor ? 2 : undefined,
                                 borderColor,
                             }}
-                            resizeMode="cover"
+                            contentFit="cover"
                             cachePolicy="memory-disk"
-                            // priority={variant === 'list' ? 'low' : 'normal'}
+                            // list rows are recycled; without this a reused row flashes the previous avatar
+                            recyclingKey={url}
                             transition={variant === 'list' ? 0 : 100}
                         />
                     )}

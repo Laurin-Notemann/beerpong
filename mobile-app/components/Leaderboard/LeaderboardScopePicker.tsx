@@ -173,7 +173,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
         return withSpring(interpolatedPosition, {
             duration: 100,
         });
-    }, [swiperProgress, segmentPositions]);
+    });
 
     const targetWidth = useDerivedValue(() => {
         const progress = swiperProgress.value;
@@ -190,7 +190,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
         return withSpring(interpolatedWidth, {
             duration: 100,
         });
-    }, [swiperProgress, segmentWidths]);
+    });
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: targetX.value }],

@@ -13,10 +13,14 @@ export const useRefetchEverythingOnWifiReconnect = (
     queryClient: QueryClient
 ) => {
     useEffect(() => {
+        // NetInfo reports the current state right away and on every change (e.g. wifi to
+        // cellular); only coming back from offline means we may have missed updates.
+        let wasConnected: boolean | null = null;
         const unsubscribe = NetInfo.addEventListener((state) => {
-            if (state.isConnected) {
-                queryClient.invalidateQueries(); // refetch all queries
+            if (wasConnected === false && state.isConnected) {
+                queryClient.invalidateQueries();
             }
+            wasConnected = state.isConnected;
         });
         return unsubscribe;
     }, [queryClient]);

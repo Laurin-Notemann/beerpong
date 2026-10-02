@@ -3,6 +3,7 @@ import { View, ViewProps } from 'react-native';
 
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
+import { describeError } from '@/toast';
 
 export interface ErrorScreenProps extends ViewProps {
     message?: string | React.JSX.Element;
@@ -10,7 +11,10 @@ export interface ErrorScreenProps extends ViewProps {
 }
 export default function ErrorScreen({
     error,
-    message = error ? (error as Error).message || 'Unknown error' : undefined,
+    message = error
+        ? (describeError(error) ??
+          ((error as Error).message || 'Unknown error'))
+        : undefined,
     ...rest
 }: ErrorScreenProps) {
     const theme = useTheme();
@@ -22,12 +26,13 @@ export default function ErrorScreen({
                 flex: 1,
                 alignItems: 'center',
                 justifyContent: 'center',
+                paddingHorizontal: 16,
 
                 backgroundColor: theme.color.bg,
             }}
         >
             <Text variant="h3" color="negative">
-                Error
+                Something went wrong
             </Text>
             {message && (
                 <Text
@@ -35,6 +40,8 @@ export default function ErrorScreen({
                     color="secondary"
                     style={{
                         marginTop: 16,
+                        paddingHorizontal: 32,
+                        textAlign: 'center',
                     }}
                 >
                     {message}

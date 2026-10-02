@@ -10,8 +10,8 @@ import { formatGroupCode } from '@/utils/groupCode';
 /** Native header menu (right side) for inviting friends to the selected group. */
 export function InviteMenu() {
     const { group } = useGroup();
-    const inviteCode = group.data?.inviteCode;
-    const name = group.data?.name;
+    const inviteCode = group?.data?.inviteCode;
+    const name = group?.data?.name;
 
     const withCode = (action: (code: string) => void) => () => {
         if (!inviteCode) {

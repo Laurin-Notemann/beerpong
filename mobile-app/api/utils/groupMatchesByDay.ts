@@ -3,38 +3,33 @@ import dayjs from 'dayjs';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 
+/** Matches grouped by calendar day, newest day and newest match first. */
 export const groupMatchesByDay = (matches: Match[]) => {
-    const dayjsMap = matches.reduce(
-        (
-            acc: Record<
-                string,
-                { matches: Match[]; title: string; date: Date }
-            >,
-            obj: Match
-        ) => {
-            const dayKey = dayjs(obj.date).format('YYYY-MM-DD');
+    const days = new Map<
+        string,
+        { matches: Match[]; title: string; date: Date }
+    >();
 
-            if (!acc[dayKey]) {
-                acc[dayKey] = {
-                    matches: [],
-                    title: env.format.date.matchesSeperatorDay(dayjs(obj.date)),
-                    date: obj.date,
-                };
-            }
-            acc[dayKey].matches.push(obj);
+    for (const match of matches) {
+        const d = match.date;
+        const dayKey = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
-            return acc;
-        },
-        {}
-    );
-    const days = Object.values(dayjsMap);
-
-    days.sort((a, b) => (dayjs(a.date).isAfter(dayjs(b.date)) ? -1 : 1));
-
-    for (const day of days) {
-        day.matches.sort((a, b) =>
-            dayjs(a.date).isAfter(dayjs(b.date)) ? -1 : 1
-        );
+        let day = days.get(dayKey);
+        if (!day) {
+            day = {
+                matches: [],
+                title: env.format.date.matchesSeperatorDay(dayjs(d)),
+                date: d,
+            };
+            days.set(dayKey, day);
+        }
+        day.matches.push(match);
     }
-    return days;
+
+    const sorted = [...days.values()];
+    sorted.sort((a, b) => b.date.getTime() - a.date.getTime());
+    for (const day of sorted) {
+        day.matches.sort((a, b) => b.date.getTime() - a.date.getTime());
+    }
+    return sorted;
 };

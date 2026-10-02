@@ -20,6 +20,7 @@ export const useMatchQuery = (
 
     return useQuery<Paths.GetMatchByIdExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches, matchId],
+        enabled: !!groupId && !!seasonId && !!matchId,
         queryFn: async () => {
             if (!groupId || !seasonId || !matchId) {
                 return null;
@@ -42,6 +43,7 @@ export const useMatchesQuery = (
 
     return useQuery<Paths.GetAllMatchesExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
+        enabled: !!groupId && !!seasonId,
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;

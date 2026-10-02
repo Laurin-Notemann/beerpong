@@ -1,6 +1,6 @@
 import { LegendList, LegendListProps } from '@legendapp/list/react-native';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
@@ -75,39 +75,46 @@ export default function Leaderboard({
 
     const nav = useNavigation();
 
-    const sortedPlayers = players.sort(
-        getRankingAlgorithm(rankingAlgorithm).sortFunc
-    );
-
-    const rankedPlayers = sortedPlayers.filter(
-        (i) => i.matches >= minMatchesRequiredToBeRanked
-    );
-    const nonPodiumPlayers = withPodium
-        ? rankedPlayers.slice(3)
-        : rankedPlayers;
-
-    const unrankedPlayers = sortedPlayers.filter(
-        (i) => i.matches < minMatchesRequiredToBeRanked
-    );
-
-    const rows: LeaderboardRow[] = nonPodiumPlayers.map((player, idx) => ({
-        type: 'player',
-        player,
-        placement: idx + (withPodium ? 4 : 1),
-        unranked: false,
-    }));
-    if (showUnranked && unrankedPlayers.length) {
-        rows.push({ type: 'unrankedHeader' });
-        for (const player of unrankedPlayers) {
-            rows.push({
-                type: 'player',
-                player,
-                placement:
-                    sortedPlayers.findIndex((j) => j.id === player.id) + 1,
-                unranked: true,
+    const { rankedPlayers, rows } = useMemo(() => {
+        // copy: `players` can be cached query data, which must not be sorted in place
+        const sortedPlayers = [...players].sort(
+            getRankingAlgorithm(rankingAlgorithm).sortFunc
+        );
+        const ranked = sortedPlayers.filter(
+            (i) => i.matches >= minMatchesRequiredToBeRanked
+        );
+        const out: LeaderboardRow[] = (
+            withPodium ? ranked.slice(3) : ranked
+        ).map((player, idx) => ({
+            type: 'player',
+            player,
+            placement: idx + (withPodium ? 4 : 1),
+            unranked: false,
+        }));
+        const unranked = sortedPlayers.filter(
+            (i) => i.matches < minMatchesRequiredToBeRanked
+        );
+        if (showUnranked && unranked.length) {
+            out.push({ type: 'unrankedHeader' });
+            sortedPlayers.forEach((player, idx) => {
+                if (player.matches < minMatchesRequiredToBeRanked) {
+                    out.push({
+                        type: 'player',
+                        player,
+                        placement: idx + 1,
+                        unranked: true,
+                    });
+                }
             });
         }
-    }
+        return { rankedPlayers: ranked, rows: out };
+    }, [
+        players,
+        rankingAlgorithm,
+        minMatchesRequiredToBeRanked,
+        withPodium,
+        showUnranked,
+    ]);
 
     const onPlayerLongPress = MODAL_ON_LONG_PRESS
         ? (id: string) => setPlayerPreviewModalId(id)

@@ -15,7 +15,7 @@ export const AppBackground: React.FC = () => {
 
     const theme = useTheme();
 
-    const wallpaperQuery = useAssetQuery(group.data?.assetIdWallpaper);
+    const wallpaperQuery = useAssetQuery(group?.data?.assetIdWallpaper);
 
     const customWallpaperUrl = wallpaperQuery.data?.data?.url;
 

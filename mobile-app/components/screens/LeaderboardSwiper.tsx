@@ -6,7 +6,6 @@ import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import ErrorScreen from '@/components/ErrorScreen';
 import Leaderboard from '@/components/Leaderboard';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
@@ -18,7 +17,7 @@ import Text from '@/components/Text';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { SeasonSettingsDto } from '@/openapi/openapi';
-import { formatWakeTime, parseWakeTime } from '@/utils/wakeTime';
+import { formatWakeTime } from '@/utils/wakeTime';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 dayjs.extend(duration);
@@ -72,7 +71,8 @@ export function LeaderboardSwiper() {
     const minMatchesRequiredToBeRanked =
         activeSeason?.seasonSettings?.minMatchesToQualify ?? 0;
 
-    const isLoading = !group || seasonsQuery.isLoading;
+    // the season list only adds the All Time page; the current season shows without it
+    const isLoading = !group;
 
     const dailyLeaderboardIsEmpty =
         dailyPlayers.filter((i) => i.matches > 0).length === 0;
@@ -81,16 +81,7 @@ export function LeaderboardSwiper() {
         activeSeason?.seasonSettings?.dailyLeaderboard === 'WAKE_TIME' &&
         !dailyLeaderboardIsEmpty;
 
-    const wakeTime = parseWakeTime(activeSeason?.seasonSettings?.wakeTime);
-
-    const dailyLeaderboardResetDate = dayjs()
-        .hour(wakeTime.hour)
-        .minute(wakeTime.minute)
-        .second(0)
-        .add(1, 'day');
-
     if (isLoading) return <LoadingScreen />;
-    if (seasonsQuery.isError) return <ErrorScreen error={seasonsQuery.error} />;
 
     const spacing = { marginTop: 32, marginBottom: 67 };
 
@@ -106,7 +97,7 @@ export function LeaderboardSwiper() {
     };
 
     return (
-        <Swiper {...swiper}>
+        <Swiper {...swiper} lazyWindow={1}>
             <Leaderboard
                 {...listProps}
                 ListHeaderComponent={
@@ -117,8 +108,9 @@ export function LeaderboardSwiper() {
                         />
                         {hasDailyLeaderboardCountdown && (
                             <LeaderboardCountdown
-                                type="today"
-                                endDate={dailyLeaderboardResetDate}
+                                wakeTime={
+                                    activeSeason?.seasonSettings?.wakeTime
+                                }
                             />
                         )}
                     </>

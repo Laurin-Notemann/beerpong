@@ -86,7 +86,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             // TODO: i can't get this to actually show up
             setTimeout(
                 () =>
-                    showYouLeftGroupToast(group.data?.name ?? 'Unknown Group'),
+                    showYouLeftGroupToast(group?.data?.name ?? 'Unknown Group'),
                 3000
             );
 

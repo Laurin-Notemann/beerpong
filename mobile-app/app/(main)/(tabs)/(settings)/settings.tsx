@@ -10,7 +10,8 @@ export default function Screen() {
 
     if (isLoading) return <LoadingScreen />;
 
-    if (!props) return <ErrorScreen error={error} />;
+    if (!props)
+        return error ? <ErrorScreen error={error} /> : <LoadingScreen />;
 
     return <GroupSettingsScreen {...props} />;
 }

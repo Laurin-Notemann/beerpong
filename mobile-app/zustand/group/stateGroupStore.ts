@@ -19,6 +19,11 @@ const useStore = create<{
     },
 }));
 
+/** The selected group's id, without the group list query and mutations of `useGroupStore`. */
+export function useSelectedGroupId() {
+    return useStore((s) => s.selectedGroupId);
+}
+
 export function useGroupStore() {
     const store = useStore();
 

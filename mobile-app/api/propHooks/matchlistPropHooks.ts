@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -32,13 +34,15 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
         invalidateMatches(groupId!, seasonId!)
     );
 
-    if (!matchesQuery.data?.data) return { props: null, isLoading, error };
-
-    const allowedMoves = movesQuery.data?.data ?? [];
-
-    const matches = matchesQuery.data.data.map(
-        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+    const matchDtos = matchesQuery.data?.data;
+    const players = playersQuery.data?.data;
+    const allowedMoves = movesQuery.data?.data;
+    const matches = useMemo(
+        () => matchDtos?.map(matchDtoToMatch(players, allowedMoves)),
+        [matchDtos, players, allowedMoves]
     );
+
+    if (!matches) return { props: null, isLoading, error };
 
     function onMatchPress(match: Match) {
         nav.navigate('match', { id: match.id, seasonId: match.seasonId });

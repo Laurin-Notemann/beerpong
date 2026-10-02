@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
@@ -15,7 +17,7 @@ export function MatchesSwiper() {
 
     const insets = useInsets(true, true);
 
-    const { groupId, activeSeason } = useGroup();
+    const { groupId, seasonId, activeSeason } = useGroup();
     const scopePicker = useScopePicker();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
@@ -32,27 +34,41 @@ export function MatchesSwiper() {
     );
 
     const wakeTime = activeSeason?.seasonSettings?.wakeTime;
+    const seasonMatches = props?.matches;
+
+    const todayMatches = useMemo(() => {
+        const todayStart = getWakeTimeDayStart(new Date(), wakeTime).getTime();
+        return (seasonMatches ?? []).filter(
+            (m) =>
+                getWakeTimeDayStart(new Date(m.date), wakeTime).getTime() ===
+                todayStart
+        );
+    }, [seasonMatches, wakeTime]);
+
+    const seasons = seasonsQuery.data?.data;
+    // past seasons from the season list, the current season from the live matches query
+    const allTimeMatches = useMemo(
+        () => [
+            ...(seasonMatches ?? []),
+            ...(seasons ?? [])
+                .filter((s) => s.id !== seasonId)
+                .flatMap((s) =>
+                    s.ruleMoves && s.rawPlayers
+                        ? s.matches.map(
+                              matchDtoToMatch(s.rawPlayers, s.ruleMoves)
+                          )
+                        : []
+                ),
+        ],
+        [seasons, seasonMatches, seasonId]
+    );
 
     if (isLoading) return <LoadingScreen />;
-    if (!props) return <ErrorScreen error={error} />;
-
-    const todayStart = getWakeTimeDayStart(new Date(), wakeTime).getTime();
-
-    const todayMatches = props.matches.filter(
-        (m) =>
-            getWakeTimeDayStart(new Date(m.date), wakeTime).getTime() ===
-            todayStart
-    );
-
-    const allTimeMatches = (seasonsQuery.data?.data ?? []).flatMap(
-        (s) =>
-            (s.ruleMoves && s.rawPlayers
-                ? s.matches.map(matchDtoToMatch(s.rawPlayers, s.ruleMoves))
-                : []) as typeof props.matches
-    );
+    if (!props)
+        return error ? <ErrorScreen error={error} /> : <LoadingScreen />;
 
     return (
-        <Swiper {...leaderboardSwiper}>
+        <Swiper {...leaderboardSwiper} lazyWindow={1}>
             <MatchesList
                 contentContainerStyle={{
                     paddingTop: insets.top,
