@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Streams a live iOS Simulator of mobile-app/ from a GitHub Actions macOS runner.
+#
+# This is `native-sim up` for our layout: the CLI expects the Expo app at the repo
+# root (from mobile-app/ it would `git init` a nested repo), and it commits and
+# pushes everything that is dirty. This script only dispatches
+# .github/workflows/native-sim.yml for a branch that is already pushed, then
+# reads the stream URL back from the commit status the runner publishes.
+#
+# Usage: scripts/native-sim-up [--ref <branch>] [--minutes 30] [--device "iPhone 17 Pro"]
+#                              [--agent] [--no-cache] [--no-open]
+#
+# The branch must contain the workflow (anything based on staging after it landed).
+# Stop early with `gh run cancel <run id>`, or `native-sim down` / `native-sim status`
+# from the repo root (the session is saved where the CLI looks for it).
+set -euo pipefail
+
+minutes=30 device="iPhone 17 Pro" ref="" agent=false cache=true open=true
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --ref) ref=$2; shift 2 ;;
+    --minutes) minutes=$2; shift 2 ;;
+    --device) device=$2; shift 2 ;;
+    --agent) agent=true; shift ;;
+    --no-cache) cache=false; shift ;;
+    --no-open) open=false; shift ;;
+    -h|--help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "unknown option: $1 (see --help)" >&2; exit 2 ;;
+  esac
+done
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+ref=${ref:-$(git rev-parse --abbrev-ref HEAD)}
+repo=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+
+# The runner builds what is on GitHub, not this checkout.
+remote_sha=$(git ls-remote origin "refs/heads/$ref" | cut -f1)
+[ -n "$remote_sha" ] || { echo "branch '$ref' is not on origin; push it first" >&2; exit 1; }
+if [ "$ref" = "$(git rev-parse --abbrev-ref HEAD)" ] && [ "$(git rev-parse HEAD)" != "$remote_sha" ]; then
+  echo "warning: local HEAD differs from origin/$ref; the runner builds origin/$ref" >&2
+fi
+
+session=$(openssl rand -hex 4)
+key=$(openssl rand -base64 24 | tr '+/' '-_' | tr -d '=\n')
+context="native-sim/$session"
+
+agent_version=0.20.1
+if [ "$agent" = true ] && command -v agent-device >/dev/null; then
+  agent_version=$(agent-device --version | awk '{print $NF}')
+fi
+
+echo "Dispatching native-sim on $repo@$ref (session $session, ${minutes}m)"
+gh workflow run native-sim.yml --repo "$repo" --ref "$ref" \
+  -f session="$session" -f gate_token="$key" -f minutes="$minutes" -f device="$device" \
+  -f mode=build -f cache="$cache" -f agent_device="$agent" -f agent_device_version="$agent_version" \
+  || { echo "dispatch failed; does '$ref' contain .github/workflows/native-sim.yml?" >&2; exit 1; }
+
+run=""
+for _ in $(seq 1 40); do
+  run=$(gh run list --repo "$repo" --workflow native-sim.yml --limit 25 \
+    --json databaseId,displayTitle,url,headSha \
+    --jq ".[] | select(.displayTitle | contains(\"$session\")) | [.databaseId, .url, .headSha] | @tsv")
+  [ -n "$run" ] && break
+  sleep 3
+done
+[ -n "$run" ] || { echo "GitHub never queued the run; check: gh run list --workflow native-sim.yml" >&2; exit 1; }
+IFS=$'\t' read -r run_id run_url sha <<<"$run"
+echo "Run $run_url"
+
+# Same file and shape the native-sim CLI uses, so `native-sim status|down` work from the root.
+if [ -d .git ]; then
+  printf '{"session":"%s","runId":%s,"sha":"%s","repo":"%s","context":"%s","url":"%s","startedAt":%s000}\n' \
+    "$session" "$run_id" "$sha" "$repo" "$context" "$run_url" "$(date +%s)" > .git/native-sim-session.json
+fi
+
+# Commit statuses are the one surface readable while the job runs. The runner first
+# posts the tunnel URL, then (without a URL) "app installed and running".
+statuses() { gh api "repos/$repo/commits/$sha/statuses?per_page=100" --jq "[.[] | select(.context == \"$context\")] $1"; }
+progress() {
+  gh run view "$run_id" --repo "$repo" --json status,jobs \
+    --jq 'if .status == "completed" then "completed" else ((.jobs[0].steps // []) | map(select(.status == "in_progress"))[0].name // "waiting for a macOS runner") end'
+}
+
+start=$(date +%s) last="" base=""
+wait_for() { # $1 = jq filter over this session's statuses that is non-empty when done
+  while true; do
+    out=$(statuses "$1" || true)
+    [ -n "$out" ] && { printf '%s' "$out"; return; }
+    step=$(progress || true)
+    if [ "$step" = completed ]; then
+      echo "run finished before that happened; logs: gh run view $run_id --log-failed" >&2
+      exit 1
+    fi
+    [ "$step" != "$last" ] && { echo "  [$(( ($(date +%s) - start) / 60 ))m] $step" >&2; last=$step; }
+    sleep 10
+  done
+}
+
+base=$(wait_for '| map(select(.state == "success" and (.target_url // "") != ""))[0].target_url // empty')
+url="${base%/}/?k=$key"
+echo
+echo "Simulator is live ($(( ($(date +%s) - start) / 60 ))m): $url"
+echo "Anyone with that link can drive the simulator. Stop it with: gh run cancel $run_id"
+if [ "$agent" = true ]; then
+  echo
+  echo "agent-device connect proxy --daemon-base-url ${base%/}/agent-device --daemon-auth-token $key"
+fi
+[ "$open" = true ] && command -v open >/dev/null && open "$url"
+
+echo
+echo "Waiting for the app (~5 min from cache, ~50 min for a cold native build; Ctrl-C is safe, the session keeps running)"
+wait_for '| map(select(.description == "app installed and running"))[0].description // empty' >/dev/null
+echo "App is on screen ($(( ($(date +%s) - start) / 60 ))m)."
