@@ -247,7 +247,7 @@ jobs:
 
       - name: Commit generated types
         if: steps.changed_paths_gate.outputs.continue_job == 'true' && steps.check_authors.outputs.has_bot_author != 'true' && steps.detect_api_changes.outputs.api_changed == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: update openapi types"
           skip_checkout: true
