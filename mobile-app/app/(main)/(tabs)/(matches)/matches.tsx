@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { useIsFocused } from 'expo-router/react-navigation';
 import React from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { InviteMenu } from '@/components/InviteMenu';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
@@ -25,7 +25,7 @@ function FocusedMatchesContent() {
 }
 
 export default function Page() {
-    const insets = useInsets(true, true, true);
+    const insets = useInsets(true, true);
     const isFocused = useIsFocused();
 
     return (
@@ -39,7 +39,7 @@ export default function Page() {
             <AppBackground />
             {isFocused ? <FocusedMatchesContent /> : null}
             {isFocused ? (
-                <SafeAreaView
+                <View
                     key="scope-picker"
                     pointerEvents="box-none"
                     style={{
@@ -52,7 +52,7 @@ export default function Page() {
                     }}
                 >
                     <LeaderboardScopePicker hasSortButton={false} />
-                </SafeAreaView>
+                </View>
             ) : null}
         </GestureHandlerRootView>
     );
