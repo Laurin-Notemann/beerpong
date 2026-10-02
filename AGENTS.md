@@ -75,6 +75,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 
 - Smallest proof that the change works. Run the tests and checks for the scope you touched:
   - API: `cd api && mvn verify -Dspringdoc.skip=true` (needs the local Postgres; tests use the `test` profile).
+  - Go API: `cd api-go && go test ./...`, then the contract suite against a running backend: `cd api-tests && API_BASE_URL=http://localhost:8080 go test ./...` (see `api-tests/README.md`). An API change has to pass it against both backends while both exist.
   - App: `cd mobile-app && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`.
 - Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.
 - Backend behavior changes ship with focused controller or service tests next to the existing ones in `api/src/test`.
@@ -118,6 +119,8 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 - `mobile-app/` - Expo / React Native app with expo-router. `app/` (routes and screens), `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `mobile-app/.eas/workflows/` - the EAS workflow that builds and updates the app.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the trigger for the EAS workflow.
+- `api-go/` - the Go rewrite of `api/` (pgx + sqlc, goose migrations). Same endpoints, schema and env vars; see `api-go/README.md`.
+- `api-tests/` - black-box contract tests and `shadowdiff`, runnable against either backend. Goldens were recorded against Java.
 - `docker/` - local compose files for the database and backend.
 
 ## Taste
