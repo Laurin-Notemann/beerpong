@@ -4,7 +4,8 @@
 # `scripts/native-sim-up`, not `native-sim up` (see .claude/skills/native-sim).
 # Changes vs. the template, all marked "mobile-app:" below: run steps default to
 # mobile-app/, cache/artifact paths and the lockfile hash are prefixed with it,
-# the gate is read from the repo root, and the build gets the app's public env.
+# the gate is read from the repo root, the build gets the app's public env and
+# a longer timeout.
 # Also (not mobile-app specific): @expo/serve-sim is pinned to 0.4.0.
 # When updating native-sim, diff its new template against this file.
 #
@@ -371,7 +372,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build app
-        timeout-minutes: 60
+        # mobile-app: 90, not 60. A cold build of this app took 47.5 min on macos-26.
+        timeout-minutes: 90
         if: inputs.mode == 'build' && steps.appcache.outputs.cache-hit != 'true'
         env:
           UDID: ${{ steps.sim.outputs.udid }}
