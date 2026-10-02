@@ -23,10 +23,8 @@ export function InviteMenu() {
 
     return (
         <Stack.Toolbar placement="right">
-            <Stack.Toolbar.Menu
-                icon="person.badge.plus"
-                title="Invite Friends to this Group"
-            >
+            <Stack.Toolbar.Menu title="Invite Friends to this Group">
+                <Stack.Toolbar.Label>Share</Stack.Toolbar.Label>
                 <Stack.Toolbar.MenuAction
                     icon="doc.on.doc"
                     onPress={withCode((code) => copyToClipboard(code))}

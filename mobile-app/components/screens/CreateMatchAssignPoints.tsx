@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
@@ -66,7 +66,7 @@ export default function CreateMatchAssignPoints({
                     onPlayerPress={onPlayerPress}
                 />
             </ScrollView>
-            <SafeAreaView
+            <View
                 style={{
                     position: 'absolute',
                     flexDirection: 'row',
@@ -88,7 +88,7 @@ export default function CreateMatchAssignPoints({
                     isPending={isPending}
                     onPress={onSubmit}
                 />
-            </SafeAreaView>
+            </View>
         </View>
     );
 }

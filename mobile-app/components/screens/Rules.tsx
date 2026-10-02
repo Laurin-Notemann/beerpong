@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import {
     NestableDraggableFlatList,
     NestableScrollContainer,
@@ -200,7 +200,7 @@ export default function Rules({
                 ]}
                 isVisible={showDeleteConfirmation}
             />
-            <SafeAreaView>
+            <View style={{ flex: 1 }}>
                 <NestableScrollContainer
                     refreshControl={<RefreshControl {...refresh} />}
                     contentContainerStyle={{
@@ -262,7 +262,7 @@ export default function Rules({
                         </Text>
                     )}
                 </NestableScrollContainer>
-            </SafeAreaView>
+            </View>
 
             {isEditing && (
                 <View
