@@ -3,7 +3,7 @@
 // differ. It only sends GET requests, so it is safe against production data.
 //
 //	shadowdiff -a http://java:8080 -b http://go:8080 -token <access token>
-//	shadowdiff -a ... -b ... -secret $JWT_SECRET -user <user id>
+//	JWT_SECRET=... shadowdiff -a ... -b ... -user <user id>
 package main
 
 import (
@@ -40,6 +40,9 @@ var st stats
 
 func main() {
 	flag.Parse()
+	if *secret == "" {
+		*secret = os.Getenv("JWT_SECRET")
+	}
 	if *token == "" && *secret != "" {
 		now := time.Now()
 		t, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": *user, "type": "access", "iat": now.Unix(), "exp": now.Add(time.Hour).Unix()}).SignedString([]byte(*secret))
