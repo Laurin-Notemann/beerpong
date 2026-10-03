@@ -9,7 +9,6 @@ import {
     useDeleteMatchMutation,
     useDeleteMatchPhotoMutation,
     useMatchesQuery,
-    useMatchQuery,
     useUpdateMatchMutation,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
@@ -43,8 +42,6 @@ import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
  *
  * TODO: find a way to not have to fetch all matches of the season here
  */
-const USE_MATCH_QUERY = false;
-
 export default function Page() {
     const [isEditing, setIsEditing] = useState(false);
 
@@ -58,10 +55,6 @@ export default function Page() {
     const isCurrentSeason = activeSeasonId === seasonId;
 
     const playersQuery = usePlayersQuery(groupId, seasonId);
-
-    const profiles = playersQuery.data?.data ?? [];
-
-    const matchQuery = useMatchQuery(groupId, seasonId, id);
 
     const movesQuery = useMoves(groupId, seasonId);
 
@@ -82,11 +75,7 @@ export default function Page() {
 
     const insets = useInsets(true, true);
 
-    const matchWithoutPhotos = USE_MATCH_QUERY
-        ? matchQuery.data?.data
-            ? matchDtoToMatch(profiles, allowedMoves)(matchQuery.data.data)
-            : null
-        : matches.find((i) => i.id === id);
+    const matchWithoutPhotos = matches.find((i) => i.id === id);
 
     const bluePhotoQuery = useAssetQuery(
         matchWithoutPhotos?.blueTeamPhotoAssetId
@@ -255,8 +244,7 @@ export default function Page() {
         playersQuery.isLoading ||
         movesQuery.isLoading ||
         bluePhotoQuery.isLoading ||
-        redPhotoQuery.isLoading ||
-        (USE_MATCH_QUERY && matchQuery.isLoading);
+        redPhotoQuery.isLoading;
 
     if (isLoading) return <LoadingScreen />;
 

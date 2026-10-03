@@ -39,7 +39,7 @@ export default function Page() {
         editedDailyLeaderboard ??
         (seasonSettings?.dailyLeaderboard === 'RESET_AT_MIDNIGHT'
             ? 'WAKE_TIME'
-            : seasonSettings?.dailyLeaderboard!);
+            : (seasonSettings?.dailyLeaderboard ?? 'WAKE_TIME'));
     const wakeTimeDate =
         editedWakeTimeDate ?? wakeTimeToDate(seasonSettings?.wakeTime);
 

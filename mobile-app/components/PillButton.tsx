@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import {
     Animated,
     Pressable,
+    StyleProp,
     StyleSheet,
     TouchableOpacity,
     View,
@@ -20,7 +21,7 @@ const PillButton: React.FC<{
     onRemove?: () => void;
     backgroundColor?: string;
     blur?: boolean;
-    style?: any;
+    style?: StyleProp<ViewStyle>;
 }> = ({
     label,
     iconName,

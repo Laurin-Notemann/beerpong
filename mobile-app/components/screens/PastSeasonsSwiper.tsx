@@ -2,10 +2,10 @@ import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import ErrorScreen from '@/components/ErrorScreen';
 import Leaderboard from '@/components/Leaderboard';
 import LoadingScreen from '@/components/LoadingScreen';
+import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { usePastSeasonCardStyle } from '@/components/screens/usePastSeasonCardStyle';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import { useNavigation } from '@/lib/navigation/useNavigation';
-import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 export function PastSeasonsSwiper() {

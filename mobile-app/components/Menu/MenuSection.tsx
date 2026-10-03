@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import React, { PropsWithChildren } from 'react';
-import { Text, View } from 'react-native';
+import { StyleProp, Text, View, ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
 
@@ -82,7 +82,7 @@ export interface MenuSectionProps extends PropsWithChildren {
 
     background?: boolean;
 
-    style?: any;
+    style?: StyleProp<ViewStyle>;
 
     footer?: string | React.JSX.Element;
 
@@ -90,7 +90,7 @@ export interface MenuSectionProps extends PropsWithChildren {
 
     noFlex?: boolean;
 
-    containerStyle?: any;
+    containerStyle?: StyleProp<ViewStyle>;
 }
 export default function MenuSection({
     title,

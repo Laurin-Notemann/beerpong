@@ -9,8 +9,6 @@ import { Icon } from '@/components/Icon';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import Text from '@/components/Text';
 import TextInput from '@/components/TextInput';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
@@ -148,7 +146,7 @@ export default function CreateGroupAddMembers({
                         }}
                     >
                         <Avatar name={i.name} size={36} />
-                        <ThemedView
+                        <View
                             style={{
                                 flex: 1,
 
@@ -156,7 +154,7 @@ export default function CreateGroupAddMembers({
                                 marginRight: 8,
                             }}
                         >
-                            <ThemedText
+                            <Text
                                 numberOfLines={2}
                                 style={{
                                     fontSize: 17,
@@ -165,8 +163,8 @@ export default function CreateGroupAddMembers({
                                 }}
                             >
                                 {i.name}
-                            </ThemedText>
-                        </ThemedView>
+                            </Text>
+                        </View>
                         <TouchableOpacity
                             onPress={() => onRemoveMember(idx)}
                             style={{ marginLeft: 'auto' }}

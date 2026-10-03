@@ -16,23 +16,21 @@ import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import Avatar from '@/components/Avatar';
+import { BlurredBackdrop } from '@/components/BlurredBackdrop';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
-import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import { AppBackground } from '@/lib/Background';
 import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
-import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-const swiperAtTop = false;
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -48,6 +46,19 @@ export interface ScopeInfo {
     isUnranked: boolean;
     name: string;
 }
+
+// shown until a scope's data has loaded
+const emptyScope: Omit<ScopeInfo, 'name'> = {
+    minMatchesRequiredToBeRanked: 0,
+    placement: 0,
+    matches: [],
+    matchesWon: 0,
+    points: 0,
+    cups: 0,
+    elo: 0,
+    rankingAlgorithm: 'ELO',
+    isUnranked: true,
+};
 
 export interface PlayerScreenProps {
     isPending: boolean;
@@ -94,8 +105,8 @@ export default function PlayerScreen({
     const [editable, setEditable] = useState(false);
 
     const insets = useInsets(true);
-    // Clears the scope picker and bottom bar that float over the end of the list.
-    const listPaddingBottom = insets.bottom + (swiperAtTop ? 0 : 48 + 24);
+    // Clears the scope picker that floats over the end of the list.
+    const listPaddingBottom = insets.bottom + 72;
 
     const [fade] = useState(() => new Animated.Value(0));
     const [scale] = useState(() => new Animated.Value(0));
@@ -193,8 +204,7 @@ export default function PlayerScreen({
                                     }
                                     style={{ paddingHorizontal: 0 }}
                                     contentContainerStyle={{
-                                        paddingTop:
-                                            insets.top + (swiperAtTop ? 48 : 0),
+                                        paddingTop: insets.top,
                                         paddingBottom: listPaddingBottom,
                                     }}
                                     ListHeaderComponent={
@@ -244,7 +254,7 @@ export default function PlayerScreen({
                             }
                             style={{ paddingHorizontal: 0 }}
                             contentContainerStyle={{
-                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                                paddingTop: insets.top,
                                 paddingBottom: listPaddingBottom,
                             }}
                             ListHeaderComponent={
@@ -282,7 +292,7 @@ export default function PlayerScreen({
                             }
                             style={{ paddingHorizontal: 0 }}
                             contentContainerStyle={{
-                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
+                                paddingTop: insets.top,
                                 paddingBottom: listPaddingBottom,
                             }}
                             ListHeaderComponent={
@@ -291,8 +301,8 @@ export default function PlayerScreen({
                                         onPress={() => setInspectAvatar(true)}
                                     >
                                         <PlayerPageHeadSection
-                                            // TODO: scopes.get('season') is actually null on first render sometimes
-                                            {...(scopes.get('season')! ?? {})}
+                                            {...(scopes.get('season') ??
+                                                emptyScope)}
                                             avatarUrl={avatarUrl}
                                             name={name}
                                             editable={editable}
@@ -323,8 +333,7 @@ export default function PlayerScreen({
                                 }
                                 style={{ paddingHorizontal: 0 }}
                                 contentContainerStyle={{
-                                    paddingTop:
-                                        insets.top + (swiperAtTop ? 48 : 0),
+                                    paddingTop: insets.top,
                                     paddingBottom: listPaddingBottom,
                                 }}
                                 ListHeaderComponent={
@@ -440,16 +449,6 @@ export default function PlayerScreen({
                     opacity={fade}
                     onPress={() => setInspectAvatar(false)}
                 />
-                {/* <SafeAreaView
-                    style={{
-                        paddingHorizontal: 4,
-                    }}
-                >
-                    <OverlayIconButton
-                        iconName="close"
-                        onPress={() => setInspectAvatar(false)}
-                    />
-                </SafeAreaView> */}
 
                 <Animated.View
                     style={[
@@ -471,19 +470,6 @@ export default function PlayerScreen({
                 </Animated.View>
             </Modal>
             {!editable && (
-                // <SafeAreaView
-                //     style={{
-                //         position: 'absolute',
-
-                //         top: swiperAtTop ? insets.top + 4 : undefined,
-                //         bottom: swiperAtTop ? undefined : insets.bottom + 4,
-
-                //         width: '100%',
-                //     }}
-                // >
-                //     <LeaderboardScopePicker />
-
-                // </SafeAreaView>
                 <View
                     style={{
                         position: 'absolute',

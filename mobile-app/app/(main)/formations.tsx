@@ -11,7 +11,6 @@ import { useTheme } from '@/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-// eslint-disable-next-line no-empty-pattern
 function Item() {
     const size = Math.floor((SCREEN_WIDTH - 32 - 16) / 3);
 

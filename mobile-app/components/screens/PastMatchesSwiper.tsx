@@ -6,9 +6,9 @@ import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchesList from '@/components/MatchesList';
+import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { usePastSeasonCardStyle } from '@/components/screens/usePastSeasonCardStyle';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
-import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 export function PastMatchesSwiper() {

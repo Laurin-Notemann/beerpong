@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { View } from 'react-native';
 
 import { env } from '@/api/env';
-import { ThemedText } from '@/components/ThemedText';
+import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
 export interface LeaderboardSeasonInfoProps {
@@ -33,19 +33,19 @@ export const LeaderBoardSeasonInfo = ({
     return (
         <View style={{ alignItems: 'center' }}>
             {!isCurrentSeason && (
-                <ThemedText
-                    type="title"
+                <Text
                     style={{
+                        fontWeight: 'bold',
                         fontSize: 25,
                         color: theme.color.text.primary,
                         marginTop: 48,
                     }}
                 >
                     {name || 'Unknown Season'}
-                </ThemedText>
+                </Text>
             )}
             {endDate && (
-                <ThemedText
+                <Text
                     style={{
                         fontSize: 12,
                         color: theme.color.text.secondary,
@@ -54,9 +54,9 @@ export const LeaderBoardSeasonInfo = ({
                 >
                     {env.format.date.seasonStartAndEnd(dayjs(startDate))} -{' '}
                     {env.format.date.seasonStartAndEnd(dayjs(endDate))}
-                </ThemedText>
+                </Text>
             )}
-            <ThemedText
+            <Text
                 style={{
                     fontSize: 17,
                     color: theme.color.text.secondary,
@@ -65,7 +65,7 @@ export const LeaderBoardSeasonInfo = ({
             >
                 {numPlayers} {numPlayers === 1 ? 'player' : 'players'} ·{' '}
                 {numMatches} {numMatches === 1 ? 'match' : 'matches'}
-            </ThemedText>
+            </Text>
         </View>
     );
 };

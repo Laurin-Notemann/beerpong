@@ -1,10 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, ViewProps } from 'react-native';
+import { TouchableOpacity, View, ViewProps } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import Avatar from '@/components/Avatar';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import Text from '@/components/Text';
 import {
     getRankingAlgorithm,
     type RankingAlgorithm,
@@ -21,7 +20,7 @@ const Description: React.FC<{
 
     return (
         <>
-            <ThemedText
+            <Text
                 style={{
                     fontSize: 15,
                     color: theme.color.text.primary,
@@ -31,19 +30,19 @@ const Description: React.FC<{
                 }}
             >
                 {player?.name}
-            </ThemedText>
+            </Text>
 
             {detailed && player && (
                 <>
-                    <ThemedText
+                    <Text
                         style={{
                             fontSize: 22,
                             color: theme.color.text.primary,
                         }}
                     >
                         {average}
-                    </ThemedText>
-                    <ThemedText
+                    </Text>
+                    <Text
                         style={{
                             fontSize: 13,
                             color: theme.color.text.secondary,
@@ -51,9 +50,9 @@ const Description: React.FC<{
                         }}
                     >
                         {plural(player.points, 'point', 'points')}
-                    </ThemedText>
+                    </Text>
 
-                    <ThemedText
+                    <Text
                         style={{
                             fontSize: 13,
                             color: theme.color.text.secondary,
@@ -61,7 +60,7 @@ const Description: React.FC<{
                         }}
                     >
                         {plural(player.matches, 'match', 'matches')}
-                    </ThemedText>
+                    </Text>
                 </>
             )}
         </>
@@ -76,7 +75,6 @@ export interface PodiumProps extends ViewProps {
     thirdPlace?: Player;
 
     onPlayerPress?: (id: string) => void;
-    onPlayerLongPress?: (id: string) => void;
     rankingAlgorithm: RankingAlgorithm;
 }
 export default function Podium({
@@ -86,14 +84,13 @@ export default function Podium({
     thirdPlace,
 
     onPlayerPress,
-    onPlayerLongPress,
     rankingAlgorithm,
     ...rest
 }: PodiumProps) {
     const theme = useTheme();
 
     return (
-        <ThemedView
+        <View
             {...rest}
             style={[
                 {
@@ -115,11 +112,8 @@ export default function Podium({
                     opacity: secondPlace ? 1 : 0.2,
                 }}
                 onPress={() => secondPlace && onPlayerPress?.(secondPlace?.id)}
-                onLongPress={() =>
-                    secondPlace && onPlayerLongPress?.(secondPlace?.id)
-                }
             >
-                <ThemedText
+                <Text
                     style={{
                         fontSize: 22,
                         color: theme.color.text.secondary,
@@ -127,7 +121,7 @@ export default function Podium({
                     }}
                 >
                     {formatPlacement(2)}
-                </ThemedText>
+                </Text>
                 <Avatar
                     url={secondPlace?.avatarUrl}
                     name={secondPlace?.name}
@@ -145,9 +139,6 @@ export default function Podium({
                 disabled={firstPlace == null || !onPlayerPress}
                 activeOpacity={0.6}
                 onPress={() => firstPlace && onPlayerPress?.(firstPlace?.id)}
-                onLongPress={() =>
-                    firstPlace && onPlayerLongPress?.(firstPlace?.id)
-                }
                 style={{
                     alignItems: 'center',
 
@@ -168,7 +159,7 @@ export default function Podium({
                     opacity: firstPlace ? 1 : 0.2,
                 }}
             >
-                <ThemedText
+                <Text
                     style={{
                         fontSize: 22,
                         color: theme.color.text.secondary,
@@ -176,7 +167,7 @@ export default function Podium({
                     }}
                 >
                     {formatPlacement(1)}
-                </ThemedText>
+                </Text>
                 <Avatar
                     url={firstPlace?.avatarUrl}
                     name={firstPlace?.name}
@@ -200,11 +191,8 @@ export default function Podium({
                     opacity: thirdPlace ? 1 : 0.2,
                 }}
                 onPress={() => thirdPlace && onPlayerPress?.(thirdPlace?.id)}
-                onLongPress={() =>
-                    thirdPlace && onPlayerLongPress?.(thirdPlace?.id)
-                }
             >
-                <ThemedText
+                <Text
                     style={{
                         fontSize: 22,
                         color: theme.color.text.secondary,
@@ -212,7 +200,7 @@ export default function Podium({
                     }}
                 >
                     {formatPlacement(3)}
-                </ThemedText>
+                </Text>
                 <Avatar
                     url={thirdPlace?.avatarUrl}
                     name={thirdPlace?.name}
@@ -226,6 +214,6 @@ export default function Podium({
                     ).getDisplayValue(thirdPlace)}
                 />
             </TouchableOpacity>
-        </ThemedView>
+        </View>
     );
 }

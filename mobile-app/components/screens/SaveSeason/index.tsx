@@ -4,12 +4,12 @@ import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
+import { NewSeasonRulesInput } from '@/components/screens/SaveSeason/NewSeasonRulesInput';
+import { OldSeasonNameInput } from '@/components/screens/SaveSeason/OldSeasonNameInput';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { AppBackground } from '@/lib/Background';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { Components } from '@/openapi/openapi';
-import { NewSeasonRulesInput } from '@/screens/SaveSeason/NewSeasonRulesInput';
-import { OldSeasonNameInput } from '@/screens/SaveSeason/OldSeasonNameInput';
 import { useNewSeasonDraft } from '@/zustand/utils/newSeasonDraftStore';
 
 export interface SaveSeasonScreenProps {

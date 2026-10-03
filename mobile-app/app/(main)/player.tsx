@@ -64,7 +64,7 @@ export default function Page() {
     const refresh = usePullToRefresh(() =>
         invalidatePlayers(groupId!, seasonId!)
     );
-    const profileId = player?.profileId!;
+    const profileId = player?.profileId ?? '';
 
     const { scopes } = usePlayerPageScope(profileId);
 

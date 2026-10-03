@@ -5,10 +5,10 @@ import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
+import { SaveSeasonScreen } from '@/components/screens/SaveSeason';
 import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { Components } from '@/openapi/openapi';
-import { SaveSeasonScreen } from '@/screens/SaveSeason';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
@@ -84,7 +84,7 @@ export default function Page() {
             numMatches={matches.length}
             players={rankedPlayers}
             oldSeasonMoves={allowedMoves}
-            oldSeasonStartDate={activeSeason?.startDate!}
+            oldSeasonStartDate={activeSeason?.startDate ?? ''}
             onCancel={() => nav.goBack()}
             isCreating={newSeasonMutation.isPending}
             rankingAlgorithm={

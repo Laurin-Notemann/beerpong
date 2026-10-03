@@ -12,8 +12,6 @@ import { SeasonModeSwitch } from '@/components/screens/SeasonModeSwitch';
 import { AppBackground } from '@/lib/Background';
 import { useInsets } from '@/lib/useInsets';
 
-const swiperAtTop = false;
-
 const screenOptions = { headerTitle: () => <ScopePickerHeaderTitle /> };
 
 export default function Page() {
@@ -33,9 +31,7 @@ export default function Page() {
                 pointerEvents="box-none"
                 style={{
                     position: 'absolute',
-
-                    top: swiperAtTop ? insets.top + 4 : undefined,
-                    bottom: swiperAtTop ? undefined : insets.bottom + 4,
+                    bottom: insets.bottom + 4,
 
                     width: '100%',
                 }}

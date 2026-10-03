@@ -26,7 +26,6 @@ export interface LeaderboardPlayerItemProps {
     cups: number;
 
     onPlayerPress?: (id: string) => void;
-    onPlayerLongPress?: (id: string) => void;
 
     rankingAlgorithm: RankingAlgorithm;
 }
@@ -41,7 +40,6 @@ function LeaderboardPlayerItem({
     elo,
     unranked = false,
     onPlayerPress,
-    onPlayerLongPress,
     rankingAlgorithm,
     cups,
 }: LeaderboardPlayerItemProps) {
@@ -60,7 +58,6 @@ function LeaderboardPlayerItem({
                 opacity: unranked ? 0.5 : undefined,
             }}
             onPress={() => onPlayerPress?.(id)}
-            onLongPress={() => onPlayerLongPress?.(id)}
         >
             <Text
                 style={{

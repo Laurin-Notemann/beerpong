@@ -5,7 +5,6 @@ import Text from '@/components/Text';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 
-// eslint-disable-next-line no-empty-pattern
 export default function OnboardingModal() {
     const navigation = useNavigation();
 

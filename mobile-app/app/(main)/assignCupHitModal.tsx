@@ -75,7 +75,7 @@ export default function Page() {
                     isFinish: j.finishingMove!,
                 };
             }),
-            profileId: profile?.profileId!,
+            profileId: profile?.profileId ?? '',
         };
     });
 

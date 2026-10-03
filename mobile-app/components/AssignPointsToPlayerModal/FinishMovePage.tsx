@@ -55,11 +55,12 @@ export default function FinishMovePage({
                                 (i) => i.isFinish && i.count > 0
                             )?.id
                         }
-                        onChange={(move) =>
-                            onSetFinishMove(
-                                finisher?.moves.find((i) => i.id === move)!
-                            )
-                        }
+                        onChange={(move) => {
+                            const finishMove = finisher?.moves.find(
+                                (i) => i.id === move
+                            );
+                            if (finishMove) onSetFinishMove(finishMove);
+                        }}
                     />
                 </ScrollView>
             </View>

@@ -22,8 +22,6 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 
 dayjs.extend(duration);
 
-const swiperAtTop = false;
-
 export function LeaderboardSwiper() {
     const scopePicker = useScopePicker();
 
@@ -88,8 +86,8 @@ export function LeaderboardSwiper() {
     const listProps = {
         refreshControl: <RefreshControl {...refresh} />,
         contentContainerStyle: {
-            paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-            paddingBottom: insets.bottom + (swiperAtTop ? 0 : 48),
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom + 48,
         },
         rankingAlgorithm,
         onPlayerPress,

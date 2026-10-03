@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import {
     Animated,
     StyleProp,
-    TextStyle,
     TouchableHighlight,
     TouchableOpacity,
     View,
+    ViewStyle,
 } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
@@ -20,7 +20,7 @@ function Change({
     style,
 }: {
     value: number;
-    style?: StyleProp<TextStyle>;
+    style?: StyleProp<ViewStyle>;
 }) {
     const theme = useTheme();
     // the rating change isn't computed yet (always 0), so there's nothing to show
@@ -32,7 +32,7 @@ function Change({
                     flexDirection: 'row',
                     alignItems: 'center',
                 },
-                style as any,
+                style,
             ]}
         >
             <Icon

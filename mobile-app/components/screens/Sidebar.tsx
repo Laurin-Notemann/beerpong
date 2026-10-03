@@ -25,8 +25,6 @@ import { plural } from '@/utils/format';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
-const RENDER_AS_MENU_ITEM = false;
-
 export interface SidebarGroupItemProps {
     id: string;
     isActive: boolean;
@@ -68,26 +66,6 @@ export function SidebarGroupItem({
     }, [deleteActionWidth, showDeleteButton]);
 
     const theme = useTheme();
-
-    if (RENDER_AS_MENU_ITEM) {
-        return (
-            <MenuItem
-                title={data?.data?.name || 'Unknown'}
-                subtitle={
-                    isLoading
-                        ? ''
-                        : failedToLoad
-                          ? 'Failed to load'
-                          : `${plural(data?.data?.numberOfPlayers ?? 0, 'Player', 'Players')} · ${plural(data?.data?.numberOfMatches ?? 0, 'Match', 'Matches')}`
-                }
-                onPress={() => onPress(id)}
-                border={false}
-                active={isActive}
-                onDrag={showDeleteButton ? () => {} : undefined}
-                color="dark"
-            />
-        );
-    }
 
     return (
         <View

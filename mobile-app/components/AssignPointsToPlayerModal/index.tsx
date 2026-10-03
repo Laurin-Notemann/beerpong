@@ -10,12 +10,9 @@ import {
 import FinishMovePage from '@/components/AssignPointsToPlayerModal/FinishMovePage';
 import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScorerPage';
 import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
-import MatchVsHeader from '@/components/MatchVsHeader';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { useTheme } from '@/theme';
 import { useTutorials } from '@/zustand/tutorialStore';
-
-const showVsHeader = false;
 
 export interface AssignPointsToPlayerModalProps {
     onClose?: () => void;
@@ -115,13 +112,6 @@ export default function AssignPointsToPlayerModal({
                         flex: 1,
                     }}
                 >
-                    {showVsHeader && (
-                        <MatchVsHeader
-                            match={match}
-                            highlightedId={players[swiper.swiperPage!]?.id}
-                        />
-                    )}
-
                     <Swiper {...swiper}>
                         {[...players, null, null].map((i, idx) => {
                             if (idx < players.length)

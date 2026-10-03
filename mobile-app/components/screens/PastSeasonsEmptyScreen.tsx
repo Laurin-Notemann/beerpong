@@ -1,11 +1,18 @@
-import { ScrollView, Text, View, ViewProps } from 'react-native';
+import {
+    ScrollView,
+    StyleProp,
+    Text,
+    View,
+    ViewProps,
+    ViewStyle,
+} from 'react-native';
 
+import { Player } from '@/api/calls/seasonHooks';
 import Leaderboard from '@/components/Leaderboard';
-import { ThemedView } from '@/components/ThemedView';
+import { mockSeasons } from '@/components/screens/mockSeasons';
 import { RankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { AppBackground } from '@/lib/Background';
 import { useInsets } from '@/lib/useInsets';
-import { mockSeasons } from '@/screens/mockSeasons';
 import { useTheme } from '@/theme';
 
 export const PastSeasonsEmptyScreen: React.FC = () => {
@@ -179,13 +186,13 @@ export interface SeasonCardProps {
         numPlayers?: number;
         numMatches?: number;
     };
-    players: any[];
+    players: Player[];
     numMatches: number;
     minMatchesRequiredToBeRanked: number;
     rankingAlgorithm?: RankingAlgorithm;
     onPlayerPress?: (playerId: string) => void;
 
-    style?: any;
+    style?: StyleProp<ViewStyle>;
 }
 export const SeasonCard: React.FC<SeasonCardProps> = ({
     season,
@@ -197,7 +204,7 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
     style,
 }) => {
     return (
-        <ThemedView
+        <View
             style={{
                 flex: 1,
 
@@ -216,6 +223,6 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
                 rankingAlgorithm={rankingAlgorithm}
                 onPlayerPress={onPlayerPress}
             />
-        </ThemedView>
+        </View>
     );
 };

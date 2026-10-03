@@ -1,10 +1,9 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import React, { memo, PropsWithChildren } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, ViewStyle } from 'react-native';
 
 import { Icon } from '@/components/Icon';
-import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
@@ -54,7 +53,7 @@ export interface AvatarProps {
     content?: string;
     size?: 128 | 96 | 40 | 36 | number;
 
-    style?: any;
+    style?: ViewStyle;
 
     borderColor?: string;
 
@@ -83,18 +82,10 @@ function Avatar({
 }: AvatarProps) {
     const theme = useTheme();
 
-    const Container: any = onPress ? Pressable : View;
+    const containerStyle: ViewStyle = { width: size, height: size, ...style };
 
-    return (
-        <Container
-            style={{
-                width: size,
-                height: size,
-
-                ...style,
-            }}
-            {...(onPress ? { onPress } : {})}
-        >
+    const avatar = (
+        <>
             <View
                 style={{
                     borderRadius: borderRadius,
@@ -156,7 +147,7 @@ function Avatar({
                         />
                     )}
                     {(!url || content) && (
-                        <ThemedText
+                        <Text
                             style={{
                                 lineHeight: size,
                                 fontSize: size / 2.7,
@@ -175,7 +166,7 @@ function Avatar({
                                     name="account-outline"
                                 />
                             )}
-                        </ThemedText>
+                        </Text>
                     )}
                 </View>
             </View>
@@ -202,7 +193,15 @@ function Avatar({
                     </Text>
                 </Badge>
             )}
-        </Container>
+        </>
+    );
+
+    return onPress ? (
+        <Pressable style={containerStyle} onPress={onPress}>
+            {avatar}
+        </Pressable>
+    ) : (
+        <View style={containerStyle}>{avatar}</View>
     );
 }
 export default memo(Avatar, (prev, next) => {

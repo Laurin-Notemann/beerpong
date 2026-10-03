@@ -70,7 +70,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     }, []);
 
     const waitForReadyWithTimeout = useCallback(async () => {
-        let timeoutId: any;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
         try {
             const minWait = new Promise<void>((resolve) =>
                 setTimeout(resolve, CAMERA_MIN_WAIT_MS)
@@ -123,8 +123,8 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 });
                 if (!result?.uri) throw new Error('No image from camera');
                 return result.uri;
-            } catch (e: any) {
-                const msg = String(e?.message ?? e);
+            } catch (e) {
+                const msg = e instanceof Error ? e.message : String(e);
                 if (msg.includes('No active and enabled video connection')) {
                     await new Promise((r) => setTimeout(r, 250));
                     lastErr = e;

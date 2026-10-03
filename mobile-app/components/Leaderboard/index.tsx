@@ -1,27 +1,19 @@
 import { LegendList, LegendListProps } from '@legendapp/list/react-native';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
-import { LongPressModal } from '@/components/LongPressModal';
-import MenuItem from '@/components/Menu/MenuItem';
-import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import {
     getRankingAlgorithm,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
-import { useNavigation } from '@/lib/navigation/useNavigation';
 import { plural } from '@/utils/format';
-
-const MODAL_ON_LONG_PRESS = false;
-
-const NEW_UNRANKED_ITEM = false;
 
 type LeaderboardRow =
     | { type: 'player'; player: Player; placement: number; unranked: boolean }
@@ -68,14 +60,6 @@ export default function Leaderboard({
     style,
     ...rest
 }: LeaderboardProps) {
-    const [playerPreviewModalId, setPlayerPreviewModalId] = useState<
-        string | null
-    >(null);
-
-    const previewedPlayer = players.find((i) => i.id === playerPreviewModalId);
-
-    const nav = useNavigation();
-
     const { rankedPlayers, rows } = useMemo(() => {
         // copy: `players` can be cached query data, which must not be sorted in place
         const sortedPlayers = [...players].sort(
@@ -117,43 +101,8 @@ export default function Leaderboard({
         showUnranked,
     ]);
 
-    const onPlayerLongPress = MODAL_ON_LONG_PRESS
-        ? (id: string) => setPlayerPreviewModalId(id)
-        : undefined;
-
     return (
         <>
-            {MODAL_ON_LONG_PRESS && (
-                <LongPressModal
-                    isVisible={playerPreviewModalId}
-                    onClose={() => setPlayerPreviewModalId(null)}
-                    onPress={() => {
-                        nav.navigate('player', {
-                            id: playerPreviewModalId!,
-                        });
-                        setPlayerPreviewModalId(null);
-                    }}
-                    content={
-                        <PlayerPageHeadSection
-                            avatarUrl={previewedPlayer?.avatarUrl}
-                            placement={0} // TODO
-                            name={previewedPlayer?.name || 'Unknown'}
-                            elo={previewedPlayer?.elo || 0}
-                            matchesWon={previewedPlayer?.matchesWon || 0}
-                            points={previewedPlayer?.points || 0}
-                            cups={0} // TODO
-                            isUnranked={
-                                (previewedPlayer?.matches ?? 0) <
-                                minMatchesRequiredToBeRanked
-                            }
-                            editable={false}
-                            onUploadAvatarPress={() => {}}
-                            matches={[]}
-                            rankingAlgorithm={rankingAlgorithm}
-                        />
-                    }
-                />
-            )}
             <LegendList
                 {...rest}
                 style={[{ flex: 1 }, style]}
@@ -175,7 +124,6 @@ export default function Leaderboard({
                                     secondPlace={rankedPlayers[1]}
                                     thirdPlace={rankedPlayers[2]}
                                     onPlayerPress={onPlayerPress}
-                                    onPlayerLongPress={onPlayerLongPress}
                                     rankingAlgorithm={rankingAlgorithm}
                                 />
                             ) : (
@@ -222,17 +170,7 @@ export default function Leaderboard({
                             avatarUrl={item.player.avatarUrl}
                             unranked={item.unranked}
                             onPlayerPress={onPlayerPress}
-                            onPlayerLongPress={onPlayerLongPress}
                             rankingAlgorithm={rankingAlgorithm}
-                        />
-                    ) : NEW_UNRANKED_ITEM ? (
-                        <MenuItem
-                            title="Unranked"
-                            subtitle={`${plural(minMatchesRequiredToBeRanked, 'match', 'matches')} required to qualify`}
-                            border={false}
-                            onPress={() =>
-                                nav.navigate('minMatchesToQualifySettings')
-                            }
                         />
                     ) : (
                         <View

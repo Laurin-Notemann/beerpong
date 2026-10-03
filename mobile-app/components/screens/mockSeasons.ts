@@ -1,4 +1,4 @@
-import { SeasonCardProps } from '@/screens/PastSeasonsEmptyScreen';
+import { SeasonCardProps } from '@/components/screens/PastSeasonsEmptyScreen';
 
 export const mockSeasons: SeasonCardProps[] = [
     {
@@ -17,6 +17,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#1',
@@ -24,6 +27,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#2',
@@ -31,6 +37,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#3',
@@ -38,6 +47,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#4',
@@ -45,6 +57,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
         ],
         numMatches: 0,
@@ -63,6 +78,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#1',
@@ -70,6 +88,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#2',
@@ -77,6 +98,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#3',
@@ -84,6 +108,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#4',
@@ -91,6 +118,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
         ],
         numMatches: 0,
@@ -109,6 +139,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#1',
@@ -116,6 +149,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#2',
@@ -123,6 +159,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#3',
@@ -130,6 +169,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
             {
                 id: '#4',
@@ -137,6 +179,9 @@ export const mockSeasons: SeasonCardProps[] = [
                 points: 120,
                 matches: 10,
                 matchesWon: 10,
+                elo: 1500,
+                profileId: '',
+                cups: 0,
             },
         ],
         numMatches: 0,
