@@ -4,14 +4,14 @@ import java.util.Map;
 
 /**
  * How many cups a move takes off the table. The match score is the sum of these, so a won match
- * ends at 10: a Bomb or Bouncer takes two cups, the last cup is entered as a normal hit and the
- * finish on top of it adds none, a Save (the last hit in overtime) adds none, and the rings take
- * their whole formation.
+ * ends at 10: a Bouncer takes two cups, a Bomb one (it's worth two points, not two cups), the
+ * last cup is entered as a normal hit and the finish on top of it adds none, a Save (the last
+ * hit in overtime) adds none, and the rings take their whole formation.
  */
 public final class RuleMoveCups {
     private static final Map<String, Integer> BY_NAME = Map.of(
             "Normal", 1,
-            "Bomb", 2,
+            "Bomb", 1,
             "Bouncer", 2,
             "Trickshot", 1,
             "Save", 0,

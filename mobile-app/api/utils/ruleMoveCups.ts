@@ -4,7 +4,7 @@ import type { RuleMoveDto } from '@/openapi/openapi';
 // before the field existed.
 const defaultCupsByName: Record<string, number> = {
     Normal: 1,
-    Bomb: 2,
+    Bomb: 1,
     Bouncer: 2,
     Trickshot: 1,
     Save: 0,
@@ -22,9 +22,9 @@ export const cupsPerHit = (
     (move.finishingMove ? 0 : 1);
 
 /**
- * A team's score: the cups its moves took off the table. A won match ends at 10 — bombs and
- * bouncers take two, the finish adds none on top of the last hit, a save (the last hit in
- * overtime) none, the rings their whole formation.
+ * A team's score: the cups its moves took off the table. A won match ends at 10 — a bouncer
+ * takes two, a bomb one (it's worth two points, not two cups), the finish none on top of the
+ * last hit, a save (the last hit in overtime) none, the rings their whole formation.
  */
 export const countCups = (moves: { count: number; cups: number }[]): number =>
     moves.reduce((sum, move) => sum + move.count * move.cups, 0);

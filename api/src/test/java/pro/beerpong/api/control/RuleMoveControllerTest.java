@@ -99,10 +99,10 @@ public class RuleMoveControllerTest {
         ((List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class))
                 .forEach(move -> cupsByName.put(move.getName(), move.getCups()));
 
-        // a won match adds up to 10 cups: bombs and bouncers take two, the finish none on top
+        // a won match adds up to 10 cups: bouncers take two, bombs one (but two points), the finish none on top
         // of the last hit, the rings their whole formation
         assertEquals(1, cupsByName.get("Normal"));
-        assertEquals(2, cupsByName.get("Bomb"));
+        assertEquals(1, cupsByName.get("Bomb"));
         assertEquals(2, cupsByName.get("Bouncer"));
         assertEquals(1, cupsByName.get("Trickshot"));
         assertEquals(0, cupsByName.get("Save"));

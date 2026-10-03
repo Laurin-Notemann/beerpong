@@ -12,7 +12,7 @@ describe('cups', () => {
         // the last cup is entered as a normal hit, the finish on top of it adds none
         expect(
             countCups([
-                move('Normal', 6),
+                move('Normal', 7),
                 move('Bomb', 1),
                 move('Bouncer', 1),
                 move('Finish - Normal', 1, true),
