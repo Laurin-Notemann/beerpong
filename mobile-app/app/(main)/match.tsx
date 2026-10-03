@@ -34,7 +34,10 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
-import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
+import {
+    draftPlayers,
+    useMatchEditDraftStore,
+} from '@/zustand/matchEditDraftStore';
 
 /**
  * currently, we need to fetch every single match of the season here, in order to calculate the influence of the viewed match on the
@@ -101,7 +104,7 @@ export default function Page() {
 
     const displayMatch = isEditing
         ? getDisplayMatch(
-              matchDraft.actions.getPlayers(),
+              draftPlayers(matchDraft),
               activeSeason?.seasonSettings?.rankingAlgorithm,
               playersQuery.data?.data ?? [],
               matches,

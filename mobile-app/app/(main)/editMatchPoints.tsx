@@ -8,7 +8,10 @@ import { countCups, cupsPerHit } from '@/api/utils/ruleMoveCups';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { ConsoleLogger } from '@/utils/logging';
-import { useMatchEditDraftStore } from '@/zustand/matchEditDraftStore';
+import {
+    draftPlayers,
+    useMatchEditDraftStore,
+} from '@/zustand/matchEditDraftStore';
 
 export default function Page() {
     const { pageIdx: initialPageIdx } = useLocalSearchParams<{
@@ -30,7 +33,7 @@ export default function Page() {
 
     const matchDraft = useMatchEditDraftStore();
 
-    const players = matchDraft.actions.getPlayers();
+    const players = draftPlayers(matchDraft);
 
     const teamMembers = players.map<TeamMember>((i) => {
         const profile = profiles.find((j) => i.playerId === j.id);

@@ -40,7 +40,6 @@ interface MatchDraftStore {
         getHasBeenOnPageTwo: () => boolean;
         setHasBeenOnPageTwo: () => void;
         clear: () => void;
-        getPlayers: () => (PlayerDraft & { team: TeamId })[];
 
         setPlayerTeam: (playerId: string, team: TeamId) => void;
         setMoveCount: (userId: string, moveId: string, count: number) => void;
@@ -111,18 +110,6 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
                 redTeamPhotoUri: undefined,
             }));
         },
-        getPlayers: () => {
-            const bluePlayers = get().blueTeam.teamMembers.map((i) => ({
-                ...i,
-                team: 'blue' as const,
-            }));
-            const redPlayers = get().redTeam.teamMembers.map((i) => ({
-                ...i,
-                team: 'red' as const,
-            }));
-            return [...bluePlayers, ...redPlayers];
-        },
-
         setPlayerTeam: async (playerId, team) => {
             set((state) => {
                 const { redTeam, blueTeam } = state;

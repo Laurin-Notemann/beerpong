@@ -35,7 +35,6 @@ interface MatchEditDraftStore {
     blueTeam: TeamDraft;
     actions: {
         clear: () => void;
-        getPlayers: () => (PlayerDraft & { team: TeamId })[]; // TODO: why is getPlayers an action? document this?
 
         setPlayerTeam: (playerId: string, team: TeamId) => void;
         setMoveCount: (userId: string, moveId: string, count: number) => void;
@@ -47,6 +46,27 @@ interface MatchEditDraftStore {
         removeTeamPhotos: () => void;
         swapTeamPhotos: () => void;
     };
+}
+
+/**
+ * Both teams' players with their team. A plain function of the draft (not a store getter), so
+ * screens re-derive it whenever the teams change; React Compiler memoizes getter calls on the
+ * stable `actions` object, which left the points sheets showing stale counts.
+ */
+export function draftPlayers(draft: {
+    blueTeam: { teamMembers: PlayerDraft[] };
+    redTeam: { teamMembers: PlayerDraft[] };
+}): (PlayerDraft & { team: TeamId })[] {
+    return [
+        ...draft.blueTeam.teamMembers.map((i) => ({
+            ...i,
+            team: 'blue' as const,
+        })),
+        ...draft.redTeam.teamMembers.map((i) => ({
+            ...i,
+            team: 'red' as const,
+        })),
+    ];
 }
 
 const isEqual = (a: TeamDraft, b: TeamDraft): boolean =>
@@ -77,18 +97,6 @@ export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
                     redTeamPhotoUri: undefined,
                 }));
             },
-            getPlayers: () => {
-                const bluePlayers = get().blueTeam.teamMembers.map((i) => ({
-                    ...i,
-                    team: 'blue' as const,
-                }));
-                const redPlayers = get().redTeam.teamMembers.map((i) => ({
-                    ...i,
-                    team: 'red' as const,
-                }));
-                return [...bluePlayers, ...redPlayers];
-            },
-
             setPlayerTeam: (playerId, team) => {
                 set((state) => {
                     const { redTeam, blueTeam, _baseline: baseline } = state;

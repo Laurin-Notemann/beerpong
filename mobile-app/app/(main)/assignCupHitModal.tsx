@@ -16,6 +16,7 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
+import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 export default function Page() {
     const cupProp = useLocalSearchParams<{
@@ -43,7 +44,7 @@ export default function Page() {
 
     const profiles = playersQuery.data?.data ?? [];
 
-    const players = matchDraft.actions.getPlayers();
+    const players = draftPlayers(matchDraft);
 
     const teamMembers = players.map<TeamMember>((i) => {
         const profile = profiles.find((j) => i.playerId === j.id);

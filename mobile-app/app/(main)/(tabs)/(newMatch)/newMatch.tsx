@@ -31,6 +31,7 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
+import { draftPlayers } from '@/zustand/matchEditDraftStore';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 function getRandomPlayers(ids: string[]) {
@@ -125,14 +126,14 @@ export default function NewMatchScreen() {
             id: i.id!,
             name: i.profile?.name || 'Unknown',
             team:
-                matchDraft.actions.getPlayers().find((j) => i.id === j.playerId)
+                draftPlayers(matchDraft).find((j) => i.id === j.playerId)
                     ?.team ?? null,
 
             avatarUrl: i.profile?.avatarUrl,
         }));
 
     const displayMatch = getDisplayMatch(
-        matchDraft.actions.getPlayers(),
+        draftPlayers(matchDraft),
         activeSeason?.seasonSettings?.rankingAlgorithm,
         playersQuery.data?.data ?? [],
         matches,
