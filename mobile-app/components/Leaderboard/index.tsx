@@ -7,6 +7,8 @@ import { Player } from '@/api/calls/seasonHooks';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
 import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
+import NextLeaderboardRow from '@/components/next/NextLeaderboardRow';
+import { NextPodium } from '@/components/next/NextPodium';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import {
@@ -14,6 +16,7 @@ import {
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { plural } from '@/utils/format';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 
 type LeaderboardRow =
     | { type: 'player'; player: Player; placement: number; unranked: boolean }
@@ -60,6 +63,8 @@ export default function Leaderboard({
     style,
     ...rest
 }: LeaderboardProps) {
+    const newDesign = useNewDesign();
+
     const { rankedPlayers, rows } = useMemo(() => {
         // copy: `players` can be cached query data, which must not be sorted in place
         const sortedPlayers = [...players].sort(
@@ -111,7 +116,7 @@ export default function Leaderboard({
                     item.type === 'player' ? item.player.id : item.type
                 }
                 getItemType={(item) => item.type}
-                estimatedItemSize={60.5}
+                estimatedItemSize={newDesign ? 72 : 60.5}
                 recycleItems
                 ListHeaderComponent={
                     <View style={{ alignItems: 'center', paddingBottom: 14 }}>
@@ -119,13 +124,23 @@ export default function Leaderboard({
                         {season && <LeaderBoardSeasonInfo {...season} />}
                         {withPodium &&
                             (rankedPlayers[0] ? (
-                                <Podium
-                                    firstPlace={rankedPlayers[0]}
-                                    secondPlace={rankedPlayers[1]}
-                                    thirdPlace={rankedPlayers[2]}
-                                    onPlayerPress={onPlayerPress}
-                                    rankingAlgorithm={rankingAlgorithm}
-                                />
+                                newDesign ? (
+                                    <NextPodium
+                                        firstPlace={rankedPlayers[0]}
+                                        secondPlace={rankedPlayers[1]}
+                                        thirdPlace={rankedPlayers[2]}
+                                        onPlayerPress={onPlayerPress}
+                                        rankingAlgorithm={rankingAlgorithm}
+                                    />
+                                ) : (
+                                    <Podium
+                                        firstPlace={rankedPlayers[0]}
+                                        secondPlace={rankedPlayers[1]}
+                                        thirdPlace={rankedPlayers[2]}
+                                        onPlayerPress={onPlayerPress}
+                                        rankingAlgorithm={rankingAlgorithm}
+                                    />
+                                )
                             ) : (
                                 podiumEmptyComponent
                             ))}
@@ -156,8 +171,18 @@ export default function Leaderboard({
                     ) : null
                 }
                 ListFooterComponent={ListFooterComponent}
+                // re-render rows when the design is switched
+                extraData={newDesign}
                 renderItem={({ item }) =>
-                    item.type === 'player' ? (
+                    item.type === 'player' && newDesign ? (
+                        <NextLeaderboardRow
+                            player={item.player}
+                            placement={item.placement}
+                            unranked={item.unranked}
+                            rankingAlgorithm={rankingAlgorithm}
+                            onPlayerPress={onPlayerPress}
+                        />
+                    ) : item.type === 'player' ? (
                         <LeaderboardPlayerItem
                             name={item.player.name}
                             cups={item.player.cups}
@@ -179,7 +204,7 @@ export default function Leaderboard({
                                 alignItems: 'center',
                                 gap: 8,
                                 height: 64,
-                                paddingHorizontal: 8,
+                                paddingHorizontal: newDesign ? 20 : 8,
                                 paddingVertical: 12,
                             }}
                         >

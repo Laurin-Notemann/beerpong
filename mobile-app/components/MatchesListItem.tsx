@@ -6,7 +6,9 @@ import { TouchableHighlight } from 'react-native-gesture-handler';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import MatchVsHeader from '@/components/MatchVsHeader';
+import { NextMatchCard } from '@/components/next/NextMatchCard';
 import { useTheme } from '@/theme';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 
 const timeColumnWidth = 44;
 
@@ -20,6 +22,17 @@ const MatchesListItemInner: React.FC<{
     border?: boolean;
 }> = ({ match, onPress, highlightedId, border = true }) => {
     const theme = useTheme();
+    const newDesign = useNewDesign();
+
+    if (newDesign) {
+        return (
+            <NextMatchCard
+                match={match}
+                onPress={onPress}
+                highlightedId={highlightedId}
+            />
+        );
+    }
 
     return (
         <TouchableHighlight

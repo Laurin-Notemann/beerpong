@@ -17,6 +17,8 @@ export default function Page() {
         togglePremiumVersion,
         showWallpaper,
         toggleShowWallpaper,
+        newDesign,
+        toggleNewDesign,
     } = useLocalSettings();
 
     return (
@@ -39,6 +41,18 @@ export default function Page() {
                     paddingBottom: 128,
                 }}
             >
+                <MenuSection footer="A redesign of the leaderboard, matches, new match and player pages. Turn it off any time to go back.">
+                    <MenuItem
+                        border={false}
+                        title="New Design"
+                        tailContent={
+                            <Switch
+                                value={newDesign}
+                                onChange={toggleNewDesign}
+                            />
+                        }
+                    />
+                </MenuSection>
                 <MenuSection>
                     <MenuItem
                         border={false}

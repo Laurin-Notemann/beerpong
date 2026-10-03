@@ -1,9 +1,12 @@
 import React from 'react';
+import { Text } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Player from '@/components/MatchPlayers/Player';
 import MenuSection from '@/components/Menu/MenuSection';
+import { useNextTokens } from '@/components/next/tokens';
 import { plural } from '@/utils/format';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 
 export interface MatchPlayersProps {
     editable?: boolean;
@@ -17,6 +20,9 @@ export default function MatchPlayers({
     setMoveCount,
     onPlayerPress,
 }: MatchPlayersProps) {
+    const newDesign = useNewDesign();
+    const t = useNextTokens();
+
     const redTeam = players.filter((i) => i.team === 'red');
     const blueTeam = players.filter((i) => i.team === 'blue');
 
@@ -29,10 +35,27 @@ export default function MatchPlayers({
         0
     );
 
+    const blueTitle = `Blue Team - ${plural(blueTeamCups, 'cup', 'cups')}`;
+    const redTitle = `Red Team - ${plural(redTeamCups, 'cup', 'cups')}`;
+
     return (
         <>
             <MenuSection
-                title={`Blue Team - ${plural(blueTeamCups, 'cup', 'cups')}`}
+                title={
+                    newDesign ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: '700',
+                                color: t.blue,
+                            }}
+                        >
+                            {blueTitle}
+                        </Text>
+                    ) : (
+                        blueTitle
+                    )
+                }
             >
                 {blueTeam.map((i, idx) => (
                     <Player
@@ -49,7 +72,21 @@ export default function MatchPlayers({
             </MenuSection>
 
             <MenuSection
-                title={`Red Team - ${plural(redTeamCups, 'cup', 'cups')}`}
+                title={
+                    newDesign ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: '700',
+                                color: t.red,
+                            }}
+                        >
+                            {redTitle}
+                        </Text>
+                    ) : (
+                        redTitle
+                    )
+                }
             >
                 {redTeam.map((i, idx) => (
                     <Player

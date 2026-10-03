@@ -30,6 +30,7 @@ import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 import { useScopePicker } from '@/zustand/useScopePicker';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -95,6 +96,7 @@ export default function PlayerScreen({
     scopes,
 }: PlayerScreenProps) {
     const scopePicker = useScopePicker();
+    const newDesign = useNewDesign();
 
     const rankingAlgorithm = scopePicker.rankingAlgorithm;
 
@@ -202,7 +204,9 @@ export default function PlayerScreen({
                                             seasonId: match.seasonId,
                                         })
                                     }
-                                    style={{ paddingHorizontal: 0 }}
+                                    style={{
+                                        paddingHorizontal: newDesign ? 16 : 0,
+                                    }}
                                     contentContainerStyle={{
                                         paddingTop: insets.top,
                                         paddingBottom: listPaddingBottom,
@@ -252,7 +256,7 @@ export default function PlayerScreen({
                                     seasonId: match.seasonId,
                                 })
                             }
-                            style={{ paddingHorizontal: 0 }}
+                            style={{ paddingHorizontal: newDesign ? 16 : 0 }}
                             contentContainerStyle={{
                                 paddingTop: insets.top,
                                 paddingBottom: listPaddingBottom,
@@ -290,7 +294,7 @@ export default function PlayerScreen({
                                     seasonId: match.seasonId,
                                 })
                             }
-                            style={{ paddingHorizontal: 0 }}
+                            style={{ paddingHorizontal: newDesign ? 16 : 0 }}
                             contentContainerStyle={{
                                 paddingTop: insets.top,
                                 paddingBottom: listPaddingBottom,
@@ -331,7 +335,9 @@ export default function PlayerScreen({
                                         seasonId: match.seasonId,
                                     })
                                 }
-                                style={{ paddingHorizontal: 0 }}
+                                style={{
+                                    paddingHorizontal: newDesign ? 16 : 0,
+                                }}
                                 contentContainerStyle={{
                                     paddingTop: insets.top,
                                     paddingBottom: listPaddingBottom,

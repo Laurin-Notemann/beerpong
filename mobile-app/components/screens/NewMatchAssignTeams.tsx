@@ -6,12 +6,14 @@ import Avatar from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
+import { NextTeamPlayerRow } from '@/components/next/NextTeamPlayerRow';
 import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 export type TeamId = 'red' | 'blue' | null;
@@ -41,6 +43,37 @@ function PlayerItem({
     const { setHasTappedToAssignPlayers } = useTutorials();
 
     const theme = useTheme();
+    const newDesign = useNewDesign();
+
+    if (newDesign) {
+        return (
+            <NextTeamPlayerRow
+                player={player}
+                randomTeamsMode={randomTeamsMode}
+                hasTutorial={hasTutorial}
+                onSelectTeam={(team) => {
+                    onSelectTeam(team);
+                    setHasTappedToAssignPlayers();
+                    triggerHapticBump('selection');
+                }}
+                onCycle={() => {
+                    onSelectTeam(
+                        player.team === null
+                            ? 'blue'
+                            : player.team === 'blue'
+                              ? 'red'
+                              : null
+                    );
+                    setHasTappedToAssignPlayers();
+                    triggerHapticBump('selection');
+                }}
+                onRandomTeamSelect={(id) => {
+                    onRandomTeamSelect(id);
+                    triggerHapticBump('selection');
+                }}
+            />
+        );
+    }
 
     return (
         <TouchableHighlight
@@ -162,7 +195,7 @@ function PlayerItem({
                 )}
                 {hasTutorial && (
                     <TutorialBubble
-                        text="Try double-tapping a players name!"
+                        text="Tap a name to switch teams"
                         left={64}
                     />
                 )}
