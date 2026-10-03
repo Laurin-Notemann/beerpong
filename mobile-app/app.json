@@ -7,26 +7,15 @@
         "icon": "./assets/images/icon.png",
         "scheme": "versus",
         "userInterfaceStyle": "automatic",
-        "splash": {
-            "image": "./assets/images/splash.png",
-            "resizeMode": "cover",
-            "backgroundColor": "#000000"
-        },
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "com.linusbolls.mobileapp",
             "buildNumber": "96",
             "infoPlist": {
-                "NSPhotoLibraryUsageDescription": true
+                "NSPhotoLibraryUsageDescription": "Versus uses your photos for player pictures and team photos."
             },
             "config": {
                 "usesNonExemptEncryption": false
-            },
-            "splash": {
-                "image": "./assets/images/splash.png",
-                "tabletImage": "./assets/ios-splash-tablet.png",
-                "resizeMode": "cover",
-                "backgroundColor": "#000000"
             }
         },
         "android": {
@@ -57,13 +46,22 @@
             [
                 "expo-image-picker",
                 {
-                    "photosPermission": "The app accesses your photos to let you choose a picture",
-                    "cameraPermission": "The app accesses your photos to let take a pic"
+                    "photosPermission": "Versus uses your photos for player pictures and team photos.",
+                    "cameraPermission": "Versus uses the camera to take player pictures and team photos."
                 }
             ],
             "expo-font",
             "expo-secure-store",
-            "expo-web-browser"
+            "expo-web-browser",
+            [
+                "expo-splash-screen",
+                {
+                    "image": "./assets/images/splash.png",
+                    "backgroundColor": "#000000",
+                    "resizeMode": "cover",
+                    "enableFullScreenImage_legacy": true
+                }
+            ]
         ],
         "experiments": {
             "typedRoutes": true,
