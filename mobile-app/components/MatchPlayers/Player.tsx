@@ -106,6 +106,7 @@ export default function Player({
     });
 
     const performedMoves = moves.filter((i) => i.count > 0);
+    const isFinisher = performedMoves.some((i) => i.isFinish);
 
     const theme = useTheme();
 
@@ -141,9 +142,34 @@ export default function Player({
                         variant="list"
                     />
                     <View style={{ marginLeft: 16, flex: 1 }}>
-                        <Text variant="body1" color="primary" numberOfLines={1}>
-                            {name}
-                        </Text>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 4,
+                            }}
+                        >
+                            <Text
+                                variant="body1"
+                                color="primary"
+                                numberOfLines={1}
+                                style={{ flexShrink: 1 }}
+                            >
+                                {name}
+                            </Text>
+                            {/* this player made the finishing throw */}
+                            {isFinisher && (
+                                <Icon
+                                    name="crown"
+                                    size={16}
+                                    color={
+                                        team
+                                            ? theme.color.team[team]
+                                            : theme.icon.primary
+                                    }
+                                />
+                            )}
+                        </View>
                         <View
                             style={{
                                 flexDirection: 'row',

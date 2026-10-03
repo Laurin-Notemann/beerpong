@@ -273,6 +273,13 @@ export default function Page() {
         setIsEditing(false);
     }
 
+    const editFinisher = displayMatch.blueTeam
+        .concat(displayMatch.redTeam)
+        .find((i) => i.moves.some((j) => j.isFinish && j.count > 0));
+    const editFinishMove = editFinisher?.moves.find(
+        (j) => j.isFinish && j.count > 0
+    );
+
     return (
         <>
             <Stack.Screen
@@ -380,6 +387,29 @@ export default function Page() {
                                   : undefined
                         }
                     />
+                )}
+                {isEditing && (
+                    <MenuSection style={{ marginTop: 12, marginBottom: 20 }}>
+                        <MenuItem
+                            border={false}
+                            title="Finish"
+                            headIcon="crown-outline"
+                            tailContent={
+                                editFinisher && editFinishMove
+                                    ? `${editFinisher.name} · ${editFinishMove.title}`
+                                    : 'Not set'
+                            }
+                            tailIconType="next"
+                            // the sheet's pages after the players pick who finished, then how
+                            onPress={() =>
+                                nav.navigate('editMatchPoints', {
+                                    pageIdx:
+                                        displayMatch.blueTeam.length +
+                                        displayMatch.redTeam.length,
+                                })
+                            }
+                        />
+                    </MenuSection>
                 )}
                 <MatchPlayers
                     onPlayerPress={(player) => {

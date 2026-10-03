@@ -4,7 +4,6 @@ import { PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { ScoredMoveInputRow } from '@/components/ScoredMoveInputRow';
-import Stepper from '@/components/Stepper';
 import Text from '@/components/Text';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
@@ -42,9 +41,25 @@ export default function PlayerPage({
                     borderColor={theme.color.team[player.team!]}
                     size={96}
                 />
-                <Text color="primary" variant="h3" style={{ marginTop: 8 }}>
-                    {player.name}
-                </Text>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        marginTop: 8,
+                    }}
+                >
+                    {finishMove && (
+                        <Icon
+                            name="crown"
+                            size={22}
+                            color={theme.color.team[player.team!]}
+                        />
+                    )}
+                    <Text color="primary" variant="h3">
+                        {player.name}
+                    </Text>
+                </View>
             </View>
             {player.moves
                 .filter((i) => !i.isFinish)
@@ -88,39 +103,31 @@ export default function PlayerPage({
                     </Text>
                 </Text>
             </View>
-            {finishMove && (
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-
-                        height: 44,
-                        paddingLeft: 64,
-                        paddingRight: 64 - 8,
-
-                        marginTop: 16,
-                    }}
+            {/* the finish isn't counted here: it's set on the sheet's last pages */}
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingHorizontal: 48,
+                }}
+            >
+                <Icon
+                    name="crown-outline"
+                    size={16}
+                    color={theme.color.text.secondary}
+                />
+                <Text
+                    color="secondary"
+                    style={{ fontSize: 13, textAlign: 'center', flexShrink: 1 }}
                 >
-                    <Icon
-                        name="crown-outline"
-                        size={24}
-                        color={theme.color.text.primary}
-                        style={{
-                            marginRight: 8,
-                        }}
-                    />
-                    <Text
-                        variant="body1"
-                        color="primary"
-                        style={{
-                            marginRight: 'auto',
-                        }}
-                    >
-                        {finishMove.title}
-                    </Text>
-                    <Stepper value={1} min={1} max={1} />
-                </View>
-            )}
+                    {finishMove
+                        ? `${player.name} finished with ${finishMove.title}. `
+                        : ''}
+                    Who finished and how is set at the end.
+                </Text>
+            </View>
         </ScrollView>
     );
 }
