@@ -8,28 +8,24 @@ import type { SFSymbol } from 'sf-symbols-typescript';
 import { useTheme } from '@/theme';
 
 /**
- * SF Symbols on iOS; Material Icons from @expo/vector-icons on Android. (The `md` prop of
- * NativeTabs.Trigger.Icon needs the native expo-symbols module, which this app doesn't ship.)
+ * Props for NativeTabs.Trigger.Icon: SF Symbols on iOS, Material Icons from @expo/vector-icons on
+ * Android (the `md` prop needs the native expo-symbols module, which this app doesn't ship).
+ * A props helper, not a wrapper component: the trigger only reads direct Icon children.
  */
-function TabIcon({
-    sf,
-    md,
-}: {
-    sf: SFSymbol | { default: SFSymbol; selected: SFSymbol };
-    md: ComponentProps<typeof MaterialIcons>['name'];
-}) {
-    return Platform.OS === 'ios' ? (
-        <NativeTabs.Trigger.Icon sf={sf} />
-    ) : (
-        <NativeTabs.Trigger.Icon
-            src={
-                <NativeTabs.Trigger.VectorIcon
-                    family={MaterialIcons}
-                    name={md}
-                />
-            }
-        />
-    );
+function tabIcon(
+    sf: SFSymbol | { default: SFSymbol; selected: SFSymbol },
+    md: ComponentProps<typeof MaterialIcons>['name']
+) {
+    return Platform.OS === 'ios'
+        ? { sf }
+        : {
+              src: (
+                  <NativeTabs.Trigger.VectorIcon
+                      family={MaterialIcons}
+                      name={md}
+                  />
+              ),
+          };
 }
 
 // Each screen pads itself for the header and tab bar (lib/useInsets.ts). iOS would otherwise
@@ -55,37 +51,47 @@ export default function TabLayout() {
             tintColor={theme.color.text.primary}
         >
             <NativeTabs.Trigger name="(leaderboard)" {...tabOptions}>
-                <TabIcon
-                    sf={{ default: 'trophy', selected: 'trophy.fill' }}
-                    md="leaderboard"
+                <NativeTabs.Trigger.Icon
+                    {...tabIcon(
+                        { default: 'trophy', selected: 'trophy.fill' },
+                        'leaderboard'
+                    )}
                 />
                 <NativeTabs.Trigger.Label>Leaderboard</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(matches)" {...tabOptions}>
-                <TabIcon sf="list.bullet" md="format-list-bulleted" />
+                <NativeTabs.Trigger.Icon
+                    {...tabIcon('list.bullet', 'format-list-bulleted')}
+                />
                 <NativeTabs.Trigger.Label>Matches</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(newMatch)" {...tabOptions}>
-                <TabIcon
-                    sf={{
-                        default: 'plus.circle',
-                        selected: 'plus.circle.fill',
-                    }}
-                    md="add-circle"
+                <NativeTabs.Trigger.Icon
+                    {...tabIcon(
+                        {
+                            default: 'plus.circle',
+                            selected: 'plus.circle.fill',
+                        },
+                        'add-circle'
+                    )}
                 />
                 <NativeTabs.Trigger.Label>New Match</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(rules)" {...tabOptions}>
-                <TabIcon
-                    sf={{ default: 'book', selected: 'book.fill' }}
-                    md="gavel"
+                <NativeTabs.Trigger.Icon
+                    {...tabIcon(
+                        { default: 'book', selected: 'book.fill' },
+                        'gavel'
+                    )}
                 />
                 <NativeTabs.Trigger.Label>Rules</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(settings)" {...tabOptions}>
-                <TabIcon
-                    sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
-                    md="settings"
+                <NativeTabs.Trigger.Icon
+                    {...tabIcon(
+                        { default: 'gearshape', selected: 'gearshape.fill' },
+                        'settings'
+                    )}
                 />
                 <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
