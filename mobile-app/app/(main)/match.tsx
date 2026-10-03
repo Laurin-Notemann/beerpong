@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useEffectEvent, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -14,6 +15,7 @@ import {
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { env } from '@/api/env';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -25,8 +27,8 @@ import MatchPlayers from '@/components/MatchPlayers';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { RefreshControl } from '@/components/RefreshControl';
+import Text from '@/components/Text';
 import { AppBackground } from '@/lib/Background';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
 import { useNavStyles } from '@/lib/navigation/navStyles';
@@ -108,9 +110,6 @@ export default function Page() {
     useEffect(() => {
         loadMatchIntoDraft();
     }, [isEditing]);
-
-    const prevMatchId = undefined; // TODO
-    const nextMatchId = undefined; // TODO
 
     const displayMatch = isEditing
         ? getDisplayMatch(
@@ -357,11 +356,20 @@ export default function Page() {
                 }}
                 contentContainerStyle={{
                     paddingHorizontal: 16,
-                    paddingTop: insets.top + 32,
+                    paddingTop: insets.top + 16,
                     paddingBottom: 32,
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
+                {match && (
+                    <Text
+                        color="secondary"
+                        style={{ textAlign: 'center', marginBottom: 24 }}
+                    >
+                        {env.format.date.matchesSeperatorDay(dayjs(match.date))}{' '}
+                        at {env.format.date.matchHour(dayjs(match.date))}
+                    </Text>
+                )}
                 {(isEditing ||
                     (match?.blueTeamPhotoUrl && match?.redTeamPhotoUrl)) && (
                     <DualTeamPhoto
@@ -450,33 +458,7 @@ export default function Page() {
                         hasPastSeasonsButton={false}
                         hasSortButton={false}
                     />
-                    <PlayerAndMatchBottomNav
-                        hasNextAndPrevButtons={false}
-                        onPrevPress={
-                            !prevMatchId
-                                ? undefined
-                                : () => {
-                                      if (prevMatchId) {
-                                          nav.navigate('match', {
-                                              id: prevMatchId,
-                                              seasonId,
-                                          });
-                                      }
-                                  }
-                        }
-                        onNextPress={
-                            !nextMatchId
-                                ? undefined
-                                : () => {
-                                      if (nextMatchId) {
-                                          nav.navigate('match', {
-                                              id: nextMatchId,
-                                              seasonId,
-                                          });
-                                      }
-                                  }
-                        }
-                    />
+                    <View style={{ height: insets.bottom + 4 }} />
                 </View>
             )}
         </>

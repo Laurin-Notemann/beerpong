@@ -169,8 +169,6 @@ export default function Page() {
                 onUploadAvatarPress={onUploadAvatarPress}
                 onDeleteAvatarPress={onDeleteAvatarPress}
                 refresh={refresh}
-                prevPlayerId={undefined} // TODO
-                nextPlayerId={undefined} // TODO
             />
         </>
     );

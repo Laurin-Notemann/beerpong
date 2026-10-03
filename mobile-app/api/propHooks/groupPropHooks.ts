@@ -111,7 +111,6 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               groupName: data.data.name || 'Unknown Group',
               hasPremium: false,
               pastSeasons: pastSeasons.length,
-              pushNotificationsEnabled: false,
               onUploadWallpaperPress,
               onDeleteWallpaperPress,
               onLeaveGroup,

@@ -195,6 +195,7 @@ export default function MenuItem({
                                 color: theme.color.text.secondary,
 
                                 flexShrink: 1,
+                                marginRight: tailIconType ? 4 : 0,
 
                                 textAlign: 'right',
                             }}

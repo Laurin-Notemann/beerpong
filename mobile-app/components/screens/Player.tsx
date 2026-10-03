@@ -21,7 +21,6 @@ import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
@@ -68,9 +67,6 @@ export interface PlayerScreenProps {
     refresh: RefreshProps;
 
     scopes: Map<string, ScopeInfo>;
-
-    prevPlayerId?: string;
-    nextPlayerId?: string;
 }
 export default function PlayerScreen({
     isPending,
@@ -84,9 +80,6 @@ export default function PlayerScreen({
     onUploadAvatarPress,
     onDeleteAvatarPress,
     refresh,
-
-    prevPlayerId,
-    nextPlayerId,
 
     scopes,
 }: PlayerScreenProps) {
@@ -102,7 +95,7 @@ export default function PlayerScreen({
 
     const insets = useInsets(true);
     // Clears the scope picker and bottom bar that float over the end of the list.
-    const listPaddingBottom = insets.bottom + (swiperAtTop ? 0 : 48 + 64);
+    const listPaddingBottom = insets.bottom + (swiperAtTop ? 0 : 48 + 24);
 
     const [fade] = useState(() => new Animated.Value(0));
     const [scale] = useState(() => new Animated.Value(0));
@@ -500,31 +493,7 @@ export default function PlayerScreen({
                 >
                     <LeaderboardScopePicker />
 
-                    <PlayerAndMatchBottomNav
-                        hasNextAndPrevButtons={false}
-                        onPrevPress={
-                            !prevPlayerId
-                                ? undefined
-                                : () => {
-                                      if (prevPlayerId) {
-                                          nav.navigate('player', {
-                                              id: prevPlayerId,
-                                          });
-                                      }
-                                  }
-                        }
-                        onNextPress={
-                            !nextPlayerId
-                                ? undefined
-                                : () => {
-                                      if (nextPlayerId) {
-                                          nav.navigate('player', {
-                                              id: nextPlayerId,
-                                          });
-                                      }
-                                  }
-                        }
-                    />
+                    <View style={{ height: insets.bottom + 4 }} />
                 </View>
             )}
         </GestureHandlerRootView>

@@ -1,43 +1,22 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { Share } from 'react-native';
 
-import { useGroup } from '@/api/calls/seasonHooks';
-import copyToClipboard from '@/components/copyToClipboard';
-import { showErrorToast } from '@/toast';
-import { formatGroupCode } from '@/utils/groupCode';
+import { useGroupInvite } from '@/lib/useGroupInvite';
 
 /** Native header menu (right side) for inviting friends to the selected group. */
 export function InviteMenu() {
-    const { group } = useGroup();
-    const inviteCode = group?.data?.inviteCode;
-    const name = group?.data?.name;
-
-    const withCode = (action: (code: string) => void) => () => {
-        if (!inviteCode) {
-            showErrorToast('Group code is not loaded yet.');
-            return;
-        }
-        action(formatGroupCode(inviteCode));
-    };
+    const { copyCode, shareInvite } = useGroupInvite();
 
     return (
         <Stack.Toolbar placement="right">
             <Stack.Toolbar.Menu title="Invite Friends to this Group">
                 <Stack.Toolbar.Label>Share</Stack.Toolbar.Label>
-                <Stack.Toolbar.MenuAction
-                    icon="doc.on.doc"
-                    onPress={withCode((code) => copyToClipboard(code))}
-                >
+                <Stack.Toolbar.MenuAction icon="doc.on.doc" onPress={copyCode}>
                     Copy Group Code
                 </Stack.Toolbar.MenuAction>
                 <Stack.Toolbar.MenuAction
                     icon="square.and.arrow.up"
-                    onPress={withCode((code) =>
-                        Share.share({
-                            message: `Join ${name ?? 'my group'} on Versus with the code ${code}`,
-                        })
-                    )}
+                    onPress={shareInvite}
                 >
                     Share Invite
                 </Stack.Toolbar.MenuAction>

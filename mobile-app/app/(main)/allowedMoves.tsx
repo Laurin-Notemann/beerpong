@@ -16,7 +16,7 @@ export default function Page() {
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
-    const insets = useInsets();
+    const insets = useInsets(true);
 
     const theme = useTheme();
 

@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import { HighestChip, LowestChip } from '@/components/Chip';
 import {
@@ -28,7 +27,11 @@ export function Stat({
     const theme = useTheme();
 
     return (
-        <TouchableOpacity style={{ alignItems: 'center' }} onPress={onPress}>
+        <TouchableOpacity
+            // three per row; tapping ranks the leaderboard by this stat
+            style={{ alignItems: 'center', width: '33%' }}
+            onPress={onPress}
+        >
             {isHighest && <HighestChip />}
             {isLowest && <LowestChip />}
             <Text
@@ -68,44 +71,36 @@ export default function PlayerStats({ player }: PlayerStatsProps) {
     const scopePicker = useScopePicker();
 
     return (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
+        <View
             style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                rowGap: 16,
+
                 width: '100%',
+                paddingHorizontal: 16,
+                marginBottom: 32,
 
                 opacity: player.matches === 0 ? 0 : 1,
             }}
         >
-            <View
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'flex-end',
-
-                    marginBottom: 32,
-                    gap: 8,
-
-                    paddingHorizontal: 16,
-                }}
-            >
-                {Object.entries(rankingAlgorithms)
-                    .filter((i) => i[1].showInStats)
-                    .map(([id, algo]) => (
-                        <Stat
-                            key={id}
-                            title={algo.name}
-                            value={algo.getDisplayValue(player, 'stat')}
-                            // isLowest={env.isDev}
-                            onPress={() => {
-                                scopePicker.setRankingAlgorithm(
-                                    id as RankingAlgorithm
-                                );
-                                router.dismissAll();
-                                router.push({ pathname: '/' });
-                            }}
-                        />
-                    ))}
-            </View>
-        </ScrollView>
+            {Object.entries(rankingAlgorithms)
+                .filter((i) => i[1].showInStats)
+                .map(([id, algo]) => (
+                    <Stat
+                        key={id}
+                        title={algo.name}
+                        value={algo.getDisplayValue(player, 'stat')}
+                        onPress={() => {
+                            scopePicker.setRankingAlgorithm(
+                                id as RankingAlgorithm
+                            );
+                            router.dismissAll();
+                            router.push({ pathname: '/' });
+                        }}
+                    />
+                ))}
+        </View>
     );
 }

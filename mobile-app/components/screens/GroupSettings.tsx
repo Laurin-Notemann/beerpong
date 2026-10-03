@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
-import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    Switch,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { env } from '@/api/env';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { AppBackground } from '@/lib/Background';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useGroupInvite } from '@/lib/useGroupInvite';
 import { useInsets } from '@/lib/useInsets';
 import { SeasonSettingsDto } from '@/openapi/openapi';
 import { formatGroupCode } from '@/utils/groupCode';
@@ -36,7 +30,6 @@ export interface GroupSettingsProps {
     hasPremium: boolean;
 
     groupName: string;
-    pushNotificationsEnabled: boolean;
 
     pastSeasons: number;
 
@@ -52,7 +45,6 @@ export default function GroupSettingsScreen({
     id,
     hasPremium,
     groupName,
-    pushNotificationsEnabled,
     pastSeasons,
     groupCode,
     onLeaveGroup,
@@ -63,6 +55,7 @@ export default function GroupSettingsScreen({
     isUpdatingWallpaper = false,
 }: GroupSettingsProps) {
     const nav = useNavigation();
+    const invite = useGroupInvite();
 
     const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
         useState(false);
@@ -90,7 +83,7 @@ export default function GroupSettingsScreen({
                     paddingBottom: insets.bottom + 16,
                 }}
             >
-                <SafeAreaView>
+                <View>
                     <MenuSection title="Settings">
                         <MenuItem
                             border={false}
@@ -165,15 +158,6 @@ export default function GroupSettingsScreen({
                             }
                             isVisible={showChangeWallpaperModal}
                         />
-                        {env.isDev && (
-                            <MenuItem
-                                title="Push Notifications"
-                                headIcon="bell-outline"
-                                tailContent={
-                                    <Switch value={pushNotificationsEnabled} />
-                                }
-                            />
-                        )}
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem
@@ -270,37 +254,17 @@ export default function GroupSettingsScreen({
                         <MenuItem
                             border={false}
                             title="Code"
+                            headIcon="pound"
+                            tailIconType="copy"
+                            tailContent={formatGroupCode(groupCode)}
+                            onPress={invite.copyCode}
+                        />
+                        <MenuItem
+                            title="Share Invite"
                             headIcon="share-outline"
                             tailIconType="next"
-                            tailContent={formatGroupCode(groupCode)}
-                            onPress={() =>
-                                copyToClipboard(formatGroupCode(groupCode))
-                            }
+                            onPress={invite.shareInvite}
                         />
-                        {env.isDev && (
-                            <>
-                                <MenuItem
-                                    title="Group Link"
-                                    headIcon="link-variant"
-                                    tailIconType="copy"
-                                />
-                                <MenuItem
-                                    title="Send Invitation"
-                                    headIcon="share-outline"
-                                    tailIconType="next"
-                                />
-                                <MenuItem
-                                    title="Show QR Code"
-                                    headIcon="qrcode"
-                                    tailIconType="next"
-                                />
-                                <MenuItem
-                                    title="Screencast Leaderboard"
-                                    headIcon="television"
-                                    tailIconType="next"
-                                />
-                            </>
-                        )}
                     </MenuSection>
                     <MenuSection
                         style={{
@@ -323,7 +287,7 @@ export default function GroupSettingsScreen({
                             }}
                         />
                     </MenuSection>
-                </SafeAreaView>
+                </View>
             </ScrollView>
         </>
     );

@@ -13,8 +13,7 @@ import Avatar from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
-import { formatRatingChange } from '@/utils/format';
-import { plural } from '@/utils/format';
+import { formatRatingChange, plural } from '@/utils/format';
 
 function Change({
     value,
@@ -24,6 +23,8 @@ function Change({
     style?: StyleProp<TextStyle>;
 }) {
     const theme = useTheme();
+    // the rating change isn't computed yet (always 0), so there's nothing to show
+    if (Math.round(value) === 0) return null;
     return (
         <View
             style={[
