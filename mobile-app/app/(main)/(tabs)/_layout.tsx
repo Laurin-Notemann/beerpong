@@ -1,9 +1,36 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NativeTabs } from 'expo-router/native-tabs';
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 import { Platform } from 'react-native';
+import type { SFSymbol } from 'sf-symbols-typescript';
 
 import { useTheme } from '@/theme';
+
+/**
+ * SF Symbols on iOS; Material Icons from @expo/vector-icons on Android. (The `md` prop of
+ * NativeTabs.Trigger.Icon needs the native expo-symbols module, which this app doesn't ship.)
+ */
+function TabIcon({
+    sf,
+    md,
+}: {
+    sf: SFSymbol | { default: SFSymbol; selected: SFSymbol };
+    md: ComponentProps<typeof MaterialIcons>['name'];
+}) {
+    return Platform.OS === 'ios' ? (
+        <NativeTabs.Trigger.Icon sf={sf} />
+    ) : (
+        <NativeTabs.Trigger.Icon
+            src={
+                <NativeTabs.Trigger.VectorIcon
+                    family={MaterialIcons}
+                    name={md}
+                />
+            }
+        />
+    );
+}
 
 // Each screen pads itself for the header and tab bar (lib/useInsets.ts). iOS would otherwise
 // also auto-inset only the first scroll view of a tab, which doubles the gap on some pages.
@@ -28,38 +55,35 @@ export default function TabLayout() {
             tintColor={theme.color.text.primary}
         >
             <NativeTabs.Trigger name="(leaderboard)" {...tabOptions}>
-                <NativeTabs.Trigger.Icon
+                <TabIcon
                     sf={{ default: 'trophy', selected: 'trophy.fill' }}
                     md="leaderboard"
                 />
                 <NativeTabs.Trigger.Label>Leaderboard</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(matches)" {...tabOptions}>
-                <NativeTabs.Trigger.Icon
-                    sf="list.bullet"
-                    md="format_list_bulleted"
-                />
+                <TabIcon sf="list.bullet" md="format-list-bulleted" />
                 <NativeTabs.Trigger.Label>Matches</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(newMatch)" {...tabOptions}>
-                <NativeTabs.Trigger.Icon
+                <TabIcon
                     sf={{
                         default: 'plus.circle',
                         selected: 'plus.circle.fill',
                     }}
-                    md="add_circle"
+                    md="add-circle"
                 />
                 <NativeTabs.Trigger.Label>New Match</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(rules)" {...tabOptions}>
-                <NativeTabs.Trigger.Icon
+                <TabIcon
                     sf={{ default: 'book', selected: 'book.fill' }}
                     md="gavel"
                 />
                 <NativeTabs.Trigger.Label>Rules</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(settings)" {...tabOptions}>
-                <NativeTabs.Trigger.Icon
+                <TabIcon
                     sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
                     md="settings"
                 />
