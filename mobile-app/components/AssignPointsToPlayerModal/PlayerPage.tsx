@@ -45,18 +45,6 @@ export default function PlayerPage({
                 <Text color="primary" variant="h3" style={{ marginTop: 8 }}>
                     {player.name}
                 </Text>
-                <Text
-                    color="secondary"
-                    style={{
-                        marginTop: 16,
-                        paddingHorizontal: 48,
-                        textAlign: 'center',
-                    }}
-                >
-                    If {player.name} scored the last cup of the match, please
-                    don't add it here. There is a separate page for the winning
-                    throw.
-                </Text>
             </View>
             {player.moves
                 .filter((i) => !i.isFinish)

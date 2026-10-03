@@ -4,6 +4,7 @@ import {
     MinimalMatch,
     TeamMember,
 } from '@/api/utils/matchDtoToMatch';
+import { countCups, cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { PlayerDto, RuleMoveDto } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
@@ -58,6 +59,7 @@ export function getDisplayMatch(
                     points: j.pointsForScorer!,
                     pointsForTeam: j.pointsForTeam!,
                     isFinish: j.finishingMove!,
+                    cups: cupsPerHit(j),
                 };
             }),
 
@@ -69,16 +71,12 @@ export function getDisplayMatch(
     const displayMatch: MinimalMatch = {
         id: 'virtual:match',
         date: new Date(), // TODO: footgun: match.date is actually important here, because getInfluenceOfMatchOnAveragePoints sorts by it!
-        blueCups: teamMembers
-            .filter((i) => i.team === 'blue')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
-        redCups: teamMembers
-            .filter((i) => i.team === 'red')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
+        blueCups: countCups(
+            teamMembers.filter((i) => i.team === 'blue').flatMap((i) => i.moves)
+        ),
+        redCups: countCups(
+            teamMembers.filter((i) => i.team === 'red').flatMap((i) => i.moves)
+        ),
         redTeam: teamMembers.filter((i) => i.team === 'red'),
         blueTeam: teamMembers.filter((i) => i.team === 'blue'),
     };

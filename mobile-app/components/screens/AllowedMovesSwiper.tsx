@@ -86,6 +86,13 @@ export default function AllowedMovesSwiper({
                                     )
                                 );
                             }}
+                            onChangeCups={(cups) => {
+                                seasonDraft.actions.setNewSeasonAllowedMoves(
+                                    allowedMoves.map((i) =>
+                                        i.id === move.id ? { ...i, cups } : i
+                                    )
+                                );
+                            }}
                             onChangeIsFinish={(finishingMove) => {
                                 seasonDraft.actions.setNewSeasonAllowedMoves(
                                     allowedMoves.map((i) =>
@@ -117,6 +124,7 @@ const AllowedMovePage: React.FC<{
     onChangeName: (name: string) => void;
     onChangePointsForScorer: (points: number) => void;
     onChangePointsForTeam: (points: number) => void;
+    onChangeCups: (cups: number) => void;
     onChangeIsFinish: (isFinish: boolean) => void;
     onDelete: () => void;
 }> = ({
@@ -124,6 +132,7 @@ const AllowedMovePage: React.FC<{
     onChangeName,
     onChangePointsForScorer,
     onChangePointsForTeam,
+    onChangeCups,
     onChangeIsFinish,
     onDelete,
 }) => {
@@ -168,6 +177,13 @@ const AllowedMovePage: React.FC<{
                             headIcon="account-group-outline"
                             defaultValue={move.pointsForTeam}
                             onChange={onChangePointsForTeam}
+                        />
+                        <MenuItemNumberInput
+                            title="Cups"
+                            subtitle="Cups one hit takes off the table; a won match adds up to 10"
+                            headIcon="cup-outline"
+                            defaultValue={move.cups}
+                            onChange={onChangeCups}
                         />
                         <MenuItem
                             title="Finish Move"

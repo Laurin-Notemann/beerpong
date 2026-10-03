@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import pro.beerpong.api.model.dto.groups.GroupCreateDto;
 import pro.beerpong.api.model.dto.groups.GroupDto;
+import pro.beerpong.api.model.RuleMoveCups;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveCreateDto;
 import pro.beerpong.api.model.dto.rulemoves.RuleMoveDto;
 import pro.beerpong.api.model.dto.rules.RuleCreateDto;
@@ -104,6 +105,7 @@ public class TestUtils {
                     ruleMoveDto.setPointsForScorer(defaultRule.pointsForScorer());
                     ruleMoveDto.setPointsForTeam(defaultRule.pointsForTeam());
                     ruleMoveDto.setName(defaultRule.name());
+                    ruleMoveDto.setCups(RuleMoveCups.defaultFor(defaultRule.name(), defaultRule.finish()));
                     return ruleMoveDto;
                 })
                 .toList();
@@ -131,6 +133,9 @@ public class TestUtils {
         assertEquals(expected.isFinishingMove(), actual.isFinishingMove());
         assertEquals(expected.getPointsForScorer(), actual.getPointsForScorer());
         assertEquals(expected.getPointsForTeam(), actual.getPointsForTeam());
+        if (expected.getCups() != null) {
+            assertEquals(expected.getCups(), actual.getCups());
+        }
     }
 
     public void assertCreatedRuleMovesEquals(List<RuleMoveCreateDto> created, List<RuleMoveDto> actual) {

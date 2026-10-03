@@ -3,6 +3,7 @@ import { Keyboard } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
+import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { SaveSeasonStack } from '@/components/SaveSeasonStack';
 import { NewSeasonRulesInput } from '@/components/screens/SaveSeason/NewSeasonRulesInput';
 import { OldSeasonNameInput } from '@/components/screens/SaveSeason/OldSeasonNameInput';
@@ -46,6 +47,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 finishingMove: i.finishingMove!,
                 pointsForScorer: i.pointsForScorer!,
                 pointsForTeam: i.pointsForTeam!,
+                cups: cupsPerHit(i),
             }))
         );
     }, [newSeasonDraft.actions, oldSeasonMoves]);
@@ -131,6 +133,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                                 finishingMove: false,
                                 pointsForScorer: 1,
                                 pointsForTeam: 0,
+                                cups: 1,
                             },
                         ]);
                         nav.navigate('allowedMove', {

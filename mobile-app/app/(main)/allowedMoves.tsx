@@ -3,6 +3,7 @@ import { ScrollView } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { AllowedMoves } from '@/components/AllowedMoves';
 import InputModal from '@/components/InputModal';
 import { useNavStyles } from '@/lib/navigation/navStyles';
@@ -43,6 +44,7 @@ export default function Page() {
                             id: i.id!,
                             name: i.name!,
                             finishingMove: i.finishingMove!,
+                            cups: cupsPerHit(i),
                             pointsForScorer: i.pointsForScorer!,
                             pointsForTeam: i.pointsForTeam!,
                         }))}

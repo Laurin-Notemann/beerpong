@@ -14,5 +14,6 @@ public interface RuleMoveMapper {
     RuleMove ruleMoveDtoToRuleMove(RuleMoveDto dto);
 
     @Mapping(source = "season.id", target = "seasonId")
+    @Mapping(target = "cups", expression = "java(move.cupsPerHit())")
     RuleMoveDto ruleMoveToRuleMoveDto(RuleMove move);
 }

@@ -334,6 +334,7 @@ declare namespace Components {
             pointsForTeam?: number; // int32
             pointsForScorer?: number; // int32
             finishingMove?: boolean;
+            cups?: number; // int32
         }
         export interface RuleMoveDto {
             id?: string;
@@ -342,6 +343,7 @@ declare namespace Components {
             pointsForTeam?: number; // int32
             pointsForScorer?: number; // int32
             finishingMove?: boolean;
+            cups?: number; // int32
         }
         export interface SeasonCreateDto {
             oldSeasonName?: string;

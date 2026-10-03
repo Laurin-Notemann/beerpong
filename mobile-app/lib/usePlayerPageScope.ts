@@ -6,6 +6,7 @@ import {
 } from '@/api/calls/seasonHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { countCups } from '@/api/utils/ruleMoveCups';
 import { ScopeInfo } from '@/components/screens/Player';
 import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { eloAlgorithm } from '@/lib/EloAlgorithm';
@@ -148,7 +149,7 @@ const getAllTimeCups = (profileId: string | undefined, matches: Match[]) => {
 
         if (!player) return sum;
 
-        return sum + player.moves.reduce((sum, i) => sum + i.count, 0);
+        return sum + countCups(player.moves);
     }, 0);
 };
 

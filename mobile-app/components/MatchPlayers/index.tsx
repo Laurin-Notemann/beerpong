@@ -2,6 +2,7 @@ import React from 'react';
 import { Text } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { countCups } from '@/api/utils/ruleMoveCups';
 import Player from '@/components/MatchPlayers/Player';
 import MenuSection from '@/components/Menu/MenuSection';
 import { useNextTokens } from '@/components/next/tokens';
@@ -26,14 +27,8 @@ export default function MatchPlayers({
     const redTeam = players.filter((i) => i.team === 'red');
     const blueTeam = players.filter((i) => i.team === 'blue');
 
-    const redTeamCups = redTeam.reduce(
-        (sum, i) => sum + i.moves.reduce((sum2, j) => sum2 + j.count, 0),
-        0
-    );
-    const blueTeamCups = blueTeam.reduce(
-        (sum, i) => sum + i.moves.reduce((sum2, j) => sum2 + j.count, 0),
-        0
-    );
+    const redTeamCups = countCups(redTeam.flatMap((i) => i.moves));
+    const blueTeamCups = countCups(blueTeam.flatMap((i) => i.moves));
 
     const blueTitle = `Blue Team - ${plural(blueTeamCups, 'cup', 'cups')}`;
     const redTitle = `Red Team - ${plural(redTeamCups, 'cup', 'cups')}`;

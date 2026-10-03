@@ -121,7 +121,7 @@ public class LeaderboardService {
                 var entry = entries.get(profileId);
                 var ownPoints = ruleMove.getPointsForScorer() * move.getValue();
 
-                entry.getStatistics().addMoves(move.getValue());
+                entry.getStatistics().addMoves(ruleMove.cupsPerHit() * move.getValue());
                 entry.getStatistics().addPoints(ownPoints);
 
                 if (ruleMove.getPointsForTeam() > 0) {

@@ -5,6 +5,7 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { countCups, cupsPerHit } from '@/api/utils/ruleMoveCups';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { ConsoleLogger } from '@/utils/logging';
@@ -60,6 +61,7 @@ export default function Page() {
                     points: j.pointsForScorer!,
                     pointsForTeam: j.pointsForTeam!,
                     isFinish: j.finishingMove!,
+                    cups: cupsPerHit(j),
                 };
             }),
             profileId: '#',
@@ -69,16 +71,12 @@ export default function Page() {
     const match: MinimalMatch = {
         id: '#',
         date: new Date(),
-        blueCups: players
-            .filter((i) => i.team === 'blue')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
-        redCups: players
-            .filter((i) => i.team === 'red')
-            .map((i) => i.moves)
-            .flat()
-            .reduce((sum, i) => sum + i.count, 0),
+        blueCups: countCups(
+            teamMembers.filter((i) => i.team === 'blue').flatMap((i) => i.moves)
+        ),
+        redCups: countCups(
+            teamMembers.filter((i) => i.team === 'red').flatMap((i) => i.moves)
+        ),
         redTeam: teamMembers.filter((i) => i.team === 'red'),
         blueTeam: teamMembers.filter((i) => i.team === 'blue'),
     };

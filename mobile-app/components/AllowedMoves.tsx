@@ -25,7 +25,14 @@ const formatStats = (move: Move): string => {
 
     const finishingMove = move.finishingMove ? 'Finishing Move' : null;
 
-    const stats = [pointsForScorer, pointsForTeam, finishingMove]
+    const cups =
+        move.cups == null
+            ? null
+            : move.cups === 1
+              ? '1 Cup'
+              : `${move.cups} Cups`;
+
+    const stats = [pointsForScorer, pointsForTeam, cups, finishingMove]
         .filter((i) => i != null)
         .join(' ⸱ ');
 
@@ -38,6 +45,7 @@ interface Move {
     pointsForScorer: number;
     pointsForTeam: number;
     finishingMove: boolean;
+    cups: number;
 }
 
 export interface AllowedMovesProps extends MenuSectionProps {

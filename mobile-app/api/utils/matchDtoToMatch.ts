@@ -10,6 +10,8 @@ export interface PerformedMove {
     count: number;
     pointsForTeam: number;
     isFinish: boolean;
+    /** cups one hit of this move takes off the table */
+    cups: number;
 }
 
 export interface TeamMember {

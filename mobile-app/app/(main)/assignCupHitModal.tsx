@@ -6,6 +6,7 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import Avatar from '@/components/Avatar';
 import CupGrid from '@/components/CupGrid';
 import { flipFormation } from '@/components/CupGrid/Formation';
@@ -73,6 +74,7 @@ export default function Page() {
                     points: j.pointsForScorer!,
                     pointsForTeam: j.pointsForTeam!,
                     isFinish: j.finishingMove!,
+                    cups: cupsPerHit(j),
                 };
             }),
             profileId: profile?.profileId ?? '',

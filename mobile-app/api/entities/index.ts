@@ -1,6 +1,7 @@
 /* eslint @typescript-eslint/explicit-function-return-type: ["error"] */
 import { Profile, WithProfile } from '@/api/types';
 import { Match, PerformedMove, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { countCups, cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { Components } from '@/openapi/openapi';
 import { ConsoleLogger } from '@/utils/logging';
 
@@ -12,6 +13,7 @@ export class RuleMoveImpl {
     public finishingMove: boolean;
     public pointsForScorer: number;
     public pointsForTeam: number;
+    public cups: number;
 
     constructor(_data: Components.Schemas.RuleMoveDto) {
         this.id = _data.id!;
@@ -19,6 +21,7 @@ export class RuleMoveImpl {
         this.finishingMove = _data.finishingMove!;
         this.pointsForScorer = _data.pointsForScorer!;
         this.pointsForTeam = _data.pointsForTeam!;
+        this.cups = cupsPerHit(_data);
     }
 }
 
@@ -39,6 +42,9 @@ export class MatchMoveImpl {
     }
     public get isFinish(): boolean {
         return this.move!.finishingMove;
+    }
+    public get cups(): number {
+        return this.move!.cups;
     }
 
     public get id(): string {
@@ -66,6 +72,7 @@ export class MatchMoveImpl {
             points: this.points,
             isFinish: this.isFinish,
             pointsForTeam: this.pointsForTeam,
+            cups: this.cups,
         };
     }
 }
@@ -152,7 +159,7 @@ export class TeamMemberImpl {
         );
     }
     public get cups(): number {
-        return this.moves.reduce((sum, i) => sum + i.count, 0);
+        return countCups(this.moves);
     }
 
     public toJSON(): TeamMember {
