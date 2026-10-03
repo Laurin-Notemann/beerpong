@@ -37,6 +37,7 @@ export const LeaderBoardSeasonInfo = ({
                     style={{
                         fontWeight: 'bold',
                         fontSize: 25,
+                        lineHeight: 32,
                         color: theme.color.text.primary,
                         marginTop: 48,
                     }}
@@ -48,6 +49,7 @@ export const LeaderBoardSeasonInfo = ({
                 <Text
                     style={{
                         fontSize: 12,
+                        lineHeight: 24,
                         color: theme.color.text.secondary,
                         marginTop: 3,
                     }}
@@ -59,6 +61,7 @@ export const LeaderBoardSeasonInfo = ({
             <Text
                 style={{
                     fontSize: 17,
+                    lineHeight: 24,
                     color: theme.color.text.secondary,
                     marginTop: 32 - 6,
                 }}

@@ -23,6 +23,7 @@ const Description: React.FC<{
             <Text
                 style={{
                     fontSize: 15,
+                    lineHeight: 24,
                     color: theme.color.text.primary,
                     marginTop: 12,
 
@@ -37,6 +38,7 @@ const Description: React.FC<{
                     <Text
                         style={{
                             fontSize: 22,
+                            lineHeight: 24,
                             color: theme.color.text.primary,
                         }}
                     >
@@ -45,8 +47,9 @@ const Description: React.FC<{
                     <Text
                         style={{
                             fontSize: 13,
+                            lineHeight: 16,
                             color: theme.color.text.secondary,
-                            marginTop: 13,
+                            marginTop: 17,
                         }}
                     >
                         {plural(player.points, 'point', 'points')}
@@ -55,8 +58,8 @@ const Description: React.FC<{
                     <Text
                         style={{
                             fontSize: 13,
+                            lineHeight: 16,
                             color: theme.color.text.secondary,
-                            marginTop: -8,
                         }}
                     >
                         {plural(player.matches, 'match', 'matches')}
@@ -116,6 +119,7 @@ export default function Podium({
                 <Text
                     style={{
                         fontSize: 22,
+                        lineHeight: 24,
                         color: theme.color.text.secondary,
                         marginBottom: 16,
                     }}
@@ -162,6 +166,7 @@ export default function Podium({
                 <Text
                     style={{
                         fontSize: 22,
+                        lineHeight: 24,
                         color: theme.color.text.secondary,
                         marginBottom: 16,
                     }}
@@ -195,6 +200,7 @@ export default function Podium({
                 <Text
                     style={{
                         fontSize: 22,
+                        lineHeight: 24,
                         color: theme.color.text.secondary,
                         marginBottom: 16,
                     }}

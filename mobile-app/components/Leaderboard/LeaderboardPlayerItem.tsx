@@ -10,6 +10,9 @@ import {
 import { useTheme } from '@/theme';
 import { formatPlacement, plural } from '@/utils/format';
 
+/** fixed, so the leaderboard list can position rows without measuring them */
+export const LEADERBOARD_ROW_HEIGHT = 60.5;
+
 export interface LeaderboardPlayerItemProps {
     id: string;
     placement: number;
@@ -52,7 +55,7 @@ function LeaderboardPlayerItem({
                 flexDirection: 'row',
                 alignItems: 'center',
 
-                height: 60.5,
+                height: LEADERBOARD_ROW_HEIGHT,
                 paddingHorizontal: 20,
 
                 opacity: unranked ? 0.5 : undefined,

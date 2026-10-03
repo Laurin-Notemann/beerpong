@@ -5,9 +5,13 @@ import { Pressable, View } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import { LeaderboardEmptyComponent } from '@/components/Leaderboard/EmptyComponent';
-import LeaderboardPlayerItem from '@/components/Leaderboard/LeaderboardPlayerItem';
+import LeaderboardPlayerItem, {
+    LEADERBOARD_ROW_HEIGHT,
+} from '@/components/Leaderboard/LeaderboardPlayerItem';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
-import NextLeaderboardRow from '@/components/next/NextLeaderboardRow';
+import NextLeaderboardRow, {
+    NEXT_LEADERBOARD_ROW_HEIGHT,
+} from '@/components/next/NextLeaderboardRow';
 import { NextPodium } from '@/components/next/NextPodium';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
@@ -21,6 +25,8 @@ import { useNewDesign } from '@/zustand/localSettingsStore';
 type LeaderboardRow =
     | { type: 'player'; player: Player; placement: number; unranked: boolean }
     | { type: 'unrankedHeader' };
+
+const UNRANKED_HEADER_HEIGHT = 64;
 
 export interface LeaderboardProps extends Pick<
     LegendListProps<LeaderboardRow>,
@@ -110,13 +116,24 @@ export default function Leaderboard({
         <>
             <LegendList
                 {...rest}
+                // row heights differ per design; a fresh list doesn't carry over the old sizes
+                key={newDesign ? 'next' : 'classic'}
                 style={[{ flex: 1 }, style]}
                 data={rows}
                 keyExtractor={(item) =>
                     item.type === 'player' ? item.player.id : item.type
                 }
                 getItemType={(item) => item.type}
-                estimatedItemSize={newDesign ? 72 : 60.5}
+                // Every row has a fixed height. Positions come from these instead of measuring
+                // recycled rows, whose late layout events could leave two rows at the same y
+                // after the rows changed (e.g. a player moving onto the podium).
+                getFixedItemSize={(item) =>
+                    item.type === 'unrankedHeader'
+                        ? UNRANKED_HEADER_HEIGHT
+                        : newDesign
+                          ? NEXT_LEADERBOARD_ROW_HEIGHT
+                          : LEADERBOARD_ROW_HEIGHT
+                }
                 recycleItems
                 ListHeaderComponent={
                     <View style={{ alignItems: 'center', paddingBottom: 14 }}>
@@ -171,8 +188,6 @@ export default function Leaderboard({
                     ) : null
                 }
                 ListFooterComponent={ListFooterComponent}
-                // re-render rows when the design is switched
-                extraData={newDesign}
                 renderItem={({ item }) =>
                     item.type === 'player' && newDesign ? (
                         <NextLeaderboardRow
@@ -203,7 +218,7 @@ export default function Leaderboard({
                                 flexDirection: 'row',
                                 alignItems: 'center',
                                 gap: 8,
-                                height: 64,
+                                height: UNRANKED_HEADER_HEIGHT,
                                 paddingHorizontal: newDesign ? 20 : 8,
                                 paddingVertical: 12,
                             }}

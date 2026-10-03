@@ -4,6 +4,9 @@ import { StyleProp, Text, View, ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
 
+/** height of a non-paragraph Heading */
+export const HEADING_HEIGHT = 64;
+
 export function Heading({
     title,
     titleHeadIcon,
@@ -38,7 +41,7 @@ export function Heading({
                           flexDirection: 'row',
                           alignItems: 'flex-end',
 
-                          height: 64,
+                          height: HEADING_HEIGHT,
                           paddingHorizontal: 8,
                           paddingBottom: 12,
                       }

@@ -10,6 +10,11 @@ import {
 } from '@/constants/rankingAlgorithms';
 import { plural } from '@/utils/format';
 
+const CARD_HEIGHT = 64;
+const CARD_GAP = 8;
+/** card plus the gap below it, fixed so the leaderboard list can position rows without measuring them */
+export const NEXT_LEADERBOARD_ROW_HEIGHT = CARD_HEIGHT + CARD_GAP;
+
 /** A leaderboard row as its own rounded card, with a rank chip. New Design only. */
 function NextLeaderboardRow({
     player,
@@ -37,10 +42,10 @@ function NextLeaderboardRow({
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 12,
-                height: 64,
+                height: CARD_HEIGHT,
                 paddingHorizontal: 12,
                 marginHorizontal: 16,
-                marginBottom: 8,
+                marginBottom: CARD_GAP,
                 borderRadius: 16,
                 borderCurve: 'continuous',
                 borderWidth: 1,

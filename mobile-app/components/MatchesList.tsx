@@ -6,7 +6,7 @@ import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
-import { Heading } from '@/components/Menu/MenuSection';
+import { Heading, HEADING_HEIGHT } from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
 
 export interface MatchesListProps extends Pick<
@@ -81,6 +81,11 @@ export default function MatchesList({
                     : item.match.id
             }
             getItemType={(item) => item.type}
+            // day headers have a fixed height, so a recycled row's late layout event can't
+            // squeeze a header under its first match. Match rows vary and are measured.
+            getFixedItemSize={(item) =>
+                item.type === 'header' ? HEADING_HEIGHT : undefined
+            }
             estimatedItemSize={72}
             recycleItems
             // rows only re-render when data or extraData change
