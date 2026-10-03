@@ -402,6 +402,19 @@ export default function PlayerScreen({
                                 }
                                 tailIconType="next"
                             />
+                            {avatarUrl && (
+                                <MenuItem
+                                    title="Remove Profile Picture"
+                                    headIcon="delete-outline"
+                                    onPress={onDeleteAvatarPress}
+                                    type="danger"
+                                    confirmationPrompt={{
+                                        title: 'Remove Profile Picture',
+                                        description:
+                                            "Are you sure you want to remove this player's profile picture?",
+                                    }}
+                                />
+                            )}
                             <MenuItem
                                 title="Delete Player"
                                 headIcon="delete-outline"
@@ -411,17 +424,6 @@ export default function PlayerScreen({
                                     title: 'Delete Player',
                                     description:
                                         'Are you sure you want to delete this player?',
-                                }}
-                            />
-                            <MenuItem
-                                title="Remove Profile Picture"
-                                headIcon="delete-outline"
-                                onPress={onDeleteAvatarPress}
-                                type="danger"
-                                confirmationPrompt={{
-                                    title: 'Remove Profile Picture',
-                                    description:
-                                        "Are you sure you want to remove this player's profile picture?",
                                 }}
                             />
                         </MenuSection>

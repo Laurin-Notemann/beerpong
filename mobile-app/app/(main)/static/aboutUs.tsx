@@ -14,7 +14,7 @@ export default function Page() {
             <Stack.Screen
                 options={{
                     ...useNavStyles(),
-                    headerTitle: 'Privacy Policy',
+                    headerTitle: 'About Us',
                 }}
             />
             <AppBackground />

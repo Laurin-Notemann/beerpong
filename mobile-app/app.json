@@ -5,7 +5,7 @@
         "version": "1.0.93",
         "orientation": "default",
         "icon": "./assets/images/icon.png",
-        "scheme": "myapp",
+        "scheme": "versus",
         "userInterfaceStyle": "automatic",
         "splash": {
             "image": "./assets/images/splash.png",

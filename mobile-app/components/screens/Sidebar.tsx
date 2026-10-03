@@ -1,6 +1,5 @@
 import { MenuView } from '@expo/ui/community/menu';
 import { LegendList } from '@legendapp/list/react-native';
-import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Href, Link, router } from 'expo-router';
 import type { DrawerContentComponentProps } from 'expo-router/drawer';
@@ -16,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { env } from '@/api/env';
-import { QK } from '@/api/utils/reactQuery';
 import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -205,12 +203,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                 {
                     text: 'Leave',
                     style: 'destructive',
-                    onPress: async () => {
-                        await leaveGroupMutation.mutateAsync(groupId);
-                        await queryClient.invalidateQueries({
-                            queryKey: [QK.group, 'myGroups'],
-                        });
-                    },
+                    onPress: () => leaveGroupMutation.mutate(groupId),
                 },
             ]
         );
@@ -218,8 +211,6 @@ export function Sidebar(props: DrawerContentComponentProps) {
     const matchDraft = useMatchDraftStore((store) => store.actions);
 
     const theme = useTheme();
-
-    const queryClient = useQueryClient();
 
     return (
         <SafeAreaView

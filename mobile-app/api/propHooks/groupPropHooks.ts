@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
 import { useAssetQuery } from '@/api/calls/assetHooks';
@@ -9,7 +8,6 @@ import {
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
-import { QK } from '@/api/utils/reactQuery';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -77,17 +75,11 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
         }
     }
 
-    const queryClient = useQueryClient();
-
     async function onLeaveGroup() {
         if (!groupId) return;
 
         try {
             await leaveGroupMutation.mutateAsync(groupId);
-
-            await queryClient.invalidateQueries({
-                queryKey: [QK.group, 'myGroups'],
-            });
 
             router.dismissAll();
             router.replace('/');
