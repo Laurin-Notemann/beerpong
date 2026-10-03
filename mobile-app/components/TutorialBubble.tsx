@@ -7,6 +7,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
+import { useTheme } from '@/theme';
+
 /**
  * A hint that points down at whatever it is rendered in. Put it inside the row it explains:
  * it sits just above that row, scrolls with it and leaves with the screen.
@@ -21,6 +23,11 @@ export function TutorialBubble({
     /** horizontal offset from the row's left edge */
     left?: number;
 }) {
+    const theme = useTheme();
+    // inverted, so the bubble stands out from the list in both light and dark themes
+    const bg = theme.color.text.primary;
+    const fg = theme.color.bg;
+
     const progress = useSharedValue(0);
 
     useEffect(() => {
@@ -49,7 +56,7 @@ export function TutorialBubble({
             <Pressable
                 onPress={onPress}
                 style={{
-                    backgroundColor: '#fff',
+                    backgroundColor: bg,
                     borderRadius: 6,
                     paddingHorizontal: 8,
                     paddingVertical: 4,
@@ -59,14 +66,12 @@ export function TutorialBubble({
                     shadowRadius: 4,
                 }}
             >
-                <Text
-                    style={{ fontSize: 11, color: '#000', fontWeight: '600' }}
-                >
+                <Text style={{ fontSize: 11, color: fg, fontWeight: '600' }}>
                     {text}
                 </Text>
             </Pressable>
             <Svg width={12} height={8} style={{ marginLeft: 16 }}>
-                <Path d="M6 8L0 0L12 0Z" fill="#fff" />
+                <Path d="M6 8L0 0L12 0Z" fill={bg} />
             </Svg>
         </Animated.View>
     );

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useEffectEvent, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 
 import { useAssetQuery } from '@/api/calls/assetHooks';
 import {
@@ -18,7 +18,6 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import ErrorScreen from '@/components/ErrorScreen';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
@@ -249,8 +248,6 @@ export default function Page() {
         }
     }
 
-    const [showDeletePhotoPrompt, setShowDeletePhotoPrompt] = useState(false);
-
     const isLoading =
         !groupId ||
         !seasonId ||
@@ -287,27 +284,6 @@ export default function Page() {
 
     return (
         <>
-            <ConfirmationModal
-                isVisible={showDeletePhotoPrompt}
-                onClose={() => setShowDeletePhotoPrompt(false)}
-                title="Delete Match Photo"
-                description="Are you sure you want to delete this match photo? This can't be undone."
-                actions={[
-                    {
-                        type: 'danger',
-                        title: 'Delete',
-                        onPress: () => {
-                            matchDraft.actions.removeTeamPhotos();
-                            setShowDeletePhotoPrompt(false);
-                        },
-                    },
-                    {
-                        title: 'Cancel',
-                        onPress: () => setShowDeletePhotoPrompt(false),
-                    },
-                ]}
-            />
-
             <Stack.Screen
                 options={{
                     ...navStyles,
@@ -376,7 +352,21 @@ export default function Page() {
                         match={displayMatch}
                         editable={isEditing}
                         onPhotoTaken={matchDraft.actions.setTeamPhotos}
-                        onRemovePress={() => setShowDeletePhotoPrompt(true)}
+                        onRemovePress={() =>
+                            Alert.alert(
+                                'Delete Match Photo',
+                                "Are you sure you want to delete this match photo? This can't be undone.",
+                                [
+                                    { text: 'Cancel', style: 'cancel' },
+                                    {
+                                        text: 'Delete',
+                                        style: 'destructive',
+                                        onPress:
+                                            matchDraft.actions.removeTeamPhotos,
+                                    },
+                                ]
+                            )
+                        }
                         onSwapTeamColorsPress={
                             matchDraft.actions.swapTeamPhotos
                         }

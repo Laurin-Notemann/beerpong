@@ -1,18 +1,22 @@
+import { MenuView } from '@expo/ui/community/menu';
 import { LegendList } from '@legendapp/list/react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Href, Link, router } from 'expo-router';
 import type { DrawerContentComponentProps } from 'expo-router/drawer';
-import React, { useState } from 'react';
-import { useEffect } from 'react';
-import { Animated, TouchableHighlight, TouchableOpacity } from 'react-native';
-import { View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    Alert,
+    Animated,
+    TouchableHighlight,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { env } from '@/api/env';
 import { QK } from '@/api/utils/reactQuery';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -190,13 +194,26 @@ export function Sidebar(props: DrawerContentComponentProps) {
 
     const nav = useNavigation();
 
-    const [showAddGroupModal, setShowAddGroupModal] = useState(false);
-
     const [isEditMode, setIsEditMode] = useState(false);
 
-    const [groupIdToBeDeleted, setGroupIdToBeDeleted] = useState<string | null>(
-        null
-    );
+    const confirmLeaveGroup = (groupId: string) =>
+        Alert.alert(
+            'Leave Group',
+            'Are you sure you want to leave this group?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Leave',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await leaveGroupMutation.mutateAsync(groupId);
+                        await queryClient.invalidateQueries({
+                            queryKey: [QK.group, 'myGroups'],
+                        });
+                    },
+                },
+            ]
+        );
 
     const matchDraft = useMatchDraftStore((store) => store.actions);
 
@@ -243,22 +260,32 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 {isEditMode ? 'Done' : 'Edit'}
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => setShowAddGroupModal(true)}
-                            style={{
-                                marginLeft: 'auto',
-                                justifyContent: 'center',
-
-                                height: '100%',
-                                paddingHorizontal: 16,
-                            }}
+                        <MenuView
+                            title="Add Group"
+                            actions={[
+                                { id: '/createGroup', title: 'Create Group' },
+                                { id: '/joinGroup', title: 'Join Group' },
+                            ]}
+                            onPressAction={({ nativeEvent }) =>
+                                openScreen(nativeEvent.event as Href)
+                            }
+                            style={{ marginLeft: 'auto', alignSelf: 'center' }}
                         >
-                            <Icon
-                                name="plus"
-                                size={24}
-                                color={theme.color.text.primary}
-                            />
-                        </TouchableOpacity>
+                            <View
+                                pointerEvents="none"
+                                accessibilityLabel="Add Group"
+                                style={{
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 13,
+                                }}
+                            >
+                                <Icon
+                                    name="plus"
+                                    size={24}
+                                    color={theme.color.text.primary}
+                                />
+                            </View>
+                        </MenuView>
                     </>
                 </View>
             </MenuSection>
@@ -289,7 +316,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 props.navigation.closeDrawer();
                             }}
                             showDeleteButton={isEditMode}
-                            onDelete={setGroupIdToBeDeleted}
+                            onDelete={confirmLeaveGroup}
                         />
                     )}
                     ListEmptyComponent={
@@ -364,67 +391,6 @@ export function Sidebar(props: DrawerContentComponentProps) {
                     />
                 </MenuSection>
 
-                <ConfirmationModal
-                    onClose={() => setShowAddGroupModal(false)}
-                    title="Add Group"
-                    actions={
-                        [
-                            {
-                                title: 'Create',
-                                type: 'default',
-
-                                onPress: () => {
-                                    openScreen('/createGroup');
-                                    setShowAddGroupModal(false);
-                                },
-                            },
-                            {
-                                title: 'Join',
-                                type: 'default',
-
-                                onPress: () => {
-                                    openScreen('/joinGroup');
-                                    setShowAddGroupModal(false);
-                                },
-                            },
-                        ] as const
-                    }
-                    isVisible={showAddGroupModal}
-                />
-                <ConfirmationModal
-                    onClose={() => setGroupIdToBeDeleted(null)}
-                    title="Leave Group"
-                    description="Are you sure you want to leave this group?"
-                    actions={
-                        [
-                            {
-                                title: 'Leave',
-                                type: 'danger',
-
-                                onPress: async () => {
-                                    if (groupIdToBeDeleted) {
-                                        await leaveGroupMutation.mutateAsync(
-                                            groupIdToBeDeleted
-                                        );
-                                        await queryClient.invalidateQueries({
-                                            queryKey: [QK.group, 'myGroups'],
-                                        });
-                                    }
-                                    setGroupIdToBeDeleted(null);
-                                },
-                            },
-                            {
-                                title: 'Cancel',
-                                type: 'default',
-
-                                onPress: () => {
-                                    setGroupIdToBeDeleted(null);
-                                },
-                            },
-                        ] as const
-                    }
-                    isVisible={groupIdToBeDeleted != null}
-                />
                 <Text
                     color="secondary"
                     style={{

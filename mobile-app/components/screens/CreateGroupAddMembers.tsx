@@ -58,7 +58,10 @@ export default function CreateGroupAddMembers({
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
+                    // a group needs at least 2 players; count up to that, then just the title
+                    headerTitle: canBeCreated
+                        ? 'Add Players'
+                        : `Add Players (${members.length} / 2)`,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 

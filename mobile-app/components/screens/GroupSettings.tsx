@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import React from 'react';
+import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { AppBackground } from '@/lib/Background';
@@ -57,8 +56,16 @@ export default function GroupSettingsScreen({
     const nav = useNavigation();
     const invite = useGroupInvite();
 
-    const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
-        useState(false);
+    const changeWallpaper = () =>
+        Alert.alert('Group Wallpaper', undefined, [
+            { text: 'Upload', onPress: onUploadWallpaperPress },
+            {
+                text: 'Remove',
+                style: 'destructive',
+                onPress: onDeleteWallpaperPress,
+            },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
 
     const experiments = useLocalSettings();
 
@@ -109,9 +116,7 @@ export default function GroupSettingsScreen({
                                 <MenuItem
                                     title="Change Wallpaper"
                                     headIcon="image-multiple"
-                                    onPress={() =>
-                                        setShowChangeWallpaperModal(true)
-                                    }
+                                    onPress={changeWallpaper}
                                     tailContent={
                                         isUpdatingWallpaper ? (
                                             <ActivityIndicator />
@@ -131,33 +136,6 @@ export default function GroupSettingsScreen({
                                     }
                                 />
                             ))}
-                        <ConfirmationModal
-                            onClose={() => setShowChangeWallpaperModal(false)}
-                            title="Group Wallpaper"
-                            actions={
-                                [
-                                    {
-                                        title: 'Upload',
-                                        type: 'confirm',
-
-                                        onPress: () => {
-                                            onUploadWallpaperPress();
-                                            setShowChangeWallpaperModal(false);
-                                        },
-                                    },
-                                    {
-                                        title: 'Remove',
-                                        type: 'danger',
-
-                                        onPress: () => {
-                                            onDeleteWallpaperPress();
-                                            setShowChangeWallpaperModal(false);
-                                        },
-                                    },
-                                ] as const
-                            }
-                            isVisible={showChangeWallpaperModal}
-                        />
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem

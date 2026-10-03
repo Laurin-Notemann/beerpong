@@ -12,7 +12,8 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, String
 
     List<GroupMember> findByUserId(String userId);
 
-    @Query("SELECT gm.group.id FROM GroupMember gm WHERE gm.user.id = :userId")
+    // only groups the user hasn't left (leaving deactivates the membership)
+    @Query("SELECT gm.group.id FROM GroupMember gm WHERE gm.user.id = :userId AND gm.active = true")
     List<String> findGroupsByUserId(@Param("userId") String userId);
 
     List<GroupMember> findByGroupId(String groupId);

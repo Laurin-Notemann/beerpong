@@ -2,16 +2,15 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
+import { Platform } from 'react-native';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { SeasonSettingsDto } from '@/openapi/openapi';
-import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { formatWakeTime, parseWakeTime, toWakeTime } from '@/utils/wakeTime';
@@ -49,8 +48,6 @@ export default function Page() {
     const isDirty =
         dailyLeaderboard !== seasonSettings?.dailyLeaderboard ||
         toWakeTime(wakeTimeDate) !== seasonSettings?.wakeTime;
-
-    const theme = useTheme();
 
     return (
         <>
@@ -111,64 +108,43 @@ export default function Page() {
                         border={false}
                         title="Reset time"
                         headIcon="alarm"
-                        tailContent={formatWakeTime(toWakeTime(wakeTimeDate))}
-                        tailIconType="next"
-                        onPress={() => setShowTimePicker(true)}
+                        tailContent={
+                            Platform.OS === 'ios' ? (
+                                // native compact picker: shows the time, opens a wheel on tap
+                                <DateTimePicker
+                                    mode="time"
+                                    display="compact"
+                                    value={wakeTimeDate}
+                                    disabled={dailyLeaderboard !== 'WAKE_TIME'}
+                                    onChange={(_, value) => {
+                                        if (value) setWakeTimeDate(value);
+                                    }}
+                                />
+                            ) : (
+                                formatWakeTime(toWakeTime(wakeTimeDate))
+                            )
+                        }
+                        tailIconType={
+                            Platform.OS === 'ios' ? undefined : 'next'
+                        }
+                        onPress={
+                            Platform.OS === 'ios'
+                                ? undefined
+                                : () => setShowTimePicker(true)
+                        }
                     />
                 </MenuSection>
-                <ConfirmationModal
-                    content={
-                        <DateTimePicker
-                            mode="time"
-                            value={wakeTimeDate}
-                            display="spinner"
-                            onChange={(_, value) => {
-                                if (value) {
-                                    setWakeTimeDate(value);
-                                }
-                            }}
-                            textColor={theme.color.text.primary}
-                        />
-                    }
-                    isVisible={showTimePicker}
-                    onClose={() => setShowTimePicker(false)}
-                    actions={[]}
-                />
-                {/* <Modal
-                    transparent
-                    visible={showTimePicker}
-                    onRequestClose={() => setShowTimePicker(false)}
-                >
-                    <Pressable
-                        style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(0,0,0,0.5)',
-                            paddingHorizontal: 8,
+                {/* Android shows the picker as a system dialog while it's mounted */}
+                {Platform.OS === 'android' && showTimePicker && (
+                    <DateTimePicker
+                        mode="time"
+                        value={wakeTimeDate}
+                        onChange={(_, value) => {
+                            setShowTimePicker(false);
+                            if (value) setWakeTimeDate(value);
                         }}
-                        onPress={() => setShowTimePicker(false)}
-                    >
-                        <View
-                            style={{
-                                backgroundColor: theme.color.modal.bg,
-                                borderRadius: 8,
-                                padding: 16,
-                            }}
-                        >
-                            <DateTimePicker
-                                mode="time"
-                                value={wakeTimeDate}
-                                display="spinner"
-                                onChange={(_, value) => {
-                                    if (value) {
-                                        setWakeTimeDate(value);
-                                    }
-                                }}
-                                textColor={theme.color.text.primary}
-                            />
-                        </View>
-                    </Pressable>
-                </Modal> */}
+                    />
+                )}
             </InputModal>
         </>
     );

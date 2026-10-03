@@ -12,6 +12,7 @@ import { CreateGroupSetGame } from '@/components/screens/CreateGroupSetGame';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export default function Page() {
@@ -21,6 +22,7 @@ export default function Page() {
     const presetsQuery = useGroupPresetsQuery();
     const matchDraft = useMatchDraftStore();
     const queryClient = useQueryClient();
+    const { selectGroup } = useGroupStore();
 
     const presets =
         presetsQuery.data?.data?.map((i) => ({
@@ -51,6 +53,7 @@ export default function Page() {
                 queryKey: [QK.group, 'myGroups'],
             });
             matchDraft.actions.clear();
+            selectGroup(data.data.id);
 
             showSuccessToast(`You created "${name}"`);
 

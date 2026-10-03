@@ -253,6 +253,7 @@ public class GroupControllerTest {
 
     @Test
     @Transactional
+    @SuppressWarnings("unchecked")
     public void group_leave() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
@@ -261,5 +262,10 @@ public class GroupControllerTest {
 
         // test group leave
         assertEquals("OK", ok);
+
+        // a left group is no longer among the user's groups
+        var groupsResponse = requestUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
+        var groups = (List<GroupDto>) requestUtils.assertSuccess(groupsResponse, ArrayList.class);
+        assertTrue(groups.stream().noneMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
     }
 }

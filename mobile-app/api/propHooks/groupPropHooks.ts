@@ -83,13 +83,6 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
         if (!groupId) return;
 
         try {
-            // TODO: i can't get this to actually show up
-            setTimeout(
-                () =>
-                    showYouLeftGroupToast(group?.data?.name ?? 'Unknown Group'),
-                3000
-            );
-
             await leaveGroupMutation.mutateAsync(groupId);
 
             await queryClient.invalidateQueries({
@@ -98,6 +91,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
             router.dismissAll();
             router.replace('/');
+            showYouLeftGroupToast(group?.data?.name ?? 'Unknown Group');
         } catch (err) {
             ConsoleLogger.error('failed to leave group:', err);
             showErrorToast('Failed to leave group.', err);

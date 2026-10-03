@@ -24,7 +24,8 @@ export default function MainLayout() {
     const modalStyles = useModalStyles();
 
     return (
-        <Stack>
+        // arrow-only back buttons: the previous title would squeeze this screen's title
+        <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
             <Stack.Screen
                 name="onboarding"
                 options={{ title: '', headerShown: false }}

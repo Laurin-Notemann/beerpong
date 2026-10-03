@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { View } from 'react-native';
 import DraggableFlatList, {
     RenderItemParams,
 } from 'react-native-draggable-flatlist';
 
-import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 import PillButton from '@/components/PillButton';
@@ -59,10 +57,6 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
     editable = true,
     ...rest
 }) => {
-    const [modalId, setModalId] = useState<string | null>(null);
-
-    const modalItem = moves.find((i) => i.id === modalId);
-
     const nav = useNavigation();
 
     const renderItem = ({
@@ -93,23 +87,6 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
 
     return (
         <>
-            <ConfirmationModal
-                onClose={() => setModalId(null)}
-                title={modalItem?.name!}
-                description={modalItem ? formatStats(modalItem) : undefined}
-                actions={[
-                    {
-                        title: 'Delete Move',
-                        type: 'danger',
-
-                        onPress: () => {
-                            onDelete?.(modalId!);
-                            setModalId(null);
-                        },
-                    },
-                ]}
-                isVisible={modalId != null}
-            />
             <MenuSection
                 title="Allowed Moves"
                 titleTailIcon={
