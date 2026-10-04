@@ -124,3 +124,41 @@ export const getRankingAlgorithm = (
 
     return rankingAlgorithms[algo] ?? rankingAlgorithms.ELO;
 };
+
+export interface Placement {
+    /** 1-based; tied players share the rank of the best of them */
+    rank: number;
+    tied: boolean;
+}
+
+/**
+ * Golf-style ranking: players whose value shows the same on screen share a
+ * rank and the next rank is skipped (1, T2, T2, 4). Tied players are listed
+ * by name, so their order is never arbitrary.
+ */
+export const rankPlayers = <T extends RankingPlayer>(
+    players: readonly T[],
+    algo: RankingAlgorithm | null | undefined
+) => {
+    const { sortFunc, getDisplayValue } = getRankingAlgorithm(algo);
+    // copy: `players` can be cached query data, which must not be sorted in place
+    const sorted = [...players].sort(sortFunc);
+
+    const ranked: { player: T; placement: Placement }[] = [];
+    for (let start = 0; start < sorted.length;) {
+        const value = getDisplayValue(sorted[start]);
+        let end = start + 1;
+        while (end < sorted.length && getDisplayValue(sorted[end]) === value)
+            end++;
+
+        const tied = end - start > 1;
+        sorted
+            .slice(start, end)
+            .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+            .forEach((player) =>
+                ranked.push({ player, placement: { rank: start + 1, tied } })
+            );
+        start = end;
+    }
+    return ranked;
+};

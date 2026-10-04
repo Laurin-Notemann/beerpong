@@ -1,6 +1,6 @@
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';

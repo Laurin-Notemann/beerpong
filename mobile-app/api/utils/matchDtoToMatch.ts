@@ -1,6 +1,6 @@
 import { MatchImpl, PlayerWithProfile } from '@/api/entities';
-import { eloAlgorithm } from '@/app/EloAlgorithm';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
+import { eloAlgorithm } from '@/lib/EloAlgorithm';
 import { Components } from '@/openapi/openapi';
 
 export interface PerformedMove {
@@ -10,6 +10,8 @@ export interface PerformedMove {
     count: number;
     pointsForTeam: number;
     isFinish: boolean;
+    /** cups one hit of this move takes off the table */
+    cups: number;
 }
 
 export interface TeamMember {
@@ -45,13 +47,33 @@ export type Match = {
     redTeamPhotoUrl?: string | null;
 };
 
+const noPlayers: PlayerWithProfile[] = [];
+const noMoves: Components.Schemas.RuleMoveDto[] = [];
+
+// React Query keeps unchanged objects across refetches, so a match DTO converted once with the
+// same players and moves can be reused instead of rebuilt on every render.
+const converted = new WeakMap<
+    Components.Schemas.MatchDtoExtended,
+    {
+        players: PlayerWithProfile[];
+        moves: Components.Schemas.RuleMoveDto[];
+        match: Match;
+    }
+>();
+
 export const matchDtoToMatch =
     (
-        players: PlayerWithProfile[] = [],
-        allowedMoves: Components.Schemas.RuleMoveDto[] = []
+        players: PlayerWithProfile[] = noPlayers,
+        allowedMoves: Components.Schemas.RuleMoveDto[] = noMoves
     ) =>
-    (i: Components.Schemas.MatchDtoExtended): Match => {
-        return new MatchImpl(i, players, allowedMoves).toJSON();
+    (dto: Components.Schemas.MatchDtoExtended): Match => {
+        const hit = converted.get(dto);
+        if (hit && hit.players === players && hit.moves === allowedMoves) {
+            return hit.match;
+        }
+        const match = new MatchImpl(dto, players, allowedMoves).toJSON();
+        converted.set(dto, { players, moves: allowedMoves, match });
+        return match;
     };
 
 export type MinimalMatch = Pick<

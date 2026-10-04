@@ -1,8 +1,13 @@
 import React from 'react';
+import { Text } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
+import { countCups } from '@/api/utils/ruleMoveCups';
 import Player from '@/components/MatchPlayers/Player';
 import MenuSection from '@/components/Menu/MenuSection';
+import { useNextTokens } from '@/components/next/tokens';
+import { plural } from '@/utils/format';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 
 export interface MatchPlayersProps {
     editable?: boolean;
@@ -16,21 +21,37 @@ export default function MatchPlayers({
     setMoveCount,
     onPlayerPress,
 }: MatchPlayersProps) {
+    const newDesign = useNewDesign();
+    const t = useNextTokens();
+
     const redTeam = players.filter((i) => i.team === 'red');
     const blueTeam = players.filter((i) => i.team === 'blue');
 
-    const redTeamCups = redTeam.reduce(
-        (sum, i) => sum + i.moves.reduce((sum2, j) => sum2 + j.count, 0),
-        0
-    );
-    const blueTeamCups = blueTeam.reduce(
-        (sum, i) => sum + i.moves.reduce((sum2, j) => sum2 + j.count, 0),
-        0
-    );
+    const redTeamCups = countCups(redTeam.flatMap((i) => i.moves));
+    const blueTeamCups = countCups(blueTeam.flatMap((i) => i.moves));
+
+    const blueTitle = `Blue Team - ${plural(blueTeamCups, 'cup', 'cups')}`;
+    const redTitle = `Red Team - ${plural(redTeamCups, 'cup', 'cups')}`;
 
     return (
         <>
-            <MenuSection title={`Blue Team - ${blueTeamCups} cups`}>
+            <MenuSection
+                title={
+                    newDesign ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: '700',
+                                color: t.blue,
+                            }}
+                        >
+                            {blueTitle}
+                        </Text>
+                    ) : (
+                        blueTitle
+                    )
+                }
+            >
                 {blueTeam.map((i, idx) => (
                     <Player
                         key={idx}
@@ -45,7 +66,23 @@ export default function MatchPlayers({
                 ))}
             </MenuSection>
 
-            <MenuSection title={`Red Team - ${redTeamCups} cups`}>
+            <MenuSection
+                title={
+                    newDesign ? (
+                        <Text
+                            style={{
+                                fontSize: 17,
+                                fontWeight: '700',
+                                color: t.red,
+                            }}
+                        >
+                            {redTitle}
+                        </Text>
+                    ) : (
+                        redTitle
+                    )
+                }
+            >
                 {redTeam.map((i, idx) => (
                     <Player
                         key={idx}

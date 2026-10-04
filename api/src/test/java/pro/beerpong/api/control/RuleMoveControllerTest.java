@@ -90,6 +90,44 @@ public class RuleMoveControllerTest {
     @Test
     @Transactional
     @SuppressWarnings("unchecked")
+    public void ruleMoves_cups() {
+        var prerequisiteGroup = testUtils.createTestGroup(port, "test", "beerpong");
+        var movesUrl = "/groups/" + prerequisiteGroup.getId() + "/seasons/" + prerequisiteGroup.getActiveSeasonId() + "/rule-moves";
+
+        var response = requestUtils.performGet(port, movesUrl, List.class, RuleMoveDto.class);
+        var cupsByName = new java.util.HashMap<String, Integer>();
+        ((List<RuleMoveDto>) requestUtils.assertSuccess(response, ArrayList.class))
+                .forEach(move -> cupsByName.put(move.getName(), move.getCups()));
+
+        // a won match adds up to 10 cups: bouncers take two, bombs one (but two points), the finish none on top
+        // of the last hit, the rings their whole formation
+        assertEquals(1, cupsByName.get("Normal"));
+        assertEquals(1, cupsByName.get("Bomb"));
+        assertEquals(2, cupsByName.get("Bouncer"));
+        assertEquals(1, cupsByName.get("Trickshot"));
+        assertEquals(0, cupsByName.get("Save"));
+        assertEquals(0, cupsByName.get("Finish - Normal"));
+        assertEquals(4, cupsByName.get("Finish - Ring of fire"));
+        assertEquals(6, cupsByName.get("Finish - Ring of water"));
+
+        // explicit cups are kept, a missing count falls back to the default
+        var custom = testUtils.buildRuleMove("Double", false, 2, 0);
+        custom.setCups(3);
+        var created = requestUtils.assertSuccess(requestUtils.performPost(port, movesUrl, custom, RuleMoveDto.class), RuleMoveDto.class);
+        assertEquals(3, created.getCups());
+
+        var legacy = testUtils.buildRuleMove("Legacy", false, 1, 0);
+        created = requestUtils.assertSuccess(requestUtils.performPost(port, movesUrl, legacy, RuleMoveDto.class), RuleMoveDto.class);
+        assertEquals(1, created.getCups());
+
+        var negative = testUtils.buildRuleMove("Negative", false, 1, 0);
+        negative.setCups(-1);
+        requestUtils.assertFailure(requestUtils.performPost(port, movesUrl, negative, RuleMoveDto.class), ErrorCodes.RULE_MOVE_INVALID_DTO);
+    }
+
+    @Test
+    @Transactional
+    @SuppressWarnings("unchecked")
     public void ruleMoves_create_success() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 

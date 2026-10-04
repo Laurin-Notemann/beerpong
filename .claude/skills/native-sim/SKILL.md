@@ -95,6 +95,8 @@ gh run cancel <run id>                          # stop early (the script prints 
 
 - The branch must contain the workflow, and `workflow_dispatch` needs it on `staging`.
 - The sim talks to the staging API (`EXPO_PUBLIC_*` env in the workflow).
+- A cold native build of this app takes ~48 min, not ~28. The workflow pins
+  `@expo/serve-sim@0.4.0`: 0.5.0 rejects the tunnel's Host header with a 403.
 - Don't `native-sim init` here, and diff the adapted workflow against the new template
   when upgrading native-sim.
 - If `gh auth status` fails because a second, broken gh account is stored, `native-sim

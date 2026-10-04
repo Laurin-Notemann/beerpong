@@ -1,11 +1,11 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { useInsets } from '@/app/useInsets';
 import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import MatchPlayers from '@/components/MatchPlayers';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
+import { useInsets } from '@/lib/useInsets';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export interface CreateMatchAssignPointsProps {
@@ -66,7 +66,7 @@ export default function CreateMatchAssignPoints({
                     onPlayerPress={onPlayerPress}
                 />
             </ScrollView>
-            <SafeAreaView
+            <View
                 style={{
                     position: 'absolute',
                     flexDirection: 'row',
@@ -88,7 +88,7 @@ export default function CreateMatchAssignPoints({
                     isPending={isPending}
                     onPress={onSubmit}
                 />
-            </SafeAreaView>
+            </View>
         </View>
     );
 }

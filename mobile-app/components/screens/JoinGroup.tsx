@@ -1,12 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import { Stack } from 'expo-router';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useEffectEvent, useState } from 'react';
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
     SafeAreaView,
     Text,
 } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import {
     CodeField,
     useBlurOnFulfill,
@@ -16,10 +17,9 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { env } from '@/api/env';
 import Button from '@/components/Button';
-import { HeaderItem } from '@/components/HeaderItem';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import { useTheme } from '@/theme';
-import { showSuccessToast } from '@/toast';
+import { showErrorToast, showSuccessToast } from '@/toast';
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 
@@ -74,7 +74,7 @@ export default function JoinGroup({
         }
     }
     function onResetCode() {
-        codeInputRef.current?.focus();
+        codeInput()?.focus();
         onCodeChange('');
     }
 
@@ -82,16 +82,19 @@ export default function JoinGroup({
         value: code,
         cellCount: env.groupCode.length,
     });
-    useAutoFocus(codeInputRef);
+    // react-native-confirmation-code-field still types its ref as the pre-0.88 TextInput class.
+    const codeInput = () =>
+        codeInputRef.current as unknown as TextInputInstance | null;
+    useAutoFocus(
+        codeInputRef as unknown as React.RefObject<TextInputInstance | null>
+    );
 
     const [props, getCellOnLayoutHandler] = useClearByFocusCell({
         value: code,
         setValue: onCodeChange,
     });
 
-    const attemptPasteFromClipboard = async () => {
-        // will ask for confirmation to access clipboard
-        const clipboardContents = await Clipboard.getStringAsync();
+    const fillFromClipboard = (clipboardContents: string) => {
         const withoutWhitespace = clipboardContents
             .replace(nonAlphaNumericChars, '')
             .toUpperCase();
@@ -99,15 +102,22 @@ export default function JoinGroup({
             withoutWhitespace.length !== env.groupCode.length ||
             !withoutWhitespace.match(/^[a-zA-Z0-9]+$/)
         ) {
-            return;
+            return false;
         }
         onCodeChange(withoutWhitespace, true);
 
         showSuccessToast('Filled in from clipboard');
+        return true;
     };
+    const fillFromClipboardOnOpen = useEffectEvent(fillFromClipboard);
 
+    // Reading the clipboard on iOS asks for permission every time; the system paste button
+    // below doesn't. Android reads without asking, so it fills the code in right away.
     useEffect(() => {
-        attemptPasteFromClipboard();
+        if (Clipboard.isPasteButtonAvailable) return;
+        Clipboard.getStringAsync().then((contents) =>
+            fillFromClipboardOnOpen(contents)
+        );
     }, []);
 
     const theme = useTheme();
@@ -127,9 +137,6 @@ export default function JoinGroup({
                         color: theme.color.text.primary,
                     },
                     headerShown: true,
-                    headerRight: isLoading
-                        ? () => <HeaderItem isLoading>awer</HeaderItem>
-                        : undefined,
                 }}
             />
             <SafeAreaView
@@ -186,6 +193,28 @@ export default function JoinGroup({
                             </Fragment>
                         )}
                     />
+                    {Clipboard.isPasteButtonAvailable && code.length === 0 && (
+                        <Clipboard.ClipboardPasteButton
+                            acceptedContentTypes={['plain-text']}
+                            displayMode="iconAndLabel"
+                            onPress={(data) => {
+                                if (
+                                    data.type !== 'text' ||
+                                    !fillFromClipboard(data.text)
+                                ) {
+                                    showErrorToast(
+                                        "The clipboard doesn't contain a group code."
+                                    );
+                                }
+                            }}
+                            style={{
+                                alignSelf: 'center',
+                                width: 110,
+                                height: 40,
+                                marginTop: 16,
+                            }}
+                        />
+                    )}
                     <TouchableOpacity
                         onPress={onResetCode}
                         style={{

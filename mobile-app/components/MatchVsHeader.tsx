@@ -1,9 +1,9 @@
 import React from 'react';
 import { Text, View, ViewProps } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import { TeamId } from '@/components/screens/NewMatchAssignTeams';
 import { useTheme } from '@/theme';
 
@@ -42,8 +42,6 @@ export function ScoreChip({
             <Text
                 style={{
                     color: theme.color.text.primary,
-                    backgroundColor: theme.color.bg,
-                    borderRadius: 2,
                     paddingHorizontal: 5,
                     paddingVertical: 2,
                     fontSize: 16,
@@ -84,6 +82,9 @@ function MatchVsHeader({
 }: MatchVsHeaderProps) {
     if (!match) return null;
 
+    // the navigation bar only has room between its buttons: smaller, at most 3 per team
+    const isHeader = variant === 'header';
+
     const winnerTeamId: TeamId = hasFinishMove(match.redTeam)
         ? 'red'
         : hasFinishMove(match.blueTeam)
@@ -98,8 +99,7 @@ function MatchVsHeader({
                     alignItems: 'center',
                     justifyContent: 'center',
 
-                    gap: variant === 'header' ? 2 : 16,
-                    bottom: variant === 'header' ? 4 : undefined,
+                    gap: isHeader ? 6 : 16,
                 },
                 rest.style,
             ]}
@@ -107,8 +107,10 @@ function MatchVsHeader({
             <TeamMemo
                 color="blue"
                 players={match.blueTeam}
-                maxItems={maxItems}
+                maxItems={isHeader ? 3 : maxItems}
                 highlightedId={highlightedId}
+                size={isHeader ? 28 : undefined}
+                centered={isHeader}
             />
 
             <ScoreChip winnerTeamId={winnerTeamId}>
@@ -118,8 +120,10 @@ function MatchVsHeader({
             <TeamMemo
                 color="red"
                 players={match.redTeam}
-                maxItems={maxItems}
+                maxItems={isHeader ? 3 : maxItems}
                 highlightedId={highlightedId}
+                size={isHeader ? 28 : undefined}
+                centered={isHeader}
             />
         </View>
     );
@@ -151,8 +155,11 @@ function Team({
     const avatarGap = size / 2.25;
 
     const maxWidth = avatarSize * maxItems - avatarGap * (maxItems - 1);
-    const actualWidth =
-        avatarSize * players.length - avatarGap * (players.length - 1);
+    const shown = Math.min(players.length, maxItems);
+    const actualWidth = Math.max(
+        0,
+        avatarSize * shown - avatarGap * (shown - 1)
+    );
 
     const highlightedPlayer = players.find(
         (i) => i.profileId === highlightedId

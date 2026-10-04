@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import pro.beerpong.api.control.GroupPresetsController;
 import pro.beerpong.api.mapping.RuleMoveMapper;
 import pro.beerpong.api.model.ErrorCodes;
+import pro.beerpong.api.model.RuleMoveCups;
 import pro.beerpong.api.model.ServiceResponse;
 import pro.beerpong.api.model.dao.Group;
 import pro.beerpong.api.model.dao.RuleMove;
@@ -33,7 +34,8 @@ public class RuleMoveService {
             buildRuleMove("Trickshot", 2, 0, false),
             buildRuleMove("Save", 2, 0, false),
             buildRuleMove("Finish - Normal", 1, 3, true),
-            buildRuleMove("Finish - Ring of fire", 1, 10, true)
+            buildRuleMove("Finish - Ring of fire", 1, 10, true),
+            buildRuleMove("Finish - Ring of water", 1, 10, true)
     );
 
     public static final List<DefaultRuleMove> DEFAULT_MOVES = List.of(
@@ -54,6 +56,7 @@ public class RuleMoveService {
         }
 
         var rule = moveMapper.ruleMoveCreateDtoToRuleMove(createDto);
+        rule.setCups(cupsOrDefault(createDto));
         rule.setSeason(season);
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(rule));
@@ -77,6 +80,7 @@ public class RuleMoveService {
         move.setPointsForTeam(createDto.getPointsForTeam());
         move.setPointsForScorer(createDto.getPointsForScorer());
         move.setFinishingMove(createDto.isFinishingMove());
+        move.setCups(cupsOrDefault(createDto));
 
         var dto = moveMapper.ruleMoveToRuleMoveDto(moveRepository.save(move));
 
@@ -126,6 +130,7 @@ public class RuleMoveService {
             ruleMove.setPointsForTeam(oldRuleMove.getPointsForTeam());
             ruleMove.setPointsForScorer(oldRuleMove.getPointsForScorer());
             ruleMove.setFinishingMove(oldRuleMove.isFinishingMove());
+            ruleMove.setCups(oldRuleMove.cupsPerHit());
             ruleMove.setSeason(newSeason);
 
             moveRepository.save(ruleMove);
@@ -149,10 +154,15 @@ public class RuleMoveService {
                     move.setFinishingMove(ruleMove.finish());
                     move.setPointsForScorer(ruleMove.pointsForScorer());
                     move.setPointsForTeam(ruleMove.pointsForTeam());
+                    move.setCups(RuleMoveCups.defaultFor(ruleMove.name(), ruleMove.finish()));
                     move.setSeason(season);
                     return move;
                 })
                 .forEach(moveRepository::save);
+    }
+
+    private static int cupsOrDefault(RuleMoveCreateDto dto) {
+        return dto.getCups() != null ? dto.getCups() : RuleMoveCups.defaultFor(dto.getName(), dto.isFinishingMove());
     }
 
     private static DefaultRuleMove buildRuleMove(String name, int pointsForScorer, int pointsForTeam, boolean finish) {

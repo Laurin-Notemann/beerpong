@@ -45,7 +45,7 @@ We need to be on the same page with terminology. When communicating, use this la
 ## The three ways to hurt yourself
 
 1. **Touching the live server by hand.** `ssh privaten` hosts the staging API and its Postgres (`~/docker/beerpong-api`). The database there is real user data. Never run destructive SQL, `docker compose down -v`, or volume prunes against it. Read logs freely; change things through the deploy workflow.
-2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, or changing permissions changes the fingerprint. The staging EAS workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
+2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, or changing permissions changes the fingerprint. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
 3. **Hand-editing generated API types.** `mobile-app/api/generated/openapi.json` and `mobile-app/openapi/openapi.d.ts` are produced from the backend. Change the Java DTOs/controllers and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile.
 
 ## Hit every surface
@@ -84,7 +84,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 ## Shipping
 
 - **API:** push to `staging` → `Api Staging Deploy` builds the image and redeploys `beerpong-api-staging` on the server over SSH. `main` deploys production (not currently running).
-- **App:** push to `staging` → `Mobile App EAS` (GitHub Action) starts `mobile-app/.eas/workflows/staging.yml` on EAS. It fingerprints the app. A matching build gets an OTA update on its channel. A new runtime gets a native build: iOS goes to TestFlight, Android to an internal preview APK. Build numbers are managed remotely by EAS.
+- **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) runs on GitHub's runners, not EAS cloud builds. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
 - The app checks for updates on foreground and applies a downloaded update when it goes to the background (`mobile-app/hooks/useOtaUpdates.ts`).
 
 ## Pull requests
@@ -116,9 +116,8 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 ## Where code lives
 
 - `api/` - Spring Boot 3 API (Java 21, Maven). `control` (REST controllers), `service`, `repository`, `model/dao` + `model/dto`, `mapping` (MapStruct), `sockets` (realtime), `auth` (JWT). Config in `src/main/resources/application.yml`.
-- `mobile-app/` - Expo / React Native app with expo-router. `app/` (routes and screens), `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
-- `mobile-app/.eas/workflows/` - the EAS workflow that builds and updates the app.
-- `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the trigger for the EAS workflow.
+- `mobile-app/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
+- `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
 - `api-go/` - the Go rewrite of `api/` (pgx + sqlc, goose migrations). Same endpoints, schema and env vars; see `api-go/README.md`.
 - `api-tests/` - black-box contract tests and `shadowdiff`, runnable against either backend. Goldens were recorded against Java.
 - `docker/` - local compose files for the database and backend.
@@ -127,6 +126,8 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 
 - Complexity belongs at the boundaries (API mapping, client hooks). Screens stay dumb.
 - Inferred types over annotations. `any` is the enemy. Imports use the `@/` alias; eslint forbids relative imports.
+- Never import `@react-navigation/*` in the app. Expo Router bundles its own React Navigation; use `expo-router/react-navigation`, the `Drawer`/`Stack`/`NativeTabs` layouts and `Stack.Toolbar`. A second copy builds and type-checks fine but crashes at launch ("Couldn't register the navigator").
+- Native UI over JS imitations: header buttons are `Stack.Toolbar` items, menus are native (`Stack.Toolbar.Menu` / `@expo/ui` `MenuView`), confirmations are `Alert.alert`.
 - Comments describe how a thing is used, and move when the code moves.
 - No `console.*` in app code outside `utils/logging.ts`. Use a `ScopedLogger`; its output also reaches Sentry Logs.
 - If a rule here fights the task in front of you, say so loudly and get a human sign-off before breaking it.

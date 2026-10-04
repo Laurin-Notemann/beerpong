@@ -53,14 +53,10 @@ const PressableScale = React.forwardRef<PressableScaleHandle, Props>(
                 bounciness,
             }).start();
 
-        useImperativeHandle(
-            ref,
-            () => ({
-                pressIn: () => animate(pressedScale),
-                pressOut: () => animate(1),
-            }),
-            [pressedScale, speed, bounciness]
-        );
+        useImperativeHandle(ref, () => ({
+            pressIn: () => animate(pressedScale),
+            pressOut: () => animate(1),
+        }));
 
         const animatedStyle = useMemo(
             () => [{ transform: [{ scale }] }, style],
@@ -90,5 +86,6 @@ const PressableScale = React.forwardRef<PressableScaleHandle, Props>(
         );
     }
 );
+PressableScale.displayName = 'PressableScale';
 
 export default PressableScale;

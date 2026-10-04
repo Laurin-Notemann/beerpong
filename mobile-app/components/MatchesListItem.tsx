@@ -6,7 +6,14 @@ import { TouchableHighlight } from 'react-native-gesture-handler';
 import { env } from '@/api/env';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import MatchVsHeader from '@/components/MatchVsHeader';
+import { NextMatchCard } from '@/components/next/NextMatchCard';
 import { useTheme } from '@/theme';
+import { useNewDesign } from '@/zustand/localSettingsStore';
+
+const timeColumnWidth = 44;
+
+const teamNames = (team: Match['blueTeam']) =>
+    team.map((i) => i.name || 'Unknown').join(', ');
 
 const MatchesListItemInner: React.FC<{
     match: Match;
@@ -15,6 +22,17 @@ const MatchesListItemInner: React.FC<{
     border?: boolean;
 }> = ({ match, onPress, highlightedId, border = true }) => {
     const theme = useTheme();
+    const newDesign = useNewDesign();
+
+    if (newDesign) {
+        return (
+            <NextMatchCard
+                match={match}
+                onPress={onPress}
+                highlightedId={highlightedId}
+            />
+        );
+    }
 
     return (
         <TouchableHighlight
@@ -37,53 +55,42 @@ const MatchesListItemInner: React.FC<{
             >
                 <MatchVsHeader match={match} highlightedId={highlightedId} />
 
-                <View style={{ flexDirection: 'row', gap: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text
                         style={{
+                            width: timeColumnWidth,
                             fontSize: 15,
                             color: theme.color.text.tertiary,
+                            fontVariant: ['tabular-nums'],
                         }}
                     >
                         {env.format.date.matchHour(dayjs(match.date))}
                     </Text>
                     <Text
+                        numberOfLines={2}
                         style={{
+                            flex: 1,
                             fontSize: 15,
                             color: theme.color.text.tertiary,
-
-                            flex: 1,
+                            textAlign: 'center',
                         }}
                     >
-                        {match.blueTeam
-                            .map((i) => i.name || 'Unknown')
-                            .join(', ') +
-                            ' - ' +
-                            match.redTeam
-                                .map((i) => i.name || 'Unknown')
-                                .join(', ')}
+                        {teamNames(match.blueTeam)} - {teamNames(match.redTeam)}
                     </Text>
+                    {/* balances the time column so the names center under the score */}
+                    <View style={{ width: timeColumnWidth }} />
                 </View>
             </View>
         </TouchableHighlight>
     );
 };
 
+// Converted matches are cached per DTO (matchDtoToMatch), so a changed match is a new object.
+// `onPress` is ignored: it only navigates to the match, which doesn't go stale.
 export const MatchesListItem = React.memo(
     MatchesListItemInner,
-    (prev, next) => {
-        if (
-            prev.highlightedId !== next.highlightedId ||
-            prev.border !== next.border
-        ) {
-            return false;
-        }
-        const a = prev.match;
-        const b = next.match;
-        return (
-            a.id === b.id &&
-            a.blueCups === b.blueCups &&
-            a.redCups === b.redCups &&
-            a.date.getTime() === b.date.getTime()
-        );
-    }
+    (prev, next) =>
+        prev.match === next.match &&
+        prev.highlightedId === next.highlightedId &&
+        prev.border === next.border
 );

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ApiId } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
@@ -57,12 +57,18 @@ export const useJoinGroupMutation = () => {
 
 export const useLeaveGroupMutation = () => {
     const { api } = useApi();
+    const qc = useQueryClient();
 
     return useMutation<Paths.LeaveGroup.Responses.$200 | null, Error, string>({
         mutationFn: async (id) => {
             const res = await (await api).leaveGroup({ id });
 
             return res?.data;
+        },
+        onSuccess: async (_, id) => {
+            // the server now refuses this group's data; drop it instead of refetching into 401s
+            qc.removeQueries({ queryKey: [QK.group, id] });
+            await qc.invalidateQueries({ queryKey: [QK.group, 'myGroups'] });
         },
     });
 };

@@ -1,8 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Host as PortalProvider } from 'react-native-portalize';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {
     MinimalMatch,
@@ -12,13 +10,9 @@ import {
 import FinishMovePage from '@/components/AssignPointsToPlayerModal/FinishMovePage';
 import FinishScorerPage from '@/components/AssignPointsToPlayerModal/FinishScorerPage';
 import PlayerPage from '@/components/AssignPointsToPlayerModal/PlayerPage';
-import { HeaderItem } from '@/components/HeaderItem';
-import MatchVsHeader from '@/components/MatchVsHeader';
 import { Swiper, useSwiperWithPageState } from '@/components/Swiper';
 import { useTheme } from '@/theme';
 import { useTutorials } from '@/zustand/tutorialStore';
-
-const showVsHeader = false;
 
 export interface AssignPointsToPlayerModalProps {
     onClose?: () => void;
@@ -82,49 +76,35 @@ export default function AssignPointsToPlayerModal({
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: '',
-                    headerLeft:
-                        swiper.swiperPage === 0
-                            ? undefined
-                            : () => (
-                                  <HeaderItem
-                                      noMargin
-                                      onPress={() => swiper.ref.current?.prev()}
-                                  >
-                                      <Icon name="chevron-left" size={32} />
-                                  </HeaderItem>
-                              ),
-                    headerRight:
-                        isAssignFinishMovePage && finishMove
-                            ? () => (
-                                  <HeaderItem
-                                      noMargin
-                                      onPress={onClose}
-                                      style={{
-                                          marginLeft: 'auto',
-                                      }}
-                                  >
-                                      Done
-                                  </HeaderItem>
-                              )
-                            : (isAssignFinisherPage && !finisher) ||
-                                isAssignFinishMovePage
-                              ? undefined
-                              : () => (
-                                    <HeaderItem
-                                        noMargin
-                                        onPress={() =>
-                                            swiper.ref.current?.next()
-                                        }
-                                    >
-                                        <Icon name="chevron-right" size={32} />
-                                    </HeaderItem>
-                                ),
-                }}
-            />
-            <PortalProvider>
+            <Stack.Screen options={{ headerTitle: '' }} />
+            {swiper.swiperPage !== 0 && (
+                <Stack.Toolbar placement="left">
+                    <Stack.Toolbar.Button
+                        icon="chevron.left"
+                        onPress={() => swiper.ref.current?.prev()}
+                    >
+                        Previous
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
+            )}
+            {isAssignFinishMovePage && finishMove ? (
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button variant="done" onPress={onClose}>
+                        Done
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
+            ) : (isAssignFinisherPage && !finisher) ||
+              isAssignFinishMovePage ? null : (
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        icon="chevron.right"
+                        onPress={() => swiper.ref.current?.next()}
+                    >
+                        Next
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
+            )}
+            <>
                 <View
                     style={{
                         backgroundColor: theme.panel.dark.bg,
@@ -132,13 +112,6 @@ export default function AssignPointsToPlayerModal({
                         flex: 1,
                     }}
                 >
-                    {showVsHeader && (
-                        <MatchVsHeader
-                            match={match}
-                            highlightedId={players[swiper.swiperPage!]?.id}
-                        />
-                    )}
-
                     <Swiper {...swiper}>
                         {[...players, null, null].map((i, idx) => {
                             if (idx < players.length)
@@ -181,7 +154,7 @@ export default function AssignPointsToPlayerModal({
                         })}
                     </Swiper>
                 </View>
-            </PortalProvider>
+            </>
         </>
     );
 }

@@ -109,6 +109,6 @@ fi
 [ "$open" = true ] && command -v open >/dev/null && open "$url"
 
 echo
-echo "Waiting for the app (a cold native build takes ~30 min; Ctrl-C is safe, the session keeps running)"
+echo "Waiting for the app (~5 min from cache, ~50 min for a cold native build; Ctrl-C is safe, the session keeps running)"
 wait_for '| map(select(.description == "app installed and running"))[0].description // empty' >/dev/null
 echo "App is on screen ($(( ($(date +%s) - start) / 60 ))m)."

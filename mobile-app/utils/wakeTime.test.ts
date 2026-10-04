@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     formatWakeTime,
+    getNextWakeTime,
     getWakeTimeDayStart,
     parseWakeTime,
     toWakeTime,
@@ -24,6 +25,16 @@ describe('wakeTime', () => {
         );
         expect(getWakeTimeDayStart(new Date(2025, 0, 2, 5), '06:30')).toEqual(
             new Date(2025, 0, 1, 6, 30)
+        );
+    });
+
+    it('resets at the next wake time, which can still be today', () => {
+        // 01:21 with an 8:00 wake time: the day started yesterday and resets at 8:00 today
+        expect(getNextWakeTime(new Date(2025, 0, 2, 1, 21), '08:00')).toEqual(
+            new Date(2025, 0, 2, 8)
+        );
+        expect(getNextWakeTime(new Date(2025, 0, 2, 9), '08:00')).toEqual(
+            new Date(2025, 0, 3, 8)
         );
     });
 });

@@ -49,3 +49,13 @@ export function getWakeTimeDayStart(
     }
     return dayStart;
 }
+
+/** when the daily leaderboard that `date` belongs to resets: the start of the next day */
+export function getNextWakeTime(
+    date: Date,
+    wakeTime: string | undefined
+): Date {
+    const next = getWakeTimeDayStart(date, wakeTime);
+    next.setDate(next.getDate() + 1);
+    return next;
+}

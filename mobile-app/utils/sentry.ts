@@ -26,7 +26,9 @@ Sentry.init({
     // Logs: forwards console.* (and Sentry.logger.*) to Sentry Logs.
     enableLogs: true,
     sendDefaultPii: true,
-    attachScreenshot: true,
+    // The native screenshot grab ran off the main thread inside the crash handler and crashed
+    // a second time (ExpoAppSceneDelegate.window asserts the main queue).
+    attachScreenshot: false,
     enableAppHangTracking: true,
     integrations: [Sentry.expoRouterIntegration()],
 });

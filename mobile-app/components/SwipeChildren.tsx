@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { LayoutChangeEvent, View } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import Animated, {
     Extrapolation,
     interpolate,
@@ -16,102 +16,78 @@ type SwipeChildrenProps = {
     /** If true, new items slide in from the right side; otherwise from the left */
     right?: boolean;
     height?: number;
+    /**
+     * Fixed, so the native header never has to resize its title view (iOS keeps the size a
+     * custom title view had when it was attached). Children are centered in it.
+     */
+    width?: number;
 };
 
-type SwipeChildItemProps = {
+function SwipeChildItem({
+    index,
+    progress,
+    distance,
+    dir,
+    children,
+}: {
     index: number;
     progress: SharedValue<number>;
     distance: number;
-    swipeDir: 1 | -1;
-    onLayout: (e: LayoutChangeEvent) => void;
-    child: React.ReactNode;
-    itemWidth: number;
-    containerWidth: number | undefined;
-};
+    dir: 1 | -1;
+    children: React.ReactNode;
+}) {
+    const style = useAnimatedStyle(() => {
+        const rel = index - progress.value;
+        return {
+            transform: [{ translateX: rel * dir * distance }],
+            opacity: interpolate(
+                Math.abs(rel),
+                [0, 1, 1.0001],
+                [1, 0, 0],
+                Extrapolation.CLAMP
+            ),
+        };
+    });
 
-const SwipeChildItem = React.memo<SwipeChildItemProps>(
-    ({
-        index,
-        progress,
-        distance,
-        swipeDir: dir,
-        onLayout,
-        child,
-        itemWidth,
-        containerWidth,
-    }) => {
-        const style = useAnimatedStyle(() => {
-            const rel = index - progress.value;
-            return {
-                position: 'absolute',
-                left: ((containerWidth ?? 0) - itemWidth) / 2,
-                transform: [{ translateX: rel * dir * distance }],
-                opacity: interpolate(
-                    Math.abs(rel),
-                    [0, 1, 1.0001],
-                    [1, 0, 0],
-                    Extrapolation.CLAMP
-                ),
-            };
-        }, [distance, dir, itemWidth, containerWidth]);
+    return (
+        <Animated.View
+            style={[
+                {
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    alignItems: 'center',
+                },
+                style,
+            ]}
+        >
+            {children}
+        </Animated.View>
+    );
+}
 
-        return (
-            <Animated.View onLayout={onLayout} style={style}>
-                {child}
-            </Animated.View>
-        );
-    }
-);
-
-export const SwipeChildren: React.FC<SwipeChildrenProps> = ({
+/** Crossfades between its children as `progress` moves, e.g. a header title per swiper page. */
+export function SwipeChildren({
     progress,
     children,
     distance = 96,
     right = false,
     height = 21,
-}) => {
-    const items = useMemo(() => React.Children.toArray(children), [children]);
-    const [widths, setWidths] = useState<number[]>(Array(items.length).fill(0));
-
-    const onLayoutAt =
-        (idx: number) =>
-        (e: LayoutChangeEvent): void => {
-            const w = e?.nativeEvent?.layout?.width ?? 0;
-            setWidths((prev) => {
-                if (prev[idx] === w) return prev;
-                const next = prev.slice();
-                next[idx] = w;
-                return next;
-            });
-        };
-
-    const containerWidth =
-        widths.reduce((m, w) => Math.max(m, w), 0) || undefined;
-
-    const swipeDir = right ? 1 : -1;
-
+    width = 220,
+}: SwipeChildrenProps) {
     return (
-        <View
-            style={{
-                overflow: 'hidden',
-                width: containerWidth,
-                height,
-                position: 'relative',
-            }}
-        >
-            {items.map((child, i) => (
+        <View style={{ overflow: 'hidden', width, height }}>
+            {React.Children.toArray(children).map((child, i) => (
                 <SwipeChildItem
                     key={i}
                     index={i}
                     progress={progress}
                     distance={distance}
-                    swipeDir={swipeDir}
-                    onLayout={onLayoutAt(i)}
-                    child={child}
-                    itemWidth={widths[i] ?? 0}
-                    containerWidth={containerWidth}
-                />
+                    dir={right ? 1 : -1}
+                >
+                    {child}
+                </SwipeChildItem>
             ))}
         </View>
     );
-};
+}

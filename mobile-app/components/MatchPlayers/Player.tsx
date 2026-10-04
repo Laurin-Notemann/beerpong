@@ -1,28 +1,30 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import {
     Animated,
     StyleProp,
-    TextStyle,
     TouchableHighlight,
     TouchableOpacity,
     View,
+    ViewStyle,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
-import { formatRatingChange } from '@/utils/format';
+import { formatRatingChange, plural } from '@/utils/format';
 
 function Change({
     value,
     style,
 }: {
     value: number;
-    style?: StyleProp<TextStyle>;
+    style?: StyleProp<ViewStyle>;
 }) {
     const theme = useTheme();
+    // the rating change isn't computed yet (always 0), so there's nothing to show
+    if (Math.round(value) === 0) return null;
     return (
         <View
             style={[
@@ -30,7 +32,7 @@ function Change({
                     flexDirection: 'row',
                     alignItems: 'center',
                 },
-                style as any,
+                style,
             ]}
         >
             <Icon
@@ -83,7 +85,7 @@ export default function Player({
     setMoveCount,
     onPress,
 }: PlayerProps) {
-    const animation = useRef(new Animated.Value(0)).current; // start with height 0
+    const [animation] = useState(() => new Animated.Value(0)); // start with height 0
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toggleCollapse = () => {
@@ -104,6 +106,7 @@ export default function Player({
     });
 
     const performedMoves = moves.filter((i) => i.count > 0);
+    const isFinisher = performedMoves.some((i) => i.isFinish);
 
     const theme = useTheme();
 
@@ -139,9 +142,34 @@ export default function Player({
                         variant="list"
                     />
                     <View style={{ marginLeft: 16, flex: 1 }}>
-                        <Text variant="body1" color="primary" numberOfLines={1}>
-                            {name}
-                        </Text>
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 4,
+                            }}
+                        >
+                            <Text
+                                variant="body1"
+                                color="primary"
+                                numberOfLines={1}
+                                style={{ flexShrink: 1 }}
+                            >
+                                {name}
+                            </Text>
+                            {/* this player made the finishing throw */}
+                            {isFinisher && (
+                                <Icon
+                                    name="crown"
+                                    size={16}
+                                    color={
+                                        team
+                                            ? theme.color.team[team]
+                                            : theme.icon.primary
+                                    }
+                                />
+                            )}
+                        </View>
                         <View
                             style={{
                                 flexDirection: 'row',
@@ -150,7 +178,8 @@ export default function Player({
                         >
                             {editable ? (
                                 <Text variant="body2" color="tertiary">
-                                    {points} points{'  '}
+                                    {plural(points, 'point', 'points')}
+                                    {'  '}
                                     <Change
                                         value={change}
                                         style={{

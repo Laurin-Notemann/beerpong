@@ -1,17 +1,21 @@
-import { FlashList, FlashListProps } from '@shopify/flash-list';
-import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { LegendList, LegendListProps } from '@legendapp/list/react-native';
+import React, { useMemo } from 'react';
 
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
-import { Heading } from '@/components/Menu/MenuSection';
+import { Heading, HEADING_HEIGHT } from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
 
-export interface MatchesListProps
-    extends Omit<FlashListProps<MatchesListRow>, 'data' | 'renderItem'> {
+export interface MatchesListProps extends Pick<
+    LegendListProps<MatchesListRow>,
+    | 'style'
+    | 'contentContainerStyle'
+    | 'ListHeaderComponent'
+    | 'ListEmptyComponent'
+> {
     refresh: RefreshProps;
     matches: Match[];
 
@@ -25,8 +29,6 @@ export interface MatchesListProps
         profileId: string;
     };
     onMatchPress: (match: Match) => void;
-
-    background?: boolean;
 }
 type MatchesListRow =
     | {
@@ -46,52 +48,32 @@ export default function MatchesList({
     forPlayer,
     onMatchPress,
 
-    background,
-
+    style,
+    contentContainerStyle,
+    ListEmptyComponent = <NoMatchesPlayedYet />,
     ...rest
 }: MatchesListProps) {
-    const days = groupMatchesByDay(matches);
-
-    const rows: MatchesListRow[] = useMemo(() => {
+    // flat rows with a header row per day, so the day separators scroll with the matches
+    const rows = useMemo(() => {
         const out: MatchesListRow[] = [];
-        for (const day of days) {
+        for (const day of groupMatchesByDay(matches)) {
             out.push({ type: 'header', title: day.title, date: day.date });
             day.matches.forEach((m, idx) => {
                 out.push({ type: 'match', match: m, isFirstOfDay: idx === 0 });
             });
         }
         return out;
-    }, [days]);
-
-    const handleMatchPress = useCallback(
-        (match: Match) => onMatchPress(match),
-        [onMatchPress]
-    );
-
-    const {
-        style: restStyle,
-        contentContainerStyle: restContentContainerStyle,
-        ...listProps
-    } = rest as any;
-
-    const containerStyle = StyleSheet.flatten([
-        { paddingBottom: 32 },
-        restContentContainerStyle,
-    ]) as ViewStyle | undefined;
-    const listStyle = StyleSheet.flatten([
-        {
-            alignSelf: 'stretch',
-            paddingHorizontal: 16,
-        },
-        restStyle,
-    ]) as ViewStyle | undefined;
+    }, [matches]);
 
     return (
-        <FlashList<MatchesListRow>
-            ListEmptyComponent={<NoMatchesPlayedYet />}
-            {...listProps}
-            contentContainerStyle={containerStyle as any}
-            style={listStyle as any}
+        <LegendList
+            {...rest}
+            ListEmptyComponent={ListEmptyComponent}
+            contentContainerStyle={[
+                { paddingBottom: 32 },
+                contentContainerStyle,
+            ]}
+            style={[{ alignSelf: 'stretch', paddingHorizontal: 16 }, style]}
             data={rows}
             keyExtractor={(item) =>
                 item.type === 'header'
@@ -99,6 +81,15 @@ export default function MatchesList({
                     : item.match.id
             }
             getItemType={(item) => item.type}
+            // day headers have a fixed height, so a recycled row's late layout event can't
+            // squeeze a header under its first match. Match rows vary and are measured.
+            getFixedItemSize={(item) =>
+                item.type === 'header' ? HEADING_HEIGHT : undefined
+            }
+            estimatedItemSize={72}
+            recycleItems
+            // rows only re-render when data or extraData change
+            extraData={forPlayer?.profileId}
             refreshControl={<RefreshControl {...refresh} />}
             renderItem={({ item }) => {
                 if (item.type === 'header') {
@@ -108,7 +99,7 @@ export default function MatchesList({
                     <MatchesListItem
                         border={!item.isFirstOfDay}
                         match={item.match}
-                        onPress={() => handleMatchPress(item.match)}
+                        onPress={() => onMatchPress(item.match)}
                         highlightedId={forPlayer?.profileId}
                     />
                 );

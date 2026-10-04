@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pro.beerpong.api.model.RuleMoveCups;
 
 @Getter
 @Setter
@@ -25,7 +26,14 @@ public class RuleMove {
 
     private boolean finishingMove;
 
+    /** Cups this move takes off the table; null on rows from before the column existed. */
+    private Integer cups;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "season_id")
     private Season season;
+
+    public int cupsPerHit() {
+        return cups != null ? cups : RuleMoveCups.defaultFor(name, finishingMove);
+    }
 }

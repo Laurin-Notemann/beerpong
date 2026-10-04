@@ -1,22 +1,14 @@
-import React, { useState } from 'react';
-import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    Switch,
-} from 'react-native';
-import { RootSiblingParent } from 'react-native-root-siblings';
+import React from 'react';
+import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { env } from '@/api/env';
-import { AppBackground } from '@/app/Background';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import copyToClipboard from '@/components/copyToClipboard';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import { AppBackground } from '@/lib/Background';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useGroupInvite } from '@/lib/useGroupInvite';
+import { useInsets } from '@/lib/useInsets';
 import { SeasonSettingsDto } from '@/openapi/openapi';
 import { formatGroupCode } from '@/utils/groupCode';
 import { formatWakeTime } from '@/utils/wakeTime';
@@ -37,7 +29,6 @@ export interface GroupSettingsProps {
     hasPremium: boolean;
 
     groupName: string;
-    pushNotificationsEnabled: boolean;
 
     pastSeasons: number;
 
@@ -53,7 +44,6 @@ export default function GroupSettingsScreen({
     id,
     hasPremium,
     groupName,
-    pushNotificationsEnabled,
     pastSeasons,
     groupCode,
     onLeaveGroup,
@@ -64,9 +54,18 @@ export default function GroupSettingsScreen({
     isUpdatingWallpaper = false,
 }: GroupSettingsProps) {
     const nav = useNavigation();
+    const invite = useGroupInvite();
 
-    const [showChangeWallpaperModal, setShowChangeWallpaperModal] =
-        useState(false);
+    const changeWallpaper = () =>
+        Alert.alert('Group Wallpaper', undefined, [
+            { text: 'Upload', onPress: onUploadWallpaperPress },
+            {
+                text: 'Remove',
+                style: 'destructive',
+                onPress: onDeleteWallpaperPress,
+            },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
 
     const experiments = useLocalSettings();
 
@@ -79,7 +78,7 @@ export default function GroupSettingsScreen({
     const allowedMoves = movesQuery.data?.data ?? [];
 
     return (
-        <RootSiblingParent>
+        <>
             <AppBackground />
             <ScrollView
                 style={{
@@ -91,7 +90,7 @@ export default function GroupSettingsScreen({
                     paddingBottom: insets.bottom + 16,
                 }}
             >
-                <SafeAreaView>
+                <View>
                     <MenuSection title="Settings">
                         <MenuItem
                             border={false}
@@ -117,9 +116,7 @@ export default function GroupSettingsScreen({
                                 <MenuItem
                                     title="Change Wallpaper"
                                     headIcon="image-multiple"
-                                    onPress={() =>
-                                        setShowChangeWallpaperModal(true)
-                                    }
+                                    onPress={changeWallpaper}
                                     tailContent={
                                         isUpdatingWallpaper ? (
                                             <ActivityIndicator />
@@ -139,42 +136,6 @@ export default function GroupSettingsScreen({
                                     }
                                 />
                             ))}
-                        <ConfirmationModal
-                            onClose={() => setShowChangeWallpaperModal(false)}
-                            title="Group Wallpaper"
-                            actions={
-                                [
-                                    {
-                                        title: 'Upload',
-                                        type: 'confirm',
-
-                                        onPress: () => {
-                                            onUploadWallpaperPress();
-                                            setShowChangeWallpaperModal(false);
-                                        },
-                                    },
-                                    {
-                                        title: 'Remove',
-                                        type: 'danger',
-
-                                        onPress: () => {
-                                            onDeleteWallpaperPress();
-                                            setShowChangeWallpaperModal(false);
-                                        },
-                                    },
-                                ] as const
-                            }
-                            isVisible={showChangeWallpaperModal}
-                        />
-                        {env.isDev && (
-                            <MenuItem
-                                title="Push Notifications"
-                                headIcon="bell-outline"
-                                tailContent={
-                                    <Switch value={pushNotificationsEnabled} />
-                                }
-                            />
-                        )}
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem
@@ -191,13 +152,6 @@ export default function GroupSettingsScreen({
                                 type: 'confirmBlue',
                             }}
                         />
-                        {env.isDev && (
-                            <MenuItem
-                                title="View Statistics"
-                                headIcon="equalizer"
-                                tailIconType="next"
-                            />
-                        )}
                         <MenuItem
                             title="Create new Player"
                             headIcon="account-plus-outline"
@@ -278,37 +232,17 @@ export default function GroupSettingsScreen({
                         <MenuItem
                             border={false}
                             title="Code"
+                            headIcon="pound"
+                            tailIconType="copy"
+                            tailContent={formatGroupCode(groupCode)}
+                            onPress={invite.copyCode}
+                        />
+                        <MenuItem
+                            title="Share Invite"
                             headIcon="share-outline"
                             tailIconType="next"
-                            tailContent={formatGroupCode(groupCode)}
-                            onPress={() =>
-                                copyToClipboard(formatGroupCode(groupCode))
-                            }
+                            onPress={invite.shareInvite}
                         />
-                        {env.isDev && (
-                            <>
-                                <MenuItem
-                                    title="Group Link"
-                                    headIcon="link-variant"
-                                    tailIconType="copy"
-                                />
-                                <MenuItem
-                                    title="Send Invitation"
-                                    headIcon="share-outline"
-                                    tailIconType="next"
-                                />
-                                <MenuItem
-                                    title="Show QR Code"
-                                    headIcon="qrcode"
-                                    tailIconType="next"
-                                />
-                                <MenuItem
-                                    title="Screencast Leaderboard"
-                                    headIcon="television"
-                                    tailIconType="next"
-                                />
-                            </>
-                        )}
                     </MenuSection>
                     <MenuSection
                         style={{
@@ -331,8 +265,8 @@ export default function GroupSettingsScreen({
                             }}
                         />
                     </MenuSection>
-                </SafeAreaView>
+                </View>
             </ScrollView>
-        </RootSiblingParent>
+        </>
     );
 }

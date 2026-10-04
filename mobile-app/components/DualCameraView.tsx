@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { env } from '@/api/env';
+import { Icon } from '@/components/Icon';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
@@ -42,8 +42,9 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
 
     const [isCapturing, setIsCapturing] = useState(false);
 
-    const overlayOpacity = useRef(new Animated.Value(0)).current;
+    const [overlayOpacity] = useState(() => new Animated.Value(0));
 
+    // Set with `isCapturing`, cleared once the overlay has faded out.
     const [overlayBlocking, setOverlayBlocking] = useState(false);
 
     // Resolve when camera is ready after facing switch
@@ -69,7 +70,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
     }, []);
 
     const waitForReadyWithTimeout = useCallback(async () => {
-        let timeoutId: any;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
         try {
             const minWait = new Promise<void>((resolve) =>
                 setTimeout(resolve, CAMERA_MIN_WAIT_MS)
@@ -88,11 +89,10 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             if (timeoutId) clearTimeout(timeoutId);
             resolveNextReadyRef.current = null;
         }
-    }, []);
+    }, [waitForNextCameraReady]);
 
     useEffect(() => {
         if (isCapturing) {
-            setOverlayBlocking(true);
             Animated.timing(overlayOpacity, {
                 toValue: 1,
                 duration: IN_PROGRESS_FADE_ANIMATION_SPEED,
@@ -123,8 +123,8 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 });
                 if (!result?.uri) throw new Error('No image from camera');
                 return result.uri;
-            } catch (e: any) {
-                const msg = String(e?.message ?? e);
+            } catch (e) {
+                const msg = e instanceof Error ? e.message : String(e);
                 if (msg.includes('No active and enabled video connection')) {
                     await new Promise((r) => setTimeout(r, 250));
                     lastErr = e;
@@ -146,6 +146,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
 
         setErr(null);
         setIsCapturing(true);
+        setOverlayBlocking(true);
 
         try {
             // 1) Shot on current lens
@@ -211,7 +212,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             >
                 <View
                     style={[
-                        StyleSheet.absoluteFillObject,
+                        StyleSheet.absoluteFill,
                         {
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -303,7 +304,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 </View>
                 <Animated.View
                     style={[
-                        StyleSheet.absoluteFillObject,
+                        StyleSheet.absoluteFill,
                         {
                             justifyContent: 'center',
                             alignItems: 'center',
@@ -339,7 +340,7 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
             </View>
             <Animated.View
                 style={[
-                    StyleSheet.absoluteFillObject,
+                    StyleSheet.absoluteFill,
                     {
                         backgroundColor: 'rgba(0,0,0,0.5)',
                         opacity: overlayOpacity,

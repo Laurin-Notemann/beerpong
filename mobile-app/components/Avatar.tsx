@@ -1,10 +1,10 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import React, { memo, PropsWithChildren } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Pressable, Text, View, ViewStyle } from 'react-native';
 
-import { ThemedText } from '@/components/ThemedText';
+import { Icon } from '@/components/Icon';
+import type { Placement } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
@@ -54,12 +54,12 @@ export interface AvatarProps {
     content?: string;
     size?: 128 | 96 | 40 | 36 | number;
 
-    style?: any;
+    style?: ViewStyle;
 
     borderColor?: string;
 
     canUpload?: boolean;
-    placement?: number;
+    placement?: Placement;
     isUnranked?: boolean;
 
     variant?: 'default' | 'list';
@@ -83,18 +83,10 @@ function Avatar({
 }: AvatarProps) {
     const theme = useTheme();
 
-    const Container: any = onPress ? Pressable : View;
+    const containerStyle: ViewStyle = { width: size, height: size, ...style };
 
-    return (
-        <Container
-            style={{
-                width: size,
-                height: size,
-
-                ...style,
-            }}
-            {...(onPress ? { onPress } : {})}
-        >
+    const avatar = (
+        <>
             <View
                 style={{
                     borderRadius: borderRadius,
@@ -148,14 +140,15 @@ function Avatar({
                                 borderWidth: borderColor ? 2 : undefined,
                                 borderColor,
                             }}
-                            resizeMode="cover"
+                            contentFit="cover"
                             cachePolicy="memory-disk"
-                            // priority={variant === 'list' ? 'low' : 'normal'}
+                            // list rows are recycled; without this a reused row flashes the previous avatar
+                            recyclingKey={url}
                             transition={variant === 'list' ? 0 : 100}
                         />
                     )}
                     {(!url || content) && (
-                        <ThemedText
+                        <Text
                             style={{
                                 lineHeight: size,
                                 fontSize: size / 2.7,
@@ -174,7 +167,7 @@ function Avatar({
                                     name="account-outline"
                                 />
                             )}
-                        </ThemedText>
+                        </Text>
                     )}
                 </View>
             </View>
@@ -201,7 +194,15 @@ function Avatar({
                     </Text>
                 </Badge>
             )}
-        </Container>
+        </>
+    );
+
+    return onPress ? (
+        <Pressable style={containerStyle} onPress={onPress}>
+            {avatar}
+        </Pressable>
+    ) : (
+        <View style={containerStyle}>{avatar}</View>
     );
 }
 export default memo(Avatar, (prev, next) => {
@@ -213,7 +214,8 @@ export default memo(Avatar, (prev, next) => {
         prev.size === next.size &&
         prev.borderColor === next.borderColor &&
         prev.canUpload === next.canUpload &&
-        prev.placement === next.placement &&
+        prev.placement?.rank === next.placement?.rank &&
+        prev.placement?.tied === next.placement?.tied &&
         prev.isUnranked === next.isUnranked &&
         prev.variant === next.variant
     );

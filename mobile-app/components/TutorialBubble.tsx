@@ -1,135 +1,78 @@
-import { useNavigation } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Animated } from 'react-native';
-import { Portal } from 'react-native-portalize';
+import { useEffect } from 'react';
+import { Pressable, Text } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
+} from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
-// this doesn't work at all lol
-function useIsOnScreen() {
-    const nav = useNavigation();
+import { useTheme } from '@/theme';
 
-    const [isOnScreen, setIsOnScreen] = useState(nav.isFocused());
-
-    nav.addListener('blur', () => {
-        setIsOnScreen(false);
-    });
-    nav.addListener('focus', () => {
-        setIsOnScreen(true);
-    });
-
-    return isOnScreen;
-}
-
-export const TutorialBubble: React.FC<{
+/**
+ * A hint that points down at whatever it is rendered in. Put it inside the row it explains:
+ * it sits just above that row, scrolls with it and leaves with the screen.
+ */
+export function TutorialBubble({
+    text,
+    onPress,
+    left = 0,
+}: {
     text: string;
     onPress?: () => void;
-
-    top?: number;
+    /** horizontal offset from the row's left edge */
     left?: number;
-}> = ({ text, onPress, top, left }) => {
-    const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(8)).current; // start 8px lower
+}) {
+    const theme = useTheme();
+    // inverted, so the bubble stands out from the list in both light and dark themes
+    const bg = theme.color.text.primary;
+    const fg = theme.color.bg;
+
+    const progress = useSharedValue(0);
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(opacity, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
+        progress.value = withTiming(1, { duration: 300 });
+    }, [progress]);
 
-    const parentRef = useRef<View>(null);
-    const [coords, setCoords] = useState({ x: 0, y: 0 });
-
-    useEffect(() => {
-        setTimeout(() => {
-            // TODO: can we attach a parentRef onLayout listener here instead?
-            parentRef.current?.measureInWindow((x, y) => setCoords({ x, y }));
-        }, 0);
-    }, []);
-
-    useEffect(() => {
-        let mounted = true;
-        const loop = () => {
-            parentRef.current?.measureInWindow((x, y) => {
-                if (mounted) setCoords({ x, y });
-            });
-            requestAnimationFrame(loop);
-        };
-        requestAnimationFrame(loop);
-        return () => {
-            mounted = false;
-        };
-    }, []);
-
-    const isOnScreen = useIsOnScreen();
-
-    const isOffScreen = coords.x === 0 && coords.y === 0;
+    const style = useAnimatedStyle(() => ({
+        opacity: progress.value,
+        transform: [{ translateY: (1 - progress.value) * 8 }],
+    }));
 
     return (
-        <View
-            ref={parentRef}
-            style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-            }}
+        <Animated.View
+            pointerEvents={onPress ? 'auto' : 'none'}
+            style={[
+                {
+                    position: 'absolute',
+                    bottom: '100%',
+                    left,
+                    zIndex: 10,
+                    marginBottom: -4,
+                },
+                style,
+            ]}
         >
-            {isOnScreen && !isOffScreen && (
-                <Portal>
-                    <Animated.View
-                        style={{
-                            position: 'absolute',
-                            top: coords.y + (top ?? 0),
-                            left: coords.x + (left ?? 0),
-                            opacity,
-                            transform: [{ translateY }],
-                            backgroundColor: '#fff',
-                            borderRadius: 4,
-                            paddingHorizontal: 8,
-                            paddingVertical: 4,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 3.84,
-                        }}
-                    >
-                        <Pressable onPress={onPress}>
-                            <Text
-                                style={{
-                                    fontSize: 10,
-                                    color: '#000',
-                                    fontWeight: 'semibold',
-                                }}
-                            >
-                                {text}
-                            </Text>
-                            <Svg
-                                width={12}
-                                height={12}
-                                style={{
-                                    position: 'absolute',
-                                    bottom: -12,
-                                    left: '50%',
-                                }}
-                            >
-                                <Path
-                                    d="M6 9L0.803848 0L11.1962 0L6 9Z"
-                                    fill="#fff"
-                                />
-                            </Svg>
-                        </Pressable>
-                    </Animated.View>
-                </Portal>
-            )}
-        </View>
+            <Pressable
+                onPress={onPress}
+                style={{
+                    backgroundColor: bg,
+                    borderRadius: 6,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                }}
+            >
+                <Text style={{ fontSize: 11, color: fg, fontWeight: '600' }}>
+                    {text}
+                </Text>
+            </Pressable>
+            <Svg width={12} height={8} style={{ marginLeft: 16 }}>
+                <Path d="M6 8L0 0L12 0Z" fill={bg} />
+            </Svg>
+        </Animated.View>
     );
-};
+}

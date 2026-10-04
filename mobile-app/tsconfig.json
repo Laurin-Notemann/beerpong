@@ -1,5 +1,5 @@
 {
-    "extends": "expo/tsconfig.base",
+    "extends": "expo/tsconfig.base.json",
     "compilerOptions": {
         "strict": true,
         "paths": {
@@ -9,11 +9,18 @@
     "include": [
         "**/*.ts",
         "**/*.tsx",
-        ".expo/types/**/*.ts",
-        "expo-env.d.ts",
         ".eslintrc.js",
         "babel.config.js",
-        "metro.config.js"
+        "metro.config.js",
+        ".expo/types/**/*.ts",
+        "expo-env.d.ts"
     ],
-    "exclude": ["**/*.test.ts", "**/*.test.tsx", "node_modules"]
+    "exclude": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "node_modules",
+        "ios",
+        "android",
+        "expo-env.d.ts"
+    ]
 }

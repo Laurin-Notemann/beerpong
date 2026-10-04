@@ -1,32 +1,29 @@
-import { DrawerContentComponentProps } from '@react-navigation/drawer';
-import { useQueryClient } from '@tanstack/react-query';
+import { MenuView } from '@expo/ui/community/menu';
+import { LegendList } from '@legendapp/list/react-native';
 import { AxiosError } from 'axios';
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
-import { useEffect, useRef } from 'react';
+import { Href, Link, router } from 'expo-router';
+import type { DrawerContentComponentProps } from 'expo-router/drawer';
+import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     Animated,
-    ScrollView,
     TouchableHighlight,
     TouchableOpacity,
+    View,
 } from 'react-native';
-import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
 import { env } from '@/api/env';
-import { QK } from '@/api/utils/reactQuery';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import ConfirmationModal from '@/components/ConfirmationModal';
+import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import Text from '@/components/Text';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
+import { plural } from '@/utils/format';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
-
-const RENDER_AS_MENU_ITEM = false;
 
 export interface SidebarGroupItemProps {
     id: string;
@@ -56,9 +53,9 @@ export function SidebarGroupItem({
         data?.data?.numberOfMatches == null;
 
     // width of the square around the delete button that slides out when the sidebar is in edit mode
-    const deleteActionWidth = useRef(
-        new Animated.Value(showDeleteButton ? 40 : 0)
-    ).current;
+    const [deleteActionWidth] = useState(
+        () => new Animated.Value(showDeleteButton ? 40 : 0)
+    );
 
     useEffect(() => {
         Animated.timing(deleteActionWidth, {
@@ -66,29 +63,9 @@ export function SidebarGroupItem({
             duration: 150,
             useNativeDriver: false, // width property needs JS driver to animate
         }).start();
-    }, [showDeleteButton]);
+    }, [deleteActionWidth, showDeleteButton]);
 
     const theme = useTheme();
-
-    if (RENDER_AS_MENU_ITEM) {
-        return (
-            <MenuItem
-                title={data?.data?.name || 'Unknown'}
-                subtitle={
-                    isLoading
-                        ? ''
-                        : failedToLoad
-                          ? 'Failed to load'
-                          : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`
-                }
-                onPress={() => onPress(id)}
-                border={false}
-                active={isActive}
-                onDrag={showDeleteButton ? () => {} : undefined}
-                color="dark"
-            />
-        );
-    }
 
     return (
         <View
@@ -166,7 +143,7 @@ export function SidebarGroupItem({
                             ? ''
                             : failedToLoad
                               ? 'Failed to load'
-                              : `${data!.data!.numberOfPlayers} Players · ${data!.data!.numberOfMatches} Matches`}
+                              : `${plural(data?.data?.numberOfPlayers ?? 0, 'Player', 'Players')} · ${plural(data?.data?.numberOfMatches ?? 0, 'Match', 'Matches')}`}
                     </Text>
                 </View>
             </TouchableHighlight>
@@ -181,26 +158,37 @@ export interface SidebarGroup {
     matchesCount: number;
 }
 
-// eslint-disable-next-line no-empty-pattern
 export function Sidebar(props: DrawerContentComponentProps) {
+    // The drawer wraps the app's stack; close it, then go to the screen by path.
+    const openScreen = (href: Href) => {
+        props.navigation.closeDrawer();
+        router.navigate(href);
+    };
+
     const { groupIds, selectedGroupId, selectGroup, leaveGroupMutation } =
         useGroupStore();
 
     const nav = useNavigation();
 
-    const [showAddGroupModal, setShowAddGroupModal] = useState(false);
-
     const [isEditMode, setIsEditMode] = useState(false);
 
-    const [groupIdToBeDeleted, setGroupIdToBeDeleted] = useState<string | null>(
-        null
-    );
+    const confirmLeaveGroup = (groupId: string) =>
+        Alert.alert(
+            'Leave Group',
+            'Are you sure you want to leave this group?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Leave',
+                    style: 'destructive',
+                    onPress: () => leaveGroupMutation.mutate(groupId),
+                },
+            ]
+        );
 
     const matchDraft = useMatchDraftStore((store) => store.actions);
 
     const theme = useTheme();
-
-    const queryClient = useQueryClient();
 
     return (
         <SafeAreaView
@@ -241,22 +229,32 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 {isEditMode ? 'Done' : 'Edit'}
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => setShowAddGroupModal(true)}
-                            style={{
-                                marginLeft: 'auto',
-                                justifyContent: 'center',
-
-                                height: '100%',
-                                paddingHorizontal: 16,
-                            }}
+                        <MenuView
+                            title="Add Group"
+                            actions={[
+                                { id: '/createGroup', title: 'Create Group' },
+                                { id: '/joinGroup', title: 'Join Group' },
+                            ]}
+                            onPressAction={({ nativeEvent }) =>
+                                openScreen(nativeEvent.event as Href)
+                            }
+                            style={{ marginLeft: 'auto', alignSelf: 'center' }}
                         >
-                            <Icon
-                                name="plus"
-                                size={24}
-                                color={theme.color.text.primary}
-                            />
-                        </TouchableOpacity>
+                            <View
+                                pointerEvents="none"
+                                accessibilityLabel="Add Group"
+                                style={{
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 13,
+                                }}
+                            >
+                                <Icon
+                                    name="plus"
+                                    size={24}
+                                    color={theme.color.text.primary}
+                                />
+                            </View>
+                        </MenuView>
                     </>
                 </View>
             </MenuSection>
@@ -267,10 +265,14 @@ export function Sidebar(props: DrawerContentComponentProps) {
                     flex: 1,
                 }}
             >
-                <ScrollView>
-                    {groupIds.map((id) => (
+                <LegendList
+                    data={groupIds}
+                    keyExtractor={(id) => id}
+                    estimatedItemSize={58}
+                    // items render from these, not just from `data`
+                    extraData={`${selectedGroupId}:${isEditMode}`}
+                    renderItem={({ item: id }) => (
                         <SidebarGroupItem
-                            key={id}
                             id={id}
                             isActive={id === selectedGroupId}
                             onPress={() => {
@@ -280,17 +282,13 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 while (nav.canGoBack()) {
                                     nav.goBack();
                                 }
-
-                                // eslint-disable-next-line
-                                console.log(Object.keys(nav));
-                                // nav.closeDrawer();
                                 props.navigation.closeDrawer();
                             }}
                             showDeleteButton={isEditMode}
-                            onDelete={setGroupIdToBeDeleted}
+                            onDelete={confirmLeaveGroup}
                         />
-                    ))}
-                    {groupIds.length < 1 && (
+                    )}
+                    ListEmptyComponent={
                         <Text
                             color="secondary"
                             style={{
@@ -326,8 +324,8 @@ export function Sidebar(props: DrawerContentComponentProps) {
                             </Link>{' '}
                             one.
                         </Text>
-                    )}
-                </ScrollView>
+                    }
+                />
             </MenuSection>
             <View
                 style={{
@@ -344,107 +342,24 @@ export function Sidebar(props: DrawerContentComponentProps) {
                         border={false}
                         title="Settings"
                         headIcon="cog-outline"
-                        onPress={() =>
-                            props.navigation.navigate('static/aboutPremium', {
-                                screen: 'localSettings',
-                            })
-                        }
+                        onPress={() => openScreen('/localSettings')}
                         tailIconType="next"
                     />
 
                     <MenuItem
                         title="Privacy Policy"
                         headIcon="shield-lock"
-                        onPress={() =>
-                            props.navigation.navigate('static/aboutPremium', {
-                                screen: 'static/privacyPolicy',
-                            })
-                        }
+                        onPress={() => openScreen('/static/privacyPolicy')}
                         tailIconType="next"
                     />
                     <MenuItem
                         title="About Us"
                         headIcon="information-outline"
-                        onPress={() =>
-                            props.navigation.navigate('static/aboutPremium', {
-                                screen: 'static/aboutUs',
-                            })
-                        }
+                        onPress={() => openScreen('/static/aboutUs')}
                         tailIconType="next"
                     />
                 </MenuSection>
 
-                <ConfirmationModal
-                    onClose={() => setShowAddGroupModal(false)}
-                    title="Add Group"
-                    actions={
-                        [
-                            {
-                                title: 'Create',
-                                type: 'default',
-
-                                onPress: () => {
-                                    props.navigation.navigate(
-                                        'static/aboutPremium',
-                                        {
-                                            screen: 'createGroup',
-                                        }
-                                    );
-                                    setShowAddGroupModal(false);
-                                },
-                            },
-                            {
-                                title: 'Join',
-                                type: 'default',
-
-                                onPress: () => {
-                                    props.navigation.navigate(
-                                        'static/aboutPremium',
-                                        {
-                                            screen: 'joinGroup',
-                                        }
-                                    );
-                                    setShowAddGroupModal(false);
-                                },
-                            },
-                        ] as const
-                    }
-                    isVisible={showAddGroupModal}
-                />
-                <ConfirmationModal
-                    onClose={() => setGroupIdToBeDeleted(null)}
-                    title="Leave Group"
-                    description="Are you sure you want to leave this group?"
-                    actions={
-                        [
-                            {
-                                title: 'Leave',
-                                type: 'danger',
-
-                                onPress: async () => {
-                                    if (groupIdToBeDeleted) {
-                                        await leaveGroupMutation.mutateAsync(
-                                            groupIdToBeDeleted
-                                        );
-                                        await queryClient.invalidateQueries({
-                                            queryKey: [QK.group, 'myGroups'],
-                                        });
-                                    }
-                                    setGroupIdToBeDeleted(null);
-                                },
-                            },
-                            {
-                                title: 'Cancel',
-                                type: 'default',
-
-                                onPress: () => {
-                                    setGroupIdToBeDeleted(null);
-                                },
-                            },
-                        ] as const
-                    }
-                    isVisible={groupIdToBeDeleted != null}
-                />
                 <Text
                     color="secondary"
                     style={{

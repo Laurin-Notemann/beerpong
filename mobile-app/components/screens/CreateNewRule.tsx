@@ -1,9 +1,8 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { HeaderItem } from '@/components/HeaderItem';
+import { Icon } from '@/components/Icon';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
 import { useTheme } from '@/theme';
@@ -30,29 +29,26 @@ export default function CreateNewRule({
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Create new Rule',
-                    headerLeft: () => (
-                        <HeaderItem onPress={() => nav.goBack()}>
-                            Cancel
-                        </HeaderItem>
-                    ),
-                    headerRight: () => (
-                        <HeaderItem
-                            disabled={
-                                title.length < 1 ||
-                                (existingValue?.title?.length ?? 0) > 0 ||
-                                description.length < 1
-                            }
-                            isLoading={isPending}
-                            onPress={() => onCreate({ title, description })}
-                        >
-                            Create
-                        </HeaderItem>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{ headerTitle: 'Create new Rule' }} />
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button onPress={() => nav.goBack()}>
+                    Cancel
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant="done"
+                    disabled={
+                        title.length < 1 ||
+                        (existingValue?.title?.length ?? 0) > 0 ||
+                        description.length < 1 ||
+                        isPending
+                    }
+                    onPress={() => onCreate({ title, description })}
+                >
+                    Create
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <InputModal>
                 <Icon
                     name="format-section"

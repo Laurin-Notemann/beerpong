@@ -1,30 +1,20 @@
-import * as React from 'react';
+import { useMemo } from 'react';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import { useInsets } from '@/app/useInsets';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import MatchesList from '@/components/MatchesList';
+import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
+import { usePastSeasonCardStyle } from '@/components/screens/usePastSeasonCardStyle';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
-import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
-import { useTheme } from '@/theme';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-/**
- * <Carousel /> intercepts touch events, so we can't wrap it inside a scrollview. instead, we have to put each item inside a scrollview.
- */
 
 export function PastMatchesSwiper() {
     const scopePicker = useScopePicker();
 
-    const swiper = useControlledSwiper(
-        scopePicker.pastSeasonsSwiperProgress,
-        'pastMatches'
-    );
-
-    const theme = useTheme();
+    const swiper = useControlledSwiper(scopePicker.pastSeasonsSwiperProgress);
 
     const { groupId } = useGroup();
 
@@ -35,7 +25,21 @@ export function PastMatchesSwiper() {
             ?.filter((i) => i.endDate != null)
             ?.filter((i) => i.numMatches > 0) ?? [];
 
-    const insets = useInsets(true, true);
+    const allSeasons = seasonsQuery.data?.data;
+    const seasonMatches = useMemo(
+        () =>
+            new Map(
+                (allSeasons ?? []).map((season) => [
+                    season.id!,
+                    season.matches.map(
+                        matchDtoToMatch(season.rawPlayers, season.ruleMoves)
+                    ),
+                ])
+            ),
+        [allSeasons]
+    );
+
+    const cardStyle = usePastSeasonCardStyle();
 
     const { props, isLoading, error } = useMatchlistProps();
 
@@ -46,33 +50,16 @@ export function PastMatchesSwiper() {
     if (seasons.length === 0) return <PastSeasonsEmptyScreen />;
 
     return (
-        <Swiper {...swiper} withPeek>
-            {seasons.map((season) => {
-                return (
-                    <MatchesList
-                        background={false}
-                        contentContainerStyle={{
-                            paddingBottom: insets.bottom + 48,
-                        }}
-                        {...props!}
-                        matches={season.matches.map(
-                            matchDtoToMatch(season.rawPlayers, season.ruleMoves)
-                        )}
-                        style={{
-                            marginTop: insets.top,
-                            marginBottom: insets.bottom + 8,
-
-                            marginHorizontal: theme.carousel.peekGap / 2,
-                            left:
-                                theme.carousel.peekGap / 2 +
-                                theme.carousel.peekSize,
-
-                            borderRadius: theme.borderRadius.card,
-                            backgroundColor: theme.color.modal.bg,
-                        }}
-                    />
-                );
-            })}
+        <Swiper {...swiper} lazyWindow={1}>
+            {seasons.map((season) => (
+                <MatchesList
+                    key={season.id}
+                    contentContainerStyle={{ paddingBottom: 48 }}
+                    {...props!}
+                    matches={seasonMatches.get(season.id!) ?? []}
+                    style={cardStyle}
+                />
+            ))}
         </Swiper>
     );
 }

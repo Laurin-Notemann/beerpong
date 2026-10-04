@@ -1600,7 +1600,8 @@
                     "name": { "type": "string" },
                     "pointsForTeam": { "type": "integer", "format": "int32" },
                     "pointsForScorer": { "type": "integer", "format": "int32" },
-                    "finishingMove": { "type": "boolean" }
+                    "finishingMove": { "type": "boolean" },
+                    "cups": { "type": "integer", "format": "int32" }
                 }
             },
             "ResponseEnvelopeRuleMoveDto": {
@@ -1620,7 +1621,8 @@
                     "seasonId": { "type": "string" },
                     "pointsForTeam": { "type": "integer", "format": "int32" },
                     "pointsForScorer": { "type": "integer", "format": "int32" },
-                    "finishingMove": { "type": "boolean" }
+                    "finishingMove": { "type": "boolean" },
+                    "cups": { "type": "integer", "format": "int32" }
                 }
             },
             "MatchCreateDto": {

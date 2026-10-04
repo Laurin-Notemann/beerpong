@@ -10,4 +10,6 @@ public class RuleMoveDto {
     private int pointsForTeam;
     private int pointsForScorer;
     private boolean finishingMove;
+    /** cups this move takes off the table (see RuleMoveCups) */
+    private Integer cups;
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
@@ -47,9 +47,12 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
     // used to make ui updates to the count less sluggish when the user drags or taps. setting this only updates the ui, and doesn't notify the parent.
     const [uiCount, setUiCount] = useState(numScored);
 
-    useEffect(() => {
+    // a new count from the parent replaces the local one
+    const [prevNumScored, setPrevNumScored] = useState(numScored);
+    if (numScored !== prevNumScored) {
+        setPrevNumScored(numScored);
         setUiCount(numScored);
-    }, [numScored]);
+    }
 
     const { setHasDraggedToAssignPoints } = useTutorials();
 
@@ -105,8 +108,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
             {hasTutorial && (
                 <TutorialBubble
                     text="Try pulling this to the right!"
-                    left={12}
-                    top={-140}
+                    left={64}
                 />
             )}
             <GestureDetector

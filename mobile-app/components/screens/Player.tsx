@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -15,32 +15,30 @@ import {
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
-import { AppBackground } from '@/app/Background';
-import { useNavStyles } from '@/app/navigation/navStyles';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
-import { HeaderItem } from '@/components/HeaderItem';
+import { BlurredBackdrop } from '@/components/BlurredBackdrop';
 import { LeaderboardScopePicker } from '@/components/Leaderboard/LeaderboardScopePicker';
-import { BlurredBackdrop } from '@/components/LongPressModal';
 import MatchesList from '@/components/MatchesList';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
-import { PlayerAndMatchBottomNav } from '@/components/PlayerAndMatchBottomNav';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
-import { PastSeasonsEmptyScreen } from '@/screens/PastSeasonsEmptyScreen';
+import type { Placement } from '@/constants/rankingAlgorithms';
+import { AppBackground } from '@/lib/Background';
+import { useNavStyles } from '@/lib/navigation/navStyles';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 import { useScopePicker } from '@/zustand/useScopePicker';
-
-const swiperAtTop = false;
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export interface ScopeInfo {
     minMatchesRequiredToBeRanked: number;
-    placement: number;
+    placement: Placement;
     matches: Match[];
     matchesWon: number;
     points: number;
@@ -50,6 +48,19 @@ export interface ScopeInfo {
     isUnranked: boolean;
     name: string;
 }
+
+// shown until a scope's data has loaded
+const emptyScope: Omit<ScopeInfo, 'name'> = {
+    minMatchesRequiredToBeRanked: 0,
+    placement: { rank: 0, tied: false },
+    matches: [],
+    matchesWon: 0,
+    points: 0,
+    cups: 0,
+    elo: 0,
+    rankingAlgorithm: 'ELO',
+    isUnranked: true,
+};
 
 export interface PlayerScreenProps {
     isPending: boolean;
@@ -69,9 +80,6 @@ export interface PlayerScreenProps {
     refresh: RefreshProps;
 
     scopes: Map<string, ScopeInfo>;
-
-    prevPlayerId?: string;
-    nextPlayerId?: string;
 }
 export default function PlayerScreen({
     isPending,
@@ -86,12 +94,10 @@ export default function PlayerScreen({
     onDeleteAvatarPress,
     refresh,
 
-    prevPlayerId,
-    nextPlayerId,
-
     scopes,
 }: PlayerScreenProps) {
     const scopePicker = useScopePicker();
+    const newDesign = useNewDesign();
 
     const rankingAlgorithm = scopePicker.rankingAlgorithm;
 
@@ -102,13 +108,19 @@ export default function PlayerScreen({
     const [editable, setEditable] = useState(false);
 
     const insets = useInsets(true);
+    // Clears the scope picker that floats over the end of the list.
+    const listPaddingBottom = insets.bottom + 72;
 
-    const fade = useRef(new Animated.Value(0)).current;
-    const scale = useRef(new Animated.Value(0)).current;
+    const [fade] = useState(() => new Animated.Value(0));
+    const [scale] = useState(() => new Animated.Value(0));
 
     const [inspectAvatar, setInspectAvatar] = useState(false);
 
+    // Stays true after `inspectAvatar` turns false until the close animation finishes.
     const [show, setShow] = useState(false);
+    if (inspectAvatar && !show) {
+        setShow(true);
+    }
 
     const { groupId } = useGroup();
 
@@ -120,19 +132,16 @@ export default function PlayerScreen({
             ?.filter((i) => i.numMatches > 0) ?? [];
 
     const leaderboardSwiper = useControlledSwiper(
-        scopePicker.leaderboardSwiperProgress,
-        'player'
+        scopePicker.leaderboardSwiperProgress
     );
     const pastSeasonsSwiper = useControlledSwiper(
-        scopePicker.pastSeasonsSwiperProgress,
-        'pastPlayer'
+        scopePicker.pastSeasonsSwiperProgress
     );
 
     const groupHasPastSeasons = pastSeasons > 0;
 
     useEffect(() => {
         if (inspectAvatar) {
-            setShow(true);
             Animated.parallel([
                 Animated.timing(fade, {
                     toValue: 1,
@@ -171,16 +180,17 @@ export default function PlayerScreen({
                     title: '',
                     headerTitle: 'Player',
                     headerLeft: undefined,
-                    headerRight: () => (
-                        <HeaderItem
-                            isLoading={isPending}
-                            onPress={() => setEditable((prev) => !prev)}
-                        >
-                            {editable ? 'Done' : 'Edit'}
-                        </HeaderItem>
-                    ),
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant={editable ? 'done' : 'plain'}
+                    disabled={isPending}
+                    onPress={() => setEditable((prev) => !prev)}
+                >
+                    {editable ? 'Done' : 'Edit'}
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <AppBackground />
             {!editable &&
                 (scopePicker.isPastSeasonsMode ? (
@@ -195,13 +205,12 @@ export default function PlayerScreen({
                                             seasonId: match.seasonId,
                                         })
                                     }
-                                    style={{ paddingHorizontal: 0 }}
+                                    style={{
+                                        paddingHorizontal: newDesign ? 16 : 0,
+                                    }}
                                     contentContainerStyle={{
-                                        paddingTop:
-                                            insets.top + (swiperAtTop ? 48 : 0),
-                                        paddingBottom:
-                                            insets.bottom +
-                                            (swiperAtTop ? 0 : 48 + 64),
+                                        paddingTop: insets.top,
+                                        paddingBottom: listPaddingBottom,
                                     }}
                                     ListHeaderComponent={
                                         <>
@@ -248,11 +257,10 @@ export default function PlayerScreen({
                                     seasonId: match.seasonId,
                                 })
                             }
-                            style={{ paddingHorizontal: 0 }}
+                            style={{ paddingHorizontal: newDesign ? 16 : 0 }}
                             contentContainerStyle={{
-                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                                paddingBottom:
-                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                                paddingTop: insets.top,
+                                paddingBottom: listPaddingBottom,
                             }}
                             ListHeaderComponent={
                                 <>
@@ -287,11 +295,10 @@ export default function PlayerScreen({
                                     seasonId: match.seasonId,
                                 })
                             }
-                            style={{ paddingHorizontal: 0 }}
+                            style={{ paddingHorizontal: newDesign ? 16 : 0 }}
                             contentContainerStyle={{
-                                paddingTop: insets.top + (swiperAtTop ? 48 : 0),
-                                paddingBottom:
-                                    insets.bottom + (swiperAtTop ? 0 : 48),
+                                paddingTop: insets.top,
+                                paddingBottom: listPaddingBottom,
                             }}
                             ListHeaderComponent={
                                 <>
@@ -299,8 +306,8 @@ export default function PlayerScreen({
                                         onPress={() => setInspectAvatar(true)}
                                     >
                                         <PlayerPageHeadSection
-                                            // TODO: scopes.get('season') is actually null on first render sometimes
-                                            {...(scopes.get('season')! ?? {})}
+                                            {...(scopes.get('season') ??
+                                                emptyScope)}
                                             avatarUrl={avatarUrl}
                                             name={name}
                                             editable={editable}
@@ -329,12 +336,12 @@ export default function PlayerScreen({
                                         seasonId: match.seasonId,
                                     })
                                 }
-                                style={{ paddingHorizontal: 0 }}
+                                style={{
+                                    paddingHorizontal: newDesign ? 16 : 0,
+                                }}
                                 contentContainerStyle={{
-                                    paddingTop:
-                                        insets.top + (swiperAtTop ? 48 : 0),
-                                    paddingBottom:
-                                        insets.bottom + (swiperAtTop ? 0 : 48),
+                                    paddingTop: insets.top,
+                                    paddingBottom: listPaddingBottom,
                                 }}
                                 ListHeaderComponent={
                                     <>
@@ -382,7 +389,7 @@ export default function PlayerScreen({
                 >
                     <PlayerPageHeadSection
                         avatarUrl={avatarUrl}
-                        placement={0} // doesn't get shown because this is only ever editable
+                        placement={{ rank: 0, tied: false }} // doesn't get shown because this is only ever editable
                         name={name}
                         elo={0} // doesn't get shown because this is only ever editable
                         matchesWon={0} // doesn't get shown because this is only ever editable
@@ -411,6 +418,19 @@ export default function PlayerScreen({
                                 }
                                 tailIconType="next"
                             />
+                            {avatarUrl && (
+                                <MenuItem
+                                    title="Remove Profile Picture"
+                                    headIcon="delete-outline"
+                                    onPress={onDeleteAvatarPress}
+                                    type="danger"
+                                    confirmationPrompt={{
+                                        title: 'Remove Profile Picture',
+                                        description:
+                                            "Are you sure you want to remove this player's profile picture?",
+                                    }}
+                                />
+                            )}
                             <MenuItem
                                 title="Delete Player"
                                 headIcon="delete-outline"
@@ -420,17 +440,6 @@ export default function PlayerScreen({
                                     title: 'Delete Player',
                                     description:
                                         'Are you sure you want to delete this player?',
-                                }}
-                            />
-                            <MenuItem
-                                title="Remove Profile Picture"
-                                headIcon="delete-outline"
-                                onPress={onDeleteAvatarPress}
-                                type="danger"
-                                confirmationPrompt={{
-                                    title: 'Remove Profile Picture',
-                                    description:
-                                        "Are you sure you want to remove this player's profile picture?",
                                 }}
                             />
                         </MenuSection>
@@ -447,16 +456,6 @@ export default function PlayerScreen({
                     opacity={fade}
                     onPress={() => setInspectAvatar(false)}
                 />
-                {/* <SafeAreaView
-                    style={{
-                        paddingHorizontal: 4,
-                    }}
-                >
-                    <OverlayIconButton
-                        iconName="close"
-                        onPress={() => setInspectAvatar(false)}
-                    />
-                </SafeAreaView> */}
 
                 <Animated.View
                     style={[
@@ -478,19 +477,6 @@ export default function PlayerScreen({
                 </Animated.View>
             </Modal>
             {!editable && (
-                // <SafeAreaView
-                //     style={{
-                //         position: 'absolute',
-
-                //         top: swiperAtTop ? insets.top + 4 : undefined,
-                //         bottom: swiperAtTop ? undefined : insets.bottom + 4,
-
-                //         width: '100%',
-                //     }}
-                // >
-                //     <LeaderboardScopePicker />
-
-                // </SafeAreaView>
                 <View
                     style={{
                         position: 'absolute',
@@ -502,31 +488,7 @@ export default function PlayerScreen({
                 >
                     <LeaderboardScopePicker />
 
-                    <PlayerAndMatchBottomNav
-                        hasNextAndPrevButtons={false}
-                        onPrevPress={
-                            !prevPlayerId
-                                ? undefined
-                                : () => {
-                                      if (prevPlayerId) {
-                                          nav.navigate('player', {
-                                              id: prevPlayerId,
-                                          });
-                                      }
-                                  }
-                        }
-                        onNextPress={
-                            !nextPlayerId
-                                ? undefined
-                                : () => {
-                                      if (nextPlayerId) {
-                                          nav.navigate('player', {
-                                              id: nextPlayerId,
-                                          });
-                                      }
-                                  }
-                        }
-                    />
+                    <View style={{ height: insets.bottom + 4 }} />
                 </View>
             )}
         </GestureHandlerRootView>

@@ -1,17 +1,19 @@
 import React from 'react';
 import { Pressable, ScrollView, TouchableHighlight, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import Avatar from '@/components/Avatar';
+import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
+import { NextTeamPlayerRow } from '@/components/next/NextTeamPlayerRow';
 import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { useNewDesign } from '@/zustand/localSettingsStore';
 import { useTutorials } from '@/zustand/tutorialStore';
 
 export type TeamId = 'red' | 'blue' | null;
@@ -41,6 +43,37 @@ function PlayerItem({
     const { setHasTappedToAssignPlayers } = useTutorials();
 
     const theme = useTheme();
+    const newDesign = useNewDesign();
+
+    if (newDesign) {
+        return (
+            <NextTeamPlayerRow
+                player={player}
+                randomTeamsMode={randomTeamsMode}
+                hasTutorial={hasTutorial}
+                onSelectTeam={(team) => {
+                    onSelectTeam(team);
+                    setHasTappedToAssignPlayers();
+                    triggerHapticBump('selection');
+                }}
+                onCycle={() => {
+                    onSelectTeam(
+                        player.team === null
+                            ? 'blue'
+                            : player.team === 'blue'
+                              ? 'red'
+                              : null
+                    );
+                    setHasTappedToAssignPlayers();
+                    triggerHapticBump('selection');
+                }}
+                onRandomTeamSelect={(id) => {
+                    onRandomTeamSelect(id);
+                    triggerHapticBump('selection');
+                }}
+            />
+        );
+    }
 
     return (
         <TouchableHighlight
@@ -162,9 +195,8 @@ function PlayerItem({
                 )}
                 {hasTutorial && (
                     <TutorialBubble
-                        text="Try double-tapping a players name!"
-                        left={-12}
-                        top={-12}
+                        text="Tap a name to switch teams"
+                        left={64}
                     />
                 )}
             </View>
@@ -182,6 +214,8 @@ export interface NewMatchAssignTeamsProps {
     maxTeamSize: number;
     players: Player[];
     setTeam: (playerId: string, team: TeamId) => void;
+    /** shown while any player is on a team */
+    onClear?: () => void;
 }
 export default function NewMatchAssignTeams({
     randomTeamsMode,
@@ -191,6 +225,7 @@ export default function NewMatchAssignTeams({
     maxTeamSize,
     players,
     setTeam,
+    onClear,
 }: NewMatchAssignTeamsProps) {
     const insets = useInsets(true, true);
 
@@ -238,9 +273,9 @@ export default function NewMatchAssignTeams({
         >
             {/* empty <View> bc otherwise the items are spaced apart  */}
             <View>
-                <Heading
-                    title={
-                        errorMessage ? (
+                {errorMessage ? (
+                    <Heading
+                        title={
                             <Text
                                 color="negative"
                                 style={{
@@ -252,9 +287,9 @@ export default function NewMatchAssignTeams({
                             >
                                 {errorMessage}
                             </Text>
-                        ) : undefined
-                    }
-                />
+                        }
+                    />
+                ) : null}
                 {!isRandomTeamsMode && (
                     <>
                         <MenuSection style={{ marginBottom: 20 }}>
@@ -265,15 +300,20 @@ export default function NewMatchAssignTeams({
                                 tailIconType="next"
                                 onPress={onRandomTeamsPress}
                             />
-                        </MenuSection>
-                        <MenuSection style={{ marginBottom: 20 }}>
                             <MenuItem
-                                border={false}
                                 headIcon="account-plus-outline"
                                 title="Create new Player"
                                 tailIconType="next"
                                 onPress={() => nav.navigate('createNewPlayer')}
                             />
+                            {onClear && (
+                                <MenuItem
+                                    headIcon="close-circle-outline"
+                                    title="Clear Teams"
+                                    type="danger"
+                                    onPress={onClear}
+                                />
+                            )}
                         </MenuSection>
                     </>
                 )}

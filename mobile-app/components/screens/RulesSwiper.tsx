@@ -1,10 +1,9 @@
 import { Stack, useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import copyToClipboard from '@/components/copyToClipboard';
-import { HeaderItem } from '@/components/HeaderItem';
+import { Icon } from '@/components/Icon';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -41,45 +40,47 @@ export default function RulesSwiper({
 
     useEffect(() => {
         editRulesStore.actions.initialize(rules);
-    }, [rules]);
+    }, [editRulesStore.actions, rules]);
 
     const theme = useTheme();
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Rules',
-                    headerLeft: () =>
-                        isEditing ? (
-                            <HeaderItem onPress={() => setIsEditing(false)}>
-                                Cancel
-                            </HeaderItem>
-                        ) : (
-                            <HeaderItem onPress={() => nav.goBack()}>
-                                Close
-                            </HeaderItem>
-                        ),
-                    headerRight: () => (
-                        <HeaderItem
-                            isLoading={isPending}
-                            onPress={async () => {
-                                if (!isEditing) {
-                                    setIsEditing(true);
-                                } else {
-                                    // store gets automatically reset when the `rules` props changes, triggering the `useEffect` in this file
-                                    await onSubmit(editRulesStore.rules);
+            <Stack.Screen options={{ headerTitle: 'Rules' }} />
+            <Stack.Toolbar placement="left">
+                {isEditing ? (
+                    <Stack.Toolbar.Button onPress={() => setIsEditing(false)}>
+                        Cancel
+                    </Stack.Toolbar.Button>
+                ) : (
+                    <Stack.Toolbar.Button
+                        icon="xmark"
+                        onPress={() => nav.goBack()}
+                    >
+                        Close
+                    </Stack.Toolbar.Button>
+                )}
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant={isEditing ? 'done' : 'plain'}
+                    disabled={
+                        (isEditing && !editRulesStore.isDirty) || isPending
+                    }
+                    onPress={async () => {
+                        if (!isEditing) {
+                            setIsEditing(true);
+                        } else {
+                            // store gets automatically reset when the `rules` props changes, triggering the `useEffect` in this file
+                            await onSubmit(editRulesStore.rules);
 
-                                    setIsEditing(false);
-                                }
-                            }}
-                            disabled={isEditing && !editRulesStore.isDirty}
-                        >
-                            {isEditing ? 'Save' : 'Edit'}
-                        </HeaderItem>
-                    ),
-                }}
-            />
+                            setIsEditing(false);
+                        }
+                    }}
+                >
+                    {isEditing ? 'Save' : 'Edit'}
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
             <Swiper
                 {...swiper}
                 style={{ backgroundColor: theme.panel.dark.bg }}

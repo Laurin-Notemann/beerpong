@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import {
     NestableDraggableFlatList,
     NestableScrollContainer,
@@ -10,18 +10,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { AppBackground } from '@/app/Background';
-import { useNavigation } from '@/app/navigation/useNavigation';
-import { useInsets } from '@/app/useInsets';
 import Button from '@/components/Button';
-import ConfirmationModal from '@/components/ConfirmationModal';
-import copyToClipboard from '@/components/copyToClipboard';
-import { HeaderItem } from '@/components/HeaderItem';
 import IconHead from '@/components/IconHead';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
+import { AppBackground } from '@/lib/Background';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
 import { showSuccessToast } from '@/toast';
 
@@ -47,10 +44,6 @@ export default function Rules({
 }: RulesProps) {
     const theme = useTheme();
     const [isEditing, setIsEditing] = useState(false);
-
-    const [modalId, setModalId] = useState<string | null>(null);
-
-    const modalItem = rules.find((i) => i.id === modalId);
 
     const nav = useNavigation();
 
@@ -106,101 +99,55 @@ export default function Rules({
         invalidateRules(groupId!, seasonId!)
     );
 
-    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const confirmDeleteSelected = () => {
+        const many = selectedIds.length > 1;
+        Alert.alert(
+            many ? 'Delete Rules' : 'Delete Rule',
+            many
+                ? `Are you sure you want to delete ${selectedIds.length} rules?`
+                : 'Are you sure you want to delete this rule?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                        deleteSelectedRules();
+                        showSuccessToast(
+                            many ? 'Rules deleted.' : 'Rule deleted.'
+                        );
+                    },
+                },
+            ]
+        );
+    };
 
     return (
         <GestureHandlerRootView>
             <AppBackground />
             <Stack.Screen
                 options={{
-                    headerRight: () => (
-                        <HeaderItem
-                            onPress={() => {
-                                if (isEditing) {
-                                    setSelectedIds([]);
-                                }
-                                setIsEditing((prev) => !prev);
-                            }}
-                        >
-                            {isEditing ? 'Done' : 'Edit'}
-                        </HeaderItem>
-                    ),
                     headerTitle:
                         selectedIds.length > 0
                             ? `${selectedIds.length} Selected`
                             : undefined,
                 }}
             />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    variant={isEditing ? 'done' : 'plain'}
+                    onPress={() => {
+                        if (isEditing) {
+                            setSelectedIds([]);
+                        }
+                        setIsEditing((prev) => !prev);
+                    }}
+                >
+                    {isEditing ? 'Done' : 'Edit'}
+                </Stack.Toolbar.Button>
+            </Stack.Toolbar>
 
-            <ConfirmationModal
-                onClose={() => setModalId(null)}
-                title={modalItem?.title!}
-                description={modalItem?.description!}
-                actions={[
-                    {
-                        title: 'Copy Rule',
-                        type: 'default',
-
-                        onPress: () => {
-                            copyToClipboard(modalItem?.description!);
-                            setModalId(null);
-                        },
-                    },
-                    // {
-                    //     title: 'Edit Rule',
-                    //     type: 'default',
-
-                    //     onPress: () => {},
-                    // },
-                    {
-                        title: 'Delete Rule',
-                        type: 'danger',
-
-                        onPress: () => {
-                            onDeleteRules([modalId!]);
-                            showSuccessToast('Rule deleted.');
-                            setModalId(null);
-                        },
-                    },
-                ]}
-                isVisible={modalItem != null}
-            />
-
-            <ConfirmationModal
-                onClose={() => setShowDeleteConfirmation(false)}
-                title={selectedIds.length > 1 ? 'Delete Rules' : 'Delete Rule'}
-                description={
-                    selectedIds.length > 1
-                        ? `Are you sure you want to delete ${selectedIds.length} rules?`
-                        : 'Are you sure you want to delete this rule?'
-                }
-                actions={[
-                    {
-                        title: 'Delete',
-                        type: 'danger',
-
-                        onPress: () => {
-                            deleteSelectedRules();
-                            showSuccessToast(
-                                selectedIds.length > 1
-                                    ? 'Rules deleted.'
-                                    : 'Rule deleted.'
-                            );
-                            setShowDeleteConfirmation(false);
-                        },
-                    },
-                    {
-                        title: 'Cancel',
-                        type: 'default',
-
-                        onPress: () => {
-                            setShowDeleteConfirmation(false);
-                        },
-                    },
-                ]}
-                isVisible={showDeleteConfirmation}
-            />
-            <SafeAreaView>
+            <View style={{ flex: 1 }}>
                 <NestableScrollContainer
                     refreshControl={<RefreshControl {...refresh} />}
                     contentContainerStyle={{
@@ -262,7 +209,7 @@ export default function Rules({
                         </Text>
                     )}
                 </NestableScrollContainer>
-            </SafeAreaView>
+            </View>
 
             {isEditing && (
                 <View
@@ -287,11 +234,11 @@ export default function Rules({
                     {selectedIds.length > 0 && (
                         <>
                             <OverlayTextButton
-                                onPress={() => setShowDeleteConfirmation(true)}
+                                onPress={confirmDeleteSelected}
                                 title="Delete"
                             />
                             {/* <OverlayTextButton
-                                onPress={() => setShowDeleteConfirmation(true)}
+                                onPress={confirmDeleteSelected}
                                 title="Copy to Group"
                             /> */}
                         </>

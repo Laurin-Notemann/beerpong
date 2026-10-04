@@ -5,6 +5,7 @@ import Avatar from '@/components/Avatar';
 import PlayerStats from '@/components/PlayerStats';
 import {
     getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
@@ -25,7 +26,7 @@ export function PlayerPageHeadSection({
     rankingAlgorithm,
 }: {
     avatarUrl?: string | null;
-    placement: number;
+    placement: Placement;
     name: string;
     onUploadAvatarPress: () => void;
     cups: number;

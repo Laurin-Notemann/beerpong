@@ -1,8 +1,11 @@
 import { BlurView } from 'expo-blur';
 import React, { PropsWithChildren } from 'react';
-import { Text, View } from 'react-native';
+import { StyleProp, Text, View, ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
+
+/** height of a non-paragraph Heading */
+export const HEADING_HEIGHT = 64;
 
 export function Heading({
     title,
@@ -38,7 +41,7 @@ export function Heading({
                           flexDirection: 'row',
                           alignItems: 'flex-end',
 
-                          height: 64,
+                          height: HEADING_HEIGHT,
                           paddingHorizontal: 8,
                           paddingBottom: 12,
                       }
@@ -76,21 +79,21 @@ export function Heading({
 }
 
 export interface MenuSectionProps extends PropsWithChildren {
-    title?: JSX.Element | string;
-    titleHeadIcon?: JSX.Element;
-    titleTailIcon?: JSX.Element;
+    title?: React.JSX.Element | string;
+    titleHeadIcon?: React.JSX.Element;
+    titleTailIcon?: React.JSX.Element;
 
     background?: boolean;
 
-    style?: any;
+    style?: StyleProp<ViewStyle>;
 
-    footer?: string | JSX.Element;
+    footer?: string | React.JSX.Element;
 
     color?: 'light' | 'dark'; // | "transparent";
 
     noFlex?: boolean;
 
-    containerStyle?: any;
+    containerStyle?: StyleProp<ViewStyle>;
 }
 export default function MenuSection({
     title,

@@ -1,26 +1,27 @@
 import { BlurView } from 'expo-blur';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Animated,
     Pressable,
+    StyleProp,
     StyleSheet,
     TouchableOpacity,
     View,
     ViewStyle,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon, IconName } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
 
 const PillButton: React.FC<{
     label: string;
-    iconName?: string;
+    iconName?: IconName;
     onPress?: () => void;
     onRemove?: () => void;
     backgroundColor?: string;
     blur?: boolean;
-    style?: any;
+    style?: StyleProp<ViewStyle>;
 }> = ({
     label,
     iconName,
@@ -30,7 +31,7 @@ const PillButton: React.FC<{
     backgroundColor = '#333',
     style,
 }) => {
-    const scale = useRef(new Animated.Value(1)).current;
+    const [scale] = useState(() => new Animated.Value(1));
 
     const removable = typeof onRemove === 'function';
 

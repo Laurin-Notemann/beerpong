@@ -1,16 +1,14 @@
-import { useState } from 'react';
 import { View } from 'react-native';
 import DraggableFlatList, {
     RenderItemParams,
 } from 'react-native-draggable-flatlist';
 
-import { useNavigation } from '@/app/navigation/useNavigation';
-import ConfirmationModal from '@/components/ConfirmationModal';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 import PillButton from '@/components/PillButton';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 
 const formatStats = (move: Move): string => {
     const pointsForScorer = move.pointsForScorer
@@ -27,7 +25,14 @@ const formatStats = (move: Move): string => {
 
     const finishingMove = move.finishingMove ? 'Finishing Move' : null;
 
-    const stats = [pointsForScorer, pointsForTeam, finishingMove]
+    const cups =
+        move.cups == null
+            ? null
+            : move.cups === 1
+              ? '1 Cup'
+              : `${move.cups} Cups`;
+
+    const stats = [pointsForScorer, pointsForTeam, cups, finishingMove]
         .filter((i) => i != null)
         .join(' ⸱ ');
 
@@ -40,6 +45,7 @@ interface Move {
     pointsForScorer: number;
     pointsForTeam: number;
     finishingMove: boolean;
+    cups: number;
 }
 
 export interface AllowedMovesProps extends MenuSectionProps {
@@ -59,10 +65,6 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
     editable = true,
     ...rest
 }) => {
-    const [modalId, setModalId] = useState<string | null>(null);
-
-    const modalItem = moves.find((i) => i.id === modalId);
-
     const nav = useNavigation();
 
     const renderItem = ({
@@ -93,23 +95,6 @@ export const AllowedMoves: React.FC<AllowedMovesProps> = ({
 
     return (
         <>
-            <ConfirmationModal
-                onClose={() => setModalId(null)}
-                title={modalItem?.name!}
-                description={modalItem ? formatStats(modalItem) : undefined}
-                actions={[
-                    {
-                        title: 'Delete Move',
-                        type: 'danger',
-
-                        onPress: () => {
-                            onDelete?.(modalId!);
-                            setModalId(null);
-                        },
-                    },
-                ]}
-                isVisible={modalId != null}
-            />
             <MenuSection
                 title="Allowed Moves"
                 titleTailIcon={

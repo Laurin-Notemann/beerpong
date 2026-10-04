@@ -10,6 +10,8 @@ interface LocalSettingsStore {
     premiumVersion: boolean;
     showWallpaper: boolean;
     scopedPlayerPage: boolean;
+    /** experimental redesign of the main screens (Experimental Features → New Design) */
+    newDesign: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -20,6 +22,7 @@ interface LocalSettingsStore {
         setTheme: (themeId: string) => void;
         toggleShowWallpaper: () => void;
         toggleScopedPlayerPage: () => void;
+        toggleNewDesign: () => void;
     };
 }
 
@@ -37,6 +40,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             showWallpaper: false,
             dailyLeaderboard: false,
             scopedPlayerPage: false,
+            newDesign: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -75,6 +79,9 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                         scopedPlayerPage: !get().scopedPlayerPage,
                     }));
                 },
+                toggleNewDesign: () => {
+                    set(() => ({ newDesign: !get().newDesign }));
+                },
             },
         }),
         {
@@ -89,6 +96,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 themeId: state.themeId,
                 showWallpaper: state.showWallpaper,
                 scopedPlayerPage: state.scopedPlayerPage,
+                newDesign: state.newDesign,
             }),
         }
     )
@@ -101,4 +109,9 @@ export function useLocalSettings() {
         ...values,
         ...actions,
     };
+}
+
+/** Whether the experimental redesign is on; components pick their `next` variant with it. */
+export function useNewDesign() {
+    return useLocalSettingsStore((s) => s.newDesign);
 }

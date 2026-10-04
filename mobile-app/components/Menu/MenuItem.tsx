@@ -1,9 +1,7 @@
 import React from 'react';
-import { Pressable, Text, TouchableHighlight, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Alert, Pressable, Text, TouchableHighlight, View } from 'react-native';
 
-import ConfirmationModal from '@/components/ConfirmationModal';
-import useBoolean from '@/components/useBoolean';
+import { Icon, IconName } from '@/components/Icon';
 import { useTheme } from '@/theme';
 
 export interface MenuItemProps {
@@ -12,11 +10,11 @@ export interface MenuItemProps {
 
     type?: 'default' | 'danger';
 
-    headIcon?: string | React.ReactElement;
+    headIcon?: IconName | React.ReactElement;
     tailIconType?: 'copy' | 'next' | 'checked' | 'unchecked' | 'draghandle';
     onPress?: () => void;
 
-    tailContent?: JSX.Element | string | number;
+    tailContent?: React.JSX.Element | string | number;
 
     color?: 'light' | 'dark'; // | "transparent";
 
@@ -32,6 +30,14 @@ export interface MenuItemProps {
     border?: boolean;
     onDrag?: () => void;
 }
+const tailIcons = {
+    next: 'chevron-right',
+    copy: 'content-copy',
+    checked: 'circle-slice-8',
+    unchecked: 'circle-outline',
+    draghandle: 'drag-horizontal-variant',
+} satisfies Record<NonNullable<MenuItemProps['tailIconType']>, IconName>;
+
 export default function MenuItem({
     title,
     subtitle,
@@ -51,38 +57,29 @@ export default function MenuItem({
     border = true,
     onDrag,
 }: MenuItemProps) {
-    const [isPromptShown, showPrompt, hidePrompt] = useBoolean(false);
+    // Native confirmation. For "confirm" prompts (e.g. starting a season) backing out is the
+    // destructive choice; for "danger" prompts (e.g. deleting) the action itself is.
+    const showPrompt = () => {
+        if (!confirmationPrompt) return;
+        const isDanger =
+            (confirmationPrompt.type ?? 'dangerRed') === 'dangerRed';
+        Alert.alert(confirmationPrompt.title, confirmationPrompt.description, [
+            {
+                text: 'Cancel',
+                style: isDanger ? 'cancel' : 'destructive',
+            },
+            {
+                text: confirmationPrompt.buttonText || 'Delete',
+                style: isDanger ? 'destructive' : 'default',
+                onPress,
+            },
+        ]);
+    };
 
     const theme = useTheme();
 
     return (
         <>
-            {confirmationPrompt && (
-                <ConfirmationModal
-                    isVisible={isPromptShown}
-                    onClose={hidePrompt}
-                    title={confirmationPrompt.title}
-                    description={confirmationPrompt.description}
-                    actions={[
-                        {
-                            type: (
-                                {
-                                    dangerRed: 'danger',
-                                    confirmBlue: 'confirm',
-                                    default: 'default',
-                                } as const
-                            )[confirmationPrompt.type ?? 'dangerRed'],
-                            title: confirmationPrompt.buttonText || 'Delete',
-                            onPress: () => {
-                                onPress?.();
-                                hidePrompt();
-                            },
-                        },
-                        { title: 'Cancel', onPress: hidePrompt },
-                    ]}
-                />
-            )}
-
             <TouchableHighlight
                 style={{
                     flexDirection: 'row',
@@ -104,6 +101,7 @@ export default function MenuItem({
                 }}
                 underlayColor={theme.panel[color].active}
                 onPress={confirmationPrompt ? showPrompt : onPress}
+                accessibilityRole={onPress ? 'button' : undefined}
             >
                 <View
                     style={{
@@ -197,6 +195,7 @@ export default function MenuItem({
                                 color: theme.color.text.secondary,
 
                                 flexShrink: 1,
+                                marginRight: tailIconType ? 4 : 0,
 
                                 textAlign: 'right',
                             }}
@@ -215,15 +214,7 @@ export default function MenuItem({
                                     : theme.icon.secondary
                             }
                             size={24}
-                            name={
-                                {
-                                    next: 'chevron-right',
-                                    copy: 'content-copy',
-                                    checked: 'circle-slice-8', // "check",
-                                    unchecked: 'circle-outline',
-                                    draghandle: 'drag-horizontal-variant',
-                                }[tailIconType]
-                            }
+                            name={tailIcons[tailIconType]}
                         />
                     )}
                     {onDrag && (

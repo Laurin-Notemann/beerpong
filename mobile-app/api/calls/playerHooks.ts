@@ -29,6 +29,7 @@ export const usePlayersQuery = (
             seasonId ?? 'NULL',
             QK.players,
         ],
+        enabled: !!groupId && !!seasonId,
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;

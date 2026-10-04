@@ -1,8 +1,10 @@
 import MenuItem, { MenuItemProps } from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 
-export interface SelectOption
-    extends Omit<MenuItemProps, 'onPress' | 'tailIconType'> {
+export interface SelectOption extends Omit<
+    MenuItemProps,
+    'onPress' | 'tailIconType'
+> {
     value: string;
 }
 

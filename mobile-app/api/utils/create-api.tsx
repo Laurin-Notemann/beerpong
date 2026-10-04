@@ -6,7 +6,7 @@ import { env } from '@/api/env';
 import beerpongDefinition from '@/api/generated/openapi.json';
 import { RealtimeClient } from '@/api/realtime';
 import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
-import { useAuth } from '@/app/auth/useAuth';
+import { useAuth } from '@/lib/auth/useAuth';
 import { Client as BeerPongClient } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
@@ -23,6 +23,8 @@ const ApiContext = createContext<ApiContextType | undefined>(undefined);
 const openApiConfig = {
     axiosConfigDefaults: {
         baseURL: env.apiBaseUrl,
+        // A server that accepts connections but never answers would otherwise spin forever.
+        timeout: 15_000,
     },
     definition: beerpongDefinition as Document,
 };
@@ -35,6 +37,7 @@ const authApi = new OpenAPIClientAxios(openApiConfig);
 
 export function ApiProvider({ children }: { children: ReactNode }) {
     const auth = useAuth();
+    const { writeLog } = useLogging();
 
     // Resolves as soon as the client is set up; auth happens per request, so a failed
     // login surfaces as a failed (and retried) query instead of a dead client.
@@ -99,7 +102,6 @@ export function ApiProvider({ children }: { children: ReactNode }) {
     });
 
     const { realtime, connectRealtime } = useRealtimeConnection();
-    const { writeLog } = useLogging();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isLoading, setIsLoading] = useState(true);

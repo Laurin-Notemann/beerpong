@@ -1,12 +1,13 @@
+import type React from 'react';
 import { Text, View, ViewProps } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Icon, IconName } from '@/components/Icon';
 import { useTheme } from '@/theme';
 
 export interface IconHeadProps extends ViewProps {
-    iconName: string;
-    title: JSX.Element | string;
-    description?: JSX.Element | string;
+    iconName: IconName;
+    title: React.JSX.Element | string;
+    description?: React.JSX.Element | string;
 }
 export default function IconHead({
     iconName,

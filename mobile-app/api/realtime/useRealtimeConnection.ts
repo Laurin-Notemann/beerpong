@@ -1,5 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useEffectEvent,
+    useRef,
+    useState,
+} from 'react';
 
 import { env } from '@/api/env';
 import {
@@ -16,22 +22,27 @@ import { RealtimeClient, RealtimeEventHandler } from '.';
 export function useRealtimeConnection() {
     const qc = useQueryClient();
 
-    // One socket for the whole app; `client.current` is read by the event handler.
+    // One socket for the whole app; `client.current` is read by the event handler
+    // and always holds the same client as `realtime`.
     const [realtime, setRealtime] = useState<RealtimeClient | null>(null);
     const client = useRef<RealtimeClient | null>(null);
-    client.current = realtime;
 
     const { writeLog } = useLogging();
 
-    function writeLogs(...data: Logs) {
+    const writeLogs = useEffectEvent((...data: Logs) => {
         writeLog(...data);
-    }
+    });
     const { invalidateLeaderboard } = useQueryInvalidation();
 
-    const onRealtimeEvent: RealtimeEventHandler = (e) => {
-        if (!client.current) return;
+    function refetchGroup(groupId: string) {
+        qc.invalidateQueries({
+            queryKey: [QK.group, groupId],
+            exact: true,
+        });
+    }
 
-        console.log('received event');
+    const onRealtimeEvent = useEffectEvent<RealtimeEventHandler>((e) => {
+        if (!client.current) return;
 
         switch (e.eventType) {
             case 'GROUPS':
@@ -188,27 +199,22 @@ export function useRealtimeConnection() {
                 });
                 break;
         }
-    };
+    });
 
     useEffect(() => {
         if (!realtime) return;
 
-        realtime.logger.addEventListener('*', writeLogs);
-        realtime.on.event(onRealtimeEvent);
+        const log = (...data: Logs) => writeLogs(...data);
+        realtime.logger.addEventListener('*', log);
+        realtime.on.event((e) => onRealtimeEvent(e));
 
         return () => {
-            realtime.logger.removeEventListener('*', writeLogs);
+            realtime.logger.removeEventListener('*', log);
         };
     }, [realtime]);
 
-    function refetchGroup(groupId: string) {
-        qc.invalidateQueries({
-            queryKey: [QK.group, groupId],
-            exact: true,
-        });
-    }
     /** Opens the socket on first call; later calls only change the subscribed groups. */
-    function connectRealtime(groupIds: string[]) {
+    const connectRealtime = useCallback((groupIds: string[]) => {
         if (client.current) {
             client.current.subscribeToGroups(groupIds);
             return;
@@ -216,7 +222,7 @@ export function useRealtimeConnection() {
         const created = new RealtimeClient(env.realtimeBaseUrl, groupIds);
         client.current = created;
         setRealtime(created);
-    }
+    }, []);
 
     return { realtime, connectRealtime };
 }

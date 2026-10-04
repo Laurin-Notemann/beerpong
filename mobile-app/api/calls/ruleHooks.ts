@@ -24,6 +24,7 @@ export const useMoves = (
             seasonId ?? 'NULL',
             QK.ruleMoves,
         ],
+        enabled: !!groupId && !!seasonId,
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
@@ -51,6 +52,7 @@ export const useGetRules = (
             seasonId ?? 'NULL',
             QK.rules,
         ],
+        enabled: !!groupId && !!seasonId,
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;
@@ -126,7 +128,7 @@ export function useRules() {
             });
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
-            showErrorToast('Failed to update rules.');
+            showErrorToast('Failed to update rules.', err);
         }
     }
 

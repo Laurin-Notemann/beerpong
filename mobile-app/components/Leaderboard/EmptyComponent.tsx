@@ -1,8 +1,9 @@
-import { Text, View, ViewProps } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import { MatchesListItem } from '@/components/MatchesListItem';
-import { mockSeasons } from '@/screens/mockSeasons';
+import { mockSeasons } from '@/components/screens/mockSeasons';
+import type { SeasonCardProps } from '@/components/screens/PastSeasonsEmptyScreen';
 import { useTheme } from '@/theme';
 
 export const LeaderboardEmptyComponent: React.FC<{ message?: string }> = ({
@@ -99,13 +100,7 @@ export const LeaderboardEmptyComponent: React.FC<{ message?: string }> = ({
     );
 };
 
-const DecorativeMatchCard: React.FC<ViewProps & any> = ({
-    style,
-    season,
-    players,
-    numMatches,
-    ...props
-}) => {
+const DecorativeMatchCard: React.FC<SeasonCardProps> = ({ style }) => {
     const theme = useTheme();
 
     return (

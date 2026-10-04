@@ -15,7 +15,7 @@ import {
     SeasonDto,
     SeasonSettingsDto,
 } from '@/openapi/openapi';
-import { useGroupStore } from '@/zustand/group/stateGroupStore';
+import { useSelectedGroupId } from '@/zustand/group/stateGroupStore';
 
 export const useSeasonQuery = (
     groupId: ApiId | null,
@@ -73,27 +73,18 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
 
             const seasons = await Promise.all(
                 rawSeasons.map(async (season) => {
-                    const matches = await (
-                        await api
-                    ).getAllMatchesExtended({
-                        groupId,
-                        seasonId: season.id!,
-                    });
-
-                    const ruleMoves = await (
-                        await api
-                    ).getAllRuleMoves({
-                        groupId,
-                        seasonId: season.id!,
-                    });
-
-                    const leaderboard = await (
-                        await api
-                    ).getLeaderboard({
-                        groupId,
-                        seasonId: season.id!,
-                        scope: LeaderboardScope.SEASON,
-                    });
+                    const client = await api;
+                    const ids = { groupId, seasonId: season.id! };
+                    const [matches, ruleMoves, leaderboard] = await Promise.all(
+                        [
+                            client.getAllMatchesExtended(ids),
+                            client.getAllRuleMoves(ids),
+                            client.getLeaderboard({
+                                ...ids,
+                                scope: LeaderboardScope.SEASON,
+                            }),
+                        ]
+                    );
 
                     const players = withProfiles(
                         leaderboard.data.data?.entries ?? [],
@@ -139,7 +130,7 @@ export const useStartNewSeasonMutation = () => {
  * mainly used for getting `groupId` and `seasonId` since we need these for so many queries
  */
 export const useGroup = () => {
-    const { selectedGroupId } = useGroupStore();
+    const selectedGroupId = useSelectedGroupId();
 
     const { data: groupQueryData } = useGroupQuery(selectedGroupId);
 
@@ -153,7 +144,7 @@ export const useGroup = () => {
     return {
         groupId: selectedGroupId,
         seasonId,
-        group: { ...(groupQueryData ?? {}) },
+        group: groupQueryData,
         activeSeason: activeSeasonQueryData?.data,
     };
 };
@@ -185,8 +176,7 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
     const seasonQuery = useSeasonQuery(groupId, seasonId);
 
     const seasonSettings = seasonQuery.data?.data?.seasonSettings as
-        | Required<SeasonSettingsDto>
-        | undefined;
+        Required<SeasonSettingsDto> | undefined;
 
     const updateSeasonSettingsMutation = useMutation({
         mutationFn: async (partialUpdate: SeasonSettingsDto) => {

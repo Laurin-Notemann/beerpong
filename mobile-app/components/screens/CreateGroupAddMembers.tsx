@@ -1,21 +1,14 @@
 import { Stack } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import {
-    TextInput as B,
-    ScrollView,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import Avatar from '@/components/Avatar';
-import { HeaderItem } from '@/components/HeaderItem';
+import { Icon } from '@/components/Icon';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import Text from '@/components/Text';
 import TextInput from '@/components/TextInput';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
 import { GroupMember } from '@/zustand/group/stateCreateGroupStore';
@@ -32,7 +25,7 @@ export default function CreateGroupAddMembers({
 
     const [value, setValue] = useState('');
 
-    const inputRef = useRef<B>(null);
+    const inputRef = useRef<TextInputInstance>(null);
 
     useAutoFocus(inputRef);
 
@@ -63,24 +56,10 @@ export default function CreateGroupAddMembers({
         <GestureHandlerRootView>
             <Stack.Screen
                 options={{
-                    headerRight: () =>
-                        value.length > 0 || members.length < 2 ? (
-                            <HeaderItem
-                                disabled={!canSubmit}
-                                onPress={onAddMember}
-                            >
-                                Add
-                            </HeaderItem>
-                        ) : (
-                            <HeaderItem
-                                disabled={!canBeCreated}
-                                onPress={() => onSubmit(members)}
-                            >
-                                Next
-                            </HeaderItem>
-                        ),
-
-                    headerTitle: `Add Players (${members.length} / 2) ${canBeCreated ? '✅' : ''}`,
+                    // a group needs at least 2 players; count up to that, then just the title
+                    headerTitle: canBeCreated
+                        ? 'Add Players'
+                        : `Add Players (${members.length} / 2)`,
                     headerBackVisible: true,
                     headerTintColor: theme.color.text.primary,
 
@@ -92,6 +71,23 @@ export default function CreateGroupAddMembers({
                     },
                 }}
             />
+            <Stack.Toolbar placement="right">
+                {value.length > 0 || members.length < 2 ? (
+                    <Stack.Toolbar.Button
+                        disabled={!canSubmit}
+                        onPress={onAddMember}
+                    >
+                        Add
+                    </Stack.Toolbar.Button>
+                ) : (
+                    <Stack.Toolbar.Button
+                        disabled={!canBeCreated}
+                        onPress={() => onSubmit(members)}
+                    >
+                        Next
+                    </Stack.Toolbar.Button>
+                )}
+            </Stack.Toolbar>
             <View
                 style={{
                     backgroundColor: theme.color.bg,
@@ -150,7 +146,7 @@ export default function CreateGroupAddMembers({
                         }}
                     >
                         <Avatar name={i.name} size={36} />
-                        <ThemedView
+                        <View
                             style={{
                                 flex: 1,
 
@@ -158,7 +154,7 @@ export default function CreateGroupAddMembers({
                                 marginRight: 8,
                             }}
                         >
-                            <ThemedText
+                            <Text
                                 numberOfLines={2}
                                 style={{
                                     fontSize: 17,
@@ -167,8 +163,8 @@ export default function CreateGroupAddMembers({
                                 }}
                             >
                                 {i.name}
-                            </ThemedText>
-                        </ThemedView>
+                            </Text>
+                        </View>
                         <TouchableOpacity
                             onPress={() => onRemoveMember(idx)}
                             style={{ marginLeft: 'auto' }}

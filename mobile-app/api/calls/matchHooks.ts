@@ -11,29 +11,6 @@ import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
-export const useMatchQuery = (
-    groupId: ApiId | null | undefined,
-    seasonId: ApiId | null | undefined,
-    matchId: ApiId | null | undefined
-) => {
-    const { api } = useApi();
-
-    return useQuery<Paths.GetMatchByIdExtended.Responses.$200 | null>({
-        queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches, matchId],
-        queryFn: async () => {
-            if (!groupId || !seasonId || !matchId) {
-                return null;
-            }
-
-            const res = await (
-                await api
-            ).getMatchByIdExtended({ groupId, seasonId, id: matchId });
-
-            return res?.data;
-        },
-    });
-};
-
 export const useMatchesQuery = (
     groupId: ApiId | null | undefined,
     seasonId: ApiId | null | undefined
@@ -42,6 +19,7 @@ export const useMatchesQuery = (
 
     return useQuery<Paths.GetAllMatchesExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
+        enabled: !!groupId && !!seasonId,
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;

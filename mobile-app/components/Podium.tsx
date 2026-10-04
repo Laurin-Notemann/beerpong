@@ -1,16 +1,16 @@
 import React from 'react';
-import { TouchableOpacity, ViewProps } from 'react-native';
+import { TouchableOpacity, View, ViewProps } from 'react-native';
 
 import { Player } from '@/api/calls/seasonHooks';
 import Avatar from '@/components/Avatar';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import Text from '@/components/Text';
 import {
     getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { formatPlacement, plural } from '@/utils/format';
 
 const Description: React.FC<{
     detailed?: boolean;
@@ -21,9 +21,10 @@ const Description: React.FC<{
 
     return (
         <>
-            <ThemedText
+            <Text
                 style={{
                     fontSize: 15,
+                    lineHeight: 24,
                     color: theme.color.text.primary,
                     marginTop: 12,
 
@@ -31,69 +32,75 @@ const Description: React.FC<{
                 }}
             >
                 {player?.name}
-            </ThemedText>
+            </Text>
 
             {detailed && player && (
                 <>
-                    <ThemedText
+                    <Text
                         style={{
                             fontSize: 22,
+                            lineHeight: 24,
                             color: theme.color.text.primary,
                         }}
                     >
                         {average}
-                    </ThemedText>
-                    <ThemedText
+                    </Text>
+                    <Text
                         style={{
                             fontSize: 13,
+                            lineHeight: 16,
                             color: theme.color.text.secondary,
-                            marginTop: 13,
+                            marginTop: 17,
                         }}
                     >
-                        {player.points} points
-                    </ThemedText>
+                        {plural(player.points, 'point', 'points')}
+                    </Text>
 
-                    <ThemedText
+                    <Text
                         style={{
                             fontSize: 13,
+                            lineHeight: 16,
                             color: theme.color.text.secondary,
-                            marginTop: -8,
                         }}
                     >
-                        {player.matches} matches
-                    </ThemedText>
+                        {plural(player.matches, 'match', 'matches')}
+                    </Text>
                 </>
             )}
         </>
     );
 };
 
+type PodiumPlace = { player: Player; placement: Placement };
+
 export interface PodiumProps extends ViewProps {
     detailed?: boolean;
 
-    firstPlace?: Player;
-    secondPlace?: Player;
-    thirdPlace?: Player;
+    /** the first three of `rankPlayers` */
+    places: PodiumPlace[];
 
     onPlayerPress?: (id: string) => void;
-    onPlayerLongPress?: (id: string) => void;
     rankingAlgorithm: RankingAlgorithm;
 }
+
+/**
+ * The top three, the leader in the middle. Spots follow the golf-style rank,
+ * so a tie for first puts two players on the top step.
+ */
 export default function Podium({
     detailed = true,
-    firstPlace,
-    secondPlace,
-    thirdPlace,
+    places,
 
     onPlayerPress,
-    onPlayerLongPress,
     rankingAlgorithm,
     ...rest
 }: PodiumProps) {
     const theme = useTheme();
 
+    const numFirst = places.filter((i) => i.placement.rank === 1).length;
+
     return (
-        <ThemedView
+        <View
             {...rest}
             style={[
                 {
@@ -104,128 +111,64 @@ export default function Podium({
                 rest.style,
             ]}
         >
-            <TouchableOpacity
-                disabled={secondPlace == null || !onPlayerPress}
-                activeOpacity={0.6}
-                style={{
-                    alignItems: 'center',
-                    marginTop: 48,
-                    flex: 1,
+            {/* left, middle, right */}
+            {([1, 0, 2] as const).map((idx) => {
+                const place = places[idx];
+                const player = place?.player;
+                const placement = place?.placement ?? {
+                    rank: idx + 1,
+                    tied: false,
+                };
+                const isFirst = placement.rank === 1;
 
-                    opacity: secondPlace ? 1 : 0.2,
-                }}
-                onPress={() => secondPlace && onPlayerPress?.(secondPlace?.id)}
-                onLongPress={() =>
-                    secondPlace && onPlayerLongPress?.(secondPlace?.id)
-                }
-            >
-                <ThemedText
-                    style={{
-                        fontSize: 22,
-                        color: theme.color.text.secondary,
-                        marginBottom: 16,
-                    }}
-                >
-                    {formatPlacement(2)}
-                </ThemedText>
-                <Avatar
-                    url={secondPlace?.avatarUrl}
-                    name={secondPlace?.name}
-                    size={96}
-                />
-                <Description
-                    detailed={detailed}
-                    player={secondPlace}
-                    average={getRankingAlgorithm(
-                        rankingAlgorithm
-                    ).getDisplayValue(secondPlace)}
-                />
-            </TouchableOpacity>
-            <TouchableOpacity
-                disabled={firstPlace == null || !onPlayerPress}
-                activeOpacity={0.6}
-                onPress={() => firstPlace && onPlayerPress?.(firstPlace?.id)}
-                onLongPress={() =>
-                    firstPlace && onPlayerLongPress?.(firstPlace?.id)
-                }
-                style={{
-                    alignItems: 'center',
+                return (
+                    <TouchableOpacity
+                        key={idx}
+                        disabled={player == null || !onPlayerPress}
+                        activeOpacity={0.6}
+                        onPress={() => player && onPlayerPress?.(player.id)}
+                        style={{
+                            alignItems: 'center',
+                            marginTop: isFirst ? 0 : 48,
+                            flex: 1,
 
-                    // 24px overlap with the 2nd and 3rd place
-                    width: 128 - 24 - 24,
+                            // a lone leader overlaps 2nd and 3rd place by 24px
+                            ...(isFirst && {
+                                zIndex: 1,
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 8,
+                            }),
 
-                    // to make the shadow work
-                    zIndex: 1,
-
-                    shadowOffset: {
-                        width: 0,
-                        height: 4,
-                    },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    flex: 1,
-
-                    opacity: firstPlace ? 1 : 0.2,
-                }}
-            >
-                <ThemedText
-                    style={{
-                        fontSize: 22,
-                        color: theme.color.text.secondary,
-                        marginBottom: 16,
-                    }}
-                >
-                    {formatPlacement(1)}
-                </ThemedText>
-                <Avatar
-                    url={firstPlace?.avatarUrl}
-                    name={firstPlace?.name}
-                    size={128}
-                />
-                <Description
-                    detailed={detailed}
-                    player={firstPlace}
-                    average={getRankingAlgorithm(
-                        rankingAlgorithm
-                    ).getDisplayValue(firstPlace)}
-                />
-            </TouchableOpacity>
-            <TouchableOpacity
-                disabled={thirdPlace == null || !onPlayerPress}
-                activeOpacity={0.6}
-                style={{
-                    alignItems: 'center',
-                    marginTop: 48,
-                    flex: 1,
-                    opacity: thirdPlace ? 1 : 0.2,
-                }}
-                onPress={() => thirdPlace && onPlayerPress?.(thirdPlace?.id)}
-                onLongPress={() =>
-                    thirdPlace && onPlayerLongPress?.(thirdPlace?.id)
-                }
-            >
-                <ThemedText
-                    style={{
-                        fontSize: 22,
-                        color: theme.color.text.secondary,
-                        marginBottom: 16,
-                    }}
-                >
-                    {formatPlacement(3)}
-                </ThemedText>
-                <Avatar
-                    url={thirdPlace?.avatarUrl}
-                    name={thirdPlace?.name}
-                    size={96}
-                />
-                <Description
-                    detailed={detailed}
-                    player={thirdPlace}
-                    average={getRankingAlgorithm(
-                        rankingAlgorithm
-                    ).getDisplayValue(thirdPlace)}
-                />
-            </TouchableOpacity>
-        </ThemedView>
+                            opacity: player ? 1 : 0.2,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 22,
+                                lineHeight: 24,
+                                color: theme.color.text.secondary,
+                                marginBottom: 16,
+                            }}
+                        >
+                            {formatPlacement(placement)}
+                        </Text>
+                        <Avatar
+                            url={player?.avatarUrl}
+                            name={player?.name}
+                            // shared first places shrink so they fit side by side
+                            size={isFirst ? (numFirst > 1 ? 104 : 128) : 96}
+                        />
+                        <Description
+                            detailed={detailed}
+                            player={player}
+                            average={getRankingAlgorithm(
+                                rankingAlgorithm
+                            ).getDisplayValue(player)}
+                        />
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
     );
 }

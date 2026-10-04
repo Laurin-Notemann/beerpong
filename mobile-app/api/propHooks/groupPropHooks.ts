@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
 import { useAssetQuery } from '@/api/calls/assetHooks';
@@ -18,8 +17,6 @@ import {
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
-
-import { QK } from '../utils/reactQuery';
 
 export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const router = useRouter();
@@ -61,7 +58,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             showSuccessToast('Updated group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to upload group wallpaper:', err);
-            showErrorToast('Failed to upload group wallpaper.');
+            showErrorToast('Failed to upload group wallpaper.', err);
         }
     }
 
@@ -74,34 +71,22 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             showSuccessToast('Removed group wallpaper.');
         } catch (err) {
             ConsoleLogger.error('failed to remove group wallpaper:', err);
-            showErrorToast('Failed to remove group wallpaper.');
+            showErrorToast('Failed to remove group wallpaper.', err);
         }
     }
-
-    const queryClient = useQueryClient();
 
     async function onLeaveGroup() {
         if (!groupId) return;
 
         try {
-            // TODO: i can't get this to actually show up
-            setTimeout(
-                () =>
-                    showYouLeftGroupToast(group.data?.name ?? 'Unknown Group'),
-                3000
-            );
-
             await leaveGroupMutation.mutateAsync(groupId);
-
-            await queryClient.invalidateQueries({
-                queryKey: [QK.group, 'myGroups'],
-            });
 
             router.dismissAll();
             router.replace('/');
+            showYouLeftGroupToast(group?.data?.name ?? 'Unknown Group');
         } catch (err) {
             ConsoleLogger.error('failed to leave group:', err);
-            showErrorToast('Failed to leave group.');
+            showErrorToast('Failed to leave group.', err);
         }
     }
 
@@ -112,7 +97,6 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               groupName: data.data.name || 'Unknown Group',
               hasPremium: false,
               pastSeasons: pastSeasons.length,
-              pushNotificationsEnabled: false,
               onUploadWallpaperPress,
               onDeleteWallpaperPress,
               onLeaveGroup,

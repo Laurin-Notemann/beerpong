@@ -6,6 +6,8 @@ export interface NewSeasonMoveInput {
     finishingMove: boolean;
     pointsForScorer: number;
     pointsForTeam: number;
+    /** cups one hit takes off the table */
+    cups: number;
 }
 
 interface NewSeasonDraftStore {

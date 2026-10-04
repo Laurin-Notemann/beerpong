@@ -37,6 +37,7 @@ export const useGetLeaderboardQuery = (
             QK.players,
             scope,
         ],
+        enabled: !!groupId && !!seasonId,
         queryFn: async () => {
             if (!groupId || !seasonId) {
                 return null;

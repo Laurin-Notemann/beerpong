@@ -4,7 +4,9 @@
 # `scripts/native-sim-up`, not `native-sim up` (see .claude/skills/native-sim).
 # Changes vs. the template, all marked "mobile-app:" below: run steps default to
 # mobile-app/, cache/artifact paths and the lockfile hash are prefixed with it,
-# the gate is read from the repo root, and the build gets the app's public env.
+# the gate is read from the repo root, the build gets the app's public env and
+# a longer timeout.
+# Also (not mobile-app specific): @expo/serve-sim is pinned to 0.4.0.
 # When updating native-sim, diff its new template against this file.
 #
 # Boots an iOS Simulator on a GitHub-hosted macOS
@@ -122,7 +124,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Cache npm + CocoaPods
         uses: actions/cache@v4
@@ -283,7 +285,9 @@ jobs:
             )
           fi
 
-          npx --yes @expo/serve-sim@latest "${ARGS[@]}" | tee serve-sim.json
+          # Pinned, not @latest as in the template: serve-sim 0.5.0 (2026-10-02)
+          # answers 403 for any Host but localhost/IPs, which breaks the tunnel.
+          npx --yes @expo/serve-sim@0.4.0 "${ARGS[@]}" | tee serve-sim.json
 
           # /readyz blocks until the simulator and the native capture session are up.
           for _ in $(seq 1 90); do
@@ -368,7 +372,8 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build app
-        timeout-minutes: 60
+        # mobile-app: 90, not 60. A cold build of this app took 47.5 min on macos-26.
+        timeout-minutes: 90
         if: inputs.mode == 'build' && steps.appcache.outputs.cache-hit != 'true'
         env:
           UDID: ${{ steps.sim.outputs.udid }}

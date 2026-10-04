@@ -1,94 +1,134 @@
-import { forwardRef, useEffect, useRef, useState } from 'react';
-import { Dimensions, View } from 'react-native';
+import { useIsFocused } from 'expo-router/react-navigation';
+import type React from 'react';
 import {
-    SharedValue,
-    useAnimatedReaction,
-    useSharedValue,
-} from 'react-native-reanimated';
-import Carousel, {
-    ICarouselInstance,
-    TCarouselProps,
-} from 'react-native-reanimated-carousel';
-import { scheduleOnRN } from 'react-native-worklets';
+    forwardRef,
+    RefObject,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from 'react';
+import { StyleProp, View, ViewStyle } from 'react-native';
+import PagerView, {
+    PagerViewOnPageScrollEvent,
+    PagerViewOnPageSelectedEvent,
+    PageScrollStateChangedNativeEvent,
+} from 'react-native-pager-view';
+import { SharedValue, useSharedValue } from 'react-native-reanimated';
 
-import { useTheme } from '@/theme';
+export interface SwiperRef {
+    scrollTo: (options: { index: number; animated?: boolean }) => void;
+    next: (options?: { animated?: boolean }) => void;
+    prev: (options?: { animated?: boolean }) => void;
+    getCurrentIndex: () => number;
+}
 
-export interface SwiperProps
-    extends Omit<
-        TCarouselProps,
-        'data' | 'renderItem' | 'mode' | 'vertical' | 'modeConfig'
-    > {
+export interface SwiperProps {
     children: React.ReactNode | React.ReactNode[];
 
     enabled?: boolean;
 
+    defaultIndex?: number;
+
     onPageChange?: (idx: number) => void;
+
+    /** the user started dragging */
+    onScrollStart?: () => void;
 
     swiperProgress: SharedValue<number>;
 
-    withPeek?: boolean;
+    style?: StyleProp<ViewStyle>;
+
+    /**
+     * Only mount pages within this distance of the current page; pages stay mounted once
+     * visited. Keeps opening a screen with many heavy pages (one list per season) cheap.
+     */
+    lazyWindow?: number;
 }
 
 /**
- * built on top of react-native-reanimated-carousel.
- * - exposes the swipe progress
- * - peek
+ * Native horizontal pager (UIPageViewController / ViewPager2).
+ * Exposes the swipe progress as a shared value, e.g. 1.5 halfway between page 2 and 3.
  */
-export const Swiper = forwardRef<ICarouselInstance, SwiperProps>(
+export const Swiper = forwardRef<SwiperRef, SwiperProps>(
     (
         {
             children,
-            enabled,
+            enabled = true,
+            defaultIndex = 0,
             onPageChange,
+            onScrollStart,
             swiperProgress,
-            withPeek = false,
-            ...rest
+            style,
+            lazyWindow,
         },
         ref
     ) => {
-        const pages = Array.isArray(children) ? children : [children];
-
-        const cleanPages = pages.filter((i) => !!i) as JSX.Element[];
-
-        const containerRef = useRef<View>(null);
-
-        const [containerWidth, setContainerWidth] = useState(
-            Dimensions.get('window').width
+        const pages = (Array.isArray(children) ? children : [children]).filter(
+            Boolean
         );
 
-        const theme = useTheme();
+        const pager = useRef<PagerView>(null);
+        const currentIndex = useRef(defaultIndex);
 
-        const computedWidth = withPeek
-            ? containerWidth -
-              theme.carousel.peekGap -
-              theme.carousel.peekSize * 2
-            : containerWidth;
+        const [visited, setVisited] = useState(() => new Set([defaultIndex]));
+        const isMounted = (idx: number) =>
+            lazyWindow == null ||
+            visited.has(idx) ||
+            [...visited].some((v) => Math.abs(v - idx) <= lazyWindow);
+
+        const goTo = (index: number, animated = true) => {
+            const clamped = Math.max(0, Math.min(index, pages.length - 1));
+            // mount the target first, so it isn't blank while the pager animates there
+            if (lazyWindow != null && !visited.has(clamped)) {
+                setVisited((prev) => new Set(prev).add(clamped));
+            }
+            if (animated) pager.current?.setPage(clamped);
+            else pager.current?.setPageWithoutAnimation(clamped);
+        };
+
+        useImperativeHandle(ref, () => ({
+            scrollTo: ({ index, animated = true }) => goTo(index, animated),
+            next: (options) =>
+                goTo(currentIndex.current + 1, options?.animated ?? true),
+            prev: (options) =>
+                goTo(currentIndex.current - 1, options?.animated ?? true),
+            getCurrentIndex: () => currentIndex.current,
+        }));
 
         return (
-            <View
-                ref={containerRef}
-                onLayout={() => {
-                    containerRef.current?.measure((x, y, w) => {
-                        setContainerWidth(w);
-                    });
+            <PagerView
+                ref={pager}
+                style={[{ flex: 1 }, style]}
+                initialPage={defaultIndex}
+                scrollEnabled={enabled}
+                onPageScroll={(e: PagerViewOnPageScrollEvent) => {
+                    swiperProgress.set(
+                        e.nativeEvent.position + e.nativeEvent.offset
+                    );
                 }}
-                style={{ flex: 1 }}
+                onPageScrollStateChanged={(
+                    e: PageScrollStateChangedNativeEvent
+                ) => {
+                    if (e.nativeEvent.pageScrollState === 'dragging')
+                        onScrollStart?.();
+                }}
+                onPageSelected={(e: PagerViewOnPageSelectedEvent) => {
+                    const idx = e.nativeEvent.position;
+                    currentIndex.current = idx;
+                    if (lazyWindow != null && !visited.has(idx)) {
+                        setVisited((prev) => new Set(prev).add(idx));
+                    }
+                    onPageChange?.(idx);
+                }}
             >
-                <Carousel
-                    {...rest}
-                    ref={ref}
-                    onProgressChange={(relativeOffset) => {
-                        swiperProgress.value = -relativeOffset / computedWidth;
-                    }}
-                    onSnapToItem={onPageChange}
-                    loop={false}
-                    width={computedWidth}
-                    style={{ width: containerWidth }}
-                    enabled={enabled}
-                    data={cleanPages}
-                    renderItem={(item) => item.item}
-                />
-            </View>
+                {pages.map((page, idx) => (
+                    // PagerView needs one plain native view per page
+                    <View key={idx} collapsable={false} style={{ flex: 1 }}>
+                        {isMounted(idx) ? page : null}
+                    </View>
+                ))}
+            </PagerView>
         );
     }
 );
@@ -105,7 +145,7 @@ export function useSwiper(options?: { initialPage?: number | null }) {
 
     const swiperProgress = useSharedValue(initialPage);
 
-    const ref = useRef<ICarouselInstance>(null);
+    const ref = useRef<SwiperRef>(null);
 
     return {
         swiperProgress,
@@ -114,34 +154,71 @@ export function useSwiper(options?: { initialPage?: number | null }) {
     };
 }
 
-export function useControlledSwiper(
-    progress: SharedValue<number>,
-    debugName: string
-) {
-    const ref = useRef<ICarouselInstance>(null);
+// Swipers that show the same scope (leaderboard, matches, player) share one progress value.
+type ControlledSwiper = {
+    ref: RefObject<SwiperRef | null>;
+    isFocused: RefObject<boolean>;
+};
+const controlledSwipers = new Map<SharedValue<number>, Set<ControlledSwiper>>();
+// The last settled page per scope, kept in JS so a newly mounted swiper can start there
+// without reading the shared value during render.
+const lastPages = new Map<SharedValue<number>, number>();
 
-    const switchToPage = (value: number) => {
-        ref.current?.scrollTo({ index: value, animated: false });
-    };
+/**
+ * Moves every mounted swiper driven by `progress` to `index` (e.g. a scope tab was tapped).
+ * Only the swiper on the focused screen animates; the hidden ones jump, so a single pager
+ * drives the shared progress.
+ */
+export function scrollControlledSwipers(
+    progress: SharedValue<number>,
+    index: number
+) {
+    lastPages.set(progress, index);
+    controlledSwipers
+        .get(progress)
+        ?.forEach(({ ref, isFocused }) =>
+            ref.current?.scrollTo({ index, animated: isFocused.current })
+        );
+}
+
+export function useControlledSwiper(progress: SharedValue<number>) {
+    const ref = useRef<SwiperRef>(null);
+    const focused = useIsFocused();
+    const isFocused = useRef(focused);
+    useEffect(() => {
+        isFocused.current = focused;
+    }, [focused]);
 
     useEffect(() => {
-        switchToPage(Math.round(progress.value));
-    }, []);
+        const swiper = { ref, isFocused };
+        const group = controlledSwipers.get(progress) ?? new Set();
+        group.add(swiper);
+        controlledSwipers.set(progress, group);
+        return () => {
+            group.delete(swiper);
+        };
+    }, [progress]);
 
-    useAnimatedReaction(
-        () => progress.value,
-        (v) => {
-            'worklet';
-            if (Math.round(v) === v) {
-                scheduleOnRN(switchToPage, v);
-            }
-        }
-    );
+    const [defaultIndex] = useState(() => lastPages.get(progress) ?? 0);
 
     return {
-        defaultIndex: Math.round(progress.value),
+        defaultIndex,
         swiperProgress: progress,
         ref,
+        // keep the other swipers of this scope on the same page
+        onPageChange: (idx: number) => {
+            lastPages.set(progress, idx);
+            controlledSwipers.get(progress)?.forEach((other) => {
+                if (
+                    other.ref !== ref &&
+                    other.ref.current?.getCurrentIndex() !== idx
+                )
+                    other.ref.current?.scrollTo({
+                        index: idx,
+                        animated: false,
+                    });
+            });
+        },
     };
 }
 
@@ -160,7 +237,7 @@ export function useSwiperWithPageState(options?: {
 
     const [swiperPage, setSwiperPage] = useState(initialPage);
 
-    const ref = useRef<ICarouselInstance>(null);
+    const ref = useRef<SwiperRef>(null);
 
     return {
         swiperPage,

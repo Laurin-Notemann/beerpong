@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -5,8 +7,8 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
-import { useNavigation } from '@/app/navigation/useNavigation';
 import { MatchesListProps } from '@/components/MatchesList';
+import { useNavigation } from '@/lib/navigation/useNavigation';
 
 export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
     const { groupId, seasonId } = useGroup();
@@ -32,13 +34,15 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
         invalidateMatches(groupId!, seasonId!)
     );
 
-    if (!matchesQuery.data?.data) return { props: null, isLoading, error };
-
-    const allowedMoves = movesQuery.data?.data ?? [];
-
-    const matches = matchesQuery.data.data.map(
-        matchDtoToMatch(playersQuery.data?.data, allowedMoves)
+    const matchDtos = matchesQuery.data?.data;
+    const players = playersQuery.data?.data;
+    const allowedMoves = movesQuery.data?.data;
+    const matches = useMemo(
+        () => matchDtos?.map(matchDtoToMatch(players, allowedMoves)),
+        [matchDtos, players, allowedMoves]
     );
+
+    if (!matches) return { props: null, isLoading, error };
 
     function onMatchPress(match: Match) {
         nav.navigate('match', { id: match.id, seasonId: match.seasonId });

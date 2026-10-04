@@ -163,6 +163,10 @@ public class GroupControllerTest {
 
         // test group by id
         assertNotNull(group);
+        // the drawer shows these counts from this endpoint
+        assertEquals(2, group.getNumberOfPlayers());
+        assertEquals(0, group.getNumberOfMatches());
+        assertEquals(1, group.getNumberOfSeasons());
         testUtils.assertGroupEquals(prerequisiteGroup, group);
     }
 
@@ -249,6 +253,7 @@ public class GroupControllerTest {
 
     @Test
     @Transactional
+    @SuppressWarnings("unchecked")
     public void group_leave() {
         var prerequisiteGroup = testUtils.createTestGroup(port);
 
@@ -257,5 +262,10 @@ public class GroupControllerTest {
 
         // test group leave
         assertEquals("OK", ok);
+
+        // a left group is no longer among the user's groups
+        var groupsResponse = requestUtils.performGet(port, "/groups/user", List.class, GroupDto.class);
+        var groups = (List<GroupDto>) requestUtils.assertSuccess(groupsResponse, ArrayList.class);
+        assertTrue(groups.stream().noneMatch(groupDto -> groupDto.getId().equals(prerequisiteGroup.getId())));
     }
 }

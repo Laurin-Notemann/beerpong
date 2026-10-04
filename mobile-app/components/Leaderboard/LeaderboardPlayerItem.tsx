@@ -1,18 +1,22 @@
-import { TouchableOpacity } from 'react-native';
+import { memo } from 'react';
+import { TouchableOpacity, View } from 'react-native';
 
 import Avatar from '@/components/Avatar';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import Text from '@/components/Text';
 import {
     getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
-import { formatPlacement } from '@/utils/format';
+import { formatPlacement, plural } from '@/utils/format';
+
+/** fixed, so the leaderboard list can position rows without measuring them */
+export const LEADERBOARD_ROW_HEIGHT = 60.5;
 
 export interface LeaderboardPlayerItemProps {
     id: string;
-    placement: number;
+    placement: Placement;
 
     name: string;
     avatarUrl?: string | null;
@@ -26,11 +30,10 @@ export interface LeaderboardPlayerItemProps {
     cups: number;
 
     onPlayerPress?: (id: string) => void;
-    onPlayerLongPress?: (id: string) => void;
 
     rankingAlgorithm: RankingAlgorithm;
 }
-export default function LeaderboardPlayerItem({
+function LeaderboardPlayerItem({
     id,
     placement,
     name,
@@ -41,7 +44,6 @@ export default function LeaderboardPlayerItem({
     elo,
     unranked = false,
     onPlayerPress,
-    onPlayerLongPress,
     rankingAlgorithm,
     cups,
 }: LeaderboardPlayerItemProps) {
@@ -54,15 +56,14 @@ export default function LeaderboardPlayerItem({
                 flexDirection: 'row',
                 alignItems: 'center',
 
-                height: 60.5,
+                height: LEADERBOARD_ROW_HEIGHT,
                 paddingHorizontal: 20,
 
                 opacity: unranked ? 0.5 : undefined,
             }}
             onPress={() => onPlayerPress?.(id)}
-            onLongPress={() => onPlayerLongPress?.(id)}
         >
-            <ThemedText
+            <Text
                 style={{
                     marginRight: 12,
 
@@ -71,16 +72,16 @@ export default function LeaderboardPlayerItem({
                 }}
             >
                 {matches ? formatPlacement(placement) : '  '}
-            </ThemedText>
+            </Text>
             <Avatar url={avatarUrl} name={name} size={36} />
-            <ThemedView
+            <View
                 style={{
                     marginLeft: 12,
 
                     flex: 1,
                 }}
             >
-                <ThemedText
+                <Text
                     numberOfLines={1}
                     style={{
                         fontSize: 17,
@@ -89,14 +90,15 @@ export default function LeaderboardPlayerItem({
                     }}
                 >
                     {name}
-                </ThemedText>
-                <ThemedText
+                </Text>
+                <Text
                     style={{ fontSize: 15, color: theme.color.text.secondary }}
                 >
-                    {points} points · {matches} matches
-                </ThemedText>
-            </ThemedView>
-            <ThemedText
+                    {plural(points, 'point', 'points')} ·{' '}
+                    {plural(matches, 'match', 'matches')}
+                </Text>
+            </View>
+            <Text
                 style={{
                     marginLeft: 'auto',
 
@@ -113,7 +115,10 @@ export default function LeaderboardPlayerItem({
                     elo,
                     points,
                 })}
-            </ThemedText>
+            </Text>
         </TouchableOpacity>
     );
 }
+
+// Rows only change when their player's numbers change; the list re-renders often.
+export default memo(LeaderboardPlayerItem);
