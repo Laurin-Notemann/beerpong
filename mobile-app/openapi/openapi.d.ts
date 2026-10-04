@@ -41,6 +41,10 @@ declare namespace Components {
             token?: string;
             type?: 'ACCESS' | 'REFRESH';
         }
+        export interface CupPositionDto {
+            x?: number; // int32
+            y?: number; // int32
+        }
         export interface ErrorDetails {
             code?: string;
             description?: string;
@@ -75,6 +79,54 @@ declare namespace Components {
             numMatches?: number; // int64
             startedAt?: string; // date-time
             entries?: PlayerDtoExtended[];
+        }
+        export interface LiveMatchCreateDto {
+            seasonId?: string;
+            ops?: LiveMatchOpDto[];
+        }
+        export interface LiveMatchDto {
+            id?: string;
+            groupId?: string;
+            seasonId?: string;
+            status?: 'IN_PROGRESS' | 'FINISHED' | 'ABANDONED';
+            startedAt?: string; // date-time
+            lastActivityAt?: string; // date-time
+            endedAt?: string; // date-time
+            createdByUserId?: string;
+            lastSeq?: number; // int64
+            resultMatchId?: string;
+            ops?: LiveMatchOpDto[];
+        }
+        export interface LiveMatchFinishDto {
+            expectedSeq?: number; // int64
+            teams?: TeamCreateDto[];
+        }
+        export interface LiveMatchOpDto {
+            id?: string;
+            seq?: number; // int64
+            type?:
+                | 'SET_TEAMS'
+                | 'SET_PLAYER_TEAM'
+                | 'ADJUST_MOVE'
+                | 'RECORD_CUP_HIT'
+                | 'UNDO_CUP_HIT';
+            createdAt?: string; // date-time
+            playerId?: string;
+            team?: string;
+            moveId?: string;
+            delta?: number; // int32
+            cups?: CupPositionDto[];
+            cup?: CupPositionDto;
+            finishMoveId?: string;
+            redPlayerIds?: string[];
+            bluePlayerIds?: string[];
+        }
+        export interface LiveMatchOpsDto {
+            ops?: LiveMatchOpDto[];
+        }
+        export interface LiveMatchOpsResultDto {
+            lastSeq?: number; // int64
+            ops?: LiveMatchOpDto[];
         }
         export interface MatchCreateDto {
             teams?: TeamCreateDto[];
@@ -210,6 +262,12 @@ declare namespace Components {
             data?: GroupPreset[];
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeListLiveMatchDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: LiveMatchDto[];
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeListMatchDto {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
@@ -262,6 +320,18 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: SeasonDto[];
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeLiveMatchDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: LiveMatchDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeLiveMatchOpsResultDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: LiveMatchOpsResultDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeMatchDto {
@@ -396,10 +466,52 @@ declare namespace Components {
     }
 }
 declare namespace Paths {
+    namespace AbandonLiveMatch {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeLiveMatchDto;
+        }
+    }
+    namespace AppendOps {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.LiveMatchOpsDto;
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeLiveMatchOpsResultDto;
+        }
+    }
     namespace CreateGroup {
         export type RequestBody = Components.Schemas.GroupCreateDto;
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
+        }
+    }
+    namespace CreateLiveMatch {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.LiveMatchCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeLiveMatchDto;
         }
     }
     namespace CreateMatch {
@@ -530,6 +642,32 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeListGroupDto;
         }
     }
+    namespace FinishLiveMatch {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.LiveMatchFinishDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeLiveMatchDto;
+        }
+    }
+    namespace GetActiveLiveMatches {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListLiveMatchDto;
+        }
+    }
     namespace GetAllMatchOverviews {
         namespace Parameters {
             export type GroupId = string;
@@ -640,6 +778,19 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeLeaderboardDto;
+        }
+    }
+    namespace GetLiveMatch {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeLiveMatchDto;
         }
     }
     namespace GetMatchById {
@@ -1322,6 +1473,54 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeletePlayer.Responses.$200>;
+    /**
+     * getLiveMatch
+     */
+    getLiveMatch(
+        parameters?: Parameters<Paths.GetLiveMatch.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetLiveMatch.Responses.$200>;
+    /**
+     * createLiveMatch
+     */
+    createLiveMatch(
+        parameters?: Parameters<Paths.CreateLiveMatch.PathParameters> | null,
+        data?: Paths.CreateLiveMatch.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CreateLiveMatch.Responses.$200>;
+    /**
+     * abandonLiveMatch
+     */
+    abandonLiveMatch(
+        parameters?: Parameters<Paths.AbandonLiveMatch.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.AbandonLiveMatch.Responses.$200>;
+    /**
+     * finishLiveMatch
+     */
+    finishLiveMatch(
+        parameters?: Parameters<Paths.FinishLiveMatch.PathParameters> | null,
+        data?: Paths.FinishLiveMatch.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.FinishLiveMatch.Responses.$200>;
+    /**
+     * appendOps
+     */
+    appendOps(
+        parameters?: Parameters<Paths.AppendOps.PathParameters> | null,
+        data?: Paths.AppendOps.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.AppendOps.Responses.$200>;
+    /**
+     * getActiveLiveMatches
+     */
+    getActiveLiveMatches(
+        parameters?: Parameters<Paths.GetActiveLiveMatches.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetActiveLiveMatches.Responses.$200>;
 }
 
 export interface PathsDictionary {
@@ -1748,6 +1947,62 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeletePlayer.Responses.$200>;
     };
+    ['/groups/{groupId}/live-matches/{id}']: {
+        /**
+         * getLiveMatch
+         */
+        get(
+            parameters?: Parameters<Paths.GetLiveMatch.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetLiveMatch.Responses.$200>;
+        /**
+         * createLiveMatch
+         */
+        put(
+            parameters?: Parameters<Paths.CreateLiveMatch.PathParameters> | null,
+            data?: Paths.CreateLiveMatch.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CreateLiveMatch.Responses.$200>;
+        /**
+         * abandonLiveMatch
+         */
+        delete(
+            parameters?: Parameters<Paths.AbandonLiveMatch.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.AbandonLiveMatch.Responses.$200>;
+    };
+    ['/groups/{groupId}/live-matches/{id}/finish']: {
+        /**
+         * finishLiveMatch
+         */
+        post(
+            parameters?: Parameters<Paths.FinishLiveMatch.PathParameters> | null,
+            data?: Paths.FinishLiveMatch.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.FinishLiveMatch.Responses.$200>;
+    };
+    ['/groups/{groupId}/live-matches/{id}/ops']: {
+        /**
+         * appendOps
+         */
+        post(
+            parameters?: Parameters<Paths.AppendOps.PathParameters> | null,
+            data?: Paths.AppendOps.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.AppendOps.Responses.$200>;
+    };
+    ['/groups/{groupId}/live-matches']: {
+        /**
+         * getActiveLiveMatches
+         */
+        get(
+            parameters?: Parameters<Paths.GetActiveLiveMatches.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetActiveLiveMatches.Responses.$200>;
+    };
 }
 
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
@@ -1758,11 +2013,18 @@ export type AssetUploadResponse = Components.Schemas.AssetUploadResponse;
 export type AuthRefreshDto = Components.Schemas.AuthRefreshDto;
 export type AuthSignupDto = Components.Schemas.AuthSignupDto;
 export type AuthTokenDto = Components.Schemas.AuthTokenDto;
+export type CupPositionDto = Components.Schemas.CupPositionDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
 export type LeaderboardDto = Components.Schemas.LeaderboardDto;
+export type LiveMatchCreateDto = Components.Schemas.LiveMatchCreateDto;
+export type LiveMatchDto = Components.Schemas.LiveMatchDto;
+export type LiveMatchFinishDto = Components.Schemas.LiveMatchFinishDto;
+export type LiveMatchOpDto = Components.Schemas.LiveMatchOpDto;
+export type LiveMatchOpsDto = Components.Schemas.LiveMatchOpsDto;
+export type LiveMatchOpsResultDto = Components.Schemas.LiveMatchOpsResultDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchDtoExtended = Components.Schemas.MatchDtoExtended;
@@ -1792,6 +2054,8 @@ export type ResponseEnvelopeListGroupDto =
     Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListGroupPreset =
     Components.Schemas.ResponseEnvelopeListGroupPreset;
+export type ResponseEnvelopeListLiveMatchDto =
+    Components.Schemas.ResponseEnvelopeListLiveMatchDto;
 export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListMatchDtoExtended =
@@ -1810,6 +2074,10 @@ export type ResponseEnvelopeListRuleMoveDto =
     Components.Schemas.ResponseEnvelopeListRuleMoveDto;
 export type ResponseEnvelopeListSeasonDto =
     Components.Schemas.ResponseEnvelopeListSeasonDto;
+export type ResponseEnvelopeLiveMatchDto =
+    Components.Schemas.ResponseEnvelopeLiveMatchDto;
+export type ResponseEnvelopeLiveMatchOpsResultDto =
+    Components.Schemas.ResponseEnvelopeLiveMatchOpsResultDto;
 export type ResponseEnvelopeMatchDto =
     Components.Schemas.ResponseEnvelopeMatchDto;
 export type ResponseEnvelopeMatchDtoExtended =
