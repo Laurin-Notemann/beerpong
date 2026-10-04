@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useIsFocused } from 'expo-router/react-navigation';
+import { useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import { useGroup } from '@/api/calls/seasonHooks';
+import { useGroup, useSeasonQuery } from '@/api/calls/seasonHooks';
 import {
     LiveMatchOfflineError,
     LiveMatchScoreChangedError,
@@ -45,12 +46,18 @@ export function useLiveMatchScreen(id: string) {
     const playersQuery = usePlayersQuery(groupId, seasonId);
     const movesQuery = useMoves(groupId, seasonId);
     const matchesQuery = useMatchesQuery(groupId, seasonId);
+    const seasonQuery = useSeasonQuery(groupId, seasonId ?? null);
+    const rankingAlgorithm =
+        seasonQuery.data?.data?.seasonSettings?.rankingAlgorithm ??
+        (seasonId === activeSeasonId
+            ? activeSeason?.seasonSettings?.rankingAlgorithm
+            : undefined);
     const moves = movesQuery.data?.data ?? [];
     const profiles = playersQuery.data?.data ?? [];
 
     const match = getDisplayMatch(
         draftPlayers(live.state),
-        activeSeason?.seasonSettings?.rankingAlgorithm,
+        rankingAlgorithm,
         profiles,
         matchesQuery.data?.data?.map(matchDtoToMatch(profiles, moves)) ?? [],
         moves
@@ -82,13 +89,27 @@ export function useLiveMatchScreen(id: string) {
                 ? ('discarded' as const)
                 : undefined;
 
+    // a second tap lands before the re-render that disables the button
+    const finishInFlight = useRef(false);
+    // finishing can take seconds; only move on if the user is still looking at this screen
+    const isFocused = useIsFocused();
+    const isFocusedRef = useRef(isFocused);
+    useEffect(() => {
+        isFocusedRef.current = isFocused;
+        return () => {
+            isFocusedRef.current = false;
+        };
+    }, [isFocused]);
+
     async function finish() {
-        if (isFinishing) return;
+        if (finishInFlight.current) return;
+        finishInFlight.current = true;
         setIsFinishing(true);
         try {
             const result = await actions.finish();
-            setIsLeaving(true);
             showSuccessToast('Match saved.');
+            if (!isFocusedRef.current) return;
+            setIsLeaving(true);
             router.replace({
                 pathname: '/match',
                 params: { id: result.matchId, seasonId: result.seasonId },
@@ -107,6 +128,7 @@ export function useLiveMatchScreen(id: string) {
                 showErrorToast("Couldn't finish the match.", err);
             }
         } finally {
+            finishInFlight.current = false;
             setIsFinishing(false);
         }
     }
@@ -141,7 +163,6 @@ export function useLiveMatchScreen(id: string) {
 
     return {
         header,
-        isLoading: live.isLoading,
         /** couldn't be loaded for another reason than not existing (e.g. offline) */
         error: !header && !isNotFound ? live.error : null,
         ended,

@@ -214,23 +214,42 @@ export default function NewMatchScreen() {
         }
     }
 
+    // a second tap in the same frame is ignored; after that the cleared draft has no teams
+    const isStarting = useRef(false);
+
     /** pro mode: the match goes live right away, also offline; this tab is free for the next one */
     function onStartLiveMatch() {
         if (!groupId || !seasonId) {
             ConsoleLogger.warn('no groupId or seasonId');
             return;
         }
-        if (!hasValidTeams) return;
+        if (isStarting.current) return;
+
+        // the draft as it is now, not as it was when this screen last rendered
+        const { redTeam, blueTeam, actions } = useMatchDraftStore.getState();
+        const teamSizes = [
+            redTeam.teamMembers.length,
+            blueTeam.teamMembers.length,
+        ];
+        if (
+            teamSizes.some(
+                (i) => i < Math.max(1, minTeamSize) || i > maxTeamSize
+            )
+        ) {
+            return;
+        }
+        isStarting.current = true;
+        requestAnimationFrame(() => {
+            isStarting.current = false;
+        });
 
         const id = startLiveMatch({
             groupId,
             seasonId,
-            redPlayerIds: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
-            bluePlayerIds: matchDraft.blueTeam.teamMembers.map(
-                (i) => i.playerId
-            ),
+            redPlayerIds: redTeam.teamMembers.map((i) => i.playerId),
+            bluePlayerIds: blueTeam.teamMembers.map((i) => i.playerId),
         });
-        matchDraft.actions.clear();
+        actions.clear();
         triggerHapticBump('toast:success');
         nav.navigate('liveMatch', { id });
     }

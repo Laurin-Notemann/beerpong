@@ -11,11 +11,11 @@ describe('teamNames', () => {
         expect(teamNames(['Anna', 'Ben'])).toBe('Anna & Ben');
     });
 
-    it('names the first two and counts the rest', () => {
-        expect(teamNames(['Anna', 'Ben', 'Cleo'])).toBe('Anna, Ben +1');
+    it('names only the first two of a bigger team', () => {
+        expect(teamNames(['Anna', 'Ben', 'Cleo'])).toBe('Anna, Ben');
         expect(
             teamNames(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'])
-        ).toBe('A, B +8');
+        ).toBe('A, B');
     });
 
     it('is empty for an empty team', () => {

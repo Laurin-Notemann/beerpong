@@ -7,6 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useNextTokens } from '@/components/next/tokens';
+import { useSwiperPage } from '@/hooks/useSwiperPage';
 
 const HEIGHT = 32;
 const INSET = 3;
@@ -15,11 +16,13 @@ function Label({
     title,
     index,
     progress,
+    selected,
     onPress,
 }: {
     title: string;
     index: number;
     progress: SharedValue<number>;
+    selected: boolean;
     onPress: () => void;
 }) {
     const t = useNextTokens();
@@ -36,6 +39,7 @@ function Label({
     return (
         <Pressable
             accessibilityRole="tab"
+            accessibilityState={{ selected }}
             onPress={onPress}
             style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
         >
@@ -66,6 +70,7 @@ export function PageTabs({
 }) {
     const t = useNextTokens();
     const [width, setWidth] = useState(0);
+    const page = useSwiperPage(progress);
     const segment = titles.length ? (width - INSET * 2) / titles.length : 0;
 
     const highlight = useAnimatedStyle(() => ({
@@ -115,6 +120,7 @@ export function PageTabs({
                     title={title}
                     index={index}
                     progress={progress}
+                    selected={index === page}
                     onPress={() => onSelect(index)}
                 />
             ))}

@@ -5,7 +5,8 @@ import { TeamBadge, TeamBadgePlayer } from '@/components/liveMatch/TeamBadge';
 import { useNextTokens } from '@/components/next/tokens';
 
 /**
- * The live score in one card: red badge and score on the left, blue on the right. The badges
+ * The live score in one card: blue badge and score on the left, red on the right (as in
+ * `MatchVsHeader`). The badges
  * share what's left after the scores, so long names ellipsize and the scores never move.
  */
 export function Scoreboard({
@@ -33,13 +34,13 @@ export function Scoreboard({
             }}
         >
             <View style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                <TeamBadge team="red" players={red.players} />
+                <TeamBadge team="blue" players={blue.players} />
             </View>
-            <ScoreChip team="red" value={red.score} />
-            <Text style={{ color: t.textSecondary, fontSize: 17 }}>–</Text>
             <ScoreChip team="blue" value={blue.score} />
+            <Text style={{ color: t.textSecondary, fontSize: 17 }}>–</Text>
+            <ScoreChip team="red" value={red.score} />
             <View style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                <TeamBadge team="blue" players={blue.players} align="end" />
+                <TeamBadge team="red" players={red.players} align="end" />
             </View>
         </View>
     );

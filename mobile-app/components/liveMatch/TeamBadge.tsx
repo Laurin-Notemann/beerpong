@@ -19,8 +19,8 @@ const SIZES = {
 };
 
 /**
- * A team at a glance: up to three overlapping avatars ringed in the team color (then "+N"),
- * and the names in one ellipsized line. `regular` stacks the names under the avatars, so long
+ * A team at a glance: up to three overlapping avatars ringed in the team color, then a "+N"
+ * avatar for the rest, and the first names in one ellipsized line. `regular` stacks the names under the avatars, so long
  * names get the full width; `compact` (the dock) puts them side by side. `align="end"`
  * mirrors the badge for the team on the right.
  */

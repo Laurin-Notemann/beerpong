@@ -1,10 +1,13 @@
 import type { LiveMatchSyncStatus } from '@/api/liveMatch/useLiveMatch';
 
-/** a team in one short line: "Anna", "Anna & Ben", "Anna, Ben +3" */
+/**
+ * A team's first names in one short line: "Anna", "Anna & Ben", "Anna, Ben". How many more
+ * there are is shown by the badge's "+N" avatar, not here.
+ */
 export function teamNames(names: string[]) {
     if (names.length <= 1) return names[0] ?? '';
     if (names.length === 2) return `${names[0]} & ${names[1]}`;
-    return `${names[0]}, ${names[1]} +${names.length - 2}`;
+    return `${names[0]}, ${names[1]}`;
 }
 
 /** why a live match can't be finished yet, or nothing when it can */

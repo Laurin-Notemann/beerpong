@@ -11,6 +11,8 @@ let timeout: ReturnType<typeof setTimeout> | undefined;
 
 function tick() {
     listeners.forEach((listener) => listener());
+    // the last timer may have unmounted during this tick
+    if (!listeners.size) return;
     timeout = setTimeout(tick, 1000 - (Date.now() % 1000));
 }
 
