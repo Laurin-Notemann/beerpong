@@ -14,22 +14,18 @@ export const IMAGE_SIZES = {
 
 /**
  * Scales the image at `uri` down so its longer edge is at most `maxSize` and encodes it
- * as JPEG. The result is upright (EXIF orientation applied) and ready for `uploadImage`.
+ * as JPEG. Loading with bounds decodes straight to the smaller size (the full-size photo
+ * never sits in memory) and bakes the EXIF orientation into the pixels, so the bounds
+ * apply to the image as displayed and the result is upright.
  */
 export async function compressImage(
     uri: string,
     { maxSize, quality }: { maxSize: number; quality: number }
 ): Promise<{ byteArray: Uint8Array; mimeType: 'image/jpeg' }> {
-    const context = ImageManipulator.manipulate(uri);
-    let image = await context.renderAsync();
-    if (Math.max(image.width, image.height) > maxSize) {
-        context.resize(
-            image.width >= image.height
-                ? { width: maxSize }
-                : { height: maxSize }
-        );
-        image = await context.renderAsync();
-    }
+    const image = await ImageManipulator.manipulate(uri, {
+        maxWidth: maxSize,
+        maxHeight: maxSize,
+    }).renderAsync();
     const result = await image.saveAsync({
         format: SaveFormat.JPEG,
         compress: quality,
