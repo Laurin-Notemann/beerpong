@@ -165,6 +165,8 @@ export function useLiveMatch(groupId: ApiId, id: ApiId) {
         syncStatus,
         pendingCount,
         isLoading: !entry && query.isLoading,
+        /** why the match couldn't be loaded, e.g. `liveMatchNotFound` (see `errorCode`) */
+        error: query.error,
     };
 }
 

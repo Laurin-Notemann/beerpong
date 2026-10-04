@@ -21,6 +21,9 @@ export const NewMatchStack: React.FC<{
     onBack: () => void;
     onNext: () => void;
     onCreate: () => void;
+    /** pro mode: the teams page starts a live match instead of going on to the next page */
+    onStart?: () => void;
+    canStart?: boolean;
 }> = ({
     onCreateRandomTeams,
     randomTeamsMode,
@@ -33,6 +36,8 @@ export const NewMatchStack: React.FC<{
     onBack,
     onNext,
     onCreate,
+    onStart,
+    canStart = false,
 }) => {
     const { activeSeason } = useGroup();
 
@@ -82,6 +87,14 @@ export const NewMatchStack: React.FC<{
                             }
                         >
                             Generate
+                        </Stack.Toolbar.Button>
+                    ) : onStart ? (
+                        <Stack.Toolbar.Button
+                            variant="done"
+                            onPress={onStart}
+                            disabled={!canStart}
+                        >
+                            Start match
                         </Stack.Toolbar.Button>
                     ) : (
                         <Stack.Toolbar.Button

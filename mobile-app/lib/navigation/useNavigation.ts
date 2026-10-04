@@ -21,6 +21,7 @@ export type RootStackParamList = {
     saveSeason: undefined;
     player: { id: string };
     match: { id: string; seasonId: string };
+    liveMatch: { id: string };
     matches: undefined;
     editFormationName: undefined;
     newMatch: undefined;

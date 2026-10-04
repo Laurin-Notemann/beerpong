@@ -72,6 +72,9 @@ export default function MainLayout() {
             />
             <Stack.Screen name="assignCupHitModal" options={modalStyles} />
             <Stack.Screen name="editMatchPoints" options={modalStyles} />
+
+            {/* a full screen pushed like `match`, so the pager's swipes don't fight a sheet */}
+            <Stack.Screen name="liveMatch" />
         </Stack>
     );
 }

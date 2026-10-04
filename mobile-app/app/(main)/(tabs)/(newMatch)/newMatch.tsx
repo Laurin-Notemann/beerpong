@@ -11,13 +11,13 @@ import {
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { startLiveMatch } from '@/api/liveMatch/useLiveMatch';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -118,9 +118,9 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    // pro mode tracks the cups during the game, so their page comes before the points
+    // in pro mode the match is entered live (see liveMatch.tsx), so only the teams are picked here
     const pages = beerpongProMode
-        ? (['teams', 'cups', 'points'] as const)
+        ? (['teams'] as const)
         : (['teams', 'points'] as const);
 
     const profiles = playersQuery.data?.data ?? [];
@@ -214,6 +214,27 @@ export default function NewMatchScreen() {
         }
     }
 
+    /** pro mode: the match goes live right away, also offline; this tab is free for the next one */
+    function onStartLiveMatch() {
+        if (!groupId || !seasonId) {
+            ConsoleLogger.warn('no groupId or seasonId');
+            return;
+        }
+        if (!hasValidTeams) return;
+
+        const id = startLiveMatch({
+            groupId,
+            seasonId,
+            redPlayerIds: matchDraft.redTeam.teamMembers.map((i) => i.playerId),
+            bluePlayerIds: matchDraft.blueTeam.teamMembers.map(
+                (i) => i.playerId
+            ),
+        });
+        matchDraft.actions.clear();
+        triggerHapticBump('toast:success');
+        nav.navigate('liveMatch', { id });
+    }
+
     const [randomTeamsMode, setRandomTeamsMode] = useState<{
         players: string[];
     } | null>(null);
@@ -277,6 +298,8 @@ export default function NewMatchScreen() {
                 }}
                 onCreate={onCreateMatch}
                 isCreating={createMatchMutation.isPending}
+                onStart={beerpongProMode ? onStartLiveMatch : undefined}
+                canStart={hasValidTeams}
             />
             <Swiper
                 // kinda hacky, this is how we get the carousel to re-mount when switching groups or seasons.
@@ -289,10 +312,8 @@ export default function NewMatchScreen() {
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
-                    // in pro mode the cups have filled in the points already
                     if (
                         pages[pageIdx] === 'points' &&
-                        !beerpongProMode &&
                         !matchDraft.hasBeenOnPageTwo
                     ) {
                         nav.navigate('assignPointsToPlayerModal', {
@@ -351,9 +372,6 @@ export default function NewMatchScreen() {
                                 setTeam={matchDraft.actions.setPlayerTeam}
                             />
                         );
-                    }
-                    if (page === 'cups') {
-                        return <NewMatchCups key={page} />;
                     }
                     return (
                         <CreateMatchAssignPoints
