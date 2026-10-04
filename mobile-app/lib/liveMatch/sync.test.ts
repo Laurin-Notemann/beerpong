@@ -8,6 +8,7 @@ import {
     nextRequest,
     SyncDeps,
     SyncErrorKind,
+    SyncRequest,
 } from '@/lib/liveMatch/sync';
 import type { LiveOp } from '@/lib/liveMatch/types';
 import { outbox, OutboxState } from '@/zustand/liveMatchOutboxStore';
@@ -20,6 +21,8 @@ const adjust = (id: string): LiveOp => ({
     delta: 1,
 });
 const match = { groupId: 'g', seasonId: 's', createdAt: '2026-10-04' };
+const opIds = (request: SyncRequest) =>
+    request.kind === 'abandon' ? [] : request.ops.map((i) => i.id);
 
 function httpError(status?: number, code?: string) {
     const config = { headers: new AxiosHeaders() };
@@ -56,6 +59,17 @@ describe('nextRequest', () => {
         expect(batch?.kind).toBe('ops');
         expect(batch?.ops).toHaveLength(MAX_OPS_PER_REQUEST);
         expect(batch?.ops[0].id).toBe('0');
+    });
+
+    it('sends a discard before anything else', () => {
+        expect(
+            nextRequest({
+                ...match,
+                pendingCreate: { ops: [adjust('t')] },
+                pendingOps: [adjust('a')],
+                pendingAbandon: true,
+            })
+        ).toEqual({ kind: 'abandon' });
     });
 
     it('has nothing to send for an empty entry', () => {
@@ -97,37 +111,33 @@ describe('createSyncEngine', () => {
         return createSyncEngine({
             getEntry: (id) => state.entries[id],
             getEntryIds: () => Object.keys(state.entries),
+            onSending: (id, request) => {
+                if (request.kind === 'create') {
+                    apply(outbox.markCreateSent(state, id));
+                }
+            },
             send: async (_id, _entry, request) => {
-                sent.push({
-                    kind: request.kind,
-                    ids: request.ops.map((i) => i.id),
-                });
+                sent.push({ kind: request.kind, ids: opIds(request) });
                 await responses.shift()?.();
             },
             onSent: (id, request) =>
                 apply(
-                    request.kind === 'create'
-                        ? outbox.ackCreate(state, id)
-                        : outbox.ackOps(
-                              state,
-                              id,
-                              request.ops.map((i) => i.id)
-                          )
+                    request.kind === 'abandon'
+                        ? outbox.drop(state, id)
+                        : request.kind === 'create'
+                          ? outbox.ackCreate(state, id)
+                          : outbox.ackOps(state, id, opIds(request))
                 ),
             onEnded: (id) => {
                 ended.push(id);
                 apply(outbox.drop(state, id));
             },
             onPoison: (id, _entry, request) => {
-                poisoned.push(request.ops.map((i) => i.id));
+                poisoned.push(opIds(request));
                 apply(
-                    request.kind === 'create'
-                        ? outbox.drop(state, id)
-                        : outbox.ackOps(
-                              state,
-                              id,
-                              request.ops.map((i) => i.id)
-                          )
+                    request.kind === 'ops'
+                        ? outbox.ackOps(state, id, opIds(request))
+                        : outbox.drop(state, id)
                 );
             },
             onFailed: (_id, _error, kind, firstInARow) =>
@@ -287,5 +297,58 @@ describe('createSyncEngine', () => {
         await vi.runAllTimersAsync();
 
         expect(sent).toHaveLength(1);
+    });
+
+    it('discards after a create already on its way, never overtaking it', async () => {
+        apply(outbox.start(state, 'm', match, [adjust('t')]));
+        let release!: () => void;
+        responses.push(() => new Promise((resolve) => (release = resolve)));
+
+        const sync = engine();
+        sync.kick();
+        await vi.advanceTimersByTimeAsync(0);
+        // the create went out, so the server may have the match: the discard is queued
+        apply(outbox.abandon(state, 'm', match));
+        sync.kick(true);
+        expect(state.entries.m.pendingAbandon).toBe(true);
+        expect(sent).toHaveLength(1);
+
+        release();
+        await vi.runAllTimersAsync();
+        expect(sent.map((i) => i.kind)).toEqual(['create', 'abandon']);
+        expect(state.entries).toEqual({});
+    });
+
+    it('keeps a discard queued while offline, and a missing match counts as discarded', async () => {
+        apply(outbox.enqueue(state, 'm', match, [adjust('a')]));
+        apply(outbox.abandon(state, 'm', match));
+        responses.push(
+            reject(httpError()),
+            reject(httpError(404, 'liveMatchNotFound'))
+        );
+
+        const sync = engine();
+        sync.kick();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(state.entries.m.pendingAbandon).toBe(true);
+
+        await vi.runAllTimersAsync();
+        expect(sent.map((i) => i.kind)).toEqual(['abandon', 'abandon']);
+        expect(state.entries).toEqual({});
+    });
+
+    it('does nothing with an answer that arrives after stop', async () => {
+        apply(outbox.enqueue(state, 'm', match, [adjust('a')]));
+        let release!: () => void;
+        responses.push(() => new Promise((resolve) => (release = resolve)));
+
+        const sync = engine();
+        sync.kick();
+        await vi.advanceTimersByTimeAsync(0);
+        sync.stop();
+        release();
+        await vi.runAllTimersAsync();
+
+        expect(state.entries.m.pendingOps).toHaveLength(1);
     });
 });

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 import {
     cachedList,
@@ -18,6 +19,7 @@ import {
 import { toLiveOpDto } from '@/lib/liveMatch/types';
 import type { LiveOp } from '@/lib/liveMatch/types';
 import type { Client, Components } from '@/openapi/openapi';
+import { useLiveMatchOutboxStore } from '@/zustand/liveMatchOutboxStore';
 
 // --- requests ---------------------------------------------------------------------------
 
@@ -37,6 +39,10 @@ export const fetchLiveMatches = async (api: Client, groupId: ApiId) =>
 export const fetchLiveMatch = async (api: Client, groupId: ApiId, id: ApiId) =>
     unwrap(await api.getLiveMatch({ groupId, id }), 'getLiveMatch');
 
+// Create, append and abandon are only sent by `useLiveMatchSync`, which retries them until
+// they go through.
+const syncRequest = { retriedUntilOnline: true };
+
 /** idempotent: the server returns the existing match if it already has this id */
 export const createLiveMatch = async (
     api: Client,
@@ -48,7 +54,8 @@ export const createLiveMatch = async (
     unwrap(
         await api.createLiveMatch(
             { groupId, id },
-            { seasonId, ops: ops.map(toLiveOpDto) }
+            { seasonId, ops: ops.map(toLiveOpDto) },
+            syncRequest
         ),
         'createLiveMatch'
     );
@@ -61,7 +68,11 @@ export const appendLiveMatchOps = async (
     ops: LiveOp[]
 ) =>
     unwrap(
-        await api.appendOps({ groupId, id }, { ops: ops.map(toLiveOpDto) }),
+        await api.appendOps(
+            { groupId, id },
+            { ops: ops.map(toLiveOpDto) },
+            syncRequest
+        ),
         'appendOps'
     );
 
@@ -77,14 +88,27 @@ export const abandonLiveMatch = async (
     api: Client,
     groupId: ApiId,
     id: ApiId
-) => unwrap(await api.abandonLiveMatch({ groupId, id }), 'abandonLiveMatch');
+) =>
+    unwrap(
+        await api.abandonLiveMatch({ groupId, id }, null, syncRequest),
+        'abandonLiveMatch'
+    );
 
 // --- queries ----------------------------------------------------------------------------
 
-/** the group's live matches in progress, ops included */
+/** the group's live matches in progress, ops included; those discarded on this phone are left out */
 export const useLiveMatchesQuery = (groupId: ApiId | null | undefined) => {
     const { api } = useApi();
     const qc = useQueryClient();
+    const outbox = useLiveMatchOutboxStore((s) => s.entries);
+
+    const select = useCallback(
+        (data: unknown) =>
+            asLiveMatchList(data).filter(
+                (i) => !i.id || !outbox[i.id]?.pendingAbandon
+            ),
+        [outbox]
+    );
 
     return useQuery({
         queryKey: liveMatchesKey(groupId ?? 'NULL'),
@@ -97,7 +121,7 @@ export const useLiveMatchesQuery = (groupId: ApiId | null | undefined) => {
                 isEnded(cachedMatch(qc, groupId, id))
             );
         },
-        select: asLiveMatchList,
+        select,
     });
 };
 

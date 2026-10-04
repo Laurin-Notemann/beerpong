@@ -17,8 +17,12 @@ export interface OutboxEntry {
     createdAt: string;
     /** set until the server has the match (`PUT /live-matches/{id}`) */
     pendingCreate?: { ops: LiveOp[] };
+    /** the create went out at least once, so the server may have the match even without an answer */
+    createSent?: true;
     /** oldest first */
     pendingOps: LiveOp[];
+    /** discarded on this phone; `DELETE /live-matches/{id}` still has to reach the server */
+    pendingAbandon?: true;
 }
 
 export interface OutboxState {
@@ -49,7 +53,7 @@ const putEntry = (
     id: string,
     entry: OutboxEntry
 ): Pick<OutboxState, 'entries' | 'failing'> =>
-    entry.pendingCreate || entry.pendingOps.length
+    entry.pendingAbandon || entry.pendingCreate || entry.pendingOps.length
         ? { entries: { ...state.entries, [id]: entry }, failing: state.failing }
         : {
               entries: withoutKey(state.entries, id),
@@ -80,6 +84,8 @@ export const outbox = {
         match: { groupId: string; seasonId: string; createdAt: string },
         ops: LiveOp[]
     ): Partial<OutboxState> {
+        // a discarded match takes no more edits
+        if (state.entries[id]?.pendingAbandon) return {};
         const entry = state.entries[id] ?? { ...match, pendingOps: [] };
 
         return {
@@ -89,6 +95,34 @@ export const outbox = {
             }),
             myOpIds: rememberMine(state, ops),
         };
+    },
+
+    markCreateSent(state: OutboxState, id: string): Partial<OutboxState> {
+        const entry = state.entries[id];
+        if (!entry?.pendingCreate || entry.createSent) return {};
+
+        return putEntry(state, id, { ...entry, createSent: true });
+    },
+
+    /**
+     * Discards the match. One the server can't know about yet is just forgotten; otherwise the
+     * entry stays until the server has the discard, and nothing else is sent for it.
+     */
+    abandon(
+        state: OutboxState,
+        id: string,
+        match: { groupId: string; seasonId: string; createdAt: string }
+    ): Partial<OutboxState> {
+        const entry = state.entries[id];
+        if (entry?.pendingCreate && !entry.createSent) {
+            return outbox.drop(state, id);
+        }
+        return putEntry(state, id, {
+            ...(entry ?? match),
+            pendingCreate: undefined,
+            pendingOps: [],
+            pendingAbandon: true,
+        });
     },
 
     ackCreate(state: OutboxState, id: string): Partial<OutboxState> {
@@ -200,10 +234,63 @@ export function restoreOutbox(persisted: unknown): Partial<OutboxState> {
     };
 }
 
+/**
+ * Combines the outbox read from disk with edits made before it was read (hydration is async):
+ * per match, what was persisted comes first and the newer ops after it.
+ */
+export function mergeOutbox(
+    persisted: Partial<OutboxState>,
+    current: OutboxState
+): OutboxState {
+    const entries = { ...(persisted.entries ?? {}) };
+
+    for (const [id, newer] of Object.entries(current.entries)) {
+        const older = entries[id];
+        if (!older) {
+            entries[id] = newer;
+            continue;
+        }
+        if (older.pendingAbandon || newer.pendingAbandon) {
+            entries[id] = {
+                ...older,
+                pendingCreate: undefined,
+                pendingOps: [],
+                pendingAbandon: true,
+            };
+            continue;
+        }
+        const known = new Set(older.pendingOps.map((i) => i.id));
+        entries[id] = {
+            ...older,
+            createSent: older.createSent ?? newer.createSent,
+            pendingOps: [
+                ...older.pendingOps,
+                ...newer.pendingOps.filter((i) => !known.has(i.id)),
+            ],
+        };
+    }
+
+    const myOpIds = [...(persisted.myOpIds ?? [])];
+    const knownIds = new Set(myOpIds);
+    myOpIds.push(...current.myOpIds.filter((i) => !knownIds.has(i)));
+
+    return {
+        ...current,
+        entries,
+        lastOpenedLiveMatchId: {
+            ...persisted.lastOpenedLiveMatchId,
+            ...current.lastOpenedLiveMatchId,
+        },
+        myOpIds: myOpIds.slice(-MAX_MY_OP_IDS),
+    };
+}
+
 interface LiveMatchOutboxStore extends OutboxState {
     actions: {
         start: (...args: Tail<Parameters<typeof outbox.start>>) => void;
         enqueue: (...args: Tail<Parameters<typeof outbox.enqueue>>) => void;
+        markCreateSent: (id: string) => void;
+        abandon: (...args: Tail<Parameters<typeof outbox.abandon>>) => void;
         ackCreate: (id: string) => void;
         ackOps: (id: string, opIds: string[]) => void;
         drop: (id: string) => void;
@@ -224,6 +311,9 @@ export const useLiveMatchOutboxStore = create<LiveMatchOutboxStore>()(
             actions: {
                 start: (...args) => set((s) => outbox.start(s, ...args)),
                 enqueue: (...args) => set((s) => outbox.enqueue(s, ...args)),
+                markCreateSent: (id) =>
+                    set((s) => outbox.markCreateSent(s, id)),
+                abandon: (...args) => set((s) => outbox.abandon(s, ...args)),
                 ackCreate: (id) => set((s) => outbox.ackCreate(s, id)),
                 ackOps: (id, opIds) => set((s) => outbox.ackOps(s, id, opIds)),
                 drop: (id) => set((s) => outbox.drop(s, id)),
@@ -244,7 +334,7 @@ export const useLiveMatchOutboxStore = create<LiveMatchOutboxStore>()(
             }),
             merge: (persisted, current) => ({
                 ...current,
-                ...restoreOutbox(persisted),
+                ...mergeOutbox(restoreOutbox(persisted), current),
             }),
         }
     )

@@ -6,7 +6,8 @@ import type { OutboxEntry } from '@/zustand/liveMatchOutboxStore';
 
 /**
  * Drains the live match outbox: per match, the create first, then the ops in batches, one
- * request in flight at a time so the server sees my ops in the order I made them. Has no React
+ * request in flight at a time so the server sees my ops in the order I made them. A discard
+ * goes first of all, and still after a create that's already on its way. Has no React
  * or network code of its own (see `useLiveMatchSync`), so the retry rules can be tested.
  */
 
@@ -16,9 +17,12 @@ export const MAX_OPS_PER_REQUEST = 50;
 export const SYNC_RETRY_TIMEOUTS = FIBONACCI_TIMEOUTS.map((ms) => ms * 10);
 
 export type SyncRequest =
-    { kind: 'create'; ops: LiveOp[] } | { kind: 'ops'; ops: LiveOp[] };
+    | { kind: 'abandon' }
+    | { kind: 'create'; ops: LiveOp[] }
+    | { kind: 'ops'; ops: LiveOp[] };
 
 export function nextRequest(entry: OutboxEntry): SyncRequest | undefined {
+    if (entry.pendingAbandon) return { kind: 'abandon' };
     if (entry.pendingCreate) {
         return { kind: 'create', ops: entry.pendingCreate.ops };
     }
@@ -67,6 +71,8 @@ export function classifySyncError(error: unknown): SyncErrorKind {
 export interface SyncDeps {
     getEntry: (id: string) => OutboxEntry | undefined;
     getEntryIds: () => string[];
+    /** right before a request goes out */
+    onSending?: (id: string, request: SyncRequest) => void;
     /** sends the request and writes the server's answer to the cache */
     send: (
         id: string,
@@ -131,7 +137,9 @@ export function createSyncEngine(deps: SyncDeps) {
                     return;
                 }
                 try {
+                    deps.onSending?.(id, request);
                     await deps.send(id, entry, request);
+                    if (stopped) return;
                     retries.get(id)?.backOff.reset();
                     deps.setFailing(id, false);
                     deps.onSent(id, request);

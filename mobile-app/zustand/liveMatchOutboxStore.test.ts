@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { LiveOp } from '@/lib/liveMatch/types';
 import {
     MAX_MY_OP_IDS,
+    mergeOutbox,
     outbox,
     OutboxState,
     restoreOutbox,
@@ -165,5 +166,121 @@ describe('restoreOutbox', () => {
             lastOpenedLiveMatchId: {},
             myOpIds: [],
         });
+    });
+});
+
+describe('outbox.abandon', () => {
+    it('forgets a match whose create never went out', () => {
+        const state = run(
+            (s) => outbox.start(s, 'm', match, [teams('t')]),
+            (s) => outbox.abandon(s, 'm', match)
+        );
+
+        expect(state.entries).toEqual({});
+    });
+
+    it('queues the discard once the create went out, dropping everything else', () => {
+        const state = run(
+            (s) => outbox.start(s, 'm', match, [teams('t')]),
+            (s) => outbox.markCreateSent(s, 'm'),
+            (s) => outbox.enqueue(s, 'm', match, [adjust('a')]),
+            (s) => outbox.abandon(s, 'm', match)
+        );
+
+        expect(state.entries.m).toMatchObject({
+            pendingAbandon: true,
+            pendingCreate: undefined,
+            pendingOps: [],
+        });
+    });
+
+    it('queues the discard of a match the server has, without an entry yet', () => {
+        const state = run((s) => outbox.abandon(s, 'm', match));
+
+        expect(state.entries.m).toEqual({
+            ...match,
+            pendingOps: [],
+            pendingCreate: undefined,
+            pendingAbandon: true,
+        });
+    });
+
+    it('takes no more edits and survives the late answer to its create', () => {
+        const state = run(
+            (s) => outbox.start(s, 'm', match, [teams('t')]),
+            (s) => outbox.markCreateSent(s, 'm'),
+            (s) => outbox.abandon(s, 'm', match),
+            (s) => outbox.enqueue(s, 'm', match, [adjust('a')]),
+            (s) => outbox.ackCreate(s, 'm')
+        );
+
+        expect(state.entries.m.pendingAbandon).toBe(true);
+        expect(state.entries.m.pendingOps).toEqual([]);
+    });
+});
+
+describe('mergeOutbox', () => {
+    const current = (
+        entries: OutboxState['entries'],
+        myOpIds: string[] = []
+    ) => ({
+        ...empty,
+        entries,
+        myOpIds,
+    });
+
+    it('keeps edits made before the outbox was read from disk', () => {
+        const merged = mergeOutbox(
+            {
+                entries: {
+                    m: { ...match, pendingOps: [adjust('a'), adjust('b')] },
+                    old: { ...match, pendingOps: [adjust('x')] },
+                },
+                myOpIds: ['a', 'b', 'x'],
+            },
+            current(
+                {
+                    m: { ...match, pendingOps: [adjust('b'), adjust('c')] },
+                    fresh: {
+                        ...match,
+                        pendingCreate: { ops: [teams('t')] },
+                        pendingOps: [],
+                    },
+                },
+                ['b', 'c', 't']
+            )
+        );
+
+        expect(merged.entries.m.pendingOps.map((i) => i.id)).toEqual([
+            'a',
+            'b',
+            'c',
+        ]);
+        expect(Object.keys(merged.entries).sort()).toEqual([
+            'fresh',
+            'm',
+            'old',
+        ]);
+        expect(merged.myOpIds).toEqual(['a', 'b', 'x', 'c', 't']);
+    });
+
+    it('keeps a discard from either side', () => {
+        const merged = mergeOutbox(
+            { entries: { m: { ...match, pendingOps: [adjust('a')] } } },
+            current({ m: { ...match, pendingOps: [], pendingAbandon: true } })
+        );
+
+        expect(merged.entries.m).toMatchObject({
+            pendingAbandon: true,
+            pendingOps: [],
+        });
+    });
+
+    it('takes the current state when nothing was persisted', () => {
+        const now = current({ m: { ...match, pendingOps: [adjust('a')] } }, [
+            'a',
+        ]);
+
+        expect(mergeOutbox({}, now)).toEqual(now);
     });
 });

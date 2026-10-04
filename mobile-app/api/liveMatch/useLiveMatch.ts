@@ -3,7 +3,6 @@ import { uuid } from 'expo';
 import { useEffect, useMemo } from 'react';
 
 import {
-    abandonLiveMatch,
     fetchLiveMatch,
     finishLiveMatch,
     useLiveMatchQuery,
@@ -99,7 +98,10 @@ function toView(
                   id,
                   groupId,
                   seasonId: server?.seasonId ?? entry?.seasonId ?? '',
-                  status: server?.status ?? 'IN_PROGRESS',
+                  // discarded here, the server just doesn't know yet
+                  status: entry?.pendingAbandon
+                      ? 'ABANDONED'
+                      : (server?.status ?? 'IN_PROGRESS'),
                   startedAt: server?.startedAt ?? entry?.createdAt ?? '',
                   lastActivityAt: server?.lastActivityAt,
                   endedAt: server?.endedAt,
@@ -383,22 +385,19 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
     }
 
     /** ends the match without a result, for everyone */
-    async function discard() {
-        const client = await api;
+    /**
+     * Ends the match without a result, for everyone. Takes effect on this phone right away; the
+     * server gets it through the outbox, so it survives being offline and app kills.
+     */
+    function discard() {
+        const { header } = readView(qc, groupId, id);
+        if (!header) return;
 
-        if (liveMatchOutbox().entries[id]?.pendingCreate) {
-            liveMatchOutbox().actions.drop(id);
-            // a create sent earlier may have reached the server even though no answer came back
-            abandonLiveMatch(client, groupId, id)
-                .then((ended) => applyLiveMatchEnd(qc, groupId, ended))
-                .catch(() => {});
-            return;
-        }
-        applyLiveMatchEnd(
-            qc,
+        liveMatchOutbox().actions.abandon(id, {
             groupId,
-            await abandonLiveMatch(client, groupId, id)
-        );
+            seasonId: header.seasonId,
+            createdAt: new Date().toISOString(),
+        });
     }
 
     return {

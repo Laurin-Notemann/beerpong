@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
@@ -44,66 +43,84 @@ export function useLiveMatchSync() {
             getEntry: (id) => store.getState().entries[id],
             getEntryIds: () => Object.keys(store.getState().entries),
 
+            onSending: (id, request) => {
+                if (request.kind === 'create') actions.markCreateSent(id);
+            },
             send: async (id, entry, request) => {
                 const client = await api;
 
-                if (request.kind === 'create') {
-                    const match = await createLiveMatch(
-                        client,
-                        entry.groupId,
-                        id,
-                        entry.seasonId,
-                        request.ops
-                    );
-                    // discarded while the create was on its way: end it for everyone
-                    if (!store.getState().entries[id]) {
+                switch (request.kind) {
+                    case 'abandon':
                         applyLiveMatchEnd(
                             qc,
                             entry.groupId,
                             await abandonLiveMatch(client, entry.groupId, id)
                         );
                         return;
+                    case 'create':
+                        applyLiveMatchStart(
+                            qc,
+                            entry.groupId,
+                            await createLiveMatch(
+                                client,
+                                entry.groupId,
+                                id,
+                                entry.seasonId,
+                                request.ops
+                            )
+                        );
+                        return;
+                    case 'ops': {
+                        const result = await appendLiveMatchOps(
+                            client,
+                            entry.groupId,
+                            id,
+                            request.ops
+                        );
+                        applyLiveMatchOps(qc, entry.groupId, {
+                            liveMatchId: id,
+                            lastSeq: result.lastSeq,
+                            ops: result.ops ?? [],
+                        });
                     }
-                    applyLiveMatchStart(qc, entry.groupId, match);
-                } else {
-                    const result = await appendLiveMatchOps(
-                        client,
-                        entry.groupId,
-                        id,
-                        request.ops
-                    );
-                    applyLiveMatchOps(qc, entry.groupId, {
-                        liveMatchId: id,
-                        lastSeq: result.lastSeq,
-                        ops: result.ops ?? [],
-                    });
                 }
             },
             onSent: (id, request) => {
-                if (request.kind === 'create') actions.ackCreate(id);
-                else
-                    actions.ackOps(
-                        id,
-                        request.ops.map((i) => i.id)
-                    );
+                switch (request.kind) {
+                    case 'abandon':
+                        actions.drop(id);
+                        break;
+                    case 'create':
+                        actions.ackCreate(id);
+                        break;
+                    case 'ops':
+                        actions.ackOps(
+                            id,
+                            request.ops.map((i) => i.id)
+                        );
+                }
             },
+            // also a discard of a match the server never got: nothing left to do
             onEnded: (id, entry) => {
                 logger.info('live match ended, dropping its queued edits', id);
                 actions.drop(id);
                 invalidateLiveMatch(qc, entry.groupId, id);
             },
-            onPoison: (id, entry, request, error) => {
-                logger.error('server rejected live match ops for good', id);
-                Sentry.captureException(error, {
-                    tags: { liveMatchSync: 'poison' },
-                    extra: { liveMatchId: id, request },
-                });
-                if (request.kind === 'create') actions.drop(id);
-                else
+            onPoison: (id, entry, request) => {
+                // the api client already reported the response; this says what got lost
+                logger.error(
+                    'server rejected live match ops for good, dropping them',
+                    id,
+                    JSON.stringify(request)
+                );
+                if (request.kind === 'ops') {
                     actions.ackOps(
                         id,
                         request.ops.map((i) => i.id)
                     );
+                } else {
+                    actions.drop(id);
+                }
                 invalidateLiveMatch(qc, entry.groupId, id);
             },
             onFailed: (id, error, kind, firstInARow) => {
