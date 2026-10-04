@@ -7,6 +7,7 @@ import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { Heading } from '@/components/Menu/MenuSection';
 import { NextTeamPlayerRow } from '@/components/next/NextTeamPlayerRow';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import Text from '@/components/Text';
 import { TutorialBubble } from '@/components/TutorialBubble';
 import { triggerHapticBump } from '@/haptics';
@@ -216,6 +217,12 @@ export interface NewMatchAssignTeamsProps {
     setTeam: (playerId: string, team: TeamId) => void;
     /** shown while any player is on a team */
     onClear?: () => void;
+    /**
+     * pro mode on Android: a "Start match" button at the bottom of the page. Android's toolbar
+     * can't show text-only buttons, so the header's one is iOS only
+     */
+    onStart?: () => void;
+    canStart?: boolean;
 }
 export default function NewMatchAssignTeams({
     randomTeamsMode,
@@ -226,6 +233,8 @@ export default function NewMatchAssignTeams({
     players,
     setTeam,
     onClear,
+    onStart,
+    canStart = false,
 }: NewMatchAssignTeamsProps) {
     const insets = useInsets(true, true);
 
@@ -256,99 +265,128 @@ export default function NewMatchAssignTeams({
     })();
 
     const isRandomTeamsMode = randomTeamsMode !== null;
+    // random teams mode has its own action in the header
+    const showStart = !!onStart && !isRandomTeamsMode;
 
     return (
-        <ScrollView
-            style={{
-                flex: 1,
-            }}
-            contentContainerStyle={{
-                paddingTop: insets.top,
-                paddingHorizontal: 16,
+        <View style={{ position: 'relative', flex: 1 }}>
+            <ScrollView
+                style={{
+                    flex: 1,
+                }}
+                contentContainerStyle={{
+                    paddingTop: insets.top,
+                    paddingHorizontal: 16,
 
-                paddingBottom: insets.bottom + 24,
+                    // room for the start button, as on the draft's points page
+                    paddingBottom: insets.bottom + (showStart ? 84 : 24),
 
-                minHeight: '100%',
-            }}
-        >
-            {/* empty <View> bc otherwise the items are spaced apart  */}
-            <View>
-                {errorMessage ? (
-                    <Heading
-                        title={
-                            <Text
-                                color="negative"
-                                style={{
-                                    fontSize: 16,
-                                    fontWeight: 500,
+                    minHeight: '100%',
+                }}
+            >
+                {/* empty <View> bc otherwise the items are spaced apart  */}
+                <View>
+                    {errorMessage ? (
+                        <Heading
+                            title={
+                                <Text
+                                    color="negative"
+                                    style={{
+                                        fontSize: 16,
+                                        fontWeight: 500,
 
-                                    marginBottom: 32,
-                                }}
-                            >
-                                {errorMessage}
-                            </Text>
-                        }
-                    />
-                ) : null}
-                {!isRandomTeamsMode && (
-                    <>
-                        <MenuSection style={{ marginBottom: 20 }}>
-                            <MenuItem
-                                border={false}
-                                headIcon="dice-multiple-outline"
-                                title="Random Teams"
-                                tailIconType="next"
-                                onPress={onRandomTeamsPress}
-                            />
-                            <MenuItem
-                                headIcon="account-plus-outline"
-                                title="Create new Player"
-                                tailIconType="next"
-                                onPress={() => nav.navigate('createNewPlayer')}
-                            />
-                            {onClear && (
-                                <MenuItem
-                                    headIcon="close-circle-outline"
-                                    title="Clear Teams"
-                                    type="danger"
-                                    onPress={onClear}
-                                />
-                            )}
-                        </MenuSection>
-                    </>
-                )}
-                <MenuSection>
-                    {players.length === 0 && (
-                        <View
-                            style={{
-                                height: 62,
-                                width: '100%',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text
-                                color="secondary"
-                                style={{
-                                    textAlign: 'center',
-                                }}
-                            >
-                                Add players to create a match
-                            </Text>
-                        </View>
-                    )}
-                    {players.map((i, idx) => (
-                        <PlayerItem
-                            randomTeamsMode={randomTeamsMode}
-                            onRandomTeamSelect={onRandomTeamSelect}
-                            hasTutorial={!hasTappedToAssignPlayers && idx === 1}
-                            key={idx}
-                            player={i}
-                            onSelectTeam={(team) => setTeam(i.id, team)}
+                                        marginBottom: 32,
+                                    }}
+                                >
+                                    {errorMessage}
+                                </Text>
+                            }
                         />
-                    ))}
-                </MenuSection>
-            </View>
-        </ScrollView>
+                    ) : null}
+                    {!isRandomTeamsMode && (
+                        <>
+                            <MenuSection style={{ marginBottom: 20 }}>
+                                <MenuItem
+                                    border={false}
+                                    headIcon="dice-multiple-outline"
+                                    title="Random Teams"
+                                    tailIconType="next"
+                                    onPress={onRandomTeamsPress}
+                                />
+                                <MenuItem
+                                    headIcon="account-plus-outline"
+                                    title="Create new Player"
+                                    tailIconType="next"
+                                    onPress={() =>
+                                        nav.navigate('createNewPlayer')
+                                    }
+                                />
+                                {onClear && (
+                                    <MenuItem
+                                        headIcon="close-circle-outline"
+                                        title="Clear Teams"
+                                        type="danger"
+                                        onPress={onClear}
+                                    />
+                                )}
+                            </MenuSection>
+                        </>
+                    )}
+                    <MenuSection>
+                        {players.length === 0 && (
+                            <View
+                                style={{
+                                    height: 62,
+                                    width: '100%',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text
+                                    color="secondary"
+                                    style={{
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    Add players to create a match
+                                </Text>
+                            </View>
+                        )}
+                        {players.map((i, idx) => (
+                            <PlayerItem
+                                randomTeamsMode={randomTeamsMode}
+                                onRandomTeamSelect={onRandomTeamSelect}
+                                hasTutorial={
+                                    !hasTappedToAssignPlayers && idx === 1
+                                }
+                                key={idx}
+                                player={i}
+                                onSelectTeam={(team) => setTeam(i.id, team)}
+                            />
+                        ))}
+                    </MenuSection>
+                </View>
+            </ScrollView>
+            {showStart && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        flexDirection: 'row',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        marginHorizontal: 8,
+                        marginBottom: insets.bottom + 16,
+                    }}
+                >
+                    <OverlayTextButton
+                        fullWidth
+                        title="Start match"
+                        disabled={!canStart}
+                        onPress={onStart}
+                    />
+                </View>
+            )}
+        </View>
     );
 }

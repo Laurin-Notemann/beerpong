@@ -67,6 +67,18 @@ func run() error {
 		MaxHeaderBytes:    64 << 10,
 	}
 
+	// Runs until the API stops. The pool closes only after the last round is done.
+	expiryCtx, stopExpiry := context.WithCancel(ctx)
+	expiryDone := make(chan struct{})
+	go func() {
+		defer close(expiryDone)
+		server.RunLiveMatchExpiry(expiryCtx)
+	}()
+	defer func() {
+		stopExpiry()
+		<-expiryDone
+	}()
+
 	errs := make(chan error, 1)
 	go func() { errs <- httpServer.ListenAndServe() }()
 	log.Info("api started", "port", cfg.Port, "environment", cfg.SentryEnvironment, "release", cfg.SentryRelease)

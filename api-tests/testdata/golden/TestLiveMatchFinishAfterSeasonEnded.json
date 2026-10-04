@@ -1,0 +1,170 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Live finish season",
+      "profileNames": [
+        "a",
+        "c"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Live finish season",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "\u003cid17\u003e",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdByUserId": "\u003cid18\u003e",
+        "endedAt": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid16\u003e",
+        "lastActivityAt": "\u003cts\u003e",
+        "lastSeq": 1,
+        "ops": [
+          {
+            "bluePlayerIds": [
+              "\u003cid7\u003e"
+            ],
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": null,
+            "finishMoveId": null,
+            "id": "\u003cid17\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": [
+              "\u003cid6\u003e"
+            ],
+            "seq": 1,
+            "team": null,
+            "type": "SET_TEAMS"
+          }
+        ],
+        "resultMatchId": null,
+        "seasonId": "\u003cid1\u003e",
+        "startedAt": "\u003cts\u003e",
+        "status": "IN_PROGRESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Old",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid19\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

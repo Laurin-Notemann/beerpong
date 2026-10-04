@@ -34,7 +34,7 @@ function connect() {
         // deserialize the event
         // format:
         //  groupId: string,
-        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES
+        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES | LIVE_MATCHES
         //  scope: string
         //  body: a dto matching the eventType (MatchDto, PlayerDto, ...)
         const socketEvent = JSON.parse(event.data);
@@ -131,6 +131,12 @@ A list of all event types with their corresponding dto and all available scopes:
 
 * **profileCreate:** When a profile is created
 * **profileUpdate:** When a profile is updated
+
+#### Live matches (body: LiveMatchDto | LiveMatchOpsEventDto)
+
+* **liveMatchStart:** When a live match is started (LiveMatchDto with all ops)
+* **liveMatchOps:** When ops are appended to a live match (LiveMatchOpsEventDto: liveMatchId, lastSeq and only the new ops)
+* **liveMatchEnd:** When a live match is finished, abandoned or expired after 6 hours without activity (LiveMatchDto without ops). Finishing also sends `matchCreate`
 
 ### TODO
 

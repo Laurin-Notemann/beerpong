@@ -7,6 +7,7 @@ import { migrateLegacyGroups } from '@/api/utils/migrateLegacyGroups';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
 import { Paths } from '@/openapi/openapi';
+import { liveMatchOutbox } from '@/zustand/liveMatchOutboxStore';
 
 export const useGroupPresetsQuery = () => {
     const { api } = useApi();
@@ -68,6 +69,8 @@ export const useLeaveGroupMutation = () => {
         onSuccess: async (_, id) => {
             // the server now refuses this group's data; drop it instead of refetching into 401s
             qc.removeQueries({ queryKey: [QK.group, id] });
+            // its queued live match edits would only get 401s
+            liveMatchOutbox().actions.dropGroup(id);
             await qc.invalidateQueries({ queryKey: [QK.group, 'myGroups'] });
         },
     });

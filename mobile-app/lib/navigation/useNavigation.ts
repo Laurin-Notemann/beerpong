@@ -21,6 +21,8 @@ export type RootStackParamList = {
     saveSeason: undefined;
     player: { id: string };
     match: { id: string; seasonId: string };
+    liveMatch: { id: string };
+    liveMatches: undefined;
     matches: undefined;
     editFormationName: undefined;
     newMatch: undefined;
@@ -46,12 +48,13 @@ export type RootStackParamList = {
 
     rule: { id: string };
 
-    assignPointsToPlayerModal: { pageIdx: number };
+    assignPointsToPlayerModal: { pageIdx: number; liveMatchId?: string };
     assignCupHitModal: {
         team: 'red' | 'blue';
         x: number;
         y: number;
         rotated: boolean;
+        liveMatchId?: string;
     };
     editMatchPoints: { pageIdx: number };
     createNewRule: undefined;

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -11,13 +12,13 @@ import {
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { startLiveMatch } from '@/api/liveMatch/useLiveMatch';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -118,9 +119,9 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    // pro mode tracks the cups during the game, so their page comes before the points
+    // in pro mode the match is entered live (see liveMatch.tsx), so only the teams are picked here
     const pages = beerpongProMode
-        ? (['teams', 'cups', 'points'] as const)
+        ? (['teams'] as const)
         : (['teams', 'points'] as const);
 
     const profiles = playersQuery.data?.data ?? [];
@@ -214,6 +215,46 @@ export default function NewMatchScreen() {
         }
     }
 
+    // a second tap in the same frame is ignored; after that the cleared draft has no teams
+    const isStarting = useRef(false);
+
+    /** pro mode: the match goes live right away, also offline; this tab is free for the next one */
+    function onStartLiveMatch() {
+        if (!groupId || !seasonId) {
+            ConsoleLogger.warn('no groupId or seasonId');
+            return;
+        }
+        if (isStarting.current) return;
+
+        // the draft as it is now, not as it was when this screen last rendered
+        const { redTeam, blueTeam, actions } = useMatchDraftStore.getState();
+        const teamSizes = [
+            redTeam.teamMembers.length,
+            blueTeam.teamMembers.length,
+        ];
+        if (
+            teamSizes.some(
+                (i) => i < Math.max(1, minTeamSize) || i > maxTeamSize
+            )
+        ) {
+            return;
+        }
+        isStarting.current = true;
+        requestAnimationFrame(() => {
+            isStarting.current = false;
+        });
+
+        const id = startLiveMatch({
+            groupId,
+            seasonId,
+            redPlayerIds: redTeam.teamMembers.map((i) => i.playerId),
+            bluePlayerIds: blueTeam.teamMembers.map((i) => i.playerId),
+        });
+        actions.clear();
+        triggerHapticBump('toast:success');
+        nav.navigate('liveMatch', { id });
+    }
+
     const [randomTeamsMode, setRandomTeamsMode] = useState<{
         players: string[];
     } | null>(null);
@@ -277,6 +318,8 @@ export default function NewMatchScreen() {
                 }}
                 onCreate={onCreateMatch}
                 isCreating={createMatchMutation.isPending}
+                onStart={beerpongProMode ? onStartLiveMatch : undefined}
+                canStart={hasValidTeams}
             />
             <Swiper
                 // kinda hacky, this is how we get the carousel to re-mount when switching groups or seasons.
@@ -284,15 +327,13 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                // pro mode adds a page, so toggling it re-mounts the carousel too
+                // pro mode has no points page, so toggling it re-mounts the carousel too
                 key={groupId + ':' + seasonId + ':' + beerpongProMode}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
-                    // in pro mode the cups have filled in the points already
                     if (
                         pages[pageIdx] === 'points' &&
-                        !beerpongProMode &&
                         !matchDraft.hasBeenOnPageTwo
                     ) {
                         nav.navigate('assignPointsToPlayerModal', {
@@ -349,18 +390,20 @@ export default function NewMatchScreen() {
                                 maxTeamSize={maxTeamSize}
                                 players={selectablePlayers}
                                 setTeam={matchDraft.actions.setPlayerTeam}
+                                onStart={
+                                    beerpongProMode && Platform.OS === 'android'
+                                        ? onStartLiveMatch
+                                        : undefined
+                                }
+                                canStart={hasValidTeams}
                             />
                         );
-                    }
-                    if (page === 'cups') {
-                        return <NewMatchCups key={page} />;
                     }
                     return (
                         <CreateMatchAssignPoints
                             key={page}
                             isPending={createMatchMutation.isPending}
                             players={teamMembers}
-                            setMoveCount={matchDraft.actions.setMoveCount}
                             onSubmit={onCreateMatch}
                             onCancel={() => {
                                 matchDraft.actions.clear();

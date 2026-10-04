@@ -10,12 +10,15 @@ export function OverlayTextButton({
     onPress,
     backgroundColor,
     isPending = false,
+    disabled = false,
     fullWidth = false,
 }: {
     title: React.ReactNode;
     onPress?: () => void;
     backgroundColor?: string;
     isPending?: boolean;
+    /** dimmed and not pressable */
+    disabled?: boolean;
     fullWidth?: boolean;
 }) {
     const theme = useTheme();
@@ -32,7 +35,9 @@ export function OverlayTextButton({
 
                 flex: fullWidth ? 1 : undefined,
             }}
-            disabled={isPending}
+            disabled={isPending || disabled}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isPending || disabled }}
         >
             <BlurView
                 intensity={70}
@@ -54,6 +59,7 @@ export function OverlayTextButton({
                         style={{
                             fontWeight: '600',
                             fontSize: 17,
+                            opacity: disabled ? 0.4 : 1,
                         }}
                     >
                         {title}

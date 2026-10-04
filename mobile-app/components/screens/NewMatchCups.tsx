@@ -11,28 +11,33 @@ import { triggerHapticBump } from '@/haptics';
 import { CUP_FORMATION, CupPosition, CupTeam, findHit } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
+import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 const HINT_HEIGHT = 64;
 const GRID_GAP = 32;
 const MAX_GRID_WIDTH = 300;
 
 /**
- * Pro mode page of the new match: both teams' cups, as on the table. Tapping a cup records who
- * hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
+ * The live match screen's cups page: both teams' cups, as on the table. Tapping a cup records
+ * who hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
  * the other team, and the swap button switches which team that is.
  */
-export default function NewMatchCups() {
+export default function NewMatchCups({
+    liveMatchId,
+}: {
+    /** the live match to enter into; without it, the local draft */
+    liveMatchId?: string;
+}) {
     const theme = useTheme();
     const nav = useNavigation();
     const insets = useInsets(true, true);
 
-    const matchDraft = useMatchDraftStore();
+    const entry = useMatchEntry(liveMatchId);
 
-    const { groupId, seasonId } = useGroup();
-    const playersQuery = usePlayersQuery(groupId, seasonId);
-    const movesQuery = useMoves(groupId, seasonId);
+    const { groupId } = useGroup();
+    const playersQuery = usePlayersQuery(groupId, entry.seasonId);
+    const movesQuery = useMoves(groupId, entry.seasonId);
 
     const [bottomTeam, setBottomTeam] = useState<CupTeam>('blue');
     const topTeam: CupTeam = bottomTeam === 'blue' ? 'red' : 'blue';
@@ -54,14 +59,14 @@ export default function NewMatchCups() {
             ...CUP_FORMATION,
             cups: CUP_FORMATION.cups.map((cup) => ({
                 ...cup,
-                disabled: !!findHit(matchDraft.cupHits, team, cup),
+                disabled: !!findHit(entry.cupHits, team, cup),
             })),
         };
         return team === bottomTeam ? rotateFormation(formation) : formation;
     }
 
     function confirmPutBack(team: CupTeam, cup: CupPosition) {
-        const hit = findHit(matchDraft.cupHits, team, cup);
+        const hit = findHit(entry.cupHits, team, cup);
         if (!hit) return;
 
         const name =
@@ -81,7 +86,7 @@ export default function NewMatchCups() {
                     text: 'Put Back',
                     style: 'destructive',
                     onPress: () => {
-                        matchDraft.actions.undoCupHit(team, cup);
+                        entry.actions.undoCupHit(team, cup);
                         triggerHapticBump('selection');
                     },
                 },
@@ -96,7 +101,7 @@ export default function NewMatchCups() {
 
         triggerHapticBump('selection');
 
-        if (findHit(matchDraft.cupHits, team, position)) {
+        if (findHit(entry.cupHits, team, position)) {
             confirmPutBack(team, position);
             return;
         }
@@ -104,6 +109,7 @@ export default function NewMatchCups() {
             team,
             ...position,
             rotated: team === bottomTeam,
+            liveMatchId,
         });
     }
 

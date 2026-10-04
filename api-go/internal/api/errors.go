@@ -42,6 +42,12 @@ var (
 	errMatchTeamHasNoPhoto      = errorCode{404, "matchTeamHasNoPhoto", "The provided team does not have a photo set!"}
 	errMatchSeasonMismatch      = errorCode{400, "matchGroupOrSeasonIdDontMatch", "The provided season id doesnt match the season id of the provided match!"}
 
+	errLiveMatchNotFound   = errorCode{404, "liveMatchNotFound", "The requested live match could not be found in this group!"}
+	errLiveMatchEnded      = errorCode{409, "liveMatchEnded", "This live match is no longer in progress!"}
+	errLiveMatchStale      = errorCode{409, "liveMatchStale", "The live match has changed since the provided expectedSeq!"}
+	errLiveMatchInvalidOps = errorCode{400, "liveMatchInvalidOps", "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"}
+	errLiveMatchTooManyOps = errorCode{400, "liveMatchTooManyOps", "A live match can have at most 2000 ops!"}
+
 	errRuleMoveNotFound         = errorCode{404, "ruleMoveNotFound", "The requested ruleMove could not be found!"}
 	errRuleMoveValidationFailed = errorCode{500, "ruleMoveValidationFailed", "The rulemove is not part of the provided season or the provided season is not part of the provided gorup!"}
 	errRuleMoveInvalidDto       = errorCode{400, "ruleMoveInvalidDto", "The name has to be non-null and non-empty and pointsForScorer and pointsForTeam have to be >= 0!"}

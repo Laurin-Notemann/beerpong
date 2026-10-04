@@ -13,6 +13,10 @@ export const QK = {
     ruleMoves: 'ruleMoves',
     profiles: 'profiles',
     assets: 'assets',
+    /** `[group, groupId, liveMatches]`: the group's matches in progress */
+    liveMatches: 'liveMatches',
+    /** `[group, groupId, liveMatch, id]`: one live match, in any status */
+    liveMatch: 'liveMatch',
 
     groupCode: 'groupCode',
 };

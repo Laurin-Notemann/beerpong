@@ -9,6 +9,10 @@ import {
 
 import { env } from '@/api/env';
 import {
+    applyLiveMatchEvent,
+    invalidateLiveMatches,
+} from '@/api/liveMatch/liveMatchCache';
+import {
     QK,
     queryKeyStartsWith,
     replaceWildcards,
@@ -198,6 +202,11 @@ export function useRealtimeConnection() {
                     ]),
                 });
                 break;
+
+            case 'LIVE_MATCHES':
+                // applied directly: ops arrive often and carry everything needed
+                applyLiveMatchEvent(qc, e.groupId, e.scope, e.body);
+                break;
         }
     });
 
@@ -207,11 +216,15 @@ export function useRealtimeConnection() {
         const log = (...data: Logs) => writeLogs(...data);
         realtime.logger.addEventListener('*', log);
         realtime.on.event((e) => onRealtimeEvent(e));
+        const offReconnect = realtime.on.reconnect(() =>
+            invalidateLiveMatches(qc)
+        );
 
         return () => {
             realtime.logger.removeEventListener('*', log);
+            offReconnect();
         };
-    }, [realtime]);
+    }, [realtime, qc]);
 
     /** Opens the socket on first call; later calls only change the subscribed groups. */
     const connectRealtime = useCallback((groupIds: string[]) => {

@@ -6,20 +6,11 @@ import {
     CupPosition,
     CupTeam,
     findHit,
-    reconcileHits,
+    PlayerDraft,
+    TeamDraft,
+    updateMoves,
+    withHits,
 } from '@/lib/cupHits';
-
-interface MoveDraft {
-    moveId: string;
-    count: number;
-}
-interface PlayerDraft {
-    playerId: string;
-    moves: MoveDraft[];
-}
-interface TeamDraft {
-    teamMembers: PlayerDraft[];
-}
 
 interface MatchDraftStore {
     blueTeamPhotoUri?: string;
@@ -27,7 +18,7 @@ interface MatchDraftStore {
     hasBeenOnPageTwo: boolean;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
-    /** pro mode: the hits entered on the cups page, oldest first */
+    /** cup hits, oldest first. Pro mode enters them into a live match now, so this stays empty */
     cupHits: CupHit[];
     actions: {
         getHasBeenOnPageTwo: () => boolean;
@@ -51,61 +42,6 @@ interface MatchDraftStore {
         removeTeamPhotos: () => void;
         swapTeamPhotos: () => void;
     };
-}
-
-type Teams = Pick<MatchDraftStore, 'redTeam' | 'blueTeam'>;
-
-/** sets one move count of a player (at least 0), wherever they play */
-function updateMoves(
-    teams: Teams,
-    playerId: string,
-    moveId: string,
-    update: (count: number) => number
-): Teams {
-    const updateTeam = (team: TeamDraft): TeamDraft => ({
-        teamMembers: team.teamMembers.map((player) => {
-            if (player.playerId !== playerId) return player;
-
-            const current =
-                player.moves.find((i) => i.moveId === moveId)?.count ?? 0;
-            const count = Math.max(0, update(current));
-
-            return {
-                ...player,
-                moves: player.moves.some((i) => i.moveId === moveId)
-                    ? player.moves.map((i) =>
-                          i.moveId === moveId ? { ...i, count } : i
-                      )
-                    : [...player.moves, { moveId, count }],
-            };
-        }),
-    });
-    return {
-        redTeam: updateTeam(teams.redTeam),
-        blueTeam: updateTeam(teams.blueTeam),
-    };
-}
-
-/** keeps the cup hits in line with the teams and move counts they're paired with */
-function withHits(
-    state: Teams & Pick<MatchDraftStore, 'cupHits'>
-): Teams & Pick<MatchDraftStore, 'cupHits'> {
-    const { hits, takenBackFinishes } = reconcileHits(state.cupHits, [
-        ...state.redTeam.teamMembers.map((i) => ({
-            ...i,
-            team: 'red' as const,
-        })),
-        ...state.blueTeam.teamMembers.map((i) => ({
-            ...i,
-            team: 'blue' as const,
-        })),
-    ]);
-    const teams = takenBackFinishes.reduce<Teams>(
-        (acc, finish) =>
-            updateMoves(acc, finish.playerId, finish.moveId, (n) => n - 1),
-        state
-    );
-    return { redTeam: teams.redTeam, blueTeam: teams.blueTeam, cupHits: hits };
 }
 
 export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({

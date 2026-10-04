@@ -18,6 +18,16 @@ type ApiContextType = {
     error: Error | null;
 };
 
+declare module 'axios' {
+    interface AxiosRequestConfig {
+        /**
+         * The caller retries this request in the background until it goes through (the live
+         * match sync), so getting no response while offline is expected and isn't reported.
+         */
+        retriedUntilOnline?: boolean;
+    }
+}
+
 const ApiContext = createContext<ApiContextType | undefined>(undefined);
 
 const openApiConfig = {
@@ -65,6 +75,13 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                         err.response.status,
                         err.response.data
                     );
+                    // the live match sync reports its client errors once itself, not on every retry
+                    if (
+                        err.config?.retriedUntilOnline &&
+                        err.response.status < 500
+                    ) {
+                        return Promise.reject(err);
+                    }
                     Sentry.captureException(err, {
                         extra: {
                             url: err.config?.url,
@@ -80,6 +97,9 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                         err.config?.method,
                         err.config?.url
                     );
+                    if (err.config?.retriedUntilOnline) {
+                        return Promise.reject(err);
+                    }
                     Sentry.captureException(err, {
                         extra: {
                             url: err.config?.url,

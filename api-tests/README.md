@@ -26,7 +26,9 @@ backend, so a passing Go run means "same responses as Java", field by field.
 The Go API deliberately differs in two places, recorded against Go: rules
 keep their written order (`TestRuleOrderIsTheWrittenOrder`), and upload URLs
 don't sign the content type, so JPEGs upload too (`signedHeaders=host`,
-`TestUploadThroughPresignedURL`). Re-record only on purpose:
+`TestUploadThroughPresignedURL`). The live match goldens (`TestLiveMatch*`)
+were recorded against Go: the feature never shipped on Java, so they guard the
+wire shape but prove no Java equivalence. Re-record only on purpose:
 
 ```sh
 GOLDEN=record API_BASE_URL=... go test ./...
