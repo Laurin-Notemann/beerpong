@@ -1,96 +1,38 @@
 # openapi codegen
 
-we use the github action `.github/workflows/generate-openapi.yaml` to automatically generate a typesafe typescript client library for our api, which can be used both in the mobile app and on the web:
-
-```java
-// java method in our backend
-@GetMapping
-public ResponseEntity<ResponseEnvelope<Foo>> getFoo() {
-    ...
-}
-```
+The app's API client is typed from an OpenAPI document:
 
 ```typescript
-// automatically generated client in our frontend
+// generated client in the app
 const api = await openApi.getClient<BeerPongClient>();
 
 api.getFoo();
 ```
 
-no manual input is required from your side, the action automatically adds a `chore: update openapi types` commit to every pull request.
+## where the types come from
 
-## how the action works
+`api-go/openapi/openapi.json` is the API's OpenAPI document. It is written by hand next to the Go
+handlers (it started as the spec springdoc generated from the Java backend) and the Go API serves
+it at `/v3/api-docs`. `TestSpecMatchesRoutes` in `api-go/internal/api` fails when an endpoint is
+served but not documented, or the other way round.
 
-on the java side, the maven plugin `springdoc-openapi-maven-plugin` generates `mobile-app/api/generated/openapi.json` from our backend code.
-the backend has to be actually running for this (!) using `mvn verify`. this is why our action provides a database.
+`npm run gen-types` in `mobile-app` (or `make gen-open-api` from the root) copies it to
+`mobile-app/api/generated/openapi.json`, which the client loads at runtime, and generates
+`mobile-app/openapi/openapi.d.ts` from it with `openapicmd`. Never edit those two files by hand.
 
-running `npm run gen-types` in the mobile app then uses the `openapicmd` package to parse `mobile-app/api/generated/openapi.json` into `mobile-app/openapi/openapi.d.ts`, which is then able to be used by the client library.
+So an API change is: change the handler and its DTO in `api-go`, update `openapi.json` to match,
+run `make gen-open-api`, and update the hooks that use the changed types. The `Generate OpenApi`
+action runs the generation for every push that changes `openapi.json` and commits
+`chore: update openapi types` if the generated files were out of date.
 
-## gotchas and dumb stuff
+## gotchas
 
-(1) when generating `openapi.json`, `springdoc-openapi-maven-plugin` doesn't seem to understand that most of our endpoints serve json, and reads them as `content-type: "*/*"`. this is a problem because `openapicmd` relies on `content-type: "application/json"` in order to automatically parse responses. to fix this, we run a command over the file, to replace all occurences of `"*/*"` with `"application/json"`.
+(1) `openapicmd` only parses responses with `content-type: "application/json"`. springdoc wrote
+`"*/*"`; the document uses `application/json` throughout, keep it that way.
 
-(2) for the typescript client, all fields are always optional, for both request bodies and responses. this is fairly annoying and we'll look into fixing it at some point.
+(2) for the typescript client, all fields are optional, for both request bodies and responses,
+because the document doesn't mark any as `required`.
 
-(3) using `Foo[]` instead of `List<Foo>` in java endpoint declarations breaks our codegen.
-this:
-
-```java
-// List<Foo> is GOOD
-@GetMapping
-public ResponseEntity<ResponseEnvelope<List<Foo>>> getFoos() {
-    ...
-}
-```
-
-gets turned into this:
-
-```json
-"ResponseEnvelopeListFoo": {
-    "type": "object",
-    "properties": {
-        "status": { "type": "string", "enum": ["OK", "ERROR"] },
-        "httpCode": { "type": "integer", "format": "int32" },
-        "data": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Foo" }
-        },
-        "error": { "$ref": "#/components/schemas/ErrorDetails" }
-    }
-}
-```
-
-while this:
-
-```java
-// Foo[] is BAD and breaks our action!
-@GetMapping
-public ResponseEntity<ResponseEnvelope<Foo[]>> getFoos() {
-    ...
-}
-```
-
-gets turned into this:
-
-```json
-"ResponseEnvelopeFoo[]": {
-    "type": "object",
-    "properties": {
-        "status": { "type": "string", "enum": ["OK", "ERROR"] },
-        "httpCode": { "type": "integer", "format": "int32" },
-        "data": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Foo" }
-        },
-        "error": { "$ref": "#/components/schemas/ErrorDetails" }
-    }
-}
-```
-
-notice the difference in the generated names? `"ResponseEnvelopeListFoo"` vs `"ResponseEnvelopeFoo[]"`? well, the `openapicmd` package doesn't really like parsing the latter, because of the brackets. it tries to generate this typescript code:
-
-```typescript
-export type ResponseEnvelopeFoo[] = Components.Schemas.ResponseEnvelopeFoo;
-```
-
-which is invalid typescript syntax, and causes our frontend build to fail.
+(3) schema names become TypeScript type names, so they must be valid identifiers. List responses
+are `ResponseEnvelopeList<Name>` schemas with an `array` `data` property; a name like
+`ResponseEnvelopeFoo[]` breaks the app's build.

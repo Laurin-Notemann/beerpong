@@ -1,9 +1,9 @@
 # api-go
 
-The Go rewrite of the Versus API (`api/`, Java). It serves the same REST
+The Versus API. It replaced the Spring Boot API in `api/` with the same REST
 endpoints, error envelopes and `/update-socket` events, against the same
-Postgres schema, with the same environment variables. The app does not
-change; `api-tests/` proves the two backends answer identically.
+Postgres schema, with the same environment variables; `api-tests/` holds the
+contract it was checked against.
 
 ## Run
 
@@ -15,6 +15,10 @@ cd api-go && go run ./cmd/api
 
 Extra variables on top of the Java ones: `PORT` (8080), `DB_MAX_CONNS` (10),
 `DB_MIGRATE` (true), `JWT_ACCESS_TTL` (1h).
+
+Staging runs as `beerpong-api-go-staging` in `~/docker/beerpong-api-go` on the
+server; `Api Staging Deploy` builds and redeploys it on every push to
+`staging`.
 
 ## Layout
 
@@ -28,6 +32,8 @@ Extra variables on top of the Java ones: `PORT` (8080), `DB_MAX_CONNS` (10),
 - `internal/realtime` – the websocket hub.
 - `internal/observability` – Sentry errors, request traces continued from the
   app, a span per SQL statement, and Sentry Logs via slog.
+- `openapi` – the OpenAPI document the app's client types are generated from
+  (see `OPENAPI_CODEGEN.md`). Update it with every endpoint or DTO change.
 
 ## Why these libraries
 
@@ -43,4 +49,5 @@ Extra variables on top of the Java ones: `PORT` (8080), `DB_MAX_CONNS` (10),
 
 The Java backend never sent `ORDER BY`, so clients got rows in physical order
 (the first team of a match is "blue"). List queries order by `ctid` to keep
-that exact order regardless of query plan.
+that exact order regardless of query plan. Rules have a `position` instead,
+because a rewrite of the rule set reuses freed space and shuffled them.
