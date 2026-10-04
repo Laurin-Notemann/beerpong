@@ -103,7 +103,7 @@ jobs:
 
       - name: Setup Java
         if: ${{ !steps.match.outputs.build_id && matrix.platform == 'android' }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: "17"
