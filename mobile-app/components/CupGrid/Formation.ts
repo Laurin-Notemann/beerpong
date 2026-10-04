@@ -38,11 +38,17 @@ export const Formation: Record<string, FormationType> = {
         ],
     },
 };
-export const flipFormation = (formation: FormationType): FormationType => {
-    const highestY = formation.cups.sort((a, b) => b.y - a.y)[0]?.y;
+/** Turns a cup position half a turn, for the team on the far side of the table. Applying it twice gives the position back. */
+export const rotatePoint = <T extends { x: number; y: number }>(
+    formation: Pick<FormationType, 'rows' | 'columns'>,
+    cup: T
+): T => ({
+    ...cup,
+    x: formation.columns - 1 - cup.x,
+    y: formation.rows - 1 - cup.y,
+});
 
-    return {
-        ...formation,
-        cups: formation.cups.map((i) => ({ ...i, y: highestY - i.y })),
-    };
-};
+export const rotateFormation = (formation: FormationType): FormationType => ({
+    ...formation,
+    cups: formation.cups.map((cup) => rotatePoint(formation, cup)),
+});

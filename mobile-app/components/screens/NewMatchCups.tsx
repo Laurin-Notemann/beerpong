@@ -1,0 +1,166 @@
+import React, { useState } from 'react';
+import { Alert, Text, View } from 'react-native';
+
+import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
+import CupGrid from '@/components/CupGrid';
+import { rotateFormation, rotatePoint } from '@/components/CupGrid/Formation';
+import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import { triggerHapticBump } from '@/haptics';
+import { CUP_FORMATION, CupPosition, CupTeam, findHit } from '@/lib/cupHits';
+import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useInsets } from '@/lib/useInsets';
+import { useTheme } from '@/theme';
+import { useMatchDraftStore } from '@/zustand/matchDraftStore';
+
+const HINT_HEIGHT = 64;
+const GRID_GAP = 32;
+const MAX_GRID_WIDTH = 300;
+
+/**
+ * Pro mode page of the new match: both teams' cups, as on the table. Tapping a cup records who
+ * hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
+ * the other team, and the swap button switches which team that is.
+ */
+export default function NewMatchCups() {
+    const theme = useTheme();
+    const nav = useNavigation();
+    const insets = useInsets(true, true);
+
+    const matchDraft = useMatchDraftStore();
+
+    const { groupId, seasonId } = useGroup();
+    const playersQuery = usePlayersQuery(groupId, seasonId);
+    const movesQuery = useMoves(groupId, seasonId);
+
+    const [bottomTeam, setBottomTeam] = useState<CupTeam>('blue');
+    const topTeam: CupTeam = bottomTeam === 'blue' ? 'red' : 'blue';
+
+    const [size, setSize] = useState({ width: 0, height: 0 });
+
+    // fit both pyramids on screen: a 7x7 grid is about 0.9 times as high as it is wide
+    const gridWidth = Math.max(
+        0,
+        Math.min(
+            MAX_GRID_WIDTH,
+            size.width - 32,
+            (size.height - HINT_HEIGHT - GRID_GAP) / 2 / 0.9
+        )
+    );
+
+    function formationOf(team: CupTeam) {
+        const formation = {
+            ...CUP_FORMATION,
+            cups: CUP_FORMATION.cups.map((cup) => ({
+                ...cup,
+                disabled: !!findHit(matchDraft.cupHits, team, cup),
+            })),
+        };
+        return team === bottomTeam ? rotateFormation(formation) : formation;
+    }
+
+    function confirmPutBack(team: CupTeam, cup: CupPosition) {
+        const hit = findHit(matchDraft.cupHits, team, cup);
+        if (!hit) return;
+
+        const name =
+            playersQuery.data?.data?.find((i) => i.id === hit.playerId)?.profile
+                ?.name || 'Unknown';
+        const move = movesQuery.data?.data?.find((i) => i.id === hit.moveId);
+        const cups = hit.cups.length;
+
+        Alert.alert(
+            'Put the cup back?',
+            `This takes back ${name}'s ${move?.name ?? 'hit'}` +
+                (cups > 1 ? ` (${cups} cups)` : '') +
+                (hit.finishMoveId ? ' and the finish.' : '.'),
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Put Back',
+                    style: 'destructive',
+                    onPress: () => {
+                        matchDraft.actions.undoCupHit(team, cup);
+                        triggerHapticBump('selection');
+                    },
+                },
+            ]
+        );
+    }
+
+    function onCupTap(team: CupTeam, drawn: CupPosition) {
+        const cup =
+            team === bottomTeam ? rotatePoint(CUP_FORMATION, drawn) : drawn;
+        const position = { x: cup.x, y: cup.y };
+
+        triggerHapticBump('selection');
+
+        if (findHit(matchDraft.cupHits, team, position)) {
+            confirmPutBack(team, position);
+            return;
+        }
+        nav.navigate('assignCupHitModal', {
+            team,
+            ...position,
+            rotated: team === bottomTeam,
+        });
+    }
+
+    return (
+        <View
+            style={{
+                flex: 1,
+                paddingTop: insets.top,
+                paddingBottom: insets.bottom,
+            }}
+        >
+            <View
+                style={{ flex: 1, alignItems: 'center' }}
+                onLayout={(e) => setSize(e.nativeEvent.layout)}
+            >
+                <View
+                    style={{
+                        height: HINT_HEIGHT,
+                        alignSelf: 'stretch',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    <Text
+                        style={{
+                            flex: 1,
+                            color: theme.color.text.secondary,
+                            fontSize: 13,
+                        }}
+                    >
+                        Tap a cup when it&apos;s hit. Tap a hit cup to put it
+                        back.
+                    </Text>
+                    <OverlayIconButton
+                        iconName="swap-vertical"
+                        onPress={() => {
+                            setBottomTeam(topTeam);
+                            triggerHapticBump('selection');
+                        }}
+                    />
+                </View>
+                {gridWidth > 0 && (
+                    <View style={{ gap: GRID_GAP }}>
+                        {[topTeam, bottomTeam].map((team) => (
+                            <CupGrid
+                                key={team}
+                                color={theme.color.team[team]}
+                                width={gridWidth}
+                                formation={formationOf(team)}
+                                onCupTap={(cup) => onCupTap(team, cup)}
+                            />
+                        ))}
+                    </View>
+                )}
+            </View>
+        </View>
+    );
+}
