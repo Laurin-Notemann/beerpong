@@ -219,6 +219,32 @@ describe('outbox.abandon', () => {
     });
 });
 
+describe('outbox.dropGroup', () => {
+    it('drops the live match edits of that group only', () => {
+        const other = { ...match, groupId: 'other' };
+        const state = run(
+            (s) => outbox.start(s, 'm', match, [teams('t')]),
+            (s) => outbox.enqueue(s, 'm2', match, [adjust('a')]),
+            (s) => outbox.abandon(s, 'm3', match),
+            (s) => outbox.start(s, 'x', other, [teams('u')]),
+            (s) => outbox.setFailing(s, 'm', true),
+            (s) => outbox.setLastOpened(s, 'g', 'm'),
+            (s) => outbox.setLastOpened(s, 'other', 'x'),
+            (s) => outbox.dropGroup(s, 'g')
+        );
+
+        expect(Object.keys(state.entries)).toEqual(['x']);
+        expect(state.failing).toEqual({});
+        expect(state.lastOpenedLiveMatchId).toEqual({ other: 'x' });
+    });
+
+    it('does nothing for a group without live matches', () => {
+        const state = run((s) => outbox.start(s, 'm', match, [teams('t')]));
+
+        expect(outbox.dropGroup(state, 'nobody')).toEqual({});
+    });
+});
+
 describe('mergeOutbox', () => {
     const current = (
         entries: OutboxState['entries'],

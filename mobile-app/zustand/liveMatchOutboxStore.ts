@@ -157,6 +157,31 @@ export const outbox = {
         };
     },
 
+    /** the user left the group: the server refuses it now, so its queued edits can never be sent */
+    dropGroup(state: OutboxState, groupId: string): Partial<OutboxState> {
+        const gone = Object.keys(state.entries).filter(
+            (id) => state.entries[id].groupId === groupId
+        );
+        if (!gone.length && !state.lastOpenedLiveMatchId[groupId]) return {};
+
+        return {
+            entries: Object.fromEntries(
+                Object.entries(state.entries).filter(
+                    ([id]) => !gone.includes(id)
+                )
+            ),
+            failing: Object.fromEntries(
+                Object.entries(state.failing).filter(
+                    ([id]) => !gone.includes(id)
+                )
+            ),
+            lastOpenedLiveMatchId: withoutKey(
+                state.lastOpenedLiveMatchId,
+                groupId
+            ),
+        };
+    },
+
     setFailing(
         state: OutboxState,
         id: string,
@@ -294,6 +319,7 @@ interface LiveMatchOutboxStore extends OutboxState {
         ackCreate: (id: string) => void;
         ackOps: (id: string, opIds: string[]) => void;
         drop: (id: string) => void;
+        dropGroup: (groupId: string) => void;
         setFailing: (id: string, failing: boolean) => void;
         setLastOpened: (groupId: string, id: string) => void;
     };
@@ -317,6 +343,8 @@ export const useLiveMatchOutboxStore = create<LiveMatchOutboxStore>()(
                 ackCreate: (id) => set((s) => outbox.ackCreate(s, id)),
                 ackOps: (id, opIds) => set((s) => outbox.ackOps(s, id, opIds)),
                 drop: (id) => set((s) => outbox.drop(s, id)),
+                dropGroup: (groupId) =>
+                    set((s) => outbox.dropGroup(s, groupId)),
                 setFailing: (id, failing) =>
                     set((s) => outbox.setFailing(s, id, failing)),
                 setLastOpened: (groupId, id) =>
