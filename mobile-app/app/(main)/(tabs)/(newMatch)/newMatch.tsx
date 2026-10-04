@@ -12,12 +12,12 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import Cups from '@/app/(main)/startLiveMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
+import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -117,6 +117,11 @@ export default function NewMatchScreen() {
     const carouselRef = useRef<SwiperRef>(null);
 
     const [swiperPage, setSwiperPage] = useState(0);
+
+    // pro mode tracks the cups during the game, so their page comes before the points
+    const pages = beerpongProMode
+        ? (['teams', 'cups', 'points'] as const)
+        : (['teams', 'points'] as const);
 
     const profiles = playersQuery.data?.data ?? [];
 
@@ -279,11 +284,17 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                key={groupId + ':' + seasonId}
+                // pro mode adds a page, so toggling it re-mounts the carousel too
+                key={groupId + ':' + seasonId + ':' + beerpongProMode}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
-                    if (pageIdx === 1 && !matchDraft.hasBeenOnPageTwo) {
+                    // in pro mode the cups have filled in the points already
+                    if (
+                        pages[pageIdx] === 'points' &&
+                        !beerpongProMode &&
+                        !matchDraft.hasBeenOnPageTwo
+                    ) {
                         nav.navigate('assignPointsToPlayerModal', {
                             pageIdx: 0,
                         });
@@ -293,12 +304,11 @@ export default function NewMatchScreen() {
                 }}
                 enabled={!(swiperPage === 0 && !hasValidTeams)}
             >
-                {(beerpongProMode ? [0, 1, 2] : [0, 1]).map((index) => {
-                    const item = { index };
-                    if (item.index === 0) {
+                {pages.map((page) => {
+                    if (page === 'teams') {
                         return (
                             <NewMatchAssignTeams
-                                key={index}
+                                key={page}
                                 onClear={
                                     bothTeamsEmpty
                                         ? undefined
@@ -342,32 +352,29 @@ export default function NewMatchScreen() {
                             />
                         );
                     }
-                    if (item.index === 1) {
-                        return (
-                            <CreateMatchAssignPoints
-                                key={index}
-                                isPending={createMatchMutation.isPending}
-                                players={teamMembers}
-                                setMoveCount={matchDraft.actions.setMoveCount}
-                                onSubmit={onCreateMatch}
-                                onCancel={() => {
-                                    matchDraft.actions.clear();
-                                    nav.goBack();
-                                }}
-                                onPlayerPress={(player) =>
-                                    nav.navigate('assignPointsToPlayerModal', {
-                                        pageIdx: teamMembers.findIndex(
-                                            (i) => i.id === player.id
-                                        ),
-                                    })
-                                }
-                            />
-                        );
+                    if (page === 'cups') {
+                        return <NewMatchCups key={page} />;
                     }
-                    if (item.index === 2) {
-                        return <Cups key={index} />;
-                    }
-                    throw new Error('Invalid swiper index');
+                    return (
+                        <CreateMatchAssignPoints
+                            key={page}
+                            isPending={createMatchMutation.isPending}
+                            players={teamMembers}
+                            setMoveCount={matchDraft.actions.setMoveCount}
+                            onSubmit={onCreateMatch}
+                            onCancel={() => {
+                                matchDraft.actions.clear();
+                                nav.goBack();
+                            }}
+                            onPlayerPress={(player) =>
+                                nav.navigate('assignPointsToPlayerModal', {
+                                    pageIdx: teamMembers.findIndex(
+                                        (i) => i.id === player.id
+                                    ),
+                                })
+                            }
+                        />
+                    );
                 })}
             </Swiper>
         </GestureHandlerRootView>

@@ -110,7 +110,9 @@ const CupGrid = ({
                             x={cup.pos.posX}
                             y={cup.pos.posY}
                             width={cupRadius * 2}
-                            onPan={getCupPanGesture(cup)}
+                            // only an editable grid moves cups; otherwise a drag
+                            // that starts on a cup should still scroll the page
+                            onPan={canEdit ? getCupPanGesture(cup) : undefined}
                             onTap={
                                 canEdit
                                     ? getCupTapGesture(cup)

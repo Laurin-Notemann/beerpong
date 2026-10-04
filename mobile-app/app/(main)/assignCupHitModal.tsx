@@ -1,149 +1,173 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import Avatar from '@/components/Avatar';
 import CupGrid from '@/components/CupGrid';
-import { flipFormation } from '@/components/CupGrid/Formation';
+import { rotateFormation } from '@/components/CupGrid/Formation';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
+import {
+    CUP_FORMATION,
+    CupMove,
+    cupsTakenBy,
+    CupTeam,
+    finishesOnTopOfLastCup,
+    finishForHit,
+    hittableMoves,
+    standingCups,
+} from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
-import { ConsoleLogger } from '@/utils/logging';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
+/** Pro mode: who hit the tapped cup, and how. Opened from the cups page of a new match. */
 export default function Page() {
-    const cupProp = useLocalSearchParams<{
+    const params = useLocalSearchParams<{
+        team: CupTeam;
         x: string;
         y: string;
-        color: string;
+        /** the team's cups are drawn turned around on the cups page */
+        rotated: string;
     }>();
-    const cup = {
-        x: parseInt(cupProp.x),
-        y: parseInt(cupProp.y),
-        color: cupProp.color,
-    };
+    const team = params.team;
+    const cup = { x: parseInt(params.x), y: parseInt(params.y) };
 
-    const isBlue = cup.color === '#18A0FB';
+    const theme = useTheme();
+    const nav = useNavigation();
 
     const matchDraft = useMatchDraftStore();
 
     const { groupId, seasonId } = useGroup();
-
     const movesQuery = useMoves(groupId, seasonId);
-
-    const allowedMoves = movesQuery.data?.data ?? [];
-
     const playersQuery = usePlayersQuery(groupId, seasonId);
 
     const profiles = playersQuery.data?.data ?? [];
+    const moves = (movesQuery.data?.data ?? []).map<CupMove & { name: string }>(
+        (i) => ({
+            id: i.id!,
+            name: i.name || 'Unknown',
+            cups: cupsPerHit(i),
+            isFinish: !!i.finishingMove,
+        })
+    );
 
     const players = draftPlayers(matchDraft);
-
-    const teamMembers = players.map<TeamMember>((i) => {
-        const profile = profiles.find((j) => i.playerId === j.id);
-
-        if (!profile?.profile?.name) {
-            ConsoleLogger.error('failed to get profile for team member');
-        }
-
-        return {
+    // you can only hit the other team's cups
+    const scorers = players
+        .filter((i) => i.team !== team)
+        .map((i) => ({
             id: i.playerId,
             team: i.team,
-            avatarUrl: profile?.profile?.avatarUrl,
-            name: profile?.profile?.name || 'Unknown',
-            points: i.moves.reduce(
-                (sum, j) =>
-                    sum +
-                    j.count *
-                        (allowedMoves.find((k) => k.id === j.moveId)
-                            ?.pointsForScorer ?? 0),
-                0
-            ),
-            change: 0.12,
-            moves: allowedMoves.map((j) => {
-                return {
-                    id: j.id!,
-                    count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
-                    title: j.name || 'Unknown',
-                    points: j.pointsForScorer!,
-                    pointsForTeam: j.pointsForTeam!,
-                    isFinish: j.finishingMove!,
-                    cups: cupsPerHit(j),
-                };
-            }),
-            profileId: profile?.profileId ?? '',
-        };
-    });
+            name:
+                profiles.find((j) => j.id === i.playerId)?.profile?.name ||
+                'Unknown',
+        }));
 
-    const potentialScorers = teamMembers.filter(
-        (i) => i.team === (isBlue ? 'red' : 'blue')
+    const hasFinish = players.some((player) =>
+        player.moves.some(
+            (move) =>
+                move.count > 0 &&
+                moves.find((i) => i.id === move.moveId)?.isFinish
+        )
     );
 
-    const [player, setPlayer] = useState<TeamMember | null>(
-        potentialScorers.length > 1 ? null : potentialScorers[0]
+    const standing = standingCups(matchDraft.cupHits, team);
+    const isStanding = standing.some((i) => i.x === cup.x && i.y === cup.y);
+    const moveOptions = hittableMoves(moves, standing.length, hasFinish);
+    const finishOptions = finishesOnTopOfLastCup(moves);
+
+    const [playerId, setPlayerId] = useState<string | null>(
+        scorers.length === 1 ? scorers[0].id : null
     );
-    const [move, setMove] = useState<string | null>(null);
+    const player = scorers.find((i) => i.id === playerId);
 
-    const shape = isBlue
-        ? flipFormation(matchDraft.blueTeam.cups.currentFormation)
-        : matchDraft.redTeam.cups.currentFormation;
+    // a hit on the last cup that still needs to know which finish it was
+    const [lastCupMove, setLastCupMove] = useState<CupMove | null>(null);
 
-    const formation = {
-        ...shape,
-        cups: shape.cups.map((i) =>
-            i.x === cup.x && i.y === cup.y ? { ...i } : { ...i, disabled: true }
-        ),
-    };
+    function record(move: CupMove, finishMoveId?: string) {
+        const cups = cupsTakenBy(matchDraft.cupHits, team, cup, move);
 
-    const nav = useNavigation();
-
-    function onSelectMove(moveId: string) {
-        if (!player) return;
-
-        setMove(moveId);
-
-        matchDraft.actions.setCupHit(cup, player.id, moveId);
-
+        if (player && cups) {
+            matchDraft.actions.recordCupHit({
+                team,
+                playerId: player.id,
+                moveId: move.id,
+                cups,
+                finishMoveId,
+            });
+        }
         nav.goBack();
     }
-    const theme = useTheme();
+
+    function onSelectMove(moveId: string) {
+        const move = moveOptions.find((i) => i.id === moveId);
+        if (!move) return;
+
+        const finish = finishForHit(move, standing.length, hasFinish, moves);
+
+        if (finish === 'ask') {
+            setLastCupMove(move);
+        } else {
+            record(move, finish.finishMoveId);
+        }
+    }
+
+    // the team's cups as they're drawn on the cups page, the tapped one stands out
+    const formation = {
+        ...CUP_FORMATION,
+        cups: CUP_FORMATION.cups.map((i) => {
+            const isTapped = i.x === cup.x && i.y === cup.y;
+            const isStanding = standing.some((j) => j.x === i.x && j.y === i.y);
+
+            return {
+                ...i,
+                disabled: !isStanding,
+                // 8-digit hex: the team color at 40% opacity
+                color: isTapped ? undefined : theme.color.team[team] + '66',
+            };
+        }),
+    };
 
     return (
-        <View
-            style={{
-                backgroundColor: theme.panel.dark.bg,
-
-                flex: 1,
-
-                paddingHorizontal: 16,
-            }}
+        <ScrollView
+            style={{ flex: 1, backgroundColor: theme.panel.dark.bg }}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
         >
-            <Stack.Screen
-                options={{
-                    headerTitle: 'Cup Hit',
-                }}
-            />
-            <View style={{ alignItems: 'center' }}>
+            <Stack.Screen options={{ headerTitle: 'Cup Hit' }} />
+            <View style={{ alignItems: 'center', marginVertical: 16 }}>
                 <CupGrid
-                    color={theme.color.team[isBlue ? 'blue' : 'red']}
+                    color={theme.color.team[team]}
                     width={160}
-                    formation={formation}
+                    formation={
+                        params.rotated === 'true'
+                            ? rotateFormation(formation)
+                            : formation
+                    }
                 />
             </View>
-            {potentialScorers.length > 1 && (
+            {!isStanding && (
+                <Text color="secondary">
+                    This cup is already off the table.
+                </Text>
+            )}
+            {isStanding && scorers.length === 0 && (
+                <Text color="secondary">
+                    Add players to the other team to record who hit this cup.
+                </Text>
+            )}
+            {isStanding && scorers.length > 1 && (
                 <>
                     <Text color="primary" variant="h3">
-                        Who scored this cup?
+                        Who hit this cup?
                     </Text>
                     <Select
-                        items={potentialScorers.map((i) => ({
+                        items={scorers.map((i) => ({
                             value: i.id,
                             title: i.name,
                             headIcon: (
@@ -155,45 +179,52 @@ export default function Page() {
                                             ? theme.color.team[i.team]
                                             : undefined
                                     }
-                                    style={{
-                                        marginRight: 8,
-                                    }}
+                                    style={{ marginRight: 8 }}
                                 />
                             ),
                         }))}
-                        onChange={(playerId) =>
-                            setPlayer(
-                                teamMembers.find((i) => i.id === playerId)!
-                            )
-                        }
-                        value={player?.id}
+                        onChange={(id) => {
+                            setPlayerId(id);
+                            setLastCupMove(null);
+                        }}
+                        value={playerId}
                     />
                 </>
             )}
-            {player && (
+            {isStanding && player && (
                 <>
                     <Text color="primary" variant="h3">
-                        How did {player.name} score this cup?
+                        How did {player.name} hit it?
                     </Text>
                     <Select
-                        items={allowedMoves
-                            .filter((i) => !i.finishingMove)
-                            .map((i) => ({
-                                value: i.id!,
-                                title: i.name!,
-                            }))}
+                        items={moveOptions.map((i) => ({
+                            value: i.id,
+                            title:
+                                i.cups > 1
+                                    ? `${i.name} (${i.cups} cups)`
+                                    : i.name,
+                        }))}
                         onChange={onSelectMove}
-                        value={move}
+                        value={lastCupMove?.id}
                     />
                 </>
             )}
-        </View>
+            {isStanding && player && lastCupMove && (
+                <>
+                    <Text color="primary" variant="h3">
+                        That&apos;s the last cup. How did {player.name} finish?
+                    </Text>
+                    <Select
+                        items={finishOptions.map((i) => ({
+                            value: i.id,
+                            title: i.name,
+                        }))}
+                        onChange={(finishMoveId) =>
+                            record(lastCupMove, finishMoveId)
+                        }
+                    />
+                </>
+            )}
+        </ScrollView>
     );
 }
-// TODO: keep formation in matchDraft, show removed cups in formation
-// TODO: overflow behaviour in modal
-
-// TODO: "Create" button doesn't make sense for cup mode
-
-// we'll need an overview anyway: to keep track of people's points, and to add stuff like team photos and locations
-// how can we easily just not use this if it's e.g. a kicker group?

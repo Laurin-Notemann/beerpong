@@ -8,8 +8,6 @@ import Animated, {
     withSpring,
 } from 'react-native-reanimated';
 
-import PressableScale from '@/components/PressableScale';
-
 const MOVEMENT_ANIMATION_DURATION_MS = 0;
 
 export interface CupProps {
@@ -41,31 +39,29 @@ export function Cup({
         // to always put the cups in the lower rows over the upper ones for consistency
         zIndex: Math.round(y),
     }));
-    const gestures = [
-        onPan?.enabled(!disabled),
-        onTap?.enabled(!disabled),
-    ].filter((i) => i != null);
+    // a disabled cup can't be moved, but stays tappable (pro mode puts a hit cup back on tap)
+    const gestures = [onPan?.enabled(!disabled), onTap].filter(
+        (i) => i != null
+    );
 
     return (
-        <PressableScale>
-            <GestureDetector gesture={Gesture.Race(...gestures)}>
-                <Animated.View
-                    style={[
-                        {
-                            position: 'absolute',
-                            width: width,
-                            height: width,
+        <GestureDetector gesture={Gesture.Race(...gestures)}>
+            <Animated.View
+                style={[
+                    {
+                        position: 'absolute',
+                        width: width,
+                        height: width,
 
-                            backgroundColor: disabled ? '#2E2E2E' : color,
-                            borderColor: '#222',
+                        backgroundColor: disabled ? '#2E2E2E' : color,
+                        borderColor: '#222',
 
-                            borderRadius: width / 2,
-                            borderWidth: disabled ? 0 : width / 16,
-                        },
-                        animatedStyle,
-                    ]}
-                />
-            </GestureDetector>
-        </PressableScale>
+                        borderRadius: width / 2,
+                        borderWidth: disabled ? 0 : width / 16,
+                    },
+                    animatedStyle,
+                ]}
+            />
+        </GestureDetector>
     );
 }
