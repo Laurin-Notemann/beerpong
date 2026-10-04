@@ -360,7 +360,6 @@ export default function NewMatchScreen() {
                             key={page}
                             isPending={createMatchMutation.isPending}
                             players={teamMembers}
-                            setMoveCount={matchDraft.actions.setMoveCount}
                             onSubmit={onCreateMatch}
                             onCancel={() => {
                                 matchDraft.actions.clear();

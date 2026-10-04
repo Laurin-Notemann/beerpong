@@ -6,12 +6,14 @@ import { DualTeamPhoto } from '@/components/DualTeamPhoto';
 import MatchPlayers from '@/components/MatchPlayers';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { useInsets } from '@/lib/useInsets';
+import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
 export interface CreateMatchAssignPointsProps {
     isPending: boolean;
     players: TeamMember[];
-    setMoveCount: (playerId: string, moveId: string, count: number) => void;
+    /** the live match to enter into; without it, the local draft */
+    liveMatchId?: string;
 
     onSubmit: () => void;
     onCancel: () => void;
@@ -21,7 +23,7 @@ export interface CreateMatchAssignPointsProps {
 export default function CreateMatchAssignPoints({
     isPending,
     players,
-    setMoveCount,
+    liveMatchId,
     onSubmit,
     onCancel,
     onPlayerPress,
@@ -29,6 +31,7 @@ export default function CreateMatchAssignPoints({
     const insets = useInsets(true, true);
 
     const matchDraft = useMatchDraftStore();
+    const entry = useMatchEntry(liveMatchId);
 
     return (
         <View style={{ position: 'relative', flex: 1 }}>
@@ -62,7 +65,7 @@ export default function CreateMatchAssignPoints({
                 <MatchPlayers
                     editable
                     players={players}
-                    setMoveCount={setMoveCount}
+                    setMoveCount={entry.actions.setMoveCount}
                     onPlayerPress={onPlayerPress}
                 />
             </ScrollView>

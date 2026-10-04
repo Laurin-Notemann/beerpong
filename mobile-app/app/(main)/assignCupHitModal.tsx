@@ -22,8 +22,8 @@ import {
     standingCups,
 } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 /** Pro mode: who hit the tapped cup, and how. Opened from the cups page of a new match. */
@@ -34,6 +34,8 @@ export default function Page() {
         y: string;
         /** the team's cups are drawn turned around on the cups page */
         rotated: string;
+        /** the live match being entered; without it, the local draft */
+        liveMatchId?: string;
     }>();
     const team = params.team;
     const cup = { x: parseInt(params.x), y: parseInt(params.y) };
@@ -41,7 +43,7 @@ export default function Page() {
     const theme = useTheme();
     const nav = useNavigation();
 
-    const matchDraft = useMatchDraftStore();
+    const entry = useMatchEntry(params.liveMatchId);
 
     const { groupId, seasonId } = useGroup();
     const movesQuery = useMoves(groupId, seasonId);
@@ -57,7 +59,7 @@ export default function Page() {
         })
     );
 
-    const players = draftPlayers(matchDraft);
+    const players = draftPlayers(entry);
     // you can only hit the other team's cups
     const scorers = players
         .filter((i) => i.team !== team)
@@ -77,7 +79,7 @@ export default function Page() {
         )
     );
 
-    const standing = standingCups(matchDraft.cupHits, team);
+    const standing = standingCups(entry.cupHits, team);
     const isStanding = standing.some((i) => i.x === cup.x && i.y === cup.y);
     const moveOptions = hittableMoves(moves, standing.length, hasFinish);
     const finishOptions = finishesOnTopOfLastCup(moves);
@@ -91,10 +93,10 @@ export default function Page() {
     const [lastCupMove, setLastCupMove] = useState<CupMove | null>(null);
 
     function record(move: CupMove, finishMoveId?: string) {
-        const cups = cupsTakenBy(matchDraft.cupHits, team, cup, move);
+        const cups = cupsTakenBy(entry.cupHits, team, cup, move);
 
         if (player && cups) {
-            matchDraft.actions.recordCupHit({
+            entry.actions.recordCupHit({
                 team,
                 playerId: player.id,
                 moveId: move.id,

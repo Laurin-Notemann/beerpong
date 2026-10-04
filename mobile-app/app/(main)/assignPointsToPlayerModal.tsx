@@ -8,18 +8,19 @@ import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { countCups, cupsPerHit } from '@/api/utils/ruleMoveCups';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useMatchEntry } from '@/lib/useMatchEntry';
 import { ConsoleLogger } from '@/utils/logging';
-import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 export default function Page() {
-    const { pageIdx: initialPageIdx } = useLocalSearchParams<{
+    const { pageIdx: initialPageIdx, liveMatchId } = useLocalSearchParams<{
         pageIdx: string;
+        liveMatchId?: string;
     }>();
 
     const nav = useNavigation();
 
-    const matchDraft = useMatchDraftStore();
+    const entry = useMatchEntry(liveMatchId);
 
     const { groupId, seasonId } = useGroup();
 
@@ -31,7 +32,7 @@ export default function Page() {
 
     const profiles = playersQuery.data?.data ?? [];
 
-    const players = draftPlayers(matchDraft);
+    const players = draftPlayers(entry);
 
     const teamMembers = players.map<TeamMember>((i) => {
         const profile = profiles.find((j) => i.playerId === j.id);
@@ -87,7 +88,7 @@ export default function Page() {
             onClose={nav.goBack}
             initialPageIdx={parseInt(initialPageIdx)}
             match={match}
-            setMoveCount={matchDraft.actions.setMoveCount}
+            setMoveCount={entry.actions.setMoveCount}
         />
     );
 }

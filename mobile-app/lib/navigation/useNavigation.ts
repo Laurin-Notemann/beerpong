@@ -46,12 +46,13 @@ export type RootStackParamList = {
 
     rule: { id: string };
 
-    assignPointsToPlayerModal: { pageIdx: number };
+    assignPointsToPlayerModal: { pageIdx: number; liveMatchId?: string };
     assignCupHitModal: {
         team: 'red' | 'blue';
         x: number;
         y: number;
         rotated: boolean;
+        liveMatchId?: string;
     };
     editMatchPoints: { pageIdx: number };
     createNewRule: undefined;
