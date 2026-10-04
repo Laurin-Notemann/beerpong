@@ -6,25 +6,32 @@ import Avatar from '@/components/Avatar';
 import { medalColors, useNextTokens } from '@/components/next/tokens';
 import {
     getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { plural } from '@/utils/format';
 
+type PodiumPlace = { player: Player; placement: Placement };
+
 function Place({
-    player,
     place,
-    size,
+    emptyRank,
     rankingAlgorithm,
     onPlayerPress,
 }: {
-    player?: Player;
-    place: 1 | 2 | 3;
-    size: number;
+    place?: PodiumPlace;
+    /** the rank an empty spot stands for */
+    emptyRank: number;
     rankingAlgorithm: RankingAlgorithm;
     onPlayerPress?: (id: string) => void;
 }) {
     const t = useNextTokens();
-    const medal = medalColors[place - 1];
+    const player = place?.player;
+    const rank = place?.placement.rank ?? emptyRank;
+    // by rank, not spot: players tied for first all stand on the top step
+    const isFirst = rank === 1;
+    const size = isFirst ? 92 : 68;
+    const medal = medalColors[rank - 1];
 
     return (
         <Pressable
@@ -33,7 +40,7 @@ function Place({
             style={{
                 flex: 1,
                 alignItems: 'center',
-                paddingTop: place === 1 ? 0 : 28,
+                paddingTop: isFirst ? 0 : 28,
                 opacity: player ? 1 : 0.35,
             }}
         >
@@ -73,7 +80,7 @@ function Place({
                             color: '#1B1B1F',
                         }}
                     >
-                        {place}
+                        {place?.placement.tied ? `T${rank}` : rank}
                     </Text>
                 </View>
             </View>
@@ -92,7 +99,7 @@ function Place({
                 <>
                     <Text
                         style={{
-                            fontSize: place === 1 ? 26 : 20,
+                            fontSize: isFirst ? 26 : 20,
                             fontWeight: '800',
                             fontVariant: ['tabular-nums'],
                             color: t.text,
@@ -111,17 +118,18 @@ function Place({
     );
 }
 
-/** The top three with medal rings, winner in the middle. New Design only. */
+/**
+ * The top three with medal rings, the leader in the middle. Spots follow the
+ * golf-style rank, so a tie for first puts two players on the top step.
+ * New Design only.
+ */
 export function NextPodium({
-    firstPlace,
-    secondPlace,
-    thirdPlace,
+    places,
     rankingAlgorithm,
     onPlayerPress,
 }: {
-    firstPlace?: Player;
-    secondPlace?: Player;
-    thirdPlace?: Player;
+    /** the first three of `rankPlayers` */
+    places: PodiumPlace[];
     rankingAlgorithm: RankingAlgorithm;
     onPlayerPress?: (id: string) => void;
 }) {
@@ -135,27 +143,16 @@ export function NextPodium({
                 marginBottom: 8,
             }}
         >
-            <Place
-                player={secondPlace}
-                place={2}
-                size={68}
-                rankingAlgorithm={rankingAlgorithm}
-                onPlayerPress={onPlayerPress}
-            />
-            <Place
-                player={firstPlace}
-                place={1}
-                size={92}
-                rankingAlgorithm={rankingAlgorithm}
-                onPlayerPress={onPlayerPress}
-            />
-            <Place
-                player={thirdPlace}
-                place={3}
-                size={68}
-                rankingAlgorithm={rankingAlgorithm}
-                onPlayerPress={onPlayerPress}
-            />
+            {/* left, middle, right */}
+            {([1, 0, 2] as const).map((idx) => (
+                <Place
+                    key={idx}
+                    place={places[idx]}
+                    emptyRank={idx + 1}
+                    rankingAlgorithm={rankingAlgorithm}
+                    onPlayerPress={onPlayerPress}
+                />
+            ))}
         </View>
     );
 }

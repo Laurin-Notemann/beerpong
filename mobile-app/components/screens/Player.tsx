@@ -25,6 +25,7 @@ import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
+import type { Placement } from '@/constants/rankingAlgorithms';
 import { AppBackground } from '@/lib/Background';
 import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
@@ -37,7 +38,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export interface ScopeInfo {
     minMatchesRequiredToBeRanked: number;
-    placement: number;
+    placement: Placement;
     matches: Match[];
     matchesWon: number;
     points: number;
@@ -51,7 +52,7 @@ export interface ScopeInfo {
 // shown until a scope's data has loaded
 const emptyScope: Omit<ScopeInfo, 'name'> = {
     minMatchesRequiredToBeRanked: 0,
-    placement: 0,
+    placement: { rank: 0, tied: false },
     matches: [],
     matchesWon: 0,
     points: 0,
@@ -388,7 +389,7 @@ export default function PlayerScreen({
                 >
                     <PlayerPageHeadSection
                         avatarUrl={avatarUrl}
-                        placement={0} // doesn't get shown because this is only ever editable
+                        placement={{ rank: 0, tied: false }} // doesn't get shown because this is only ever editable
                         name={name}
                         elo={0} // doesn't get shown because this is only ever editable
                         matchesWon={0} // doesn't get shown because this is only ever editable

@@ -8,7 +8,7 @@ import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { countCups } from '@/api/utils/ruleMoveCups';
 import { ScopeInfo } from '@/components/screens/Player';
-import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
+import { rankPlayers } from '@/constants/rankingAlgorithms';
 import { eloAlgorithm } from '@/lib/EloAlgorithm';
 import { SeasonSettingsDto } from '@/openapi/openapi';
 import { getWakeTimeDayStart } from '@/utils/wakeTime';
@@ -162,14 +162,12 @@ const getScope = (
 ): ScopeInfo => {
     const rankingAlgorithm = seasonSettings?.rankingAlgorithm;
 
-    const sortedPlayers = seasonPlayers.sort(
-        getRankingAlgorithm(rankingAlgorithm).sortFunc
+    const ranked = rankPlayers(seasonPlayers, rankingAlgorithm).find(
+        (i) => i.player.profileId === profileId
     );
+    const placement = ranked?.placement ?? { rank: 0, tied: false };
 
-    const placement =
-        sortedPlayers.findIndex((i) => i.profileId === profileId) + 1;
-
-    const player = sortedPlayers.find((i) => i.profileId === profileId);
+    const player = ranked?.player;
 
     return {
         minMatchesRequiredToBeRanked: seasonSettings?.minMatchesToQualify ?? 0,

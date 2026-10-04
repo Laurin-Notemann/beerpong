@@ -6,6 +6,7 @@ import Avatar from '@/components/Avatar';
 import { medalColors, useNextTokens } from '@/components/next/tokens';
 import {
     getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { plural } from '@/utils/format';
@@ -24,14 +25,14 @@ function NextLeaderboardRow({
     onPlayerPress,
 }: {
     player: Player;
-    placement: number;
+    placement: Placement;
     unranked: boolean;
     rankingAlgorithm: RankingAlgorithm;
     onPlayerPress?: (id: string) => void;
 }) {
     const t = useNextTokens();
     const algo = getRankingAlgorithm(rankingAlgorithm);
-    const medal = !unranked ? medalColors[placement - 1] : undefined;
+    const medal = !unranked ? medalColors[placement.rank - 1] : undefined;
 
     return (
         <Pressable
@@ -56,8 +57,10 @@ function NextLeaderboardRow({
         >
             <View
                 style={{
-                    width: 30,
+                    // grows for "T12"
+                    minWidth: 30,
                     height: 30,
+                    paddingHorizontal: 4,
                     borderRadius: 15,
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -72,7 +75,9 @@ function NextLeaderboardRow({
                         color: medal ? '#1B1B1F' : t.textSecondary,
                     }}
                 >
-                    {unranked || !player.matches ? '–' : placement}
+                    {unranked || !player.matches
+                        ? '–'
+                        : `${placement.tied ? 'T' : ''}${placement.rank}`}
                 </Text>
             </View>
             <Avatar
