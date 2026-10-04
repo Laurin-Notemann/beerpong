@@ -1,10 +1,11 @@
 name: Mobile App Staging
 
-# Ships every staging push of the mobile app, on the runner itself (no EAS cloud builds).
+# Ships every staging push of the iOS app, on the runner itself (no EAS cloud builds). Android only
+# ships when started by hand (Actions -> Mobile App Staging -> Run workflow, platform android).
 #
 # Per platform: if a build with the same native fingerprint is registered on EAS, only an OTA
 # update is published to that build's channel. Otherwise the app is built here with
-# `eas build --local`, registered on EAS with `eas upload` (so the next push finds it), and on
+# `eas build --local`, registered on EAS with `eas upload` (so the next run finds it), and on
 # iOS submitted to TestFlight.
 #   iOS     -> profile/channel/environment "production": store build, TestFlight
 #   Android -> profile/channel/environment "preview":    internal APK
@@ -18,11 +19,15 @@ on:
       - ".github/workflows/mobile-app-eas.yml"
   workflow_dispatch:
     inputs:
+      platform:
+        description: Which app to ship
+        type: choice
+        options: [ios, android, both]
+        default: ios
       native_build:
         description: Build natively even if a build with the same fingerprint exists
-        type: choice
-        options: [none, ios, android, both]
-        default: none
+        type: boolean
+        default: false
 
 defaults:
   run:
@@ -31,7 +36,7 @@ defaults:
 jobs:
   ship:
     name: Ship ${{ matrix.platform }}
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.platform == 'ios' && 'macos-26' || 'ubuntu-latest' }}
     timeout-minutes: 120
     # One run per platform at a time. A newer push waits instead of cancelling, so a native
     # build is never cut off halfway, and only the newest waiting push runs next.
@@ -41,21 +46,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: ios
-            runner: macos-26
-            profile: production
-            artifact: app.ipa
-          - platform: android
-            runner: ubuntu-latest
-            profile: preview
-            artifact: app.apk
+        # pushes have no inputs, so they ship iOS only
+        platform: ${{ fromJSON(inputs.platform == 'both' && '["ios","android"]' || inputs.platform == 'android' && '["android"]' || '["ios"]') }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       EXPO_PUBLIC_GIT_COMMIT: ${{ github.sha }}
       PLATFORM: ${{ matrix.platform }}
-      PROFILE: ${{ matrix.profile }}
+      PROFILE: ${{ matrix.platform == 'ios' && 'production' || 'preview' }}
+      ARTIFACT: ${{ matrix.platform == 'ios' && 'app.ipa' || 'app.apk' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,8 +83,7 @@ jobs:
             | sed -n '/^{/,$p' | jq -r .hash)
           build_id=$(eas build:list -p "$PLATFORM" --fingerprint-hash "$fingerprint" --status finished \
             --limit 1 --json --non-interactive | jq -r '.[0].id // empty')
-          forced="${{ inputs.native_build }}"
-          if [ "$forced" = "$PLATFORM" ] || [ "$forced" = "both" ]; then build_id=""; fi
+          if [ "${{ inputs.native_build }}" = "true" ]; then build_id=""; fi
           echo "fingerprint $fingerprint, matching build: ${build_id:-none}"
           echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
           echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
@@ -112,16 +110,16 @@ jobs:
         if: ${{ !steps.match.outputs.build_id }}
         run: |
           eas build --local -p "$PLATFORM" --profile "$PROFILE" --non-interactive \
-            --output "$RUNNER_TEMP/${{ matrix.artifact }}"
+            --output "$RUNNER_TEMP/$ARTIFACT"
 
       - name: Submit to TestFlight
         if: ${{ !steps.match.outputs.build_id && matrix.platform == 'ios' }}
-        run: eas submit -p ios --profile production --path "$RUNNER_TEMP/app.ipa" --non-interactive
+        run: eas submit -p ios --profile production --path "$RUNNER_TEMP/$ARTIFACT" --non-interactive
 
       - name: Register build on EAS
         if: ${{ !steps.match.outputs.build_id }}
         run: |
-          eas upload -p "$PLATFORM" --build-path "$RUNNER_TEMP/${{ matrix.artifact }}" \
+          eas upload -p "$PLATFORM" --build-path "$RUNNER_TEMP/$ARTIFACT" \
             --fingerprint "${{ steps.match.outputs.fingerprint }}" --non-interactive
 
       - name: Keep the build
@@ -129,5 +127,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ github.sha }}
-          path: ${{ runner.temp }}/${{ matrix.artifact }}
+          path: ${{ runner.temp }}/${{ env.ARTIFACT }}
           retention-days: 14
