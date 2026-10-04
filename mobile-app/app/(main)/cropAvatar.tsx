@@ -18,7 +18,7 @@ import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
 
 import { useUpdatePlayerAvatarMutation } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import { uriToByteArray } from '@/api/utils/uriToByteArray';
+import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import Avatar from '@/components/Avatar';
 import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
@@ -139,14 +139,17 @@ export default function Page() {
 
             if (DEBUG) return;
 
-            const byteArray = await uriToByteArray(rawCroppedUri);
+            const { byteArray, mimeType } = await compressImage(
+                rawCroppedUri,
+                IMAGE_SIZES.avatar
+            );
 
             await uploadAvatarMutation.mutateAsync({
                 groupId,
                 seasonId,
                 profileId,
                 byteArray,
-                mimeType: 'image/png',
+                mimeType,
             });
 
             if (imageKey) deleteTemp(imageKey);

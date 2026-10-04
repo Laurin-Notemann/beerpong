@@ -8,20 +8,10 @@ export async function readAsByteArray(uri: string): Promise<ByteArray> {
     return await file.bytes();
 }
 
-export type ByteArrayImagePickerAsset = ImagePicker.ImagePickerAsset & {
-    byteArray: ByteArray;
-};
-
+/** The picked images; empty when the user cancels. Callers compress before uploading. */
 export async function launchImageLibrary(
     options?: ImagePicker.ImagePickerOptions
-): Promise<ByteArrayImagePickerAsset[]> {
+): Promise<ImagePicker.ImagePickerAsset[]> {
     const result = await ImagePicker.launchImageLibraryAsync(options);
-    const assets = await Promise.all(
-        (result.assets ?? []).map(async (asset) => {
-            const byteArray = await readAsByteArray(asset.uri);
-
-            return { ...asset, byteArray } as ByteArrayImagePickerAsset;
-        })
-    );
-    return assets;
+    return result.assets ?? [];
 }

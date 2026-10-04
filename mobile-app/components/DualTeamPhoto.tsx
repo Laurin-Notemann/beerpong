@@ -1,13 +1,7 @@
 import { useCameraPermissions } from 'expo-camera';
+import { Image, ImageSource } from 'expo-image';
 import { useMemo, useState } from 'react';
-import {
-    Animated,
-    Image,
-    ImageSourcePropType,
-    Modal,
-    StyleSheet,
-    View,
-} from 'react-native';
+import { Animated, Modal, StyleSheet, View } from 'react-native';
 
 import { Match } from '@/api/utils/matchDtoToMatch';
 import {
@@ -37,8 +31,8 @@ type DualTeamPhotoMode = 'blueLarge' | 'redLarge' | 'equal';
 
 export interface DualTeamPhotoProps {
     match: Pick<Match, 'blueTeam' | 'redTeam'>;
-    blueImageSource?: ImageSourcePropType;
-    redImageSource?: ImageSourcePropType;
+    blueImageSource?: ImageSource;
+    redImageSource?: ImageSource;
     initialMode?: DualTeamPhotoMode;
 
     onSwapTeamColorsPress?: () => void;
@@ -199,7 +193,9 @@ export function DualTeamPhoto({
             <Image
                 source={blueImageSource}
                 style={StyleSheet.absoluteFill}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={100}
             />
         </Animated.View>
     );
@@ -236,7 +232,9 @@ export function DualTeamPhoto({
             <Image
                 source={redImageSource}
                 style={StyleSheet.absoluteFill}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={100}
             />
         </Animated.View>
     );

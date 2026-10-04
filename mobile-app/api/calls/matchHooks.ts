@@ -4,10 +4,10 @@ import { AxiosError } from 'axios';
 
 import { ApiId } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
+import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
-import { uriToByteArray } from '@/api/utils/uriToByteArray';
 import { Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
@@ -128,13 +128,16 @@ export async function uploadTeamPhoto(
     photoUpload: TeamPhotoDto | undefined,
     photoUri: string
 ): Promise<void> {
-    const byteArray = await uriToByteArray(photoUri);
+    const { byteArray, mimeType } = await compressImage(
+        photoUri,
+        IMAGE_SIZES.teamPhoto
+    );
 
     await uploadImage(
         photoUpload?.teamPhoto?.singleUploadUrl ?? '',
         byteArray,
         'matchPhoto',
-        'image/png'
+        mimeType
     );
 }
 

@@ -8,6 +8,7 @@ import {
 } from '@/api/calls/groupHooks';
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
+import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
 import {
     showErrorToast,
@@ -44,12 +45,13 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
             mediaTypes: ['images'],
             selectionLimit: 1,
         });
-        const mimeType = result?.mimeType;
-        const byteArray = result?.byteArray;
-
-        if (!groupId || !mimeType || !byteArray) return;
+        if (!groupId || !result) return;
 
         try {
+            const { byteArray, mimeType } = await compressImage(
+                result.uri,
+                IMAGE_SIZES.wallpaper
+            );
             await updateGroupWallpaperMutation.mutateAsync({
                 groupId,
                 byteArray,

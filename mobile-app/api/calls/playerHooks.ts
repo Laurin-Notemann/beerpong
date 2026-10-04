@@ -95,7 +95,7 @@ export const useUpdatePlayerAvatarMutation = () => {
         Paths.SetAvatar.Responses.$200 | null,
         Error,
         {
-            byteArray: Uint8Array<ArrayBuffer>;
+            byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>;
             mimeType: string;
 
             groupId: ApiId;

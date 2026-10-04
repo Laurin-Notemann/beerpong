@@ -18,17 +18,6 @@ import { showErrorToast, showSuccessToast } from '@/toast';
 import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 
-function uint8ToBase64(bytes: Uint8Array): string {
-    const CHUNK_SIZE = 0x8000; // ~32KB
-    let binary = '';
-    for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-        const slice = bytes.subarray(i, i + CHUNK_SIZE);
-        // @ts-expect-error: Using apply on chunk avoids spread
-        binary += String.fromCharCode.apply(null, slice);
-    }
-    return btoa(binary);
-}
-
 export default function Page() {
     const router = useRouter();
     const nav = useNavigation();
@@ -103,36 +92,16 @@ export default function Page() {
             selectionLimit: 1,
         });
 
-        const mimeType = result?.mimeType;
-        const byteArray = result?.byteArray;
+        setIsUploadingAvatar(false);
 
-        if (!result) {
-            // if the image picker was cancelled by the user
-            setIsUploadingAvatar(false);
-            return;
-        }
+        // cancelled
+        if (!result) return;
 
-        if (!mimeType || !byteArray) {
-            showErrorToast('Failed to process uploaded image.');
-            setIsUploadingAvatar(false);
-            return;
-        }
+        triggerHapticBump('light');
 
-        try {
-            const base64 = uint8ToBase64(byteArray);
-
-            const uri = `data:${result.type};base64,${base64}`;
-
-            triggerHapticBump('light');
-
-            const imageKey = putTemp<string>(uri);
-            nav.navigate('cropAvatar', { imageKey, profileId });
-        } catch (err) {
-            ConsoleLogger.error('failed to process image:', err);
-            showErrorToast('Failed to process image.', err);
-        } finally {
-            setIsUploadingAvatar(false);
-        }
+        // the crop screen reads the picked file itself
+        const imageKey = putTemp<string>(result.uri);
+        nav.navigate('cropAvatar', { imageKey, profileId });
     }
 
     async function onDeleteAvatarPress() {
