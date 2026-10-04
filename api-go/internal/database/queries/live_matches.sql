@@ -1,6 +1,3 @@
--- Every write to a live match runs in a transaction that first takes
--- LockLiveMatch, so seq is assigned one request at a time.
-
 -- name: InsertLiveMatch :execrows
 INSERT INTO live_matches (id, group_id, season_id, created_by, status, started_at, last_activity_at, last_seq)
 VALUES ($1, $2, $3, $4, 'IN_PROGRESS', $5, $5, 0)
@@ -13,6 +10,8 @@ JOIN group_members gm ON gm.id = lm.created_by
 WHERE lm.id = $1;
 
 -- name: LockLiveMatch :one
+-- Every write to a live match runs in a transaction that first takes this lock,
+-- so seq is assigned one request at a time.
 SELECT sqlc.embed(lm), gm.user_id AS created_by_user_id
 FROM live_matches lm
 JOIN group_members gm ON gm.id = lm.created_by

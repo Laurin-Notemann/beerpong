@@ -9,7 +9,7 @@ import (
 	. "github.com/laurin-notemann/beerpong/api-tests/harness"
 )
 
-func newUUID() string {
+func newLiveMatchID() string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	b[6] = b[6]&0x0f | 0x40
@@ -19,28 +19,39 @@ func newUUID() string {
 
 func liveMatchPath(g *Group, suffix string) string { return g.Path("/live-matches" + suffix) }
 
-type op = map[string]any
+type liveOp = map[string]any
 
-func setTeams(g *Group, red, blue string) op {
-	return op{"id": newUUID(), "type": "SET_TEAMS", "redPlayerIds": []string{g.Players[red]}, "bluePlayerIds": []string{g.Players[blue]}}
+func setTeams(g *Group, red, blue string) liveOp {
+	return liveOp{"id": newLiveMatchID(), "type": "SET_TEAMS", "redPlayerIds": []string{g.Players[red]}, "bluePlayerIds": []string{g.Players[blue]}}
 }
 
-func adjustMove(g *Group, player string, delta int) op {
-	return op{"id": newUUID(), "type": "ADJUST_MOVE", "playerId": g.Players[player], "moveId": g.Moves["Normal"], "delta": delta}
+func adjustMove(g *Group, player string, delta int) liveOp {
+	return liveOp{"id": newLiveMatchID(), "type": "ADJUST_MOVE", "playerId": g.Players[player], "moveId": g.Moves["Normal"], "delta": delta}
 }
 
-func createBody(g *Group, ops ...op) map[string]any {
+func createBody(g *Group, ops ...liveOp) map[string]any {
 	return map[string]any{"seasonId": g.SeasonID, "ops": ops}
 }
 
-func putLiveMatch(h *H, u *User, g *Group, id string, ops ...op) *Resp {
+func putLiveMatch(h *H, u *User, g *Group, id string, ops ...liveOp) *Resp {
 	h.Helper()
 	return h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+id), Auth: u.Bearer(), Body: createBody(g, ops...), Ordered: true})
 }
 
-func appendLiveOps(h *H, u *User, g *Group, id string, ops ...op) *Resp {
+func appendLiveOps(h *H, u *User, g *Group, id string, ops ...liveOp) *Resp {
 	h.Helper()
 	return h.Do(Req{Method: "POST", Path: liveMatchPath(g, "/"+id+"/ops"), Auth: u.Bearer(), Body: map[string]any{"ops": ops}, Ordered: true})
+}
+
+// the quiet variants keep big bodies out of the golden transcript
+func appendLiveOpsQuiet(h *H, u *User, g *Group, id string, ops ...liveOp) *Resp {
+	h.Helper()
+	return h.Do(Req{Method: "POST", Path: liveMatchPath(g, "/"+id+"/ops"), Auth: u.Bearer(), Body: map[string]any{"ops": ops}, Skip: true})
+}
+
+func getLiveMatchQuiet(h *H, u *User, g *Group, id string) *Resp {
+	h.Helper()
+	return h.Do(Req{Method: "GET", Path: liveMatchPath(g, "/"+id), Auth: u.Bearer(), Skip: true})
 }
 
 func getLiveMatch(h *H, u *User, g *Group, id string) *Resp {
@@ -67,7 +78,7 @@ func TestLiveMatchCreateAndGet(t *testing.T) {
 	g := h.NewGroup(owner, "Live create", "a", "b", "c", "d")
 	ws := h.Listen(g.ID)
 
-	id := newUUID()
+	id := newLiveMatchID()
 	first := setTeams(g, "a", "b")
 	created := h.OK(putLiveMatch(h, owner, g, id, first, adjustMove(g, "a", 1)))
 	h.Equal(created.Str("id"), id, "id")
@@ -116,18 +127,18 @@ func TestLiveMatchCreateValidation(t *testing.T) {
 	h.Fail(putLiveMatch(h, owner, g, "not-a-uuid", setTeams(g, "a", "b")), 400, "liveMatchInvalidOps")
 	badOpID := setTeams(g, "a", "b")
 	badOpID["id"] = "nope"
-	h.Fail(putLiveMatch(h, owner, g, newUUID(), badOpID), 400, "liveMatchInvalidOps")
-	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newUUID()), Auth: owner.Bearer(), Body: map[string]any{"ops": []op{}}}), 400, "liveMatchInvalidOps")
-	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newUUID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": g.SeasonID}}), 400, "liveMatchInvalidOps")
-	unknownType := liveMatchPath(g, "/"+newUUID())
-	h.SpringError(h.Do(Req{Method: "PUT", Path: unknownType, Auth: owner.Bearer(), ContentType: "application/json", RawBody: ptr(`{"seasonId":"` + g.SeasonID + `","ops":[{"id":"` + newUUID() + `","type":"NOPE"}]}`)}), 400, "Bad Request", unknownType)
-	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newUUID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": newUUID(), "ops": []op{setTeams(g, "a", "b")}}}), 404, "seasonNotFound")
-	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newUUID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": other.SeasonID, "ops": []op{setTeams(g, "a", "b")}}}), 404, "seasonHasDifferentGroup")
+	h.Fail(putLiveMatch(h, owner, g, newLiveMatchID(), badOpID), 400, "liveMatchInvalidOps")
+	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newLiveMatchID()), Auth: owner.Bearer(), Body: map[string]any{"ops": []liveOp{}}}), 400, "liveMatchInvalidOps")
+	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newLiveMatchID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": g.SeasonID}}), 400, "liveMatchInvalidOps")
+	unknownType := liveMatchPath(g, "/"+newLiveMatchID())
+	h.SpringError(h.Do(Req{Method: "PUT", Path: unknownType, Auth: owner.Bearer(), ContentType: "application/json", RawBody: rawLiveJSON(`{"seasonId":"` + g.SeasonID + `","ops":[{"id":"` + newLiveMatchID() + `","type":"NOPE"}]}`)}), 400, "Bad Request", unknownType)
+	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newLiveMatchID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": newLiveMatchID(), "ops": []liveOp{setTeams(g, "a", "b")}}}), 404, "seasonNotFound")
+	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newLiveMatchID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": other.SeasonID, "ops": []liveOp{setTeams(g, "a", "b")}}}), 404, "seasonHasDifferentGroup")
 
 	oldSeason := g.SeasonID
 	h.StartSeason(g, "Old")
 	ws.Expect(1)
-	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newUUID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": oldSeason, "ops": []op{setTeams(g, "a", "b")}}}), 403, "seasonAlreadyEnded")
+	h.Fail(h.Do(Req{Method: "PUT", Path: liveMatchPath(g, "/"+newLiveMatchID()), Auth: owner.Bearer(), Body: map[string]any{"seasonId": oldSeason, "ops": []liveOp{setTeams(g, "a", "b")}}}), 403, "seasonAlreadyEnded")
 
 	// none of the rejected calls created anything
 	h.Equal(len(h.OK(listLiveMatches(h, owner, g)).List()), 0, "no live matches")
@@ -140,7 +151,7 @@ func TestLiveMatchConcurrentCreate(t *testing.T) {
 	g := h.NewGroup(owner, "Live concurrent", "a", "b")
 	ws := h.Listen(g.ID)
 
-	id := newUUID()
+	id := newLiveMatchID()
 	body := createBody(g, setTeams(g, "a", "b"))
 	const n = 8
 	results := make([]*Resp, n)
@@ -170,7 +181,7 @@ func TestLiveMatchAppend(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Live append", "a", "b")
-	id := newUUID()
+	id := newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
 	ws := h.Listen(g.ID)
 
@@ -185,17 +196,17 @@ func TestLiveMatchAppend(t *testing.T) {
 	h.Equal(seqs(Get(ev[0], "body", "ops").([]any)), []any{2.0, 3.0}, "event seqs")
 
 	// ops keep only the fields of their type
-	hit := op{"id": newUUID(), "type": "RECORD_CUP_HIT", "team": "blue", "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "finishMoveId": g.Moves["Finish - Normal"],
-		"cups": []op{{"x": 0, "y": 0}, {"x": 9, "y": 3}}, "delta": 4, "redPlayerIds": []string{g.Players["a"]}}
-	undo := op{"id": newUUID(), "type": "UNDO_CUP_HIT", "team": "blue", "cup": op{"x": 9, "y": 3}}
-	remove := op{"id": newUUID(), "type": "SET_PLAYER_TEAM", "playerId": g.Players["b"]}
+	hit := liveOp{"id": newLiveMatchID(), "type": "RECORD_CUP_HIT", "team": "blue", "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "finishMoveId": g.Moves["Finish - Normal"],
+		"cups": []liveOp{{"x": 0, "y": 0}, {"x": 9, "y": 3}}, "delta": 4, "redPlayerIds": []string{g.Players["a"]}}
+	undo := liveOp{"id": newLiveMatchID(), "type": "UNDO_CUP_HIT", "team": "blue", "cup": liveOp{"x": 9, "y": 3}}
+	remove := liveOp{"id": newLiveMatchID(), "type": "SET_PLAYER_TEAM", "playerId": g.Players["b"]}
 	res := h.OK(appendLiveOps(h, owner, g, id, hit, undo, remove))
 	h.Equal(seqs(res.List("ops")), []any{4.0, 5.0, 6.0}, "seqs")
-	h.Equal(res.Data("ops", "0", "cups"), []any{op{"x": 0.0, "y": 0.0}, op{"x": 9.0, "y": 3.0}}, "cups")
+	h.Equal(res.Data("ops", "0", "cups"), []any{liveOp{"x": 0.0, "y": 0.0}, liveOp{"x": 9.0, "y": 3.0}}, "cups")
 	h.Equal(res.Str("ops", "0", "finishMoveId"), g.Moves["Finish - Normal"], "finish move")
 	h.Equal(res.Data("ops", "0", "delta"), nil, "delta is not part of a cup hit")
 	h.Equal(res.Data("ops", "0", "redPlayerIds"), nil, "team lists are not part of a cup hit")
-	h.Equal(res.Data("ops", "1", "cup"), op{"x": 9.0, "y": 3.0}, "undone cup")
+	h.Equal(res.Data("ops", "1", "cup"), liveOp{"x": 9.0, "y": 3.0}, "undone cup")
 	h.Equal(res.Data("ops", "2", "team"), nil, "removal has no team")
 	h.Equal(res.Str("ops", "2", "playerId"), g.Players["b"], "removed player")
 	ev = ws.Expect(1)
@@ -212,7 +223,7 @@ func TestLiveMatchAppendIsIdempotentPerOpID(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Live retry", "a", "b")
-	id := newUUID()
+	id := newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
 	ws := h.Listen(g.ID)
 
@@ -250,56 +261,57 @@ func TestLiveMatchInvalidOpsAppendNothing(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Live invalid", "a", "b")
-	id := newUUID()
+	id := newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
 	ws := h.Listen(g.ID)
 
 	valid := adjustMove(g, "a", 1)
-	invalid := map[string]op{
+	invalid := map[string]liveOp{
 		"delta 0":        adjustMove(g, "a", 0),
 		"delta 21":       adjustMove(g, "a", 21),
-		"missing player": {"id": newUUID(), "type": "ADJUST_MOVE", "moveId": g.Moves["Normal"], "delta": 1},
-		"x is 10":        {"id": newUUID(), "type": "UNDO_CUP_HIT", "team": "red", "cup": op{"x": 10, "y": 0}},
-		"no cups":        {"id": newUUID(), "type": "RECORD_CUP_HIT", "team": "red", "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "cups": []op{}},
-		"green team":     {"id": newUUID(), "type": "SET_PLAYER_TEAM", "playerId": g.Players["a"], "team": "green"},
+		"missing player": {"id": newLiveMatchID(), "type": "ADJUST_MOVE", "moveId": g.Moves["Normal"], "delta": 1},
+		"x is 10":        {"id": newLiveMatchID(), "type": "UNDO_CUP_HIT", "team": "red", "cup": liveOp{"x": 10, "y": 0}},
+		"no cups":        {"id": newLiveMatchID(), "type": "RECORD_CUP_HIT", "team": "red", "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "cups": []liveOp{}},
+		"green team":     {"id": newLiveMatchID(), "type": "SET_PLAYER_TEAM", "playerId": g.Players["a"], "team": "green"},
 		"op id not uuid": {"id": "nope", "type": "ADJUST_MOVE", "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "delta": 1},
-		"no type":        {"id": newUUID(), "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "delta": 1},
+		"no type":        {"id": newLiveMatchID(), "playerId": g.Players["a"], "moveId": g.Moves["Normal"], "delta": 1},
 	}
 	for _, name := range []string{"delta 0", "delta 21", "missing player", "x is 10", "no cups", "green team", "op id not uuid", "no type"} {
 		// the valid op in front must not be appended either
-		h.Fail(appendLiveOps(h, owner, g, id, valid, invalid[name]), 400, "liveMatchInvalidOps")
+		h.Fail(appendLiveOpsQuiet(h, owner, g, id, valid, invalid[name]), 400, "liveMatchInvalidOps")
 	}
-	tooMany := make([]op, 51)
+	tooMany := make([]liveOp, 51)
 	for i := range tooMany {
 		tooMany[i] = adjustMove(g, "a", 1)
 	}
-	h.Fail(appendLiveOps(h, owner, g, id, tooMany...), 400, "liveMatchInvalidOps")
+	h.Fail(appendLiveOpsQuiet(h, owner, g, id, tooMany...), 400, "liveMatchInvalidOps")
 	h.Fail(h.Do(Req{Method: "POST", Path: liveMatchPath(g, "/"+id+"/ops"), Auth: owner.Bearer(), Body: map[string]any{}}), 400, "liveMatchInvalidOps")
-	h.SpringError(h.Do(Req{Method: "POST", Path: liveMatchPath(g, "/"+id+"/ops"), Auth: owner.Bearer(), ContentType: "application/json", RawBody: ptr(`{"ops":[{"id":"` + newUUID() + `","type":"NOPE"}]}`)}), 400, "Bad Request", liveMatchPath(g, "/"+id+"/ops"))
+	h.SpringError(h.Do(Req{Method: "POST", Path: liveMatchPath(g, "/"+id+"/ops"), Auth: owner.Bearer(), ContentType: "application/json", RawBody: rawLiveJSON(`{"ops":[{"id":"` + newLiveMatchID() + `","type":"NOPE"}]}`)}), 400, "Bad Request", liveMatchPath(g, "/"+id+"/ops"))
 
-	// 50 is the limit
-	fifty := make([]op, 50)
+	// nothing was announced for the rejected requests
+	ws.ExpectNone()
+
+	// 50 is the limit (its event is left unread: 50 ops would bloat the transcript)
+	fifty := make([]liveOp, 50)
 	for i := range fifty {
 		fifty[i] = adjustMove(g, "a", 1)
 	}
-	fiftyOps := h.OK(appendLiveOps(h, owner, g, id, fifty...))
+	fiftyOps := h.OK(appendLiveOpsQuiet(h, owner, g, id, fifty...))
 	h.Equal(fiftyOps.Num("lastSeq"), 51, "lastSeq after 50 ops")
-	ws.Expect(1)
 
-	stored := h.OK(getLiveMatch(h, owner, g, id))
+	stored := h.OK(getLiveMatchQuiet(h, owner, g, id))
 	h.Equal(len(stored.List("ops")), 51, "only the 50 valid ops and the first were stored")
-	ws.ExpectNone()
 }
 
 func TestLiveMatchOpLimit(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Live limit", "a", "b")
-	id := newUUID()
+	id := newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
 
-	batch := func(n int) []op {
-		ops := make([]op, n)
+	batch := func(n int) []liveOp {
+		ops := make([]liveOp, n)
 		for i := range ops {
 			ops[i] = adjustMove(g, "a", 1)
 		}
@@ -307,15 +319,15 @@ func TestLiveMatchOpLimit(t *testing.T) {
 	}
 	// 1 + 39 * 50 = 1951 ops
 	for i := 0; i < 39; i++ {
-		h.OK(h.Do(Req{Method: "POST", Path: liveMatchPath(g, "/"+id+"/ops"), Auth: owner.Bearer(), Body: map[string]any{"ops": batch(50)}, Skip: true}))
+		h.OK(appendLiveOpsQuiet(h, owner, g, id, batch(50)...))
 	}
-	h.Equal(h.OK(getLiveMatch(h, owner, g, id)).Num("lastSeq"), 1951, "lastSeq")
+	h.Equal(h.OK(getLiveMatchQuiet(h, owner, g, id)).Num("lastSeq"), 1951, "lastSeq")
 
-	h.Fail(appendLiveOps(h, owner, g, id, batch(50)...), 400, "liveMatchTooManyOps")
-	h.Equal(h.OK(getLiveMatch(h, owner, g, id)).Num("lastSeq"), 1951, "nothing was appended")
+	h.Fail(appendLiveOpsQuiet(h, owner, g, id, batch(50)...), 400, "liveMatchTooManyOps")
+	h.Equal(h.OK(getLiveMatchQuiet(h, owner, g, id)).Num("lastSeq"), 1951, "nothing was appended")
 	// exactly the remaining 49 still fit
-	h.Equal(h.OK(appendLiveOps(h, owner, g, id, batch(49)...)).Num("lastSeq"), 2000, "lastSeq at the limit")
-	h.Fail(appendLiveOps(h, owner, g, id, batch(1)...), 400, "liveMatchTooManyOps")
+	h.Equal(h.OK(appendLiveOpsQuiet(h, owner, g, id, batch(49)...)).Num("lastSeq"), 2000, "lastSeq at the limit")
+	h.Fail(appendLiveOpsQuiet(h, owner, g, id, batch(1)...), 400, "liveMatchTooManyOps")
 }
 
 func TestLiveMatchList(t *testing.T) {
@@ -326,10 +338,10 @@ func TestLiveMatchList(t *testing.T) {
 
 	h.Equal(len(h.OK(listLiveMatches(h, owner, g)).List()), 0, "empty list")
 
-	older, newer := newUUID(), newUUID()
+	older, newer := newLiveMatchID(), newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, older, setTeams(g, "a", "b")))
 	h.OK(putLiveMatch(h, owner, g, newer, setTeams(g, "a", "b")))
-	h.OK(putLiveMatch(h, owner, other, newUUID(), setTeams(other, "x", "y")))
+	h.OK(putLiveMatch(h, owner, other, newLiveMatchID(), setTeams(other, "x", "y")))
 
 	// the most recently active one comes first
 	h.OK(appendLiveOps(h, owner, g, older, adjustMove(g, "a", 1)))
@@ -348,22 +360,22 @@ func TestLiveMatchOfAnotherGroupIsNotFound(t *testing.T) {
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Live isolation", "a", "b")
 	other := h.NewGroup(owner, "Live isolation other", "x", "y")
-	id := newUUID()
+	id := newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
 
 	h.Fail(getLiveMatch(h, owner, other, id), 404, "liveMatchNotFound")
 	h.Fail(appendLiveOps(h, owner, other, id, adjustMove(other, "x", 1)), 404, "liveMatchNotFound")
 	h.Fail(putLiveMatch(h, owner, other, id, setTeams(other, "x", "y")), 404, "liveMatchNotFound")
-	h.Fail(getLiveMatch(h, owner, g, newUUID()), 404, "liveMatchNotFound")
-	h.Fail(appendLiveOps(h, owner, g, newUUID(), adjustMove(g, "a", 1)), 404, "liveMatchNotFound")
+	h.Fail(getLiveMatch(h, owner, g, newLiveMatchID()), 404, "liveMatchNotFound")
+	h.Fail(appendLiveOps(h, owner, g, newLiveMatchID(), adjustMove(g, "a", 1)), 404, "liveMatchNotFound")
 
 	// an op id of another live match is not a retry
-	second := newUUID()
+	second := newLiveMatchID()
 	first := setTeams(g, "a", "b")
-	h.OK(putLiveMatch(h, owner, g, newUUID(), first))
+	h.OK(putLiveMatch(h, owner, g, newLiveMatchID(), first))
 	h.OK(putLiveMatch(h, owner, g, second, setTeams(g, "a", "b")))
 	h.Fail(appendLiveOps(h, owner, g, second, first), 400, "liveMatchInvalidOps")
-	h.Fail(putLiveMatch(h, owner, g, newUUID(), first), 400, "liveMatchInvalidOps")
+	h.Fail(putLiveMatch(h, owner, g, newLiveMatchID(), first), 400, "liveMatchInvalidOps")
 
 	h.Equal(h.OK(getLiveMatch(h, owner, g, id)).Num("lastSeq"), 1, "left untouched")
 	h.Equal(h.OK(getLiveMatch(h, owner, g, second)).Num("lastSeq"), 1, "left untouched")
@@ -375,12 +387,12 @@ func TestLiveMatchRequiresMembership(t *testing.T) {
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Live membership", "a", "b")
 	stranger := h.NewUser()
-	id := newUUID()
+	id := newLiveMatchID()
 	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
 
 	h.Unauthorized(getLiveMatch(h, stranger, g, id), "No access to this group!")
 	h.Unauthorized(listLiveMatches(h, stranger, g), "No access to this group!")
-	h.Unauthorized(putLiveMatch(h, stranger, g, newUUID(), setTeams(g, "a", "b")), "No access to this group!")
+	h.Unauthorized(putLiveMatch(h, stranger, g, newLiveMatchID(), setTeams(g, "a", "b")), "No access to this group!")
 	h.Unauthorized(appendLiveOps(h, stranger, g, id, adjustMove(g, "a", 1)), "No access to this group!")
 
 	// a member who is not the creator can append
@@ -388,4 +400,4 @@ func TestLiveMatchRequiresMembership(t *testing.T) {
 	h.OK(appendLiveOps(h, stranger, g, id, adjustMove(g, "a", 1)))
 }
 
-func ptr[T any](v T) *T { return &v }
+func rawLiveJSON(s string) *string { return &s }

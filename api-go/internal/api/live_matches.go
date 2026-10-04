@@ -495,11 +495,7 @@ func (s *Server) createLiveMatch(r *request) response {
 	var isNew bool
 	res = s.tx(ctx, func(q *db.Queries) (response, error) {
 		// a retry of a create that went through (its response got lost) returns what exists
-		returnExisting := func() (response, error) {
-			row, err := q.GetLiveMatch(ctx, id)
-			if err != nil {
-				return nil, err
-			}
+		returnExisting := func(row db.GetLiveMatchRow) (response, error) {
 			if row.LiveMatch.GroupID != groupID {
 				return fail(errLiveMatchNotFound), nil
 			}
@@ -510,8 +506,8 @@ func (s *Server) createLiveMatch(r *request) response {
 			created = toLiveMatchDTO(row.LiveMatch, row.CreatedByUserID, ops[id])
 			return ok(created), nil
 		}
-		if _, err := q.GetLiveMatch(ctx, id); err == nil {
-			return returnExisting()
+		if row, err := q.GetLiveMatch(ctx, id); err == nil {
+			return returnExisting(row)
 		} else if !notFound(err) {
 			return nil, err
 		}
@@ -539,7 +535,11 @@ func (s *Server) createLiveMatch(r *request) response {
 		}
 		if inserted == 0 {
 			// a concurrent create with the same id won; its transaction is committed by now
-			return returnExisting()
+			row, err := q.GetLiveMatch(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+			return returnExisting(row)
 		}
 		_, failure, err := s.appendLiveMatchOps(ctx, q, id, 0, memberID, ops)
 		if err != nil {

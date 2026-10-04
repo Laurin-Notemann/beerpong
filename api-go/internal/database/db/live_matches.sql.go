@@ -87,7 +87,6 @@ func (q *Queries) InProgressLiveMatchesByGroup(ctx context.Context, groupID stri
 }
 
 const insertLiveMatch = `-- name: InsertLiveMatch :execrows
-
 INSERT INTO live_matches (id, group_id, season_id, created_by, status, started_at, last_activity_at, last_seq)
 VALUES ($1, $2, $3, $4, 'IN_PROGRESS', $5, $5, 0)
 ON CONFLICT (id) DO NOTHING
@@ -101,8 +100,6 @@ type InsertLiveMatchParams struct {
 	StartedAt time.Time
 }
 
-// Every write to a live match runs in a transaction that first takes
-// LockLiveMatch, so seq is assigned one request at a time.
 func (q *Queries) InsertLiveMatch(ctx context.Context, arg InsertLiveMatchParams) (int64, error) {
 	result, err := q.db.Exec(ctx, insertLiveMatch,
 		arg.ID,
@@ -231,6 +228,8 @@ type LockLiveMatchRow struct {
 	CreatedByUserID *string
 }
 
+// Every write to a live match runs in a transaction that first takes this lock,
+// so seq is assigned one request at a time.
 func (q *Queries) LockLiveMatch(ctx context.Context, arg LockLiveMatchParams) (LockLiveMatchRow, error) {
 	row := q.db.QueryRow(ctx, lockLiveMatch, arg.ID, arg.GroupID)
 	var i LockLiveMatchRow

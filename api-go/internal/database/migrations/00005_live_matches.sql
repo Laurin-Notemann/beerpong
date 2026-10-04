@@ -12,7 +12,7 @@ CREATE TABLE live_matches (
     last_activity_at timestamp(6) with time zone NOT NULL,
     ended_at timestamp(6) with time zone,
     last_seq bigint NOT NULL,
-    result_match_id text REFERENCES matches (id)
+    result_match_id text REFERENCES matches (id) ON DELETE SET NULL
 );
 
 -- the group's list of running matches, newest activity first
