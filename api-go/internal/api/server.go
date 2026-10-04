@@ -87,7 +87,22 @@ func (s *Server) Handler() http.Handler {
 	root := http.NewServeMux()
 	root.Handle("/update-socket", s.hub)
 	root.Handle("/", sentryhttp.New(sentryhttp.Options{}).Handle(mux))
-	return root
+	return springHeaders(root)
+}
+
+// springHeaders sets the headers Spring Security put on every response. The
+// no-store ones keep the app's HTTP stack from caching API responses.
+func springHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+		h.Set("Pragma", "no-cache")
+		h.Set("Expires", "0")
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("X-XSS-Protection", "0")
+		next.ServeHTTP(w, r)
+	})
 }
 
 // routes is every endpoint by path and method. openapi/openapi.json documents

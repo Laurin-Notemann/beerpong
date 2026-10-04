@@ -12,6 +12,29 @@ func TestHealthcheck(t *testing.T) {
 	h.Equal(res.Data(), "OK", "healthcheck data")
 }
 
+// Spring Security put these on every response; no-store keeps the phones'
+// HTTP stacks from caching API responses.
+func TestResponseHeaders(t *testing.T) {
+	h := New(t)
+	want := map[string]string{
+		"Cache-Control":          "no-cache, no-store, max-age=0, must-revalidate",
+		"Pragma":                 "no-cache",
+		"Expires":                "0",
+		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options":        "DENY",
+		"X-Xss-Protection":       "0",
+	}
+	for _, res := range []*Resp{
+		h.Do(Req{Method: "GET", Path: "/healthcheck", Skip: true}),
+		h.Do(Req{Method: "GET", Path: "/nope", Skip: true}),
+		h.Do(Req{Method: "GET", Path: "/groups/user", Skip: true}),
+	} {
+		for name, value := range want {
+			h.Equal(res.Header.Get(name), value, name)
+		}
+	}
+}
+
 func TestGroupPresets(t *testing.T) {
 	h := New(t)
 	res := h.OK(h.Do(Req{Method: "GET", Path: "/group-presets", Ordered: true}))
