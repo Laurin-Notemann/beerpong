@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
     composeOps,
+    countFinishes,
     formatElapsed,
     hasGap,
     mergeOps,
+    splitDelta,
     teamScore,
     toTeamCreateDtos,
 } from '@/lib/liveMatch/log';
@@ -115,5 +117,41 @@ describe('formatElapsed', () => {
 
     it('treats negative time as 0', () => {
         expect(formatElapsed(-5000)).toBe('0:00');
+    });
+});
+
+describe('countFinishes', () => {
+    it('sums the finish moves of both teams', () => {
+        const state = {
+            redTeam: {
+                teamMembers: [
+                    {
+                        playerId: 'anna',
+                        moves: [
+                            { moveId: 'finish', count: 1 },
+                            { moveId: 'n', count: 3 },
+                        ],
+                    },
+                ],
+            },
+            blueTeam: {
+                teamMembers: [
+                    { playerId: 'ben', moves: [{ moveId: 'ring', count: 1 }] },
+                ],
+            },
+            cupHits: [],
+        };
+
+        expect(countFinishes(state, new Set(['finish', 'ring']))).toBe(2);
+        expect(countFinishes(state, new Set(['finish']))).toBe(1);
+    });
+});
+
+describe('splitDelta', () => {
+    it('splits into steps the server accepts', () => {
+        expect(splitDelta(3)).toEqual([3]);
+        expect(splitDelta(-45)).toEqual([-20, -20, -5]);
+        expect(splitDelta(40)).toEqual([20, 20]);
+        expect(splitDelta(0)).toEqual([]);
     });
 });

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 
+import { useLiveMatchSync } from '@/api/liveMatch/useLiveMatchSync';
 import { useApi } from '@/api/utils/create-api';
 import { useModalStyles } from '@/lib/navigation/modalStyles';
 import {
@@ -20,6 +21,9 @@ export default function MainLayout() {
     useEffect(() => {
         connectRealtime(groupIds);
     }, [connectRealtime, groupIds]);
+
+    // sends live match edits queued on this phone, also those from before an app kill
+    useLiveMatchSync();
 
     const modalStyles = useModalStyles();
 

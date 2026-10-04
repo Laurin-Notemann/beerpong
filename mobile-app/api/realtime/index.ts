@@ -8,7 +8,8 @@ export type RealtimeAffectedEntity =
     | 'PLAYERS'
     | 'RULES'
     | 'RULE_MOVES'
-    | 'PROFILES';
+    | 'PROFILES'
+    | 'LIVE_MATCHES';
 
 export interface RealtimeEvent<T = RealtimeAffectedEntity> {
     groupId: string;
@@ -32,6 +33,10 @@ export class RealtimeClient {
 
     private connectionBackoff = new BackOff([0, ...FIBONACCI_TIMEOUTS]);
 
+    private hasOpened = false;
+
+    private reconnectHandlers: (() => void)[] = [];
+
     private get url() {
         return this.host + '/update-socket';
     }
@@ -53,6 +58,18 @@ export class RealtimeClient {
             this.logger.info('connection opened');
             this._subscribeToGroups();
             this.connectionBackoff.reset();
+
+            // events sent while the socket was down are lost; listeners catch up
+            if (this.hasOpened) {
+                for (const handler of this.reconnectHandlers) {
+                    try {
+                        handler();
+                    } catch (err) {
+                        this.logger.error('reconnect handler failed:', err);
+                    }
+                }
+            }
+            this.hasOpened = true;
         });
 
         this.ws.addEventListener('close', () => {
@@ -131,6 +148,15 @@ export class RealtimeClient {
     public on = {
         event: (handler: RealtimeEventHandler) => {
             this.registerHandler('*', handler);
+        },
+        /** every time the socket opens again after it was closed; returns the unsubscribe */
+        reconnect: (handler: () => void) => {
+            this.reconnectHandlers.push(handler);
+            return () => {
+                this.reconnectHandlers = this.reconnectHandlers.filter(
+                    (i) => i !== handler
+                );
+            };
         },
     };
     public get isOpen(): boolean {

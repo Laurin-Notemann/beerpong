@@ -3,9 +3,15 @@ import { CupTeam } from '@/lib/cupHits';
 import type { LiveMatchState, LiveOp } from '@/lib/liveMatch/types';
 import type { Components } from '@/openapi/openapi';
 
-/** adds the incoming ops to the confirmed ones: one op per seq, sorted by seq */
-export function mergeOps(confirmed: LiveOp[], incoming: LiveOp[]) {
-    const bySeq = new Map<number, LiveOp>();
+/**
+ * adds the incoming ops to the confirmed ones: one op per seq, sorted by seq. Works on wire ops
+ * too, since the server never changes an op once it has a seq.
+ */
+export function mergeOps<T extends { seq?: number }>(
+    confirmed: T[],
+    incoming: T[]
+) {
+    const bySeq = new Map<number, T>();
 
     for (const op of [...confirmed, ...incoming]) {
         if (op.seq === undefined || bySeq.has(op.seq)) continue;
@@ -15,7 +21,7 @@ export function mergeOps(confirmed: LiveOp[], incoming: LiveOp[]) {
 }
 
 /** whether the confirmed log is missing a seq, i.e. an event was missed and a refetch is due */
-export const hasGap = (ops: LiveOp[]) =>
+export const hasGap = (ops: { seq?: number }[]) =>
     ops.some((op, idx) => op.seq !== idx + 1);
 
 /** what this phone shows: the server's log, then my ops it hasn't confirmed yet */
@@ -70,4 +76,27 @@ export function formatElapsed(ms: number) {
     return hours > 0
         ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}`
         : `${minutes}:${seconds}`;
+}
+
+/** how many finishes the match has; a match can only be finished with exactly one */
+export const countFinishes = (
+    state: LiveMatchState,
+    finishMoveIds: Set<string>
+) =>
+    [...state.redTeam.teamMembers, ...state.blueTeam.teamMembers]
+        .flatMap((player) => player.moves)
+        .filter((move) => finishMoveIds.has(move.moveId))
+        .reduce((sum, move) => sum + move.count, 0);
+
+/** the server takes `ADJUST_MOVE` deltas of at most 20 either way, so bigger jumps are split */
+export const MAX_MOVE_DELTA = 20;
+
+export function splitDelta(delta: number) {
+    const deltas: number[] = [];
+    for (let rest = delta; rest !== 0;) {
+        const step = Math.sign(rest) * Math.min(Math.abs(rest), MAX_MOVE_DELTA);
+        deltas.push(step);
+        rest -= step;
+    }
+    return deltas;
 }
