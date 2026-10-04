@@ -81,24 +81,27 @@ jobs:
           FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
           DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-go-staging:${{ github.sha }}
         run: |
+          # The script arrives on stdin, so every command that could read
+          # stdin gets /dev/null; otherwise it eats the rest of the script.
+          # No `set -e`: the server's .bash_logout fails without a terminal
+          # and would turn every exit into 1.
           ssh $SERVER_USER@$SERVER_IP << EOF
-            set -e
-            cd ~/docker/beerpong-api-go
+            cd ~/docker/beerpong-api-go || exit 1
 
-            gcloud auth activate-service-account --key-file=$FILE_PATH
-            gcloud auth configure-docker europe-west10-docker.pkg.dev --quiet
+            gcloud auth activate-service-account --key-file=$FILE_PATH < /dev/null || exit 1
+            gcloud auth configure-docker europe-west10-docker.pkg.dev --quiet < /dev/null || exit 1
 
-            sed -i 's|^\(\s*image:\).*|\1 $DOCKER_IMAGE|' docker-compose.yml
-            docker compose pull
-            docker compose up -d
+            sed -i 's|^\(\s*image:\).*|\1 $DOCKER_IMAGE|' docker-compose.yml || exit 1
+            docker compose pull < /dev/null || exit 1
+            docker compose up -d < /dev/null || exit 1
 
             for i in \$(seq 1 30); do
-              if curl -sf https://beerpong.lb.staging.laurinnotemann.dev/healthcheck > /dev/null; then
-                docker image prune -af > /dev/null
+              if curl -sf https://beerpong.lb.staging.laurinnotemann.dev/healthcheck < /dev/null > /dev/null; then
+                docker image prune -af < /dev/null > /dev/null
                 exit 0
               fi
               sleep 2
             done
-            docker compose logs --tail 50
+            docker compose logs --tail 50 < /dev/null
             exit 1
           EOF
