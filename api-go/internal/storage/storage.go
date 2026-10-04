@@ -60,13 +60,13 @@ func (b *Bucket) PublicURL(key string) string {
 	return "https://" + b.bucket + "." + b.endpoint + "/" + key
 }
 
-// UploadURL presigns a PUT for key. The content type is part of the
-// signature, so the client has to upload with exactly this type.
-func (b *Bucket) UploadURL(ctx context.Context, key, contentType string) (string, error) {
+// UploadURL presigns a PUT for key. The content type is left out of the
+// signature: the picker hands the app JPEG, PNG or HEIC, and the object
+// keeps whatever Content-Type the upload carries.
+func (b *Bucket) UploadURL(ctx context.Context, key string) (string, error) {
 	req, err := b.presign.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(b.bucket),
-		Key:         aws.String(key),
-		ContentType: aws.String(contentType),
+		Bucket: aws.String(b.bucket),
+		Key:    aws.String(key),
 	}, s3.WithPresignExpires(uploadURLTTL))
 	if err != nil {
 		return "", err

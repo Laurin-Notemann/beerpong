@@ -355,7 +355,7 @@ func (s *Server) startSeason(r *request) response {
 
 		newMoves := make([]defaultMove, len(moves))
 		for i, m := range moves {
-			newMoves[i] = defaultMove{name: *m.name, pointsForScorer: m.pointsForScorer, pointsForTeam: m.pointsForTeam, finish: m.finish}
+			newMoves[i] = defaultMove{name: *m.name, pointsForScorer: m.pointsForScorer, pointsForTeam: m.pointsForTeam, finish: m.finish, cups: m.cups}
 		}
 		if err := insertRuleMoves(ctx, q, newSeason.ID, newMoves); err != nil {
 			return nil, err
@@ -440,7 +440,11 @@ func insertRuleMoves(ctx context.Context, q *db.Queries, seasonID string, moves 
 	}
 	rows := make([]db.InsertRuleMovesParams, len(moves))
 	for i, m := range moves {
-		rows[i] = db.InsertRuleMovesParams{ID: uuid.NewString(), FinishingMove: m.finish, Name: ptr(m.name), PointsForScorer: m.pointsForScorer, PointsForTeam: m.pointsForTeam, SeasonID: &seasonID}
+		cups := defaultCupsFor(&m.name, m.finish)
+		if m.cups != nil {
+			cups = *m.cups
+		}
+		rows[i] = db.InsertRuleMovesParams{ID: uuid.NewString(), FinishingMove: m.finish, Name: ptr(m.name), PointsForScorer: m.pointsForScorer, PointsForTeam: m.pointsForTeam, SeasonID: &seasonID, Cups: &cups}
 	}
 	_, err := q.InsertRuleMoves(ctx, rows)
 	return err

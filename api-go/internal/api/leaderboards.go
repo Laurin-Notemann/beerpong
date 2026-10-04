@@ -188,7 +188,7 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 			return board{}, internal(err)
 		}
 		for _, m := range moves {
-			in.RuleMoves[m.ID] = leaderboard.RuleMove{PointsForScorer: m.PointsForScorer, PointsForTeam: m.PointsForTeam, Finishing: m.FinishingMove}
+			in.RuleMoves[m.ID] = leaderboard.RuleMove{PointsForScorer: m.PointsForScorer, PointsForTeam: m.PointsForTeam, Finishing: m.FinishingMove, Cups: cupsPerHit(m)}
 		}
 	}
 	if len(memberPlayers) > 0 {

@@ -96,6 +96,50 @@
     }
   },
   {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid10\u003e"
+                },
+                {
+                  "count": 1,
+                  "moveId": "\u003cid13\u003e"
+                }
+              ],
+              "playerId": "\u003cid6\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [],
+              "playerId": "\u003cid7\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid16\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
     "request": "GET /groups/\u003cid3\u003e",
     "status": 200,
     "response": {
@@ -108,9 +152,9 @@
         "id": "\u003cid3\u003e",
         "inviteCode": "\u003cinviteCode\u003e",
         "name": "Lookup",
-        "numberOfMatches": 0,
-        "numberOfPlayers": 0,
-        "numberOfSeasons": 0,
+        "numberOfMatches": 1,
+        "numberOfPlayers": 2,
+        "numberOfSeasons": 1,
         "sportPreset": {
           "id": "beerpong",
           "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",

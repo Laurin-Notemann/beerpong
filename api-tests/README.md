@@ -1,7 +1,8 @@
 # api-tests
 
 Black-box contract tests for the Versus API. They only talk HTTP and the
-websocket, so they run against either backend (`api/` Java, `api-go/` Go).
+websocket, so they run against any build of it (`api-go/`, and the retired
+Java `api/`).
 
 ```sh
 cd api-tests
@@ -22,7 +23,10 @@ Every request and realtime event of a test is normalized (ids numbered by
 first appearance, timestamps, tokens and signatures masked) and compared with
 `testdata/golden/<Test>.json`. The goldens were recorded against the Java
 backend, so a passing Go run means "same responses as Java", field by field.
-Re-record only on purpose, against the backend you consider correct:
+The Go API deliberately differs in two places, recorded against Go: rules
+keep their written order (`TestRuleOrderIsTheWrittenOrder`), and upload URLs
+don't sign the content type, so JPEGs upload too (`signedHeaders=host`,
+`TestUploadThroughPresignedURL`). Re-record only on purpose:
 
 ```sh
 GOLDEN=record API_BASE_URL=... go test ./...

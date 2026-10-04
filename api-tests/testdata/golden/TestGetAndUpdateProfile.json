@@ -76,12 +76,12 @@
     "status": 200,
     "response": {
       "data": {
-        "activeSeasonId": "\u003cid15\u003e",
+        "activeSeasonId": "\u003cid16\u003e",
         "assetIdWallpaper": null,
         "createdAt": "\u003cts\u003e",
-        "createdById": "\u003cid16\u003e",
+        "createdById": "\u003cid17\u003e",
         "customSportName": null,
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "inviteCode": "\u003cinviteCode\u003e",
         "name": "Other",
         "numberOfMatches": 0,
@@ -113,7 +113,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/profiles/\u003cid18\u003e",
+    "request": "GET /groups/\u003cid3\u003e/profiles/\u003cid19\u003e",
     "status": 404,
     "response": {
       "error": {
@@ -237,7 +237,7 @@
     ]
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid18\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/profiles/\u003cid19\u003e",
     "body": {
       "name": "x"
     },

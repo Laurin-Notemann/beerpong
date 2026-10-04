@@ -52,7 +52,7 @@ func TestComputeAggregatesStats(t *testing.T) {
 			Members: []Member{{ID: "ma", TeamID: "t1", PlayerID: "pa"}, {ID: "mb", TeamID: "t2", PlayerID: "pb"}},
 			Moves:   []Move{{TeamMemberID: "ma", MoveID: "cup", Value: 2}, {TeamMemberID: "ma", MoveID: "finish", Value: 1}, {TeamMemberID: "mb", MoveID: "cup", Value: 1}},
 		}},
-		RuleMoves: map[string]RuleMove{"cup": {PointsForScorer: 1}, "finish": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true}},
+		RuleMoves: map[string]RuleMove{"cup": {PointsForScorer: 1, Cups: 1}, "finish": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true}},
 		ProfileOf: map[string]string{"pa": "A", "pb": "B"},
 	}
 	res, err := Compute(in)
@@ -63,7 +63,8 @@ func TestComputeAggregatesStats(t *testing.T) {
 	for _, e := range res.Entries {
 		stats[*e.Player.ProfileID] = e.Stats
 	}
-	if a := stats["A"]; a.Points != 6 || a.Wins != 1 || a.Moves != 3 || a.Matches != 1 || a.AvgPointsPerMatch != 6 {
+	// Moves counts cups: two hits, and the finish on top of the last one takes none.
+	if a := stats["A"]; a.Points != 6 || a.Wins != 1 || a.Moves != 2 || a.Matches != 1 || a.AvgPointsPerMatch != 6 {
 		t.Fatalf("A: %+v", *a)
 	}
 	if b := stats["B"]; b.Points != 1 || b.Wins != 0 || b.Elo >= StartingElo {

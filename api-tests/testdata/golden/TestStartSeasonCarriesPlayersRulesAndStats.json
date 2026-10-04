@@ -79,7 +79,7 @@
                 },
                 {
                   "count": 3,
-                  "moveId": "\u003cid14\u003e"
+                  "moveId": "\u003cid15\u003e"
                 }
               ],
               "playerId": "\u003cid7\u003e"
@@ -106,7 +106,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -124,7 +124,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid14\u003e"
+                  "moveId": "\u003cid15\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -146,7 +146,7 @@
               "moves": [
                 {
                   "count": 5,
-                  "moveId": "\u003cid14\u003e"
+                  "moveId": "\u003cid15\u003e"
                 }
               ],
               "playerId": "\u003cid7\u003e"
@@ -160,7 +160,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid18\u003e",
+        "id": "\u003cid19\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -174,7 +174,7 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid17\u003e",
+          "id": "\u003cid18\u003e",
           "photoUploads": [],
           "seasonId": "\u003cid1\u003e"
         },
@@ -186,7 +186,7 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid18\u003e",
+          "id": "\u003cid19\u003e",
           "photoUploads": [],
           "seasonId": "\u003cid1\u003e"
         },
@@ -213,7 +213,7 @@
           "id": "\u003cid9\u003e",
           "profileId": "\u003cid6\u003e",
           "seasonId": "\u003cid1\u003e",
-          "statisticsId": "\u003cid19\u003e"
+          "statisticsId": "\u003cid20\u003e"
         },
         "eventType": "PLAYERS",
         "groupId": "\u003cid3\u003e",
@@ -235,7 +235,7 @@
         {
           "createdById": "\u003cid2\u003e",
           "description": "Be nice",
-          "id": "\u003cid20\u003e",
+          "id": "\u003cid21\u003e",
           "seasonId": "\u003cid1\u003e",
           "title": "House rule"
         }
@@ -251,7 +251,7 @@
           {
             "createdById": "\u003cid2\u003e",
             "description": "Be nice",
-            "id": "\u003cid20\u003e",
+            "id": "\u003cid21\u003e",
             "seasonId": "\u003cid1\u003e",
             "title": "House rule"
           }
@@ -294,7 +294,7 @@
               "elo": 1499.326069,
               "id": null,
               "matches": 2,
-              "moves": 9,
+              "moves": 8,
               "points": 12,
               "totalTeamSize": 2,
               "wins": 1
@@ -366,7 +366,7 @@
         "createdById": "\u003cid2\u003e",
         "endDate": null,
         "groupId": "\u003cid3\u003e",
-        "id": "\u003cid21\u003e",
+        "id": "\u003cid22\u003e",
         "name": null,
         "seasonSettings": {
           "dailyLeaderboard": "WAKE_TIME",
@@ -390,7 +390,7 @@
             "createdById": "\u003cid2\u003e",
             "endDate": null,
             "groupId": "\u003cid3\u003e",
-            "id": "\u003cid21\u003e",
+            "id": "\u003cid22\u003e",
             "name": null,
             "seasonSettings": {
               "dailyLeaderboard": "WAKE_TIME",
@@ -454,7 +454,7 @@
     "status": 200,
     "response": {
       "data": {
-        "activeSeasonId": "\u003cid21\u003e",
+        "activeSeasonId": "\u003cid22\u003e",
         "assetIdWallpaper": null,
         "createdAt": "\u003cts\u003e",
         "createdById": "\u003cid2\u003e",
@@ -463,8 +463,8 @@
         "inviteCode": "\u003cinviteCode\u003e",
         "name": "Season start",
         "numberOfMatches": 0,
-        "numberOfPlayers": 0,
-        "numberOfSeasons": 0,
+        "numberOfPlayers": 2,
+        "numberOfSeasons": 2,
         "sportPreset": {
           "id": "beerpong",
           "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
@@ -476,15 +476,15 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid21\u003e/rules",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid22\u003e/rules",
     "status": 200,
     "response": {
       "data": [
         {
           "createdById": "\u003cid2\u003e",
           "description": "Be nice",
-          "id": "\u003cid26\u003e",
-          "seasonId": "\u003cid21\u003e",
+          "id": "\u003cid27\u003e",
+          "seasonId": "\u003cid22\u003e",
           "title": "House rule"
         }
       ],
@@ -493,23 +493,23 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid21\u003e/players?showInactive=true",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid22\u003e/players?showInactive=true",
     "status": 200,
     "response": {
       "data": [
         {
           "activeThisSeason": true,
-          "id": "\u003cid22\u003e",
+          "id": "\u003cid23\u003e",
           "profileId": "\u003cid4\u003e",
-          "seasonId": "\u003cid21\u003e",
-          "statisticsId": "\u003cid27\u003e"
+          "seasonId": "\u003cid22\u003e",
+          "statisticsId": "\u003cid28\u003e"
         },
         {
           "activeThisSeason": true,
-          "id": "\u003cid23\u003e",
+          "id": "\u003cid24\u003e",
           "profileId": "\u003cid5\u003e",
-          "seasonId": "\u003cid21\u003e",
-          "statisticsId": "\u003cid28\u003e"
+          "seasonId": "\u003cid22\u003e",
+          "statisticsId": "\u003cid29\u003e"
         }
       ],
       "httpCode": 200,
@@ -517,19 +517,19 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid21\u003e/players/extended",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid22\u003e/players/extended",
     "status": 200,
     "response": {
       "data": [
         {
           "activeThisSeason": true,
-          "id": "\u003cid22\u003e",
+          "id": "\u003cid23\u003e",
           "profileId": "\u003cid4\u003e",
           "season": {
             "createdById": null,
             "endDate": null,
             "groupId": null,
-            "id": "\u003cid21\u003e",
+            "id": "\u003cid22\u003e",
             "name": null,
             "seasonSettings": {
               "dailyLeaderboard": "WAKE_TIME",
@@ -547,7 +547,7 @@
             "elo": 1499.326069,
             "id": null,
             "matches": 2,
-            "moves": 9,
+            "moves": 8,
             "points": 12,
             "totalTeamSize": 2,
             "wins": 1
@@ -555,13 +555,13 @@
         },
         {
           "activeThisSeason": true,
-          "id": "\u003cid23\u003e",
+          "id": "\u003cid24\u003e",
           "profileId": "\u003cid5\u003e",
           "season": {
             "createdById": null,
             "endDate": null,
             "groupId": null,
-            "id": "\u003cid21\u003e",
+            "id": "\u003cid22\u003e",
             "name": null,
             "seasonSettings": {
               "dailyLeaderboard": "WAKE_TIME",
@@ -615,7 +615,7 @@
           "createdById": "\u003cid2\u003e",
           "endDate": null,
           "groupId": "\u003cid3\u003e",
-          "id": "\u003cid21\u003e",
+          "id": "\u003cid22\u003e",
           "name": null,
           "seasonSettings": {
             "dailyLeaderboard": "WAKE_TIME",
@@ -638,7 +638,7 @@
     "response": {
       "data": [
         {
-          "activeSeasonId": "\u003cid21\u003e",
+          "activeSeasonId": "\u003cid22\u003e",
           "assetIdWallpaper": null,
           "createdAt": "\u003cts\u003e",
           "createdById": "\u003cid2\u003e",

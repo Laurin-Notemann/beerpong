@@ -70,6 +70,8 @@ type RuleMove struct {
 	PointsForScorer int32
 	PointsForTeam   int32
 	Finishing       bool
+	// Cups is how many cups one hit takes; the Moves statistic counts cups.
+	Cups int32
 }
 
 type Input struct {
@@ -217,7 +219,7 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 				continue
 			}
 			own := rm.PointsForScorer * mv.Value
-			e.Stats.Moves += int64(mv.Value)
+			e.Stats.Moves += int64(rm.Cups * mv.Value)
 			e.Stats.Points += int64(own)
 			if rm.PointsForTeam > 0 {
 				for _, tm := range members {

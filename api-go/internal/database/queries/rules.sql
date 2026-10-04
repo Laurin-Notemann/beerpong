@@ -1,15 +1,16 @@
 -- name: RulesBySeason :many
-SELECT * FROM rules WHERE season_id = $1 ORDER BY ctid;
+SELECT * FROM rules WHERE season_id = $1 ORDER BY position NULLS LAST, ctid;
 
 -- name: DeleteRulesBySeason :exec
 DELETE FROM rules WHERE season_id = $1;
 
 -- name: InsertRules :copyfrom
-INSERT INTO rules (id, title, description, season_id, created_by) VALUES ($1, $2, $3, $4, $5);
+INSERT INTO rules (id, title, description, season_id, created_by, position) VALUES ($1, $2, $3, $4, $5, $6);
 
 -- name: CopyRules :exec
-INSERT INTO rules (id, title, description, season_id, created_by)
-SELECT gen_random_uuid()::text, r.title, r.description, @new_season_id, r.created_by
+INSERT INTO rules (id, title, description, season_id, created_by, position)
+SELECT gen_random_uuid()::text, r.title, r.description, @new_season_id, r.created_by,
+       (row_number() OVER (ORDER BY r.position NULLS LAST, r.ctid) - 1)::integer
 FROM rules r
 WHERE r.season_id = @old_season_id;
 
@@ -23,16 +24,16 @@ SELECT * FROM rule_moves WHERE id = $1;
 SELECT * FROM rule_moves WHERE id = ANY (@ids::text[]);
 
 -- name: InsertRuleMove :one
-INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: InsertRuleMoves :copyfrom
-INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id)
-VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups)
+VALUES ($1, $2, $3, $4, $5, $6, $7);
 
 -- name: UpdateRuleMove :one
-UPDATE rule_moves SET name = $2, points_for_team = $3, points_for_scorer = $4, finishing_move = $5
+UPDATE rule_moves SET name = $2, points_for_team = $3, points_for_scorer = $4, finishing_move = $5, cups = $6
 WHERE id = $1
 RETURNING *;
 

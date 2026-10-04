@@ -82,7 +82,7 @@ func (s *Server) writeRules(r *request) response {
 		rows := make([]db.InsertRulesParams, len(rules))
 		written = make([]ruleDTO, len(rules))
 		for i, rule := range rules {
-			rows[i] = db.InsertRulesParams{ID: uuid.NewString(), Title: rule.title, Description: rule.description, SeasonID: &seasonID, CreatedBy: &memberID}
+			rows[i] = db.InsertRulesParams{ID: uuid.NewString(), Title: rule.title, Description: rule.description, SeasonID: &seasonID, CreatedBy: &memberID, Position: ptr(int32(i))}
 			written[i] = ruleDTO{ID: rows[i].ID, Title: rule.title, Description: rule.description, CreatedByID: &memberID, SeasonID: &seasonID}
 		}
 		if len(rows) > 0 {
@@ -120,10 +120,19 @@ type ruleMoveInput struct {
 	pointsForScorer int32
 	pointsForTeam   int32
 	finish          bool
+	// cups is optional; older apps don't send it.
+	cups *int32
 }
 
 func (m ruleMoveInput) invalid() bool {
-	return m.name == nil || javaTrimEmpty(*m.name) || m.pointsForTeam < 0 || m.pointsForScorer < 0
+	return m.name == nil || javaTrimEmpty(*m.name) || m.pointsForTeam < 0 || m.pointsForScorer < 0 || (m.cups != nil && *m.cups < 0)
+}
+
+func (m ruleMoveInput) cupsOrDefault() int32 {
+	if m.cups != nil {
+		return *m.cups
+	}
+	return defaultCupsFor(m.name, m.finish)
 }
 
 func readRuleMove(o object) (ruleMoveInput, error) {
@@ -131,10 +140,11 @@ func readRuleMove(o object) (ruleMoveInput, error) {
 	team, err1 := o.primitiveInt("pointsForTeam")
 	scorer, err2 := o.primitiveInt("pointsForScorer")
 	finish, err3 := o.primitiveBool("finishingMove")
-	if err := errors.Join(err, err1, err2, err3); err != nil {
+	cups, err4 := o.integer("cups")
+	if err := errors.Join(err, err1, err2, err3, err4); err != nil {
 		return ruleMoveInput{}, err
 	}
-	return ruleMoveInput{name: name, pointsForScorer: scorer, pointsForTeam: team, finish: finish}, nil
+	return ruleMoveInput{name: name, pointsForScorer: scorer, pointsForTeam: team, finish: finish, cups: cups}, nil
 }
 
 // parseRuleMoveList binds a List<RuleMoveCreateDto>; moves is nil for a
@@ -210,7 +220,7 @@ func (s *Server) createRuleMove(r *request) response {
 		}
 		row, err := q.InsertRuleMove(ctx, db.InsertRuleMoveParams{
 			ID: uuid.NewString(), FinishingMove: move.finish, Name: move.name,
-			PointsForScorer: move.pointsForScorer, PointsForTeam: move.pointsForTeam, SeasonID: &seasonID,
+			PointsForScorer: move.pointsForScorer, PointsForTeam: move.pointsForTeam, SeasonID: &seasonID, Cups: ptr(move.cupsOrDefault()),
 		})
 		if err != nil {
 			return nil, err
@@ -259,7 +269,7 @@ func (s *Server) updateRuleMove(r *request) response {
 		if !inSeason {
 			return fail(errRuleMoveValidationFailed), nil
 		}
-		row, err := q.UpdateRuleMove(ctx, db.UpdateRuleMoveParams{ID: moveID, Name: move.name, PointsForTeam: move.pointsForTeam, PointsForScorer: move.pointsForScorer, FinishingMove: move.finish})
+		row, err := q.UpdateRuleMove(ctx, db.UpdateRuleMoveParams{ID: moveID, Name: move.name, PointsForTeam: move.pointsForTeam, PointsForScorer: move.pointsForScorer, FinishingMove: move.finish, Cups: ptr(move.cupsOrDefault())})
 		if err != nil {
 			return nil, err
 		}

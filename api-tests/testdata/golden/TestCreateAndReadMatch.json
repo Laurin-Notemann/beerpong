@@ -80,7 +80,7 @@
                 },
                 {
                   "count": 2,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -93,7 +93,7 @@
                 },
                 {
                   "count": 0,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid9\u003e"
@@ -106,7 +106,7 @@
               "moves": [
                 {
                   "count": 3,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid10\u003e"
@@ -115,7 +115,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid18\u003e"
+                  "moveId": "\u003cid19\u003e"
                 }
               ],
               "playerId": "\u003cid11\u003e"
@@ -129,7 +129,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -143,7 +143,7 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid19\u003e",
+          "id": "\u003cid20\u003e",
           "photoUploads": [],
           "seasonId": "\u003cid1\u003e"
         },
@@ -154,13 +154,13 @@
     ]
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid20\u003e",
     "status": 200,
     "response": {
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "photoUploads": null,
         "seasonId": "\u003cid1\u003e"
       },
@@ -169,42 +169,42 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e/extended",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid20\u003e/extended",
     "status": 200,
     "response": {
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "matchMoves": [
           {
-            "id": "\u003cid20\u003e",
+            "id": "\u003cid21\u003e",
             "moveId": "\u003cid12\u003e",
-            "teamMemberId": "\u003cid21\u003e",
+            "teamMemberId": "\u003cid22\u003e",
             "value": 1
           },
           {
-            "id": "\u003cid22\u003e",
+            "id": "\u003cid23\u003e",
             "moveId": "\u003cid14\u003e",
-            "teamMemberId": "\u003cid23\u003e",
+            "teamMemberId": "\u003cid24\u003e",
             "value": 1
-          },
-          {
-            "id": "\u003cid24\u003e",
-            "moveId": "\u003cid16\u003e",
-            "teamMemberId": "\u003cid21\u003e",
-            "value": 2
           },
           {
             "id": "\u003cid25\u003e",
-            "moveId": "\u003cid16\u003e",
-            "teamMemberId": "\u003cid26\u003e",
+            "moveId": "\u003cid17\u003e",
+            "teamMemberId": "\u003cid22\u003e",
+            "value": 2
+          },
+          {
+            "id": "\u003cid26\u003e",
+            "moveId": "\u003cid17\u003e",
+            "teamMemberId": "\u003cid27\u003e",
             "value": 3
           },
           {
-            "id": "\u003cid27\u003e",
-            "moveId": "\u003cid18\u003e",
-            "teamMemberId": "\u003cid28\u003e",
+            "id": "\u003cid28\u003e",
+            "moveId": "\u003cid19\u003e",
+            "teamMemberId": "\u003cid29\u003e",
             "value": 1
           }
         ],
@@ -212,35 +212,35 @@
         "seasonId": "\u003cid1\u003e",
         "teamMembers": [
           {
-            "id": "\u003cid26\u003e",
+            "id": "\u003cid27\u003e",
             "playerId": "\u003cid10\u003e",
-            "teamId": "\u003cid29\u003e"
+            "teamId": "\u003cid30\u003e"
           },
           {
-            "id": "\u003cid28\u003e",
+            "id": "\u003cid29\u003e",
             "playerId": "\u003cid11\u003e",
-            "teamId": "\u003cid29\u003e"
+            "teamId": "\u003cid30\u003e"
           },
           {
-            "id": "\u003cid21\u003e",
+            "id": "\u003cid22\u003e",
             "playerId": "\u003cid8\u003e",
-            "teamId": "\u003cid30\u003e"
+            "teamId": "\u003cid31\u003e"
           },
           {
-            "id": "\u003cid23\u003e",
+            "id": "\u003cid24\u003e",
             "playerId": "\u003cid9\u003e",
-            "teamId": "\u003cid30\u003e"
+            "teamId": "\u003cid31\u003e"
           }
         ],
         "teams": [
           {
-            "id": "\u003cid30\u003e",
-            "matchId": "\u003cid19\u003e",
+            "id": "\u003cid31\u003e",
+            "matchId": "\u003cid20\u003e",
             "photoAssetId": null
           },
           {
-            "id": "\u003cid29\u003e",
-            "matchId": "\u003cid19\u003e",
+            "id": "\u003cid30\u003e",
+            "matchId": "\u003cid20\u003e",
             "photoAssetId": null
           }
         ]
@@ -250,7 +250,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e/overview",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid20\u003e/overview",
     "status": 200,
     "response": {
       "data": {
@@ -265,7 +265,7 @@
                 },
                 {
                   "count": 2,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e",
@@ -283,10 +283,10 @@
             }
           ],
           "points": 11,
-          "teamId": "\u003cid30\u003e"
+          "teamId": "\u003cid31\u003e"
         },
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "redTeam": {
           "assetPhotoId": null,
           "members": [
@@ -294,7 +294,7 @@
               "moves": [
                 {
                   "count": 3,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid10\u003e",
@@ -304,7 +304,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid18\u003e"
+                  "moveId": "\u003cid19\u003e"
                 }
               ],
               "playerId": "\u003cid11\u003e",
@@ -312,7 +312,7 @@
             }
           ],
           "points": 5,
-          "teamId": "\u003cid29\u003e"
+          "teamId": "\u003cid30\u003e"
         },
         "seasonId": "\u003cid1\u003e"
       },
@@ -328,7 +328,7 @@
         {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid19\u003e",
+          "id": "\u003cid20\u003e",
           "photoUploads": null,
           "seasonId": "\u003cid1\u003e"
         }
@@ -345,36 +345,36 @@
         {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid19\u003e",
+          "id": "\u003cid20\u003e",
           "matchMoves": [
             {
-              "id": "\u003cid20\u003e",
+              "id": "\u003cid21\u003e",
               "moveId": "\u003cid12\u003e",
-              "teamMemberId": "\u003cid21\u003e",
+              "teamMemberId": "\u003cid22\u003e",
               "value": 1
             },
             {
-              "id": "\u003cid22\u003e",
+              "id": "\u003cid23\u003e",
               "moveId": "\u003cid14\u003e",
-              "teamMemberId": "\u003cid23\u003e",
+              "teamMemberId": "\u003cid24\u003e",
               "value": 1
-            },
-            {
-              "id": "\u003cid24\u003e",
-              "moveId": "\u003cid16\u003e",
-              "teamMemberId": "\u003cid21\u003e",
-              "value": 2
             },
             {
               "id": "\u003cid25\u003e",
-              "moveId": "\u003cid16\u003e",
-              "teamMemberId": "\u003cid26\u003e",
+              "moveId": "\u003cid17\u003e",
+              "teamMemberId": "\u003cid22\u003e",
+              "value": 2
+            },
+            {
+              "id": "\u003cid26\u003e",
+              "moveId": "\u003cid17\u003e",
+              "teamMemberId": "\u003cid27\u003e",
               "value": 3
             },
             {
-              "id": "\u003cid27\u003e",
-              "moveId": "\u003cid18\u003e",
-              "teamMemberId": "\u003cid28\u003e",
+              "id": "\u003cid28\u003e",
+              "moveId": "\u003cid19\u003e",
+              "teamMemberId": "\u003cid29\u003e",
               "value": 1
             }
           ],
@@ -382,35 +382,35 @@
           "seasonId": "\u003cid1\u003e",
           "teamMembers": [
             {
-              "id": "\u003cid21\u003e",
+              "id": "\u003cid22\u003e",
               "playerId": "\u003cid8\u003e",
-              "teamId": "\u003cid30\u003e"
+              "teamId": "\u003cid31\u003e"
             },
             {
-              "id": "\u003cid23\u003e",
+              "id": "\u003cid24\u003e",
               "playerId": "\u003cid9\u003e",
+              "teamId": "\u003cid31\u003e"
+            },
+            {
+              "id": "\u003cid27\u003e",
+              "playerId": "\u003cid10\u003e",
               "teamId": "\u003cid30\u003e"
             },
             {
-              "id": "\u003cid26\u003e",
-              "playerId": "\u003cid10\u003e",
-              "teamId": "\u003cid29\u003e"
-            },
-            {
-              "id": "\u003cid28\u003e",
+              "id": "\u003cid29\u003e",
               "playerId": "\u003cid11\u003e",
-              "teamId": "\u003cid29\u003e"
+              "teamId": "\u003cid30\u003e"
             }
           ],
           "teams": [
             {
-              "id": "\u003cid29\u003e",
-              "matchId": "\u003cid19\u003e",
+              "id": "\u003cid30\u003e",
+              "matchId": "\u003cid20\u003e",
               "photoAssetId": null
             },
             {
-              "id": "\u003cid30\u003e",
-              "matchId": "\u003cid19\u003e",
+              "id": "\u003cid31\u003e",
+              "matchId": "\u003cid20\u003e",
               "photoAssetId": null
             }
           ]
@@ -437,7 +437,7 @@
                   },
                   {
                     "count": 2,
-                    "moveId": "\u003cid16\u003e"
+                    "moveId": "\u003cid17\u003e"
                   }
                 ],
                 "playerId": "\u003cid8\u003e",
@@ -455,10 +455,10 @@
               }
             ],
             "points": 11,
-            "teamId": "\u003cid30\u003e"
+            "teamId": "\u003cid31\u003e"
           },
           "date": "\u003cts\u003e",
-          "id": "\u003cid19\u003e",
+          "id": "\u003cid20\u003e",
           "redTeam": {
             "assetPhotoId": null,
             "members": [
@@ -466,7 +466,7 @@
                 "moves": [
                   {
                     "count": 1,
-                    "moveId": "\u003cid18\u003e"
+                    "moveId": "\u003cid19\u003e"
                   }
                 ],
                 "playerId": "\u003cid11\u003e",
@@ -476,7 +476,7 @@
                 "moves": [
                   {
                     "count": 3,
-                    "moveId": "\u003cid16\u003e"
+                    "moveId": "\u003cid17\u003e"
                   }
                 ],
                 "playerId": "\u003cid10\u003e",
@@ -484,7 +484,7 @@
               }
             ],
             "points": 5,
-            "teamId": "\u003cid29\u003e"
+            "teamId": "\u003cid30\u003e"
           },
           "seasonId": "\u003cid1\u003e"
         }
@@ -541,12 +541,12 @@
     "status": 200,
     "response": {
       "data": {
-        "activeSeasonId": "\u003cid31\u003e",
+        "activeSeasonId": "\u003cid32\u003e",
         "assetIdWallpaper": null,
         "createdAt": "\u003cts\u003e",
-        "createdById": "\u003cid32\u003e",
+        "createdById": "\u003cid33\u003e",
         "customSportName": null,
-        "id": "\u003cid33\u003e",
+        "id": "\u003cid34\u003e",
         "inviteCode": "\u003cinviteCode\u003e",
         "name": "Other",
         "numberOfMatches": 0,
@@ -563,7 +563,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid31\u003e/matches",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid32\u003e/matches",
     "status": 404,
     "response": {
       "error": {
@@ -575,7 +575,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid31\u003e/matches/\u003cid19\u003e",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid32\u003e/matches/\u003cid20\u003e",
     "status": 404,
     "response": {
       "error": {
@@ -617,7 +617,7 @@
         "createdById": "\u003cid2\u003e",
         "endDate": null,
         "groupId": "\u003cid3\u003e",
-        "id": "\u003cid43\u003e",
+        "id": "\u003cid45\u003e",
         "name": null,
         "seasonSettings": {
           "dailyLeaderboard": "WAKE_TIME",
@@ -641,7 +641,7 @@
             "createdById": "\u003cid2\u003e",
             "endDate": null,
             "groupId": "\u003cid3\u003e",
-            "id": "\u003cid43\u003e",
+            "id": "\u003cid45\u003e",
             "name": null,
             "seasonSettings": {
               "dailyLeaderboard": "WAKE_TIME",
@@ -677,7 +677,7 @@
     ]
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches/\u003cid19\u003e",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid45\u003e/matches/\u003cid20\u003e",
     "status": 400,
     "response": {
       "error": {
@@ -689,7 +689,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches/\u003cid19\u003e/extended",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid45\u003e/matches/\u003cid20\u003e/extended",
     "status": 400,
     "response": {
       "error": {
@@ -701,7 +701,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches/\u003cid19\u003e/overview",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid45\u003e/matches/\u003cid20\u003e/overview",
     "status": 400,
     "response": {
       "error": {
@@ -713,7 +713,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid19\u003e/overview",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid20\u003e/overview",
     "status": 200,
     "response": {
       "data": {
@@ -728,7 +728,7 @@
                 },
                 {
                   "count": 2,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e",
@@ -746,10 +746,10 @@
             }
           ],
           "points": 11,
-          "teamId": "\u003cid30\u003e"
+          "teamId": "\u003cid31\u003e"
         },
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "redTeam": {
           "assetPhotoId": null,
           "members": [
@@ -757,7 +757,7 @@
               "moves": [
                 {
                   "count": 3,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid10\u003e",
@@ -767,7 +767,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid18\u003e"
+                  "moveId": "\u003cid19\u003e"
                 }
               ],
               "playerId": "\u003cid11\u003e",
@@ -775,7 +775,7 @@
             }
           ],
           "points": 5,
-          "teamId": "\u003cid29\u003e"
+          "teamId": "\u003cid30\u003e"
         },
         "seasonId": "\u003cid1\u003e"
       },
@@ -784,7 +784,7 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid43\u003e/matches",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid45\u003e/matches",
     "status": 200,
     "response": {
       "data": [],

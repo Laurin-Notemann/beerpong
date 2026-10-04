@@ -10,8 +10,9 @@ import (
 )
 
 const copyRules = `-- name: CopyRules :exec
-INSERT INTO rules (id, title, description, season_id, created_by)
-SELECT gen_random_uuid()::text, r.title, r.description, $1, r.created_by
+INSERT INTO rules (id, title, description, season_id, created_by, position)
+SELECT gen_random_uuid()::text, r.title, r.description, $1, r.created_by,
+       (row_number() OVER (ORDER BY r.position NULLS LAST, r.ctid) - 1)::integer
 FROM rules r
 WHERE r.season_id = $2
 `
@@ -76,7 +77,7 @@ func (q *Queries) FinishingMoveIDs(ctx context.Context, ids []string) ([]string,
 }
 
 const getRuleMove = `-- name: GetRuleMove :one
-SELECT id, finishing_move, name, points_for_scorer, points_for_team, season_id FROM rule_moves WHERE id = $1
+SELECT id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups FROM rule_moves WHERE id = $1
 `
 
 func (q *Queries) GetRuleMove(ctx context.Context, id string) (RuleMove, error) {
@@ -89,14 +90,15 @@ func (q *Queries) GetRuleMove(ctx context.Context, id string) (RuleMove, error) 
 		&i.PointsForScorer,
 		&i.PointsForTeam,
 		&i.SeasonID,
+		&i.Cups,
 	)
 	return i, err
 }
 
 const insertRuleMove = `-- name: InsertRuleMove :one
-INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, finishing_move, name, points_for_scorer, points_for_team, season_id
+INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups
 `
 
 type InsertRuleMoveParams struct {
@@ -106,6 +108,7 @@ type InsertRuleMoveParams struct {
 	PointsForScorer int32
 	PointsForTeam   int32
 	SeasonID        *string
+	Cups            *int32
 }
 
 func (q *Queries) InsertRuleMove(ctx context.Context, arg InsertRuleMoveParams) (RuleMove, error) {
@@ -116,6 +119,7 @@ func (q *Queries) InsertRuleMove(ctx context.Context, arg InsertRuleMoveParams) 
 		arg.PointsForScorer,
 		arg.PointsForTeam,
 		arg.SeasonID,
+		arg.Cups,
 	)
 	var i RuleMove
 	err := row.Scan(
@@ -125,6 +129,7 @@ func (q *Queries) InsertRuleMove(ctx context.Context, arg InsertRuleMoveParams) 
 		&i.PointsForScorer,
 		&i.PointsForTeam,
 		&i.SeasonID,
+		&i.Cups,
 	)
 	return i, err
 }
@@ -136,6 +141,7 @@ type InsertRuleMovesParams struct {
 	PointsForScorer int32
 	PointsForTeam   int32
 	SeasonID        *string
+	Cups            *int32
 }
 
 type InsertRulesParams struct {
@@ -144,6 +150,7 @@ type InsertRulesParams struct {
 	Description *string
 	SeasonID    *string
 	CreatedBy   *string
+	Position    *int32
 }
 
 const ruleMoveExistsInSeason = `-- name: RuleMoveExistsInSeason :one
@@ -163,7 +170,7 @@ func (q *Queries) RuleMoveExistsInSeason(ctx context.Context, arg RuleMoveExists
 }
 
 const ruleMovesByIDs = `-- name: RuleMovesByIDs :many
-SELECT id, finishing_move, name, points_for_scorer, points_for_team, season_id FROM rule_moves WHERE id = ANY ($1::text[])
+SELECT id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups FROM rule_moves WHERE id = ANY ($1::text[])
 `
 
 func (q *Queries) RuleMovesByIDs(ctx context.Context, ids []string) ([]RuleMove, error) {
@@ -182,6 +189,7 @@ func (q *Queries) RuleMovesByIDs(ctx context.Context, ids []string) ([]RuleMove,
 			&i.PointsForScorer,
 			&i.PointsForTeam,
 			&i.SeasonID,
+			&i.Cups,
 		); err != nil {
 			return nil, err
 		}
@@ -194,7 +202,7 @@ func (q *Queries) RuleMovesByIDs(ctx context.Context, ids []string) ([]RuleMove,
 }
 
 const ruleMovesBySeason = `-- name: RuleMovesBySeason :many
-SELECT id, finishing_move, name, points_for_scorer, points_for_team, season_id FROM rule_moves WHERE season_id = $1 ORDER BY ctid
+SELECT id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups FROM rule_moves WHERE season_id = $1 ORDER BY ctid
 `
 
 func (q *Queries) RuleMovesBySeason(ctx context.Context, seasonID *string) ([]RuleMove, error) {
@@ -213,6 +221,7 @@ func (q *Queries) RuleMovesBySeason(ctx context.Context, seasonID *string) ([]Ru
 			&i.PointsForScorer,
 			&i.PointsForTeam,
 			&i.SeasonID,
+			&i.Cups,
 		); err != nil {
 			return nil, err
 		}
@@ -225,7 +234,7 @@ func (q *Queries) RuleMovesBySeason(ctx context.Context, seasonID *string) ([]Ru
 }
 
 const rulesBySeason = `-- name: RulesBySeason :many
-SELECT id, description, title, season_id, created_by FROM rules WHERE season_id = $1 ORDER BY ctid
+SELECT id, description, title, season_id, created_by, position FROM rules WHERE season_id = $1 ORDER BY position NULLS LAST, ctid
 `
 
 func (q *Queries) RulesBySeason(ctx context.Context, seasonID *string) ([]Rule, error) {
@@ -243,6 +252,7 @@ func (q *Queries) RulesBySeason(ctx context.Context, seasonID *string) ([]Rule, 
 			&i.Title,
 			&i.SeasonID,
 			&i.CreatedBy,
+			&i.Position,
 		); err != nil {
 			return nil, err
 		}
@@ -255,9 +265,9 @@ func (q *Queries) RulesBySeason(ctx context.Context, seasonID *string) ([]Rule, 
 }
 
 const updateRuleMove = `-- name: UpdateRuleMove :one
-UPDATE rule_moves SET name = $2, points_for_team = $3, points_for_scorer = $4, finishing_move = $5
+UPDATE rule_moves SET name = $2, points_for_team = $3, points_for_scorer = $4, finishing_move = $5, cups = $6
 WHERE id = $1
-RETURNING id, finishing_move, name, points_for_scorer, points_for_team, season_id
+RETURNING id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups
 `
 
 type UpdateRuleMoveParams struct {
@@ -266,6 +276,7 @@ type UpdateRuleMoveParams struct {
 	PointsForTeam   int32
 	PointsForScorer int32
 	FinishingMove   bool
+	Cups            *int32
 }
 
 func (q *Queries) UpdateRuleMove(ctx context.Context, arg UpdateRuleMoveParams) (RuleMove, error) {
@@ -275,6 +286,7 @@ func (q *Queries) UpdateRuleMove(ctx context.Context, arg UpdateRuleMoveParams) 
 		arg.PointsForTeam,
 		arg.PointsForScorer,
 		arg.FinishingMove,
+		arg.Cups,
 	)
 	var i RuleMove
 	err := row.Scan(
@@ -284,6 +296,7 @@ func (q *Queries) UpdateRuleMove(ctx context.Context, arg UpdateRuleMoveParams) 
 		&i.PointsForScorer,
 		&i.PointsForTeam,
 		&i.SeasonID,
+		&i.Cups,
 	)
 	return i, err
 }

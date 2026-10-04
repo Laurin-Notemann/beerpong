@@ -141,6 +141,7 @@ func (r iteratorForInsertRuleMoves) Values() ([]interface{}, error) {
 		r.rows[0].PointsForScorer,
 		r.rows[0].PointsForTeam,
 		r.rows[0].SeasonID,
+		r.rows[0].Cups,
 	}, nil
 }
 
@@ -149,7 +150,7 @@ func (r iteratorForInsertRuleMoves) Err() error {
 }
 
 func (q *Queries) InsertRuleMoves(ctx context.Context, arg []InsertRuleMovesParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"rule_moves"}, []string{"id", "finishing_move", "name", "points_for_scorer", "points_for_team", "season_id"}, &iteratorForInsertRuleMoves{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"rule_moves"}, []string{"id", "finishing_move", "name", "points_for_scorer", "points_for_team", "season_id", "cups"}, &iteratorForInsertRuleMoves{rows: arg})
 }
 
 // iteratorForInsertRules implements pgx.CopyFromSource.
@@ -177,6 +178,7 @@ func (r iteratorForInsertRules) Values() ([]interface{}, error) {
 		r.rows[0].Description,
 		r.rows[0].SeasonID,
 		r.rows[0].CreatedBy,
+		r.rows[0].Position,
 	}, nil
 }
 
@@ -185,7 +187,7 @@ func (r iteratorForInsertRules) Err() error {
 }
 
 func (q *Queries) InsertRules(ctx context.Context, arg []InsertRulesParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"rules"}, []string{"id", "title", "description", "season_id", "created_by"}, &iteratorForInsertRules{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"rules"}, []string{"id", "title", "description", "season_id", "created_by", "position"}, &iteratorForInsertRules{rows: arg})
 }
 
 // iteratorForInsertStatistics implements pgx.CopyFromSource.

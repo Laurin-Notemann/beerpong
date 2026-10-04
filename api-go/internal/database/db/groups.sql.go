@@ -91,6 +91,43 @@ func (q *Queries) GroupExists(ctx context.Context, id string) (bool, error) {
 	return exists, err
 }
 
+const groupWithStats = `-- name: GroupWithStats :one
+SELECT
+    g.id, g.created_at, g.custom_sport_name, g.invite_code, g.name, g.sport_preset, g.active_season_id, g.asset_id_wallpaper, g.created_by,
+    (SELECT count(*) FROM matches m WHERE m.season_id = g.active_season_id) AS matches,
+    (SELECT count(*) FROM players p WHERE p.season_id = g.active_season_id) AS players,
+    (SELECT count(*) FROM seasons s WHERE s.group_id = g.id) AS seasons
+FROM groups g
+WHERE g.id = $1
+`
+
+type GroupWithStatsRow struct {
+	Group   Group
+	Matches int64
+	Players int64
+	Seasons int64
+}
+
+func (q *Queries) GroupWithStats(ctx context.Context, id string) (GroupWithStatsRow, error) {
+	row := q.db.QueryRow(ctx, groupWithStats, id)
+	var i GroupWithStatsRow
+	err := row.Scan(
+		&i.Group.ID,
+		&i.Group.CreatedAt,
+		&i.Group.CustomSportName,
+		&i.Group.InviteCode,
+		&i.Group.Name,
+		&i.Group.SportPreset,
+		&i.Group.ActiveSeasonID,
+		&i.Group.AssetIDWallpaper,
+		&i.Group.CreatedBy,
+		&i.Matches,
+		&i.Players,
+		&i.Seasons,
+	)
+	return i, err
+}
+
 const insertGroup = `-- name: InsertGroup :exec
 INSERT INTO groups (id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by)
 VALUES ($1, $2, $3, $4, $5, $6, NULL, NULL, NULL)
@@ -192,7 +229,7 @@ SELECT
     (SELECT count(*) FROM players p WHERE p.season_id = g.active_season_id) AS players,
     (SELECT count(*) FROM seasons s WHERE s.group_id = g.id) AS seasons
 FROM groups g
-WHERE g.id IN (SELECT gm.group_id FROM group_members gm WHERE gm.user_id = $1)
+WHERE g.id IN (SELECT gm.group_id FROM group_members gm WHERE gm.user_id = $1 AND gm.active)
 ORDER BY g.ctid
 `
 
@@ -203,8 +240,8 @@ type UserGroupsWithStatsRow struct {
 	Seasons int64
 }
 
-// Groups the user ever joined (left groups included, as in the Java
-// backend), with counters for the active season.
+// Groups the user hasn't left (leaving deactivates the membership), with
+// counters for the active season.
 func (q *Queries) UserGroupsWithStats(ctx context.Context, userID *string) ([]UserGroupsWithStatsRow, error) {
 	rows, err := q.db.Query(ctx, userGroupsWithStats, userID)
 	if err != nil {

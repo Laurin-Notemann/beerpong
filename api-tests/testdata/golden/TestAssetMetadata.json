@@ -73,12 +73,12 @@
     "status": 200,
     "response": {
       "data": {
-        "id": "\u003cid13\u003e",
+        "id": "\u003cid14\u003e",
         "offsetX": 0.5,
         "offsetY": 0.25,
-        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
         "type": "PROFILE_AVATAR",
-        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
         "zoom": 3
       },
       "httpCode": 200,
@@ -86,15 +86,15 @@
     }
   },
   {
-    "request": "GET /assets/\u003cid13\u003e",
+    "request": "GET /assets/\u003cid14\u003e",
     "status": 200,
     "response": {
       "data": {
-        "id": "\u003cid13\u003e",
+        "id": "\u003cid14\u003e",
         "offsetX": 0.5,
         "offsetY": 0.25,
         "type": "PROFILE_AVATAR",
-        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
         "zoom": 3
       },
       "httpCode": 200,

@@ -28,22 +28,28 @@ func TestCreateGroupBeerpong(t *testing.T) {
 	h.Reload(g)
 	h.Equal(len(g.Profiles), 3, "profiles created")
 	h.Equal(len(g.Players), 3, "players created in the first season")
-	h.Equal(len(g.Moves), 7, "beerpong rule moves")
+	h.Equal(len(g.Moves), 8, "beerpong rule moves")
 
-	// GET /rules returns rows in physical table order, which Postgres does not
-	// keep stable once space is reused, so the order is not asserted.
 	rules := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/rules"), Auth: owner.Bearer()}))
 	h.Equal(len(rules.List()), 19, "beerpong default rules")
 	h.Equal(Get(rules.List()[0], "createdById"), res.Str("createdById"), "rule creator")
+	h.Equal(Get(rules.List()[0], "title"), "Teams", "first default rule")
+	h.Equal(Get(rules.List()[18], "title"), "Saves", "last default rule")
 
 	moves := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/rule-moves"), Auth: owner.Bearer()}))
 	finishes := 0
+	cups := map[string]any{}
 	for _, m := range moves.List() {
 		if Get(m, "finishingMove") == true {
 			finishes++
 		}
+		cups[Get(m, "name").(string)] = Get(m, "cups")
 	}
-	h.Equal(finishes, 2, "beerpong finishing moves")
+	h.Equal(finishes, 3, "beerpong finishing moves")
+	h.Equal(cups, map[string]any{
+		"Normal": 1.0, "Bomb": 1.0, "Bouncer": 2.0, "Trickshot": 1.0, "Save": 0.0,
+		"Finish - Normal": 0.0, "Finish - Ring of fire": 4.0, "Finish - Ring of water": 6.0,
+	}, "cups per move")
 
 	seasons := h.OK(h.Do(Req{Method: "GET", Path: g.Path("/seasons"), Auth: owner.Bearer()}))
 	h.Equal(len(seasons.List()), 1, "one season")
@@ -112,10 +118,11 @@ func TestGroupLookup(t *testing.T) {
 	g := h.NewGroup(owner, "Lookup", "a", "b")
 	other := h.NewUser()
 
+	h.CreateMatch(owner, g, []Member{{"a", map[string]int{"Normal": 1, "Finish - Normal": 1}}}, []Member{{"b", nil}})
 	byID := h.OK(h.Do(Req{Method: "GET", Path: g.Path(""), Auth: owner.Bearer()}))
-	// GET by id does not compute the counters
-	h.Equal(byID.Num("numberOfPlayers"), 0, "numberOfPlayers by id")
-	h.Equal(byID.Num("numberOfSeasons"), 0, "numberOfSeasons by id")
+	h.Equal(byID.Num("numberOfPlayers"), 2, "numberOfPlayers by id")
+	h.Equal(byID.Num("numberOfMatches"), 1, "numberOfMatches by id")
+	h.Equal(byID.Num("numberOfSeasons"), 1, "numberOfSeasons by id")
 
 	byCode := h.OK(h.Do(Req{Method: "GET", Path: "/groups?inviteCode=" + g.InviteCode, Auth: other.Bearer()}))
 	h.Equal(byCode.Str("id"), g.ID, "lookup by invite code")
@@ -144,9 +151,8 @@ func TestUserGroupsWithStats(t *testing.T) {
 		}
 	}
 
-	// Leaving keeps the group in /groups/user (membership rows are only deactivated).
 	h.OK(h.Do(Req{Method: "POST", Path: g.Path("/leave"), Auth: owner.Bearer()}))
-	h.Equal(len(h.OK(h.Do(Req{Method: "GET", Path: "/groups/user", Auth: owner.Bearer()})).List()), 2, "left group still listed")
+	h.Equal(len(h.OK(h.Do(Req{Method: "GET", Path: "/groups/user", Auth: owner.Bearer()})).List()), 1, "left group is gone")
 }
 
 func TestUpdateGroup(t *testing.T) {

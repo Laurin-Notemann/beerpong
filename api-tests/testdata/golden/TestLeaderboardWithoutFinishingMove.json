@@ -80,7 +80,7 @@
                 },
                 {
                   "count": 2,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -102,7 +102,7 @@
               "moves": [
                 {
                   "count": 3,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid10\u003e"
@@ -111,7 +111,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid11\u003e"
@@ -125,7 +125,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -156,7 +156,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -170,7 +170,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid20\u003e",
+        "id": "\u003cid21\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -189,6 +189,7 @@
     "status": 200,
     "response": {
       "data": {
+        "cups": 0,
         "finishingMove": false,
         "id": "\u003cid14\u003e",
         "name": "Finish - Normal",
@@ -247,7 +248,7 @@
                   },
                   {
                     "count": 2,
-                    "moveId": "\u003cid16\u003e"
+                    "moveId": "\u003cid17\u003e"
                   }
                 ],
                 "playerId": "\u003cid8\u003e",
@@ -255,10 +256,10 @@
               }
             ],
             "points": 11,
-            "teamId": "\u003cid21\u003e"
+            "teamId": "\u003cid22\u003e"
           },
           "date": "\u003cts\u003e",
-          "id": "\u003cid19\u003e",
+          "id": "\u003cid20\u003e",
           "redTeam": {
             "assetPhotoId": null,
             "members": [
@@ -266,7 +267,7 @@
                 "moves": [
                   {
                     "count": 1,
-                    "moveId": "\u003cid16\u003e"
+                    "moveId": "\u003cid17\u003e"
                   }
                 ],
                 "playerId": "\u003cid11\u003e",
@@ -276,7 +277,7 @@
                 "moves": [
                   {
                     "count": 3,
-                    "moveId": "\u003cid16\u003e"
+                    "moveId": "\u003cid17\u003e"
                   }
                 ],
                 "playerId": "\u003cid10\u003e",
@@ -284,7 +285,7 @@
               }
             ],
             "points": 4,
-            "teamId": "\u003cid22\u003e"
+            "teamId": "\u003cid23\u003e"
           },
           "seasonId": "\u003cid1\u003e"
         },
@@ -304,10 +305,10 @@
               }
             ],
             "points": 11,
-            "teamId": "\u003cid23\u003e"
+            "teamId": "\u003cid24\u003e"
           },
           "date": "\u003cts\u003e",
-          "id": "\u003cid20\u003e",
+          "id": "\u003cid21\u003e",
           "redTeam": {
             "assetPhotoId": null,
             "members": [
@@ -315,7 +316,7 @@
                 "moves": [
                   {
                     "count": 1,
-                    "moveId": "\u003cid16\u003e"
+                    "moveId": "\u003cid17\u003e"
                   }
                 ],
                 "playerId": "\u003cid8\u003e",
@@ -323,7 +324,7 @@
               }
             ],
             "points": 1,
-            "teamId": "\u003cid24\u003e"
+            "teamId": "\u003cid25\u003e"
           },
           "seasonId": "\u003cid1\u003e"
         }

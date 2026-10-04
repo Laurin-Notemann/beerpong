@@ -33,7 +33,7 @@
   {
     "request": "POST /groups",
     "body": {
-      "name": "forged",
+      "name": "Upload",
       "profileNames": [
         "a"
       ],
@@ -49,7 +49,7 @@
         "customSportName": null,
         "id": "\u003cid3\u003e",
         "inviteCode": "\u003cinviteCode\u003e",
-        "name": "forged",
+        "name": "Upload",
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
@@ -62,46 +62,5 @@
       "httpCode": 200,
       "status": "OK"
     }
-  },
-  {
-    "request": "GET /groups/\u003cid3\u003e",
-    "status": 401,
-    "response": "Invalid access token or invalid user-id!"
-  },
-  {
-    "request": "GET /groups/\u003cid3\u003e",
-    "status": 401,
-    "response": "Invalid access token or invalid user-id!"
-  },
-  {
-    "request": "GET /groups/\u003cid3\u003e",
-    "status": 200,
-    "response": {
-      "data": {
-        "activeSeasonId": "\u003cid1\u003e",
-        "assetIdWallpaper": null,
-        "createdAt": "\u003cts\u003e",
-        "createdById": "\u003cid2\u003e",
-        "customSportName": null,
-        "id": "\u003cid3\u003e",
-        "inviteCode": "\u003cinviteCode\u003e",
-        "name": "forged",
-        "numberOfMatches": 0,
-        "numberOfPlayers": 1,
-        "numberOfSeasons": 1,
-        "sportPreset": {
-          "id": "beerpong",
-          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
-          "title": "Beerpong"
-        }
-      },
-      "httpCode": 200,
-      "status": "OK"
-    }
-  },
-  {
-    "request": "GET /groups/\u003cid3\u003e",
-    "status": 401,
-    "response": "Invalid access token or invalid user-id!"
   }
 ]

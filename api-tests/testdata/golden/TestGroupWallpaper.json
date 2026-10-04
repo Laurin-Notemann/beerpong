@@ -68,12 +68,12 @@
     "status": 200,
     "response": {
       "data": {
-        "id": "\u003cid13\u003e",
+        "id": "\u003cid14\u003e",
         "offsetX": 0,
         "offsetY": 0,
-        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
         "type": "GROUP_WALLPAPER",
-        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
         "zoom": 0
       },
       "httpCode": 200,
@@ -84,12 +84,12 @@
     "events": [
       {
         "body": {
-          "id": "\u003cid13\u003e",
+          "id": "\u003cid14\u003e",
           "offsetX": 0,
           "offsetY": 0,
-          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
           "type": "GROUP_WALLPAPER",
-          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
           "zoom": 0
         },
         "eventType": "ASSETS",
@@ -104,7 +104,7 @@
     "response": {
       "data": {
         "activeSeasonId": "\u003cid1\u003e",
-        "assetIdWallpaper": "\u003cid13\u003e",
+        "assetIdWallpaper": "\u003cid14\u003e",
         "createdAt": "\u003cts\u003e",
         "createdById": "\u003cid2\u003e",
         "customSportName": null,
@@ -112,8 +112,8 @@
         "inviteCode": "\u003cinviteCode\u003e",
         "name": "Wallpaper",
         "numberOfMatches": 0,
-        "numberOfPlayers": 0,
-        "numberOfSeasons": 0,
+        "numberOfPlayers": 1,
+        "numberOfSeasons": 1,
         "sportPreset": {
           "id": "beerpong",
           "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
@@ -125,15 +125,15 @@
     }
   },
   {
-    "request": "GET /assets/\u003cid13\u003e",
+    "request": "GET /assets/\u003cid14\u003e",
     "status": 200,
     "response": {
       "data": {
-        "id": "\u003cid13\u003e",
+        "id": "\u003cid14\u003e",
         "offsetX": 0,
         "offsetY": 0,
         "type": "GROUP_WALLPAPER",
-        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid13\u003e",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
         "zoom": 0
       },
       "httpCode": 200,
@@ -150,12 +150,12 @@
     "status": 200,
     "response": {
       "data": {
-        "id": "\u003cid14\u003e",
+        "id": "\u003cid15\u003e",
         "offsetX": 1.5,
         "offsetY": 2,
-        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+        "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid15\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
         "type": "GROUP_WALLPAPER",
-        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid15\u003e",
         "zoom": 1.25
       },
       "httpCode": 200,
@@ -166,12 +166,12 @@
     "events": [
       {
         "body": {
-          "id": "\u003cid14\u003e",
+          "id": "\u003cid15\u003e",
           "offsetX": 1.5,
           "offsetY": 2,
-          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+          "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid15\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
           "type": "GROUP_WALLPAPER",
-          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
+          "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid15\u003e",
           "zoom": 1.25
         },
         "eventType": "ASSETS",
@@ -181,7 +181,7 @@
     ]
   },
   {
-    "request": "GET /assets/\u003cid13\u003e",
+    "request": "GET /assets/\u003cid14\u003e",
     "status": 404,
     "response": {
       "error": {
@@ -193,15 +193,15 @@
     }
   },
   {
-    "request": "GET /assets/\u003cid14\u003e",
+    "request": "GET /assets/\u003cid15\u003e",
     "status": 200,
     "response": {
       "data": {
-        "id": "\u003cid14\u003e",
+        "id": "\u003cid15\u003e",
         "offsetX": 1.5,
         "offsetY": 2,
         "type": "GROUP_WALLPAPER",
-        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid14\u003e",
+        "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid15\u003e",
         "zoom": 1.25
       },
       "httpCode": 200,
@@ -294,7 +294,7 @@
     ]
   },
   {
-    "request": "GET /assets/\u003cid14\u003e",
+    "request": "GET /assets/\u003cid15\u003e",
     "status": 404,
     "response": {
       "error": {

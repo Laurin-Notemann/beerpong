@@ -80,7 +80,7 @@
                 },
                 {
                   "count": 2,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -102,7 +102,7 @@
               "moves": [
                 {
                   "count": 3,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid10\u003e"
@@ -111,7 +111,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid11\u003e"
@@ -125,7 +125,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid19\u003e",
+        "id": "\u003cid20\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -156,7 +156,7 @@
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid16\u003e"
+                  "moveId": "\u003cid17\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -170,7 +170,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid20\u003e",
+        "id": "\u003cid21\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -210,7 +210,7 @@
               "elo": 1504.136698,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 7,
               "points": 14,
               "totalTeamSize": 3,
               "wins": 1
@@ -274,7 +274,7 @@
               "elo": 1500.77619,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 3,
               "points": 7,
               "totalTeamSize": 3,
               "wins": 1
@@ -352,7 +352,7 @@
             "elo": 1504.136698,
             "id": null,
             "matches": 2,
-            "moves": 4,
+            "moves": 7,
             "points": 14,
             "totalTeamSize": 3,
             "wins": 1
@@ -416,7 +416,7 @@
             "elo": 1500.77619,
             "id": null,
             "matches": 2,
-            "moves": 4,
+            "moves": 3,
             "points": 7,
             "totalTeamSize": 3,
             "wins": 1
@@ -491,7 +491,7 @@
               "elo": 1504.136698,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 7,
               "points": 14,
               "totalTeamSize": 3,
               "wins": 1
@@ -555,7 +555,7 @@
               "elo": 1500.77619,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 3,
               "points": 7,
               "totalTeamSize": 3,
               "wins": 1
@@ -643,7 +643,7 @@
               "elo": 1504.136698,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 7,
               "points": 14,
               "totalTeamSize": 3,
               "wins": 1
@@ -675,7 +675,7 @@
               "elo": 1500.77619,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 3,
               "points": 7,
               "totalTeamSize": 3,
               "wins": 1
@@ -754,7 +754,7 @@
               "elo": 1504.136698,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 7,
               "points": 14,
               "totalTeamSize": 3,
               "wins": 1
@@ -786,7 +786,7 @@
               "elo": 1500.77619,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 3,
               "points": 7,
               "totalTeamSize": 3,
               "wins": 1
@@ -897,7 +897,7 @@
               "elo": 1504.136698,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 7,
               "points": 14,
               "totalTeamSize": 3,
               "wins": 1
@@ -929,7 +929,7 @@
               "elo": 1500.77619,
               "id": null,
               "matches": 2,
-              "moves": 4,
+              "moves": 3,
               "points": 7,
               "totalTeamSize": 3,
               "wins": 1

@@ -121,7 +121,7 @@ func (s *Server) createGroup(r *request) response {
 		if rawPreset != nil && *rawPreset == "beerpong" {
 			rules := make([]db.InsertRulesParams, len(defaultBeerpongRules))
 			for i, rule := range defaultBeerpongRules {
-				rules[i] = db.InsertRulesParams{ID: uuid.NewString(), Title: ptr(rule[0]), Description: ptr(rule[1]), SeasonID: &seasonID, CreatedBy: &memberID}
+				rules[i] = db.InsertRulesParams{ID: uuid.NewString(), Title: ptr(rule[0]), Description: ptr(rule[1]), SeasonID: &seasonID, CreatedBy: &memberID, Position: ptr(int32(i))}
 			}
 			if _, err := q.InsertRules(ctx, rules); err != nil {
 				return nil, err
@@ -165,14 +165,16 @@ func (s *Server) findGroupByInviteCode(r *request) response {
 }
 
 func (s *Server) getGroup(r *request) response {
-	group, err := s.q.GetGroup(r.Context(), r.path("id"))
+	row, err := s.q.GroupWithStats(r.Context(), r.path("id"))
 	if notFound(err) {
 		return fail(errGroupNotFound)
 	}
 	if err != nil {
 		return internal(err)
 	}
-	return ok(toGroupDTO(group))
+	g := toGroupDTO(row.Group)
+	g.NumberOfMatches, g.NumberOfPlayers, g.NumberOfSeasons = row.Matches, row.Players, row.Seasons
+	return ok(g)
 }
 
 func (s *Server) updateGroup(r *request) response {
@@ -317,18 +319,19 @@ func (s *Server) deleteWallpaper(r *request) response {
 }
 
 var defaultBeerpongMoves = []defaultMove{
-	{"Normal", 1, 0, false},
-	{"Bomb", 2, 0, false},
-	{"Bouncer", 2, 0, false},
-	{"Trickshot", 2, 0, false},
-	{"Save", 2, 0, false},
-	{"Finish - Normal", 1, 3, true},
-	{"Finish - Ring of fire", 1, 10, true},
+	{"Normal", 1, 0, false, nil},
+	{"Bomb", 2, 0, false, nil},
+	{"Bouncer", 2, 0, false, nil},
+	{"Trickshot", 2, 0, false, nil},
+	{"Save", 2, 0, false, nil},
+	{"Finish - Normal", 1, 3, true, nil},
+	{"Finish - Ring of fire", 1, 10, true, nil},
+	{"Finish - Ring of water", 1, 10, true, nil},
 }
 
 var defaultMoves = []defaultMove{
-	{"Normal", 1, 0, false},
-	{"Finish - Normal", 1, 3, true},
+	{"Normal", 1, 0, false, nil},
+	{"Finish - Normal", 1, 3, true, nil},
 }
 
 type defaultMove struct {
@@ -336,6 +339,7 @@ type defaultMove struct {
 	pointsForScorer int32
 	pointsForTeam   int32
 	finish          bool
+	cups            *int32 // nil: the default for the name
 }
 
 var defaultBeerpongRules = [][2]string{

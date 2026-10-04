@@ -56,6 +56,32 @@ func TestWriteRules(t *testing.T) {
 	h.Fail(h.Do(Req{Method: "GET", Path: g.Path("/seasons/" + other.SeasonID + "/rules"), Auth: owner.Bearer()}), 404, "seasonHasDifferentGroup")
 }
 
+// TestRuleOrderIsTheWrittenOrder: GET returns rules in the order they were
+// written, even once their rows no longer sit in that order on disk. Two
+// updates of an indexed column move the first row to the end of the table
+// and of the index, like rewrites that reuse freed space do.
+func TestRuleOrderIsTheWrittenOrder(t *testing.T) {
+	h := New(t)
+	db := h.DB()
+	owner := h.NewUser()
+	g := h.NewGroup(owner, "Rule order", "a")
+	order := []string{"C", "A", "B", "D"}
+	var body []any
+	for _, title := range order {
+		body = append(body, map[string]any{"title": title, "description": "x"})
+	}
+	written := h.OK(h.Do(Req{Method: "PUT", Path: g.SeasonPath("/rules"), Auth: owner.Bearer(), Body: body, Ordered: true}))
+	first := Get(written.List()[0], "id")
+	h.Exec(db, "UPDATE rules SET season_id = NULL WHERE id = $1", first)
+	h.Exec(db, "UPDATE rules SET season_id = $2 WHERE id = $1", first, g.SeasonID)
+
+	var got []string
+	for _, r := range h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/rules"), Auth: owner.Bearer(), Ordered: true})).List() {
+		got = append(got, Get(r, "title").(string))
+	}
+	h.Equal(got, order, "stored rule order")
+}
+
 func TestRuleMoves(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()
@@ -66,18 +92,27 @@ func TestRuleMoves(t *testing.T) {
 	h.Equal(created.Str("name"), "Island", "name")
 	h.Equal(created.Num("pointsForScorer"), 3, "scorer points")
 	h.Equal(created.Str("seasonId"), g.SeasonID, "season")
+	h.Equal(created.Num("cups"), 1, "cups default to 1 when the app doesn't send them")
 	ev := ws.Expect(1)
 	h.Equal(EventScope(ev[0]), "ruleMovesCreate", "create event")
 	h.Equal(EventType(ev[0]), "RULE_MOVES", "event type")
 
 	all := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/rule-moves"), Auth: owner.Bearer()}))
-	h.Equal(len(all.List()), 8, "default moves plus one")
+	h.Equal(len(all.List()), 9, "default moves plus one")
 
 	updated := h.OK(h.Do(Req{Method: "PUT", Path: g.SeasonPath("/rule-moves/" + created.Str("id")), Auth: owner.Bearer(), Body: map[string]any{"name": "Island 2", "pointsForScorer": 0, "pointsForTeam": 0, "finishingMove": true}}))
 	h.Equal(updated.Str("name"), "Island 2", "renamed")
 	h.Equal(updated.Data("finishingMove"), true, "finishing")
+	h.Equal(updated.Num("cups"), 0, "a finish without cups takes none")
 	ev = ws.Expect(1)
 	h.Equal(EventScope(ev[0]), "ruleMovesUpdate", "update event")
+
+	withCups := h.OK(h.Do(Req{Method: "PUT", Path: g.SeasonPath("/rule-moves/" + created.Str("id")), Auth: owner.Bearer(), Body: map[string]any{"name": "Island", "pointsForScorer": 3, "pointsForTeam": 1, "finishingMove": false, "cups": 3}}))
+	h.Equal(withCups.Num("cups"), 3, "cups sent by the app")
+	ws.Expect(1)
+	ringOfWater := h.OK(h.Do(Req{Method: "POST", Path: g.SeasonPath("/rule-moves"), Auth: owner.Bearer(), Body: map[string]any{"name": "Finish - Ring of water", "pointsForScorer": 1, "pointsForTeam": 10, "finishingMove": true}}))
+	h.Equal(ringOfWater.Num("cups"), 6, "default cups by name")
+	ws.Expect(1)
 
 	for _, bad := range []map[string]any{
 		{"name": "", "pointsForScorer": 1},
@@ -85,6 +120,7 @@ func TestRuleMoves(t *testing.T) {
 		{"pointsForScorer": 1},
 		{"name": "x", "pointsForScorer": -1},
 		{"name": "x", "pointsForTeam": -1},
+		{"name": "x", "cups": -1},
 	} {
 		h.Fail(h.Do(Req{Method: "POST", Path: g.SeasonPath("/rule-moves"), Auth: owner.Bearer(), Body: bad}), 400, "ruleMoveInvalidDto")
 		h.Fail(h.Do(Req{Method: "PUT", Path: g.SeasonPath("/rule-moves/" + created.Str("id")), Auth: owner.Bearer(), Body: bad}), 400, "ruleMoveInvalidDto")

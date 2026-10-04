@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -57,14 +56,9 @@ func (s *Server) assetMetadata(a db.Asset) assetMetadataDTO {
 	}
 }
 
-// assetUpload signs an upload for a freshly created asset. The signed
-// content type is the request's when it is an image type, else image/png.
+// assetUpload signs an upload for a freshly created asset.
 func (s *Server) assetUpload(r *request, a db.Asset) (assetUploadDTO, error) {
-	contentType := "image/png"
-	if ct := r.Header.Get("Content-Type"); strings.HasPrefix(strings.ToLower(ct), "image/") {
-		contentType = ct
-	}
-	url, err := s.bucket.UploadURL(r.Context(), a.ID, contentType)
+	url, err := s.bucket.UploadURL(r.Context(), a.ID)
 	if err != nil {
 		return assetUploadDTO{}, err
 	}

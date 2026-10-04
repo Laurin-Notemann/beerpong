@@ -29,11 +29,14 @@ func TestUploadThroughPresignedURL(t *testing.T) {
 	res, err := http.DefaultClient.Do(put)
 	h.True(err == nil && res.StatusCode == 200, "upload through presigned url: %v %v", err, res)
 
-	// the presigned URL is bound to the content type it was signed for
-	wrong, _ := http.NewRequest("PUT", upload.Str("singleUploadUrl"), bytes.NewReader(tinyPNG))
-	wrong.Header.Set("Content-Type", "image/jpeg")
-	res, err = http.DefaultClient.Do(wrong)
-	h.True(err == nil && res.StatusCode == 403, "upload with another content type is rejected: %v %v", err, res)
+	// the picker hands the app JPEGs too; the URL takes any content type and
+	// the object keeps the one it was uploaded with
+	jpeg, _ := http.NewRequest("PUT", upload.Str("singleUploadUrl"), bytes.NewReader(tinyPNG))
+	jpeg.Header.Set("Content-Type", "image/jpeg")
+	res, err = http.DefaultClient.Do(jpeg)
+	h.True(err == nil && res.StatusCode == 200, "upload as image/jpeg: %v %v", err, res)
+	stored, err := http.Head(upload.Str("url"))
+	h.True(err == nil && stored.Header.Get("Content-Type") == "image/jpeg", "stored content type: %v %v", err, stored)
 
 	h.OK(h.Do(Req{Method: "DELETE", Path: g.Path("/profiles/" + profile + "/avatar"), Auth: owner.Bearer(), Skip: true}))
 	head, err := http.Head(upload.Str("url"))

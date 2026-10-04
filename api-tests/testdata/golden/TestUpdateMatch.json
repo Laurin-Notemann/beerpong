@@ -89,7 +89,7 @@
               "moves": [
                 {
                   "count": 2,
-                  "moveId": "\u003cid14\u003e"
+                  "moveId": "\u003cid15\u003e"
                 }
               ],
               "playerId": "\u003cid8\u003e"
@@ -103,17 +103,17 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "photoUploads": [
           {
             "teamId": null,
             "teamPhoto": {
-              "id": "\u003cid18\u003e",
+              "id": "\u003cid19\u003e",
               "offsetX": 0,
               "offsetY": 0,
-              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid18\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid19\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
               "type": "TEAM_PHOTO",
-              "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid18\u003e",
+              "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid19\u003e",
               "zoom": 0
             }
           }
@@ -130,17 +130,17 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid17\u003e",
+          "id": "\u003cid18\u003e",
           "photoUploads": [
             {
               "teamId": null,
               "teamPhoto": {
-                "id": "\u003cid18\u003e",
+                "id": "\u003cid19\u003e",
                 "offsetX": 0,
                 "offsetY": 0,
-                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid18\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid19\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
                 "type": "TEAM_PHOTO",
-                "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid18\u003e",
+                "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid19\u003e",
                 "zoom": 0
               }
             }
@@ -154,24 +154,24 @@
     ]
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e/extended",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e/extended",
     "status": 200,
     "response": {
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "matchMoves": [
           {
-            "id": "\u003cid19\u003e",
+            "id": "\u003cid20\u003e",
             "moveId": "\u003cid12\u003e",
-            "teamMemberId": "\u003cid20\u003e",
+            "teamMemberId": "\u003cid21\u003e",
             "value": 1
           },
           {
-            "id": "\u003cid21\u003e",
-            "moveId": "\u003cid14\u003e",
-            "teamMemberId": "\u003cid22\u003e",
+            "id": "\u003cid22\u003e",
+            "moveId": "\u003cid15\u003e",
+            "teamMemberId": "\u003cid23\u003e",
             "value": 2
           }
         ],
@@ -179,25 +179,25 @@
         "seasonId": "\u003cid1\u003e",
         "teamMembers": [
           {
-            "id": "\u003cid20\u003e",
+            "id": "\u003cid21\u003e",
             "playerId": "\u003cid7\u003e",
-            "teamId": "\u003cid23\u003e"
+            "teamId": "\u003cid24\u003e"
           },
           {
-            "id": "\u003cid22\u003e",
+            "id": "\u003cid23\u003e",
             "playerId": "\u003cid8\u003e",
-            "teamId": "\u003cid24\u003e"
+            "teamId": "\u003cid25\u003e"
           }
         ],
         "teams": [
           {
-            "id": "\u003cid23\u003e",
-            "matchId": "\u003cid17\u003e",
-            "photoAssetId": "\u003cid18\u003e"
+            "id": "\u003cid24\u003e",
+            "matchId": "\u003cid18\u003e",
+            "photoAssetId": "\u003cid19\u003e"
           },
           {
-            "id": "\u003cid24\u003e",
-            "matchId": "\u003cid17\u003e",
+            "id": "\u003cid25\u003e",
+            "matchId": "\u003cid18\u003e",
             "photoAssetId": null
           }
         ]
@@ -207,17 +207,17 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid23\u003e",
+          "existingTeamId": "\u003cid24\u003e",
           "teamMembers": [
             {
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid14\u003e"
+                  "moveId": "\u003cid15\u003e"
                 }
               ],
               "playerId": "\u003cid7\u003e"
@@ -229,7 +229,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid24\u003e",
+          "existingTeamId": "\u003cid25\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -249,7 +249,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -263,7 +263,7 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid17\u003e",
+          "id": "\u003cid18\u003e",
           "photoUploads": [],
           "seasonId": "\u003cid1\u003e"
         },
@@ -274,24 +274,24 @@
     ]
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e/extended",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e/extended",
     "status": 200,
     "response": {
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "matchMoves": [
           {
-            "id": "\u003cid25\u003e",
-            "moveId": "\u003cid14\u003e",
-            "teamMemberId": "\u003cid26\u003e",
+            "id": "\u003cid26\u003e",
+            "moveId": "\u003cid15\u003e",
+            "teamMemberId": "\u003cid27\u003e",
             "value": 1
           },
           {
-            "id": "\u003cid27\u003e",
+            "id": "\u003cid28\u003e",
             "moveId": "\u003cid13\u003e",
-            "teamMemberId": "\u003cid28\u003e",
+            "teamMemberId": "\u003cid29\u003e",
             "value": 1
           }
         ],
@@ -299,30 +299,30 @@
         "seasonId": "\u003cid1\u003e",
         "teamMembers": [
           {
-            "id": "\u003cid26\u003e",
+            "id": "\u003cid27\u003e",
             "playerId": "\u003cid7\u003e",
-            "teamId": "\u003cid29\u003e"
+            "teamId": "\u003cid30\u003e"
           },
           {
-            "id": "\u003cid30\u003e",
+            "id": "\u003cid31\u003e",
             "playerId": "\u003cid9\u003e",
-            "teamId": "\u003cid29\u003e"
+            "teamId": "\u003cid30\u003e"
           },
           {
-            "id": "\u003cid28\u003e",
+            "id": "\u003cid29\u003e",
             "playerId": "\u003cid8\u003e",
-            "teamId": "\u003cid31\u003e"
+            "teamId": "\u003cid32\u003e"
           }
         ],
         "teams": [
           {
-            "id": "\u003cid29\u003e",
-            "matchId": "\u003cid17\u003e",
-            "photoAssetId": "\u003cid18\u003e"
+            "id": "\u003cid30\u003e",
+            "matchId": "\u003cid18\u003e",
+            "photoAssetId": "\u003cid19\u003e"
           },
           {
-            "id": "\u003cid31\u003e",
-            "matchId": "\u003cid17\u003e",
+            "id": "\u003cid32\u003e",
+            "matchId": "\u003cid18\u003e",
             "photoAssetId": null
           }
         ]
@@ -332,18 +332,18 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e/overview",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e/overview",
     "status": 200,
     "response": {
       "data": {
         "blueTeam": {
-          "assetPhotoId": "\u003cid18\u003e",
+          "assetPhotoId": "\u003cid19\u003e",
           "members": [
             {
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid14\u003e"
+                  "moveId": "\u003cid15\u003e"
                 }
               ],
               "playerId": "\u003cid7\u003e",
@@ -356,10 +356,10 @@
             }
           ],
           "points": 1,
-          "teamId": "\u003cid29\u003e"
+          "teamId": "\u003cid30\u003e"
         },
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "redTeam": {
           "assetPhotoId": null,
           "members": [
@@ -375,7 +375,7 @@
             }
           ],
           "points": 11,
-          "teamId": "\u003cid31\u003e"
+          "teamId": "\u003cid32\u003e"
         },
         "seasonId": "\u003cid1\u003e"
       },
@@ -384,11 +384,11 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid23\u003e",
+          "existingTeamId": "\u003cid24\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -402,7 +402,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid24\u003e",
+          "existingTeamId": "\u003cid25\u003e",
           "teamMembers": [
             {
               "moves": [],
@@ -423,11 +423,11 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid29\u003e",
+          "existingTeamId": "\u003cid30\u003e",
           "savePhoto": true,
           "teamMembers": [
             {
@@ -442,7 +442,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid31\u003e",
+          "existingTeamId": "\u003cid32\u003e",
           "savePhoto": true,
           "teamMembers": [
             {
@@ -458,29 +458,29 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "photoUploads": [
           {
-            "teamId": "\u003cid29\u003e",
-            "teamPhoto": {
-              "id": "\u003cid32\u003e",
-              "offsetX": 0,
-              "offsetY": 0,
-              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid32\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
-              "type": "TEAM_PHOTO",
-              "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid32\u003e",
-              "zoom": 0
-            }
-          },
-          {
-            "teamId": "\u003cid31\u003e",
+            "teamId": "\u003cid30\u003e",
             "teamPhoto": {
               "id": "\u003cid33\u003e",
               "offsetX": 0,
               "offsetY": 0,
-              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid33\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid33\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
               "type": "TEAM_PHOTO",
               "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid33\u003e",
+              "zoom": 0
+            }
+          },
+          {
+            "teamId": "\u003cid32\u003e",
+            "teamPhoto": {
+              "id": "\u003cid34\u003e",
+              "offsetX": 0,
+              "offsetY": 0,
+              "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid34\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
+              "type": "TEAM_PHOTO",
+              "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid34\u003e",
               "zoom": 0
             }
           }
@@ -497,29 +497,29 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid17\u003e",
+          "id": "\u003cid18\u003e",
           "photoUploads": [
             {
-              "teamId": "\u003cid29\u003e",
-              "teamPhoto": {
-                "id": "\u003cid32\u003e",
-                "offsetX": 0,
-                "offsetY": 0,
-                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid32\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
-                "type": "TEAM_PHOTO",
-                "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid32\u003e",
-                "zoom": 0
-              }
-            },
-            {
-              "teamId": "\u003cid31\u003e",
+              "teamId": "\u003cid30\u003e",
               "teamPhoto": {
                 "id": "\u003cid33\u003e",
                 "offsetX": 0,
                 "offsetY": 0,
-                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid33\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=content-type;host expires=300\u003e",
+                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid33\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
                 "type": "TEAM_PHOTO",
                 "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid33\u003e",
+                "zoom": 0
+              }
+            },
+            {
+              "teamId": "\u003cid32\u003e",
+              "teamPhoto": {
+                "id": "\u003cid34\u003e",
+                "offsetX": 0,
+                "offsetY": 0,
+                "singleUploadUrl": "\u003cpresigned https://versus-bucket.fsn1.your-objectstorage.com/\u003cid34\u003e params=X-Amz-Algorithm,X-Amz-Credential,X-Amz-Date,X-Amz-Expires,X-Amz-Signature,X-Amz-SignedHeaders signedHeaders=host expires=300\u003e",
+                "type": "TEAM_PHOTO",
+                "url": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid34\u003e",
                 "zoom": 0
               }
             }
@@ -533,7 +533,7 @@
     ]
   },
   {
-    "request": "GET /assets/\u003cid18\u003e",
+    "request": "GET /assets/\u003cid19\u003e",
     "status": 404,
     "response": {
       "error": {
@@ -545,18 +545,18 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e/extended",
+    "request": "GET /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e/extended",
     "status": 200,
     "response": {
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid17\u003e",
+        "id": "\u003cid18\u003e",
         "matchMoves": [
           {
-            "id": "\u003cid34\u003e",
+            "id": "\u003cid35\u003e",
             "moveId": "\u003cid12\u003e",
-            "teamMemberId": "\u003cid35\u003e",
+            "teamMemberId": "\u003cid36\u003e",
             "value": 1
           }
         ],
@@ -564,26 +564,26 @@
         "seasonId": "\u003cid1\u003e",
         "teamMembers": [
           {
-            "id": "\u003cid35\u003e",
+            "id": "\u003cid36\u003e",
             "playerId": "\u003cid7\u003e",
-            "teamId": "\u003cid36\u003e"
+            "teamId": "\u003cid37\u003e"
           },
           {
-            "id": "\u003cid37\u003e",
+            "id": "\u003cid38\u003e",
             "playerId": "\u003cid8\u003e",
-            "teamId": "\u003cid38\u003e"
+            "teamId": "\u003cid39\u003e"
           }
         ],
         "teams": [
           {
-            "id": "\u003cid36\u003e",
-            "matchId": "\u003cid17\u003e",
-            "photoAssetId": "\u003cid32\u003e"
+            "id": "\u003cid37\u003e",
+            "matchId": "\u003cid18\u003e",
+            "photoAssetId": "\u003cid33\u003e"
           },
           {
-            "id": "\u003cid38\u003e",
-            "matchId": "\u003cid17\u003e",
-            "photoAssetId": "\u003cid33\u003e"
+            "id": "\u003cid39\u003e",
+            "matchId": "\u003cid18\u003e",
+            "photoAssetId": "\u003cid34\u003e"
           }
         ]
       },
@@ -592,7 +592,7 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
@@ -629,11 +629,11 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -647,7 +647,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [],
@@ -668,11 +668,11 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -707,11 +707,11 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -725,7 +725,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid38\u003e",
+          "existingTeamId": "\u003cid39\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -751,11 +751,11 @@
     }
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [],
@@ -764,7 +764,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid38\u003e",
+          "existingTeamId": "\u003cid39\u003e",
           "teamMembers": []
         }
       ]
@@ -784,7 +784,7 @@
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -798,7 +798,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid38\u003e",
+          "existingTeamId": "\u003cid39\u003e",
           "teamMembers": [
             {
               "moves": [],
@@ -850,7 +850,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid39\u003e",
+        "id": "\u003cid40\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -864,7 +864,7 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid39\u003e",
+          "id": "\u003cid40\u003e",
           "photoUploads": [],
           "seasonId": "\u003cid1\u003e"
         },
@@ -875,11 +875,11 @@
     ]
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid39\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid40\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [
@@ -893,7 +893,7 @@
           ]
         },
         {
-          "existingTeamId": "\u003cid38\u003e",
+          "existingTeamId": "\u003cid39\u003e",
           "teamMembers": [
             {
               "moves": [],
@@ -908,7 +908,7 @@
       "data": {
         "createdById": "\u003cid2\u003e",
         "date": "\u003cts\u003e",
-        "id": "\u003cid39\u003e",
+        "id": "\u003cid40\u003e",
         "photoUploads": [],
         "seasonId": "\u003cid1\u003e"
       },
@@ -922,7 +922,7 @@
         "body": {
           "createdById": "\u003cid2\u003e",
           "date": "\u003cts\u003e",
-          "id": "\u003cid39\u003e",
+          "id": "\u003cid40\u003e",
           "photoUploads": [],
           "seasonId": "\u003cid1\u003e"
         },
@@ -963,7 +963,7 @@
         "createdById": "\u003cid2\u003e",
         "endDate": null,
         "groupId": "\u003cid3\u003e",
-        "id": "\u003cid40\u003e",
+        "id": "\u003cid41\u003e",
         "name": null,
         "seasonSettings": {
           "dailyLeaderboard": "WAKE_TIME",
@@ -987,7 +987,7 @@
             "createdById": "\u003cid2\u003e",
             "endDate": null,
             "groupId": "\u003cid3\u003e",
-            "id": "\u003cid40\u003e",
+            "id": "\u003cid41\u003e",
             "name": null,
             "seasonSettings": {
               "dailyLeaderboard": "WAKE_TIME",
@@ -1023,29 +1023,29 @@
     ]
   },
   {
-    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid17\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches/\u003cid18\u003e",
     "body": {
       "teams": [
         {
-          "existingTeamId": "\u003cid36\u003e",
+          "existingTeamId": "\u003cid37\u003e",
           "teamMembers": [
             {
               "moves": [
                 {
                   "count": 1,
-                  "moveId": "\u003cid45\u003e"
+                  "moveId": "\u003cid46\u003e"
                 }
               ],
-              "playerId": "\u003cid41\u003e"
+              "playerId": "\u003cid42\u003e"
             }
           ]
         },
         {
-          "existingTeamId": "\u003cid38\u003e",
+          "existingTeamId": "\u003cid39\u003e",
           "teamMembers": [
             {
               "moves": [],
-              "playerId": "\u003cid42\u003e"
+              "playerId": "\u003cid43\u003e"
             }
           ]
         }

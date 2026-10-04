@@ -81,6 +81,7 @@ type Rule struct {
 	Title       *string
 	SeasonID    *string
 	CreatedBy   *string
+	Position    *int32
 }
 
 type RuleMove struct {
@@ -90,6 +91,7 @@ type RuleMove struct {
 	PointsForScorer int32
 	PointsForTeam   int32
 	SeasonID        *string
+	Cups            *int32
 }
 
 type Season struct {

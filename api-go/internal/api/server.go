@@ -19,12 +19,13 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/auth"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
+	"github.com/laurin-notemann/beerpong/api-go/openapi"
 )
 
 // Bucket is the object storage the API signs uploads for.
 type Bucket interface {
 	PublicURL(key string) string
-	UploadURL(ctx context.Context, key, contentType string) (string, error)
+	UploadURL(ctx context.Context, key string) (string, error)
 	Delete(ctx context.Context, key string) error
 }
 
@@ -69,42 +70,13 @@ type route map[string]handlerFunc
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
-	handle := func(pattern string, methods route) {
+	for pattern, methods := range s.routes() {
 		mux.Handle(pattern, s.dispatch(methods))
 	}
-
-	handle("/healthcheck", route{"GET": s.healthcheck})
-	handle("/group-presets", route{"GET": s.listPresets})
-	handle("/assets/{id}", route{"GET": s.getAsset})
-	handle("/auth/signup", route{"POST": s.signup})
-	handle("/auth/refresh", route{"POST": s.refresh})
-
-	handle("/groups", route{"GET": s.findGroupByInviteCode, "POST": s.createGroup})
-	handle("/groups/user", route{"GET": s.userGroups})
-	handle("/groups/{id}", route{"GET": s.getGroup, "PUT": s.updateGroup})
-	handle("/groups/{id}/wallpaper", route{"PUT": s.setWallpaper, "DELETE": s.deleteWallpaper})
-	handle("/groups/{id}/join", route{"POST": s.joinGroup})
-	handle("/groups/{id}/leave", route{"POST": s.leaveGroup})
-	handle("/groups/{groupId}/leaderboard", route{"GET": s.leaderboard})
-	handle("/groups/{groupId}/active-season", route{"PUT": s.startSeason})
-	handle("/groups/{groupId}/seasons", route{"GET": s.listSeasons})
-	handle("/groups/{groupId}/seasons/{id}", route{"GET": s.getSeason, "PUT": s.updateSeason})
-	handle("/groups/{groupId}/profiles", route{"GET": s.listProfiles, "POST": s.createProfile})
-	handle("/groups/{groupId}/profiles/{id}", route{"GET": s.getProfile, "PUT": s.updateProfile})
-	handle("/groups/{groupId}/profiles/{id}/avatar", route{"PUT": s.setAvatar, "DELETE": s.deleteAvatar})
-	handle("/groups/{groupId}/seasons/{seasonId}/rules", route{"GET": s.listRules, "PUT": s.writeRules})
-	handle("/groups/{groupId}/seasons/{seasonId}/rule-moves", route{"GET": s.listRuleMoves, "POST": s.createRuleMove})
-	handle("/groups/{groupId}/seasons/{seasonId}/rule-moves/{ruleMoveId}", route{"PUT": s.updateRuleMove})
-	handle("/groups/{groupId}/seasons/{seasonId}/players", route{"GET": s.listPlayers})
-	handle("/groups/{groupId}/seasons/{seasonId}/players/extended", route{"GET": s.listPlayersExtended})
-	handle("/groups/{groupId}/seasons/{seasonId}/players/{id}", route{"DELETE": s.deletePlayer})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches", route{"GET": s.listMatches, "POST": s.createMatch})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches/extended", route{"GET": s.listMatchesExtended})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches/overview", route{"GET": s.listMatchOverviews})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches/{id}", route{"GET": s.getMatch, "PUT": s.updateMatch, "DELETE": s.deleteMatch})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches/{id}/extended", route{"GET": s.getMatchExtended})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches/{id}/overview", route{"GET": s.getMatchOverview})
-	handle("/groups/{groupId}/seasons/{seasonId}/matches/{id}/photos/{teamId}", route{"PUT": s.setTeamPhoto, "DELETE": s.deleteTeamPhoto})
+	mux.HandleFunc("GET /v3/api-docs", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(openapi.Spec)
+	})
 
 	// Anything else is a 404, but /groups/** paths are authenticated first,
 	// exactly like Spring Security did before routing.
@@ -116,6 +88,45 @@ func (s *Server) Handler() http.Handler {
 	root.Handle("/update-socket", s.hub)
 	root.Handle("/", sentryhttp.New(sentryhttp.Options{}).Handle(mux))
 	return root
+}
+
+// routes is every endpoint by path and method. openapi/openapi.json documents
+// exactly these (TestSpecMatchesRoutes).
+func (s *Server) routes() map[string]route {
+	return map[string]route{
+		"/healthcheck":   {"GET": s.healthcheck},
+		"/group-presets": {"GET": s.listPresets},
+		"/assets/{id}":   {"GET": s.getAsset},
+		"/auth/signup":   {"POST": s.signup},
+		"/auth/refresh":  {"POST": s.refresh},
+
+		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
+		"/groups/user":                                                      {"GET": s.userGroups},
+		"/groups/{id}":                                                      {"GET": s.getGroup, "PUT": s.updateGroup},
+		"/groups/{id}/wallpaper":                                            {"PUT": s.setWallpaper, "DELETE": s.deleteWallpaper},
+		"/groups/{id}/join":                                                 {"POST": s.joinGroup},
+		"/groups/{id}/leave":                                                {"POST": s.leaveGroup},
+		"/groups/{groupId}/leaderboard":                                     {"GET": s.leaderboard},
+		"/groups/{groupId}/active-season":                                   {"PUT": s.startSeason},
+		"/groups/{groupId}/seasons":                                         {"GET": s.listSeasons},
+		"/groups/{groupId}/seasons/{id}":                                    {"GET": s.getSeason, "PUT": s.updateSeason},
+		"/groups/{groupId}/profiles":                                        {"GET": s.listProfiles, "POST": s.createProfile},
+		"/groups/{groupId}/profiles/{id}":                                   {"GET": s.getProfile, "PUT": s.updateProfile},
+		"/groups/{groupId}/profiles/{id}/avatar":                            {"PUT": s.setAvatar, "DELETE": s.deleteAvatar},
+		"/groups/{groupId}/seasons/{seasonId}/rules":                        {"GET": s.listRules, "PUT": s.writeRules},
+		"/groups/{groupId}/seasons/{seasonId}/rule-moves":                   {"GET": s.listRuleMoves, "POST": s.createRuleMove},
+		"/groups/{groupId}/seasons/{seasonId}/rule-moves/{ruleMoveId}":      {"PUT": s.updateRuleMove},
+		"/groups/{groupId}/seasons/{seasonId}/players":                      {"GET": s.listPlayers},
+		"/groups/{groupId}/seasons/{seasonId}/players/extended":             {"GET": s.listPlayersExtended},
+		"/groups/{groupId}/seasons/{seasonId}/players/{id}":                 {"DELETE": s.deletePlayer},
+		"/groups/{groupId}/seasons/{seasonId}/matches":                      {"GET": s.listMatches, "POST": s.createMatch},
+		"/groups/{groupId}/seasons/{seasonId}/matches/extended":             {"GET": s.listMatchesExtended},
+		"/groups/{groupId}/seasons/{seasonId}/matches/overview":             {"GET": s.listMatchOverviews},
+		"/groups/{groupId}/seasons/{seasonId}/matches/{id}":                 {"GET": s.getMatch, "PUT": s.updateMatch, "DELETE": s.deleteMatch},
+		"/groups/{groupId}/seasons/{seasonId}/matches/{id}/extended":        {"GET": s.getMatchExtended},
+		"/groups/{groupId}/seasons/{seasonId}/matches/{id}/overview":        {"GET": s.getMatchOverview},
+		"/groups/{groupId}/seasons/{seasonId}/matches/{id}/photos/{teamId}": {"PUT": s.setTeamPhoto, "DELETE": s.deleteTeamPhoto},
+	}
 }
 
 func (s *Server) dispatch(methods route) http.Handler {
