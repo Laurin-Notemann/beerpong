@@ -1468,6 +1468,146 @@
                     }
                 }
             }
+        },
+        "/groups/{groupId}/live-matches/{id}": {
+            "get": {
+                "tags": ["live-match-controller"],
+                "operationId": "getLiveMatch",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": ["live-match-controller"],
+                "operationId": "createLiveMatch",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LiveMatchCreateDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/live-matches/{id}/ops": {
+            "post": {
+                "tags": ["live-match-controller"],
+                "operationId": "appendOps",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LiveMatchOpsDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchOpsResultDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/live-matches": {
+            "get": {
+                "tags": ["live-match-controller"],
+                "operationId": "getActiveLiveMatches",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -2182,6 +2322,145 @@
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/TeamDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "CupPositionDto": {
+                "type": "object",
+                "properties": {
+                    "x": { "type": "integer", "format": "int32" },
+                    "y": { "type": "integer", "format": "int32" }
+                }
+            },
+            "LiveMatchCreateDto": {
+                "type": "object",
+                "properties": {
+                    "seasonId": { "type": "string" },
+                    "ops": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LiveMatchOpDto"
+                        }
+                    }
+                }
+            },
+            "LiveMatchOpDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "seq": { "type": "integer", "format": "int64" },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "SET_TEAMS",
+                            "SET_PLAYER_TEAM",
+                            "ADJUST_MOVE",
+                            "RECORD_CUP_HIT",
+                            "UNDO_CUP_HIT"
+                        ]
+                    },
+                    "createdAt": { "type": "string", "format": "date-time" },
+                    "playerId": { "type": "string" },
+                    "team": { "type": "string" },
+                    "moveId": { "type": "string" },
+                    "delta": { "type": "integer", "format": "int32" },
+                    "cups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CupPositionDto"
+                        }
+                    },
+                    "cup": { "$ref": "#/components/schemas/CupPositionDto" },
+                    "finishMoveId": { "type": "string" },
+                    "redPlayerIds": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                    },
+                    "bluePlayerIds": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                    }
+                }
+            },
+            "LiveMatchDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "groupId": { "type": "string" },
+                    "seasonId": { "type": "string" },
+                    "status": {
+                        "type": "string",
+                        "enum": ["IN_PROGRESS", "FINISHED", "ABANDONED"]
+                    },
+                    "startedAt": { "type": "string", "format": "date-time" },
+                    "lastActivityAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "endedAt": { "type": "string", "format": "date-time" },
+                    "createdByUserId": { "type": "string" },
+                    "lastSeq": { "type": "integer", "format": "int64" },
+                    "resultMatchId": { "type": "string" },
+                    "ops": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LiveMatchOpDto"
+                        }
+                    }
+                }
+            },
+            "LiveMatchOpsDto": {
+                "type": "object",
+                "properties": {
+                    "ops": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LiveMatchOpDto"
+                        }
+                    }
+                }
+            },
+            "LiveMatchOpsResultDto": {
+                "type": "object",
+                "properties": {
+                    "lastSeq": { "type": "integer", "format": "int64" },
+                    "ops": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LiveMatchOpDto"
+                        }
+                    }
+                }
+            },
+            "ResponseEnvelopeLiveMatchDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/LiveMatchDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "ResponseEnvelopeLiveMatchOpsResultDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "$ref": "#/components/schemas/LiveMatchOpsResultDto"
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "ResponseEnvelopeListLiveMatchDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/LiveMatchDto" }
+                    },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             }

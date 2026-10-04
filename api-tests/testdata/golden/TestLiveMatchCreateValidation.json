@@ -1,0 +1,378 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Live create validation",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Live create validation",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Live create other",
+      "profileNames": [
+        "z"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid16\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid17\u003e",
+        "customSportName": null,
+        "id": "\u003cid18\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Live create other",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/not-a-uuid",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "\u003cid29\u003e",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid30\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "nope",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid31\u003e",
+    "body": {
+      "ops": []
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid32\u003e",
+    "body": {
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid33\u003e",
+    "body": "{\"seasonId\":\"\u003cid1\u003e\",\"ops\":[{\"id\":\"\u003cid34\u003e\",\"type\":\"NOPE\"}]}",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/groups/\u003cid3\u003e/live-matches/\u003cid33\u003e",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid35\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "\u003cid36\u003e",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid37\u003e"
+    },
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonNotFound",
+        "description": "This season could not be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid38\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "\u003cid39\u003e",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid16\u003e"
+    },
+    "status": 404,
+    "response": {
+      "error": {
+        "code": "seasonHasDifferentGroup",
+        "description": "The provided season and group id do not match or no season with this id could be found!"
+      },
+      "httpCode": 404,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/active-season",
+    "body": {
+      "oldSeasonName": "Old",
+      "ruleMoves": [
+        {
+          "finishingMove": false,
+          "name": "Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": false,
+          "name": "Bomb",
+          "pointsForScorer": 2,
+          "pointsForTeam": 0
+        },
+        {
+          "finishingMove": true,
+          "name": "Finish - Normal",
+          "pointsForScorer": 1,
+          "pointsForTeam": 3
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "endDate": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid40\u003e",
+        "name": null,
+        "seasonSettings": {
+          "dailyLeaderboard": "WAKE_TIME",
+          "maxTeamSize": 10,
+          "minMatchesToQualify": 1,
+          "minTeamSize": 1,
+          "rankingAlgorithm": "AVERAGE",
+          "wakeTime": "00:00:00"
+        },
+        "startDate": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "newSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": null,
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid40\u003e",
+            "name": null,
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          },
+          "oldSeason": {
+            "createdById": "\u003cid2\u003e",
+            "endDate": "\u003cts\u003e",
+            "groupId": "\u003cid3\u003e",
+            "id": "\u003cid1\u003e",
+            "name": "Old",
+            "seasonSettings": {
+              "dailyLeaderboard": "WAKE_TIME",
+              "maxTeamSize": 10,
+              "minMatchesToQualify": 1,
+              "minTeamSize": 1,
+              "rankingAlgorithm": "AVERAGE",
+              "wakeTime": "00:00:00"
+            },
+            "startDate": "\u003cts\u003e"
+          }
+        },
+        "eventType": "SEASONS",
+        "groupId": "\u003cid3\u003e",
+        "scope": "seasonStart"
+      }
+    ]
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid46\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid42\u003e"
+          ],
+          "id": "\u003cid47\u003e",
+          "redPlayerIds": [
+            "\u003cid41\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 403,
+    "response": {
+      "error": {
+        "code": "seasonAlreadyEnded",
+        "description": "Past seasons are immutable!"
+      },
+      "httpCode": 403,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/live-matches",
+    "status": 200,
+    "response": {
+      "data": [],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": []
+  }
+]

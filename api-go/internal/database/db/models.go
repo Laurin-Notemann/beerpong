@@ -45,6 +45,29 @@ type GroupMember struct {
 	UserID  *string
 }
 
+type LiveMatch struct {
+	ID             string
+	GroupID        string
+	SeasonID       string
+	CreatedBy      string
+	Status         string
+	StartedAt      time.Time
+	LastActivityAt time.Time
+	EndedAt        *time.Time
+	LastSeq        int64
+	ResultMatchID  *string
+}
+
+type LiveMatchOp struct {
+	ID          string
+	LiveMatchID string
+	Seq         int64
+	CreatedAt   time.Time
+	CreatedBy   string
+	Type        string
+	Payload     string
+}
+
 type Match struct {
 	ID        string
 	Date      *time.Time

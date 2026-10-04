@@ -1,0 +1,3436 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Live invalid",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Live invalid",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "\u003cid17\u003e",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdByUserId": "\u003cid18\u003e",
+        "endedAt": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid16\u003e",
+        "lastActivityAt": "\u003cts\u003e",
+        "lastSeq": 1,
+        "ops": [
+          {
+            "bluePlayerIds": [
+              "\u003cid7\u003e"
+            ],
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": null,
+            "finishMoveId": null,
+            "id": "\u003cid17\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": [
+              "\u003cid6\u003e"
+            ],
+            "seq": 1,
+            "team": null,
+            "type": "SET_TEAMS"
+          }
+        ],
+        "resultMatchId": null,
+        "seasonId": "\u003cid1\u003e",
+        "startedAt": "\u003cts\u003e",
+        "status": "IN_PROGRESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 0,
+          "id": "\u003cid20\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 21,
+          "id": "\u003cid21\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid22\u003e",
+          "moveId": "\u003cid13\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "cup": {
+            "x": 10,
+            "y": 0
+          },
+          "id": "\u003cid23\u003e",
+          "team": "red",
+          "type": "UNDO_CUP_HIT"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "cups": [],
+          "id": "\u003cid24\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "team": "red",
+          "type": "RECORD_CUP_HIT"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "id": "\u003cid25\u003e",
+          "playerId": "\u003cid6\u003e",
+          "team": "green",
+          "type": "SET_PLAYER_TEAM"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "nope",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid19\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid26\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid27\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid28\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid29\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid30\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid31\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid32\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid33\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid34\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid35\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid36\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid37\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid38\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid39\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid40\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid41\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid42\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid43\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid44\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid45\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid46\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid47\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid48\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid49\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid50\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid51\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid52\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid53\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid54\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid55\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid56\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid57\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid58\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid59\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid60\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid61\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid62\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid63\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid64\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid65\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid66\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid67\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid68\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid69\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid70\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid71\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid72\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid73\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid74\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid75\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid76\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid77\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {},
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "liveMatchInvalidOps",
+        "description": "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": "{\"ops\":[{\"id\":\"\u003cid78\u003e\",\"type\":\"NOPE\"}]}",
+    "status": 400,
+    "response": {
+      "error": "Bad Request",
+      "path": "/groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+      "status": 400,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "delta": 1,
+          "id": "\u003cid79\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid80\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid81\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid82\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid83\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid84\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid85\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid86\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid87\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid88\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid89\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid90\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid91\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid92\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid93\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid94\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid95\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid96\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid97\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid98\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid99\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid100\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid101\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid102\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid103\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid104\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid105\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid106\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid107\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid108\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid109\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid110\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid111\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid112\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid113\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid114\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid115\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid116\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid117\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid118\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid119\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid120\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid121\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid122\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid123\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid124\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid125\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid126\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid127\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        },
+        {
+          "delta": 1,
+          "id": "\u003cid128\u003e",
+          "moveId": "\u003cid13\u003e",
+          "playerId": "\u003cid6\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "lastSeq": 51,
+        "ops": [
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid79\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 2,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid80\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 3,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid81\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 4,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid82\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 5,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid83\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 6,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid84\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 7,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid85\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 8,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid86\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 9,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid87\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 10,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid88\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 11,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid89\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 12,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid90\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 13,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid91\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 14,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid92\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 15,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid93\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 16,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid94\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 17,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid95\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 18,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid96\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 19,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid97\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 20,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid98\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 21,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid99\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 22,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid100\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 23,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid101\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 24,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid102\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 25,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid103\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 26,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid104\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 27,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid105\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 28,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid106\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 29,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid107\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 30,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid108\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 31,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid109\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 32,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid110\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 33,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid111\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 34,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid112\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 35,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid113\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 36,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid114\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 37,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid115\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 38,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid116\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 39,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid117\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 40,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid118\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 41,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid119\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 42,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid120\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 43,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid121\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 44,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid122\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 45,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid123\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 46,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid124\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 47,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid125\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 48,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid126\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 49,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid127\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 50,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid128\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 51,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          }
+        ]
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "lastSeq": 51,
+          "liveMatchId": "\u003cid16\u003e",
+          "ops": [
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid100\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 23,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid101\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 24,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid102\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 25,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid103\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 26,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid104\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 27,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid105\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 28,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid106\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 29,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid107\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 30,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid108\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 31,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid109\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 32,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid110\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 33,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid111\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 34,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid112\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 35,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid113\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 36,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid114\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 37,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid115\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 38,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid116\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 39,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid117\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 40,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid118\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 41,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid119\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 42,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid120\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 43,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid121\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 44,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid122\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 45,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid123\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 46,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid124\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 47,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid125\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 48,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid126\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 49,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid127\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 50,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid128\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 51,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid79\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 2,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid80\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 3,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid81\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 4,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid82\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 5,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid83\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 6,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid84\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 7,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid85\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 8,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid86\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 9,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid87\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 10,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid88\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 11,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid89\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 12,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid90\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 13,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid91\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 14,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid92\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 15,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid93\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 16,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid94\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 17,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid95\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 18,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid96\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 19,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid97\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 20,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid98\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 21,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 1,
+              "finishMoveId": null,
+              "id": "\u003cid99\u003e",
+              "moveId": "\u003cid13\u003e",
+              "playerId": "\u003cid6\u003e",
+              "redPlayerIds": null,
+              "seq": 22,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            }
+          ]
+        },
+        "eventType": "LIVE_MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "liveMatchOps"
+      }
+    ]
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "createdByUserId": "\u003cid18\u003e",
+        "endedAt": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid16\u003e",
+        "lastActivityAt": "\u003cts\u003e",
+        "lastSeq": 51,
+        "ops": [
+          {
+            "bluePlayerIds": [
+              "\u003cid7\u003e"
+            ],
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": null,
+            "finishMoveId": null,
+            "id": "\u003cid17\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": [
+              "\u003cid6\u003e"
+            ],
+            "seq": 1,
+            "team": null,
+            "type": "SET_TEAMS"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid79\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 2,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid80\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 3,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid81\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 4,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid82\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 5,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid83\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 6,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid84\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 7,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid85\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 8,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid86\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 9,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid87\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 10,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid88\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 11,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid89\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 12,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid90\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 13,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid91\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 14,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid92\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 15,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid93\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 16,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid94\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 17,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid95\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 18,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid96\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 19,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid97\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 20,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid98\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 21,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid99\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 22,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid100\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 23,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid101\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 24,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid102\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 25,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid103\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 26,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid104\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 27,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid105\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 28,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid106\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 29,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid107\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 30,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid108\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 31,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid109\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 32,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid110\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 33,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid111\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 34,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid112\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 35,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid113\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 36,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid114\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 37,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid115\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 38,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid116\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 39,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid117\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 40,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid118\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 41,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid119\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 42,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid120\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 43,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid121\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 44,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid122\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 45,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid123\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 46,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid124\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 47,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid125\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 48,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid126\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 49,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid127\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 50,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 1,
+            "finishMoveId": null,
+            "id": "\u003cid128\u003e",
+            "moveId": "\u003cid13\u003e",
+            "playerId": "\u003cid6\u003e",
+            "redPlayerIds": null,
+            "seq": 51,
+            "team": null,
+            "type": "ADJUST_MOVE"
+          }
+        ],
+        "resultMatchId": null,
+        "seasonId": "\u003cid1\u003e",
+        "startedAt": "\u003cts\u003e",
+        "status": "IN_PROGRESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": []
+  }
+]

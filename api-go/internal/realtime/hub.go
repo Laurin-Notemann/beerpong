@@ -26,14 +26,15 @@ var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]
 
 // Event types, as the app switches on them.
 const (
-	Matches   = "MATCHES"
-	Players   = "PLAYERS"
-	Seasons   = "SEASONS"
-	Groups    = "GROUPS"
-	Rules     = "RULES"
-	RuleMoves = "RULE_MOVES"
-	Assets    = "ASSETS"
-	Profiles  = "PROFILES"
+	Matches     = "MATCHES"
+	Players     = "PLAYERS"
+	Seasons     = "SEASONS"
+	Groups      = "GROUPS"
+	Rules       = "RULES"
+	RuleMoves   = "RULE_MOVES"
+	Assets      = "ASSETS"
+	Profiles    = "PROFILES"
+	LiveMatches = "LIVE_MATCHES"
 )
 
 type event struct {
