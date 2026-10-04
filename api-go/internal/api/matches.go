@@ -511,6 +511,49 @@ func invalidMatch(ctx context.Context, q *db.Queries, seasonID string, in matchI
 	return players != int64(len(playerIDs)), nil
 }
 
+// insertValidMatch validates a match against its active season and the
+// caller's membership, then inserts it with its teams. POST /matches and
+// finishing a live match both end here. A non-nil response is the error to
+// answer with; the transaction must roll back.
+func (s *Server) insertValidMatch(r *request, q *db.Queries, groupID string, sn season, in matchInput) (matchDTO, response, error) {
+	ctx := r.Context()
+	wrong, err := wrongTeamSizes(in, sn.Settings)
+	if err != nil {
+		return matchDTO{}, nil, err
+	}
+	if wrong {
+		return matchDTO{}, fail(errMatchDtoValidationFailed), nil
+	}
+	if len(in.teams) != 2 {
+		return matchDTO{}, fail(errMatchWrongAmountOfTeams), nil
+	}
+	memberID, err := s.membershipID(r, q, groupID)
+	if err != nil {
+		return matchDTO{}, nil, err
+	}
+	if memberID == "" {
+		return matchDTO{}, fail(errAuthUserNotInGroup), nil
+	}
+	invalid, err := invalidMatch(ctx, q, sn.ID, in)
+	if err != nil {
+		return matchDTO{}, nil, err
+	}
+	if invalid {
+		return matchDTO{}, fail(errMatchDtoValidationFailed), nil
+	}
+
+	now := s.now()
+	matchID := uuid.NewString()
+	if err := q.InsertMatch(ctx, db.InsertMatchParams{ID: matchID, Date: &now, SeasonID: &sn.ID, CreatedBy: &memberID}); err != nil {
+		return matchDTO{}, nil, err
+	}
+	photos, err := s.createTeams(r, q, matchID, in, nil)
+	if err != nil {
+		return matchDTO{}, nil, err
+	}
+	return matchDTO{ID: matchID, Date: &now, SeasonID: &sn.ID, CreatedByID: &memberID, PhotoUploads: &photos}, nil, nil
+}
+
 func (s *Server) createMatch(r *request) response {
 	body, res := readJSON(r.Request, true)
 	if res != nil {
@@ -528,41 +571,11 @@ func (s *Server) createMatch(r *request) response {
 		if res != nil {
 			return res, nil
 		}
-		wrong, err := wrongTeamSizes(in, sn.Settings)
-		if err != nil {
-			return nil, err
+		match, failure, err := s.insertValidMatch(r, q, groupID, sn, in)
+		if err != nil || failure != nil {
+			return failure, err
 		}
-		if wrong {
-			return fail(errMatchDtoValidationFailed), nil
-		}
-		if len(in.teams) != 2 {
-			return fail(errMatchWrongAmountOfTeams), nil
-		}
-		memberID, err := s.membershipID(r, q, groupID)
-		if err != nil {
-			return nil, err
-		}
-		if memberID == "" {
-			return fail(errAuthUserNotInGroup), nil
-		}
-		invalid, err := invalidMatch(ctx, q, sn.ID, in)
-		if err != nil {
-			return nil, err
-		}
-		if invalid {
-			return fail(errMatchDtoValidationFailed), nil
-		}
-
-		now := s.now()
-		matchID := uuid.NewString()
-		if err := q.InsertMatch(ctx, db.InsertMatchParams{ID: matchID, Date: &now, SeasonID: &sn.ID, CreatedBy: &memberID}); err != nil {
-			return nil, err
-		}
-		photos, err := s.createTeams(r, q, matchID, in, nil)
-		if err != nil {
-			return nil, err
-		}
-		created = matchDTO{ID: matchID, Date: &now, SeasonID: &sn.ID, CreatedByID: &memberID, PhotoUploads: &photos}
+		created = match
 		return ok(created), nil
 	})
 	if _, isOK := res.(okResponse); isOK {

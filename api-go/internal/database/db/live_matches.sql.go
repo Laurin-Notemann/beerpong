@@ -10,6 +10,27 @@ import (
 	"time"
 )
 
+const endLiveMatch = `-- name: EndLiveMatch :exec
+UPDATE live_matches SET status = $2, ended_at = $3, result_match_id = $4 WHERE id = $1
+`
+
+type EndLiveMatchParams struct {
+	ID            string
+	Status        string
+	EndedAt       *time.Time
+	ResultMatchID *string
+}
+
+func (q *Queries) EndLiveMatch(ctx context.Context, arg EndLiveMatchParams) error {
+	_, err := q.db.Exec(ctx, endLiveMatch,
+		arg.ID,
+		arg.Status,
+		arg.EndedAt,
+		arg.ResultMatchID,
+	)
+	return err
+}
+
 const getLiveMatch = `-- name: GetLiveMatch :one
 SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, gm.user_id AS created_by_user_id
 FROM live_matches lm
@@ -262,4 +283,34 @@ type SetLiveMatchProgressParams struct {
 func (q *Queries) SetLiveMatchProgress(ctx context.Context, arg SetLiveMatchProgressParams) error {
 	_, err := q.db.Exec(ctx, setLiveMatchProgress, arg.ID, arg.LastSeq, arg.LastActivityAt)
 	return err
+}
+
+const staleLiveMatches = `-- name: StaleLiveMatches :many
+SELECT id, group_id FROM live_matches WHERE status = 'IN_PROGRESS' AND last_activity_at < $1
+`
+
+type StaleLiveMatchesRow struct {
+	ID      string
+	GroupID string
+}
+
+// Candidates for expiry. The caller locks and re-reads each one before it decides.
+func (q *Queries) StaleLiveMatches(ctx context.Context, lastActivityAt time.Time) ([]StaleLiveMatchesRow, error) {
+	rows, err := q.db.Query(ctx, staleLiveMatches, lastActivityAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StaleLiveMatchesRow
+	for rows.Next() {
+		var i StaleLiveMatchesRow
+		if err := rows.Scan(&i.ID, &i.GroupID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

@@ -1539,6 +1539,78 @@
                         }
                     }
                 }
+            },
+            "delete": {
+                "tags": ["live-match-controller"],
+                "operationId": "abandonLiveMatch",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/live-matches/{id}/finish": {
+            "post": {
+                "tags": ["live-match-controller"],
+                "operationId": "finishLiveMatch",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LiveMatchFinishDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/groups/{groupId}/live-matches/{id}/ops": {
@@ -2405,6 +2477,18 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/LiveMatchOpDto"
+                        }
+                    }
+                }
+            },
+            "LiveMatchFinishDto": {
+                "type": "object",
+                "properties": {
+                    "expectedSeq": { "type": "integer", "format": "int64" },
+                    "teams": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TeamCreateDto"
                         }
                     }
                 }

@@ -38,3 +38,10 @@ SELECT * FROM live_match_ops WHERE id = ANY (@ids::text[]);
 
 -- name: LiveMatchOpsByLiveMatchIDs :many
 SELECT * FROM live_match_ops WHERE live_match_id = ANY (@live_match_ids::text[]) ORDER BY live_match_id, seq;
+
+-- name: EndLiveMatch :exec
+UPDATE live_matches SET status = $2, ended_at = $3, result_match_id = $4 WHERE id = $1;
+
+-- name: StaleLiveMatches :many
+-- Candidates for expiry. The caller locks and re-reads each one before it decides.
+SELECT id, group_id FROM live_matches WHERE status = 'IN_PROGRESS' AND last_activity_at < $1;

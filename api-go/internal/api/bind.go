@@ -124,6 +124,33 @@ func (o object) integer(key string) (*int32, error) {
 	}
 }
 
+// long binds a Long field (nil when missing or null), like integer.
+func (o object) long(key string) (*int64, error) {
+	var s string
+	switch t := o[key].(type) {
+	case nil:
+		return nil, nil
+	case json.Number:
+		s = string(t)
+	case string:
+		if s = strings.TrimSpace(t); s == "" {
+			return nil, nil
+		}
+	default:
+		return nil, errBadBody
+	}
+	if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return &i, nil
+	}
+	// Jackson accepts floats for longs and truncates them.
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil || math.IsNaN(f) || f >= math.MaxInt64 || f < math.MinInt64 {
+		return nil, errBadBody
+	}
+	i := int64(f)
+	return &i, nil
+}
+
 // primitiveInt binds an int field: missing or null is 0.
 func (o object) primitiveInt(key string) (int32, error) {
 	v, err := o.integer(key)
