@@ -181,3 +181,72 @@ export function reconcileHits(hits: CupHit[], players: DraftPlayer[]) {
 
     return { hits: unchanged ? hits : result, takenBackFinishes };
 }
+
+interface MoveDraft {
+    moveId: string;
+    count: number;
+}
+export interface PlayerDraft {
+    playerId: string;
+    moves: MoveDraft[];
+}
+export interface TeamDraft {
+    teamMembers: PlayerDraft[];
+}
+export interface DraftTeams {
+    redTeam: TeamDraft;
+    blueTeam: TeamDraft;
+}
+
+/** sets one move count of a player (at least 0), wherever they play */
+export function updateMoves(
+    teams: DraftTeams,
+    playerId: string,
+    moveId: string,
+    update: (count: number) => number
+): DraftTeams {
+    const updateTeam = (team: TeamDraft): TeamDraft => ({
+        teamMembers: team.teamMembers.map((player) => {
+            if (player.playerId !== playerId) return player;
+
+            const current =
+                player.moves.find((i) => i.moveId === moveId)?.count ?? 0;
+            const count = Math.max(0, update(current));
+
+            return {
+                ...player,
+                moves: player.moves.some((i) => i.moveId === moveId)
+                    ? player.moves.map((i) =>
+                          i.moveId === moveId ? { ...i, count } : i
+                      )
+                    : [...player.moves, { moveId, count }],
+            };
+        }),
+    });
+    return {
+        redTeam: updateTeam(teams.redTeam),
+        blueTeam: updateTeam(teams.blueTeam),
+    };
+}
+
+/** keeps the cup hits in line with the teams and move counts they're paired with */
+export function withHits(
+    state: DraftTeams & { cupHits: CupHit[] }
+): DraftTeams & { cupHits: CupHit[] } {
+    const { hits, takenBackFinishes } = reconcileHits(state.cupHits, [
+        ...state.redTeam.teamMembers.map((i) => ({
+            ...i,
+            team: 'red' as const,
+        })),
+        ...state.blueTeam.teamMembers.map((i) => ({
+            ...i,
+            team: 'blue' as const,
+        })),
+    ]);
+    const teams = takenBackFinishes.reduce<DraftTeams>(
+        (acc, finish) =>
+            updateMoves(acc, finish.playerId, finish.moveId, (n) => n - 1),
+        state
+    );
+    return { redTeam: teams.redTeam, blueTeam: teams.blueTeam, cupHits: hits };
+}
