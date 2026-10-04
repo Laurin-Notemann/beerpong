@@ -50,7 +50,7 @@ export default function TabLayout() {
     // it). Unmounting the accessory would also work, but its content would be gone before
     // UIKit's slide-out. So `bottomAccessoryHidden` hides it (animated by UIKit) while it keeps
     // showing the last match, and it's unmounted once it's out of sight.
-    const dock = useLiveMatchDock();
+    const dock = useLiveMatchDock({ enabled: DOCK_IN_TAB_BAR });
     const accessory = useLingering(
         DOCK_IN_TAB_BAR ? dock.snapshot : undefined,
         ACCESSORY_HIDE_MS

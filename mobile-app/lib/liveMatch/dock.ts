@@ -77,3 +77,42 @@ export function dockLabel({
         ? `${count} live matches, this one ${score}. Opens the list`
         : `Live match, ${score}. Opens the match`;
 }
+
+// Rough widths in the dock's row (see `DockRow`), to decide what fits before laying it out
+const DOCK_CHROME = 56; // the dock's margins and padding
+const DOCK_FIXED = 150; // live dot and timer, the two scores, the gaps between them
+const MORE_CHIP = 38;
+const AVATAR = 20;
+const AVATAR_STEP = 10; // the avatars overlap by half
+const NAMES_GAP = 6;
+const MIN_NAMES_WIDTH = 40;
+// names only fit next to small teams; bigger ones show their avatars
+const MAX_NAMED_TEAM = 2;
+/** at this window width and below, a badge shows 2 avatars and "+N" instead of 3 */
+export const NARROW_DOCK_WIDTH = 340;
+
+/** how the dock's two team badges fit next to the scores at this window width */
+export function dockBadgeLayout({
+    windowWidth,
+    largestTeam,
+    count,
+}: {
+    windowWidth: number;
+    largestTeam: number;
+    /** live matches in the group; more than one adds "+N" */
+    count: number;
+}) {
+    const maxAvatars = windowWidth <= NARROW_DOCK_WIDTH ? 2 : 3;
+
+    const badgeWidth =
+        (windowWidth - DOCK_CHROME - DOCK_FIXED - (count > 1 ? MORE_CHIP : 0)) /
+        2;
+    const circles =
+        Math.min(largestTeam, maxAvatars) + (largestTeam > maxAvatars ? 1 : 0);
+    const avatarsWidth = AVATAR + AVATAR_STEP * Math.max(0, circles - 1);
+    const showNames =
+        largestTeam <= MAX_NAMED_TEAM &&
+        badgeWidth - avatarsWidth - NAMES_GAP >= MIN_NAMES_WIDTH;
+
+    return { maxAvatars, showNames };
+}

@@ -11,30 +11,31 @@ export interface TeamBadgePlayer {
     avatarUrl?: string | null;
 }
 
-const MAX_AVATARS = 3;
-
 const SIZES = {
     regular: { avatar: 28, fontSize: 14, gap: 4 },
     compact: { avatar: 20, fontSize: 13, gap: 6 },
 };
 
 /**
- * A team at a glance: up to three overlapping avatars ringed in the team color, then a "+N"
- * avatar for the rest, and the first names in one ellipsized line. `regular` stacks the names under the avatars, so long
- * names get the full width; `compact` (the dock) puts them side by side. `align="end"`
- * mirrors the badge for the team on the right.
+ * A team at a glance: up to `maxAvatars` overlapping avatars ringed in the team color, then a
+ * "+N" avatar for the rest, and the first names in one ellipsized line. `regular` stacks the
+ * names under the avatars, so long names get the full width; `compact` (the dock) puts them
+ * side by side. `align="end"` mirrors the badge for the team on the right.
  */
 export function TeamBadge({
     team,
     players,
     size = 'regular',
     align = 'start',
+    maxAvatars = 3,
     showNames = true,
 }: {
     team: CupTeam;
     players: TeamBadgePlayer[];
     size?: keyof typeof SIZES;
     align?: 'start' | 'end';
+    /** the dock shows fewer on narrow phones */
+    maxAvatars?: number;
     /** off where there's only room for the avatars; the accessibility label still names everyone */
     showNames?: boolean;
 }) {
@@ -44,7 +45,7 @@ export function TeamBadge({
     // half an avatar: four circles still fit next to the scores on a 320 pt screen
     const overlap = s.avatar / 2;
 
-    const shown = players.slice(0, MAX_AVATARS);
+    const shown = players.slice(0, maxAvatars);
     const rest = players.length - shown.length;
     const label = teamNames(players.map((i) => i.name));
 

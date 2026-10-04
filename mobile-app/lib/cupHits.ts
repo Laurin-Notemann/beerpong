@@ -1,8 +1,8 @@
 import { Formation, FormationType } from '@/components/CupGrid/Formation';
 
 /**
- * Pro mode: the cups of the new match draft. Both teams start with the 10-cup pyramid; the draft
- * keeps a log of hits, and which cups still stand is derived from it. A hit also counts as one
+ * Pro mode: the cups of a match being entered. Both teams start with the 10-cup pyramid; the
+ * match keeps a log of hits, and which cups still stand is derived from it. A hit also counts as one
  * of its move on the points page, so the two pages can't disagree about the score.
  */
 

@@ -22,11 +22,11 @@ import {
     standingCups,
 } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
-import { useMatchEntry } from '@/lib/useMatchEntry';
+import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
-/** Pro mode: who hit the tapped cup, and how. Opened from the cups page of a new match. */
+/** Pro mode: who hit the tapped cup, and how. Opened from the live match's cups page. */
 export default function Page() {
     const params = useLocalSearchParams<{
         team: CupTeam;
@@ -44,10 +44,11 @@ export default function Page() {
     const nav = useNavigation();
 
     const entry = useMatchEntry(params.liveMatchId);
+    useCloseWhenEnded(entry.isEnded);
 
-    const { groupId, seasonId } = useGroup();
-    const movesQuery = useMoves(groupId, seasonId);
-    const playersQuery = usePlayersQuery(groupId, seasonId);
+    const { groupId } = useGroup();
+    const movesQuery = useMoves(groupId, entry.seasonId);
+    const playersQuery = usePlayersQuery(groupId, entry.seasonId);
 
     const profiles = playersQuery.data?.data ?? [];
     const moves = (movesQuery.data?.data ?? []).map<CupMove & { name: string }>(

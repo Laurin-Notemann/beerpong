@@ -27,8 +27,9 @@ export function TabStack({ root }: { root: string }) {
     const { selectedGroupId } = useGroupStore();
     const selectedGroup = useGroupQuery(selectedGroupId);
 
-    const dock = useLiveMatchDock();
-    const floatingDock = DOCK_IN_TAB_BAR ? undefined : dock.snapshot;
+    // without the bottom accessory, each tab stack floats its own dock
+    const dock = useLiveMatchDock({ enabled: !DOCK_IN_TAB_BAR });
+    const floatingDock = dock.snapshot;
 
     return (
         <View style={{ flex: 1 }}>

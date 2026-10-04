@@ -19,8 +19,8 @@ const GRID_GAP = 32;
 const MAX_GRID_WIDTH = 300;
 
 /**
- * Pro mode page of the new match: both teams' cups, as on the table. Tapping a cup records who
- * hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
+ * The live match screen's cups page: both teams' cups, as on the table. Tapping a cup records
+ * who hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
  * the other team, and the swap button switches which team that is.
  */
 export default function NewMatchCups({
@@ -35,9 +35,9 @@ export default function NewMatchCups({
 
     const entry = useMatchEntry(liveMatchId);
 
-    const { groupId, seasonId } = useGroup();
-    const playersQuery = usePlayersQuery(groupId, seasonId);
-    const movesQuery = useMoves(groupId, seasonId);
+    const { groupId } = useGroup();
+    const playersQuery = usePlayersQuery(groupId, entry.seasonId);
+    const movesQuery = useMoves(groupId, entry.seasonId);
 
     const [bottomTeam, setBottomTeam] = useState<CupTeam>('blue');
     const topTeam: CupTeam = bottomTeam === 'blue' ? 'red' : 'blue';

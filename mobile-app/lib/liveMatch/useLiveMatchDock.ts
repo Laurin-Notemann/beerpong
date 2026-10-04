@@ -19,13 +19,17 @@ export interface LiveMatchDockSnapshot {
 
 /**
  * The live match dock's data. It shows (`snapshot` is set) in pro mode while the selected group
- * has a live match. Tapping it opens the match, or the list when several are live.
+ * has a live match. Tapping it opens the match, or the list when several are live. `enabled`
+ * is false where this platform doesn't show the dock (the tab bar's accessory or the tab
+ * stacks' floating one), so it's computed only once.
  */
-export function useLiveMatchDock() {
+export function useLiveMatchDock({ enabled }: { enabled: boolean }) {
     const groupId = useSelectedGroupId();
     const proMode = useLocalSettingsStore((s) => s.beerpongProMode);
     // out of pro mode the dock is hidden, so nothing needs fetching
-    const { matches, primary } = useGroupLiveMatches(proMode ? groupId : null);
+    const { matches, primary } = useGroupLiveMatches(
+        enabled && proMode ? groupId : null
+    );
     const nav = useNavigation();
 
     const count = matches.length;

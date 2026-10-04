@@ -63,16 +63,22 @@ export default function LiveMatchPage() {
                         }
                     />
                 </View>
-                <InsetFree>
-                    <Swiper ref={pagerRef} swiperProgress={pagerProgress}>
-                        <NewMatchCups liveMatchId={id} />
-                        <CreateMatchAssignPoints
-                            liveMatchId={id}
-                            players={screen.teamMembers}
-                            onPlayerPress={screen.openPlayer}
-                        />
-                    </Swiper>
-                </InsetFree>
+                {/* an edit made while the finish is on its way wouldn't be part of the match */}
+                <View
+                    style={{ flex: 1, opacity: screen.isFinishing ? 0.5 : 1 }}
+                    pointerEvents={screen.isFinishing ? 'none' : 'auto'}
+                >
+                    <InsetFree>
+                        <Swiper ref={pagerRef} swiperProgress={pagerProgress}>
+                            <NewMatchCups liveMatchId={id} />
+                            <CreateMatchAssignPoints
+                                liveMatchId={id}
+                                players={screen.teamMembers}
+                                onPlayerPress={screen.openPlayer}
+                            />
+                        </Swiper>
+                    </InsetFree>
+                </View>
                 <FinishBar
                     syncStatus={screen.syncStatus}
                     pendingCount={screen.pendingCount}

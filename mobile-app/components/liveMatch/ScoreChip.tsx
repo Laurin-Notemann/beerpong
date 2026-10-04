@@ -143,7 +143,13 @@ export function ScoreChip({
             ]}
         >
             {/* sizes the chip to the number; the visible one is in the layer above */}
-            <Text style={[text, { opacity: 0 }]}>{value}</Text>
+            <Text
+                style={[text, { opacity: 0 }]}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+            >
+                {value}
+            </Text>
             {/* the first value is just there; only changes roll */}
             <LayoutAnimationConfig skipEntering>
                 <View style={LAYER} pointerEvents="none">

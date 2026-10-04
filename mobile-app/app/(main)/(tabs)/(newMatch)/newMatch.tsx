@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -326,7 +327,7 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                // pro mode adds a page, so toggling it re-mounts the carousel too
+                // pro mode has no points page, so toggling it re-mounts the carousel too
                 key={groupId + ':' + seasonId + ':' + beerpongProMode}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
@@ -389,6 +390,12 @@ export default function NewMatchScreen() {
                                 maxTeamSize={maxTeamSize}
                                 players={selectablePlayers}
                                 setTeam={matchDraft.actions.setPlayerTeam}
+                                onStart={
+                                    beerpongProMode && Platform.OS === 'android'
+                                        ? onStartLiveMatch
+                                        : undefined
+                                }
+                                canStart={hasValidTeams}
                             />
                         );
                     }

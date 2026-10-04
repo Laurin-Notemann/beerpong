@@ -8,7 +8,7 @@ import { MinimalMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { countCups, cupsPerHit } from '@/api/utils/ruleMoveCups';
 import AssignPointsToPlayerModal from '@/components/AssignPointsToPlayerModal/index';
 import { useNavigation } from '@/lib/navigation/useNavigation';
-import { useMatchEntry } from '@/lib/useMatchEntry';
+import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { ConsoleLogger } from '@/utils/logging';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
@@ -21,14 +21,15 @@ export default function Page() {
     const nav = useNavigation();
 
     const entry = useMatchEntry(liveMatchId);
+    useCloseWhenEnded(entry.isEnded);
 
-    const { groupId, seasonId } = useGroup();
+    const { groupId } = useGroup();
 
-    const movesQuery = useMoves(groupId, seasonId);
+    const movesQuery = useMoves(groupId, entry.seasonId);
 
     const allowedMoves = movesQuery.data?.data ?? [];
 
-    const playersQuery = usePlayersQuery(groupId, seasonId);
+    const playersQuery = usePlayersQuery(groupId, entry.seasonId);
 
     const profiles = playersQuery.data?.data ?? [];
 

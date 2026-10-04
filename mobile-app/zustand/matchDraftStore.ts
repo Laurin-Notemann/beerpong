@@ -18,7 +18,7 @@ interface MatchDraftStore {
     hasBeenOnPageTwo: boolean;
     redTeam: TeamDraft;
     blueTeam: TeamDraft;
-    /** pro mode: the hits entered on the cups page, oldest first */
+    /** cup hits, oldest first. Pro mode enters them into a live match now, so this stays empty */
     cupHits: CupHit[];
     actions: {
         getHasBeenOnPageTwo: () => boolean;

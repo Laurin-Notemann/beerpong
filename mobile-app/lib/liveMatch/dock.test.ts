@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    dockBadgeLayout,
     dockLabel,
     groupLiveMatches,
     primaryLiveMatch,
@@ -145,5 +146,48 @@ describe('dockLabel', () => {
         expect(dockLabel({ count: 3, blueScore: 0, redScore: 1 })).toBe(
             '3 live matches, this one blue 0, red 1. Opens the list'
         );
+    });
+});
+
+describe('dockBadgeLayout', () => {
+    it('shows three avatars and the names of small teams on regular phones', () => {
+        expect(
+            dockBadgeLayout({ windowWidth: 393, largestTeam: 2, count: 1 })
+        ).toEqual({ maxAvatars: 3, showNames: true });
+    });
+
+    it('caps the avatars at two plus "+N" on narrow phones', () => {
+        expect(
+            dockBadgeLayout({ windowWidth: 320, largestTeam: 4, count: 1 })
+                .maxAvatars
+        ).toBe(2);
+        expect(
+            dockBadgeLayout({ windowWidth: 375, largestTeam: 4, count: 1 })
+                .maxAvatars
+        ).toBe(3);
+    });
+
+    it('hides names that would get too little room', () => {
+        // 1v1 on a 320 pt phone leaves about 30 pt per name
+        expect(
+            dockBadgeLayout({ windowWidth: 320, largestTeam: 1, count: 1 })
+                .showNames
+        ).toBe(false);
+        // "+N" takes the room the names had
+        expect(
+            dockBadgeLayout({ windowWidth: 375, largestTeam: 2, count: 2 })
+                .showNames
+        ).toBe(false);
+        expect(
+            dockBadgeLayout({ windowWidth: 375, largestTeam: 2, count: 1 })
+                .showNames
+        ).toBe(true);
+    });
+
+    it('never names teams of three or more', () => {
+        expect(
+            dockBadgeLayout({ windowWidth: 430, largestTeam: 3, count: 1 })
+                .showNames
+        ).toBe(false);
     });
 });

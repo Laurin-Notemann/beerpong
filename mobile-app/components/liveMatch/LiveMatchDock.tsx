@@ -1,7 +1,8 @@
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NativeTabs } from 'expo-router/native-tabs';
-import { Text, View } from 'react-native';
+import { Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
+    FadeIn,
     LayoutAnimationConfig,
     useReducedMotion,
 } from 'react-native-reanimated';
@@ -10,6 +11,8 @@ import { useLiveMatchTeams } from '@/api/liveMatch/useGroupLiveMatches';
 import { LiveDot } from '@/components/liveMatch/LiveDot';
 import { LiveTimer } from '@/components/liveMatch/LiveTimer';
 import {
+    EASE_OUT,
+    ENTER_MS,
     floatIn,
     floatOut,
     popIn,
@@ -20,7 +23,7 @@ import { ScoreChip } from '@/components/liveMatch/ScoreChip';
 import { TeamBadge } from '@/components/liveMatch/TeamBadge';
 import { useNextTokens, withAlpha } from '@/components/next/tokens';
 import PressableScale from '@/components/PressableScale';
-import { dockLabel } from '@/lib/liveMatch/dock';
+import { dockBadgeLayout, dockLabel } from '@/lib/liveMatch/dock';
 import type { LiveMatchDockSnapshot } from '@/lib/liveMatch/useLiveMatchDock';
 import { useInsets } from '@/lib/useInsets';
 
@@ -36,9 +39,6 @@ const FLOATING_HEIGHT = 56;
 const FLOATING_GAP = 8;
 /** how much higher a tab's content has to end while the floating dock shows */
 export const FLOATING_DOCK_INSET = FLOATING_HEIGHT + 2 * FLOATING_GAP;
-
-// names only fit next to small teams; bigger ones show their avatars
-const MAX_NAMED_TEAM = 2;
 
 interface DockProps {
     snapshot: LiveMatchDockSnapshot;
@@ -86,88 +86,109 @@ function MoreChip({ count }: { count: number }) {
 /**
  * The regular dock: live dot and timer, then blue badge, score – score, red badge (as in
  * `Scoreboard`), then "+N" when more matches are live. The scores sit in the middle of the
- * space between timer and "+N"; the badges give way (names only for teams of up to two, then
- * they ellipsize), so the scores never move.
+ * space between timer and "+N"; the badges give way (`dockBadgeLayout`: names only where they
+ * fit, fewer avatars on narrow phones), so the scores never move.
  */
 function DockRow({ snapshot, teams }: RowProps) {
     const t = useNextTokens();
+    const { width } = useWindowDimensions();
     const { primary, count } = snapshot;
     const { red, blue } = teams;
-    const showNames =
-        red.players.length <= MAX_NAMED_TEAM &&
-        blue.players.length <= MAX_NAMED_TEAM;
+    const { maxAvatars, showNames } = dockBadgeLayout({
+        windowWidth: width,
+        largestTeam: Math.max(red.players.length, blue.players.length),
+        count,
+    });
 
     return (
-        // the "+N" only animates when the count changes, not with the dock itself
-        <LayoutAnimationConfig skipEntering skipExiting>
-            <View
-                style={{
-                    flex: 1,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 10,
-                }}
-            >
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                        flexShrink: 0,
-                    }}
-                >
-                    <LiveDot />
-                    <LiveTimer startedAt={primary.startedAt} />
-                </View>
+        // Another match fades in as a whole: its own row, so the scores don't roll as if a cup
+        // changed. The first one just shows (see the docks' `skipEntering`)
+        <Animated.View
+            key={primary.id}
+            entering={FadeIn.duration(ENTER_MS).easing(EASE_OUT)}
+            style={{ flex: 1 }}
+        >
+            {/* the "+N" only animates when the count changes, not with the dock itself */}
+            <LayoutAnimationConfig skipEntering skipExiting>
                 <View
                     style={{
                         flex: 1,
-                        minWidth: 0,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 6,
+                        gap: 10,
                     }}
                 >
                     <View
                         style={{
-                            flex: 1,
-                            minWidth: 0,
-                            alignItems: 'flex-end',
-                            overflow: 'hidden',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
+                            flexShrink: 0,
                         }}
                     >
-                        <TeamBadge
-                            team="blue"
-                            players={blue.players}
-                            size="compact"
-                            showNames={showNames}
-                        />
+                        <LiveDot />
+                        <LiveTimer startedAt={primary.startedAt} />
                     </View>
-                    <ScoreChip team="blue" value={blue.score} size="compact" />
-                    <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-                        –
-                    </Text>
-                    <ScoreChip team="red" value={red.score} size="compact" />
                     <View
                         style={{
                             flex: 1,
                             minWidth: 0,
-                            alignItems: 'flex-start',
-                            overflow: 'hidden',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 6,
                         }}
                     >
-                        <TeamBadge
-                            team="red"
-                            players={red.players}
+                        <View
+                            style={{
+                                flex: 1,
+                                minWidth: 0,
+                                alignItems: 'flex-end',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <TeamBadge
+                                team="blue"
+                                players={blue.players}
+                                size="compact"
+                                maxAvatars={maxAvatars}
+                                showNames={showNames}
+                            />
+                        </View>
+                        <ScoreChip
+                            team="blue"
+                            value={blue.score}
                             size="compact"
-                            align="end"
-                            showNames={showNames}
                         />
+                        <Text style={{ color: t.textSecondary, fontSize: 13 }}>
+                            –
+                        </Text>
+                        <ScoreChip
+                            team="red"
+                            value={red.score}
+                            size="compact"
+                        />
+                        <View
+                            style={{
+                                flex: 1,
+                                minWidth: 0,
+                                alignItems: 'flex-start',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <TeamBadge
+                                team="red"
+                                players={red.players}
+                                size="compact"
+                                align="end"
+                                maxAvatars={maxAvatars}
+                                showNames={showNames}
+                            />
+                        </View>
                     </View>
+                    {count > 1 && <MoreChip count={count - 1} />}
                 </View>
-                {count > 1 && <MoreChip count={count - 1} />}
-            </View>
-        </LayoutAnimationConfig>
+            </LayoutAnimationConfig>
+        </Animated.View>
     );
 }
 
@@ -257,11 +278,13 @@ export function LiveMatchAccessory({ snapshot, onPress }: DockProps) {
                 paddingHorizontal: placement === 'inline' ? 10 : 16,
             }}
         >
-            {placement === 'inline' ? (
-                <InlineDockRow snapshot={snapshot} teams={teams} />
-            ) : (
-                <DockRow snapshot={snapshot} teams={teams} />
-            )}
+            <LayoutAnimationConfig skipEntering>
+                {placement === 'inline' ? (
+                    <InlineDockRow snapshot={snapshot} teams={teams} />
+                ) : (
+                    <DockRow snapshot={snapshot} teams={teams} />
+                )}
+            </LayoutAnimationConfig>
         </PressableScale>
     );
 }

@@ -21,7 +21,10 @@ export const NewMatchStack: React.FC<{
     onBack: () => void;
     onNext: () => void;
     onCreate: () => void;
-    /** pro mode: the teams page starts a live match instead of going on to the next page */
+    /**
+     * pro mode: the teams page starts a live match instead of going on to the next page. The
+     * toolbar button only shows on iOS (Android needs an icon); Android has one in the page
+     */
     onStart?: () => void;
     canStart?: boolean;
 }> = ({
