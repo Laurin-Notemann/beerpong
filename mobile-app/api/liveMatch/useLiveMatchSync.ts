@@ -106,8 +106,10 @@ export function useLiveMatchSync() {
                 actions.drop(id);
                 invalidateLiveMatch(qc, entry.groupId, id);
             },
-            onPoison: (id, entry, request) => {
-                // the api client already reported the response; this says what got lost
+            // a create the server won't take drops the match on this phone
+            onPoison: (id, entry, request, error) => {
+                // reported once here, the api client doesn't report sync responses
+                captureMutationErr('liveMatchSync')(error);
                 logger.error(
                     'server rejected live match ops for good, dropping them',
                     id,
@@ -125,7 +127,7 @@ export function useLiveMatchSync() {
             },
             onFailed: (id, error, kind, firstInARow) => {
                 logger.warn('live match sync failed, will retry', id, kind);
-                // network and server errors are already reported by the api client
+                // server errors are already reported by the api client
                 if (kind === 'other' && firstInARow) {
                     captureMutationErr('liveMatchSync')(error);
                 }

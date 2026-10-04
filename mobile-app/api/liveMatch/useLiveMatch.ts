@@ -13,13 +13,15 @@ import {
     cachedMatch,
     invalidateLiveMatch,
     liveMatchKey,
+    removeEndedFromList,
 } from '@/api/liveMatch/liveMatchCache';
 import { requestLiveMatchSync } from '@/api/liveMatch/useLiveMatchSync';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { CupHit, CupPosition, CupTeam } from '@/lib/cupHits';
-import { isEnded, isIncomplete, mergeLiveMatch } from '@/lib/liveMatch/cache';
+import { isEnded, mergeLiveMatch } from '@/lib/liveMatch/cache';
+import { finishWithRetry, LiveMatchOfflineError } from '@/lib/liveMatch/finish';
 import {
     composeOps,
     countFinishes,
@@ -28,7 +30,6 @@ import {
     toTeamCreateDtos,
 } from '@/lib/liveMatch/log';
 import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
-import { errorCode } from '@/lib/liveMatch/sync';
 import { LiveMatchDto, LiveOp, toLiveOps } from '@/lib/liveMatch/types';
 import { showErrorToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
@@ -39,24 +40,6 @@ import {
 } from '@/zustand/liveMatchOutboxStore';
 
 const logger = new ScopedLogger('live-match');
-
-/** finish couldn't send this phone's last edits in time */
-export class LiveMatchOfflineError extends Error {
-    constructor() {
-        super(
-            "Can't reach the server. Your edits are saved; finish again when you're back online."
-        );
-        this.name = 'LiveMatchOfflineError';
-    }
-}
-
-/** someone changed the score while this phone was finishing, and it no longer has one finish */
-export class LiveMatchScoreChangedError extends Error {
-    constructor() {
-        super('The score changed while finishing. Check it and finish again.');
-        this.name = 'LiveMatchScoreChangedError';
-    }
-}
 
 export type LiveMatchSyncStatus = 'synced' | 'syncing' | 'offline';
 
@@ -137,16 +120,19 @@ export function useLiveMatch(groupId: ApiId, id: ApiId) {
         return view.ignoredOpIds.filter((i) => mine.has(i));
     }, [view.ignoredOpIds, myOpIds]);
 
-    // a conflict is only final once the server's log decided it
+    // a conflict is only final once the server's log decided it. Only a lost cup hit is worth a
+    // toast; another phone undoing the same cup or removing a player first needs no explanation
     useEffect(() => {
-        const confirmed = new Set(view.confirmed.map((i) => i.id));
+        const confirmed = new Map(view.confirmed.map((i) => [i.id, i]));
         const lost = ignoredOwnOpIds.filter(
             (i) => confirmed.has(i) && !toastedConflicts.has(i)
         );
         if (!lost.length) return;
 
         lost.forEach((i) => toastedConflicts.add(i));
-        showErrorToast('Someone else already marked that cup.');
+        if (lost.some((i) => confirmed.get(i)?.type === 'RECORD_CUP_HIT')) {
+            showErrorToast('Someone else already marked that cup.');
+        }
     }, [ignoredOwnOpIds, view.confirmed]);
 
     const pendingCount = entry
@@ -325,6 +311,7 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
         const fetched = await fetchLiveMatch(await api, groupId, id);
         const merged = mergeLiveMatch(cachedMatch(qc, groupId, id), fetched);
         qc.setQueryData(liveMatchKey(groupId, id), merged);
+        removeEndedFromList(qc, groupId, merged);
         return merged;
     }
 
@@ -338,55 +325,46 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
         await waitUntilSent(id, 10_000);
 
         const client = await api;
-        // expectedSeq has to match the log that was reduced, so a log with holes is refetched
-        let server = cachedMatch(qc, groupId, id);
-        if (!server || isIncomplete(server)) server = await refetch();
-
-        for (let attempt = 0; ; attempt++) {
-            const { state, header } = toView(groupId, id, server, undefined);
-            try {
-                const result = await finishLiveMatch(client, groupId, id, {
+        const result = await finishWithRetry({
+            cached: cachedMatch(qc, groupId, id),
+            refetch,
+            send: (server) =>
+                finishLiveMatch(client, groupId, id, {
                     expectedSeq: server.lastSeq ?? 0,
-                    teams: toTeamCreateDtos(state),
-                });
-                const seasonId = result.seasonId ?? header!.seasonId;
-                if (!result.resultMatchId) {
-                    throw new Error('finishLiveMatch: no result match');
-                }
-                applyLiveMatchEnd(qc, groupId, result);
-                invalidateMatches(groupId, seasonId);
-                invalidatePlayers(groupId, seasonId);
-                invalidateLeaderboard(groupId);
-
-                return { matchId: result.resultMatchId, seasonId };
-            } catch (error) {
-                if (errorCode(error) === 'liveMatchEnded') {
-                    invalidateLiveMatch(qc, groupId, id);
-                }
-                if (errorCode(error) !== 'liveMatchStale') throw error;
-                if (attempt > 0) throw new LiveMatchScoreChangedError();
-
-                server = await refetch();
+                    teams: toTeamCreateDtos(
+                        toView(groupId, id, server, undefined).state
+                    ),
+                }),
+            countFinishes: (server) => {
                 const finishMoveIds = cachedFinishMoveIds(
                     qc,
                     groupId,
-                    server.seasonId ?? header!.seasonId
+                    server.seasonId ?? ''
                 );
-                const finishes =
+                return (
                     finishMoveIds &&
                     countFinishes(
                         toView(groupId, id, server, undefined).state,
                         finishMoveIds
-                    );
-                // without the rules loaded, the server's validation decides
-                if (finishes !== undefined && finishes !== 1) {
-                    throw new LiveMatchScoreChangedError();
-                }
-            }
+                    )
+                );
+            },
+            onEnded: () => invalidateLiveMatch(qc, groupId, id),
+        });
+
+        const seasonId =
+            result.seasonId ?? readView(qc, groupId, id).header?.seasonId;
+        if (!result.resultMatchId || !seasonId) {
+            throw new Error('finishLiveMatch: no result match');
         }
+        applyLiveMatchEnd(qc, groupId, result);
+        invalidateMatches(groupId, seasonId);
+        invalidatePlayers(groupId, seasonId);
+        invalidateLeaderboard(groupId);
+
+        return { matchId: result.resultMatchId, seasonId };
     }
 
-    /** ends the match without a result, for everyone */
     /**
      * Ends the match without a result, for everyone. Takes effect on this phone right away; the
      * server gets it through the outbox, so it survives being offline and app kills.

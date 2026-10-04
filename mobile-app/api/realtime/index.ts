@@ -118,8 +118,15 @@ export class RealtimeClient {
             for (const handler of handlers) {
                 try {
                     handler(event);
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                } catch (_) {}
+                } catch (err) {
+                    // one broken handler mustn't stop the others, but it has to show up in Sentry
+                    this.logger.error(
+                        'handler failed:',
+                        event.eventType,
+                        event.scope,
+                        err
+                    );
+                }
             }
         }
     }

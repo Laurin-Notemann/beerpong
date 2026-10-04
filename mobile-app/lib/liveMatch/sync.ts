@@ -46,26 +46,28 @@ export function errorCode(error: unknown): string | undefined {
  * - `retry`: no answer or a server error. A 500 can also be two identical first creates racing;
  *   the retry then gets the existing match.
  * - `ended`: the match is over or gone; what's queued for it can never be sent.
- * - `poison`: the server will never take these ops; they're dropped so they can't block the
- *   ones after them.
- * - `other`: kept and retried, in case it's temporary (auth, a season that isn't active yet…).
+ * - `poison`: the server will never take this request (any other 4xx, e.g. a season that ended
+ *   or a user removed from the group); it's dropped so it can't block what comes after it.
+ *   A create that's poison drops the whole match on this phone.
+ * - `other`: kept and retried, in case it's temporary (401 until the token refreshes, 408, 429,
+ *   an error that isn't from the server).
  */
 export type SyncErrorKind = 'retry' | 'ended' | 'poison' | 'other';
 
+const TEMPORARY_STATUSES = [401, 408, 429];
+
 export function classifySyncError(error: unknown): SyncErrorKind {
-    if (isAxiosError(error)) {
-        if (!error.response || error.response.status >= 500) return 'retry';
-    }
     switch (errorCode(error)) {
         case 'liveMatchEnded':
         case 'liveMatchNotFound':
             return 'ended';
-        case 'liveMatchInvalidOps':
-        case 'liveMatchTooManyOps':
-            return 'poison';
-        default:
-            return 'other';
     }
+    if (!isAxiosError(error)) return 'other';
+
+    const status = error.response?.status;
+    if (!status || status >= 500) return 'retry';
+    if (status >= 400 && !TEMPORARY_STATUSES.includes(status)) return 'poison';
+    return 'other';
 }
 
 export interface SyncDeps {

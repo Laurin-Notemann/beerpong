@@ -70,13 +70,33 @@ export function applyLiveMatchStart(
         applyLiveMatchEnd(qc, groupId, match);
         return;
     }
-    qc.setQueryData(liveMatchKey(groupId, match.id), (prev: unknown) =>
-        mergeLiveMatch(asLiveMatch(prev), match)
-    );
+    const single = mergeLiveMatch(cachedMatch(qc, groupId, match.id), match);
+    qc.setQueryData(liveMatchKey(groupId, match.id), single);
+    // a start that arrives after the end must not bring the match back
+    if (isEnded(single)) {
+        removeEndedFromList(qc, groupId, single);
+        return;
+    }
     qc.setQueryData(liveMatchesKey(groupId), (prev: unknown) =>
         prev === undefined
             ? undefined
             : upsertInList(asLiveMatchList(prev), match)
+    );
+}
+
+/** takes an ended match out of the list, e.g. one fetched on its own after a missed end event */
+export function removeEndedFromList(
+    qc: QueryClient,
+    groupId: ApiId,
+    match: LiveMatchDto
+) {
+    const id = match.id;
+    if (!id || !isEnded(match)) return;
+
+    qc.setQueryData(liveMatchesKey(groupId), (prev: unknown) =>
+        prev === undefined
+            ? undefined
+            : removeFromList(asLiveMatchList(prev), id)
     );
 }
 
@@ -129,17 +149,10 @@ export function applyLiveMatchEnd(
     if (!match.id) return;
     const id = match.id;
 
-    const single = cachedMatch(qc, groupId, id);
-    if (single) {
-        qc.setQueryData(liveMatchKey(groupId, id), withEnd(single, match));
-    } else {
-        qc.invalidateQueries({ queryKey: liveMatchKey(groupId, id) });
-    }
-    qc.setQueryData(liveMatchesKey(groupId), (prev: unknown) =>
-        prev === undefined
-            ? undefined
-            : removeFromList(asLiveMatchList(prev), id)
-    );
+    // also without a cached copy: a list fetch still in flight then can't bring it back
+    const ended = withEnd(cachedMatch(qc, groupId, id), match);
+    qc.setQueryData(liveMatchKey(groupId, id), ended);
+    removeEndedFromList(qc, groupId, ended);
     liveMatchOutbox().actions.drop(id);
 }
 

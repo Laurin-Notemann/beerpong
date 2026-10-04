@@ -75,6 +75,13 @@ export function ApiProvider({ children }: { children: ReactNode }) {
                         err.response.status,
                         err.response.data
                     );
+                    // the live match sync reports its client errors once itself, not on every retry
+                    if (
+                        err.config?.retriedUntilOnline &&
+                        err.response.status < 500
+                    ) {
+                        return Promise.reject(err);
+                    }
                     Sentry.captureException(err, {
                         extra: {
                             url: err.config?.url,

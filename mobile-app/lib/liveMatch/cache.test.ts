@@ -4,6 +4,7 @@ import {
     asLiveMatch,
     asLiveMatchList,
     asOpsEvent,
+    isEnded,
     isIncomplete,
     mergeFetchedList,
     mergeLiveMatch,
@@ -112,6 +113,17 @@ describe('withEnd', () => {
         expect(next.status).toBe('ABANDONED');
         expect(seqs(next)).toEqual([1, 2]);
     });
+
+    it('records the end of a match that was never opened on this phone', () => {
+        const next = withEnd(undefined, {
+            id: 'm',
+            status: 'FINISHED',
+            ops: [],
+        });
+
+        expect(isEnded(next)).toBe(true);
+        expect(next.ops).toEqual([]);
+    });
 });
 
 describe('the list of matches in progress', () => {
@@ -140,6 +152,29 @@ describe('the list of matches in progress', () => {
         expect(next.map((i) => i.id)).toEqual(['a']);
         expect(seqs(next[0])).toEqual([1, 2]);
     });
+
+    it('never takes an ended match from a fetch', () => {
+        const next = mergeFetchedList(
+            [],
+            [live('a', [1]), live('done', [1], { status: 'FINISHED' })],
+            () => false
+        );
+
+        expect(next.map((i) => i.id)).toEqual(['a']);
+    });
+
+    it('keeps out a match whose end arrived while the list fetch was in flight', () => {
+        // the end event lands first, for a match this phone never opened
+        const single = withEnd(undefined, { id: 'm', status: 'FINISHED' });
+        // then the fetch that started before the end resolves, still showing it in progress
+        const next = mergeFetchedList(
+            [],
+            [live('m', [1, 2])],
+            (id) => id === single.id && isEnded(single)
+        );
+
+        expect(next).toEqual([]);
+    });
 });
 
 describe('values persisted by an older app version', () => {
@@ -155,6 +190,24 @@ describe('values persisted by an older app version', () => {
         expect(asLiveMatch({ id: 'm', ops: [null, op(1)] })?.ops).toEqual([
             op(1),
         ]);
+    });
+
+    it('get dates without a zone id, which Date.parse cannot read', () => {
+        const match = asLiveMatch({
+            id: 'm',
+            startedAt: '2026-10-04T18:15:30.123456Z[Etc/UTC]',
+            lastActivityAt: '2026-10-04T20:15:30+02:00[Europe/Berlin]',
+            endedAt: '2026-10-04T18:20:00Z',
+        });
+
+        expect(match?.startedAt).toBe('2026-10-04T18:15:30.123456Z');
+        expect(Date.parse(match!.startedAt!)).toBe(
+            Date.parse('2026-10-04T18:15:30.123Z')
+        );
+        expect(Date.parse(match!.lastActivityAt!)).toBe(
+            Date.parse('2026-10-04T18:15:30Z')
+        );
+        expect(match?.endedAt).toBe('2026-10-04T18:20:00Z');
     });
 
     it('socket bodies without a live match id are ignored', () => {

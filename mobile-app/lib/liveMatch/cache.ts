@@ -20,10 +20,24 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const asOps = (value: unknown) =>
     Array.isArray(value) ? (value.filter(isObject) as LiveMatchOpDto[]) : [];
 
+/**
+ * Older servers wrote socket dates as `2026-10-04T18:15:30Z[Etc/UTC]`, which `Date.parse` can't
+ * read (a timer would freeze at 0:00). The zone id adds nothing to the offset before it.
+ */
+export const withoutZoneId = <T>(date: T) =>
+    typeof date === 'string' ? date.replace(/\[[^\]]*\]$/, '') : date;
+
 export function asLiveMatch(value: unknown): LiveMatchDto | undefined {
     if (!isObject(value) || typeof value.id !== 'string') return;
 
-    return { ...(value as LiveMatchDto), ops: asOps(value.ops) };
+    const match = value as LiveMatchDto;
+    return {
+        ...match,
+        startedAt: withoutZoneId(match.startedAt),
+        lastActivityAt: withoutZoneId(match.lastActivityAt),
+        endedAt: withoutZoneId(match.endedAt),
+        ops: asOps(value.ops),
+    };
 }
 
 export const asLiveMatchList = (value: unknown) =>
@@ -126,7 +140,7 @@ export function mergeFetchedList(
     isKnownEnded: (id: string) => boolean
 ) {
     return fetched
-        .filter((i) => i.id && !isKnownEnded(i.id))
+        .filter((i) => i.id && !isEnded(i) && !isKnownEnded(i.id))
         .map((match) =>
             mergeLiveMatch(
                 cached.find((i) => i.id === match.id),

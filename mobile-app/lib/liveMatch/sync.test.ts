@@ -89,7 +89,15 @@ describe('classifySyncError', () => {
         ['a missing match', httpError(404, 'liveMatchNotFound'), 'ended'],
         ['invalid ops', httpError(400, 'liveMatchInvalidOps'), 'poison'],
         ['a full log', httpError(400, 'liveMatchTooManyOps'), 'poison'],
-        ['anything else', httpError(403, 'groupNotFound'), 'other'],
+        [
+            'any other client error, e.g. an ended season',
+            httpError(400, 'seasonAlreadyEnded'),
+            'poison',
+        ],
+        ['a user removed from the group', httpError(403), 'poison'],
+        ['an expired token', httpError(401), 'other'],
+        ['a request timeout', httpError(408), 'other'],
+        ['rate limiting', httpError(429), 'other'],
         ['a non-http error', new Error('boom'), 'other'],
     ])('%s', (_, error, kind) => {
         expect(classifySyncError(error)).toBe(kind);
@@ -270,12 +278,27 @@ describe('createSyncEngine', () => {
         expect(state.entries).toEqual({});
     });
 
-    it('keeps the ops on other errors and reports only the first in a row', async () => {
+    it('drops a match whose create the server rejects for good', async () => {
+        apply(outbox.start(state, 'm', match, [adjust('t')]));
+        apply(outbox.enqueue(state, 'm', match, [adjust('a')]));
+        responses.push(reject(httpError(400, 'seasonAlreadyEnded')));
+
+        engine().kick();
+        await vi.runAllTimersAsync();
+
+        expect(sent).toEqual([{ kind: 'create', ids: ['t'] }]);
+        expect(poisoned).toEqual([['t']]);
+        expect(failed).toEqual([]);
+        expect(state.entries).toEqual({});
+        expect(state.failing).toEqual({});
+    });
+
+    it('keeps the ops on temporary errors and reports only the first in a row', async () => {
         apply(outbox.enqueue(state, 'm', match, [adjust('a')]));
         responses.push(
-            reject(httpError(403, 'forbidden')),
-            reject(httpError(403, 'forbidden')),
-            reject(httpError(403, 'forbidden'))
+            reject(httpError(429)),
+            reject(httpError(429)),
+            reject(httpError(429))
         );
 
         engine().kick();

@@ -6,6 +6,7 @@ import {
     cachedMatch,
     liveMatchesKey,
     liveMatchKey,
+    removeEndedFromList,
 } from '@/api/liveMatch/liveMatchCache';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
@@ -141,7 +142,13 @@ export const useLiveMatchQuery = (
             if (!groupId || !id) return null;
 
             const fetched = await fetchLiveMatch(await api, groupId, id);
-            return mergeLiveMatch(cachedMatch(qc, groupId, id), fetched);
+            const merged = mergeLiveMatch(
+                cachedMatch(qc, groupId, id),
+                fetched
+            );
+            // its end event may have been missed, so it can still be in the list
+            removeEndedFromList(qc, groupId, merged);
+            return merged;
         },
         initialData: () =>
             groupId && id

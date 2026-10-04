@@ -8,13 +8,15 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useSeasonQuery } from '@/api/calls/seasonHooks';
 import {
-    LiveMatchOfflineError,
-    LiveMatchScoreChangedError,
     useLiveMatch,
     useLiveMatchActions,
 } from '@/api/liveMatch/useLiveMatch';
 import { matchDtoToMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
+import {
+    LiveMatchOfflineError,
+    LiveMatchScoreChangedError,
+} from '@/lib/liveMatch/finish';
 import { finishHint } from '@/lib/liveMatch/labels';
 import { errorCode } from '@/lib/liveMatch/sync';
 import { useNavigation } from '@/lib/navigation/useNavigation';
