@@ -1,7 +1,13 @@
-name: Mobile App EAS
+name: Mobile App Staging
 
-# Starts the EAS workflow (mobile-app/.eas/workflows/staging.yml), which decides per platform
-# whether to publish an OTA update or make a new native build. All build logic lives there.
+# Ships every staging push of the mobile app, on the runner itself (no EAS cloud builds).
+#
+# Per platform: if a build with the same native fingerprint is registered on EAS, only an OTA
+# update is published to that build's channel. Otherwise the app is built here with
+# `eas build --local`, registered on EAS with `eas upload` (so the next push finds it), and on
+# iOS submitted to TestFlight.
+#   iOS     -> profile/channel/environment "production": store build, TestFlight
+#   Android -> profile/channel/environment "preview":    internal APK
 
 on:
   push:
@@ -11,19 +17,45 @@ on:
       - "mobile-app/**"
       - ".github/workflows/mobile-app-eas.yml"
   workflow_dispatch:
-
-concurrency:
-  group: mobile-app-eas
-  cancel-in-progress: false
+    inputs:
+      native_build:
+        description: Build natively even if a build with the same fingerprint exists
+        type: choice
+        options: [none, ios, android, both]
+        default: none
 
 defaults:
   run:
     working-directory: mobile-app
 
 jobs:
-  run-eas-workflow:
-    name: Run EAS staging workflow
-    runs-on: ubuntu-latest
+  ship:
+    name: Ship ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    # One run per platform at a time. A newer push waits instead of cancelling, so a native
+    # build is never cut off halfway, and only the newest waiting push runs next.
+    concurrency:
+      group: mobile-app-staging-${{ matrix.platform }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ios
+            runner: macos-26
+            profile: production
+            artifact: app.ipa
+          - platform: android
+            runner: ubuntu-latest
+            profile: preview
+            artifact: app.apk
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      EXPO_PUBLIC_GIT_COMMIT: ${{ github.sha }}
+      PLATFORM: ${{ matrix.platform }}
+      PROFILE: ${{ matrix.profile }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,26 +67,67 @@ jobs:
           cache: "npm"
           cache-dependency-path: "mobile-app/package-lock.json"
 
-      # eas-cli evaluates the app config, which resolves config plugins from node_modules.
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
       - name: Install dependencies
         run: npm ci
 
-      # EAS runs can sit in the queue for a long time. Without this, an older run can finish
-      # after a newer one and publish stale code as the newest OTA update.
-      - name: Cancel older EAS workflow runs
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      # The profile name is also the channel and the EAS environment (see eas.json).
+      - name: Find matching build
+        id: match
         run: |
-          for status in NEW WAITING IN_PROGRESS; do
-            npx --yes eas-cli@latest workflow:runs --workflow staging.yml --status "$status" --json --limit 50 \
-              | jq -r '.[].id' \
-              | while read -r id; do
-                  echo "cancelling $id ($status)"
-                  npx --yes eas-cli@latest workflow:cancel "$id" --non-interactive || true
-                done
-          done
+          fingerprint=$(eas fingerprint:generate -p "$PLATFORM" --environment "$PROFILE" --json --non-interactive \
+            | sed -n '/^{/,$p' | jq -r .hash)
+          build_id=$(eas build:list -p "$PLATFORM" --fingerprint-hash "$fingerprint" --status finished \
+            --limit 1 --json --non-interactive | jq -r '.[0].id // empty')
+          forced="${{ inputs.native_build }}"
+          if [ "$forced" = "$PLATFORM" ] || [ "$forced" = "both" ]; then build_id=""; fi
+          echo "fingerprint $fingerprint, matching build: ${build_id:-none}"
+          echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+          echo "build_id=$build_id" >> "$GITHUB_OUTPUT"
 
-      - name: Start EAS workflow
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: npx --yes eas-cli@latest workflow:run .eas/workflows/staging.yml --non-interactive -F git_commit=${{ github.sha }}
+      # Runtime unchanged -> OTA update
+
+      - name: Publish update
+        if: steps.match.outputs.build_id
+        run: |
+          eas update --platform "$PLATFORM" --channel "$PROFILE" --environment "$PROFILE" \
+            --message "staging $GITHUB_SHA" --non-interactive
+          npx sentry-expo-upload-sourcemaps dist
+
+      # Runtime changed -> native build
+
+      - name: Setup Java
+        if: ${{ !steps.match.outputs.build_id && matrix.platform == 'android' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+
+      - name: Build
+        if: ${{ !steps.match.outputs.build_id }}
+        run: |
+          eas build --local -p "$PLATFORM" --profile "$PROFILE" --non-interactive \
+            --output "$RUNNER_TEMP/${{ matrix.artifact }}"
+
+      - name: Submit to TestFlight
+        if: ${{ !steps.match.outputs.build_id && matrix.platform == 'ios' }}
+        run: eas submit -p ios --profile production --path "$RUNNER_TEMP/app.ipa" --non-interactive
+
+      - name: Register build on EAS
+        if: ${{ !steps.match.outputs.build_id }}
+        run: |
+          eas upload -p "$PLATFORM" --build-path "$RUNNER_TEMP/${{ matrix.artifact }}" \
+            --fingerprint "${{ steps.match.outputs.fingerprint }}" --non-interactive
+
+      - name: Keep the build
+        if: ${{ !steps.match.outputs.build_id }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ github.sha }}
+          path: ${{ runner.temp }}/${{ matrix.artifact }}
+          retention-days: 14
