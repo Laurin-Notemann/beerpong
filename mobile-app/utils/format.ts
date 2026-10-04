@@ -1,4 +1,8 @@
-export const formatPlacement = (placement: number) => '#' + placement;
+import type { Placement } from '@/constants/rankingAlgorithms';
+
+/** "#2", or golf-style "T2" when the rank is shared */
+export const formatPlacement = ({ rank, tied }: Placement) =>
+    (tied ? 'T' : '#') + rank;
 
 export const formatRatingChange = (value: number) =>
     Math.abs(value)

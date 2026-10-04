@@ -16,14 +16,20 @@ import { NextPodium } from '@/components/next/NextPodium';
 import Podium from '@/components/Podium';
 import Text from '@/components/Text';
 import {
-    getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
+    rankPlayers,
 } from '@/constants/rankingAlgorithms';
 import { plural } from '@/utils/format';
 import { useNewDesign } from '@/zustand/localSettingsStore';
 
 type LeaderboardRow =
-    | { type: 'player'; player: Player; placement: number; unranked: boolean }
+    | {
+          type: 'player';
+          player: Player;
+          placement: Placement;
+          unranked: boolean;
+      }
     | { type: 'unrankedHeader' };
 
 const UNRANKED_HEADER_HEIGHT = 64;
@@ -71,39 +77,28 @@ export default function Leaderboard({
 }: LeaderboardProps) {
     const newDesign = useNewDesign();
 
-    const { rankedPlayers, rows } = useMemo(() => {
-        // copy: `players` can be cached query data, which must not be sorted in place
-        const sortedPlayers = [...players].sort(
-            getRankingAlgorithm(rankingAlgorithm).sortFunc
-        );
-        const ranked = sortedPlayers.filter(
-            (i) => i.matches >= minMatchesRequiredToBeRanked
-        );
+    const { podium, rows } = useMemo(() => {
+        const isRanked = (player: Player) =>
+            player.matches >= minMatchesRequiredToBeRanked;
+        const ranked = rankPlayers(players.filter(isRanked), rankingAlgorithm);
         const out: LeaderboardRow[] = (
             withPodium ? ranked.slice(3) : ranked
-        ).map((player, idx) => ({
+        ).map(({ player, placement }) => ({
             type: 'player',
             player,
-            placement: idx + (withPodium ? 4 : 1),
+            placement,
             unranked: false,
         }));
-        const unranked = sortedPlayers.filter(
-            (i) => i.matches < minMatchesRequiredToBeRanked
+        const unranked = rankPlayers(players, rankingAlgorithm).filter(
+            ({ player }) => !isRanked(player)
         );
         if (showUnranked && unranked.length) {
             out.push({ type: 'unrankedHeader' });
-            sortedPlayers.forEach((player, idx) => {
-                if (player.matches < minMatchesRequiredToBeRanked) {
-                    out.push({
-                        type: 'player',
-                        player,
-                        placement: idx + 1,
-                        unranked: true,
-                    });
-                }
-            });
+            unranked.forEach(({ player, placement }) =>
+                out.push({ type: 'player', player, placement, unranked: true })
+            );
         }
-        return { rankedPlayers: ranked, rows: out };
+        return { podium: ranked.slice(0, 3), rows: out };
     }, [
         players,
         rankingAlgorithm,
@@ -140,20 +135,16 @@ export default function Leaderboard({
                         {ListHeaderComponent}
                         {season && <LeaderBoardSeasonInfo {...season} />}
                         {withPodium &&
-                            (rankedPlayers[0] ? (
+                            (podium.length ? (
                                 newDesign ? (
                                     <NextPodium
-                                        firstPlace={rankedPlayers[0]}
-                                        secondPlace={rankedPlayers[1]}
-                                        thirdPlace={rankedPlayers[2]}
+                                        places={podium}
                                         onPlayerPress={onPlayerPress}
                                         rankingAlgorithm={rankingAlgorithm}
                                     />
                                 ) : (
                                     <Podium
-                                        firstPlace={rankedPlayers[0]}
-                                        secondPlace={rankedPlayers[1]}
-                                        thirdPlace={rankedPlayers[2]}
+                                        places={podium}
                                         onPlayerPress={onPlayerPress}
                                         rankingAlgorithm={rankingAlgorithm}
                                     />

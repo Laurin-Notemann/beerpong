@@ -6,7 +6,6 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { SaveSeasonScreen } from '@/components/screens/SaveSeason';
-import { getRankingAlgorithm } from '@/constants/rankingAlgorithms';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { Components } from '@/openapi/openapi';
 import { showErrorToast, showSuccessToast } from '@/toast';
@@ -64,13 +63,9 @@ export default function Page() {
         groupId,
         seasonId ?? null
     );
-    const rankingAlgorithm = activeSeason?.seasonSettings?.rankingAlgorithm;
 
-    const sortedPlayers = currentSeasonPlayers.sort(
-        getRankingAlgorithm(rankingAlgorithm).sortFunc
-    );
-
-    const rankedPlayers = sortedPlayers.filter(
+    // ordered by the podium, which ranks them
+    const rankedPlayers = currentSeasonPlayers.filter(
         (i) => i.matches >= minMatchesRequiredToBeRanked
     );
 

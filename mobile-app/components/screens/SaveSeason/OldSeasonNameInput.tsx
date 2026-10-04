@@ -5,6 +5,7 @@ import { Player } from '@/api/calls/seasonHooks';
 import { LeaderBoardSeasonInfo } from '@/components/Leaderboard/LeaderboardSeasonInfo';
 import Podium from '@/components/Podium';
 import TextInput from '@/components/TextInput';
+import { rankPlayers } from '@/constants/rankingAlgorithms';
 import { useInsets } from '@/lib/useInsets';
 
 export const OldSeasonNameInput: React.FC<{
@@ -52,9 +53,10 @@ export const OldSeasonNameInput: React.FC<{
             <Podium
                 detailed={false}
                 style={{ marginHorizontal: 'auto' }}
-                firstPlace={rankedPlayers[0]}
-                secondPlace={rankedPlayers[1]}
-                thirdPlace={rankedPlayers[2]}
+                places={rankPlayers(rankedPlayers, rankingAlgorithm).slice(
+                    0,
+                    3
+                )}
                 rankingAlgorithm={rankingAlgorithm}
             />
             <View style={{ height: 16 }} />

@@ -5,6 +5,7 @@ import Avatar from '@/components/Avatar';
 import Text from '@/components/Text';
 import {
     getRankingAlgorithm,
+    type Placement,
     type RankingAlgorithm,
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
@@ -15,7 +16,7 @@ export const LEADERBOARD_ROW_HEIGHT = 60.5;
 
 export interface LeaderboardPlayerItemProps {
     id: string;
-    placement: number;
+    placement: Placement;
 
     name: string;
     avatarUrl?: string | null;

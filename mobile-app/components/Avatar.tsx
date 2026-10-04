@@ -4,6 +4,7 @@ import React, { memo, PropsWithChildren } from 'react';
 import { Pressable, Text, View, ViewStyle } from 'react-native';
 
 import { Icon } from '@/components/Icon';
+import type { Placement } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
 import { formatPlacement } from '@/utils/format';
 
@@ -58,7 +59,7 @@ export interface AvatarProps {
     borderColor?: string;
 
     canUpload?: boolean;
-    placement?: number;
+    placement?: Placement;
     isUnranked?: boolean;
 
     variant?: 'default' | 'list';
@@ -213,7 +214,8 @@ export default memo(Avatar, (prev, next) => {
         prev.size === next.size &&
         prev.borderColor === next.borderColor &&
         prev.canUpload === next.canUpload &&
-        prev.placement === next.placement &&
+        prev.placement?.rank === next.placement?.rank &&
+        prev.placement?.tied === next.placement?.tied &&
         prev.isUnranked === next.isUnranked &&
         prev.variant === next.variant
     );
