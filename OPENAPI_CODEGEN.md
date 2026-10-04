@@ -16,9 +16,10 @@ handlers (it started as the spec springdoc generated from the Java backend) and 
 it at `/v3/api-docs`. `TestSpecMatchesRoutes` in `api-go/internal/api` fails when an endpoint is
 served but not documented, or the other way round.
 
-`npm run gen-types` in `mobile-app` (or `make gen-open-api` from the root) copies it to
-`mobile-app/api/generated/openapi.json`, which the client loads at runtime, and generates
-`mobile-app/openapi/openapi.d.ts` from it with `openapicmd`. Never edit those two files by hand.
+`make gen-open-api` from the root copies it to `mobile-app/api/generated/openapi.json`, which the
+client loads at runtime, and generates `mobile-app/openapi/openapi.d.ts` from it with `openapicmd`
+(`npm run gen-types`). Never edit those two files by hand. The copy happens in `scripts/gen-api`
+rather than the npm script because `package.json` scripts are part of the app's runtime fingerprint.
 
 So an API change is: change the handler and its DTO in `api-go`, update `openapi.json` to match,
 run `make gen-open-api`, and update the hooks that use the changed types. The `Generate OpenApi`

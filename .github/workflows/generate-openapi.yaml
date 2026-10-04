@@ -31,11 +31,9 @@ jobs:
           cache-dependency-path: "mobile-app/package-lock.json"
 
       - name: Generate client types
-        working-directory: mobile-app
         run: |
-          npm ci
-          npm run gen-types
-          npx prettier --write api/generated/openapi.json openapi/openapi.d.ts
+          (cd mobile-app && npm ci)
+          ./scripts/gen-api
 
       - name: Commit generated types
         uses: stefanzweifel/git-auto-commit-action@v5
