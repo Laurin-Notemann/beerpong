@@ -111,7 +111,7 @@ func TestRuleMoves(t *testing.T) {
 	h.Equal(withCups.Num("cups"), 3, "cups sent by the app")
 	ws.Expect(1)
 	ringOfWater := h.OK(h.Do(Req{Method: "POST", Path: g.SeasonPath("/rule-moves"), Auth: owner.Bearer(), Body: map[string]any{"name": "Finish - Ring of water", "pointsForScorer": 1, "pointsForTeam": 10, "finishingMove": true}}))
-	h.Equal(ringOfWater.Num("cups"), 6, "default cups by name")
+	h.Equal(ringOfWater.Num("cups"), 4, "default cups by name")
 	ws.Expect(1)
 
 	for _, bad := range []map[string]any{

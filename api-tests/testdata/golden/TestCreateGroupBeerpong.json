@@ -270,8 +270,8 @@
         {
           "cups": 4,
           "finishingMove": true,
-          "id": "\u003cid13\u003e",
-          "name": "Finish - Ring of fire",
+          "id": "\u003cid14\u003e",
+          "name": "Finish - Ring of water",
           "pointsForScorer": 1,
           "pointsForTeam": 10,
           "seasonId": "\u003cid1\u003e"
@@ -279,8 +279,8 @@
         {
           "cups": 6,
           "finishingMove": true,
-          "id": "\u003cid14\u003e",
-          "name": "Finish - Ring of water",
+          "id": "\u003cid13\u003e",
+          "name": "Finish - Ring of fire",
           "pointsForScorer": 1,
           "pointsForTeam": 10,
           "seasonId": "\u003cid1\u003e"

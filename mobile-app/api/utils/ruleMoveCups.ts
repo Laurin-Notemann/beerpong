@@ -9,8 +9,8 @@ const defaultCupsByName: Record<string, number> = {
     Trickshot: 1,
     Save: 0,
     'Finish - Normal': 0,
-    'Finish - Ring of fire': 4,
-    'Finish - Ring of water': 6,
+    'Finish - Ring of fire': 6,
+    'Finish - Ring of water': 4,
 };
 
 /** How many cups one hit of this move takes off the table. */

@@ -14,8 +14,8 @@ var defaultCups = map[string]int32{
 	"Trickshot":              1,
 	"Save":                   0,
 	"Finish - Normal":        0,
-	"Finish - Ring of fire":  4,
-	"Finish - Ring of water": 6,
+	"Finish - Ring of fire":  6,
+	"Finish - Ring of water": 4,
 }
 
 // defaultCupsFor is the cup count of a move that never had one: the default

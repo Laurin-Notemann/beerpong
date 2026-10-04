@@ -82,7 +82,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 
 ## Shipping
 
-- **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`api-go/internal/database/migrations`, goose) run when it starts. `main` deploys the Java production API (not currently running).
+- **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`api-go/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
 - **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) ships iOS from GitHub's runners, not EAS cloud builds. Android only ships when you start the workflow by hand with `platform: android`. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
 - The app checks for updates on foreground and applies a downloaded update when it goes to the background (`mobile-app/hooks/useOtaUpdates.ts`).
 
@@ -115,7 +115,7 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 ## Where code lives
 
 - `api-go/` - the API (Go, pgx + sqlc, goose migrations). `internal/api` (handlers), `internal/database` (migrations, SQL queries, generated code), `internal/leaderboard` (stats and Elo), `internal/realtime` (websocket), `openapi/` (the API document). See `api-go/README.md`.
-- `api/` - the retired Spring Boot API it replaced. No longer deployed; kept for reference until it's removed.
+- `api/` - the retired Spring Boot API it replaced. Not deployed or running anywhere; kept for reference until it's removed.
 - `mobile-app/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
 - `api-tests/` - black-box contract tests (HTTP and websocket, compared with recorded golden transcripts) and `shadowdiff`.

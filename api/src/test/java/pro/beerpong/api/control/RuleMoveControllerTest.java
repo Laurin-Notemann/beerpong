@@ -107,8 +107,8 @@ public class RuleMoveControllerTest {
         assertEquals(1, cupsByName.get("Trickshot"));
         assertEquals(0, cupsByName.get("Save"));
         assertEquals(0, cupsByName.get("Finish - Normal"));
-        assertEquals(4, cupsByName.get("Finish - Ring of fire"));
-        assertEquals(6, cupsByName.get("Finish - Ring of water"));
+        assertEquals(6, cupsByName.get("Finish - Ring of fire"));
+        assertEquals(4, cupsByName.get("Finish - Ring of water"));
 
         // explicit cups are kept, a missing count falls back to the default
         var custom = testUtils.buildRuleMove("Double", false, 2, 0);

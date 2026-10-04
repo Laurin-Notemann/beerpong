@@ -16,8 +16,8 @@ public final class RuleMoveCups {
             "Trickshot", 1,
             "Save", 0,
             "Finish - Normal", 0,
-            "Finish - Ring of fire", 4,
-            "Finish - Ring of water", 6
+            "Finish - Ring of fire", 6,
+            "Finish - Ring of water", 4
     );
 
     private RuleMoveCups() {

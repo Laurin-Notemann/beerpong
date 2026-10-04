@@ -21,13 +21,13 @@ describe('cups', () => {
         // the rings take their whole formation
         expect(
             countCups([
-                move('Normal', 6),
+                move('Normal', 4),
                 move('Finish - Ring of fire', 1, true),
             ])
         ).toBe(10);
         expect(
             countCups([
-                move('Normal', 4),
+                move('Normal', 6),
                 move('Finish - Ring of water', 1, true),
             ])
         ).toBe(10);

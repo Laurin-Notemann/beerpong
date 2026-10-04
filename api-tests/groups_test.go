@@ -48,7 +48,7 @@ func TestCreateGroupBeerpong(t *testing.T) {
 	h.Equal(finishes, 3, "beerpong finishing moves")
 	h.Equal(cups, map[string]any{
 		"Normal": 1.0, "Bomb": 1.0, "Bouncer": 2.0, "Trickshot": 1.0, "Save": 0.0,
-		"Finish - Normal": 0.0, "Finish - Ring of fire": 4.0, "Finish - Ring of water": 6.0,
+		"Finish - Normal": 0.0, "Finish - Ring of fire": 6.0, "Finish - Ring of water": 4.0,
 	}, "cups per move")
 
 	seasons := h.OK(h.Do(Req{Method: "GET", Path: g.Path("/seasons"), Auth: owner.Bearer()}))

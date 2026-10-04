@@ -13,7 +13,7 @@ import (
 //	match 2: blue c (Finish - Ring of fire) vs red a (Normal)
 //
 // Team points of a finishing move go to every member of the scoring team.
-// "moves" counts cups: Bomb 1, Finish - Normal 0, Ring of fire 4.
+// "moves" counts cups: Bomb 1, Finish - Normal 0, Ring of fire 6.
 func leaderboardGroup(h *H) (*User, *Group) {
 	owner := h.NewUser()
 	g := h.NewGroup(owner, "Leaderboard", "a", "b", "c", "d")
@@ -36,7 +36,7 @@ type wantStats struct {
 var seasonStats = map[string]wantStats{
 	"a": {points: 7, matches: 2, wins: 1, moves: 3, teamSize: 3, avgPoints: 3.5, avgTeamSize: 1.5},
 	"b": {points: 5, matches: 1, wins: 1, moves: 1, teamSize: 2, avgPoints: 5, avgTeamSize: 2},
-	"c": {points: 14, matches: 2, wins: 1, moves: 7, teamSize: 3, avgPoints: 7, avgTeamSize: 1.5},
+	"c": {points: 14, matches: 2, wins: 1, moves: 9, teamSize: 3, avgPoints: 7, avgTeamSize: 1.5},
 	"d": {points: 1, matches: 1, wins: 0, moves: 1, teamSize: 2, avgPoints: 1, avgTeamSize: 2},
 }
 
