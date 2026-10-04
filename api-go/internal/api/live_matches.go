@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"regexp"
 	"slices"
 	"time"
 
@@ -28,57 +27,7 @@ const liveInProgress = "IN_PROGRESS"
 
 var (
 	liveOpTypes = []string{"SET_TEAMS", "SET_PLAYER_TEAM", "ADJUST_MOVE", "RECORD_CUP_HIT", "UNDO_CUP_HIT"}
-	uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 )
-
-type cupPositionDTO struct {
-	X *int32 `json:"x"`
-	Y *int32 `json:"y"`
-}
-
-// liveMatchOpDTO is used for input and output. seq and createdAt are set by
-// the server and ignored on input. Which of the typed fields are set depends
-// on the type; the rest stay null.
-type liveMatchOpDTO struct {
-	ID            string           `json:"id"`
-	Seq           *int64           `json:"seq"`
-	Type          *string          `json:"type"`
-	CreatedAt     *time.Time       `json:"createdAt"`
-	PlayerID      *string          `json:"playerId"`
-	Team          *string          `json:"team"`
-	MoveID        *string          `json:"moveId"`
-	Delta         *int32           `json:"delta"`
-	Cups          []cupPositionDTO `json:"cups"`
-	Cup           *cupPositionDTO  `json:"cup"`
-	FinishMoveID  *string          `json:"finishMoveId"`
-	RedPlayerIDs  []string         `json:"redPlayerIds"`
-	BluePlayerIDs []string         `json:"bluePlayerIds"`
-}
-
-type liveMatchDTO struct {
-	ID              string           `json:"id"`
-	GroupID         string           `json:"groupId"`
-	SeasonID        string           `json:"seasonId"`
-	Status          string           `json:"status"`
-	StartedAt       *time.Time       `json:"startedAt"`
-	LastActivityAt  *time.Time       `json:"lastActivityAt"`
-	EndedAt         *time.Time       `json:"endedAt"`
-	CreatedByUserID *string          `json:"createdByUserId"`
-	LastSeq         int64            `json:"lastSeq"`
-	ResultMatchID   *string          `json:"resultMatchId"`
-	Ops             []liveMatchOpDTO `json:"ops"`
-}
-
-type liveMatchOpsResultDTO struct {
-	LastSeq int64            `json:"lastSeq"`
-	Ops     []liveMatchOpDTO `json:"ops"`
-}
-
-type liveMatchOpsEventDTO struct {
-	LiveMatchID string           `json:"liveMatchId"`
-	LastSeq     int64            `json:"lastSeq"`
-	Ops         []liveMatchOpDTO `json:"ops"`
-}
 
 // ---- binding and validation ----
 
@@ -195,7 +144,7 @@ func parseIDList(o object, key string) ([]string, error) {
 	return out, nil
 }
 
-func isUUID(s string) bool { return uuidPattern.MatchString(s) }
+func isUUID(s string) bool { return realtime.IsUUID(s) }
 
 func isUUIDPtr(s *string) bool { return s != nil && isUUID(*s) }
 
@@ -291,34 +240,6 @@ func opPayload(op liveMatchOpDTO) (string, error) {
 	}
 	out, err := json.Marshal(fields)
 	return string(out), err
-}
-
-func toLiveMatchOpDTO(row db.LiveMatchOp) (liveMatchOpDTO, error) {
-	var dto liveMatchOpDTO
-	if err := json.Unmarshal([]byte(row.Payload), &dto); err != nil {
-		return dto, err
-	}
-	dto.ID, dto.Seq, dto.Type, dto.CreatedAt = row.ID, &row.Seq, &row.Type, utc(&row.CreatedAt)
-	return dto, nil
-}
-
-func toLiveMatchDTO(lm db.LiveMatch, userID *string, ops []liveMatchOpDTO) liveMatchDTO {
-	if ops == nil {
-		ops = []liveMatchOpDTO{}
-	}
-	return liveMatchDTO{
-		ID:              lm.ID,
-		GroupID:         lm.GroupID,
-		SeasonID:        lm.SeasonID,
-		Status:          lm.Status,
-		StartedAt:       utc(&lm.StartedAt),
-		LastActivityAt:  utc(&lm.LastActivityAt),
-		EndedAt:         utc(lm.EndedAt),
-		CreatedByUserID: userID,
-		LastSeq:         lm.LastSeq,
-		ResultMatchID:   lm.ResultMatchID,
-		Ops:             ops,
-	}
 }
 
 // liveMatchOps loads the ops of live matches, in seq order, by live match.
@@ -451,19 +372,14 @@ func (s *Server) listLiveMatches(r *request) response {
 }
 
 func (s *Server) getLiveMatch(r *request) response {
-	ctx := r.Context()
-	row, err := s.q.GetLiveMatch(ctx, r.path("id"))
-	if notFound(err) || (err == nil && row.LiveMatch.GroupID != r.path("groupId")) {
+	lm, err := loadLiveMatchDTO(r.Context(), s.q, r.path("id"))
+	if notFound(err) || (err == nil && lm.GroupID != r.path("groupId")) {
 		return fail(errLiveMatchNotFound)
 	}
 	if err != nil {
 		return internal(err)
 	}
-	ops, err := liveMatchOps(ctx, s.q, []string{row.LiveMatch.ID})
-	if err != nil {
-		return internal(err)
-	}
-	return ok(toLiveMatchDTO(row.LiveMatch, row.CreatedByUserID, ops[row.LiveMatch.ID]))
+	return ok(lm)
 }
 
 // createLiveMatch creates a live match under the client's id, together with
@@ -495,19 +411,15 @@ func (s *Server) createLiveMatch(r *request) response {
 	var isNew bool
 	res = s.tx(ctx, func(q *db.Queries) (response, error) {
 		// a retry of a create that went through (its response got lost) returns what exists
-		returnExisting := func(row db.GetLiveMatchRow) (response, error) {
-			if row.LiveMatch.GroupID != groupID {
+		returnExisting := func(lm liveMatchDTO) (response, error) {
+			if lm.GroupID != groupID {
 				return fail(errLiveMatchNotFound), nil
 			}
-			ops, err := liveMatchOps(ctx, q, []string{id})
-			if err != nil {
-				return nil, err
-			}
-			created = toLiveMatchDTO(row.LiveMatch, row.CreatedByUserID, ops[id])
-			return ok(created), nil
+			created = lm
+			return ok(lm), nil
 		}
-		if row, err := q.GetLiveMatch(ctx, id); err == nil {
-			return returnExisting(row)
+		if lm, err := loadLiveMatchDTO(ctx, q, id); err == nil {
+			return returnExisting(lm)
 		} else if !notFound(err) {
 			return nil, err
 		}
@@ -535,11 +447,11 @@ func (s *Server) createLiveMatch(r *request) response {
 		}
 		if inserted == 0 {
 			// a concurrent create with the same id won; its transaction is committed by now
-			row, err := q.GetLiveMatch(ctx, id)
+			lm, err := loadLiveMatchDTO(ctx, q, id)
 			if err != nil {
 				return nil, err
 			}
-			return returnExisting(row)
+			return returnExisting(lm)
 		}
 		_, failure, err := s.appendLiveMatchOps(ctx, q, id, 0, memberID, ops)
 		if err != nil {

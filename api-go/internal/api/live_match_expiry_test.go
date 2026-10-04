@@ -114,6 +114,66 @@ func (f expiryFixture) get(t *testing.T, id string) db.LiveMatch {
 	return row.LiveMatch
 }
 
+// abandonExpired is AbandonExpiredLiveMatches restricted to this fixture's
+// group: the shared test database may hold live matches of other tests or of a
+// local copy of real data, and those must not be touched or counted.
+func (f expiryFixture) abandonExpired(ctx context.Context, t *testing.T, now time.Time) (int, error) {
+	t.Helper()
+	cutoff := now.Add(-liveMatchExpiry)
+	all, err := f.s.q.StaleLiveMatches(ctx, cutoff)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var mine []db.StaleLiveMatchesRow
+	for _, c := range all {
+		if c.GroupID == f.groupID {
+			mine = append(mine, c)
+		}
+	}
+	return f.s.abandonStale(ctx, mine, cutoff)
+}
+
+const probeScope = "probe"
+
+func waitSubscribed(t *testing.T, s *Server, conn *websocket.Conn, groupID string) {
+	t.Helper()
+	// a read that times out closes the connection, so it gets one long read
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	got := make(chan error, 1)
+	go func() {
+		_, _, err := conn.Read(ctx)
+		got <- err
+	}()
+	ticker := time.NewTicker(20 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		s.hub.Publish(groupID, realtime.LiveMatches, probeScope, nil)
+		select {
+		case err := <-got:
+			if err != nil {
+				t.Fatal("the websocket never got subscribed: ", err)
+			}
+			return
+		case <-ticker.C:
+		}
+	}
+}
+
+// readEvent returns the next event that is not a probe left over from waitSubscribed.
+func readEvent(t *testing.T, ctx context.Context, conn *websocket.Conn) []byte {
+	t.Helper()
+	for {
+		_, data, err := conn.Read(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(data), `"scope":"`+probeScope+`"`) {
+			return data
+		}
+	}
+}
+
 func TestAbandonExpiredLiveMatches(t *testing.T) {
 	s, hubServer := expiryTestServer(t)
 	f := newExpiryFixture(t, s)
@@ -129,7 +189,9 @@ func TestAbandonExpiredLiveMatches(t *testing.T) {
 	if err := conn.Write(ctx, websocket.MessageText, sub); err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(150 * time.Millisecond)
+	// The hub has no "subscribed" signal, so probe events are published until one
+	// arrives; from then on the subscription is known to be in place.
+	waitSubscribed(t, s, conn, f.groupID)
 
 	// the clock is injected through now; rows are placed relative to it
 	now := time.Now().UTC().Truncate(time.Microsecond)
@@ -139,7 +201,7 @@ func TestAbandonExpiredLiveMatches(t *testing.T) {
 	fresh := f.insert(t, liveInProgress, now.Add(-time.Hour), 1)
 	finished := f.insert(t, liveFinished, now.Add(-24*time.Hour), 3)
 
-	n, err := s.AbandonExpiredLiveMatches(ctx, now)
+	n, err := f.abandonExpired(ctx, t, now)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,10 +225,7 @@ func TestAbandonExpiredLiveMatches(t *testing.T) {
 	// the end is announced, without ops
 	rctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	_, data, err := conn.Read(rctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	data := readEvent(t, rctx, conn)
 	var ev struct {
 		EventType string
 		Scope     string
@@ -180,9 +239,18 @@ func TestAbandonExpiredLiveMatches(t *testing.T) {
 	}
 
 	// a second round finds nothing and announces nothing
-	if n, err := s.AbandonExpiredLiveMatches(ctx, now); err != nil || n != 0 {
+	if n, err := f.abandonExpired(ctx, t, now); err != nil || n != 0 {
 		t.Errorf("second round: %d, %v", n, err)
 	}
+}
+
+// A panic in a round must not end the expiry loop (or the process): the next
+// round still runs.
+func TestExpiryRoundRecoversFromPanic(t *testing.T) {
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	s := NewServer(nil, nil, nil, realtime.NewHub(log), log) // no pool: the scan panics
+	s.expiryRound(context.Background())
+	s.expiryRound(context.Background())
 }
 
 // An op appended between the scan and the decision keeps the live match alive

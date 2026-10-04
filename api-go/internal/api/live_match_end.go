@@ -3,7 +3,10 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
@@ -63,6 +66,12 @@ func (s *Server) finishLiveMatch(r *request) response {
 	in, err := parseMatchInput(body)
 	if err != nil {
 		return springError(400)
+	}
+	// live matches have no photos, so a savePhoto from the body must not create assets
+	for _, t := range in.teams {
+		if t != nil {
+			t.savePhoto = false
+		}
 	}
 	groupID, id := r.path("groupId"), r.path("id")
 
@@ -152,19 +161,32 @@ func (s *Server) RunLiveMatchExpiry(ctx context.Context) {
 	ticker := time.NewTicker(liveMatchExpiryInterval)
 	defer ticker.Stop()
 	for {
-		n, err := s.AbandonExpiredLiveMatches(ctx, s.now())
-		if err != nil && ctx.Err() == nil {
-			s.log.ErrorContext(ctx, "live match expiry failed", "err", err)
-			observability.CaptureError(ctx, err)
-		}
-		if n > 0 {
-			s.log.InfoContext(ctx, "abandoned expired live matches", "count", n)
-		}
+		s.expiryRound(ctx)
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
 		}
+	}
+}
+
+// expiryRound is one scan. A panic is logged and reported like a handler's, so
+// it costs this round and not the API process.
+func (s *Server) expiryRound(ctx context.Context) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			err := fmt.Errorf("live match expiry panic: %v", rec)
+			s.log.ErrorContext(ctx, "live match expiry failed", "err", err)
+			observability.CaptureError(ctx, err)
+		}
+	}()
+	n, err := s.AbandonExpiredLiveMatches(ctx, s.now())
+	if err != nil && ctx.Err() == nil {
+		s.log.ErrorContext(ctx, "live match expiry failed", "err", err)
+		observability.CaptureError(ctx, err)
+	}
+	if n > 0 {
+		s.log.InfoContext(ctx, "abandoned expired live matches", "count", n)
 	}
 }
 
@@ -177,6 +199,12 @@ func (s *Server) AbandonExpiredLiveMatches(ctx context.Context, now time.Time) (
 	if err != nil {
 		return 0, err
 	}
+	return s.abandonStale(ctx, stale, cutoff)
+}
+
+// abandonStale runs abandonIfExpired for the scan's candidates. Tests call it
+// with the candidates of their own group only.
+func (s *Server) abandonStale(ctx context.Context, stale []db.StaleLiveMatchesRow, cutoff time.Time) (int, error) {
 	var errs []error
 	n := 0
 	for _, c := range stale {
@@ -197,25 +225,26 @@ func (s *Server) AbandonExpiredLiveMatches(ctx context.Context, now time.Time) (
 func (s *Server) abandonIfExpired(ctx context.Context, id, groupID string, cutoff time.Time) (bool, error) {
 	var ended liveMatchDTO
 	var changed bool
-	res := s.tx(ctx, func(q *db.Queries) (response, error) {
+	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		q := s.q.WithTx(tx)
 		lm, err := q.LockLiveMatch(ctx, db.LockLiveMatchParams{ID: id, GroupID: groupID})
 		if notFound(err) {
-			return ok(nil), nil
+			return nil
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if lm.LiveMatch.Status != liveInProgress || !lm.LiveMatch.LastActivityAt.Before(cutoff) {
-			return ok(nil), nil
+			return nil
 		}
 		if ended, err = s.endLiveMatch(ctx, q, lm, liveAbandoned, nil); err != nil {
-			return nil, err
+			return err
 		}
 		changed = true
-		return ok(nil), nil
+		return nil
 	})
-	if e, failed := res.(internalError); failed {
-		return false, e.err
+	if err != nil {
+		return false, err
 	}
 	if changed {
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)

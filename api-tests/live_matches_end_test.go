@@ -239,3 +239,25 @@ func TestLiveMatchSurvivesDeletedResultMatch(t *testing.T) {
 	h.Equal(h.OK(abandonLiveMatch(h, owner, g, id)).Str("status"), "FINISHED", "abandon")
 	ws.ExpectNone()
 }
+
+// Live matches have no photos: a savePhoto in the finish body creates no
+// upload (its URLs would never reach the finishing phone).
+func TestLiveMatchFinishIgnoresSavePhoto(t *testing.T) {
+	h := New(t)
+	owner := h.NewUser()
+	g := h.NewGroup(owner, "Live finish photo", "a", "c")
+	id := newLiveMatchID()
+	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "c")))
+	ws := h.Listen(g.ID)
+
+	body := finishBody(g, 1)
+	for _, team := range body["teams"].([]any) {
+		team.(map[string]any)["savePhoto"] = true
+	}
+	h.OK(finishLiveMatch(h, owner, g, id, body))
+
+	ev := ws.Expect(2)
+	h.Equal(EventScope(ev[0]), "matchCreate", "event scope")
+	uploads, _ := Get(ev[0], "body", "photoUploads").([]any)
+	h.Equal(len(uploads), 0, "photo uploads")
+}

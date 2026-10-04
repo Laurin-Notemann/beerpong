@@ -24,6 +24,9 @@ const (
 
 var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
+// IsUUID reports whether s is a UUID in its dashed text form.
+func IsUUID(s string) bool { return uuidPattern.MatchString(s) }
+
 // Event types, as the app switches on them.
 const (
 	Matches     = "MATCHES"

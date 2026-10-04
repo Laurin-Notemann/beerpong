@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
@@ -364,3 +365,82 @@ func deref[T any](p *T) T {
 }
 
 func ptr[T any](v T) *T { return &v }
+
+// ---- live matches ----
+
+type cupPositionDTO struct {
+	X *int32 `json:"x"`
+	Y *int32 `json:"y"`
+}
+
+// liveMatchOpDTO is used for input and output. seq and createdAt are set by
+// the server and ignored on input. Which of the typed fields are set depends
+// on the type; the rest stay null.
+type liveMatchOpDTO struct {
+	ID            string           `json:"id"`
+	Seq           *int64           `json:"seq"`
+	Type          *string          `json:"type"`
+	CreatedAt     *time.Time       `json:"createdAt"`
+	PlayerID      *string          `json:"playerId"`
+	Team          *string          `json:"team"`
+	MoveID        *string          `json:"moveId"`
+	Delta         *int32           `json:"delta"`
+	Cups          []cupPositionDTO `json:"cups"`
+	Cup           *cupPositionDTO  `json:"cup"`
+	FinishMoveID  *string          `json:"finishMoveId"`
+	RedPlayerIDs  []string         `json:"redPlayerIds"`
+	BluePlayerIDs []string         `json:"bluePlayerIds"`
+}
+
+type liveMatchDTO struct {
+	ID              string           `json:"id"`
+	GroupID         string           `json:"groupId"`
+	SeasonID        string           `json:"seasonId"`
+	Status          string           `json:"status"`
+	StartedAt       *time.Time       `json:"startedAt"`
+	LastActivityAt  *time.Time       `json:"lastActivityAt"`
+	EndedAt         *time.Time       `json:"endedAt"`
+	CreatedByUserID *string          `json:"createdByUserId"`
+	LastSeq         int64            `json:"lastSeq"`
+	ResultMatchID   *string          `json:"resultMatchId"`
+	Ops             []liveMatchOpDTO `json:"ops"`
+}
+
+type liveMatchOpsResultDTO struct {
+	LastSeq int64            `json:"lastSeq"`
+	Ops     []liveMatchOpDTO `json:"ops"`
+}
+
+type liveMatchOpsEventDTO struct {
+	LiveMatchID string           `json:"liveMatchId"`
+	LastSeq     int64            `json:"lastSeq"`
+	Ops         []liveMatchOpDTO `json:"ops"`
+}
+
+func toLiveMatchOpDTO(row db.LiveMatchOp) (liveMatchOpDTO, error) {
+	var dto liveMatchOpDTO
+	if err := json.Unmarshal([]byte(row.Payload), &dto); err != nil {
+		return dto, err
+	}
+	dto.ID, dto.Seq, dto.Type, dto.CreatedAt = row.ID, &row.Seq, &row.Type, utc(&row.CreatedAt)
+	return dto, nil
+}
+
+func toLiveMatchDTO(lm db.LiveMatch, userID *string, ops []liveMatchOpDTO) liveMatchDTO {
+	if ops == nil {
+		ops = []liveMatchOpDTO{}
+	}
+	return liveMatchDTO{
+		ID:              lm.ID,
+		GroupID:         lm.GroupID,
+		SeasonID:        lm.SeasonID,
+		Status:          lm.Status,
+		StartedAt:       utc(&lm.StartedAt),
+		LastActivityAt:  utc(&lm.LastActivityAt),
+		EndedAt:         utc(lm.EndedAt),
+		CreatedByUserID: userID,
+		LastSeq:         lm.LastSeq,
+		ResultMatchID:   lm.ResultMatchID,
+		Ops:             ops,
+	}
+}

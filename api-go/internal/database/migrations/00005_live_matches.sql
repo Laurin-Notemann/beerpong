@@ -19,6 +19,8 @@ CREATE TABLE live_matches (
 CREATE INDEX live_matches_group_status_activity_idx ON live_matches (group_id, status, last_activity_at DESC);
 -- the expiry scan only looks at running matches
 CREATE INDEX live_matches_in_progress_activity_idx ON live_matches (last_activity_at) WHERE status = 'IN_PROGRESS';
+-- deleting a match clears result_match_id, which looks the rows up here
+CREATE INDEX live_matches_result_match_idx ON live_matches (result_match_id) WHERE result_match_id IS NOT NULL;
 
 CREATE TABLE live_match_ops (
     id text PRIMARY KEY,
