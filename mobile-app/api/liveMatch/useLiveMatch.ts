@@ -76,7 +76,7 @@ export interface LiveMatchHeader {
 }
 
 /** what this phone shows: the server's log with my unconfirmed edits on top */
-function toView(
+export function toView(
     groupId: string,
     id: string,
     server: LiveMatchDto | undefined,

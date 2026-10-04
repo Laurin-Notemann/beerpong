@@ -75,6 +75,8 @@ export default function MainLayout() {
 
             {/* a full screen pushed like `match`, so the pager's swipes don't fight a sheet */}
             <Stack.Screen name="liveMatch" />
+            {/* the dock opens it when several matches are live */}
+            <Stack.Screen name="liveMatches" options={modalStyles} />
         </Stack>
     );
 }

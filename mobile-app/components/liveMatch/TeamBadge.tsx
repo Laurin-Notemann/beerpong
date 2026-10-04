@@ -29,11 +29,14 @@ export function TeamBadge({
     players,
     size = 'regular',
     align = 'start',
+    showNames = true,
 }: {
     team: CupTeam;
     players: TeamBadgePlayer[];
     size?: keyof typeof SIZES;
     align?: 'start' | 'end';
+    /** off where there's only room for the avatars; the accessibility label still names everyone */
+    showNames?: boolean;
 }) {
     const theme = useTheme();
     const s = SIZES[size];
@@ -127,7 +130,7 @@ export function TeamBadge({
             }
         >
             {avatars}
-            {names}
+            {showNames && names}
         </View>
     );
 }

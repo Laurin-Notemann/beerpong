@@ -5,6 +5,14 @@ import React, { type ComponentProps } from 'react';
 import { Platform } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
+import {
+    DOCK_IN_TAB_BAR,
+    LiveMatchAccessory,
+} from '@/components/liveMatch/LiveMatchDock';
+import {
+    useLingering,
+    useLiveMatchDock,
+} from '@/lib/liveMatch/useLiveMatchDock';
 import { useTheme } from '@/theme';
 
 /**
@@ -32,11 +40,29 @@ function tabIcon(
 // also auto-inset only the first scroll view of a tab, which doubles the gap on some pages.
 const tabOptions = { disableAutomaticContentInsets: Platform.OS === 'ios' };
 
+// how long the accessory keeps its content after it's told to hide, so it slides out full
+const ACCESSORY_HIDE_MS = 600;
+
 export default function TabLayout() {
     const theme = useTheme();
 
+    // The live match dock as the tab bar's bottom accessory (iOS 26+; elsewhere TabStack floats
+    // it). Unmounting the accessory would also work, but its content would be gone before
+    // UIKit's slide-out. So `bottomAccessoryHidden` hides it (animated by UIKit) while it keeps
+    // showing the last match, and it's unmounted once it's out of sight.
+    const dock = useLiveMatchDock();
+    const accessory = useLingering(
+        DOCK_IN_TAB_BAR ? dock.snapshot : undefined,
+        ACCESSORY_HIDE_MS
+    );
+
     return (
         <NativeTabs
+            unstable_nativeProps={
+                DOCK_IN_TAB_BAR
+                    ? { ios: { bottomAccessoryHidden: !dock.snapshot } }
+                    : undefined
+            }
             // Liquid Glass floats its own bar; older iOS keeps a solid bar on short lists.
             disableTransparentOnScrollEdge={!isLiquidGlassAvailable()}
             iconColor={{
@@ -50,6 +76,14 @@ export default function TabLayout() {
             labelVisibilityMode="labeled"
             tintColor={theme.color.text.primary}
         >
+            {accessory && (
+                <NativeTabs.BottomAccessory>
+                    <LiveMatchAccessory
+                        snapshot={accessory}
+                        onPress={dock.open}
+                    />
+                </NativeTabs.BottomAccessory>
+            )}
             <NativeTabs.Trigger name="(leaderboard)" {...tabOptions}>
                 <NativeTabs.Trigger.Icon
                     {...tabIcon(
