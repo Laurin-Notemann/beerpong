@@ -85,38 +85,20 @@ html.tv.fullscreen {
     animation: rise 400ms ease-out both;
 }
 
-/* a score clip (ScoreClipPanel) slides in from its side of the screen and back out */
-@keyframes clip-in-left {
+/* a score clip's column (ScoreClipPanel) opens and pushes the board aside, then closes again */
+@keyframes clip-open {
     from {
-        transform: translateX(-120%);
+        width: 0;
     }
 }
-@keyframes clip-in-right {
-    from {
-        transform: translateX(120%);
-    }
-}
-@keyframes clip-out-left {
+@keyframes clip-close {
     to {
-        transform: translateX(-120%);
+        width: 0;
     }
 }
-@keyframes clip-out-right {
-    to {
-        transform: translateX(120%);
-    }
+.score-clip {
+    animation: clip-open 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.score-clip-left {
-    left: 2.5rem;
-    animation: clip-in-left 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.score-clip-right {
-    right: 2.5rem;
-    animation: clip-in-right 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.score-clip-left.leaving {
-    animation: clip-out-left 350ms ease-in both;
-}
-.score-clip-right.leaving {
-    animation: clip-out-right 350ms ease-in both;
+.score-clip.leaving {
+    animation: clip-close 350ms ease-in both;
 }

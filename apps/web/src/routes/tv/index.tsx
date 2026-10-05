@@ -16,7 +16,7 @@ import {
     pickMatches,
 } from '~/tv/lib/display';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
-import { type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
+import { type ScoreClip, scoreClipsOf, useClipCache } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -126,6 +126,7 @@ function Tv() {
         }
     );
     liveMatches.current = board.data?.liveMatches ?? [];
+    const clipSrc = useClipCache(liveMatches.current, clips);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const remoteUrl = identity.code ? `${location.origin}/tv/rem/${identity.code}` : undefined;
@@ -140,6 +141,7 @@ function Tv() {
                     remoteUrl={remoteUrl}
                     offline={!connected || board.isError}
                     clip={clips[0]}
+                    clipSrc={clipSrc}
                     onClipDone={clipDone}
                 />
             ) : (
@@ -179,6 +181,7 @@ function Screen({
     remoteUrl,
     offline,
     clip,
+    clipSrc,
     onClipDone,
 }: {
     board: Board | null;
@@ -186,6 +189,7 @@ function Screen({
     remoteUrl: string | undefined;
     offline: boolean;
     clip: ScoreClip | undefined;
+    clipSrc: (url: string) => string;
     onClipDone: () => void;
 }) {
     const live = board?.liveMatches ?? [];
@@ -198,66 +202,69 @@ function Screen({
     const rows = board?.leaderboard.rows ?? [];
 
     return (
-        <main className="flex h-screen flex-col gap-[2rem] p-[2.5rem]">
-            <Header board={board} config={config} remoteUrl={remoteUrl} offline={offline} />
-            {!board ? (
-                <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
-                    Loading…
-                </div>
-            ) : layout === 'focus' && focused ? (
-                <FocusView match={focused} />
-            ) : layout === 'split' ? (
-                <div className="flex min-h-0 flex-1 gap-[2.5rem]">
-                    <section className="flex min-h-0 flex-[1.45] flex-col gap-[1rem] overflow-hidden">
-                        <SectionTitle>
-                            Leaderboard · {board.ranking} · as if it ended now
-                        </SectionTitle>
-                        <LeaderboardList
-                            rows={withLivePlayers(rows, 8)}
-                            fill
-                            className="min-h-0 flex-1"
-                        />
-                    </section>
-                    <aside className="flex min-h-0 flex-1 flex-col gap-[1.2rem]">
-                        <LiveMatchPanel match={matches[0]} className="min-h-0 flex-1" />
-                        {live.length > 1 && (
-                            <AlsoLive matches={live.filter((i) => i.id !== matches[0].id)} />
-                        )}
-                    </aside>
-                </div>
-            ) : layout === 'live' ? (
-                matches.length ? (
-                    <Matches matches={matches} className="flex-1" />
-                ) : (
-                    <Empty>No live matches right now</Empty>
-                )
-            ) : rows.length ? (
-                <div className="flex min-h-0 flex-1 flex-col gap-[2rem]">
-                    <Podium rows={rows.slice(0, 3)} />
-                    {/* two columns, filled top to bottom: 4 to 8 left, 9 to 13 right */}
-                    <LeaderboardList
-                        rows={rows.slice(3, 13)}
-                        compact
-                        className="grid! min-h-0 flex-1 grid-flow-col grid-cols-2 gap-x-[2rem]"
-                        style={{
-                            gridTemplateRows: `repeat(${Math.ceil(rows.slice(3, 13).length / 2)}, minmax(0, 4.6rem))`,
-                        }}
-                    />
-                </div>
-            ) : (
-                <Empty>No matches played {config.scope === 'today' ? 'today' : 'yet'}</Empty>
-            )}
+        <div className="flex h-screen">
             {clip && (
                 <ScoreClipPanel
                     key={clip.id}
                     clip={clip}
+                    src={clipSrc(clip.url)}
                     // next to the leaderboard the live match is on the right; elsewhere the
                     // scorer's team side (blue plays on the left)
                     from={layout === 'split' || clip.team === 'red' ? 'right' : 'left'}
                     onDone={onClipDone}
                 />
             )}
-        </main>
+            <main className="flex h-screen min-w-0 flex-1 flex-col gap-[2rem] p-[2.5rem]">
+                <Header board={board} config={config} remoteUrl={remoteUrl} offline={offline} />
+                {!board ? (
+                    <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
+                        Loading…
+                    </div>
+                ) : layout === 'focus' && focused ? (
+                    <FocusView match={focused} />
+                ) : layout === 'split' ? (
+                    <div className="flex min-h-0 flex-1 gap-[2.5rem]">
+                        <section className="flex min-h-0 flex-[1.45] flex-col gap-[1rem] overflow-hidden">
+                            <SectionTitle>
+                                Leaderboard · {board.ranking} · as if it ended now
+                            </SectionTitle>
+                            <LeaderboardList
+                                rows={withLivePlayers(rows, 8)}
+                                fill
+                                className="min-h-0 flex-1"
+                            />
+                        </section>
+                        <aside className="flex min-h-0 flex-1 flex-col gap-[1.2rem]">
+                            <LiveMatchPanel match={matches[0]} className="min-h-0 flex-1" />
+                            {live.length > 1 && (
+                                <AlsoLive matches={live.filter((i) => i.id !== matches[0].id)} />
+                            )}
+                        </aside>
+                    </div>
+                ) : layout === 'live' ? (
+                    matches.length ? (
+                        <Matches matches={matches} className="flex-1" />
+                    ) : (
+                        <Empty>No live matches right now</Empty>
+                    )
+                ) : rows.length ? (
+                    <div className="flex min-h-0 flex-1 flex-col gap-[2rem]">
+                        <Podium rows={rows.slice(0, 3)} />
+                        {/* two columns, filled top to bottom: 4 to 8 left, 9 to 13 right */}
+                        <LeaderboardList
+                            rows={rows.slice(3, 13)}
+                            compact
+                            className="grid! min-h-0 flex-1 grid-flow-col grid-cols-2 gap-x-[2rem]"
+                            style={{
+                                gridTemplateRows: `repeat(${Math.ceil(rows.slice(3, 13).length / 2)}, minmax(0, 4.6rem))`,
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <Empty>No matches played {config.scope === 'today' ? 'today' : 'yet'}</Empty>
+                )}
+            </main>
+        </div>
     );
 }
 

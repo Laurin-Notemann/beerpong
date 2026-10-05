@@ -4,12 +4,13 @@ import { type RankingAlgorithm, rankingNames, rankPlayers } from '~/tv/lib/ranki
 import type * as Dto from '@/openapi/openapi';
 
 import { apiFor, assetUrl } from '~/tv/server/api';
+import { clipPath } from '~/tv/server/clips';
 
 export interface BoardPlayer {
     id: string;
     name: string;
     avatarUrl: string | null;
-    /** the clip the TV plays when they score in a live match */
+    /** the clip the TV plays when they score in a live match, on this server (clips.ts) */
     scoreClipUrl: string | null;
 }
 
@@ -94,7 +95,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             id: profileId ?? '',
             name: p?.name ?? 'Unknown',
             avatarUrl: avatars.get(profileId ?? '') ?? null,
-            scoreClipUrl: p?.scoreClipUrl ?? null,
+            scoreClipUrl: clipPath(p?.scoreClipUrl),
         };
     };
 
