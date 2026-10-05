@@ -111,7 +111,7 @@ export function Simulator({
                         </div>
                         <div className="engine">
                             <span
-                                className={`live ${live === 'live' ? 'on' : live === 'offline' ? 'off' : ''}`}
+                                className={`livestatus ${live === 'live' ? 'on' : live === 'offline' ? 'off' : ''}`}
                             >
                                 <i />
                                 {live === 'live'
