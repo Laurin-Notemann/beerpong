@@ -187,6 +187,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid22\u003e",
@@ -272,6 +273,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid7\u003e",

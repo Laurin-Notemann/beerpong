@@ -1,10 +1,20 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    QueryClient,
+    queryOptions,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 
 import { fetchProfiles, withProfiles } from '@/api/calls/profileHooks';
 import { ApiId, WithProfile } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { LeaderboardDto, Paths, PlayerDtoExtended } from '@/openapi/openapi';
+import {
+    Client,
+    LeaderboardDto,
+    Paths,
+    PlayerDtoExtended,
+} from '@/openapi/openapi';
 
 export enum LeaderboardScope {
     TODAY = 'today',
@@ -12,16 +22,14 @@ export enum LeaderboardScope {
     ALL_TIME = 'all-time',
 }
 
-export const useGetLeaderboardQuery = (
+export const leaderboardQueryOptions = (
+    api: Promise<Client>,
+    qc: QueryClient,
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined,
     scope: LeaderboardScope
-) => {
-    const { api } = useApi();
-
-    const qc = useQueryClient();
-
-    return useQuery<
+) =>
+    queryOptions<
         | (Omit<Paths.GetLeaderboard.Responses.$200, 'data'> & {
               data?: Omit<LeaderboardDto, 'entries'> & {
                   entries?: WithProfile<PlayerDtoExtended>[];
@@ -60,4 +68,15 @@ export const useGetLeaderboardQuery = (
             };
         },
     });
+
+export const useGetLeaderboardQuery = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null | undefined,
+    scope: LeaderboardScope
+) => {
+    const { api } = useApi();
+
+    const qc = useQueryClient();
+
+    return useQuery(leaderboardQueryOptions(api, qc, groupId, seasonId, scope));
 };

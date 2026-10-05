@@ -6,7 +6,9 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -28,13 +30,13 @@ func Init(opts Options) (*slog.Logger, func(), error) {
 		return logger, func() {}, nil
 	}
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:              opts.DSN,
-		Environment:      opts.Environment,
-		Release:          opts.Release,
-		EnableTracing:    true,
-		TracesSampleRate: 1.0, // sample every request while traffic is low
-		SendDefaultPII:   true,
-		Tags:             map[string]string{"runtime": "go"},
+		Dsn:            opts.DSN,
+		Environment:    opts.Environment,
+		Release:        opts.Release,
+		EnableTracing:  true,
+		TracesSampler:  sampleTrace,
+		SendDefaultPII: true,
+		Tags:           map[string]string{"runtime": "go"},
 	})
 	if err != nil {
 		return nil, nil, err
@@ -44,6 +46,29 @@ func Init(opts Options) (*slog.Logger, func(), error) {
 	}.NewSentryHandler(context.Background())
 	logger := slog.New(fanout{stdout, sentryHandler})
 	return logger, func() { sentry.Flush(5 * time.Second) }, nil
+}
+
+type syntheticKey struct{}
+
+// MarkSynthetic tags requests from Go's default HTTP client: shadowdiff and the
+// api-tests contract suite. The app, the web app and browsers send their own
+// user agents. Their errors still reach Sentry; only their traces are dropped.
+func MarkSynthetic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.UserAgent(), "Go-http-client/") {
+			r = r.WithContext(context.WithValue(r.Context(), syntheticKey{}, true))
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// sampleTrace keeps every trace (traffic is low) except synthetic ones, which
+// were half of all transactions.
+func sampleTrace(c sentry.SamplingContext) float64 {
+	if c.Span.Context().Value(syntheticKey{}) != nil {
+		return 0
+	}
+	return 1
 }
 
 // CaptureError reports err as a Sentry issue on the request's hub.

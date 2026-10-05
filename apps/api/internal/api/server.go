@@ -18,6 +18,7 @@ import (
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/auth"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
+	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 	"github.com/laurin-notemann/beerpong/api-go/openapi"
 )
@@ -86,7 +87,7 @@ func (s *Server) Handler() http.Handler {
 	// hours and must not become one endless transaction.
 	root := http.NewServeMux()
 	root.Handle("/update-socket", s.hub)
-	root.Handle("/", sentryhttp.New(sentryhttp.Options{}).Handle(mux))
+	root.Handle("/", observability.MarkSynthetic(sentryhttp.New(sentryhttp.Options{}).Handle(mux)))
 	return springHeaders(root)
 }
 

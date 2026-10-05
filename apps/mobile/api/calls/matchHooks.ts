@@ -1,6 +1,4 @@
-import * as Sentry from '@sentry/react-native';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
+import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
 import { ApiId } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
@@ -11,13 +9,12 @@ import { uploadImage } from '@/api/utils/uploadImage';
 import { Client, Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
-export const useMatchesQuery = (
+export const matchesQueryOptions = (
+    api: Promise<Client>,
     groupId: ApiId | null | undefined,
     seasonId: ApiId | null | undefined
-) => {
-    const { api } = useApi();
-
-    return useQuery<Paths.GetAllMatchesExtended.Responses.$200 | null>({
+) =>
+    queryOptions<Paths.GetAllMatchesExtended.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
         enabled: !!groupId && !!seasonId,
         queryFn: async () => {
@@ -31,6 +28,14 @@ export const useMatchesQuery = (
             return res?.data;
         },
     });
+
+export const useMatchesQuery = (
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined
+) => {
+    const { api } = useApi();
+
+    return useQuery(matchesQueryOptions(api, groupId, seasonId));
 };
 
 export const useMatchesByPlayerQuery = (
@@ -67,16 +72,8 @@ export const useCreateMatchMutation = () => {
                 const res = await (await api).createMatch(body, body);
                 return res?.data;
             } catch (err) {
+                // the API client reports the failure; this keeps what was entered
                 writeLog('useCreateMatchMutation', body);
-                Sentry.captureEvent({
-                    message: 'Failed to create match',
-                    level: 'error',
-                    extra: {
-                        body,
-                        response: (err as AxiosError).response?.data,
-                        status: (err as AxiosError).response?.status,
-                    },
-                });
                 throw err;
             }
         },

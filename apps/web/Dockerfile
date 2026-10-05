@@ -13,6 +13,9 @@ COPY apps/mobile/utils apps/mobile/utils
 COPY apps/mobile/openapi apps/mobile/openapi
 COPY apps/web/ apps/web/
 WORKDIR /src/apps/web
+# baked into the TV's client for Sentry (src/tv/sentry.ts); empty means no reporting
+ARG VITE_SENTRY_DSN
+ARG VITE_GIT_COMMIT
 RUN npm run build
 
 FROM node:24-alpine

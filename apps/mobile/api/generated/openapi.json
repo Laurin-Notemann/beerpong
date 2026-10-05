@@ -2779,6 +2779,7 @@
                     "id": { "type": "string" },
                     "name": { "type": "string", "nullable": true },
                     "assetIdAvatar": { "type": "string", "nullable": true },
+                    "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true }
                 },
@@ -2786,6 +2787,7 @@
                     "id",
                     "name",
                     "assetIdAvatar",
+                    "avatarUrl",
                     "groupId",
                     "createdById"
                 ]
@@ -2828,6 +2830,7 @@
                     "id": { "type": "string" },
                     "name": { "type": "string", "nullable": true },
                     "assetIdAvatar": { "type": "string", "nullable": true },
+                    "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true },
                     "reactivated": { "type": "boolean" },
@@ -2837,6 +2840,7 @@
                     "id",
                     "name",
                     "assetIdAvatar",
+                    "avatarUrl",
                     "groupId",
                     "createdById",
                     "reactivated",
@@ -2894,11 +2898,28 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": {
                         "type": "array",
-                        "items": { "$ref": "#/components/schemas/SeasonDto" }
+                        "items": {
+                            "$ref": "#/components/schemas/SeasonListDto"
+                        }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 },
                 "required": ["status", "httpCode", "data"]
+            },
+            "SeasonListDto": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/SeasonDto" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "numMatches": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        },
+                        "required": ["numMatches"]
+                    }
+                ]
             },
             "ResponseEnvelopeListRuleMoveDto": {
                 "type": "object",

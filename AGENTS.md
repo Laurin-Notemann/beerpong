@@ -20,7 +20,7 @@ Most fixes reach users as OTA updates, not store releases. Native changes (new n
 
 ### 4. Observable
 
-Errors, logs and traces from the app and the server go to Sentry (org `versus-zr`, projects `mobile` and `server`). The app's traces propagate into the API, so one trace spans both. If something can fail silently, make sure it shows up there.
+Errors, logs and traces from the app and the server go to Sentry (org `versus-zr`, projects `mobile` and `server`; the TV's errors to `web`). The app's traces propagate into the API, so one trace spans both. If something can fail silently, make sure it shows up there.
 
 ## A note from Laurin
 

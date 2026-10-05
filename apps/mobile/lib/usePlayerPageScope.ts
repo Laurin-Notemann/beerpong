@@ -4,8 +4,12 @@ import {
     useGroup,
     useSeasonSettings,
 } from '@/api/calls/seasonHooks';
+import {
+    useSeasonLeaderboards,
+    useSeasonMatches,
+} from '@/api/calls/seasonMatchesHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
-import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { Match } from '@/api/utils/matchDtoToMatch';
 import { countCups } from '@/api/utils/ruleMoveCups';
 import { ScopeInfo } from '@/components/screens/Player';
 import { rankPlayers } from '@/constants/rankingAlgorithms';
@@ -13,10 +17,16 @@ import { eloAlgorithm } from '@/lib/EloAlgorithm';
 import { SeasonSettingsDto } from '@/openapi/openapi';
 import { getWakeTimeDayStart } from '@/utils/wakeTime';
 
-// TODO: additional seasons
 // TODO: minMatchesRequiredToBeRanked, placement, elo, points, rankingAlgorithm
 
-export function usePlayerPageScope(profileId: string) {
+const playedIn = (profileId: string) => (match: Match) =>
+    match.blueTeam.concat(match.redTeam).some((i) => i.profileId === profileId);
+
+/**
+ * The player page: the player (`playerId` is from any season) and their stats per scope.
+ * Loads every season of the group, all of which the page shows.
+ */
+export function usePlayerPageScope(playerId: string) {
     const { groupId, seasonId, activeSeason: groupActiveSeason } = useGroup();
 
     const { alltimePlayers, dailyPlayers } = useLeaderboardProps(
@@ -25,31 +35,26 @@ export function usePlayerPageScope(profileId: string) {
     );
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
+    const seasons = seasonsQuery.data?.data ?? [];
+    const seasonIds = seasons.map((i) => i.id!);
 
-    // TODO: this should only be the seasons where this specific player was active
-    const activeSeason = seasonsQuery.data?.data?.find(
-        (i) => i.endDate == null
-    );
-    const playerIds =
-        seasonsQuery.data?.data?.flatMap((i) =>
-            i.players.filter((j) => j.profileId === profileId).map((i) => i.id)
+    const seasonMatches = useSeasonMatches(groupId, seasonIds);
+    const { leaderboardBySeason } = useSeasonLeaderboards(groupId, seasonIds);
+
+    // with deleted players, so a past season's player has a page too
+    const player = [...seasonMatches.playersBySeason.values()]
+        .flat()
+        .find((i) => i.id === playerId);
+    const profileId = player?.profileId ?? '';
+
+    const matchesOf = (id: string | undefined) =>
+        (id ? seasonMatches.matchesBySeason.get(id) : undefined)?.filter(
+            playedIn(profileId)
         ) ?? [];
 
-    const currentSeasonMatches =
-        activeSeason?.ruleMoves && activeSeason?.rawPlayers
-            ? (activeSeason?.matches
-                  .filter((i) =>
-                      i.teamMembers!.find((j) =>
-                          playerIds.includes(j.playerId!)
-                      )
-                  )
-                  .map(
-                      matchDtoToMatch(
-                          activeSeason?.rawPlayers,
-                          activeSeason?.ruleMoves
-                      )
-                  ) ?? [])
-            : [];
+    const currentSeasonMatches = matchesOf(
+        seasons.find((i) => i.endDate == null)?.id
+    );
 
     const { seasonSettings } = useSeasonSettings(groupId!, seasonId!);
 
@@ -66,44 +71,21 @@ export function usePlayerPageScope(profileId: string) {
             ).getTime() === todayStart
     );
 
-    const allTimeMatches = (seasonsQuery.data?.data ?? []).flatMap((i) =>
-        i.ruleMoves && i.rawPlayers
-            ? i.matches
-                  .filter((i) =>
-                      i.teamMembers!.find((j) =>
-                          playerIds.includes(j.playerId!)
-                      )
-                  )
-                  .map(matchDtoToMatch(i.rawPlayers, i.ruleMoves))
-            : []
-    );
+    const allTimeMatches = seasons.flatMap((i) => matchesOf(i.id));
 
-    const scopes = (seasonsQuery.data?.data ?? []).reduce<
-        Map<string, ScopeInfo>
-    >((obj, i) => {
-        const seasonMatches =
-            i?.ruleMoves && i?.rawPlayers
-                ? (i?.matches
-                      .filter((i) =>
-                          i.teamMembers!.find((j) =>
-                              playerIds.includes(j.playerId!)
-                          )
-                      )
-                      .map(matchDtoToMatch(i?.rawPlayers, i?.ruleMoves)) ?? [])
-                : [];
-
-        obj.set(
-            i.id!,
+    const scopes = new Map<string, ScopeInfo>();
+    for (const season of seasons) {
+        scopes.set(
+            season.id!,
             getScope(
                 profileId,
-                seasonMatches,
-                i.seasonSettings,
-                i.players,
-                i.name || 'Unknown'
+                matchesOf(season.id),
+                season.seasonSettings,
+                leaderboardBySeason.get(season.id!) ?? [],
+                season.name || 'Unknown'
             )
         );
-        return obj;
-    }, new Map());
+    }
 
     scopes.set(
         'today',
@@ -127,7 +109,11 @@ export function usePlayerPageScope(profileId: string) {
         )
     );
 
-    return { scopes };
+    return {
+        player,
+        scopes,
+        isLoading: seasonsQuery.isLoading || seasonMatches.isLoading,
+    };
 }
 
 const getMatchesWon = (profileId: string | undefined, matches: Match[]) => {

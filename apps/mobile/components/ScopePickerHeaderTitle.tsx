@@ -1,4 +1,8 @@
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
 import { HeaderTitle } from '@/components/HeaderTitle';
 import { SwipeChildren } from '@/components/SwipeChildren';
 import { useScopePicker } from '@/zustand/useScopePicker';
@@ -10,10 +14,7 @@ export function ScopePickerHeaderTitle() {
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const pastSeasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasons = getPastSeasons(seasonsQuery.data?.data);
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 

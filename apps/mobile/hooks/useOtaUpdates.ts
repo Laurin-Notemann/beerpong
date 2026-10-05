@@ -3,6 +3,21 @@ import * as Updates from 'expo-updates';
 import { useEffect, useEffectEvent } from 'react';
 import { AppState } from 'react-native';
 
+import { ScopedLogger } from '@/utils/logging';
+
+const logger = new ScopedLogger('ota');
+
+/**
+ * The phone couldn't reach the update server: offline, a timeout, a dropped connection, or a
+ * download that iOS cut off after the app went to the background ("Failed to load all
+ * assets", MOBILE-T). The next foreground tries again, so these aren't bugs.
+ */
+const NETWORK_ERROR =
+    /timed out|connection was lost|offline|not connected to the internet|could not connect|network|unable to resolve host|failed to connect|timeout|failed to load all assets/i;
+
+export const isNetworkError = (error: unknown) =>
+    NETWORK_ERROR.test(error instanceof Error ? error.message : String(error));
+
 /**
  * Silent OTA updates: checks and downloads when the app comes to the foreground,
  * and only applies a downloaded update once the app is backgrounded, so the user
@@ -29,6 +44,10 @@ export function useOtaUpdates() {
                 await Updates.fetchUpdateAsync();
             }
         } catch (error) {
+            if (isNetworkError(error)) {
+                logger.info('update check failed, retrying next time:', error);
+                return;
+            }
             Sentry.captureException(error, { tags: { ota: 'check' } });
         }
     });

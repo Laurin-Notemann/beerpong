@@ -12,7 +12,11 @@ import {
     ScrollView,
 } from 'react-native-gesture-handler';
 
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
 import Avatar from '@/components/Avatar';
@@ -76,6 +80,7 @@ export interface PlayerScreenProps {
 
     pastSeasons: number;
 
+    /** missing for a player who can't be deleted: already deleted, or of a past season */
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
@@ -128,10 +133,7 @@ export default function PlayerScreen({
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const pastSeasonss =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasonss = getPastSeasons(seasonsQuery.data?.data);
 
     const leaderboardSwiper = useControlledSwiper(
         scopePicker.leaderboardSwiperProgress
@@ -434,17 +436,19 @@ export default function PlayerScreen({
                                     }}
                                 />
                             )}
-                            <MenuItem
-                                title="Delete Player"
-                                headIcon="delete-outline"
-                                onPress={onDelete}
-                                type="danger"
-                                confirmationPrompt={{
-                                    title: 'Delete Player',
-                                    description:
-                                        'Are you sure you want to delete this player?',
-                                }}
-                            />
+                            {onDelete && (
+                                <MenuItem
+                                    title="Delete Player"
+                                    headIcon="delete-outline"
+                                    onPress={onDelete}
+                                    type="danger"
+                                    confirmationPrompt={{
+                                        title: 'Delete Player',
+                                        description:
+                                            'Are you sure you want to delete this player?',
+                                    }}
+                                />
+                            )}
                         </MenuSection>
                     </View>
                 </ScrollView>

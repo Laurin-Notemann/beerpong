@@ -6,7 +6,11 @@ import {
     useGroupQuery,
     useUpdateGroupWallpaperMutation,
 } from '@/api/calls/groupHooks';
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
 import { ScreenState } from '@/api/types';
 import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import { GroupSettingsProps } from '@/components/screens/GroupSettings';
@@ -31,10 +35,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     const deleteWallpaperMutation = useDeleteWallpaperMutation();
 
-    const pastSeasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasons = getPastSeasons(seasonsQuery.data?.data);
 
     const { data, ...screenState } = useGroupQuery(groupId);
 

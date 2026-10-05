@@ -64,14 +64,30 @@ func (s *Server) seasonOfGroup(r *request, seasonID string) response {
 	return nil
 }
 
+// seasonListDTO is a season in the season list, with its match count so the
+// app can leave out empty past seasons without loading their matches.
+type seasonListDTO struct {
+	seasonDTO
+	NumMatches int64 `json:"numMatches"`
+}
+
 func (s *Server) listSeasons(r *request) response {
-	rows, err := s.q.SeasonsByGroup(r.Context(), ptr(r.path("groupId")))
+	groupID := ptr(r.path("groupId"))
+	rows, err := s.q.SeasonsByGroup(r.Context(), groupID)
 	if err != nil {
 		return internal(err)
 	}
-	out := make([]seasonDTO, len(rows))
+	counts, err := s.q.MatchCountsBySeason(r.Context(), groupID)
+	if err != nil {
+		return internal(err)
+	}
+	matches := make(map[string]int64, len(counts))
+	for _, c := range counts {
+		matches[deref(c.SeasonID)] = c.Matches
+	}
+	out := make([]seasonListDTO, len(rows))
 	for i, row := range rows {
-		out[i] = seasonFromRow(db.GetSeasonRow(row)).dto()
+		out[i] = seasonListDTO{seasonDTO: seasonFromRow(db.GetSeasonRow(row)).dto(), NumMatches: matches[row.ID]}
 	}
 	return ok(out)
 }

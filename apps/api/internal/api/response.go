@@ -2,7 +2,9 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -73,6 +75,13 @@ func internalf(format string, args ...any) response {
 }
 
 func (e internalError) write(w http.ResponseWriter, r *http.Request, log *slog.Logger) {
+	// The client went away (closed the screen, lost signal) and the query was
+	// cancelled with its request. Nothing failed on our side.
+	if errors.Is(e.err, context.Canceled) && r.Context().Err() != nil {
+		log.InfoContext(r.Context(), "client disconnected", "method", r.Method, "path", r.URL.Path)
+		writeSpringError(w, r, http.StatusInternalServerError)
+		return
+	}
 	log.ErrorContext(r.Context(), "request failed", "method", r.Method, "path", r.URL.Path, "err", e.err)
 	observability.CaptureError(r.Context(), e.err)
 	writeSpringError(w, r, http.StatusInternalServerError)

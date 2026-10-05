@@ -1,11 +1,7 @@
-import { useMemo } from 'react';
-
-import { useMatchesQuery } from '@/api/calls/matchHooks';
-import { usePlayersQuery } from '@/api/calls/playerHooks';
-import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { useSeasonMatches } from '@/api/calls/seasonMatchesHooks';
 import { ScreenState } from '@/api/types';
-import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { Match } from '@/api/utils/matchDtoToMatch';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import { MatchesListProps } from '@/components/MatchesList';
 import { useNavigation } from '@/lib/navigation/useNavigation';
@@ -15,18 +11,10 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
 
     const nav = useNavigation();
 
-    const playersQuery = usePlayersQuery(groupId, seasonId);
-
-    const matchesQuery = useMatchesQuery(groupId, seasonId);
-
-    const movesQuery = useMoves(groupId, seasonId);
-
-    const isLoading =
-        playersQuery.isLoading ||
-        matchesQuery.isLoading ||
-        movesQuery.isLoading;
-
-    const error = playersQuery.error ?? matchesQuery.error ?? movesQuery.error;
+    const { matchesBySeason, isLoading, error } = useSeasonMatches(
+        groupId,
+        seasonId ? [seasonId] : []
+    );
 
     const { invalidateMatches } = useQueryInvalidation();
 
@@ -34,13 +22,7 @@ export const useMatchlistProps = (): ScreenState<MatchesListProps> => {
         invalidateMatches(groupId!, seasonId!)
     );
 
-    const matchDtos = matchesQuery.data?.data;
-    const players = playersQuery.data?.data;
-    const allowedMoves = movesQuery.data?.data;
-    const matches = useMemo(
-        () => matchDtos?.map(matchDtoToMatch(players, allowedMoves)),
-        [matchDtos, players, allowedMoves]
-    );
+    const matches = seasonId ? matchesBySeason.get(seasonId) : undefined;
 
     if (!matches) return { props: null, isLoading, error };
 

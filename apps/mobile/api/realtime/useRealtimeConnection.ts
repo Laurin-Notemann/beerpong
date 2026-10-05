@@ -39,6 +39,13 @@ export function useRealtimeConnection() {
     });
     const { invalidateLeaderboard } = useQueryInvalidation();
 
+    function invalidateProfiles(groupId: string) {
+        qc.invalidateQueries({
+            queryKey: [QK.group, groupId, QK.profiles],
+            exact: true,
+        });
+    }
+
     function refetchGroup(groupId: string) {
         qc.invalidateQueries({
             queryKey: [QK.group, groupId],
@@ -140,6 +147,8 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'PROFILES':
+                // first: the queries below read the profiles through fetchProfiles
+                invalidateProfiles(e.groupId);
                 invalidateLeaderboard(e.groupId);
                 // refetch because the create player event is for profile
                 refetchGroup(e.groupId);
@@ -184,6 +193,8 @@ export function useRealtimeConnection() {
             case 'ASSETS':
                 client.current.logger.info('refetching assets');
 
+                // an avatar changed: profiles carry its url
+                invalidateProfiles(e.groupId);
                 invalidateLeaderboard(e.groupId);
 
                 qc.invalidateQueries({

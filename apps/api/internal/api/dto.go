@@ -177,12 +177,19 @@ type profileDTO struct {
 	ID            string  `json:"id"`
 	Name          *string `json:"name"`
 	AssetIDAvatar *string `json:"assetIdAvatar"`
-	GroupID       *string `json:"groupId"`
-	CreatedByID   *string `json:"createdById"`
+	// AvatarURL is where the avatar loads from, so the app doesn't look up
+	// every profile's asset.
+	AvatarURL   *string `json:"avatarUrl"`
+	GroupID     *string `json:"groupId"`
+	CreatedByID *string `json:"createdById"`
 }
 
-func toProfileDTO(p db.Profile) profileDTO {
-	return profileDTO{ID: p.ID, Name: p.Name, AssetIDAvatar: p.AssetIDAvatar, GroupID: p.GroupID, CreatedByID: p.CreatedBy}
+func (s *Server) toProfileDTO(p db.Profile) profileDTO {
+	var avatarURL *string
+	if p.AssetIDAvatar != nil {
+		avatarURL = ptr(s.bucket.PublicURL(*p.AssetIDAvatar))
+	}
+	return profileDTO{ID: p.ID, Name: p.Name, AssetIDAvatar: p.AssetIDAvatar, AvatarURL: avatarURL, GroupID: p.GroupID, CreatedByID: p.CreatedBy}
 }
 
 type profileCreatedDTO struct {

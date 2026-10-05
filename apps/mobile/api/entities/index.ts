@@ -295,12 +295,20 @@ export class MatchImpl {
 
         this.ruleMoves = ruleMoves;
 
-        const matchMoves = _data.matchMoves!.map((i) => new MatchMoveImpl(i));
-
-        for (const matchMove of matchMoves) {
-            matchMove.setRuleMove(
-                ruleMoves.find((i) => i.id === matchMove.moveId)!
-            );
+        // A move whose rule move isn't in `_ruleMoves` (not loaded, or from another season)
+        // can't be shown or scored, so it's left out instead of crashing the whole list.
+        const matchMoves: MatchMoveImpl[] = [];
+        for (const dto of _data.matchMoves ?? []) {
+            const matchMove = new MatchMoveImpl(dto);
+            const ruleMove = ruleMoves.find((i) => i.id === matchMove.moveId);
+            if (!ruleMove) {
+                ConsoleLogger.warn(
+                    `MatchImpl failed to resolve move "${matchMove.moveId}" for match "${_data.id}"`
+                );
+                continue;
+            }
+            matchMove.setRuleMove(ruleMove);
+            matchMoves.push(matchMove);
         }
 
         for (const team of this.teams) {

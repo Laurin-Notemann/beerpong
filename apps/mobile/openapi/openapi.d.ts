@@ -385,6 +385,7 @@ declare namespace Components {
             id: string;
             name: string | null;
             assetIdAvatar: string | null;
+            avatarUrl: string | null;
             groupId: string | null;
             createdById: string | null;
             reactivated: boolean;
@@ -394,6 +395,7 @@ declare namespace Components {
             id: string;
             name: string | null;
             assetIdAvatar: string | null;
+            avatarUrl: string | null;
             groupId: string | null;
             createdById: string | null;
         }
@@ -520,7 +522,7 @@ declare namespace Components {
         export interface ResponseEnvelopeListSeasonDto {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
-            data: SeasonDto[];
+            data: SeasonListDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeLiveMatchDto {
@@ -636,6 +638,24 @@ declare namespace Components {
                 wakeTime?: string;
             } | null;
             createdById: string | null;
+        }
+        export interface SeasonListDto {
+            id: string;
+            name: string | null;
+            startDate: string | null; // date-time
+            endDate: string | null; // date-time
+            groupId: string | null;
+            seasonSettings: {
+                minMatchesToQualify?: number; // int32
+                minTeamSize?: number; // int32
+                maxTeamSize?: number; // int32
+                rankingAlgorithm?: 'AVERAGE' | 'ELO' | null;
+                dailyLeaderboard?:
+                    'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
+                wakeTime?: string;
+            } | null;
+            createdById: string | null;
+            numMatches: number; // int64
         }
         export interface SeasonSettingsDto {
             minMatchesToQualify?: number; // int32
@@ -2613,6 +2633,7 @@ export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
 export type RuleMoveDto = Components.Schemas.RuleMoveDto;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
+export type SeasonListDto = Components.Schemas.SeasonListDto;
 export type SeasonSettingsDto = Components.Schemas.SeasonSettingsDto;
 export type SeasonUpdateDto = Components.Schemas.SeasonUpdateDto;
 export type TeamCreateDto = Components.Schemas.TeamCreateDto;

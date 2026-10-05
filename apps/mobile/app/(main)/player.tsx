@@ -5,7 +5,11 @@ import {
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
 } from '@/api/calls/playerHooks';
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -30,19 +34,16 @@ export default function Page() {
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const player = seasonsQuery.data?.data
-        ?.flatMap((i) => i.players)
-        ?.find((i) => i.id === id);
-
-    const pastSeasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore TODO: type this properly
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasons = getPastSeasons(seasonsQuery.data?.data);
 
     // TODO: this should only be the seasons where this specific player was active
     const activeSeasons = pastSeasons;
+
+    const { player, scopes, isLoading } = usePlayerPageScope(id ?? '');
+
+    // A deleted player, or one of a past season, can't be deleted (the API answers 403).
+    const canDelete =
+        !!player?.activeThisSeason && player.seasonId === seasonId;
 
     const deleteAvatarMutation = useDeletePlayerAvatarMutation();
 
@@ -55,11 +56,9 @@ export default function Page() {
     );
     const profileId = player?.profileId ?? '';
 
-    const { scopes } = usePlayerPageScope(profileId);
-
     if (!id) return <ErrorScreen message="Failed to find user" />;
 
-    const playerName = player?.name || 'Unknown';
+    const playerName = player?.profile?.name || 'Unknown';
 
     async function onDelete() {
         if (!groupId || !seasonId) return;
@@ -77,8 +76,6 @@ export default function Page() {
             showErrorToast('Failed to delete player.', err);
         }
     }
-
-    const isLoading = seasonsQuery.isLoading;
 
     if (isLoading) return <LoadingScreen />;
 
@@ -133,8 +130,8 @@ export default function Page() {
                 profileId={profileId!}
                 hasPremium={false}
                 pastSeasons={activeSeasons.length}
-                onDelete={onDelete}
-                avatarUrl={player?.avatarUrl}
+                onDelete={canDelete ? onDelete : undefined}
+                avatarUrl={player?.profile?.avatarUrl}
                 onUploadAvatarPress={onUploadAvatarPress}
                 onDeleteAvatarPress={onDeleteAvatarPress}
                 refresh={refresh}

@@ -20,6 +20,7 @@ import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEvery
 import { CrashFallback } from '@/components/CrashFallback';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useOtaUpdates } from '@/hooks/useOtaUpdates';
+import { useSentryScreenTransactions } from '@/hooks/useSentryScreenTransactions';
 import { useTheme } from '@/theme';
 import { Sentry } from '@/utils/sentry';
 import { LoggingProvider } from '@/utils/useLogging';
@@ -48,6 +49,7 @@ function RootLayout() {
 
     useRefetchEverythingOnWifiReconnect(queryClient);
     useOtaUpdates();
+    useSentryScreenTransactions();
 
     useEffect(() => {
         SplashScreen.hideAsync();

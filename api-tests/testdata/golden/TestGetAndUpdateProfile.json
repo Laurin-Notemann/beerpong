@@ -103,6 +103,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid4\u003e",
@@ -145,6 +146,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid4\u003e",
@@ -159,6 +161,7 @@
       {
         "body": {
           "assetIdAvatar": null,
+          "avatarUrl": null,
           "createdById": "\u003cid2\u003e",
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid4\u003e",
@@ -179,6 +182,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid5\u003e",
@@ -193,6 +197,7 @@
       {
         "body": {
           "assetIdAvatar": null,
+          "avatarUrl": null,
           "createdById": "\u003cid2\u003e",
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid5\u003e",
@@ -211,6 +216,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid5\u003e",
@@ -225,6 +231,7 @@
       {
         "body": {
           "assetIdAvatar": null,
+          "avatarUrl": null,
           "createdById": "\u003cid2\u003e",
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid5\u003e",

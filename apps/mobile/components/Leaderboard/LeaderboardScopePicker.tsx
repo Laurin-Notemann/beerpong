@@ -10,7 +10,11 @@ import Animated, {
     withSpring,
 } from 'react-native-reanimated';
 
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
 import { Icon, IconName } from '@/components/Icon';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import PillButton from '@/components/PillButton';
@@ -72,10 +76,7 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const pastSeasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasons = getPastSeasons(seasonsQuery.data?.data);
 
     function onChange(scope: string) {
         const optionIndex = ['today', 'season', 'all-time'].indexOf(scope);
