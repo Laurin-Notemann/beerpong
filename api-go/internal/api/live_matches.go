@@ -351,10 +351,18 @@ func (s *Server) appendLiveMatchOps(ctx context.Context, q *db.Queries, liveMatc
 // ---- endpoints ----
 
 func (s *Server) listLiveMatches(r *request) response {
-	ctx := r.Context()
-	rows, err := s.q.InProgressLiveMatchesByGroup(ctx, r.path("groupId"))
+	out, err := s.inProgressLiveMatches(r.Context(), r.path("groupId"))
 	if err != nil {
 		return internal(err)
+	}
+	return ok(out)
+}
+
+// inProgressLiveMatches are a group's running live matches with their ops.
+func (s *Server) inProgressLiveMatches(ctx context.Context, groupID string) ([]liveMatchDTO, error) {
+	rows, err := s.q.InProgressLiveMatchesByGroup(ctx, groupID)
+	if err != nil {
+		return nil, err
 	}
 	ids := make([]string, len(rows))
 	for i, row := range rows {
@@ -362,13 +370,13 @@ func (s *Server) listLiveMatches(r *request) response {
 	}
 	ops, err := liveMatchOps(ctx, s.q, ids)
 	if err != nil {
-		return internal(err)
+		return nil, err
 	}
 	out := make([]liveMatchDTO, len(rows))
 	for i, row := range rows {
 		out[i] = toLiveMatchDTO(row.LiveMatch, row.CreatedByUserID, ops[row.LiveMatch.ID])
 	}
-	return ok(out)
+	return out, nil
 }
 
 func (s *Server) getLiveMatch(r *request) response {

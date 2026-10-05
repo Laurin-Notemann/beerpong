@@ -65,35 +65,43 @@ func parseProjectedMatches(body any, now time.Time) ([]leaderboard.Match, error)
 	}
 	out := make([]leaderboard.Match, len(list))
 	for i, raw := range list {
-		in, err := parseMatchInput(raw)
-		if err != nil || len(in.teams) != 2 {
-			return nil, errors.New("a projected match needs two teams")
+		if out[i], err = parseProjectedMatch(raw, fmt.Sprintf("projected-%d", i), now); err != nil {
+			return nil, err
 		}
-		id := fmt.Sprintf("projected-%d", i)
-		m := leaderboard.Match{ID: id, Date: now, Projected: true}
-		for t, team := range in.teams {
-			if team == nil || team.members == nil {
-				return nil, errNullInMatch
-			}
-			teamID := fmt.Sprintf("%s-team-%d", id, t)
-			m.TeamIDs = append(m.TeamIDs, teamID)
-			for j, member := range team.members {
-				if member == nil || member.playerID == nil || member.moves == nil {
-					return nil, errNullInMatch
-				}
-				memberID := fmt.Sprintf("%s-%d", teamID, j)
-				m.Members = append(m.Members, leaderboard.Member{ID: memberID, TeamID: teamID, PlayerID: *member.playerID})
-				for _, mv := range member.moves {
-					if mv == nil || mv.moveID == nil || mv.count < 0 {
-						return nil, errNullInMatch
-					}
-					m.Moves = append(m.Moves, leaderboard.Move{TeamMemberID: memberID, MoveID: *mv.moveID, Value: mv.count})
-				}
-			}
-		}
-		out[i] = m
 	}
 	return out, nil
+}
+
+// parseProjectedMatch reads one live match as it would be entered now
+// ({"teams": [blue, red]} in the match create format) and counts it as
+// ending now.
+func parseProjectedMatch(raw any, id string, now time.Time) (leaderboard.Match, error) {
+	in, err := parseMatchInput(raw)
+	if err != nil || len(in.teams) != 2 {
+		return leaderboard.Match{}, errors.New("a projected match needs two teams")
+	}
+	m := leaderboard.Match{ID: id, Date: now, Projected: true}
+	for t, team := range in.teams {
+		if team == nil || team.members == nil {
+			return m, errNullInMatch
+		}
+		teamID := fmt.Sprintf("%s-team-%d", id, t)
+		m.TeamIDs = append(m.TeamIDs, teamID)
+		for j, member := range team.members {
+			if member == nil || member.playerID == nil || member.moves == nil {
+				return m, errNullInMatch
+			}
+			memberID := fmt.Sprintf("%s-%d", teamID, j)
+			m.Members = append(m.Members, leaderboard.Member{ID: memberID, TeamID: teamID, PlayerID: *member.playerID})
+			for _, mv := range member.moves {
+				if mv == nil || mv.moveID == nil || mv.count < 0 {
+					return m, errNullInMatch
+				}
+				m.Moves = append(m.Moves, leaderboard.Move{TeamMemberID: memberID, MoveID: *mv.moveID, Value: mv.count})
+			}
+		}
+	}
+	return m, nil
 }
 
 // leaderboardQuery reads and checks the scope and season of a leaderboard

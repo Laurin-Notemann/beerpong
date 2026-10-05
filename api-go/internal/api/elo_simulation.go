@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -50,8 +51,9 @@ type eloSimulationDTO struct {
 	Params    eloParamsDTO   `json:"params"`
 	Seasons   []eloSeasonDTO `json:"seasons"`
 	SeasonID  *string        `json:"seasonId"`
-	// Baseline is what the standings compare with: "withoutTestGames" when
-	// the request has test games, else "defaults" (the default weights).
+	// Baseline is what the standings compare with: "storedGames" (the same
+	// weights without test and live games) when the request has any, else
+	// "defaults" (the default weights).
 	Baseline   string           `json:"baseline"`
 	Standings  []eloStandingDTO `json:"standings"`
 	Games      []eloGameDTO     `json:"games"`
@@ -107,15 +109,18 @@ type eloStandingDTO struct {
 
 type eloGameDTO struct {
 	MatchID string `json:"matchId"`
-	// TestIndex is the test game's place in the request; nil for real games
-	TestIndex  *int         `json:"testIndex"`
-	Date       time.Time    `json:"date"`
-	Gap        float64      `json:"gap"`
-	Scale      float64      `json:"scale"`
-	TeamPoints float64      `json:"teamPoints"`
-	Finisher   string       `json:"finisher"`
-	FinishMove string       `json:"finishMove"`
-	Teams      []eloTeamDTO `json:"teams"`
+	// TestIndex is the test game's place in the request; nil for other games
+	TestIndex *int `json:"testIndex"`
+	// LiveMatchID is the live match a running game is, counted as if it ended
+	// now; nil for other games
+	LiveMatchID *string      `json:"liveMatchId"`
+	Date        time.Time    `json:"date"`
+	Gap         float64      `json:"gap"`
+	Scale       float64      `json:"scale"`
+	TeamPoints  float64      `json:"teamPoints"`
+	Finisher    string       `json:"finisher"`
+	FinishMove  string       `json:"finishMove"`
+	Teams       []eloTeamDTO `json:"teams"`
 }
 
 type eloTeamDTO struct {
@@ -163,17 +168,26 @@ type eloGroup struct {
 	playing map[string]bool
 }
 
-func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, response) {
+// eloGroupByCode is the group of the request's invite code.
+func (s *Server) eloGroupByCode(ctx context.Context, r *request) (db.Group, response) {
 	code := strings.Join(r.URL.Query()["inviteCode"], ",")
 	if javaTrimEmpty(code) {
-		return eloGroup{}, fail(errInvalidGroupInviteCode)
+		return db.Group{}, fail(errInvalidGroupInviteCode)
 	}
 	row, err := s.q.GetGroupByInviteCode(ctx, &code)
 	if notFound(err) {
-		return eloGroup{}, fail(errGroupInviteNotFound)
+		return db.Group{}, fail(errGroupInviteNotFound)
 	}
 	if err != nil {
-		return eloGroup{}, internal(err)
+		return db.Group{}, internal(err)
+	}
+	return row, nil
+}
+
+func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, response) {
+	row, res := s.eloGroupByCode(ctx, r)
+	if res != nil {
+		return eloGroup{}, res
 	}
 	g := eloGroup{group: toGroupDTO(row), profiles: map[string]string{}, playing: map[string]bool{}}
 	seasons, err := s.q.SeasonsByGroup(ctx, &row.ID)
@@ -231,7 +245,7 @@ func (s *Server) eloSimulation(r *request) response {
 	if !valid {
 		return springError(400)
 	}
-	tests, res := readTestGames(r)
+	tests, live, res := readExtraGames(r, time.Now())
 	if res != nil {
 		return res
 	}
@@ -286,7 +300,20 @@ func (s *Server) eloSimulation(r *request) response {
 			PointsForTeam: m.PointsForTeam, Finishing: m.FinishingMove})
 	}
 
-	in, testOf, valid := g.withTestGames(li.in, sn.ID, tests, moves)
+	// only the season's live matches that are still running count
+	if len(live) > 0 {
+		running, err := s.inProgressLiveMatches(ctx, g.group.ID)
+		if err != nil {
+			return internal(err)
+		}
+		seasonOf := map[string]string{}
+		for _, lm := range running {
+			seasonOf[lm.ID] = lm.SeasonID
+		}
+		live = slices.DeleteFunc(live, func(m eloLiveGame) bool { return seasonOf[m.id] != sn.ID })
+	}
+
+	in, extra, valid := g.withExtraGames(li.in, sn.ID, tests, live, moves)
 	if !valid {
 		return fail(errEloInvalidTestGame)
 	}
@@ -299,16 +326,31 @@ func (s *Server) eloSimulation(r *request) response {
 		return internal(err)
 	}
 	baseline := li.in
-	if len(tests) > 0 {
-		out.Baseline = "withoutTestGames"
+	if len(tests) > 0 || len(live) > 0 {
+		out.Baseline = "storedGames"
 		baseline.Elo = &params
 	}
 	before, err := leaderboard.Compute(baseline)
 	if err != nil {
 		return internal(err)
 	}
-	out.Games = g.games(in, moves, result.Games, testOf)
+	out.Games = g.games(in, moves, result.Games, extra)
 	out.Standings = g.standings(result, before, int64(sn.MinMatchesToQualify))
+	return ok(out)
+}
+
+// eloLiveMatches answers GET /elo-simulation/live-matches: the group's
+// running live matches with their ops. The server doesn't interpret ops, so
+// the simulator reduces them with the app's code and sends their teams back.
+func (s *Server) eloLiveMatches(r *request) response {
+	row, res := s.eloGroupByCode(r.Context(), r)
+	if res != nil {
+		return res
+	}
+	out, err := s.inProgressLiveMatches(r.Context(), row.ID)
+	if err != nil {
+		return internal(err)
+	}
 	return ok(out)
 }
 
@@ -380,35 +422,72 @@ type eloTestMove struct {
 	Count  int32  `json:"count"`
 }
 
-// readTestGames reads the body of a POST: {"testGames": [...]}.
-func readTestGames(r *request) ([]eloTestGame, response) {
+// eloLiveGame is a running live match as it would be entered now.
+type eloLiveGame struct {
+	id    string
+	match leaderboard.Match
+}
+
+// readExtraGames reads the body of a POST: {"testGames": [...],
+// "liveMatches": [{"liveMatchId": ..., "teams": [blue, red]}]}, the teams in
+// the match create format.
+func readExtraGames(r *request, now time.Time) ([]eloTestGame, []eloLiveGame, response) {
 	if r.Method != http.MethodPost {
-		return nil, nil
+		return nil, nil, nil
 	}
 	body, res := readJSON(r.Request, false)
 	if res != nil || body == nil {
-		return nil, res
+		return nil, nil, res
 	}
-	raw, err := json.Marshal(body)
+	o, err := asObject(body)
 	if err != nil {
-		return nil, springError(400)
+		return nil, nil, springError(400)
 	}
-	var req struct {
-		TestGames []eloTestGame `json:"testGames"`
+	raw, err := json.Marshal(o["testGames"])
+	if err != nil {
+		return nil, nil, springError(400)
 	}
-	if err := json.Unmarshal(raw, &req); err != nil || len(req.TestGames) > maxTestGames {
-		return nil, fail(errEloInvalidTestGame)
+	var tests []eloTestGame
+	if err := json.Unmarshal(raw, &tests); err != nil || len(tests) > maxTestGames {
+		return nil, nil, fail(errEloInvalidTestGame)
 	}
-	return req.TestGames, nil
+	list, _, err := o.list("liveMatches")
+	if err != nil || len(list) > maxProjectedMatches {
+		return nil, nil, fail(errEloInvalidLiveMatch)
+	}
+	var live []eloLiveGame
+	for _, item := range list {
+		lo, err := asObject(item)
+		if err != nil {
+			return nil, nil, fail(errEloInvalidLiveMatch)
+		}
+		id, err := lo.str("liveMatchId")
+		if err != nil || id == nil {
+			return nil, nil, fail(errEloInvalidLiveMatch)
+		}
+		m, err := parseProjectedMatch(item, "live-"+*id, now)
+		if err != nil {
+			return nil, nil, fail(errEloInvalidLiveMatch)
+		}
+		live = append(live, eloLiveGame{id: *id, match: m})
+	}
+	return tests, live, nil
 }
 
-// withTestGames adds the test games to a season's input. testOf maps a test
-// game's match id to its place in the request. A player without a player row
-// in the season joins it for the test, starting like everyone else.
-func (g eloGroup) withTestGames(base leaderboard.Input, seasonID string, tests []eloTestGame, moves map[string]db.RuleMove) (leaderboard.Input, map[string]int, bool) {
-	testOf := map[string]int{}
-	if len(tests) == 0 {
-		return base, testOf, true
+// extraGames maps the match ids of test and live games to where they came
+// from.
+type extraGames struct {
+	test map[string]int    // the test game's place in the request
+	live map[string]string // the live match's id
+}
+
+// withExtraGames adds test and live games to a season's input. A player
+// without a player row in the season joins it for a test game, starting like
+// everyone else. A live match whose players aren't the season's is left out.
+func (g eloGroup) withExtraGames(base leaderboard.Input, seasonID string, tests []eloTestGame, live []eloLiveGame, moves map[string]db.RuleMove) (leaderboard.Input, extraGames, bool) {
+	extra := extraGames{test: map[string]int{}, live: map[string]string{}}
+	if len(tests) == 0 && len(live) == 0 {
+		return base, extra, true
 	}
 	in := base
 	in.Matches = append([]leaderboard.Match(nil), base.Matches...)
@@ -458,7 +537,7 @@ func (g eloGroup) withTestGames(base leaderboard.Input, seasonID string, tests [
 			date, found = last, true
 		}
 		if !found || len(t.Teams) != 2 {
-			return in, nil, false
+			return in, extra, false
 		}
 		id := fmt.Sprintf("test-%d", i)
 		m := leaderboard.Match{ID: id, Date: date}
@@ -466,14 +545,14 @@ func (g eloGroup) withTestGames(base leaderboard.Input, seasonID string, tests [
 		finishers := 0
 		for k, team := range t.Teams {
 			if len(team) == 0 || len(team) > maxTestTeam {
-				return in, nil, false
+				return in, extra, false
 			}
 			teamID := fmt.Sprintf("%s-team-%d", id, k)
 			m.TeamIDs = append(m.TeamIDs, teamID)
 			finished := false
 			for j, p := range team {
 				if !g.playing[p.ProfileID] || inGame[p.ProfileID] {
-					return in, nil, false
+					return in, extra, false
 				}
 				inGame[p.ProfileID] = true
 				player, ok := playerOf[p.ProfileID]
@@ -489,7 +568,7 @@ func (g eloGroup) withTestGames(base leaderboard.Input, seasonID string, tests [
 				for _, mv := range p.Moves {
 					rm, known := moves[mv.MoveID]
 					if !known || mv.Count < 0 || mv.Count > maxTestMoveHit {
-						return in, nil, false
+						return in, extra, false
 					}
 					if rm.FinishingMove && mv.Count > 0 {
 						finished = true
@@ -502,15 +581,40 @@ func (g eloGroup) withTestGames(base leaderboard.Input, seasonID string, tests [
 			}
 		}
 		if finishers != 1 {
-			return in, nil, false
+			return in, extra, false
 		}
 		in.Matches = append(in.Matches, m)
-		testOf[id] = i
+		extra.test[id] = i
 	}
-	return in, testOf, true
+
+	profileOf := map[string]string{}
+	for _, p := range base.Players {
+		if p.ProfileID != nil {
+			profileOf[p.ID] = *p.ProfileID
+		}
+	}
+live:
+	for _, lg := range live {
+		for _, tm := range lg.match.Members {
+			if _, ok := profileOf[tm.PlayerID]; !ok {
+				continue live
+			}
+		}
+		for _, mv := range lg.match.Moves {
+			if _, ok := moves[mv.MoveID]; !ok {
+				continue live
+			}
+		}
+		for _, tm := range lg.match.Members {
+			in.ProfileOf[tm.PlayerID] = profileOf[tm.PlayerID]
+		}
+		in.Matches = append(in.Matches, lg.match)
+		extra.live[lg.match.ID] = lg.id
+	}
+	return in, extra, true
 }
 
-func (g eloGroup) games(in leaderboard.Input, moves map[string]db.RuleMove, traced []leaderboard.Game, testOf map[string]int) []eloGameDTO {
+func (g eloGroup) games(in leaderboard.Input, moves map[string]db.RuleMove, traced []leaderboard.Game, extra extraGames) []eloGameDTO {
 	matches := map[string]leaderboard.Match{}
 	for _, m := range in.Matches {
 		matches[m.ID] = m
@@ -519,8 +623,11 @@ func (g eloGroup) games(in leaderboard.Input, moves map[string]db.RuleMove, trac
 	for _, tg := range traced {
 		m := matches[tg.MatchID]
 		dto := eloGameDTO{MatchID: tg.MatchID, Date: tg.Date.UTC(), Gap: tg.Gap, Scale: tg.Scale, TeamPoints: tg.TeamPoints}
-		if i, isTest := testOf[tg.MatchID]; isTest {
+		if i, isTest := extra.test[tg.MatchID]; isTest {
 			dto.TestIndex = &i
+		}
+		if id, isLive := extra.live[tg.MatchID]; isLive {
+			dto.LiveMatchID = &id
 		}
 		for _, tt := range tg.Teams {
 			team := eloTeamDTO{Won: tt.Won, Rating: tt.Rating, WinChance: tt.WinChance}

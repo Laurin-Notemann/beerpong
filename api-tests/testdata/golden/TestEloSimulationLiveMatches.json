@@ -179,150 +179,617 @@
     }
   },
   {
-    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season\u0026seasonId=\u003cid1\u003e",
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid22\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid9\u003e"
+          ],
+          "id": "\u003cid23\u003e",
+          "redPlayerIds": [
+            "\u003cid8\u003e"
+          ],
+          "type": "SET_TEAMS"
+        },
+        {
+          "delta": 3,
+          "id": "\u003cid24\u003e",
+          "moveId": "\u003cid17\u003e",
+          "playerId": "\u003cid8\u003e",
+          "type": "ADJUST_MOVE"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
     "status": 200,
     "response": {
       "data": {
-        "entries": [
+        "createdByUserId": "\u003cid25\u003e",
+        "endedAt": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid22\u003e",
+        "lastActivityAt": "\u003cts\u003e",
+        "lastSeq": 2,
+        "ops": [
           {
-            "activeThisSeason": true,
-            "id": "\u003cid10\u003e",
-            "profileId": "\u003cid6\u003e",
-            "season": {
-              "createdById": null,
-              "endDate": null,
-              "groupId": null,
-              "id": "\u003cid1\u003e",
-              "name": null,
-              "seasonSettings": {
-                "dailyLeaderboard": "WAKE_TIME",
-                "maxTeamSize": 10,
-                "minMatchesToQualify": 1,
-                "minTeamSize": 1,
-                "rankingAlgorithm": "AVERAGE",
-                "wakeTime": "00:00:00"
-              },
-              "startDate": "\u003cts\u003e"
-            },
-            "statistics": {
-              "avgPointsPerMatch": 7,
-              "avgTeamSize": 1.5,
-              "elo": 1560.247409,
-              "id": null,
-              "matches": 2,
-              "moves": 9,
-              "points": 14,
-              "totalTeamSize": 3,
-              "wins": 1
-            }
+            "bluePlayerIds": [
+              "\u003cid9\u003e"
+            ],
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": null,
+            "finishMoveId": null,
+            "id": "\u003cid23\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": [
+              "\u003cid8\u003e"
+            ],
+            "seq": 1,
+            "team": null,
+            "type": "SET_TEAMS"
           },
           {
-            "activeThisSeason": true,
-            "id": "\u003cid11\u003e",
-            "profileId": "\u003cid7\u003e",
-            "season": {
-              "createdById": null,
-              "endDate": null,
-              "groupId": null,
-              "id": "\u003cid1\u003e",
-              "name": null,
-              "seasonSettings": {
-                "dailyLeaderboard": "WAKE_TIME",
-                "maxTeamSize": 10,
-                "minMatchesToQualify": 1,
-                "minTeamSize": 1,
-                "rankingAlgorithm": "AVERAGE",
-                "wakeTime": "00:00:00"
-              },
-              "startDate": "\u003cts\u003e"
-            },
-            "statistics": {
-              "avgPointsPerMatch": 1,
-              "avgTeamSize": 2,
-              "elo": 1302.730423,
-              "id": null,
-              "matches": 1,
-              "moves": 1,
-              "points": 1,
-              "totalTeamSize": 2,
-              "wins": 0
-            }
-          },
-          {
-            "activeThisSeason": true,
-            "id": "\u003cid8\u003e",
-            "profileId": "\u003cid4\u003e",
-            "season": {
-              "createdById": null,
-              "endDate": null,
-              "groupId": null,
-              "id": "\u003cid1\u003e",
-              "name": null,
-              "seasonSettings": {
-                "dailyLeaderboard": "WAKE_TIME",
-                "maxTeamSize": 10,
-                "minMatchesToQualify": 1,
-                "minTeamSize": 1,
-                "rankingAlgorithm": "AVERAGE",
-                "wakeTime": "00:00:00"
-              },
-              "startDate": "\u003cts\u003e"
-            },
-            "statistics": {
-              "avgPointsPerMatch": 3.5,
-              "avgTeamSize": 1.5,
-              "elo": 1302.252591,
-              "id": null,
-              "matches": 2,
-              "moves": 3,
-              "points": 7,
-              "totalTeamSize": 3,
-              "wins": 1
-            }
-          },
-          {
-            "activeThisSeason": true,
-            "id": "\u003cid9\u003e",
-            "profileId": "\u003cid5\u003e",
-            "season": {
-              "createdById": null,
-              "endDate": null,
-              "groupId": null,
-              "id": "\u003cid1\u003e",
-              "name": null,
-              "seasonSettings": {
-                "dailyLeaderboard": "WAKE_TIME",
-                "maxTeamSize": 10,
-                "minMatchesToQualify": 1,
-                "minTeamSize": 1,
-                "rankingAlgorithm": "AVERAGE",
-                "wakeTime": "00:00:00"
-              },
-              "startDate": "\u003cts\u003e"
-            },
-            "statistics": {
-              "avgPointsPerMatch": 5,
-              "avgTeamSize": 2,
-              "elo": 1659.769577,
-              "id": null,
-              "matches": 1,
-              "moves": 1,
-              "points": 5,
-              "totalTeamSize": 2,
-              "wins": 1
-            }
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": 3,
+            "finishMoveId": null,
+            "id": "\u003cid24\u003e",
+            "moveId": "\u003cid17\u003e",
+            "playerId": "\u003cid8\u003e",
+            "redPlayerIds": null,
+            "seq": 2,
+            "team": null,
+            "type": "ADJUST_MOVE"
           }
         ],
-        "numMatches": 2,
-        "numPlayers": 4,
-        "startedAt": "\u003cts\u003e"
+        "resultMatchId": null,
+        "seasonId": "\u003cid1\u003e",
+        "startedAt": "\u003cts\u003e",
+        "status": "IN_PROGRESS"
       },
       "httpCode": 200,
       "status": "OK"
     }
   },
   {
-    "request": "GET /elo-simulation?inviteCode=\u003cinviteCode\u003e",
+    "request": "GET /elo-simulation/live-matches?inviteCode=\u003cinviteCode\u003e",
+    "status": 200,
+    "response": {
+      "data": [
+        {
+          "createdByUserId": "\u003cid25\u003e",
+          "endedAt": null,
+          "groupId": "\u003cid3\u003e",
+          "id": "\u003cid22\u003e",
+          "lastActivityAt": "\u003cts\u003e",
+          "lastSeq": 2,
+          "ops": [
+            {
+              "bluePlayerIds": [
+                "\u003cid9\u003e"
+              ],
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": null,
+              "finishMoveId": null,
+              "id": "\u003cid23\u003e",
+              "moveId": null,
+              "playerId": null,
+              "redPlayerIds": [
+                "\u003cid8\u003e"
+              ],
+              "seq": 1,
+              "team": null,
+              "type": "SET_TEAMS"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": null,
+              "delta": 3,
+              "finishMoveId": null,
+              "id": "\u003cid24\u003e",
+              "moveId": "\u003cid17\u003e",
+              "playerId": "\u003cid8\u003e",
+              "redPlayerIds": null,
+              "seq": 2,
+              "team": null,
+              "type": "ADJUST_MOVE"
+            }
+          ],
+          "resultMatchId": null,
+          "seasonId": "\u003cid1\u003e",
+          "startedAt": "\u003cts\u003e",
+          "status": "IN_PROGRESS"
+        }
+      ],
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /elo-simulation?inviteCode=\u003cinviteCode\u003e",
+    "body": {
+      "liveMatches": [
+        {
+          "liveMatchId": "\u003cid22\u003e",
+          "teams": [
+            {
+              "teamMembers": [
+                {
+                  "moves": [],
+                  "playerId": "\u003cid9\u003e"
+                }
+              ]
+            },
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 3,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid8\u003e"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "baseline": "storedGames",
+        "defaults": {
+          "k": 350,
+          "marginWeight": 0.5,
+          "perPoint": 25,
+          "topWeight": 0.5
+        },
+        "games": [
+          {
+            "date": "\u003cts\u003e",
+            "finishMove": "",
+            "finisher": "",
+            "gap": 3,
+            "liveMatchId": "\u003cid22\u003e",
+            "matchId": "live-\u003cid22\u003e",
+            "scale": 0.894427191,
+            "teamPoints": 1.5,
+            "teams": [
+              {
+                "avgPoints": 0,
+                "cups": 0,
+                "players": [
+                  {
+                    "after": 1445.849522,
+                    "before": 1659.769577,
+                    "expected": 1.653809988,
+                    "hitting": -41.3452497,
+                    "moves": [],
+                    "name": "b",
+                    "own": 0,
+                    "points": 0,
+                    "profileId": "\u003cid5\u003e",
+                    "result": -172.5748059
+                  }
+                ],
+                "points": 0,
+                "rating": 1659.769577,
+                "winChance": 0.551269996,
+                "won": false
+              },
+              {
+                "avgPoints": 3,
+                "cups": 3,
+                "players": [
+                  {
+                    "after": 1516.172647,
+                    "before": 1302.252591,
+                    "expected": 1.346190012,
+                    "hitting": 41.3452497,
+                    "moves": [
+                      {
+                        "count": 3,
+                        "name": "Normal"
+                      }
+                    ],
+                    "name": "a",
+                    "own": 3,
+                    "points": 3,
+                    "profileId": "\u003cid4\u003e",
+                    "result": 172.5748059
+                  }
+                ],
+                "points": 3,
+                "rating": 1302.252591,
+                "winChance": 0.448730004,
+                "won": true
+              }
+            ],
+            "testIndex": null
+          },
+          {
+            "date": "\u003cts\u003e",
+            "finishMove": "Finish - Normal",
+            "finisher": "a",
+            "gap": 3.5,
+            "liveMatchId": null,
+            "matchId": "\u003cid20\u003e",
+            "scale": 0.9486832981,
+            "teamPoints": 4.5,
+            "teams": [
+              {
+                "avgPoints": 2,
+                "cups": 4,
+                "players": [
+                  {
+                    "after": 1302.730423,
+                    "before": 1500,
+                    "expected": 2.25,
+                    "hitting": -31.25,
+                    "moves": [
+                      {
+                        "count": 1,
+                        "name": "Normal"
+                      }
+                    ],
+                    "name": "d",
+                    "own": 1,
+                    "points": 1,
+                    "profileId": "\u003cid7\u003e",
+                    "result": -166.0195772
+                  },
+                  {
+                    "after": 1352.730423,
+                    "before": 1500,
+                    "expected": 2.25,
+                    "hitting": 18.75,
+                    "moves": [
+                      {
+                        "count": 3,
+                        "name": "Normal"
+                      }
+                    ],
+                    "name": "c",
+                    "own": 3,
+                    "points": 3,
+                    "profileId": "\u003cid6\u003e",
+                    "result": -166.0195772
+                  }
+                ],
+                "points": 4,
+                "rating": 1500,
+                "winChance": 0.5,
+                "won": false
+              },
+              {
+                "avgPoints": 5.5,
+                "cups": 3,
+                "players": [
+                  {
+                    "after": 1659.769577,
+                    "before": 1500,
+                    "expected": 2.25,
+                    "hitting": -6.25,
+                    "moves": [
+                      {
+                        "count": 1,
+                        "name": "Bomb"
+                      }
+                    ],
+                    "name": "b",
+                    "own": 2,
+                    "points": 5,
+                    "profileId": "\u003cid5\u003e",
+                    "result": 166.0195772
+                  },
+                  {
+                    "after": 1684.769577,
+                    "before": 1500,
+                    "expected": 2.25,
+                    "hitting": 18.75,
+                    "moves": [
+                      {
+                        "count": 1,
+                        "name": "Finish - Normal"
+                      },
+                      {
+                        "count": 2,
+                        "name": "Normal"
+                      }
+                    ],
+                    "name": "a",
+                    "own": 3,
+                    "points": 6,
+                    "profileId": "\u003cid4\u003e",
+                    "result": 166.0195772
+                  }
+                ],
+                "points": 11,
+                "rating": 1500,
+                "winChance": 0.5,
+                "won": true
+              }
+            ],
+            "testIndex": null
+          },
+          {
+            "date": "\u003cts\u003e",
+            "finishMove": "Finish - Ring of fire",
+            "finisher": "c",
+            "gap": 10,
+            "liveMatchId": null,
+            "matchId": "\u003cid21\u003e",
+            "scale": 1.483239697,
+            "teamPoints": 4.5,
+            "teams": [
+              {
+                "avgPoints": 1,
+                "cups": 1,
+                "players": [
+                  {
+                    "after": 1302.252591,
+                    "before": 1684.769577,
+                    "expected": 4.928753953,
+                    "hitting": -98.21884883,
+                    "moves": [
+                      {
+                        "count": 1,
+                        "name": "Normal"
+                      }
+                    ],
+                    "name": "a",
+                    "own": 1,
+                    "points": 1,
+                    "profileId": "\u003cid4\u003e",
+                    "result": -284.298137
+                  }
+                ],
+                "points": 1,
+                "rating": 1684.769577,
+                "winChance": 0.5476393282,
+                "won": false
+              },
+              {
+                "avgPoints": 11,
+                "cups": 6,
+                "players": [
+                  {
+                    "after": 1560.247409,
+                    "before": 1352.730423,
+                    "expected": 4.071246047,
+                    "hitting": -76.78115117,
+                    "moves": [
+                      {
+                        "count": 1,
+                        "name": "Finish - Ring of fire"
+                      }
+                    ],
+                    "name": "c",
+                    "own": 1,
+                    "points": 11,
+                    "profileId": "\u003cid6\u003e",
+                    "result": 284.298137
+                  }
+                ],
+                "points": 11,
+                "rating": 1352.730423,
+                "winChance": 0.4523606718,
+                "won": true
+              }
+            ],
+            "testIndex": null
+          }
+        ],
+        "groupId": "\u003cid3\u003e",
+        "groupName": "Leaderboard",
+        "moves": [
+          {
+            "finishing": false,
+            "id": "\u003cid12\u003e",
+            "name": "Bomb",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid13\u003e",
+            "name": "Bouncer",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid17\u003e",
+            "name": "Normal",
+            "pointsForScorer": 1,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid18\u003e",
+            "name": "Save",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid19\u003e",
+            "name": "Trickshot",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid14\u003e",
+            "name": "Finish - Normal",
+            "pointsForScorer": 1,
+            "pointsForTeam": 3
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid15\u003e",
+            "name": "Finish - Ring of fire",
+            "pointsForScorer": 1,
+            "pointsForTeam": 10
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid16\u003e",
+            "name": "Finish - Ring of water",
+            "pointsForScorer": 1,
+            "pointsForTeam": 10
+          }
+        ],
+        "params": {
+          "k": 350,
+          "marginWeight": 0.5,
+          "perPoint": 25,
+          "topWeight": 0.5
+        },
+        "prediction": {
+          "defaults": {
+            "called": 1,
+            "correct": 0,
+            "games": 2,
+            "logLoss": 0.7432113257
+          },
+          "params": {
+            "called": 1,
+            "correct": 0,
+            "games": 2,
+            "logLoss": 0.7432113257
+          }
+        },
+        "profiles": [
+          {
+            "id": "\u003cid4\u003e",
+            "name": "a"
+          },
+          {
+            "id": "\u003cid5\u003e",
+            "name": "b"
+          },
+          {
+            "id": "\u003cid6\u003e",
+            "name": "c"
+          },
+          {
+            "id": "\u003cid7\u003e",
+            "name": "d"
+          }
+        ],
+        "seasonId": "\u003cid1\u003e",
+        "seasons": [
+          {
+            "id": "\u003cid1\u003e",
+            "minMatchesToQualify": 1,
+            "name": null,
+            "numMatches": 2
+          }
+        ],
+        "standings": [
+          {
+            "baselineElo": 1302.252591,
+            "baselineRank": 4,
+            "elo": 1516.172647,
+            "hitting": -38.12359914,
+            "matches": 3,
+            "name": "a",
+            "points": 10,
+            "profileId": "\u003cid4\u003e",
+            "rank": 2,
+            "result": 54.29624607,
+            "wins": 2
+          },
+          {
+            "baselineElo": 1302.730423,
+            "baselineRank": 3,
+            "elo": 1302.730423,
+            "hitting": -31.25,
+            "matches": 1,
+            "name": "d",
+            "points": 1,
+            "profileId": "\u003cid7\u003e",
+            "rank": 4,
+            "result": -166.0195772,
+            "wins": 0
+          },
+          {
+            "baselineElo": 1560.247409,
+            "baselineRank": 2,
+            "elo": 1560.247409,
+            "hitting": -58.03115117,
+            "matches": 2,
+            "name": "c",
+            "points": 14,
+            "profileId": "\u003cid6\u003e",
+            "rank": 1,
+            "result": 118.2785598,
+            "wins": 1
+          },
+          {
+            "baselineElo": 1659.769577,
+            "baselineRank": 1,
+            "elo": 1445.849522,
+            "hitting": -47.5952497,
+            "matches": 2,
+            "name": "b",
+            "points": 5,
+            "profileId": "\u003cid5\u003e",
+            "rank": 3,
+            "result": -6.55522874,
+            "wins": 1
+          }
+        ]
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /elo-simulation?inviteCode=\u003cinviteCode\u003e",
+    "body": {
+      "liveMatches": [
+        {
+          "liveMatchId": "\u003cid26\u003e",
+          "teams": [
+            {
+              "teamMembers": [
+                {
+                  "moves": [],
+                  "playerId": "\u003cid9\u003e"
+                }
+              ]
+            },
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 3,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid8\u003e"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     "status": 200,
     "response": {
       "data": {
@@ -674,412 +1141,22 @@
     }
   },
   {
-    "request": "GET /elo-simulation?k=0\u0026perPoint=0\u0026inviteCode=\u003cinviteCode\u003e",
-    "status": 200,
-    "response": {
-      "data": {
-        "baseline": "defaults",
-        "defaults": {
-          "k": 350,
-          "marginWeight": 0.5,
-          "perPoint": 25,
-          "topWeight": 0.5
-        },
-        "games": [
-          {
-            "date": "\u003cts\u003e",
-            "finishMove": "Finish - Normal",
-            "finisher": "a",
-            "gap": 3.5,
-            "liveMatchId": null,
-            "matchId": "\u003cid20\u003e",
-            "scale": 0.9486832981,
-            "teamPoints": 4.5,
-            "teams": [
-              {
-                "avgPoints": 2,
-                "cups": 4,
-                "players": [
-                  {
-                    "after": 1500,
-                    "before": 1500,
-                    "expected": 2.25,
-                    "hitting": 0,
-                    "moves": [
-                      {
-                        "count": 1,
-                        "name": "Normal"
-                      }
-                    ],
-                    "name": "d",
-                    "own": 1,
-                    "points": 1,
-                    "profileId": "\u003cid7\u003e",
-                    "result": 0
-                  },
-                  {
-                    "after": 1500,
-                    "before": 1500,
-                    "expected": 2.25,
-                    "hitting": 0,
-                    "moves": [
-                      {
-                        "count": 3,
-                        "name": "Normal"
-                      }
-                    ],
-                    "name": "c",
-                    "own": 3,
-                    "points": 3,
-                    "profileId": "\u003cid6\u003e",
-                    "result": 0
-                  }
-                ],
-                "points": 4,
-                "rating": 1500,
-                "winChance": 0.5,
-                "won": false
-              },
-              {
-                "avgPoints": 5.5,
-                "cups": 3,
-                "players": [
-                  {
-                    "after": 1500,
-                    "before": 1500,
-                    "expected": 2.25,
-                    "hitting": 0,
-                    "moves": [
-                      {
-                        "count": 1,
-                        "name": "Bomb"
-                      }
-                    ],
-                    "name": "b",
-                    "own": 2,
-                    "points": 5,
-                    "profileId": "\u003cid5\u003e",
-                    "result": 0
-                  },
-                  {
-                    "after": 1500,
-                    "before": 1500,
-                    "expected": 2.25,
-                    "hitting": 0,
-                    "moves": [
-                      {
-                        "count": 1,
-                        "name": "Finish - Normal"
-                      },
-                      {
-                        "count": 2,
-                        "name": "Normal"
-                      }
-                    ],
-                    "name": "a",
-                    "own": 3,
-                    "points": 6,
-                    "profileId": "\u003cid4\u003e",
-                    "result": 0
-                  }
-                ],
-                "points": 11,
-                "rating": 1500,
-                "winChance": 0.5,
-                "won": true
-              }
-            ],
-            "testIndex": null
-          },
-          {
-            "date": "\u003cts\u003e",
-            "finishMove": "Finish - Ring of fire",
-            "finisher": "c",
-            "gap": 10,
-            "liveMatchId": null,
-            "matchId": "\u003cid21\u003e",
-            "scale": 1.483239697,
-            "teamPoints": 4.5,
-            "teams": [
-              {
-                "avgPoints": 1,
-                "cups": 1,
-                "players": [
-                  {
-                    "after": 1500,
-                    "before": 1500,
-                    "expected": 4.5,
-                    "hitting": 0,
-                    "moves": [
-                      {
-                        "count": 1,
-                        "name": "Normal"
-                      }
-                    ],
-                    "name": "a",
-                    "own": 1,
-                    "points": 1,
-                    "profileId": "\u003cid4\u003e",
-                    "result": 0
-                  }
-                ],
-                "points": 1,
-                "rating": 1500,
-                "winChance": 0.5,
-                "won": false
-              },
-              {
-                "avgPoints": 11,
-                "cups": 6,
-                "players": [
-                  {
-                    "after": 1500,
-                    "before": 1500,
-                    "expected": 4.5,
-                    "hitting": 0,
-                    "moves": [
-                      {
-                        "count": 1,
-                        "name": "Finish - Ring of fire"
-                      }
-                    ],
-                    "name": "c",
-                    "own": 1,
-                    "points": 11,
-                    "profileId": "\u003cid6\u003e",
-                    "result": 0
-                  }
-                ],
-                "points": 11,
-                "rating": 1500,
-                "winChance": 0.5,
-                "won": true
-              }
-            ],
-            "testIndex": null
-          }
-        ],
-        "groupId": "\u003cid3\u003e",
-        "groupName": "Leaderboard",
-        "moves": [
-          {
-            "finishing": false,
-            "id": "\u003cid12\u003e",
-            "name": "Bomb",
-            "pointsForScorer": 2,
-            "pointsForTeam": 0
-          },
-          {
-            "finishing": false,
-            "id": "\u003cid13\u003e",
-            "name": "Bouncer",
-            "pointsForScorer": 2,
-            "pointsForTeam": 0
-          },
-          {
-            "finishing": false,
-            "id": "\u003cid17\u003e",
-            "name": "Normal",
-            "pointsForScorer": 1,
-            "pointsForTeam": 0
-          },
-          {
-            "finishing": false,
-            "id": "\u003cid18\u003e",
-            "name": "Save",
-            "pointsForScorer": 2,
-            "pointsForTeam": 0
-          },
-          {
-            "finishing": false,
-            "id": "\u003cid19\u003e",
-            "name": "Trickshot",
-            "pointsForScorer": 2,
-            "pointsForTeam": 0
-          },
-          {
-            "finishing": true,
-            "id": "\u003cid14\u003e",
-            "name": "Finish - Normal",
-            "pointsForScorer": 1,
-            "pointsForTeam": 3
-          },
-          {
-            "finishing": true,
-            "id": "\u003cid15\u003e",
-            "name": "Finish - Ring of fire",
-            "pointsForScorer": 1,
-            "pointsForTeam": 10
-          },
-          {
-            "finishing": true,
-            "id": "\u003cid16\u003e",
-            "name": "Finish - Ring of water",
-            "pointsForScorer": 1,
-            "pointsForTeam": 10
-          }
-        ],
-        "params": {
-          "k": 0,
-          "marginWeight": 0.5,
-          "perPoint": 0,
-          "topWeight": 0.5
-        },
-        "prediction": {
-          "defaults": {
-            "called": 1,
-            "correct": 0,
-            "games": 2,
-            "logLoss": 0.7432113257
-          },
-          "params": {
-            "called": 0,
-            "correct": 0,
-            "games": 2,
-            "logLoss": 0.6931471806
-          }
-        },
-        "profiles": [
-          {
-            "id": "\u003cid4\u003e",
-            "name": "a"
-          },
-          {
-            "id": "\u003cid5\u003e",
-            "name": "b"
-          },
-          {
-            "id": "\u003cid6\u003e",
-            "name": "c"
-          },
-          {
-            "id": "\u003cid7\u003e",
-            "name": "d"
-          }
-        ],
-        "seasonId": "\u003cid1\u003e",
-        "seasons": [
-          {
-            "id": "\u003cid1\u003e",
-            "minMatchesToQualify": 1,
-            "name": null,
-            "numMatches": 2
-          }
-        ],
-        "standings": [
-          {
-            "baselineElo": 1302.252591,
-            "baselineRank": 4,
-            "elo": 1500,
-            "hitting": 0,
-            "matches": 2,
-            "name": "a",
-            "points": 7,
-            "profileId": "\u003cid4\u003e",
-            "rank": 2,
-            "result": 0,
-            "wins": 1
-          },
-          {
-            "baselineElo": 1302.730423,
-            "baselineRank": 3,
-            "elo": 1500,
-            "hitting": 0,
-            "matches": 1,
-            "name": "d",
-            "points": 1,
-            "profileId": "\u003cid7\u003e",
-            "rank": 4,
-            "result": 0,
-            "wins": 0
-          },
-          {
-            "baselineElo": 1560.247409,
-            "baselineRank": 2,
-            "elo": 1500,
-            "hitting": 0,
-            "matches": 2,
-            "name": "c",
-            "points": 14,
-            "profileId": "\u003cid6\u003e",
-            "rank": 1,
-            "result": 0,
-            "wins": 1
-          },
-          {
-            "baselineElo": 1659.769577,
-            "baselineRank": 1,
-            "elo": 1500,
-            "hitting": 0,
-            "matches": 1,
-            "name": "b",
-            "points": 5,
-            "profileId": "\u003cid5\u003e",
-            "rank": 3,
-            "result": 0,
-            "wins": 1
-          }
-        ]
-      },
-      "httpCode": 200,
-      "status": "OK"
-    }
-  },
-  {
-    "request": "GET /elo-simulation/search?inviteCode=\u003cinviteCode\u003e",
-    "status": 200,
-    "response": {
-      "data": {
-        "params": {
-          "k": 150,
-          "marginWeight": 1,
-          "perPoint": 0,
-          "topWeight": 0
-        },
-        "prediction": {
-          "called": 1,
-          "correct": 0,
-          "games": 2,
-          "logLoss": 0.7129525969
-        },
-        "tried": 1225
-      },
-      "httpCode": 200,
-      "status": "OK"
-    }
-  },
-  {
-    "request": "GET /elo-simulation?inviteCode=\u003cinviteCode\u003e",
-    "status": 404,
-    "response": {
-      "error": {
-        "code": "groupInviteNotFound",
-        "description": "No group with the provided invite code could be found!"
-      },
-      "httpCode": 404,
-      "status": "ERROR"
-    }
-  },
-  {
-    "request": "GET /elo-simulation?inviteCode=",
+    "request": "POST /elo-simulation?inviteCode=\u003cinviteCode\u003e",
+    "body": {
+      "liveMatches": [
+        {
+          "liveMatchId": "\u003cid22\u003e"
+        }
+      ]
+    },
     "status": 400,
     "response": {
       "error": {
-        "code": "invalidGroupInviteCode",
-        "description": "Group invite code must be non-null and non-empty!"
+        "code": "eloInvalidLiveMatch",
+        "description": "A live match needs its liveMatchId and two teams in the match create format!"
       },
       "httpCode": 400,
       "status": "ERROR"
-    }
-  },
-  {
-    "request": "GET /elo-simulation?k=lots\u0026inviteCode=\u003cinviteCode\u003e",
-    "status": 400,
-    "response": {
-      "error": "Bad Request",
-      "path": "/elo-simulation",
-      "status": 400,
-      "timestamp": "\u003cts\u003e"
     }
   }
 ]

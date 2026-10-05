@@ -32,7 +32,8 @@ var (
 	errInvalidRuleMoves      = errorCode{400, "invalidRuleMoves", "Rule Moves must be non-null, contain at least one normal and one finish move and every move must be valid (name non-null, non empty; pointsForScorer and pointsForTeam > 0)"}
 	errInvalidSeasonDto      = errorCode{400, "invalidSeasonDto", "Season update dto must be non-null and have non-null seasonSettings!"}
 
-	errEloInvalidTestGame = errorCode{400, "eloInvalidTestGame", "A test game needs a valid position, two teams of the group's profiles (each player once), the season's moves and exactly one team that finished!"}
+	errEloInvalidTestGame  = errorCode{400, "eloInvalidTestGame", "A test game needs a valid position, two teams of the group's profiles (each player once), the season's moves and exactly one team that finished!"}
+	errEloInvalidLiveMatch = errorCode{400, "eloInvalidLiveMatch", "A live match needs its liveMatchId and two teams in the match create format!"}
 
 	errMatchNotFound            = errorCode{404, "matchNotFound", "The requested match could not be found or its season id does not match the provided group id!"}
 	errMatchWrongAmountOfTeams  = errorCode{400, "matchWrongAmountOfTeams", "The amount of teams has to be exactly 2!"}
