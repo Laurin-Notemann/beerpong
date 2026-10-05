@@ -56,6 +56,9 @@ jobs:
           context: apps/api
           platforms: linux/amd64
           build-args: SENTRY_RELEASE=api-go@${{ github.sha }}
+          # mode=max also caches the build stage (go mod download), not just the final image
+          cache-from: type=gha,scope=api-go
+          cache-to: type=gha,scope=api-go,mode=max
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-go-staging:${{ github.sha }}
 
   deploy-api:
