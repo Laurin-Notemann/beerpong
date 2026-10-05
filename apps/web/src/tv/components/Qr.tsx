@@ -1,12 +1,16 @@
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 
-/** a QR code of `value`, dark on white so phones read it from across the room */
-export function Qr({ value, className }: { value: string; className?: string }) {
+/**
+ * a QR code of `value` (empty until there is one), dark on white so phones read it from across
+ * the room. A screen doesn't get scratched, so the lowest error correction: fewer, larger modules.
+ */
+export function Qr({ value, className }: { value: string | undefined; className?: string }) {
     const [svg, setSvg] = useState('');
 
     useEffect(() => {
-        QRCode.toString(value, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }).then(setSvg);
+        if (!value) return;
+        QRCode.toString(value, { type: 'svg', margin: 1, errorCorrectionLevel: 'L' }).then(setSvg);
     }, [value]);
 
     return (

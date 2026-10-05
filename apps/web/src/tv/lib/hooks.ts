@@ -5,7 +5,9 @@ import type { DisplayConfig } from '~/tv/lib/display';
 import { getBoard, getSocketUrl } from '~/tv/server/functions';
 
 export type DisplayEvent =
-    { type: 'config'; config: DisplayConfig } | { type: 'session'; refreshToken: string };
+    | { type: 'config'; config: DisplayConfig }
+    | { type: 'session'; refreshToken: string }
+    | { type: 'reload' };
 
 /**
  * Follows a display's server-sent events. When the stream fails for good (the server restarted

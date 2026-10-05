@@ -14,7 +14,7 @@ import {
 import { type DisplayEvent, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import { formatElapsed } from '~/tv/lib/liveMatch';
 import type { LiveMatchView } from '~/tv/server/board';
-import { connectGroup, disconnectGroup, updateDisplay } from '~/tv/server/functions';
+import { connectGroup, disconnectGroup, reloadDisplay, updateDisplay } from '~/tv/server/functions';
 
 /** The phone's remote for one TV, opened from the TV's QR code (`k` is the TV's control key). */
 export const Route = createFileRoute('/tv/remote/$id')({
@@ -64,132 +64,185 @@ function Remote() {
 
     // in the order they started, so rows don't move under your thumb while cups are hit
     const live = [...(board.data?.liveMatches ?? [])].sort(byStart);
-    const picked = pickMatches(board.data?.liveMatches ?? [], config.pinnedMatchIds).map(
-        (i) => i.id
-    );
-    const layout = layoutFor(
-        config,
-        live.map((i) => i.id)
-    );
-    // the live matches the TV shows right now
-    const shown =
-        layout === 'focus'
-            ? [config.focusMatchId]
-            : layout === 'split'
-              ? picked.slice(0, 1)
-              : layout === 'live'
-                ? picked
-                : [];
-    const focused = layout === 'focus' ? live.find((i) => i.id === config.focusMatchId) : undefined;
+    const liveIds = live.map((i) => i.id);
+    // the live matches the TV shows (the first one next to the leaderboard)
+    const picked = pickMatches(board.data?.liveMatches ?? [], config.pinnedMatchIds);
+    const pinned = config.pinnedMatchIds.filter((i) => liveIds.includes(i));
+    const screen: Screen = layoutFor(config, liveIds) === 'focus' ? 'focus' : config.view;
 
-    const togglePin = (matchId: string) => {
-        const pinned = config.pinnedMatchIds.filter((i) => live.some((m) => m.id === i));
+    const choose = (next: Screen) => {
+        if (next !== 'focus') send({ view: next, focusMatchId: null });
+        // the match the TV shows right now goes on the whole screen
+        else if (screen !== 'focus' && picked[0]) send({ focusMatchId: picked[0].id });
+    };
+
+    const togglePin = (matchId: string) =>
         send({
             pinnedMatchIds: pinned.includes(matchId)
                 ? pinned.filter((i) => i !== matchId)
                 : [...pinned, matchId].slice(-MAX_MATCHES),
         });
+
+    const captions: Record<Screen, string> = {
+        auto: live.length ? 'Leaderboard + a live match' : 'Leaderboard, no match running',
+        leaderboard: scopeLabels[config.scope],
+        live: live.length ? `${live.length} running` : 'None running',
+        focus:
+            screen === 'focus' && picked.length
+                ? versus(live.find((i) => i.id === config.focusMatchId) ?? picked[0])
+                : live.length
+                  ? `${live.length} running`
+                  : 'None running',
     };
+
+    const noLive = (
+        <p className="text-text-3">
+            No live matches. They show up here when someone starts one in the app.
+        </p>
+    );
 
     return (
         <Page title={board.data?.group.name ?? config.groupName ?? ''} offline={!connected}>
-            {focused && (
-                <div className="flex items-center gap-3 rounded-2xl border border-live bg-live/10 p-3">
-                    <div className="min-w-0 flex-1 text-sm">
-                        <div className="font-semibold">Full screen on the TV</div>
-                        <div className="truncate text-text-2">
-                            {focused.blue.players.map((p) => p.name).join(' & ')} vs{' '}
-                            {focused.red.players.map((p) => p.name).join(' & ')}
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => send({ focusMatchId: null })}
-                        className="rounded-xl bg-text px-4 py-2 text-sm font-semibold text-black"
-                    >
-                        Exit
-                    </button>
-                </div>
-            )}
-            <Section title="On the TV">
-                <Segmented<View>
-                    value={config.view}
-                    onChange={(view) => send({ view })}
-                    options={[
-                        { value: 'auto', label: 'Auto' },
-                        { value: 'leaderboard', label: 'Leaderboard' },
-                        { value: 'live', label: 'Live' },
-                    ]}
-                />
-                <p className="text-sm text-text-3">
-                    {config.view === 'auto'
-                        ? 'The leaderboard next to a live match while one is live, the full leaderboard otherwise.'
-                        : config.view === 'live'
-                          ? 'Only live matches.'
-                          : 'Only the leaderboard.'}
-                </p>
-            </Section>
+            <div className="grid grid-cols-2 gap-3">
+                {screens.map((s) => (
+                    <ScreenTile
+                        key={s.value}
+                        screen={s.value}
+                        label={s.label}
+                        caption={captions[s.value]}
+                        selected={screen === s.value}
+                        disabled={s.value === 'focus' && !live.length}
+                        onPress={() => choose(s.value)}
+                    />
+                ))}
+            </div>
 
-            <Section title="Leaderboard">
-                <Segmented<Scope>
-                    value={config.scope}
-                    onChange={(scope) => send({ scope })}
-                    options={[
-                        { value: 'season', label: 'Season' },
-                        { value: 'today', label: 'Today' },
-                        { value: 'all-time', label: 'All time' },
-                    ]}
-                />
-                {config.scope !== 'all-time' && (board.data?.seasons.length ?? 0) > 1 && (
-                    <select
-                        value={config.seasonId ?? ''}
-                        onChange={(e) => send({ seasonId: e.target.value || null })}
-                        className="w-full rounded-xl border border-line bg-panel-2 px-4 py-3 text-base"
-                    >
-                        <option value="">Current season</option>
-                        {board
-                            .data!.seasons.filter((i) => !i.active)
-                            .map((i) => (
-                                <option key={i.id} value={i.id}>
-                                    {i.name}
-                                </option>
-                            ))}
-                    </select>
-                )}
-            </Section>
-
-            <Section title={`Live matches${live.length ? ` · ${live.length}` : ''}`}>
-                {live.length === 0 ? (
-                    <p className="text-text-3">
-                        No live matches. They show up here when someone starts one in the app.
-                    </p>
-                ) : (
-                    <>
-                        <p className="text-sm text-text-3">
-                            Tap a match to show it first; the rest fill up with the latest. Next to
-                            the leaderboard the TV shows one, in Live up to {MAX_MATCHES}. ⤢ puts a
-                            match on the whole screen until it ends.
+            {screen === 'auto' && (
+                <Section title="Next to the leaderboard">
+                    {live.length === 0 ? (
+                        <p className="text-text-3">
+                            When someone starts a match in the app, it shows here and next to the
+                            leaderboard.
                         </p>
+                    ) : (
                         <ul className="flex flex-col gap-2">
+                            <Choice
+                                selected={!pinned.length}
+                                onPress={() => send({ pinnedMatchIds: [] })}
+                                mark={<Radio on={!pinned.length} />}
+                            >
+                                <div className="font-semibold">Automatic</div>
+                                <div className="truncate text-sm text-text-3">
+                                    {pinned.length
+                                        ? 'One of the latest'
+                                        : `Now ${versus(picked[0])}`}
+                                </div>
+                            </Choice>
                             {live.map((m) => (
-                                <MatchRow
+                                <Choice
                                     key={m.id}
-                                    match={m}
-                                    pinIndex={config.pinnedMatchIds.indexOf(m.id)}
-                                    onTv={shown.includes(m.id)}
-                                    focused={config.focusMatchId === m.id}
-                                    onPress={() => togglePin(m.id)}
-                                    onFocus={() =>
+                                    selected={pinned[0] === m.id}
+                                    onPress={() =>
                                         send({
-                                            focusMatchId:
-                                                config.focusMatchId === m.id ? null : m.id,
+                                            pinnedMatchIds: [
+                                                m.id,
+                                                ...pinned.filter((i) => i !== m.id),
+                                            ],
                                         })
                                     }
-                                />
+                                    mark={<Radio on={pinned[0] === m.id} />}
+                                >
+                                    <MatchSummary match={m} />
+                                </Choice>
                             ))}
                         </ul>
-                    </>
-                )}
-            </Section>
+                    )}
+                </Section>
+            )}
+
+            {(screen === 'auto' || screen === 'leaderboard') && (
+                <Section title="Leaderboard">
+                    <Segmented<Scope>
+                        value={config.scope}
+                        onChange={(scope) => send({ scope })}
+                        options={[
+                            { value: 'season', label: 'Season' },
+                            { value: 'today', label: 'Today' },
+                            { value: 'all-time', label: 'All time' },
+                        ]}
+                    />
+                    {config.scope !== 'all-time' && (board.data?.seasons.length ?? 0) > 1 && (
+                        <select
+                            value={config.seasonId ?? ''}
+                            onChange={(e) => send({ seasonId: e.target.value || null })}
+                            className="w-full rounded-xl border border-line bg-panel-2 px-4 py-3 text-base"
+                        >
+                            <option value="">Current season</option>
+                            {board
+                                .data!.seasons.filter((i) => !i.active)
+                                .map((i) => (
+                                    <option key={i.id} value={i.id}>
+                                        {i.name}
+                                    </option>
+                                ))}
+                        </select>
+                    )}
+                </Section>
+            )}
+
+            {screen === 'live' && (
+                <Section title="Matches on the TV">
+                    {live.length === 0 ? (
+                        noLive
+                    ) : (
+                        <>
+                            <p className="text-sm text-text-3">
+                                Pick up to {MAX_MATCHES}, in the order they show. Open spots fill up
+                                with the latest.
+                            </p>
+                            <ul className="flex flex-col gap-2">
+                                {live.map((m) => {
+                                    const index = pinned.indexOf(m.id);
+                                    return (
+                                        <Choice
+                                            key={m.id}
+                                            selected={index >= 0}
+                                            onPress={() => togglePin(m.id)}
+                                            mark={<PinMark index={index} />}
+                                        >
+                                            <MatchSummary
+                                                match={m}
+                                                onTv={picked.some((i) => i.id === m.id)}
+                                            />
+                                        </Choice>
+                                    );
+                                })}
+                            </ul>
+                        </>
+                    )}
+                </Section>
+            )}
+
+            {screen === 'focus' && (
+                <Section title="On the whole screen">
+                    <ul className="flex flex-col gap-2">
+                        {live.map((m) => (
+                            <Choice
+                                key={m.id}
+                                selected={config.focusMatchId === m.id}
+                                onPress={() => send({ focusMatchId: m.id })}
+                                mark={<Radio on={config.focusMatchId === m.id} />}
+                            >
+                                <MatchSummary match={m} />
+                            </Choice>
+                        ))}
+                    </ul>
+                    <p className="text-sm text-text-3">
+                        When it ends, the TV goes back to{' '}
+                        {screens.find((i) => i.value === config.view)?.label}.
+                    </p>
+                </Section>
+            )}
 
             <Section title="Group">
                 <ConnectGroup id={id} keyValue={key} compact />
@@ -203,64 +256,181 @@ function Remote() {
                     Remove group from TV
                 </button>
             </Section>
+
+            <Section title="TV">
+                <button
+                    onClick={() => reloadDisplay({ data: { id, key } }).catch(() => {})}
+                    className="rounded-xl border border-line bg-panel-2 py-3 font-semibold active:scale-[0.98]"
+                >
+                    Reload TV
+                </button>
+                <p className="text-sm text-text-3">
+                    Reloads the page on the TV, so it gets the newest version after an update.
+                </p>
+            </Section>
         </Page>
     );
 }
 
-function MatchRow({
-    match,
-    pinIndex,
-    onTv,
-    focused,
+/** what the TV shows: one of the views, or a live match on the whole screen */
+type Screen = View | 'focus';
+
+const screens: { value: Screen; label: string }[] = [
+    { value: 'auto', label: 'Auto' },
+    { value: 'leaderboard', label: 'Leaderboard' },
+    { value: 'live', label: 'Live' },
+    { value: 'focus', label: 'One match' },
+];
+
+const scopeLabels: Record<Scope, string> = {
+    season: 'This season',
+    today: 'Today',
+    'all-time': 'All time',
+};
+
+const names = (team: LiveMatchView['blue']) => team.players.map((p) => p.name).join(' & ') || '…';
+const versus = (match: LiveMatchView) => `${names(match.blue)} vs ${names(match.red)}`;
+
+function ScreenTile({
+    screen,
+    label,
+    caption,
+    selected,
+    disabled,
     onPress,
-    onFocus,
 }: {
-    match: LiveMatchView;
-    pinIndex: number;
-    onTv: boolean;
-    focused: boolean;
+    screen: Screen;
+    label: string;
+    caption: string;
+    selected: boolean;
+    disabled: boolean;
     onPress: () => void;
-    onFocus: () => void;
 }) {
-    const now = useNow();
-    const names = (team: LiveMatchView['blue']) =>
-        team.players.map((p) => p.name).join(' & ') || '…';
+    return (
+        <button
+            onClick={onPress}
+            disabled={disabled}
+            aria-pressed={selected}
+            className={`flex flex-col gap-2 rounded-2xl border p-3 text-left transition active:scale-[0.97] disabled:opacity-40 ${selected ? 'border-live bg-live/10' : 'border-line bg-panel'}`}
+        >
+            <Sketch screen={screen} active={selected} />
+            <div className="min-w-0">
+                <div className="font-semibold">{label}</div>
+                <div className="truncate text-xs text-text-3">{caption}</div>
+            </div>
+        </button>
+    );
+}
+
+/** a small drawing of a screen's layout on the TV */
+function Sketch({ screen, active }: { screen: Screen; active: boolean }) {
+    const line = <div className="h-[3px] rounded-full bg-text-3/60" />;
+    const lines = (n: number) => Array.from({ length: n }, (_, i) => <div key={i}>{line}</div>);
+    const match = (
+        <div className="flex min-h-0 flex-1 gap-px overflow-hidden rounded-[3px]">
+            <div className="flex-1 bg-blue/60" />
+            <div className="flex-1 bg-red/60" />
+        </div>
+    );
 
     return (
-        <li className="flex items-stretch gap-2">
-            <button
-                onClick={onPress}
-                aria-pressed={pinIndex >= 0}
-                className={`flex min-w-0 flex-1 items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.98] ${pinIndex >= 0 ? 'border-live bg-live/10' : 'border-line bg-panel'}`}
-            >
-                <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm text-blue">{names(match.blue)}</div>
-                    <div className="truncate text-sm text-red">{names(match.red)}</div>
-                    <div className="tabular text-xs text-text-3">
-                        {formatElapsed(now - Date.parse(match.startedAt))}
-                        {onTv && ' · on the TV'}
+        <div
+            className={`flex aspect-video gap-1.5 rounded-lg border p-1.5 ${active ? 'border-live/50 bg-black' : 'border-line bg-panel-2'}`}
+        >
+            {screen === 'auto' && (
+                <>
+                    <div className="flex flex-[1.45] flex-col justify-around">{lines(5)}</div>
+                    <div className="flex flex-1 flex-col">{match}</div>
+                </>
+            )}
+            {screen === 'leaderboard' && (
+                <div className="flex flex-1 flex-col gap-1">
+                    <div className="flex h-1/2 items-end justify-center gap-1">
+                        <div className="h-2/3 w-3 rounded-t-[2px] bg-text-3/60" />
+                        <div className="h-full w-3 rounded-t-[2px] bg-gold/80" />
+                        <div className="h-1/2 w-3 rounded-t-[2px] bg-text-3/60" />
+                    </div>
+                    <div className="grid flex-1 grid-cols-2 content-around gap-x-1.5">
+                        {lines(4)}
                     </div>
                 </div>
-                <div className="tabular text-xl font-black">
-                    <span className="text-blue">{match.blue.score}</span>
-                    <span className="text-text-3">–</span>
-                    <span className="text-red">{match.red.score}</span>
-                </div>
-                <div
-                    className={`grid size-7 place-items-center rounded-full text-sm font-bold ${pinIndex >= 0 ? 'bg-live text-black' : 'border border-line text-text-3'}`}
-                >
-                    {pinIndex >= 0 ? pinIndex + 1 : '+'}
-                </div>
-            </button>
+            )}
+            {screen === 'live' && (
+                <>
+                    {match}
+                    {match}
+                </>
+            )}
+            {screen === 'focus' && match}
+        </div>
+    );
+}
+
+/** a row of a single or multiple choice */
+function Choice({
+    selected,
+    onPress,
+    mark,
+    children,
+}: {
+    selected: boolean;
+    onPress: () => void;
+    mark: React.ReactNode;
+    children: React.ReactNode;
+}) {
+    return (
+        <li>
             <button
-                onClick={onFocus}
-                aria-pressed={focused}
-                aria-label={focused ? 'Exit full screen' : 'Full screen on the TV'}
-                className={`grid w-12 shrink-0 place-items-center rounded-2xl border text-xl transition active:scale-95 ${focused ? 'border-live bg-live text-black' : 'border-line bg-panel text-text-2'}`}
+                onClick={onPress}
+                aria-pressed={selected}
+                className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.98] ${selected ? 'border-live bg-live/10' : 'border-line bg-panel'}`}
             >
-                ⤢
+                <div className="min-w-0 flex-1">{children}</div>
+                {mark}
             </button>
         </li>
+    );
+}
+
+function Radio({ on }: { on: boolean }) {
+    return (
+        <div
+            className={`grid size-6 shrink-0 place-items-center rounded-full border-2 ${on ? 'border-live' : 'border-line'}`}
+        >
+            {on && <div className="size-2.5 rounded-full bg-live" />}
+        </div>
+    );
+}
+
+/** a picked match's place on the TV, or + to pick it */
+function PinMark({ index }: { index: number }) {
+    return (
+        <div
+            className={`grid size-7 shrink-0 place-items-center rounded-full text-sm font-bold ${index >= 0 ? 'bg-live text-black' : 'border border-line text-text-3'}`}
+        >
+            {index >= 0 ? index + 1 : '+'}
+        </div>
+    );
+}
+
+function MatchSummary({ match, onTv }: { match: LiveMatchView; onTv?: boolean }) {
+    const now = useNow();
+    return (
+        <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+                <div className="truncate text-sm text-blue">{names(match.blue)}</div>
+                <div className="truncate text-sm text-red">{names(match.red)}</div>
+                <div className="tabular text-xs text-text-3">
+                    {formatElapsed(now - Date.parse(match.startedAt))}
+                    {onTv && ' · on the TV'}
+                </div>
+            </div>
+            <div className="tabular text-xl font-black">
+                <span className="text-blue">{match.blue.score}</span>
+                <span className="text-text-3">–</span>
+                <span className="text-red">{match.red.score}</span>
+            </div>
+        </div>
     );
 }
 

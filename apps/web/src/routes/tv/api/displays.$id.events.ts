@@ -24,7 +24,7 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                 const stream = new ReadableStream({
                     start(controller) {
                         const send = (event: DisplayEvent) => {
-                            if (event.type === 'session' && !isTv) return;
+                            if (event.type !== 'config' && !isTv) return;
                             controller.enqueue(
                                 encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
                             );

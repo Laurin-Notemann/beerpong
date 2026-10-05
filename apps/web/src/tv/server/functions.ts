@@ -4,7 +4,7 @@ import { emptyConfig, parsePatch } from '~/tv/lib/display';
 import { socketUrl } from '~/apiUrl';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
 import { buildBoard } from '~/tv/server/board';
-import { authorize, register, setSession, update } from '~/tv/server/displays';
+import { authorize, register, reload, setSession, update } from '~/tv/server/displays';
 
 const asObject = (data: unknown) =>
     (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
@@ -17,10 +17,11 @@ export const registerDisplay = createServerFn({ method: 'POST' })
             id: data.id,
             key: data.key,
             secret: data.secret,
+            code: data.code,
             config: data.config,
             refreshToken: data.refreshToken,
         });
-        return { config: display.config };
+        return { config: display.config, code: display.code };
     });
 
 /** a phone changing what the TV shows */
@@ -62,6 +63,13 @@ export const connectGroup = createServerFn({ method: 'POST' })
     });
 
 /** takes the group off the TV; the TV leaves it, so it no longer counts as a member */
+/** a phone reloading the TV's page, e.g. to pick up a deploy */
+export const reloadDisplay = createServerFn({ method: 'POST' })
+    .inputValidator(asObject)
+    .handler(({ data }) => {
+        reload(authorize(data.id, data.key).display);
+    });
+
 export const disconnectGroup = createServerFn({ method: 'POST' })
     .inputValidator(asObject)
     .handler(async ({ data }) => {

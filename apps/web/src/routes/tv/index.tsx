@@ -31,6 +31,8 @@ interface Identity {
     id: string;
     key: string;
     secret: string;
+    /** the QR code's short link; the server hands it out on the first register */
+    code: string | null;
     config: DisplayConfig;
     refreshToken: string | null;
 }
@@ -43,6 +45,7 @@ function loadIdentity(): Identity {
         if (stored?.id && stored?.key && stored?.secret) {
             return {
                 ...stored,
+                code: stored.code ?? null,
                 config: parseConfig(stored.config),
                 refreshToken: stored.refreshToken ?? null,
             };
@@ -54,6 +57,7 @@ function loadIdentity(): Identity {
         id: randomToken(),
         key: randomToken(),
         secret: randomToken(24),
+        code: null,
         config: emptyConfig,
         refreshToken: null,
     };
@@ -73,9 +77,11 @@ function Tv() {
     }, [identity]);
 
     const register = useCallback(async () => {
-        const { id, key, secret, config, refreshToken } = identity;
-        const res = await registerDisplay({ data: { id, key, secret, config, refreshToken } });
-        setIdentity((i) => ({ ...i, config: res.config }));
+        const { id, key, secret, code, config, refreshToken } = identity;
+        const res = await registerDisplay({
+            data: { id, key, secret, code, config, refreshToken },
+        });
+        setIdentity((i) => ({ ...i, code: res.code, config: res.config }));
         setRegistered(true);
     }, [identity]);
 
@@ -93,6 +99,7 @@ function Tv() {
     }, []);
 
     const onEvent = useCallback((event: DisplayEvent) => {
+        if (event.type === 'reload') return location.reload();
         setIdentity((i) =>
             event.type === 'config'
                 ? { ...i, config: event.config }
@@ -121,7 +128,7 @@ function Tv() {
     liveMatches.current = board.data?.liveMatches ?? [];
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
-    const remoteUrl = `${location.origin}/tv/remote/${identity.id}?k=${identity.key}`;
+    const remoteUrl = identity.code ? `${location.origin}/tv/rem/${identity.code}` : undefined;
     const { config } = identity;
 
     return (
@@ -144,7 +151,7 @@ function Tv() {
 }
 
 /** before a phone put a group on it: one big QR code */
-function Pairing({ remoteUrl }: { remoteUrl: string }) {
+function Pairing({ remoteUrl }: { remoteUrl: string | undefined }) {
     return (
         <main className="grid h-screen place-items-center">
             <div className="rise flex items-center gap-[6rem]">
@@ -176,7 +183,7 @@ function Screen({
 }: {
     board: Board | null;
     config: DisplayConfig;
-    remoteUrl: string;
+    remoteUrl: string | undefined;
     offline: boolean;
     clip: ScoreClip | undefined;
     onClipDone: () => void;
@@ -262,7 +269,7 @@ function Header({
 }: {
     board: Board | null;
     config: DisplayConfig;
-    remoteUrl: string;
+    remoteUrl: string | undefined;
     offline: boolean;
 }) {
     const now = useNow(10_000);
