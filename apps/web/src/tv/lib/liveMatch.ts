@@ -27,7 +27,10 @@ export interface RackCup {
 }
 
 /** a live match's teams and score, from its op log and its season's rule moves */
-export function foldLiveMatch(dto: Dto.LiveMatchDto, ruleMoves: Dto.RuleMoveDto[]) {
+export function foldLiveMatch(
+    dto: Pick<Dto.LiveMatchDto, 'ops'>,
+    ruleMoves: Pick<Dto.RuleMoveDto, 'id' | 'name' | 'finishingMove' | 'cups'>[]
+) {
     const { state } = reduceLiveMatch(toLiveOps(dto.ops));
     const cups = ruleMoves.flatMap((i) => (i.id ? [{ id: i.id, cups: cupsPerHit(i) }] : []));
 

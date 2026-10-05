@@ -14,7 +14,7 @@ import { formatGroupCode } from '@/utils/groupCode';
 import { formatWakeTime } from '@/utils/wakeTime';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
-const formatTeamSize = (seasonSettings?: SeasonSettingsDto) => {
+const formatTeamSize = (seasonSettings?: SeasonSettingsDto | null) => {
     if (seasonSettings?.minTeamSize === seasonSettings?.maxTeamSize) {
         if (seasonSettings?.minTeamSize === 1) {
             return 'Exactly One Person';

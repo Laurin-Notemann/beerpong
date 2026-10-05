@@ -13,6 +13,6 @@ export interface Profile extends ProfileDto {
 }
 
 /** a DTO that references a profile by `profileId`, with the resolved profile attached */
-export type WithProfile<T extends { profileId?: string }> = T & {
+export type WithProfile<T extends { profileId?: string | null }> = T & {
     profile?: Profile;
 };

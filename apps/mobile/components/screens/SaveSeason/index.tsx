@@ -17,7 +17,7 @@ export interface SaveSeasonScreenProps {
     oldSeasonMoves: Components.Schemas.RuleMoveDto[];
     onStartNewSeason: (
         oldSeasonName: string,
-        newSeasonAllowedMoves: Components.Schemas.RuleMoveDto[]
+        newSeasonAllowedMoves: Components.Schemas.RuleMoveCreateDto[]
     ) => void;
     numMatches: number;
     players: Player[];

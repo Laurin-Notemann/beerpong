@@ -168,7 +168,7 @@ const getAverageTeamSize = (
 const getScope = (
     profileId: string | undefined,
     matches: Match[],
-    seasonSettings: SeasonSettingsDto | undefined,
+    seasonSettings: SeasonSettingsDto | null | undefined,
     seasonPlayers: Player[],
     name: string
 ): ScopeInfo => {

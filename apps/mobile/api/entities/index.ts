@@ -58,7 +58,12 @@ export class MatchMoveImpl {
         this.moveId = ruleMove.id;
     }
 
-    constructor(_data: Components.Schemas.MatchMoveDtoComplete) {
+    constructor(
+        _data: Pick<
+            Components.Schemas.MatchMoveDtoComplete,
+            'moveId' | 'value' | 'teamMemberId'
+        >
+    ) {
         this.moveId = _data.moveId!;
         this.count = _data.value!;
         this.teamMemberId = _data.teamMemberId!;
@@ -267,7 +272,7 @@ export class MatchImpl {
 
     constructor(
         _data: Omit<Components.Schemas.MatchDtoExtended, 'date'> & {
-            date?: string | Date;
+            date?: string | Date | null;
         },
         _players: PlayerWithProfile[],
         _ruleMoves: Components.Schemas.RuleMoveDto[]

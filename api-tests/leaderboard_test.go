@@ -189,6 +189,35 @@ func TestLeaderboardAcrossSeasons(t *testing.T) {
 	h.Equal(allTime.Num("numMatches"), 3, "all-time matches after another season")
 }
 
+// The all-time board counts every match, whoever was removed or rejoined
+// since: removing a player in the app keeps the profile, and starting a season
+// carries over only the players who weren't removed. A removed profile that
+// never played stays off the board, like on the season boards.
+func TestAllTimeCountsRemovedPlayersMatches(t *testing.T) {
+	h := New(t)
+	owner, g := leaderboardGroup(h)
+	h.OK(h.Do(Req{Method: "POST", Path: g.Path("/profiles"), Auth: owner.Bearer(), Body: map[string]any{"name": "e"}}))
+	h.Reload(g)
+	h.OK(h.Do(Req{Method: "DELETE", Path: g.SeasonPath("/players/" + g.Players["d"]), Auth: owner.Bearer()}))
+	h.OK(h.Do(Req{Method: "DELETE", Path: g.SeasonPath("/players/" + g.Players["e"]), Auth: owner.Bearer()}))
+
+	h.StartSeason(g, "First")
+	// d rejoins in the new season and wins against c
+	h.OK(h.Do(Req{Method: "POST", Path: g.Path("/profiles"), Auth: owner.Bearer(), Body: map[string]any{"name": "d"}}))
+	h.Reload(g)
+	h.OK(h.CreateMatch(owner, g, []Member{{"d", map[string]int{"Finish - Normal": 1}}}, []Member{{"c", map[string]int{"Normal": 2}}}))
+
+	allTime := h.OK(h.Do(Req{Method: "GET", Path: g.Path("/leaderboard?scope=all-time"), Auth: owner.Bearer()}))
+	h.Equal(allTime.Num("numMatches"), 3, "all-time numMatches")
+	h.Equal(allTime.Num("numPlayers"), 4, "all-time numPlayers")
+	checkStats(h, g, allTime.List("entries"), map[string]wantStats{
+		"a": seasonStats["a"],
+		"b": seasonStats["b"],
+		"c": {points: 16, matches: 3, wins: 1, moves: 11, teamSize: 4, avgPoints: 16.0 / 3, avgTeamSize: 4.0 / 3},
+		"d": {points: 5, matches: 2, wins: 1, moves: 1, teamSize: 3, avgPoints: 2.5, avgTeamSize: 1.5},
+	})
+}
+
 func TestLeaderboardValidation(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()

@@ -84,7 +84,7 @@ type Input struct {
 	// ProfileOf maps the players appearing in matches to their profile.
 	ProfileOf map[string]string
 	// KeepStoredStats starts from the stored statistics instead of zero
-	// (all-time boards, and season boards used to carry stats forward).
+	// (season boards used to carry stats forward).
 	KeepStoredStats bool
 	// Elo replaces DefaultElo (the simulator).
 	Elo *EloParams
@@ -209,7 +209,7 @@ func buildEntries(players []Player, keepStored bool) (map[string]*Entry, []strin
 		if keepStored {
 			stats = p.Stored
 			// every season starts at StartingElo; the all-time board replays
-			// all seasons for its Elo (allTimeElo in the API)
+			// all seasons instead (allTimeBoard in the API)
 			stats.Elo = StartingElo
 		}
 		stats.PlayerID = p.ID

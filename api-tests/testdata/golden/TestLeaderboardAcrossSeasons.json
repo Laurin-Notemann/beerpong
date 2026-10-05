@@ -443,14 +443,14 @@
               "startDate": "\u003cts\u003e"
             },
             "statistics": {
-              "avgPointsPerMatch": 0,
-              "avgTeamSize": 0,
+              "avgPointsPerMatch": 1,
+              "avgTeamSize": 2,
               "elo": 1302.730423,
               "id": null,
-              "matches": 0,
-              "moves": 0,
-              "points": 0,
-              "totalTeamSize": 0,
+              "matches": 1,
+              "moves": 1,
+              "points": 1,
+              "totalTeamSize": 2,
               "wins": 0
             }
           },
@@ -850,14 +850,14 @@
               "startDate": "\u003cts\u003e"
             },
             "statistics": {
-              "avgPointsPerMatch": 0,
-              "avgTeamSize": 0,
+              "avgPointsPerMatch": 1,
+              "avgTeamSize": 2,
               "elo": 1302.730423,
               "id": null,
-              "matches": 0,
-              "moves": 0,
-              "points": 0,
-              "totalTeamSize": 0,
+              "matches": 1,
+              "moves": 1,
+              "points": 1,
+              "totalTeamSize": 2,
               "wins": 0
             }
           },

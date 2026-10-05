@@ -60,7 +60,7 @@ const logger = new ScopedLogger('live-match');
 const isTeam = (value: unknown): value is CupTeam =>
     value === 'red' || value === 'blue';
 
-const toCups = (cups: { x?: number; y?: number }[] | undefined) =>
+const toCups = (cups: { x?: number; y?: number }[] | null | undefined) =>
     cups?.every((i) => typeof i.x === 'number' && typeof i.y === 'number')
         ? cups.map((i) => ({ x: i.x!, y: i.y! }))
         : undefined;

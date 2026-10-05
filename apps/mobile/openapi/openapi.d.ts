@@ -14,21 +14,21 @@ declare namespace Components {
             zoom?: number; // double
         }
         export interface AssetMetadataDto {
-            id?: string;
-            url?: string;
-            type?: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO';
-            offsetX?: number; // double
-            offsetY?: number; // double
-            zoom?: number; // double
+            id: string;
+            url: string;
+            type: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO' | null;
+            offsetX: number; // double
+            offsetY: number; // double
+            zoom: number; // double
         }
         export interface AssetUploadResponse {
-            id?: string;
-            url?: string;
-            type?: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO';
-            offsetX?: number; // double
-            offsetY?: number; // double
-            zoom?: number; // double
-            singleUploadUrl?: string;
+            id: string;
+            url: string;
+            type: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO' | null;
+            offsetX: number; // double
+            offsetY: number; // double
+            zoom: number; // double
+            singleUploadUrl: string;
         }
         export interface AuthRefreshDto {
             refreshToken?: string;
@@ -38,23 +38,23 @@ declare namespace Components {
             deviceId?: string;
         }
         export interface AuthTokenDto {
-            token?: string;
-            type?: 'ACCESS' | 'REFRESH';
+            token: string;
+            type: 'ACCESS' | 'REFRESH';
         }
         export interface CupPositionDto {
-            x?: number; // int32
-            y?: number; // int32
+            x: number; // int32
+            y: number; // int32
         }
         export interface EloGameDto {
             matchId: string;
             /**
-             * The test game's place in the request; missing for real games.
+             * The test game's place in the request; null for real games.
              */
-            testIndex?: number; // int32
+            testIndex: number | null; // int32
             /**
-             * The running live match this game is, counted as if it ended now; missing for other games.
+             * The running live match this game is, counted as if it ended now; null for other games.
              */
-            liveMatchId?: string;
+            liveMatchId: string | null;
             date: string; // date-time
             gap: number; // double
             scale: number; // double
@@ -121,17 +121,17 @@ declare namespace Components {
         }
         export interface EloSeasonDto {
             id: string;
-            name?: string;
+            name: string | null;
             numMatches: number; // int32
             minMatchesToQualify: number; // int32
         }
         export interface EloSimulationDto {
             groupId: string;
-            groupName?: string;
+            groupName: string | null;
             defaults: EloParamsDto;
             params: EloParamsDto;
             seasons: EloSeasonDto[];
-            seasonId?: string;
+            seasonId: string | null;
             /**
              * What the standings' baseline values compare with: the default weights, or with test or live games the same weights without them.
              */
@@ -151,11 +151,11 @@ declare namespace Components {
             name: string;
             elo: number; // double
             /**
-             * Place among the ranked players; missing while unranked.
+             * Place among the ranked players; null while unranked.
              */
-            rank?: number; // int32
-            baselineElo?: number; // double
-            baselineRank?: number; // int32
+            rank: number | null; // int32
+            baselineElo: number | null; // double
+            baselineRank: number | null; // int32
             matches: number; // int64
             wins: number; // int64
             points: number; // int64
@@ -187,15 +187,15 @@ declare namespace Components {
             moves: EloTestMoveDto[];
         }
         export interface ErrorDetails {
-            code?: string;
-            description?: string;
+            code: string;
+            description: string;
         }
         export interface FormationDto {
-            id?: string;
-            groupId?: string;
-            name?: string;
-            cups?: CupPositionDto[];
-            updatedAt?: string; // date-time
+            id: string;
+            groupId: string;
+            name: string;
+            cups: CupPositionDto[];
+            updatedAt: string; // date-time
         }
         export interface FormationSaveDto {
             name?: string;
@@ -208,29 +208,33 @@ declare namespace Components {
             customSportName?: string;
         }
         export interface GroupDto {
-            id?: string;
-            name?: string;
-            inviteCode?: string;
-            activeSeasonId?: string;
-            assetIdWallpaper?: string;
-            createdById?: string;
-            createdAt?: string; // date-time
-            sportPreset?: GroupPreset;
-            customSportName?: string;
-            numberOfPlayers?: number; // int64
-            numberOfMatches?: number; // int64
-            numberOfSeasons?: number; // int64
+            id: string;
+            name: string | null;
+            inviteCode: string | null;
+            activeSeasonId: string | null;
+            assetIdWallpaper: string | null;
+            createdById: string | null;
+            createdAt: string | null; // date-time
+            sportPreset: {
+                id: string;
+                title: string;
+                imageUrl: string;
+            } | null;
+            customSportName: string | null;
+            numberOfPlayers: number; // int64
+            numberOfMatches: number; // int64
+            numberOfSeasons: number; // int64
         }
         export interface GroupPreset {
-            id?: string;
-            title?: string;
-            imageUrl?: string;
+            id: string;
+            title: string;
+            imageUrl: string;
         }
         export interface LeaderboardDto {
-            numPlayers?: number; // int64
-            numMatches?: number; // int64
-            startedAt?: string; // date-time
-            entries?: PlayerDtoExtended[];
+            numPlayers: number; // int64
+            numMatches: number; // int64
+            startedAt: string | null; // date-time
+            entries: PlayerDtoExtended[];
         }
         export interface LeaderboardProjectionDto {
             matches?: MatchCreateDto[];
@@ -240,26 +244,26 @@ declare namespace Components {
             ops?: LiveMatchOpDto[];
         }
         export interface LiveMatchDto {
-            id?: string;
-            groupId?: string;
-            seasonId?: string;
-            status?: 'IN_PROGRESS' | 'FINISHED' | 'ABANDONED';
-            startedAt?: string; // date-time
-            lastActivityAt?: string; // date-time
-            endedAt?: string; // date-time
-            createdByUserId?: string;
-            lastSeq?: number; // int64
-            resultMatchId?: string;
-            ops?: LiveMatchOpDto[];
+            id: string;
+            groupId: string;
+            seasonId: string;
+            status: 'IN_PROGRESS' | 'FINISHED' | 'ABANDONED';
+            startedAt: string; // date-time
+            lastActivityAt: string; // date-time
+            endedAt: string | null; // date-time
+            createdByUserId: string | null;
+            lastSeq: number; // int64
+            resultMatchId: string | null;
+            ops: LiveMatchOpDto[];
         }
         export interface LiveMatchFinishDto {
             expectedSeq?: number; // int64
             teams?: TeamCreateDto[];
         }
         export interface LiveMatchOpDto {
-            id?: string;
+            id: string;
             seq?: number; // int64
-            type?:
+            type:
                 | 'SET_TEAMS'
                 | 'SET_PLAYER_TEAM'
                 | 'ADJUST_MOVE'
@@ -269,15 +273,18 @@ declare namespace Components {
                 | 'RECORD_MISS'
                 | 'UNDO_MISS';
             createdAt?: string; // date-time
-            playerId?: string;
-            team?: string;
-            moveId?: string;
-            delta?: number; // int32
-            cups?: CupPositionDto[];
-            cup?: CupPositionDto;
-            finishMoveId?: string;
-            redPlayerIds?: string[];
-            bluePlayerIds?: string[];
+            playerId?: string | null;
+            team?: string | null;
+            moveId?: string | null;
+            delta?: number | null; // int32
+            cups?: CupPositionDto[] | null;
+            cup?: {
+                x: number; // int32
+                y: number; // int32
+            } | null;
+            finishMoveId?: string | null;
+            redPlayerIds?: string[] | null;
+            bluePlayerIds?: string[] | null;
             /**
              * SET_RERACK: where each of `cups` is drawn, pairwise; both empty puts the team's cups back in the pyramid
              */
@@ -291,8 +298,8 @@ declare namespace Components {
             ops?: LiveMatchOpDto[];
         }
         export interface LiveMatchOpsResultDto {
-            lastSeq?: number; // int64
-            ops?: LiveMatchOpDto[];
+            lastSeq: number; // int64
+            ops: LiveMatchOpDto[];
         }
         export interface MatchCreateDto {
             /**
@@ -302,284 +309,284 @@ declare namespace Components {
             teams?: TeamCreateDto[];
         }
         export interface MatchDto {
-            id?: string;
-            date?: string; // date-time
-            seasonId?: string;
-            createdById?: string;
-            photoUploads?: TeamPhotoDto[];
+            id: string;
+            date: string | null; // date-time
+            seasonId: string | null;
+            createdById: string | null;
+            photoUploads: TeamPhotoDto[] | null;
         }
         export interface MatchDtoExtended {
-            id?: string;
-            date?: string; // date-time
-            seasonId?: string;
-            createdById?: string;
-            photoUploads?: TeamPhotoDto[];
-            teams?: TeamDto[];
-            teamMembers?: TeamMemberDto[];
-            matchMoves?: MatchMoveDtoComplete[];
+            id: string;
+            date: string | null; // date-time
+            seasonId: string | null;
+            createdById: string | null;
+            photoUploads: TeamPhotoDto[] | null;
+            teams: TeamDto[];
+            teamMembers: TeamMemberDto[];
+            matchMoves: MatchMoveDtoComplete[];
         }
         export interface MatchMoveDto {
-            moveId?: string;
+            moveId: string | null;
             count?: number; // int32
         }
         export interface MatchMoveDtoComplete {
-            id?: string;
-            value?: number; // int32
-            teamMemberId?: string;
-            moveId?: string;
+            id: string;
+            value: number; // int32
+            teamMemberId: string | null;
+            moveId: string | null;
         }
         export interface MatchOverviewDto {
-            id?: string;
-            date?: string; // date-time
-            seasonId?: string;
-            blueTeam?: MatchOverviewTeamDto;
-            redTeam?: MatchOverviewTeamDto;
+            id: string;
+            date: string | null; // date-time
+            seasonId: string | null;
+            blueTeam: MatchOverviewTeamDto;
+            redTeam: MatchOverviewTeamDto;
         }
         export interface MatchOverviewTeamDto {
-            points?: number; // int32
-            teamId?: string;
-            assetPhotoId?: string;
-            members?: MatchOverviewTeamMemberDto[];
+            points: number; // int32
+            teamId: string;
+            assetPhotoId: string | null;
+            members: MatchOverviewTeamMemberDto[];
         }
         export interface MatchOverviewTeamMemberDto {
-            playerId?: string;
-            points?: number; // int32
-            moves?: MatchMoveDto[];
+            playerId: string | null;
+            points: number; // int32
+            moves: MatchMoveDto[];
         }
         export interface PlayerDto {
-            id?: string;
-            profileId?: string;
-            seasonId?: string;
-            activeThisSeason?: boolean;
-            statisticsId?: string;
+            id: string;
+            profileId: string | null;
+            seasonId: string | null;
+            activeThisSeason: boolean;
+            statisticsId: string | null;
         }
         export interface PlayerDtoExtended {
-            id?: string;
-            profileId?: string;
-            season?: SeasonDto;
-            activeThisSeason?: boolean;
-            statistics?: PlayerStatisticsDto;
+            id: string;
+            profileId: string | null;
+            season: SeasonDto;
+            activeThisSeason: boolean;
+            statistics: PlayerStatisticsDto;
         }
         export interface PlayerStatisticsDto {
-            id?: string;
-            points?: number; // int64
-            matches?: number; // int64
-            wins?: number; // int64
-            moves?: number; // int64
-            totalTeamSize?: number; // int64
-            avgPointsPerMatch?: number; // double
-            avgTeamSize?: number; // double
-            elo?: number; // double
+            id: string | null;
+            points: number; // int64
+            matches: number; // int64
+            wins: number; // int64
+            moves: number; // int64
+            totalTeamSize: number; // int64
+            avgPointsPerMatch: number; // double
+            avgTeamSize: number; // double
+            elo: number; // double
         }
         export interface ProfileCreateDto {
             name?: string;
         }
         export interface ProfileCreatedDto {
-            id?: string;
-            name?: string;
-            assetIdAvatar?: string;
-            groupId?: string;
-            createdById?: string;
-            reactivated?: boolean;
-            lastActiveSeasonId?: string;
+            id: string;
+            name: string | null;
+            assetIdAvatar: string | null;
+            groupId: string | null;
+            createdById: string | null;
+            reactivated: boolean;
+            lastActiveSeasonId: string | null;
         }
         export interface ProfileDto {
-            id?: string;
-            name?: string;
-            assetIdAvatar?: string;
-            groupId?: string;
-            createdById?: string;
+            id: string;
+            name: string | null;
+            assetIdAvatar: string | null;
+            groupId: string | null;
+            createdById: string | null;
         }
         export interface ResponseEnvelopeAssetMetadataDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: AssetMetadataDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: AssetMetadataDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeAssetUploadResponse {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: AssetUploadResponse;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: AssetUploadResponse;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeAuthTokenDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: AuthTokenDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: AuthTokenDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeEloSearchDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: EloSearchDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: EloSearchDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeEloSimulationDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: EloSimulationDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: EloSimulationDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeFormationDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: FormationDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: FormationDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeGroupDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: GroupDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: GroupDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeLeaderboardDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: LeaderboardDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: LeaderboardDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListFormationDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: FormationDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: FormationDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListGroupDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: GroupDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: GroupDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListGroupPreset {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: GroupPreset[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: GroupPreset[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListLiveMatchDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: LiveMatchDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: LiveMatchDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: MatchDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchDtoExtended {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: MatchDtoExtended[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchDtoExtended[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchOverviewDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: MatchOverviewDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchOverviewDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListPlayerDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: PlayerDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: PlayerDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListPlayerDtoExtended {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: PlayerDtoExtended[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: PlayerDtoExtended[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListProfileDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: ProfileDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: ProfileDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListRuleDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: RuleDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: RuleDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListRuleMoveDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: RuleMoveDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: RuleMoveDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListSeasonDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: SeasonDto[];
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: SeasonDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeLiveMatchDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: LiveMatchDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: LiveMatchDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeLiveMatchOpsResultDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: LiveMatchOpsResultDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: LiveMatchOpsResultDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeMatchDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: MatchDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeMatchDtoExtended {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: MatchDtoExtended;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchDtoExtended;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeMatchOverviewDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: MatchOverviewDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchOverviewDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeProfileCreatedDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: ProfileCreatedDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: ProfileCreatedDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeProfileDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: ProfileDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: ProfileDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeRuleMoveDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: RuleMoveDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: RuleMoveDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeSeasonDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: SeasonDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: SeasonDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeString {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: string;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: string;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeTeamDto {
-            status?: 'OK' | 'ERROR';
-            httpCode?: number; // int32
-            data?: TeamDto;
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: TeamDto;
             error?: ErrorDetails;
         }
         export interface RuleCreateDto {
@@ -587,11 +594,11 @@ declare namespace Components {
             description?: string;
         }
         export interface RuleDto {
-            id?: string;
-            title?: string;
-            description?: string;
-            createdById?: string;
-            seasonId?: string;
+            id: string;
+            title: string | null;
+            description: string | null;
+            createdById: string | null;
+            seasonId: string | null;
         }
         export interface RuleMoveCreateDto {
             name?: string;
@@ -601,34 +608,42 @@ declare namespace Components {
             cups?: number; // int32
         }
         export interface RuleMoveDto {
-            id?: string;
-            name?: string;
-            seasonId?: string;
-            pointsForTeam?: number; // int32
-            pointsForScorer?: number; // int32
-            finishingMove?: boolean;
-            cups?: number; // int32
+            id: string;
+            name: string | null;
+            seasonId: string | null;
+            pointsForTeam: number; // int32
+            pointsForScorer: number; // int32
+            finishingMove: boolean;
+            cups: number; // int32
         }
         export interface SeasonCreateDto {
             oldSeasonName?: string;
             ruleMoves?: RuleMoveCreateDto[];
         }
         export interface SeasonDto {
-            id?: string;
-            name?: string;
-            startDate?: string; // date-time
-            endDate?: string; // date-time
-            groupId?: string;
-            seasonSettings?: SeasonSettingsDto;
-            createdById?: string;
+            id: string;
+            name: string | null;
+            startDate: string | null; // date-time
+            endDate: string | null; // date-time
+            groupId: string | null;
+            seasonSettings: {
+                minMatchesToQualify?: number; // int32
+                minTeamSize?: number; // int32
+                maxTeamSize?: number; // int32
+                rankingAlgorithm?: 'AVERAGE' | 'ELO' | null;
+                dailyLeaderboard?:
+                    'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
+                wakeTime?: string;
+            } | null;
+            createdById: string | null;
         }
         export interface SeasonSettingsDto {
             minMatchesToQualify?: number; // int32
             minTeamSize?: number; // int32
             maxTeamSize?: number; // int32
-            rankingAlgorithm?: 'AVERAGE' | 'ELO';
+            rankingAlgorithm?: 'AVERAGE' | 'ELO' | null;
             dailyLeaderboard?:
-                'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS';
+                'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
             wakeTime?: string;
         }
         export interface SeasonUpdateDto {
@@ -640,22 +655,22 @@ declare namespace Components {
             teamMembers?: TeamMemberCreateDto[];
         }
         export interface TeamDto {
-            id?: string;
-            matchId?: string;
-            photoAssetId?: string;
+            id: string;
+            matchId: string | null;
+            photoAssetId: string | null;
         }
         export interface TeamMemberCreateDto {
             playerId?: string;
             moves?: MatchMoveDto[];
         }
         export interface TeamMemberDto {
-            id?: string;
-            teamId?: string;
-            playerId?: string;
+            id: string;
+            teamId: string | null;
+            playerId: string | null;
         }
         export interface TeamPhotoDto {
-            teamId?: string;
-            teamPhoto?: AssetUploadResponse;
+            teamId: string | null;
+            teamPhoto: AssetUploadResponse;
         }
     }
 }
