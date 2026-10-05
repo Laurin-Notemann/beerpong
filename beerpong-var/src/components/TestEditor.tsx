@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { RuleMove, Simulation, TestGame } from '@/api';
+import type { RuleMove, Simulation, TestGame } from '~/api';
 
 type Slot = { profileId: string; counts: Record<string, number> };
 type Finish = { team: number; slot: number; moveId: string };

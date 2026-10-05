@@ -265,3 +265,18 @@ tr.unranked td { color: var(--text-2); }
 .editor .actions { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.9rem; flex-wrap: wrap; }
 .editor .problem { color: var(--down); font-size: 0.875rem; }
 @media (max-width: 900px) { .editor .teams2 { grid-template-columns: 1fr; } }
+
+/* live games */
+.tag.live { background: var(--down); }
+@media (prefers-reduced-motion: no-preference) { .tag.live { animation: livepulse 1.6s ease-in-out infinite; } }
+@keyframes livepulse { 50% { opacity: 0.55; } }
+.games tr.live { background: color-mix(in srgb, var(--down) 8%, transparent); }
+.games tr.live > td:first-child { border-left: 3px solid var(--down); }
+.livegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+.livecard { font: inherit; color: inherit; text-align: left; cursor: pointer; display: grid; gap: 0.5rem; border-top: 3px solid var(--down); }
+.livecard:hover { background: var(--surface-2); }
+.liveteam { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.8rem; }
+.liveteam .cups { font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 1.4rem; min-width: 1.6rem; }
+.liveteam.w .cups { color: var(--up); }
+.liveplayer { white-space: nowrap; font-size: 0.9375rem; }
+.liveplayer .mv { color: var(--muted); font-size: 0.8125rem; }

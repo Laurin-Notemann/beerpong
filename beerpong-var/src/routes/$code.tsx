@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 
-import { getSimulation, type Params, type Simulation, type TestGame } from '@/api';
-import { Simulator } from '@/components/Simulator';
-import { useLive } from '@/live';
+import { getSimulation, type Params, type Simulation, type TestGame } from '~/api';
+import { Simulator } from '~/components/Simulator';
+import { useLive } from '~/live';
 
 // The season, the weights and the test games live in the URL, so a link
 // shows the same thing.

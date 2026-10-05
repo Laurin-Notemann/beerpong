@@ -1,5 +1,5 @@
-import type { Game, Params } from '@/api';
-import { isRing, pct, sgn } from '@/format';
+import type { Game, Params } from '~/api';
+import { isRing, pct, sgn } from '~/format';
 
 // The two parts of a rating change, with the formulas filled in for one game:
 // the selected one, or else the season's first ring.

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef } from 'react';
 
-import type { Game, GameTeam } from '@/api';
-import { isRing, pct, sgn, shortMove, when } from '@/format';
+import type { Game, GameTeam } from '~/api';
+import { isRing, pct, sgn, shortMove, when } from '~/format';
 
 // Every game of the season with what it was worth; a click opens its moves
 // and each player's change. Test games sit between the real ones.
@@ -21,10 +21,15 @@ export function Games({
     onEdit: (testIndex: number) => void;
     onRemove: (testIndex: number) => void;
 }) {
-    // real games keep their numbers when test games come in between
+    // real games keep their numbers when test and live games come in between
     let real = 0;
+    let live = 0;
     const numbers = games.map((g) =>
-        g.testIndex == null ? String(++real) : `T${g.testIndex + 1}`
+        g.liveMatchId != null
+            ? `L${++live}`
+            : g.testIndex == null
+              ? String(++real)
+              : `T${g.testIndex + 1}`
     );
     // games that arrived live since the season was opened flash once
     const seen = useRef(new Set(games.map((g) => g.matchId)));
@@ -78,6 +83,7 @@ export function Games({
                                         open ? 'sel' : '',
                                         seen.current.has(g.matchId) ? '' : 'new',
                                         g.testIndex == null ? '' : 'test',
+                                        g.liveMatchId == null ? '' : 'live',
                                     ].join(' ')}
                                     aria-expanded={open}
                                     onClick={toggle}
@@ -90,7 +96,11 @@ export function Games({
                                 >
                                     <td className="num">
                                         {numbers[gi]}
-                                        {g.testIndex == null ? (
+                                        {g.liveMatchId != null ? (
+                                            <span className="when">
+                                                <span className="tag live">LIVE</span>
+                                            </span>
+                                        ) : g.testIndex == null ? (
                                             // the server renders UTC, the browser local time
                                             <span className="when" suppressHydrationWarning>
                                                 {when(g.date)}
@@ -117,7 +127,7 @@ export function Games({
                                         <span
                                             className={`fin ${isRing(g.finishMove) ? 'ring' : ''}`}
                                         >
-                                            {g.finisher}{' '}
+                                            {g.finisher || (g.liveMatchId != null && 'in progress')}{' '}
                                             <span className="mv">{shortMove(g.finishMove)}</span>
                                         </span>
                                     </td>
@@ -155,15 +165,17 @@ export function Games({
                                                 </button>{' '}
                                             </>
                                         )}
-                                        <button
-                                            type="button"
-                                            className="icon"
-                                            title="A test game right after this one"
-                                            aria-label={`Test game after game ${numbers[gi]}`}
-                                            onClick={() => onAdd(g)}
-                                        >
-                                            +
-                                        </button>
+                                        {g.liveMatchId == null && (
+                                            <button
+                                                type="button"
+                                                className="icon"
+                                                title="A test game right after this one"
+                                                aria-label={`Test game after game ${numbers[gi]}`}
+                                                onClick={() => onAdd(g)}
+                                            >
+                                                +
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                                 {open && (

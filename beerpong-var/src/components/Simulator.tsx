@@ -8,14 +8,15 @@ import {
     searchWeights,
     type Simulation,
     type TestGame,
-} from '@/api';
-import { Board } from '@/components/Board';
-import { Chart } from '@/components/Chart';
-import { Games } from '@/components/Games';
-import { Parts } from '@/components/Parts';
-import { TestEditor } from '@/components/TestEditor';
-import { pct } from '@/format';
-import type { LiveStatus } from '@/live';
+} from '~/api';
+import { Board } from '~/components/Board';
+import { Chart } from '~/components/Chart';
+import { Games } from '~/components/Games';
+import { LiveNow } from '~/components/LiveNow';
+import { Parts } from '~/components/Parts';
+import { TestEditor } from '~/components/TestEditor';
+import { pct } from '~/format';
+import type { LiveStatus } from '~/live';
 
 const sliders: {
     key: keyof Params;
@@ -324,6 +325,18 @@ function Season({
     return (
         <>
             {sim.games.length > 0 && <Parts params={params} games={sim.games} sel={sel} />}
+
+            <LiveNow
+                games={sim.games}
+                onOpen={(gi) => {
+                    setSel(gi);
+                    setTimeout(() =>
+                        document
+                            .querySelector(`#games tr[data-g="${gi}"]`)
+                            ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    );
+                }}
+            />
 
             <section aria-labelledby="h-board">
                 <div className="section-head">
