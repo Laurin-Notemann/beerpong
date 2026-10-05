@@ -1,4 +1,5 @@
 import { CupHit, CupPosition, CupTeam, DraftTeams } from '@/lib/cupHits';
+import type { Rerack } from '@/lib/rerack';
 import type { Components } from '@/openapi/openapi';
 import { ScopedLogger } from '@/utils/logging';
 
@@ -31,11 +32,21 @@ export type LiveOp = OpBase &
               finishMoveId?: string;
           }
         | { type: 'UNDO_CUP_HIT'; team: CupTeam; cup: CupPosition }
+        | {
+              /** the team's standing `cups` drawn at `drawn` (pairwise); none: the pyramid */
+              type: 'SET_RERACK';
+              team: CupTeam;
+              cups: CupPosition[];
+              drawn: CupPosition[];
+              formationId?: string;
+          }
     );
 
 /** the state the entry screens render, shaped like the match draft store's */
 export interface LiveMatchState extends DraftTeams {
     cupHits: CupHit[];
+    /** teams whose cups were put back together in another formation, on any phone */
+    reracks: Partial<Record<CupTeam, Rerack>>;
 }
 
 const logger = new ScopedLogger('live-match');
@@ -103,6 +114,20 @@ export function toLiveOp(dto: LiveMatchOpDto): LiveOp | undefined {
                 const cup = toCups(dto.cup ? [dto.cup] : undefined)?.[0];
                 if (!isTeam(dto.team) || !cup) return;
                 return { ...base, type: dto.type, team: dto.team, cup };
+            }
+            case 'SET_RERACK': {
+                const cups = toCups(dto.cups ?? []);
+                const drawn = toCups(dto.drawn ?? []);
+                if (!isTeam(dto.team) || !cups || !drawn) return;
+                if (cups.length !== drawn.length) return;
+                return {
+                    ...base,
+                    type: dto.type,
+                    team: dto.team,
+                    cups,
+                    drawn,
+                    formationId: dto.formationId ?? undefined,
+                };
             }
         }
     })();

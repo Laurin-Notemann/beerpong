@@ -3170,7 +3170,8 @@
                             "SET_PLAYER_TEAM",
                             "ADJUST_MOVE",
                             "RECORD_CUP_HIT",
-                            "UNDO_CUP_HIT"
+                            "UNDO_CUP_HIT",
+                            "SET_RERACK"
                         ]
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
@@ -3193,6 +3194,17 @@
                     "bluePlayerIds": {
                         "type": "array",
                         "items": { "type": "string" }
+                    },
+                    "drawn": {
+                        "type": "array",
+                        "description": "SET_RERACK: where each of `cups` is drawn, pairwise; both empty puts the team's cups back in the pyramid",
+                        "items": {
+                            "$ref": "#/components/schemas/CupPositionDto"
+                        }
+                    },
+                    "formationId": {
+                        "type": "string",
+                        "description": "SET_RERACK: the saved formation the cups were re-racked into"
                     }
                 }
             },

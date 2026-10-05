@@ -390,6 +390,9 @@ type liveMatchOpDTO struct {
 	FinishMoveID  *string          `json:"finishMoveId"`
 	RedPlayerIDs  []string         `json:"redPlayerIds"`
 	BluePlayerIDs []string         `json:"bluePlayerIds"`
+	// SET_RERACK only; left out elsewhere rather than null, unlike the fields above
+	Drawn       []cupPositionDTO `json:"drawn,omitempty"`
+	FormationID *string          `json:"formationId,omitempty"`
 }
 
 type liveMatchDTO struct {

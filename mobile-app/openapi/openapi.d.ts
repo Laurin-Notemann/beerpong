@@ -260,7 +260,8 @@ declare namespace Components {
                 | 'SET_PLAYER_TEAM'
                 | 'ADJUST_MOVE'
                 | 'RECORD_CUP_HIT'
-                | 'UNDO_CUP_HIT';
+                | 'UNDO_CUP_HIT'
+                | 'SET_RERACK';
             createdAt?: string; // date-time
             playerId?: string;
             team?: string;
@@ -271,6 +272,14 @@ declare namespace Components {
             finishMoveId?: string;
             redPlayerIds?: string[];
             bluePlayerIds?: string[];
+            /**
+             * SET_RERACK: where each of `cups` is drawn, pairwise; both empty puts the team's cups back in the pyramid
+             */
+            drawn?: CupPositionDto[];
+            /**
+             * SET_RERACK: the saved formation the cups were re-racked into
+             */
+            formationId?: string;
         }
         export interface LiveMatchOpsDto {
             ops?: LiveMatchOpDto[];

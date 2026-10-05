@@ -1,0 +1,292 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Live rerack",
+      "profileNames": [
+        "a",
+        "b"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Live rerack",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e",
+    "body": {
+      "ops": [
+        {
+          "bluePlayerIds": [
+            "\u003cid7\u003e"
+          ],
+          "id": "\u003cid17\u003e",
+          "redPlayerIds": [
+            "\u003cid6\u003e"
+          ],
+          "type": "SET_TEAMS"
+        }
+      ],
+      "seasonId": "\u003cid1\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdByUserId": "\u003cid18\u003e",
+        "endedAt": null,
+        "groupId": "\u003cid3\u003e",
+        "id": "\u003cid16\u003e",
+        "lastActivityAt": "\u003cts\u003e",
+        "lastSeq": 1,
+        "ops": [
+          {
+            "bluePlayerIds": [
+              "\u003cid7\u003e"
+            ],
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": null,
+            "delta": null,
+            "finishMoveId": null,
+            "id": "\u003cid17\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": [
+              "\u003cid6\u003e"
+            ],
+            "seq": 1,
+            "team": null,
+            "type": "SET_TEAMS"
+          }
+        ],
+        "resultMatchId": null,
+        "seasonId": "\u003cid1\u003e",
+        "startedAt": "\u003cts\u003e",
+        "status": "IN_PROGRESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/live-matches/\u003cid16\u003e/ops",
+    "body": {
+      "ops": [
+        {
+          "cups": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            }
+          ],
+          "drawn": [
+            {
+              "x": 2,
+              "y": 1
+            },
+            {
+              "x": 3,
+              "y": 2
+            }
+          ],
+          "formationId": "\u003cid19\u003e",
+          "id": "\u003cid20\u003e",
+          "playerId": "\u003cid6\u003e",
+          "team": "red",
+          "type": "SET_RERACK"
+        },
+        {
+          "cups": [],
+          "drawn": [],
+          "id": "\u003cid21\u003e",
+          "team": "red",
+          "type": "SET_RERACK"
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "lastSeq": 3,
+        "ops": [
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              }
+            ],
+            "delta": null,
+            "drawn": [
+              {
+                "x": 2,
+                "y": 1
+              },
+              {
+                "x": 3,
+                "y": 2
+              }
+            ],
+            "finishMoveId": null,
+            "formationId": "\u003cid19\u003e",
+            "id": "\u003cid20\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": null,
+            "seq": 2,
+            "team": "red",
+            "type": "SET_RERACK"
+          },
+          {
+            "bluePlayerIds": null,
+            "createdAt": "\u003cts\u003e",
+            "cup": null,
+            "cups": [],
+            "delta": null,
+            "finishMoveId": null,
+            "id": "\u003cid21\u003e",
+            "moveId": null,
+            "playerId": null,
+            "redPlayerIds": null,
+            "seq": 3,
+            "team": "red",
+            "type": "SET_RERACK"
+          }
+        ]
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": [
+      {
+        "body": {
+          "lastSeq": 3,
+          "liveMatchId": "\u003cid16\u003e",
+          "ops": [
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": [],
+              "delta": null,
+              "finishMoveId": null,
+              "id": "\u003cid21\u003e",
+              "moveId": null,
+              "playerId": null,
+              "redPlayerIds": null,
+              "seq": 3,
+              "team": "red",
+              "type": "SET_RERACK"
+            },
+            {
+              "bluePlayerIds": null,
+              "createdAt": "\u003cts\u003e",
+              "cup": null,
+              "cups": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 2,
+                  "y": 0
+                }
+              ],
+              "delta": null,
+              "drawn": [
+                {
+                  "x": 2,
+                  "y": 1
+                },
+                {
+                  "x": 3,
+                  "y": 2
+                }
+              ],
+              "finishMoveId": null,
+              "formationId": "\u003cid19\u003e",
+              "id": "\u003cid20\u003e",
+              "moveId": null,
+              "playerId": null,
+              "redPlayerIds": null,
+              "seq": 2,
+              "team": "red",
+              "type": "SET_RERACK"
+            }
+          ]
+        },
+        "eventType": "LIVE_MATCHES",
+        "groupId": "\u003cid3\u003e",
+        "scope": "liveMatchOps"
+      }
+    ]
+  },
+  {
+    "events": []
+  }
+]
