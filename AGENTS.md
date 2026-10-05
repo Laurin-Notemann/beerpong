@@ -12,7 +12,7 @@ Entering a match has to be quicker than arguing about the score. Screens render 
 
 ### 2. Realtime, but offline tolerant
 
-Every group member sees new matches, players and seasons live via the `/update-socket` websocket (see `api-go/README-Socket-Updates.md`). The app must keep working when the socket drops and must catch up on reconnect (`useRefetchEverythingOnWifiReconnect`).
+Every group member sees new matches, players and seasons live via the `/update-socket` websocket (see `apps/api/README-Socket-Updates.md`). The app must keep working when the socket drops and must catch up on reconnect (`useRefetchEverythingOnWifiReconnect`).
 
 ### 3. Ship without the stores
 
@@ -46,14 +46,14 @@ We need to be on the same page with terminology. When communicating, use this la
 
 1. **Touching the live server by hand.** `ssh privaten` hosts the staging API (`~/docker/beerpong-api-go`) and its Postgres (`~/docker/beerpong-api`). The database there is real user data. Never run destructive SQL, `docker compose down -v`, or volume prunes against it. Read logs freely; change things through the deploy workflow.
 2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, or changing permissions changes the fingerprint. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
-3. **Hand-editing generated API types.** `mobile-app/api/generated/openapi.json` and `mobile-app/openapi/openapi.d.ts` are generated from `api-go/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile.
+3. **Hand-editing generated API types.** `apps/mobile/api/generated/openapi.json` and `apps/mobile/openapi/openapi.d.ts` are generated from `apps/api/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile.
 
 ## Hit every surface
 
 The most common defect in this repo is a change that works on the path you tested and is missing everywhere else. Before calling work done, walk this list and say which entries applied:
 
-- **Both ends of the wire.** A DTO change in `api-go/` needs `api-go/openapi/openapi.json` updated, regenerated types and every consuming hook in `mobile-app/api/calls` and `mobile-app/api/propHooks` updated.
-- **Realtime.** If a mutation changes data other group members see, the server must emit the socket event and the app must apply it (`mobile-app/api/realtime`).
+- **Both ends of the wire.** A DTO change in `apps/api/` needs `apps/api/openapi/openapi.json` updated, regenerated types and every consuming hook in `apps/mobile/api/calls` and `apps/mobile/api/propHooks` updated.
+- **Realtime.** If a mutation changes data other group members see, the server must emit the socket event and the app must apply it (`apps/mobile/api/realtime`).
 - **Cache.** React Query is persisted to disk. A changed response shape must not crash on an old cached value.
 - **Platforms.** iOS and Android. Permissions and native behavior differ.
 - **Reverse states.** If you added a way in, add the way out. Create needs delete, join needs leave.
@@ -62,8 +62,8 @@ The most common defect in this repo is a change that works on the path you teste
 ## Dev servers
 
 - Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN` and the `AWS_*` S3 settings from the environment.
-- API: `set -a; source .env; set +a; cd api-go && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
-- App: `cd mobile-app && npm install && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
+- API: `set -a; source .env; set +a; cd apps/api && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
+- App: `cd apps/mobile && npm install && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
 - npm is the package manager for the app (`package-lock.json`). Don't add a second lockfile.
 - Stop what you started. This machine runs other projects' servers too.
 
@@ -74,28 +74,28 @@ An empty database is a bad test. For realistic data, dump the staging database r
 ## Verifying
 
 - Smallest proof that the change works. Run the tests and checks for the scope you touched:
-  - API: `cd api-go && go test ./...`, then the contract suite against the running API: `cd api-tests && API_BASE_URL=http://localhost:8080 go test ./...` (see `api-tests/README.md`).
-  - App: `cd mobile-app && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`.
-  - TV: `cd tv && npm run typecheck && npm test && npm run build`.
+  - API: `cd apps/api && go test ./...`, then the contract suite against the running API: `cd api-tests && API_BASE_URL=http://localhost:8080 go test ./...` (see `api-tests/README.md`).
+  - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`.
+  - TV: `cd apps/tv && npm run typecheck && npm test && npm run build`.
 - Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.
 - Backend behavior changes ship with a contract test in `api-tests/` (observable behavior) or a unit test next to the Go code (Elo, leaderboard math).
 - Don't verify with simulators, devices or browsers unless the developer asks.
 
 ## Testing the Elo
 
-The Elo lives in `api-go/internal/leaderboard/elo.go`; its comment explains the model, and `DefaultElo` holds the weights. Ratings aren't stored per game: every leaderboard recomputes them from the season's matches (all time: every season's, in order), so changing a weight changes every rating at once. Check a change three ways:
+The Elo lives in `apps/api/internal/leaderboard/elo.go`; its comment explains the model, and `DefaultElo` holds the weights. Ratings aren't stored per game: every leaderboard recomputes them from the season's matches (all time: every season's, in order), so changing a weight changes every rating at once. Check a change three ways:
 
-- `cd api-go && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
-- beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `beerpong-var/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
+- `cd apps/api && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
+- beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `apps/var/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
 - Contract goldens with `elo` values (`api-tests/testdata/golden`) change with the Elo. Re-record only the tests that fail on `elo` (`GOLDEN=record ... go test -run '<those tests>' ./...`) and check that the diff touches nothing but `"elo"` lines.
 
 ## Shipping
 
-- **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`api-go/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
+- **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`apps/api/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
 - **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) ships iOS from GitHub's runners, not EAS cloud builds. Android only ships when you start the workflow by hand with `platform: android`. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
-- **TV:** push to `staging` → `TV Staging Deploy` builds `tv/Dockerfile`, writes the `tv` service in `~/docker/versus-tv` and its Traefik route (`~/traefik/dynamic/versus-tv-staging.yml`) on the server and redeploys it at https://beerpong.lb.staging.laurinnotemann.dev/tv.
-- **beerpong-var:** push to `staging` with changes in `beerpong-var/` → `Beerpong-var Deploy` builds its image and redeploys `beerpong-var` on the server (`~/docker/beerpong-var`, routed by `~/traefik/dynamic/beerpong-var.yml`).
-- The app checks for updates on foreground and applies a downloaded update when it goes to the background (`mobile-app/hooks/useOtaUpdates.ts`).
+- **TV:** push to `staging` → `TV Staging Deploy` builds `apps/tv/Dockerfile`, writes the `tv` service in `~/docker/versus-tv` and its Traefik route (`~/traefik/dynamic/versus-tv-staging.yml`) on the server and redeploys it at https://beerpong.lb.staging.laurinnotemann.dev/tv.
+- **beerpong-var:** push to `staging` with changes in `apps/var/` → `Beerpong-var Deploy` builds its image and redeploys `beerpong-var` on the server (`~/docker/beerpong-var`, routed by `~/traefik/dynamic/beerpong-var.yml`).
+- The app checks for updates on foreground and applies a downloaded update when it goes to the background (`apps/mobile/hooks/useOtaUpdates.ts`).
 
 ## Pull requests
 
@@ -104,7 +104,7 @@ The Elo lives in `api-go/internal/leaderboard/elo.go`; its comment explains the 
 - Body: the problem in a sentence or two, then how you fixed it. End with the model and harness that did the work.
 - UI changes need before/after images. Motion or timing needs a short video.
 - One concern per PR. If the description says "also", split it.
-- The `Generate OpenApi` action may push a `chore: update openapi types` commit after a change to `api-go/openapi/openapi.json`. Pull before pushing again.
+- The `Generate OpenApi` action may push a `chore: update openapi types` commit after a change to `apps/api/openapi/openapi.json`. Pull before pushing again.
 
 ## Documentation
 
@@ -121,16 +121,16 @@ Most code changes do not need a documentation change. Agents can read the code.
 
 ## How it works
 
-The app talks to the API over REST through a typed `openapi-client-axios` client generated from the backend's OpenAPI spec. Responses are wrapped in a `ResponseEnvelope`. Handlers in `api-go/internal/api` run plain SQL through sqlc-generated queries and build the DTOs themselves. After a write, the server publishes a socket event for the group, and connected apps update their React Query cache. Assets (avatars, match photos) are uploaded to S3-compatible storage via presigned URLs. Auth uses JWTs (`api-go/internal/auth`).
+The app talks to the API over REST through a typed `openapi-client-axios` client generated from the backend's OpenAPI spec. Responses are wrapped in a `ResponseEnvelope`. Handlers in `apps/api/internal/api` run plain SQL through sqlc-generated queries and build the DTOs themselves. After a write, the server publishes a socket event for the group, and connected apps update their React Query cache. Assets (avatars, match photos) are uploaded to S3-compatible storage via presigned URLs. Auth uses JWTs (`apps/api/internal/auth`).
 
 ## Where code lives
 
-- `api-go/` - the API (Go, pgx + sqlc, goose migrations). `internal/api` (handlers), `internal/database` (migrations, SQL queries, generated code), `internal/leaderboard` (stats and Elo), `internal/realtime` (websocket), `openapi/` (the API document). See `api-go/README.md`.
-- `mobile-app/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
+- `apps/api/` - the API (Go, pgx + sqlc, goose migrations). `internal/api` (handlers), `internal/database` (migrations, SQL queries, generated code), `internal/leaderboard` (stats and Elo), `internal/realtime` (websocket), `openapi/` (the API document). See `apps/api/README.md`.
+- `apps/mobile/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
-- `tv/` - Versus TV: a TanStack Start web app that puts live matches and the leaderboard on a TV, controlled from phones. It reduces live matches with `mobile-app/lib/liveMatch` code, so keep what `tv/src/lib/liveMatch.ts` imports free of React Native. See `tv/README.md`.
+- `apps/tv/` - Versus TV: a TanStack Start web app that puts live matches and the leaderboard on a TV, controlled from phones. It reduces live matches with `apps/mobile/lib/liveMatch` code, so keep what `apps/tv/src/lib/liveMatch.ts` imports free of React Native. See `apps/tv/README.md`.
 - `api-tests/` - black-box contract tests (HTTP and websocket, compared with recorded golden transcripts) and `shadowdiff`.
-- `beerpong-var/` - the Elo simulator, a TanStack Start app on the API's `/elo-simulation` (see [Testing the Elo](#testing-the-elo)).
+- `apps/var/` - the Elo simulator, a TanStack Start app on the API's `/elo-simulation` (see [Testing the Elo](#testing-the-elo)).
 - `docker/` - local compose files for the database and backend.
 
 ## Taste

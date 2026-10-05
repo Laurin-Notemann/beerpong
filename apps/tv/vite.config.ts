@@ -30,10 +30,10 @@ const noImportMeta: Plugin = {
 };
 
 export default defineConfig({
-    // served under /tv on the API's hostname (see tv/README.md), locally too
+    // served under /tv on the API's hostname (see README.md), locally too
     base: '/tv/',
     server: { port: 3100 },
-    // one tsconfig for every file, also the shared ones in mobile-app/ (whose tsconfig extends
+    // one tsconfig for every file, also the shared ones in apps/mobile/ (whose tsconfig extends
     // Expo's, which isn't installed here)
     tsconfig: './tsconfig.json',
     resolve: { alias: aliases },

@@ -1,6 +1,6 @@
 name: TV Staging Deploy
 
-# Tests, builds and deploys the TV app (tv/) to the staging server, next to the API: the
+# Tests, builds and deploys the TV app (apps/tv/) to the staging server, next to the API: the
 # compose service `tv` in ~/docker/versus-tv on the `traefik_web` network, served by Traefik
 # at https://beerpong.lb.staging.laurinnotemann.dev/tv. The deploy writes the compose file and
 # the Traefik route itself, so the server needs no setup by hand.
@@ -10,12 +10,12 @@ on:
     branches:
       - "staging"
     paths:
-      - "tv/**"
-      - "mobile-app/lib/**"
-      - "mobile-app/api/utils/**"
-      - "mobile-app/components/CupGrid/**"
-      - "mobile-app/utils/**"
-      - "mobile-app/openapi/**"
+      - "apps/tv/**"
+      - "apps/mobile/lib/**"
+      - "apps/mobile/api/utils/**"
+      - "apps/mobile/components/CupGrid/**"
+      - "apps/mobile/utils/**"
+      - "apps/mobile/openapi/**"
       - ".github/workflows/tv-staging-cd.yml"
       - ".github/workflows/tv-ci.yml"
   workflow_dispatch:
@@ -57,7 +57,7 @@ jobs:
         with:
           push: true
           context: .
-          file: tv/Dockerfile
+          file: apps/tv/Dockerfile
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/tv-staging:${{ github.sha }}
 

@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
 // The API computes everything with the leaderboard's own Elo code
-// (/elo-simulation in api-go); this page only shows it. A group opens with its
+// (/elo-simulation in apps/api); this page only shows it. A group opens with its
 // invite code, the same code that lets anyone join it in the app.
 
 export type Params = {

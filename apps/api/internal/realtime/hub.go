@@ -1,6 +1,6 @@
 // Package realtime serves /update-socket: clients send {"groupIds": [...]}
 // and receive every event published for those groups. See
-// api/README-Socket-Updates.md for the protocol.
+// apps/api/README-Socket-Updates.md for the protocol.
 package realtime
 
 import (

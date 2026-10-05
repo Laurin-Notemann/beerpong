@@ -2,4 +2,4 @@
 **/.output
 **/.nitro
 **/.tanstack
-tv/scripts/.seed.json
+apps/tv/scripts/.seed.json

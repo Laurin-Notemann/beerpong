@@ -1,12 +1,12 @@
 # native-sim-template-version: 19
 # Adapted from native-sim 0.1.1's template (templates/native-sim.yml, v19) for an
-# Expo app that lives in `mobile-app/` instead of the repo root. Start it with
+# Expo app that lives in `apps/mobile/` instead of the repo root. Start it with
 # `scripts/native-sim-up`, not `native-sim up` (see .claude/skills/native-sim).
-# Changes vs. the template, all marked "mobile-app:" below: run steps default to
-# mobile-app/, cache/artifact paths and the lockfile hash are prefixed with it,
+# Changes vs. the template, all marked "apps/mobile:" below: run steps default to
+# apps/mobile/, cache/artifact paths and the lockfile hash are prefixed with it,
 # the gate is read from the repo root, the build gets the app's public env and
 # a longer timeout.
-# Also (not mobile-app specific): @expo/serve-sim is pinned to 0.4.0.
+# Also (not apps/mobile specific): @expo/serve-sim is pinned to 0.4.0.
 # When updating native-sim, diff its new template against this file.
 #
 # Boots an iOS Simulator on a GitHub-hosted macOS
@@ -106,18 +106,18 @@ jobs:
       GATE_PORT: "3199"
       PREVIEW_PORT: "3200"
       AGENT_PORT: "4310"
-      # mobile-app: what EAS's `production` environment injects. EXPO_PUBLIC_*
+      # apps/mobile: what EAS's `production` environment injects. EXPO_PUBLIC_*
       # values are embedded in the shipped JS bundle, so they are not secrets.
       EXPO_PUBLIC_API_BASE_URL: https://beerpong.lb.staging.laurinnotemann.dev
       EXPO_PUBLIC_API_WS_URL: wss://beerpong.lb.staging.laurinnotemann.dev
-      # mobile-app: the Sentry config plugin uploads source maps in Release
+      # apps/mobile: the Sentry config plugin uploads source maps in Release
       # builds; there is no auth token here (same as the EAS development profile).
       SENTRY_DISABLE_AUTO_UPLOAD: "true"
-    # mobile-app: the Expo project is in a subdirectory. `uses:` steps ignore
-    # this, so their paths are prefixed with mobile-app/ explicitly.
+    # apps/mobile: the Expo project is in a subdirectory. `uses:` steps ignore
+    # this, so their paths are prefixed with apps/mobile/ explicitly.
     defaults:
       run:
-        working-directory: mobile-app
+        working-directory: apps/mobile
 
     steps:
       - uses: actions/checkout@v4
@@ -132,8 +132,8 @@ jobs:
           path: |
             ~/.npm
             ~/Library/Caches/CocoaPods
-          # mobile-app: hash only the app's lockfile.
-          key: native-sim-${{ runner.os }}-${{ hashFiles('mobile-app/package-lock.json') }}
+          # apps/mobile: hash only the app's lockfile.
+          key: native-sim-${{ runner.os }}-${{ hashFiles('apps/mobile/package-lock.json') }}
           restore-keys: native-sim-${{ runner.os }}-
 
       - name: Install JS dependencies
@@ -172,7 +172,7 @@ jobs:
         if: inputs.mode == 'build' && inputs.cache == 'true'
         uses: actions/cache/restore@v4
         with:
-          path: mobile-app/build/native-sim-app # mobile-app
+          path: apps/mobile/build/native-sim-app # apps/mobile
           key: native-sim-app-${{ runner.os }}-${{ steps.fp.outputs.hash }}
 
       - name: Boot simulator
@@ -315,7 +315,7 @@ jobs:
           # The gate starts before the agent-device proxy does; until that comes
           # up, /agent-device/* simply 502s.
           NATIVE_SIM_TARGET_PORT="$PREVIEW_PORT" NATIVE_SIM_GATE_PORT="$GATE_PORT" \
-            nohup node "$GITHUB_WORKSPACE/.github/native-sim/gate.cjs" > gate.log 2>&1 & # mobile-app: gate lives at the repo root
+            nohup node "$GITHUB_WORKSPACE/.github/native-sim/gate.cjs" > gate.log 2>&1 & # apps/mobile: gate lives at the repo root
           disown
           for _ in $(seq 1 30); do
             curl -fsS -o /dev/null "http://127.0.0.1:$GATE_PORT/__native-sim/healthz" && exit 0
@@ -372,7 +372,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build app
-        # mobile-app: 90, not 60. A cold build of this app took 47.5 min on macos-26.
+        # apps/mobile: 90, not 60. A cold build of this app took 47.5 min on macos-26.
         timeout-minutes: 90
         if: inputs.mode == 'build' && steps.appcache.outputs.cache-hit != 'true'
         env:
@@ -413,7 +413,7 @@ jobs:
         if: inputs.mode == 'build' && inputs.cache == 'true' && steps.appcache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: mobile-app/build/native-sim-app # mobile-app
+          path: apps/mobile/build/native-sim-app # apps/mobile
           key: native-sim-app-${{ runner.os }}-${{ steps.fp.outputs.hash }}
 
       - name: Export app archive
@@ -432,7 +432,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: native-sim-app-${{ inputs.session }}
-          path: mobile-app/build/*.app.tar.gz # mobile-app
+          path: apps/mobile/build/*.app.tar.gz # apps/mobile
           if-no-files-found: error
           retention-days: 1
 

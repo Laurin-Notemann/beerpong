@@ -1,4 +1,4 @@
-# api-go
+# api
 
 The Versus API. It replaced the retired Spring Boot API with the same REST
 endpoints, error envelopes and `/update-socket` events, against the same
@@ -10,7 +10,7 @@ contract it was checked against.
 ```sh
 # from the repo root, with the database from `make docker-db-up`
 set -a; source .env; set +a
-cd api-go && go run ./cmd/api
+cd apps/api && go run ./cmd/api
 ```
 
 Extra variables on top of the Java ones: `PORT` (8080), `DB_MAX_CONNS` (10),
@@ -28,7 +28,7 @@ server; `Api Staging Deploy` builds and redeploys it on every push to
 - `internal/database` – `migrations/` (goose, embedded) and `queries/` (SQL),
   compiled by sqlc into `db/`. Run `sqlc generate` after editing queries.
 - `internal/leaderboard` – stats (a port of the Java `LeaderboardService`)
-  and the Elo (`elo.go`, tuned with beerpong-var through `/elo-simulation`).
+  and the Elo (`elo.go`, tuned with beerpong-var (apps/var) through `/elo-simulation`).
 - `internal/realtime` – the websocket hub.
 - `internal/observability` – Sentry errors, request traces continued from the
   app, a span per SQL statement, and Sentry Logs via slog.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Streams a live iOS Simulator of mobile-app/ from a GitHub Actions macOS runner.
+# Streams a live iOS Simulator of apps/mobile/ from a GitHub Actions macOS runner.
 #
 # This is `native-sim up` for our layout: the CLI expects the Expo app at the repo
-# root (from mobile-app/ it would `git init` a nested repo), and it commits and
+# root (from apps/mobile/ it would `git init` a nested repo), and it commits and
 # pushes everything that is dirty. This script only dispatches
 # .github/workflows/native-sim.yml for a branch that is already pushed, then
 # reads the stream URL back from the commit status the runner publishes.

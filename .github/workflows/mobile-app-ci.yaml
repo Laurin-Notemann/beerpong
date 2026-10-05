@@ -3,11 +3,11 @@ name: Mobile App CI
 on:
   push:
     paths:
-      - "mobile-app/**"
+      - "apps/mobile/**"
 
 defaults:
   run:
-    working-directory: mobile-app
+    working-directory: apps/mobile
 
 jobs:
   lint:

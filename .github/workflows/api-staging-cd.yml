@@ -1,6 +1,6 @@
 name: Api Staging Deploy
 
-# Tests, builds and deploys the Go API (api-go/) to the staging server, where
+# Tests, builds and deploys the Go API (apps/api/) to the staging server, where
 # it runs as beerpong-api-go-staging in ~/docker/beerpong-api-go. Migrations
 # run when the container starts (DB_MIGRATE in the server's .env).
 
@@ -9,7 +9,7 @@ on:
     branches:
       - "staging"
     paths:
-      - "api-go/**"
+      - "apps/api/**"
       - "api-tests/**"
       - ".github/workflows/api-staging-cd.yml"
       - ".github/workflows/api-go-ci.yml"
@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          context: api-go
+          context: apps/api
           platforms: linux/amd64
           build-args: SENTRY_RELEASE=api-go@${{ github.sha }}
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-go-staging:${{ github.sha }}

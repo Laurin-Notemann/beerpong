@@ -8,7 +8,7 @@ import (
 )
 
 // The JSON shapes below are the API contract the app is generated from
-// (mobile-app/api/generated/openapi.json). Field names, order and nullability
+// (apps/mobile/api/generated/openapi.json). Field names, order and nullability
 // follow the Java DTOs; fields that were nullable there are pointers here.
 
 var (

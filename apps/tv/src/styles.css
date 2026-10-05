@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* the app's dark theme (mobile-app/theme.ts) */
+/* the app's dark theme (apps/mobile/theme.ts) */
 @theme {
     --color-bg: #000;
     --color-panel: #141414;

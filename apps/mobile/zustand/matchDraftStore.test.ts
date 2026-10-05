@@ -14,7 +14,7 @@ import {
 } from '@/lib/cupHits';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 
-// the default beerpong rules, with their cups (see api-go/internal/api/cups.go)
+// the default beerpong rules, with their cups (see apps/api/internal/api/cups.go)
 const normal: CupMove = { id: 'normal', cups: 1, isFinish: false };
 const bomb: CupMove = { id: 'bomb', cups: 1, isFinish: false };
 const bouncer: CupMove = { id: 'bouncer', cups: 2, isFinish: false };

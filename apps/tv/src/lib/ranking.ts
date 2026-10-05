@@ -1,5 +1,5 @@
 /**
- * The leaderboard's order, as the app ranks it (mobile-app/constants/rankingAlgorithms.ts, for
+ * The leaderboard's order, as the app ranks it (apps/mobile/constants/rankingAlgorithms.ts, for
  * the two algorithms a season can pick): golf-style, players whose value shows the same share a
  * rank and the next one is skipped (1, T2, T2, 4); tied players are listed by name.
  */

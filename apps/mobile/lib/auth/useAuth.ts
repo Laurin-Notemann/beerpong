@@ -143,7 +143,7 @@ async function getAccessToken(
     } catch (err) {
         ConsoleLogger.error('Failed to get access token:', err);
         if (isAxiosError(err)) {
-            // more detailed error response returned by the backend, can be found in api-go/internal/api/errors.go
+            // more detailed error response returned by the backend, can be found in apps/api/internal/api/errors.go
             const customErrorCode = err.response?.data.error?.code;
 
             // standard http error code, e.g. "Bad Request"

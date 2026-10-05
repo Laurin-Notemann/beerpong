@@ -78,7 +78,7 @@ export function Simulator({
     return (
         <>
             <header className="top wrap">
-                <div className="eyebrow">beerpong-var · runs api-go/internal/leaderboard</div>
+                <div className="eyebrow">beerpong-var · runs apps/api/internal/leaderboard</div>
                 <h1>
                     {sim.groupName} <span className="cup">Elo simulator</span>
                 </h1>

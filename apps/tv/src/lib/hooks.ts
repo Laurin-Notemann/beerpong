@@ -77,7 +77,7 @@ export function useBoard(
 }
 
 /**
- * Subscribes to the group on the API's websocket (api/README-Socket-Updates.md) and calls
+ * Subscribes to the group on the API's websocket (apps/api/README-Socket-Updates.md) and calls
  * `onChange` for every event, debounced: a match entry sends several at once. Reconnects with
  * a backoff and counts a reconnect as a change, since events may have been missed meanwhile.
  */
