@@ -202,6 +202,18 @@ export function useRealtimeConnection() {
                         QK.seasons,
                     ]),
                 });
+                // a team photo is found through its match
+                if (e.scope.startsWith('matchTeamPhoto')) {
+                    qc.invalidateQueries({
+                        predicate: replaceWildcards([
+                            QK.group,
+                            e.groupId,
+                            QK.season,
+                            '*',
+                            QK.matches,
+                        ]),
+                    });
+                }
                 break;
 
             case 'LIVE_MATCHES':

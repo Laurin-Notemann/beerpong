@@ -183,9 +183,6 @@
     }
   },
   {
-    "events": []
-  },
-  {
     "events": [
       {
         "body": {
@@ -198,7 +195,7 @@
           "zoom": 0
         },
         "eventType": "ASSETS",
-        "groupId": "\u003cid16\u003e",
+        "groupId": "\u003cid3\u003e",
         "scope": "matchTeamPhotoSet"
       }
     ]
@@ -233,7 +230,7 @@
           "zoom": 0
         },
         "eventType": "ASSETS",
-        "groupId": "\u003cid16\u003e",
+        "groupId": "\u003cid3\u003e",
         "scope": "matchTeamPhotoSet"
       }
     ]
@@ -272,7 +269,7 @@
           "photoAssetId": null
         },
         "eventType": "ASSETS",
-        "groupId": "\u003cid16\u003e",
+        "groupId": "\u003cid3\u003e",
         "scope": "matchTeamPhotoDelete"
       }
     ]
@@ -525,7 +522,7 @@
           "zoom": 0
         },
         "eventType": "ASSETS",
-        "groupId": "\u003cid16\u003e",
+        "groupId": "\u003cid3\u003e",
         "scope": "matchTeamPhotoSet"
       }
     ]

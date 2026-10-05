@@ -172,23 +172,20 @@ func TestMatchPhotos(t *testing.T) {
 	h.Equal(extended.Str("teams", "1", "photoAssetId"), Get(uploads[0], "teamPhoto", "id"), "red photo")
 
 	groupWS := h.Listen(g.ID)
-	matchWS := h.Listen(matchID)
 	photo := h.OK(h.Do(Req{Method: "PUT", Path: matchPath + "/photos/" + blue, Auth: owner.Bearer()}))
 	h.Equal(photo.Str("type"), "TEAM_PHOTO", "photo type")
-	// photo events are addressed to the match id
-	groupWS.ExpectNone()
-	ev := matchWS.Expect(1)
+	ev := groupWS.Expect(1)
 	h.Equal(EventScope(ev[0]), "matchTeamPhotoSet", "photo set event")
-	h.Equal(EventGroupID(ev[0]), matchID, "photo event keyed by match")
+	h.Equal(EventGroupID(ev[0]), g.ID, "photo event goes to the group")
 
 	replaced := h.OK(h.Do(Req{Method: "PUT", Path: matchPath + "/photos/" + blue, Auth: owner.Bearer()}))
-	matchWS.Expect(1)
+	groupWS.Expect(1)
 	h.Fail(h.Do(Req{Method: "GET", Path: "/assets/" + photo.Str("id")}), 404, "assetNotFound")
 
 	deleted := h.OK(h.Do(Req{Method: "DELETE", Path: matchPath + "/photos/" + blue, Auth: owner.Bearer()}))
 	h.Equal(deleted.Data("photoAssetId"), nil, "photo cleared")
 	h.Equal(deleted.Str("matchId"), matchID, "team match")
-	ev = matchWS.Expect(1)
+	ev = groupWS.Expect(1)
 	h.Equal(EventScope(ev[0]), "matchTeamPhotoDelete", "photo delete event")
 	h.Fail(h.Do(Req{Method: "GET", Path: "/assets/" + replaced.Str("id")}), 404, "assetNotFound")
 	h.Fail(h.Do(Req{Method: "DELETE", Path: matchPath + "/photos/" + blue, Auth: owner.Bearer()}), 404, "matchTeamHasNoPhoto")
@@ -205,9 +202,28 @@ func TestMatchPhotos(t *testing.T) {
 	h.StartSeason(g, "Old")
 	groupWS.Expect(1)
 	h.OK(h.Do(Req{Method: "PUT", Path: g.Path("/seasons/" + oldSeason + "/matches/" + matchID + "/photos/" + blue), Auth: owner.Bearer()}))
-	matchWS.Expect(1)
+	groupWS.Expect(1)
 
 	h.Fail(h.Do(Req{Method: "DELETE", Path: g.Path("/seasons/" + oldSeason + "/matches/" + matchID), Auth: owner.Bearer()}), 403, "seasonAlreadyEnded")
+}
+
+// A member of one group can't reach another group's match photos through a
+// season id of the other group.
+func TestMatchPhotosStayInTheirGroup(t *testing.T) {
+	h := New(t)
+	owner := h.NewUser()
+	g := h.NewGroup(owner, "Photos here", "a", "b")
+	stranger := h.NewUser()
+	foreign := h.NewGroup(stranger, "Photos elsewhere", "y", "z")
+	match := h.OK(h.CreateMatch(stranger, foreign, []Member{{"y", map[string]int{"Finish - Normal": 1}}}, []Member{{"z", nil}}))
+	matchPath := g.Path("/seasons/" + foreign.SeasonID + "/matches/" + match.Str("id"))
+	extended := h.OK(h.Do(Req{Method: "GET", Path: foreign.SeasonPath("/matches/" + match.Str("id") + "/extended"), Auth: stranger.Bearer(), Skip: true}))
+	team := extended.Str("teams", "0", "id")
+	ws := h.Listen(g.ID, foreign.ID)
+
+	h.Fail(h.Do(Req{Method: "PUT", Path: matchPath + "/photos/" + team, Auth: owner.Bearer()}), 404, "seasonHasDifferentGroup")
+	h.Fail(h.Do(Req{Method: "DELETE", Path: matchPath + "/photos/" + team, Auth: owner.Bearer()}), 404, "seasonHasDifferentGroup")
+	ws.ExpectNone()
 }
 
 func TestUpdateMatch(t *testing.T) {
