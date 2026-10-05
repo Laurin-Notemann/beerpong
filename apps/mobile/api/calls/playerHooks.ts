@@ -10,7 +10,7 @@ import { fetchProfiles, withProfiles } from '@/api/calls/profileHooks';
 import { ApiId, WithProfile } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
-import { QK, replaceWildcards } from '@/api/utils/reactQuery';
+import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
 import { Client, Paths, PlayerDto } from '@/openapi/openapi';
 
@@ -156,8 +156,6 @@ export const useDeletePlayerMutation = () => {
 export const useDeletePlayerAvatarMutation = () => {
     const { api } = useApi();
 
-    const qc = useQueryClient();
-
     return useMutation<
         Paths.DeleteAvatar.Responses.$200 | null,
         Error,
@@ -168,20 +166,6 @@ export const useDeletePlayerAvatarMutation = () => {
                 await api
             ).deleteAvatar({ groupId, id: profileId });
             return res?.data;
-        },
-        // The API sends no group event for a removed avatar, so this phone refetches the
-        // profiles and everything that shows them.
-        onSuccess: (_, { groupId }) => {
-            qc.invalidateQueries({
-                queryKey: [QK.group, groupId, QK.profiles],
-                exact: true,
-            });
-            qc.invalidateQueries({
-                predicate: replaceWildcards(
-                    [QK.group, groupId, QK.season, '*', QK.players],
-                    { startsWith: true }
-                ),
-            });
         },
         onError: captureMutationErr('deleteAvatar'),
     });

@@ -891,8 +891,6 @@ func (s *Server) teamOfMatch(r *request) response {
 	return nil
 }
 
-// Team photo events are addressed to the match id, as the Java backend did.
-
 func (s *Server) setTeamPhoto(r *request) response {
 	if res := s.teamOfMatch(r); res != nil {
 		return res

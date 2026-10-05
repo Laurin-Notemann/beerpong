@@ -213,6 +213,10 @@ export function useRealtimeConnection() {
                         QK.seasons,
                     ]),
                 });
+                // the wallpaper is found through the group
+                if (e.scope.startsWith('groupWallpaper')) {
+                    refetchGroup(e.groupId);
+                }
                 // a team photo is found through its match
                 if (e.scope.startsWith('matchTeamPhoto')) {
                     qc.invalidateQueries({

@@ -119,11 +119,11 @@ func TestProfileAvatar(t *testing.T) {
 
 	deleted := h.OK(h.Do(Req{Method: "DELETE", Path: g.Path("/profiles/" + profile + "/avatar"), Auth: owner.Bearer()}))
 	h.Equal(deleted.Data("assetIdAvatar"), nil, "avatar cleared")
-	// The delete event is addressed to the profile id, not the group id.
-	groupWS.ExpectNone()
-	ev = profileWS.Expect(1)
+	// the group hears about it (the Java backend sent it to the profile id)
+	ev = groupWS.Expect(1)
 	h.Equal(EventScope(ev[0]), "profileAvatarDelete", "avatar delete event")
-	h.Equal(EventGroupID(ev[0]), profile, "avatar delete event is keyed by profile id")
+	h.Equal(EventGroupID(ev[0]), g.ID, "avatar delete event is keyed by group id")
+	profileWS.ExpectNone()
 	h.Fail(h.Do(Req{Method: "GET", Path: "/assets/" + second.Str("id")}), 404, "assetNotFound")
 	h.Fail(h.Do(Req{Method: "DELETE", Path: g.Path("/profiles/" + profile + "/avatar"), Auth: owner.Bearer()}), 404, "profileHasNoAvatar")
 }
