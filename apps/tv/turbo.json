@@ -1,0 +1,36 @@
+{
+    "$schema": "https://turborepo.com/schema.json",
+    "extends": ["//"],
+    "tasks": {
+        "typecheck": {
+            "inputs": [
+                "$TURBO_DEFAULT$",
+                "$TURBO_ROOT$/apps/mobile/lib/**",
+                "$TURBO_ROOT$/apps/mobile/api/utils/**",
+                "$TURBO_ROOT$/apps/mobile/components/CupGrid/**",
+                "$TURBO_ROOT$/apps/mobile/utils/**",
+                "$TURBO_ROOT$/apps/mobile/openapi/**"
+            ]
+        },
+        "test": {
+            "inputs": [
+                "$TURBO_DEFAULT$",
+                "$TURBO_ROOT$/apps/mobile/lib/**",
+                "$TURBO_ROOT$/apps/mobile/api/utils/**",
+                "$TURBO_ROOT$/apps/mobile/components/CupGrid/**",
+                "$TURBO_ROOT$/apps/mobile/utils/**",
+                "$TURBO_ROOT$/apps/mobile/openapi/**"
+            ]
+        },
+        "build": {
+            "inputs": [
+                "$TURBO_DEFAULT$",
+                "$TURBO_ROOT$/apps/mobile/lib/**",
+                "$TURBO_ROOT$/apps/mobile/api/utils/**",
+                "$TURBO_ROOT$/apps/mobile/components/CupGrid/**",
+                "$TURBO_ROOT$/apps/mobile/utils/**",
+                "$TURBO_ROOT$/apps/mobile/openapi/**"
+            ]
+        }
+    }
+}

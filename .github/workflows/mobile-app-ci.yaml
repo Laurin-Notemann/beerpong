@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "apps/mobile/**"
+      - "package-lock.json"
 
 defaults:
   run:

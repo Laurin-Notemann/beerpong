@@ -11,6 +11,7 @@ on:
       - "staging"
     paths:
       - "apps/var/**"
+      - "package-lock.json"
       - ".github/workflows/beerpong-var-cd.yml"
   workflow_dispatch:
 
@@ -49,7 +50,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          context: apps/var
+          context: .
+          file: apps/var/Dockerfile
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/beerpong-var:${{ github.sha }}
 

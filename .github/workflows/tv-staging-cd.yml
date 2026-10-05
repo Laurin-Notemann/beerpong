@@ -16,6 +16,7 @@ on:
       - "apps/mobile/components/CupGrid/**"
       - "apps/mobile/utils/**"
       - "apps/mobile/openapi/**"
+      - "package-lock.json"
       - ".github/workflows/tv-staging-cd.yml"
       - ".github/workflows/tv-ci.yml"
   workflow_dispatch:

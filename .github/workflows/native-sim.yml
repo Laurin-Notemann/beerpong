@@ -1,11 +1,12 @@
 # native-sim-template-version: 19
 # Adapted from native-sim 0.1.1's template (templates/native-sim.yml, v19) for an
-# Expo app that lives in `apps/mobile/` instead of the repo root. Start it with
-# `scripts/native-sim-up`, not `native-sim up` (see .claude/skills/native-sim).
+# Expo app that lives in `apps/mobile/` (an npm workspace) instead of the repo
+# root. Start it with `scripts/native-sim-up`, not `native-sim up` (see
+# .claude/skills/native-sim).
 # Changes vs. the template, all marked "apps/mobile:" below: run steps default to
-# apps/mobile/, cache/artifact paths and the lockfile hash are prefixed with it,
-# the gate is read from the repo root, the build gets the app's public env and
-# a longer timeout.
+# apps/mobile/, cache/artifact paths are prefixed with it, the lockfile is the
+# workspace root's, the gate is read from the repo root, the build gets the
+# app's public env and a longer timeout.
 # Also (not apps/mobile specific): @expo/serve-sim is pinned to 0.4.0.
 # When updating native-sim, diff its new template against this file.
 #
@@ -132,8 +133,8 @@ jobs:
           path: |
             ~/.npm
             ~/Library/Caches/CocoaPods
-          # apps/mobile: hash only the app's lockfile.
-          key: native-sim-${{ runner.os }}-${{ hashFiles('apps/mobile/package-lock.json') }}
+          # apps/mobile: the lockfile is the workspace root's.
+          key: native-sim-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: native-sim-${{ runner.os }}-
 
       - name: Install JS dependencies
@@ -147,7 +148,8 @@ jobs:
             corepack enable
             # --immutable is Yarn 2+; Yarn 1 wants --frozen-lockfile.
             yarn install --immutable || yarn install --frozen-lockfile
-          elif [ -f package-lock.json ]; then
+          # apps/mobile: the lockfile is at the workspace root; npm ci here installs this workspace.
+          elif [ -f ../../package-lock.json ]; then
             npm ci
           else
             npm install

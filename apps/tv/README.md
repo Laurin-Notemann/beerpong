@@ -28,6 +28,6 @@ npm run typecheck && npm test && npm run build
 
 ## Staging
 
-Pushing to `staging` runs `TV Staging Deploy` (`.github/workflows/tv-staging-cd.yml`): checks, an image from `apps/tv/Dockerfile` (built from the repo root, since it includes the shared `apps/mobile/` code), then on the server the compose service `tv` in `~/docker/versus-tv` and the Traefik route `~/traefik/dynamic/versus-tv-staging.yml` (the API's hostname, path `/tv`). The workflow writes both files, so change them there, not on the server.
+Pushing to `staging` runs `TV Staging Deploy` (`.github/workflows/tv-staging-cd.yml`): checks, an image from `apps/tv/Dockerfile` (built from the repo root, since it includes the shared `apps/mobile/` code and the root lockfile), then on the server the compose service `tv` in `~/docker/versus-tv` and the Traefik route `~/traefik/dynamic/versus-tv-staging.yml` (the API's hostname, path `/tv`). The workflow writes both files, so change them there, not on the server.
 
 Run one instance only: the TVs live in that process's memory.

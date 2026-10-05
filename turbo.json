@@ -1,0 +1,15 @@
+{
+    "$schema": "https://turborepo.com/schema.json",
+    "agentGuidance": false,
+    "tasks": {
+        "lint": {},
+        "typecheck": {},
+        "test": {},
+        "format:check": {},
+        "build": {
+            "outputs": [
+                ".output/**"
+            ]
+        }
+    }
+}
