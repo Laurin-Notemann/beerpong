@@ -5,3 +5,4 @@ node_modules
 dist
 test-results
 scripts/.seed.json
+public/polyfills.js

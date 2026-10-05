@@ -11,6 +11,7 @@ A web page for a TV (a laptop on HDMI, in practice): the group's leaderboard nex
 - The TV registers with the server under a random id. The QR code carries that id and a control key; the TV also keeps a secret that never leaves it. A phone's changes go to the server (`src/server/functions.ts`), which sends them to the TV and the other phones as server-sent events (`src/routes/api/displays.$id.events.ts`).
 - The server keeps the TVs in memory. Each TV stores its settings and API login in localStorage and registers again when its event stream drops, so a restart or redeploy only costs a reconnect.
 - To read the group, the server signs up its own API user per TV and joins the group with the code, like a phone does (a member without a profile, invisible in the group). Removing the group from the TV leaves it again. All API calls go through the server; browsers only open the API's `/update-socket` to hear about changes and refetch.
+- TVs run old browsers, so the page works back to Chromium 69 (TVs from about 2018): the build compiles down for them, flattens Tailwind's cascade layers, adds margins where flexbox `gap` is missing (`flexGapFallback.ts`) and loads `core-js` first where built-ins are missing (`scripts/polyfills.mjs`). If a browser still can't run it, the error and its user agent show at the bottom of the screen.
 - Live matches are reduced with the app's code from `mobile-app/` (`src/lib/liveMatch.ts`), so the TV always shows the same score as the phones. Keep the modules it imports free of React Native imports.
 
 ## Run it

@@ -1,2 +1,3 @@
 routeTree.gen.ts
 .output
+public/polyfills.js
