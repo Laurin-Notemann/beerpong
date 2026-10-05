@@ -51,8 +51,37 @@
                 }
             ],
             "expo-font",
+            [
+                "expo-notifications",
+                {
+                    "enableBackgroundRemoteNotifications": true
+                }
+            ],
             "expo-secure-store",
             "expo-web-browser",
+            [
+                "expo-widgets",
+                {
+                    "bundleIdentifier": "com.linusbolls.mobileapp.ExpoWidgetsTarget",
+                    "groupIdentifier": "group.com.linusbolls.mobileapp",
+                    "enablePushNotifications": true,
+                    "frequentUpdates": true,
+                    "widgets": [
+                        {
+                            "name": "LeaderboardWidget",
+                            "displayName": "Versus",
+                            "description": "Your group's live matches, and its leaderboard",
+                            "ios": {
+                                "supportedFamilies": [
+                                    "systemSmall",
+                                    "systemMedium",
+                                    "systemLarge"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
             [
                 "expo-splash-screen",
                 {

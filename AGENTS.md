@@ -61,7 +61,7 @@ The most common defect in this repo is a change that works on the path you teste
 ## Dev servers
 
 - On this machine Go is in `~/.local/go/bin` and port 5432 is taken: run the API with the `api-local` skill instead of the next two lines.
-- Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN` and the `AWS_*` S3 settings from the environment.
+- Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN`, the `AWS_*` S3 settings and the optional `APNS_*` push key from the environment.
 - API: `set -a; source .env; set +a; cd apps/api && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
 - App: `npm install` at the root, then `cd apps/mobile && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
 - npm is the package manager (npm workspaces, one root `package-lock.json`). Don't add a second lockfile.

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useLiveMatchSync } from '@/api/liveMatch/useLiveMatchSync';
 import { useApi } from '@/api/utils/create-api';
 import { useModalStyles } from '@/lib/navigation/modalStyles';
+import { useHomeScreenWidget, usePushTokens } from '@/lib/widgets/useWidgets';
 import {
     useEnsureGroupSelected,
     useGroupStore,
@@ -24,6 +25,10 @@ export default function MainLayout() {
 
     // sends live match edits queued on this phone, also those from before an app kill
     useLiveMatchSync();
+    // live scores outside the app: the home screen widget, and the tokens the API pushes
+    // Live Activities and widget updates to (iOS)
+    useHomeScreenWidget();
+    usePushTokens();
 
     const modalStyles = useModalStyles();
 

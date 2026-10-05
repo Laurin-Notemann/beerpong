@@ -1660,6 +1660,34 @@
                 }
             }
         },
+        "/groups/user/push-tokens": {
+            "put": {
+                "tags": ["group-controller"],
+                "operationId": "setPushTokens",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushTokensDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopePushTokensDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/user": {
             "get": {
                 "tags": ["group-controller"],
@@ -1855,6 +1883,48 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/live-matches/{id}/display": {
+            "put": {
+                "tags": ["live-match-controller"],
+                "operationId": "setLiveMatchDisplay",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LiveMatchDisplayDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLiveMatchDisplayResultDto"
                                 }
                             }
                         }
@@ -3600,6 +3670,67 @@
                         }
                     }
                 }
+            },
+            "LiveMatchDisplayDto": {
+                "type": "object",
+                "description": "A live match's score as the app shows it, computed at seq (the live match's lastSeq).",
+                "properties": {
+                    "seq": { "type": "integer", "format": "int64" },
+                    "blueNames": { "type": "string" },
+                    "blueScore": { "type": "integer", "format": "int32" },
+                    "redNames": { "type": "string" },
+                    "redScore": { "type": "integer", "format": "int32" }
+                },
+                "required": [
+                    "seq",
+                    "blueNames",
+                    "blueScore",
+                    "redNames",
+                    "redScore"
+                ]
+            },
+            "LiveMatchDisplayResultDto": {
+                "type": "object",
+                "properties": {
+                    "accepted": {
+                        "type": "boolean",
+                        "description": "false if seq isn't the live match's lastSeq (or it ended): nothing changed"
+                    }
+                },
+                "required": ["accepted"]
+            },
+            "PushTokensDto": {
+                "type": "object",
+                "description": "The calling phone's APNs tokens. A null token is forgotten; no activityStartToken means no Live Activities.",
+                "properties": {
+                    "deviceToken": { "type": "string", "nullable": true },
+                    "activityStartToken": { "type": "string", "nullable": true }
+                },
+                "required": ["deviceToken", "activityStartToken"]
+            },
+            "ResponseEnvelopeLiveMatchDisplayResultDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "$ref": "#/components/schemas/LiveMatchDisplayResultDto"
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
+            "ResponseEnvelopePushTokensDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "$ref": "#/components/schemas/PushTokensDto"
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "LiveMatchOpsResultDto": {
                 "type": "object",

@@ -1,0 +1,103 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/user/push-tokens",
+    "body": {
+      "activityStartToken": "d4e5f6",
+      "deviceToken": "a1b2c3"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activityStartToken": "d4e5f6",
+        "deviceToken": "a1b2c3"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/user/push-tokens",
+    "body": {
+      "activityStartToken": null,
+      "deviceToken": "a1b2c3"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activityStartToken": null,
+        "deviceToken": "a1b2c3"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "PUT /groups/user/push-tokens",
+    "body": {
+      "activityStartToken": null,
+      "deviceToken": "not hex"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidPushToken",
+        "description": "Push tokens have to be hex strings of at most 512 characters, or null!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/user/push-tokens",
+    "body": {
+      "activityStartToken": null,
+      "deviceToken": ""
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "invalidPushToken",
+        "description": "Push tokens have to be hex strings of at most 512 characters, or null!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "PUT /groups/user/push-tokens",
+    "body": {},
+    "status": 401,
+    "response": "Missing or invalid Authorization header!"
+  }
+]

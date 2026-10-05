@@ -19,6 +19,7 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/auth"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
+	"github.com/laurin-notemann/beerpong/api-go/internal/push"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 	"github.com/laurin-notemann/beerpong/api-go/openapi"
 )
@@ -37,6 +38,9 @@ type Server struct {
 	bucket Bucket
 	hub    *realtime.Hub
 	log    *slog.Logger
+	// nil without an APNs key (SetAPNs)
+	apns   *push.Client
+	pushes *liveScorePushes
 	// now is the clock for every timestamp the API writes. The Java backend
 	// ran in UTC; so does this.
 	now func() time.Time
@@ -50,6 +54,7 @@ func NewServer(pool *pgxpool.Pool, tokens *auth.Tokens, bucket Bucket, hub *real
 		bucket: bucket,
 		hub:    hub,
 		log:    log,
+		pushes: newLiveScorePushes(),
 		now:    func() time.Time { return time.Now().UTC() },
 	}
 }
@@ -121,6 +126,7 @@ func (s *Server) routes() map[string]route {
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
 		"/groups/user":                                                      {"GET": s.userGroups},
+		"/groups/user/push-tokens":                                          {"PUT": s.putPushTokens},
 		"/groups/{id}":                                                      {"GET": s.getGroup, "PUT": s.updateGroup},
 		"/groups/{id}/wallpaper":                                            {"PUT": s.setWallpaper, "DELETE": s.deleteWallpaper},
 		"/groups/{id}/join":                                                 {"POST": s.joinGroup},
@@ -138,6 +144,7 @@ func (s *Server) routes() map[string]route {
 		"/groups/{groupId}/live-matches/{id}":                               {"GET": s.getLiveMatch, "PUT": s.createLiveMatch, "DELETE": s.abandonLiveMatch},
 		"/groups/{groupId}/live-matches/{id}/ops":                           {"POST": s.appendOps},
 		"/groups/{groupId}/live-matches/{id}/finish":                        {"POST": s.finishLiveMatch},
+		"/groups/{groupId}/live-matches/{id}/display":                       {"PUT": s.putLiveMatchDisplay},
 		"/groups/{groupId}/formations":                                      {"GET": s.listFormations},
 		"/groups/{groupId}/formations/{id}":                                 {"PUT": s.putFormation, "DELETE": s.deleteFormation},
 		"/groups/{groupId}/seasons/{seasonId}/rules":                        {"GET": s.listRules, "PUT": s.writeRules},

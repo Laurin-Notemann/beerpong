@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
@@ -18,14 +18,30 @@ import { Swiper, SwiperRef } from '@/components/Swiper';
 import { AppBackground } from '@/lib/Background';
 import { useLiveMatchScreen } from '@/lib/liveMatch/useLiveMatchScreen';
 import { useInsets } from '@/lib/useInsets';
+import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 /**
  * Entering a live match: the score on top, the cups and points pages (as in the pro mode
  * draft) in the middle, and Finish at the bottom. Every phone in the group can have it open.
  */
 export default function LiveMatchPage() {
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const { id, groupId } = useLocalSearchParams<{
+        id: string;
+        groupId?: string;
+    }>();
     const screen = useLiveMatchScreen(id);
+
+    // a Live Activity opens its match in the match's group, which may not be the selected one
+    const { selectedGroupId, selectGroup, groupIds } = useGroupStore();
+    useEffect(() => {
+        if (
+            groupId &&
+            groupId !== selectedGroupId &&
+            groupIds.includes(groupId)
+        ) {
+            selectGroup(groupId);
+        }
+    }, [groupId, selectedGroupId, groupIds, selectGroup]);
     const insets = useInsets(true);
 
     const pagerRef = useRef<SwiperRef>(null);

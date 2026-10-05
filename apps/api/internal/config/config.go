@@ -20,6 +20,8 @@ type Config struct {
 
 	AWS AWS
 
+	APNs APNs
+
 	SentryDSN         string `env:"BACKEND_SENTRY_DSN"`
 	SentryEnvironment string `env:"SENTRY_ENVIRONMENT" envDefault:"staging"`
 	SentryRelease     string `env:"SENTRY_RELEASE"`
@@ -43,6 +45,18 @@ type AWS struct {
 	Endpoint  string `env:"AWS_ENDPOINT,required"` // host without scheme, e.g. fsn1.your-objectstorage.com
 	AccessKey string `env:"AWS_ACCESS_KEY,required"`
 	SecretKey string `env:"AWS_SECRET_KEY,required"`
+}
+
+// APNs is the Apple push key the API sends Live Activity and widget pushes
+// with. Without a key the API sends no pushes.
+type APNs struct {
+	KeyID  string `env:"APNS_KEY_ID"`
+	TeamID string `env:"APNS_TEAM_ID" envDefault:"A5X77AGYX4"`
+	// the .p8 file's contents, base64-encoded so it fits on one line of an env file
+	Key   string `env:"APNS_KEY"`
+	Topic string `env:"APNS_TOPIC" envDefault:"com.linusbolls.mobileapp"`
+	// TestFlight and App Store builds get production tokens; development builds sandbox ones
+	Production bool `env:"APNS_PRODUCTION" envDefault:"true"`
 }
 
 func Load() (Config, error) {
