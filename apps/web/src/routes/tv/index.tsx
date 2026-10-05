@@ -145,7 +145,8 @@ function Tv() {
             ) : (
                 <Pairing remoteUrl={remoteUrl} />
             )}
-            <FullscreenButton />
+            {/* it sits in the corner a clip from the right plays in */}
+            {!clips.length && <FullscreenButton />}
         </>
     );
 }
@@ -196,20 +197,20 @@ function Screen({
     );
     const focused = live.find((i) => i.id === config.focusMatchId);
     const rows = board?.leaderboard.rows ?? [];
+    // next to the leaderboard the live match is on the right; elsewhere the scorer's team side
+    // (blue plays on the left)
+    const clipFrom = layout === 'split' || clip?.team === 'red' ? 'right' : 'left';
+    const clipPanel = clip && (
+        <ScoreClipPanel key={clip.id} clip={clip} from={clipFrom} onDone={onClipDone} />
+    );
 
     return (
+        // the clip comes before or after the board in the page, not just on screen: whatever
+        // comes later paints on top, and on the TV anything over the video hides it (black)
         <div className="flex h-screen">
-            {clip && (
-                <ScoreClipPanel
-                    key={clip.id}
-                    clip={clip}
-                    // next to the leaderboard the live match is on the right; elsewhere the
-                    // scorer's team side (blue plays on the left)
-                    from={layout === 'split' || clip.team === 'red' ? 'right' : 'left'}
-                    onDone={onClipDone}
-                />
-            )}
-            <main className="flex h-screen min-w-0 flex-1 flex-col gap-[2rem] p-[2.5rem]">
+            {clipFrom === 'left' && clipPanel}
+            {/* the board doesn't fit next to a clip; it's cut off rather than drawn over it */}
+            <main className="flex h-screen min-w-0 flex-1 flex-col gap-[2rem] overflow-hidden p-[2.5rem]">
                 <Header board={board} config={config} remoteUrl={remoteUrl} offline={offline} />
                 {!board ? (
                     <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
@@ -259,6 +260,7 @@ function Screen({
                     <Empty>No matches played {config.scope === 'today' ? 'today' : 'yet'}</Empty>
                 )}
             </main>
+            {clipFrom === 'right' && clipPanel}
         </div>
     );
 }
