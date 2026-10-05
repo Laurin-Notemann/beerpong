@@ -218,10 +218,11 @@ export interface NewMatchAssignTeamsProps {
     /** shown while any player is on a team */
     onClear?: () => void;
     /**
-     * pro mode on Android: a "Start match" button at the bottom of the page. Android's toolbar
-     * can't show text-only buttons, so the header's one is iOS only
+     * pro mode on Android: "After the game" and "Start live" buttons at the bottom of the page.
+     * Android's toolbar can't show text-only buttons, so the header's ones are iOS only
      */
     onStart?: () => void;
+    onNext?: () => void;
     canStart?: boolean;
 }
 export default function NewMatchAssignTeams({
@@ -234,6 +235,7 @@ export default function NewMatchAssignTeams({
     setTeam,
     onClear,
     onStart,
+    onNext,
     canStart = false,
 }: NewMatchAssignTeamsProps) {
     const insets = useInsets(true, true);
@@ -377,11 +379,20 @@ export default function NewMatchAssignTeams({
                         right: 0,
                         marginHorizontal: 8,
                         marginBottom: insets.bottom + 16,
+                        gap: 16,
                     }}
                 >
+                    {onNext && (
+                        <OverlayTextButton
+                            fullWidth
+                            title="After the game"
+                            disabled={!canStart}
+                            onPress={onNext}
+                        />
+                    )}
                     <OverlayTextButton
                         fullWidth
-                        title="Start match"
+                        title="Start live"
                         disabled={!canStart}
                         onPress={onStart}
                     />

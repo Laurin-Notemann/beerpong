@@ -22,8 +22,9 @@ export const NewMatchStack: React.FC<{
     onNext: () => void;
     onCreate: () => void;
     /**
-     * pro mode: the teams page starts a live match instead of going on to the next page. The
-     * toolbar button only shows on iOS (Android needs an icon); Android has one in the page
+     * pro mode: the teams page can start a live match, next to Next for entering a match after
+     * the game. The toolbar button only shows on iOS (Android needs an icon); Android has one in
+     * the page
      */
     onStart?: () => void;
     canStart?: boolean;
@@ -70,8 +71,8 @@ export const NewMatchStack: React.FC<{
                             ),
                 }}
             />
-            {/* On the first page the tab's Groups button keeps the left side; one button on
-                the right leaves room for the teams in the title. Later pages replace Groups
+            {/* On the first page the tab's Groups button keeps the left side; few buttons on
+                the right leave room for the teams in the title. Later pages replace Groups
                 with Back. */}
             {page === 0 ? (
                 <Stack.Toolbar placement="right">
@@ -91,21 +92,24 @@ export const NewMatchStack: React.FC<{
                         >
                             Generate
                         </Stack.Toolbar.Button>
-                    ) : onStart ? (
-                        <Stack.Toolbar.Button
-                            variant="done"
-                            onPress={onStart}
-                            disabled={!canStart}
-                        >
-                            Start match
-                        </Stack.Toolbar.Button>
                     ) : (
-                        <Stack.Toolbar.Button
-                            onPress={onNext}
-                            disabled={!hasValidTeams}
-                        >
-                            Next
-                        </Stack.Toolbar.Button>
+                        <>
+                            <Stack.Toolbar.Button
+                                onPress={onNext}
+                                disabled={!hasValidTeams}
+                            >
+                                Next
+                            </Stack.Toolbar.Button>
+                            {onStart && (
+                                <Stack.Toolbar.Button
+                                    variant="done"
+                                    onPress={onStart}
+                                    disabled={!canStart}
+                                >
+                                    Start live
+                                </Stack.Toolbar.Button>
+                            )}
+                        </>
                     )}
                 </Stack.Toolbar>
             ) : (
