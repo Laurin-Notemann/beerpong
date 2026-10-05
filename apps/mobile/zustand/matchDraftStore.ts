@@ -13,11 +13,6 @@ import {
 } from '@/lib/cupHits';
 
 interface MatchDraftStore {
-    /**
-     * the id the match is created with, set by the first Create. It stays until the draft is
-     * cleared, so sending the same draft twice (a retry, a double tap) saves the match once.
-     */
-    matchId?: string;
     blueTeamPhotoUri?: string;
     redTeamPhotoUri?: string;
     hasBeenOnPageTwo: boolean;
@@ -66,7 +61,6 @@ export const useMatchDraftStore = create<MatchDraftStore>()((set, get) => ({
         },
         clear: () => {
             set(() => ({
-                matchId: undefined,
                 hasBeenOnPageTwo: false,
                 redTeam: { teamMembers: [] },
                 blueTeam: { teamMembers: [] },

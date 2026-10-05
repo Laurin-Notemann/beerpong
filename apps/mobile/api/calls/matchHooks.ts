@@ -1,5 +1,21 @@
-import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
+import {
+    queryOptions,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+import { Alert } from 'react-native';
 
+import {
+    CreatedMatch,
+    createMatchKey,
+    discardQueuedMatch,
+    QueuedMatch,
+    registerMatchQueue,
+} from '@/api/calls/matchQueue';
+import { env } from '@/api/env';
 import { ApiId } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
@@ -7,7 +23,8 @@ import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
 import { Client, Paths, TeamPhotoDto } from '@/openapi/openapi';
-import { useLogging } from '@/utils/useLogging';
+import { describeError, showErrorToast, showSuccessToast } from '@/toast';
+import { ScopedLogger } from '@/utils/logging';
 
 export const matchesQueryOptions = (
     api: Promise<Client>,
@@ -57,29 +74,109 @@ export const useMatchesByPlayerQuery = (
     };
 };
 
-export const useCreateMatchMutation = () => {
+/** Enters a new match; it's sent when the phone is online (see `matchQueue`). */
+export const useCreateMatchMutation = () =>
+    useMutation<CreatedMatch, unknown, QueuedMatch>({
+        mutationKey: createMatchKey,
+    });
+
+const queueLogger = new ScopedLogger('match-queue');
+
+/**
+ * Registers how queued matches are sent (`registerMatchQueue`). Rendered inside `ApiProvider`,
+ * it registers during the first render, before `PersistQueryClientProvider` restores the
+ * persisted matches in an effect.
+ */
+export function MatchQueue() {
+    const qc = useQueryClient();
     const { api } = useApi();
 
-    const { writeLog } = useLogging();
-
-    return useMutation<
-        Paths.CreateMatch.Responses.$200 | null,
-        Error,
-        Paths.CreateMatch.RequestBody & { groupId: ApiId; seasonId: ApiId }
-    >({
-        mutationFn: async (body) => {
-            try {
-                const res = await (await api).createMatch(body, body);
+    useState(() =>
+        registerMatchQueue(qc, {
+            createMatch: async ({ id, groupId, seasonId, teams }) => {
+                const res = await (
+                    await api
+                ).createMatch({ groupId, seasonId }, { id, teams });
                 return res?.data;
-            } catch (err) {
-                // the API client reports the failure; this keeps what was entered
-                writeLog('useCreateMatchMutation', body);
-                throw err;
-            }
-        },
-        onError: captureMutationErr('createMatch'),
-    });
-};
+            },
+            onCreated: (match, created) => {
+                if (match.photos) {
+                    // not awaited: the next queued match is sent while the photos upload
+                    uploadTeamPhotos(
+                        api,
+                        { ...match, matchId: match.id },
+                        created?.data?.photoUploads ?? [],
+                        match.photos
+                    );
+                } else {
+                    showSuccessToast('Created match.');
+                }
+            },
+            onRejected: (match, error) => {
+                // keeps what was entered
+                queueLogger.warn('the server rejected a match:', match, error);
+                captureMutationErr('createMatch')(error);
+                const time = env.format.date.matchHour(dayjs(match.enteredAt));
+                Alert.alert(
+                    'Match not saved',
+                    `The match from ${time} couldn't be saved. ${describeError(error) ?? ''}`.trim()
+                );
+            },
+        })
+    );
+
+    return null;
+}
+
+/** Tapping a match that isn't on the server yet says so, and offers to drop it. */
+export function useExplainQueuedMatch() {
+    const qc = useQueryClient();
+
+    return (matchId: ApiId) =>
+        Alert.alert(
+            'Not synced yet',
+            "This match is saved on your phone and is sent when you're back online.",
+            [
+                {
+                    text: 'Discard',
+                    style: 'destructive',
+                    onPress: () => {
+                        if (!discardQueuedMatch(qc, matchId)) {
+                            showErrorToast("It's being sent right now.");
+                        }
+                    },
+                },
+                { text: 'OK', style: 'cancel' },
+            ]
+        );
+}
+
+/** after a match is created with `savePhoto`; says when it's done */
+async function uploadTeamPhotos(
+    api: Promise<Client>,
+    match: { groupId: ApiId; seasonId: ApiId; matchId: ApiId },
+    photoUploads: TeamPhotoDto[],
+    photos: { blueTeamPhotoUri: string; redTeamPhotoUri: string }
+) {
+    // the upload urls are returned in the same order as the teams
+    const [bluePhotoUpload, redPhotoUpload] = photoUploads;
+    try {
+        if (bluePhotoUpload && redPhotoUpload) {
+            await uploadTeamPhoto(bluePhotoUpload, photos.blueTeamPhotoUri);
+            await uploadTeamPhoto(redPhotoUpload, photos.redTeamPhotoUri);
+        } else {
+            // a repeated create returns the match without upload urls
+            await attachTeamPhotos(api, match, photos);
+        }
+        showSuccessToast('Created match.');
+    } catch (err) {
+        queueLogger.error('failed to upload team photos:', err);
+        showErrorToast(
+            "Match created, but the team photos couldn't be uploaded.",
+            err
+        );
+    }
+}
 
 export const useDeleteMatchMutation = () => {
     const { api } = useApi();

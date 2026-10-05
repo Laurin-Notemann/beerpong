@@ -1,3 +1,4 @@
+import { onlineManager } from '@tanstack/react-query';
 import { uuid } from 'expo';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -6,8 +7,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
 import {
-    attachTeamPhotos,
-    uploadTeamPhoto,
     useCreateMatchMutation,
     useMatchesQuery,
 } from '@/api/calls/matchHooks';
@@ -15,7 +14,6 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { startLiveMatch } from '@/api/liveMatch/useLiveMatch';
-import { useApi } from '@/api/utils/create-api';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
@@ -32,7 +30,6 @@ import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { AppBackground } from '@/lib/Background';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
 import { useNavigation } from '@/lib/navigation/useNavigation';
-import { Client, TeamPhotoDto } from '@/openapi/openapi';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -83,33 +80,6 @@ const areTeamsEqual = (
 
     return result;
 };
-
-/** after a match is created with `savePhoto`; says when it's done, as Create doesn't wait for it */
-async function uploadTeamPhotos(
-    api: Promise<Client>,
-    match: { groupId: string; seasonId: string; matchId: string },
-    photoUploads: TeamPhotoDto[],
-    photos: { blueTeamPhotoUri: string; redTeamPhotoUri: string }
-) {
-    // the upload urls are returned in the same order as the teams
-    const [bluePhotoUpload, redPhotoUpload] = photoUploads;
-    try {
-        if (bluePhotoUpload && redPhotoUpload) {
-            await uploadTeamPhoto(bluePhotoUpload, photos.blueTeamPhotoUri);
-            await uploadTeamPhoto(redPhotoUpload, photos.redTeamPhotoUri);
-        } else {
-            // a repeated create returns the match without upload urls
-            await attachTeamPhotos(api, match, photos);
-        }
-        showSuccessToast('Created match.');
-    } catch (err) {
-        ConsoleLogger.error('failed to upload team photos:', err);
-        showErrorToast(
-            "Match created, but the team photos couldn't be uploaded.",
-            err
-        );
-    }
-}
 
 export default function NewMatchScreen() {
     const router = useRouter();
@@ -180,7 +150,6 @@ export default function NewMatchScreen() {
     const bothTeamsEmpty = teamMembers.length === 0;
 
     const createMatchMutation = useCreateMatchMutation();
-    const { api } = useApi();
 
     const finishes = teamMembers
         .flatMap((i) => i.moves)
@@ -203,34 +172,29 @@ export default function NewMatchScreen() {
             return;
         }
 
-        const { blueTeamPhotoUri, redTeamPhotoUri } = matchDraft;
+        // the draft as it is now: a second tap before the next render finds it cleared
+        const draft = useMatchDraftStore.getState();
+        const { blueTeamPhotoUri, redTeamPhotoUri } = draft;
+        if (!draft.blueTeam.teamMembers.length) return;
 
-        // read and set right away, so a second tap before the next render sends the same id
-        let matchId = useMatchDraftStore.getState().matchId;
-        if (!matchId) {
-            matchId = uuid.v4();
-            useMatchDraftStore.setState({ matchId });
-        }
-
+        // made here, so a create that is sent again (a retry, after a restart) saves it once
+        const matchId = uuid.v4();
         const savePhoto = !!blueTeamPhotoUri && !!redTeamPhotoUri;
 
-        let matchRes;
-        try {
-            matchRes = await createMatchMutation.mutateAsync({
-                id: matchId,
-                groupId,
-                seasonId,
-                teams: [
-                    { ...matchDraft.blueTeam, savePhoto },
-                    { ...matchDraft.redTeam, savePhoto },
-                ],
-            });
-        } catch (err) {
-            // the draft keeps its match id, so tapping Create again can't save it twice
-            ConsoleLogger.error('failed to create match:', err);
-            showErrorToast('Failed to create match.', err);
-            return;
-        }
+        // not awaited: offline, the match waits on the phone and is sent once it's back online
+        createMatchMutation.mutate({
+            id: matchId,
+            groupId,
+            seasonId,
+            teams: [
+                { ...draft.blueTeam, savePhoto },
+                { ...draft.redTeam, savePhoto },
+            ],
+            enteredAt: new Date().toISOString(),
+            photos: savePhoto
+                ? { blueTeamPhotoUri, redTeamPhotoUri }
+                : undefined,
+        });
 
         matchDraft.actions.clear();
         // show the new match where it lands: the current season, today
@@ -240,21 +204,11 @@ export default function NewMatchScreen() {
         router.replace('/');
         carouselRef.current?.prev();
 
-        if (!savePhoto) {
+        if (!onlineManager.isOnline()) {
+            showSuccessToast("Saved. It's sent when you're back online.");
+        } else if (!savePhoto) {
             // no photo was taken on the points page, so ask for one
             nav.navigate('matchPhotoModal', { matchId, seasonId });
-        }
-
-        if (blueTeamPhotoUri && redTeamPhotoUri) {
-            // not awaited: the next match can be entered while the photos upload
-            uploadTeamPhotos(
-                api,
-                { groupId, seasonId, matchId },
-                matchRes?.data?.photoUploads ?? [],
-                { blueTeamPhotoUri, redTeamPhotoUri }
-            );
-        } else {
-            showSuccessToast('Created match.');
         }
     });
 

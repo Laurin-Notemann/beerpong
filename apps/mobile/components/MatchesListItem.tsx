@@ -12,6 +12,9 @@ import { useNewDesign } from '@/zustand/localSettingsStore';
 
 const timeColumnWidth = 44;
 
+/** a match that isn't on the server yet is dimmed, like an unsent message */
+const queuedStyle = { opacity: 0.5 };
+
 const teamNames = (team: Match['blueTeam']) =>
     team.map((i) => i.name || 'Unknown').join(', ');
 
@@ -26,11 +29,13 @@ const MatchesListItemInner: React.FC<{
 
     if (newDesign) {
         return (
-            <NextMatchCard
-                match={match}
-                onPress={onPress}
-                highlightedId={highlightedId}
-            />
+            <View style={match.isQueued && queuedStyle}>
+                <NextMatchCard
+                    match={match}
+                    onPress={onPress}
+                    highlightedId={highlightedId}
+                />
+            </View>
         );
     }
 
@@ -44,6 +49,7 @@ const MatchesListItemInner: React.FC<{
 
                 borderTopColor: border ? theme.panel.light.active : undefined,
                 borderTopWidth: border ? 0.5 : undefined,
+                ...(match.isQueued && queuedStyle),
             }}
             onPress={onPress}
         >
