@@ -67,6 +67,8 @@ type liveMoveDTO struct {
 	Name string `json:"name"`
 	Team string `json:"team"`
 	Move string `json:"move"`
+	// the score right after it, e.g. "2–0"
+	Score string `json:"score,omitempty"`
 }
 
 const (
@@ -115,7 +117,7 @@ func liveDetails(o object, now time.Time) (teams json.RawMessage, players []live
 			return nil, nil, nil, false
 		}
 		for _, m := range moves {
-			if !text(m.Name) || !text(m.Move) || !team(m.Team) {
+			if !text(m.Name) || !text(m.Move) || !team(m.Team) || !text(m.Score) {
 				return nil, nil, nil, false
 			}
 		}
@@ -210,12 +212,9 @@ func (s *Server) putLiveMatchDisplay(r *request) response {
 	if !valid {
 		return fail(errLiveMatchInvalidDisplay)
 	}
-	score, err := json.Marshal(liveScoreDTO{
+	display := liveScoreDTO{
 		BlueNames: *blueNames, BlueScore: *blueScore, RedNames: *redNames, RedScore: *redScore,
 		Teams: teams, Players: players, Moves: moves,
-	})
-	if err != nil {
-		return internal(err)
 	}
 
 	groupID, id := r.path("groupId"), r.path("id")
@@ -233,6 +232,18 @@ func (s *Server) putLiveMatchDisplay(r *request) response {
 		current := m.Status == liveInProgress && *seq == m.LastSeq && (m.DisplaySeq == nil || *seq >= *m.DisplaySeq)
 		if !current {
 			return ok(liveScoreResultDTO{Accepted: false}), nil
+		}
+		// a phone on an older app version reports no details; at the same seq the ones another
+		// phone reported still hold
+		if display.Players == nil && m.Display != nil && m.DisplaySeq != nil && *m.DisplaySeq == *seq {
+			var stored liveScoreDTO
+			if json.Unmarshal([]byte(*m.Display), &stored) == nil {
+				display.Teams, display.Players, display.Moves = stored.Teams, stored.Players, stored.Moves
+			}
+		}
+		score, err := json.Marshal(display)
+		if err != nil {
+			return nil, err
 		}
 		if m.Display != nil && *m.Display == string(score) {
 			return ok(liveScoreResultDTO{Accepted: true}), nil

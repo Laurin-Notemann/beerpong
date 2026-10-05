@@ -99,6 +99,7 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
                             name: nameOf(m.playerId),
                             team: m.team,
                             move: m.move,
+                            score: `${m.blue}–${m.red}`,
                         })),
                 };
             });

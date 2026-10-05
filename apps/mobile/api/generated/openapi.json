@@ -3843,7 +3843,11 @@
                 "properties": {
                     "name": { "type": "string" },
                     "team": { "type": "string", "enum": ["red", "blue"] },
-                    "move": { "type": "string" }
+                    "move": { "type": "string" },
+                    "score": {
+                        "type": "string",
+                        "description": "the score right after it, e.g. \"2–0\""
+                    }
                 },
                 "required": ["name", "team", "move"]
             },
