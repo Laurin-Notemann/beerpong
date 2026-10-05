@@ -7,7 +7,6 @@ interface LocalSettingsStore {
     beerpongProMode: boolean;
     matchPhotos: boolean;
     themeId: string;
-    premiumVersion: boolean;
     showWallpaper: boolean;
     scopedPlayerPage: boolean;
     /** experimental redesign of the main screens (Experimental Features → New Design) */
@@ -23,7 +22,6 @@ interface LocalSettingsStore {
         toggleLiveMatches: () => void;
         toggleBeerpongProMode: () => void;
 
-        togglePremiumVersion: () => void;
         toggleMatchPhotos: () => void;
         setTheme: (themeId: string) => void;
         toggleShowWallpaper: () => void;
@@ -43,7 +41,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             rulesTab: false,
             tutorials: false,
             eloAlgorithm: false,
-            premiumVersion: false,
             matchPhotos: false,
             themeId: 'dark',
             showWallpaper: false,
@@ -63,12 +60,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 toggleBeerpongProMode: () => {
                     set(() => ({
                         beerpongProMode: !get().beerpongProMode,
-                    }));
-                },
-
-                togglePremiumVersion: () => {
-                    set(() => ({
-                        premiumVersion: !get().premiumVersion,
                     }));
                 },
                 toggleMatchPhotos: () => {
@@ -112,7 +103,6 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 liveMatches: state.liveMatches,
                 beerpongProMode: state.beerpongProMode,
 
-                premiumVersion: state.premiumVersion,
                 matchPhotos: state.matchPhotos,
                 themeId: state.themeId,
                 showWallpaper: state.showWallpaper,

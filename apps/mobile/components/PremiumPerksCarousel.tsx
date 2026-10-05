@@ -2,44 +2,45 @@ import { Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
-import Button from '@/components/Button';
+import { Icon, IconName } from '@/components/Icon';
 import { Swiper } from '@/components/Swiper';
 import { useTheme } from '@/theme';
 
 interface PremiumPerk {
     title: string;
+    icon: IconName;
     description: string;
 }
 
+/** Planned premium features. They remain available while store setup is in progress. */
 const perks: PremiumPerk[] = [
     {
-        title: 'Seasons\n',
+        title: 'Seasons',
+        icon: 'cached',
         description:
-            'Reset the leaderboard of a group but save the results using seasons! Do it every weekend, or after a vacation.',
+            'Start a fresh leaderboard whenever you like: every weekend, after a vacation. Past seasons stay saved.',
     },
     {
-        title: 'Profile Pictures, Group Wallpapers, and Team Photos',
+        title: 'Photos',
+        icon: 'image-multiple',
         description:
-            'Reset the leaderboard of a group but save the results using seasons! Do it every weekend, or after a vacation.',
+            'Profile pictures for every player, a wallpaper for the group and a photo of each team after the match.',
     },
     {
-        title: 'Beerpong Pro Mode\n',
+        title: 'Pro Mode',
+        icon: 'bullseye-arrow',
         description:
-            "Ever wanted to specifically track who scored which cup? No? Well, you'll be able to anyway using pro mode!",
+            'Track a match live, cup by cup, and see who scored which one.',
     },
     {
-        title: 'iOS Homescreen Widget\n',
+        title: 'Versus TV',
+        icon: 'television',
         description:
-            'Reset the leaderboard of a group but save the results using seasons! Do it every weekend, or after a vacation.',
-    },
-    {
-        title: 'Screencast your Leaderboard\n',
-        description:
-            'Reset the leaderboard of a group but save the results using seasons! Do it every weekend, or after a vacation.',
+            'Put the live match and the leaderboard on a TV for everyone at the party.',
     },
 ];
 
-const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
+const PremiumPerkCard = ({ title, icon, description }: PremiumPerk) => {
     const theme = useTheme();
 
     return (
@@ -70,14 +71,7 @@ const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
                 {title}
             </Text>
 
-            <View
-                style={{
-                    width: 192,
-                    height: 192,
-
-                    backgroundColor: '#fff',
-                }}
-            ></View>
+            <Icon name={icon} size={96} color={theme.color.premium} />
 
             <Text
                 style={{
@@ -95,23 +89,18 @@ const PremiumPerkCard = ({ title, description }: PremiumPerk) => {
     );
 };
 
+/** The perks, one card per page, with `children` (the buttons) below. */
 export const PremiumPerksCarousel = ({
-    onGetPremiumPress,
-    onSecondaryActionPress,
+    children,
 }: {
-    onGetPremiumPress: () => void;
-    onSecondaryActionPress: () => void;
+    children?: React.ReactNode;
 }) => {
     const theme = useTheme();
     const swiperProgress = useSharedValue(0);
 
     return (
-        <View
-            style={{
-                height: 512 + 8,
-            }}
-        >
-            <View style={{ height: 400 }}>
+        <View>
+            <View style={{ height: 320 }}>
                 <Swiper swiperProgress={swiperProgress}>
                     {perks.map((perk) => (
                         <ScrollView
@@ -122,10 +111,7 @@ export const PremiumPerksCarousel = ({
                                     theme.carousel.peekSize,
                             }}
                         >
-                            <PremiumPerkCard
-                                title={perk.title}
-                                description={perk.description}
-                            />
+                            <PremiumPerkCard {...perk} />
                         </ScrollView>
                     ))}
                 </Swiper>
@@ -139,18 +125,7 @@ export const PremiumPerksCarousel = ({
                     paddingTop: 16,
                 }}
             >
-                <Button
-                    variant="primary"
-                    size="large"
-                    title="Get Premium for 5€ / Year"
-                    onPress={onGetPremiumPress}
-                />
-                <Button
-                    variant="secondary"
-                    size="large"
-                    title="Check out our Website"
-                    onPress={onSecondaryActionPress}
-                />
+                {children}
             </View>
         </View>
     );

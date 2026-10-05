@@ -12,6 +12,7 @@ import {
 import { useModalStyles } from '@/lib/navigation/modalStyles';
 import { FloatingDockInsetContext, useInsets } from '@/lib/useInsets';
 import { useHomeScreenWidgets, usePushTokens } from '@/lib/widgets/useWidgets';
+import { usePremiumSync } from '@/lib/premium/usePremium';
 import {
     useEnsureGroupSelected,
     useGroupStore,
@@ -42,6 +43,8 @@ export default function MainLayout() {
     // Live Activities and widget updates to (iOS)
     useHomeScreenWidgets();
     usePushTokens();
+    // sends store purchases of premium to the API
+    usePremiumSync();
 
     const modalStyles = useModalStyles();
 

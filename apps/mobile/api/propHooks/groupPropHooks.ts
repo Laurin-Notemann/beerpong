@@ -98,7 +98,7 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
               id: data.data.id,
               groupCode: data.data.inviteCode!,
               groupName: data.data.name || 'Unknown Group',
-              hasPremium: false,
+              hasPremium: data.data.premium === true,
               pastSeasons: pastSeasons.length,
               onUploadWallpaperPress: () => void onUploadWallpaperPress(),
               onDeleteWallpaperPress: () => void onDeleteWallpaperPress(),

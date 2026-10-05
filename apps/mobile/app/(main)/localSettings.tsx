@@ -106,11 +106,6 @@ export default function Page() {
                                 tailIconType="next"
                                 onPress={() => nav.navigate('onboarding')}
                             />
-                            <MenuItem
-                                title="Has Premium"
-                                headIcon="dev-to"
-                                tailContent={<Switch value={false} />}
-                            />
                         </>
                     )}
                 </MenuSection>

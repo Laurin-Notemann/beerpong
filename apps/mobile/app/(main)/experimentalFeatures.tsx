@@ -13,8 +13,6 @@ export default function Page() {
     const {
         beerpongProMode,
         toggleBeerpongProMode,
-        premiumVersion,
-        togglePremiumVersion,
         showWallpaper,
         toggleShowWallpaper,
         newDesign,
@@ -65,15 +63,6 @@ export default function Page() {
                             <Switch
                                 value={beerpongProMode}
                                 onChange={toggleBeerpongProMode}
-                            />
-                        }
-                    />
-                    <MenuItem
-                        title="Premium Version"
-                        tailContent={
-                            <Switch
-                                value={premiumVersion}
-                                onChange={togglePremiumVersion}
                             />
                         }
                     />
