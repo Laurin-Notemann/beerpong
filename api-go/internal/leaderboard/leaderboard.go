@@ -208,8 +208,8 @@ func buildEntries(players []Player, keepStored bool) (map[string]*Entry, []strin
 		stats := FreshStats()
 		if keepStored {
 			stats = p.Stored
-			// every season starts at StartingElo, so the all-time Elo is the
-			// running season's
+			// every season starts at StartingElo; the all-time board replays
+			// all seasons for its Elo (allTimeElo in the API)
 			stats.Elo = StartingElo
 		}
 		stats.PlayerID = p.ID

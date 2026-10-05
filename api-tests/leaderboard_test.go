@@ -267,3 +267,34 @@ func TestLeaderboardProjection(t *testing.T) {
 	oneTeam := map[string]any{"teams": []any{leading["teams"].([]any)[0]}}
 	h.Fail(project(oneTeam), 400, "leaderboardInvalidProjection")
 }
+
+// A season board starts everyone at 1500; the all-time board replays every
+// season, so a player's rating carries over.
+func TestAllTimeEloCarriesAcrossSeasons(t *testing.T) {
+	h := New(t)
+	owner := h.NewUser()
+	g := h.NewGroup(owner, "Elo seasons", "a", "b")
+	win := func() {
+		h.OK(h.CreateMatch(owner, g, []Member{{"a", map[string]int{"Normal": 9, "Finish - Normal": 1}}}, []Member{{"b", nil}}))
+	}
+	eloOf := func(path, profile string) float64 {
+		res := h.OK(h.Do(Req{Method: "GET", Path: g.Path(path), Auth: owner.Bearer(), Skip: true}))
+		for _, e := range res.List("entries") {
+			if Get(e, "profileId") == profile {
+				return Get(e, "statistics", "elo").(float64)
+			}
+		}
+		h.Fatalf("no %s on %s", profile, path)
+		return 0
+	}
+
+	win()
+	h.StartSeason(g, "First")
+	win()
+
+	season := eloOf("/leaderboard?scope=season&seasonId="+g.SeasonID, g.Profiles["a"])
+	allTime := eloOf("/leaderboard?scope=all-time", g.Profiles["a"])
+	h.True(season > 1500, "a won this season: %v", season)
+	h.True(allTime > season, "a won both seasons, so all time is higher: %v vs %v", allTime, season)
+	h.True(eloOf("/leaderboard?scope=all-time", g.Profiles["b"]) < eloOf("/leaderboard?scope=season&seasonId="+g.SeasonID, g.Profiles["b"]), "b lost both")
+}

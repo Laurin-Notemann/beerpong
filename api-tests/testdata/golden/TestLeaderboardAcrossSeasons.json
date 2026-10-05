@@ -445,7 +445,7 @@
             "statistics": {
               "avgPointsPerMatch": 0,
               "avgTeamSize": 0,
-              "elo": 1500,
+              "elo": 1302.730423,
               "id": null,
               "matches": 0,
               "moves": 0,
@@ -477,7 +477,7 @@
             "statistics": {
               "avgPointsPerMatch": 3.666666667,
               "avgTeamSize": 1.333333333,
-              "elo": 1459.237621,
+              "elo": 1270.31486,
               "id": null,
               "matches": 3,
               "moves": 7,
@@ -509,7 +509,7 @@
             "statistics": {
               "avgPointsPerMatch": 4.5,
               "avgTeamSize": 1.5,
-              "elo": 1540.762379,
+              "elo": 1679.207308,
               "id": null,
               "matches": 2,
               "moves": 1,
@@ -541,7 +541,7 @@
             "statistics": {
               "avgPointsPerMatch": 7,
               "avgTeamSize": 1.5,
-              "elo": 1500,
+              "elo": 1560.247409,
               "id": null,
               "matches": 2,
               "moves": 9,
@@ -852,7 +852,7 @@
             "statistics": {
               "avgPointsPerMatch": 0,
               "avgTeamSize": 0,
-              "elo": 1500,
+              "elo": 1302.730423,
               "id": null,
               "matches": 0,
               "moves": 0,
@@ -884,7 +884,7 @@
             "statistics": {
               "avgPointsPerMatch": 3.666666667,
               "avgTeamSize": 1.333333333,
-              "elo": 1500,
+              "elo": 1270.31486,
               "id": null,
               "matches": 3,
               "moves": 7,
@@ -916,7 +916,7 @@
             "statistics": {
               "avgPointsPerMatch": 4.5,
               "avgTeamSize": 1.5,
-              "elo": 1500,
+              "elo": 1679.207308,
               "id": null,
               "matches": 2,
               "moves": 1,
@@ -948,7 +948,7 @@
             "statistics": {
               "avgPointsPerMatch": 7,
               "avgTeamSize": 1.5,
-              "elo": 1500,
+              "elo": 1560.247409,
               "id": null,
               "matches": 2,
               "moves": 9,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 
@@ -193,8 +194,53 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 			return board{}, internal(err)
 		}
 		b.numMatches += past
+
+		elo, res := s.allTimeElo(ctx, q, group, projected...)
+		if res != nil {
+			return board{}, res
+		}
+		for _, e := range b.active {
+			if rating, found := elo[deref(e.Player.ProfileID)]; found {
+				e.Stats.Elo = rating
+			}
+		}
 	}
 	return b, nil
+}
+
+// allTimeElo replays every match of the group, oldest first, so a player's
+// rating carries across seasons; a season board starts everyone at
+// StartingElo. Keyed by profile id. Projected matches belong to the running
+// season.
+func (s *Server) allTimeElo(ctx context.Context, q *db.Queries, group groupDTO, projected ...leaderboard.Match) (map[string]float64, response) {
+	seasons, err := q.SeasonsByGroup(ctx, &group.ID)
+	if err != nil {
+		return nil, internal(err)
+	}
+	all := leaderboard.Input{RuleMoves: map[string]leaderboard.RuleMove{}, ProfileOf: map[string]string{}}
+	for _, sn := range seasons {
+		var running []leaderboard.Match
+		if sn.ID == deref(group.ActiveSeasonID) {
+			running = projected
+		}
+		li, res := s.leaderboardInput(ctx, q, group, "season", false, sn.ID, nil, running...)
+		if res != nil {
+			return nil, res
+		}
+		all.Players = append(all.Players, li.in.Players...)
+		all.Matches = append(all.Matches, li.in.Matches...)
+		maps.Copy(all.RuleMoves, li.in.RuleMoves)
+		maps.Copy(all.ProfileOf, li.in.ProfileOf)
+	}
+	result, err := leaderboard.Compute(all)
+	if err != nil {
+		return nil, internal(err)
+	}
+	elo := map[string]float64{}
+	for _, e := range result.Entries {
+		elo[deref(e.Player.ProfileID)] = e.Stats.Elo
+	}
+	return elo, nil
 }
 
 // leaderboardInput is what a board is computed from.

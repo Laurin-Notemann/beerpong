@@ -18,7 +18,8 @@ import "math"
 //     belongs to every teammate and only counts in the result.
 //
 // Teams throw equally often and players take turns. Every season starts at
-// StartingElo. DefaultElo was tuned on Sackverein's games with beerpong-var
+// StartingElo; the all-time board replays every season from it once.
+// DefaultElo was tuned on Sackverein's games with beerpong-var
 // (the Elo simulator); changing it changes every rating the next time a
 // leaderboard is computed.
 const (

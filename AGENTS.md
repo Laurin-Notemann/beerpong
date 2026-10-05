@@ -83,7 +83,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 
 ## Testing the Elo
 
-The Elo lives in `api-go/internal/leaderboard/elo.go`; its comment explains the model, and `DefaultElo` holds the weights. Ratings aren't stored per game: every leaderboard recomputes them from the season's matches, so changing a weight changes every rating at once. Check a change three ways:
+The Elo lives in `api-go/internal/leaderboard/elo.go`; its comment explains the model, and `DefaultElo` holds the weights. Ratings aren't stored per game: every leaderboard recomputes them from the season's matches (all time: every season's, in order), so changing a weight changes every rating at once. Check a change three ways:
 
 - `cd api-go && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
 - beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `beerpong-var/` only shows it. The weights are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
