@@ -26,7 +26,6 @@ const widget = (players: Player[], minMatchesToQualify = 0) =>
         players,
         rankingAlgorithm: 'ELO',
         minMatchesToQualify,
-        live: [],
     });
 
 describe('toLeaderboardWidget', () => {

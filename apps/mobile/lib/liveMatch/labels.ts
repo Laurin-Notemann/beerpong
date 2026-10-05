@@ -14,3 +14,36 @@ export function finishHint(finishes: number) {
     if (finishes > 1) return 'Only one finish can count. Remove the extra one';
     return undefined;
 }
+
+/** a cup hit as the match's list of moves shows it: who, on which team, with which move */
+export interface MoveLogEntry {
+    playerId: string;
+    /** the scorer's team */
+    team: 'red' | 'blue';
+    /** e.g. "Bouncer", or "Normal · Finish - Ring of fire" with the finish it ended the match with */
+    move: string;
+}
+
+/** a live match's cup hits, newest first, labelled with the rule's move names */
+export function moveLog(
+    cupHits: {
+        team: 'red' | 'blue';
+        playerId: string;
+        moveId: string;
+        finishMoveId?: string;
+    }[],
+    moves: { id?: string; name?: string | null }[]
+): MoveLogEntry[] {
+    const name = (id: string) => moves.find((i) => i.id === id)?.name || 'Hit';
+
+    return cupHits
+        .map((hit) => ({
+            playerId: hit.playerId,
+            // the hit team is the one whose cups went down; the scorer plays against it
+            team: hit.team === 'red' ? ('blue' as const) : ('red' as const),
+            move: hit.finishMoveId
+                ? `${name(hit.moveId)} · ${name(hit.finishMoveId)}`
+                : name(hit.moveId),
+        }))
+        .reverse();
+}

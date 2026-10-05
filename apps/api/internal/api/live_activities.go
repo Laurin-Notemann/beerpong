@@ -1,16 +1,19 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
+	"github.com/laurin-notemann/beerpong/api-go/internal/leaderboard"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
 	"github.com/laurin-notemann/beerpong/api-go/internal/push"
 )
@@ -30,19 +33,94 @@ const (
 	liveActivityAttributes = "LiveActivityAttributes"
 	// how long a finished match's score stays on the Lock Screen
 	finishedActivityDismissal = 15 * time.Minute
-	// the most matches a widget push carries; the widget shows fewer
+	// the most matches a widget push carries, and moves per match; a silent
+	// push can be at most 4 KB
 	maxWidgetMatches = 4
+	maxWidgetMoves   = 6
+	maxPushBytes     = 4000
 	maxNamesLength   = 200
 	maxScore         = 1000
 	maxTokenLength   = 512
 )
 
-// liveScoreDTO is a live match's score as the app shows it.
+// liveScoreDTO is a live match's score as the app shows it, and what the
+// "Live matches" widget shows with it.
 type liveScoreDTO struct {
 	BlueNames string `json:"blueNames"`
 	BlueScore int32  `json:"blueScore"`
 	RedNames  string `json:"redNames"`
 	RedScore  int32  `json:"redScore"`
+	// the teams as the match would be entered now, for the players' live Elo
+	Teams   json.RawMessage `json:"teams,omitempty"`
+	Players []livePlayerDTO `json:"players,omitempty"`
+	// the cup hits so far, newest first
+	Moves []liveMoveDTO `json:"moves,omitempty"`
+}
+
+type livePlayerDTO struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Team string `json:"team"`
+}
+
+type liveMoveDTO struct {
+	Name string `json:"name"`
+	Team string `json:"team"`
+	Move string `json:"move"`
+}
+
+const (
+	maxLivePlayers = 20
+	maxLiveMoves   = 10
+	maxLiveText    = 100
+)
+
+// decodeJSONNumbers is json.Unmarshal into any, with numbers kept as json.Number
+// like readJSON, so the request binders read them.
+func decodeJSONNumbers(raw []byte) (any, error) {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	var v any
+	return v, dec.Decode(&v)
+}
+
+// liveDetails reads a display's optional teams, players and moves. ok is false
+// if one is there but malformed.
+func liveDetails(o object, now time.Time) (teams json.RawMessage, players []livePlayerDTO, moves []liveMoveDTO, valid bool) {
+	if raw := o["teams"]; raw != nil {
+		if _, err := parseProjectedMatch(map[string]any{"teams": raw}, "display", now); err != nil {
+			return nil, nil, nil, false
+		}
+		var err error
+		if teams, err = json.Marshal(raw); err != nil {
+			return nil, nil, nil, false
+		}
+	}
+	text := func(s string) bool { return len(s) <= maxLiveText }
+	team := func(s string) bool { return s == "red" || s == "blue" }
+	if raw := o["players"]; raw != nil {
+		b, _ := json.Marshal(raw)
+		if json.Unmarshal(b, &players) != nil || len(players) > maxLivePlayers {
+			return nil, nil, nil, false
+		}
+		for _, p := range players {
+			if !isUUID(p.ID) || !text(p.Name) || !team(p.Team) {
+				return nil, nil, nil, false
+			}
+		}
+	}
+	if raw := o["moves"]; raw != nil {
+		b, _ := json.Marshal(raw)
+		if json.Unmarshal(b, &moves) != nil || len(moves) > maxLiveMoves {
+			return nil, nil, nil, false
+		}
+		for _, m := range moves {
+			if !text(m.Name) || !text(m.Move) || !team(m.Team) {
+				return nil, nil, nil, false
+			}
+		}
+	}
+	return teams, players, moves, true
 }
 
 type liveScoreResultDTO struct {
@@ -128,7 +206,14 @@ func (s *Server) putLiveMatchDisplay(r *request) response {
 		*blueScore < 0 || *blueScore > maxScore || *redScore < 0 || *redScore > maxScore {
 		return fail(errLiveMatchInvalidDisplay)
 	}
-	score, err := json.Marshal(liveScoreDTO{BlueNames: *blueNames, BlueScore: *blueScore, RedNames: *redNames, RedScore: *redScore})
+	teams, players, moves, valid := liveDetails(o, s.now())
+	if !valid {
+		return fail(errLiveMatchInvalidDisplay)
+	}
+	score, err := json.Marshal(liveScoreDTO{
+		BlueNames: *blueNames, BlueScore: *blueScore, RedNames: *redNames, RedScore: *redScore,
+		Teams: teams, Players: players, Moves: moves,
+	})
 	if err != nil {
 		return internal(err)
 	}
@@ -355,36 +440,81 @@ func liveMatchURL(lm db.LiveMatch) string {
 	return "versus://liveMatch?" + url.Values{"id": {lm.ID}, "groupId": {lm.GroupID}}.Encode()
 }
 
-// pushWidgets sends the group's phones the scores of its matches running now.
-// It's a silent push: iOS wakes the app for a moment to update the widget, as
-// often as it allows.
+// pushWidgets sends the group's phones the scores of its matches running now,
+// with their players' live Elo and their moves. It's a silent push: iOS wakes
+// the app for a moment to update the "Live matches" widget, as often as it
+// allows.
 func (s *Server) pushWidgets(ctx context.Context, groupID string, tokens []db.GroupPushTokensRow) error {
 	rows, err := s.q.InProgressLiveMatchesByGroup(ctx, groupID)
 	if err != nil {
 		return err
 	}
-	matches := []map[string]any{}
+	type running struct {
+		lm    db.LiveMatch
+		score liveScoreDTO
+	}
+	var live []running
 	for _, row := range rows {
-		lm := row.LiveMatch
 		var score liveScoreDTO
-		if lm.Display == nil || json.Unmarshal([]byte(*lm.Display), &score) != nil {
+		if row.LiveMatch.Display == nil || json.Unmarshal([]byte(*row.LiveMatch.Display), &score) != nil {
 			continue
 		}
-		matches = append(matches, map[string]any{
-			"id":        lm.ID,
-			"blueNames": score.BlueNames,
-			"blueScore": score.BlueScore,
-			"redNames":  score.RedNames,
-			"redScore":  score.RedScore,
-			"startedAt": lm.StartedAt.UnixMilli(),
-		})
-		if len(matches) == maxWidgetMatches {
+		live = append(live, running{row.LiveMatch, score})
+		if len(live) == maxWidgetMatches {
 			break
 		}
+	}
+
+	// the live Elo: the season's ratings as if the running matches ended now,
+	// like the TV's leaderboard
+	var projected []projectedLive
+	for _, m := range live {
+		projected = append(projected, projectedLive{seasonID: m.lm.SeasonID, teams: m.score.Teams})
+	}
+	elo, err := s.liveEloChanges(ctx, groupID, projected)
+	if err != nil {
+		// the scores still go out, without the Elo
+		s.log.WarnContext(ctx, "live Elo for the widget failed", "groupId", groupID, "err", err)
+		observability.CaptureError(ctx, err)
+	}
+
+	matches := []map[string]any{}
+	for _, m := range live {
+		players := []map[string]any{}
+		for _, p := range m.score.Players {
+			player := map[string]any{"name": p.Name, "team": p.Team}
+			if change, found := elo[p.ID]; found {
+				player["elo"] = int(math.Round(change))
+			}
+			players = append(players, player)
+		}
+		moves := m.score.Moves
+		if len(moves) > maxWidgetMoves {
+			moves = moves[:maxWidgetMoves]
+		}
+		matches = append(matches, map[string]any{
+			"id":        m.lm.ID,
+			"blueNames": m.score.BlueNames,
+			"blueScore": m.score.BlueScore,
+			"redNames":  m.score.RedNames,
+			"redScore":  m.score.RedScore,
+			"startedAt": m.lm.StartedAt.UnixMilli(),
+			"players":   players,
+			"moves":     moves,
+		})
 	}
 	payload := map[string]any{
 		"aps":        map[string]any{"content-available": 1},
 		"liveScores": map[string]any{"groupId": groupID, "matches": matches},
+	}
+	// APNs refuses a payload over 4 KB: without the moves, then without the players
+	for _, details := range []string{"moves", "players"} {
+		if b, _ := json.Marshal(payload); len(b) <= maxPushBytes {
+			break
+		}
+		for _, m := range matches {
+			delete(m, details)
+		}
 	}
 
 	var errs []error
@@ -399,4 +529,75 @@ func (s *Server) pushWidgets(ctx context.Context, groupID string, tokens []db.Gr
 		errs = append(errs, err)
 	}
 	return errors.Join(errs...)
+}
+
+type projectedLive struct {
+	seasonID string
+	teams    json.RawMessage
+}
+
+// liveEloChanges is how much each player's season Elo would change if the
+// group's running matches ended now (by player id): the leaderboard projection
+// the TV shows. Matches of another season than the running one, or without
+// teams, don't count.
+func (s *Server) liveEloChanges(ctx context.Context, groupID string, live []projectedLive) (map[string]float64, error) {
+	g, err := s.q.GetGroup(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	group := toGroupDTO(g)
+	if group.ActiveSeasonID == nil {
+		return nil, nil
+	}
+	var matches []leaderboard.Match
+	for i, m := range live {
+		if m.seasonID != *group.ActiveSeasonID || len(m.teams) == 0 {
+			continue
+		}
+		teams, err := decodeJSONNumbers(m.teams)
+		if err != nil {
+			return nil, err
+		}
+		match, err := parseProjectedMatch(map[string]any{"teams": teams}, fmt.Sprintf("projected-%d", i), s.now())
+		if err != nil {
+			return nil, err
+		}
+		matches = append(matches, match)
+	}
+	if len(matches) == 0 {
+		return nil, nil
+	}
+	board := func(projected ...leaderboard.Match) (map[string]float64, error) {
+		b, res := s.leaderboardFor(ctx, s.q, group, "season", false, *group.ActiveSeasonID, nil, projected...)
+		if res != nil {
+			return nil, fmt.Errorf("leaderboard for the live Elo: %v", res)
+		}
+		out := map[string]float64{}
+		for _, e := range b.active {
+			out[e.Player.ID] = e.Stats.Elo
+		}
+		return out, nil
+	}
+	before, err := board()
+	if err != nil {
+		return nil, err
+	}
+	after, err := board(matches...)
+	if err != nil {
+		return nil, err
+	}
+	changes := map[string]float64{}
+	for _, m := range matches {
+		for _, member := range m.Members {
+			old, found := before[member.PlayerID]
+			if !found {
+				// a player's first match starts them at the starting Elo
+				old = leaderboard.StartingElo
+			}
+			if now, found := after[member.PlayerID]; found {
+				changes[member.PlayerID] = now - old
+			}
+		}
+	}
+	return changes, nil
 }

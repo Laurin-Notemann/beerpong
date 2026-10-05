@@ -3,6 +3,7 @@
 // (no React Native imports in their import graph), or the TV stops building.
 import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { type CupPosition, type CupTeam, findHit } from '@/lib/cupHits';
+import { moveLog } from '@/lib/liveMatch/labels';
 import { teamScore, toTeamCreateDtos } from '@/lib/liveMatch/log';
 import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
 import { toLiveOps } from '@/lib/liveMatch/types';
@@ -46,5 +47,7 @@ export function foldLiveMatch(
     });
     // as a match would be entered right now, for the leaderboard projection
     const teams = toTeamCreateDtos(state);
-    return { blue: team('blue'), red: team('red'), teams };
+    // the cup hits so far, newest first, as the phones' widget lists them
+    const moves = moveLog(state.cupHits, ruleMoves);
+    return { blue: team('blue'), red: team('red'), teams, moves };
 }

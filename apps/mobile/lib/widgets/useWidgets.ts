@@ -16,18 +16,24 @@ import {
 } from '@/api/liveMatch/useGroupLiveMatches';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
+import { moveLog } from '@/lib/liveMatch/labels';
+import { toTeamCreateDtos } from '@/lib/liveMatch/log';
+import { leaderboardWidget } from '@/lib/widgets/LeaderboardWidget';
 import {
-    leaderboardWidget,
-    showOnWidget,
-} from '@/lib/widgets/LeaderboardWidget';
+    liveMatchesWidget,
+    showLiveMatches,
+} from '@/lib/widgets/LiveMatchesWidget';
 import {
     emptyLeaderboardWidget,
     type LeaderboardWidgetProps,
+    type LiveMatchesWidgetProps,
     type LiveScore,
+    mergeLiveMatches,
     toLeaderboardWidget,
     toLiveScore,
-    type WidgetLiveMatch,
+    type WidgetMove,
 } from '@/lib/widgets/props';
+import type { Components } from '@/openapi/openapi';
 import { ScopedLogger } from '@/utils/logging';
 import { useSelectedGroupHydrated } from '@/zustand/group/stateGroupStore';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
@@ -40,7 +46,14 @@ interface LiveScoreOf {
     /** the seq the score is at; undefined while this phone isn't in sync with the server */
     seq?: number;
     score: LiveScore;
+    /** for the "Live matches" widget: the API computes the players' live Elo from the teams */
+    teams: Components.Schemas.TeamCreateDto[];
+    players: { id: string; name: string; team: 'red' | 'blue' }[];
+    moves: WidgetMove[];
 }
+
+/** the most moves a report carries (the API takes 10, the widget shows fewer) */
+const REPORTED_MOVES = 10;
 
 /**
  * The group's live matches of the active season with their scores as this phone computes them,
@@ -55,16 +68,44 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
         if (!players || !moves) return [];
         return matches
             .filter((i) => i.seasonId === seasonId)
-            .map((i) => ({
-                id: i.id,
-                startedAt: i.startedAt,
-                seq: i.syncedSeq,
-                score: toLiveScore(liveMatchTeams(i.state, players, moves)),
-            }));
+            .map((i) => {
+                const teams = liveMatchTeams(i.state, players, moves);
+                const people = [
+                    ...teams.blue.players.map((p) => ({
+                        ...p,
+                        team: 'blue' as const,
+                    })),
+                    ...teams.red.players.map((p) => ({
+                        ...p,
+                        team: 'red' as const,
+                    })),
+                ];
+                const nameOf = (id: string) =>
+                    people.find((p) => p.id === id)?.name ?? '';
+                return {
+                    id: i.id,
+                    startedAt: i.startedAt,
+                    seq: i.syncedSeq,
+                    score: toLiveScore(teams),
+                    teams: toTeamCreateDtos(i.state),
+                    players: people.map(({ id, name, team }) => ({
+                        id,
+                        name,
+                        team,
+                    })),
+                    moves: moveLog(i.state.cupHits, moves)
+                        .slice(0, REPORTED_MOVES)
+                        .map((m) => ({
+                            name: nameOf(m.playerId),
+                            team: m.team,
+                            move: m.move,
+                        })),
+                };
+            });
     }, [matches, players, moves, seasonId]);
 }
 
-/** by live match: what this phone reported last, as `${seq} ${score}` */
+/** by live match: what this phone reported last */
 const reported = new Map<string, string>();
 
 /**
@@ -76,13 +117,14 @@ function useLiveScoreReports(groupId: ApiId | null, scores: LiveScoreOf[]) {
 
     useEffect(() => {
         if (!groupId) return;
-        for (const { id, seq, score } of scores) {
+        for (const { id, seq, score, teams, players, moves } of scores) {
             if (seq === undefined) continue;
-            const key = `${seq} ${JSON.stringify(score)}`;
+            const body = { seq, ...score, teams, players, moves };
+            const key = JSON.stringify(body);
             if (reported.get(id) === key) continue;
             reported.set(id, key);
             api.then((client) =>
-                client.setLiveMatchDisplay({ groupId, id }, { seq, ...score })
+                client.setLiveMatchDisplay({ groupId, id }, body)
             ).catch((err) => {
                 // the next change, or the next time this phone is in sync, tries again
                 reported.delete(id);
@@ -92,14 +134,55 @@ function useLiveScoreReports(groupId: ApiId | null, scores: LiveScoreOf[]) {
     }, [api, groupId, scores]);
 }
 
-let writtenWidget: string | undefined;
+let writtenLeaderboard: string | undefined;
+let writtenLiveMatches: string | undefined;
+
+/** writes props to a widget if they changed: reloading a widget is cheap, but not free */
+function useWidgetProps(
+    props: object | undefined,
+    written: () => string | undefined,
+    write: (json: string) => void
+) {
+    const json = props ? JSON.stringify(props) : undefined;
+    useEffect(() => {
+        if (!json || json === written()) return;
+        try {
+            write(json);
+        } catch (err) {
+            logger.error('failed to update a widget', err);
+        }
+    }, [json, written, write]);
+}
+
+const writeLeaderboard = (json: string) => {
+    leaderboardWidget?.updateSnapshot(JSON.parse(json));
+    writtenLeaderboard = json;
+};
+const writeLiveMatches = (json: string) => {
+    writtenLiveMatches = json;
+    const next = JSON.parse(json) as LiveMatchesWidgetProps;
+    liveMatchesWidget
+        ?.getTimeline()
+        .then((timeline) =>
+            showLiveMatches(
+                mergeLiveMatches(
+                    next,
+                    timeline[0]?.props as LiveMatchesWidgetProps | undefined
+                )
+            )
+        )
+        .catch((err) => {
+            writtenLiveMatches = undefined;
+            logger.error('failed to update the live matches widget', err);
+        });
+};
 
 /**
- * Reports this phone's live scores, and keeps the home screen widget on the selected group: its
- * matches running now, else its season leaderboard. While the app isn't running, the API's
- * silent pushes update the widget's matches (`liveScoresTask`).
+ * Reports this phone's live scores, and keeps both home screen widgets on the selected group:
+ * "Leaderboard" on its season leaderboard, "Live matches" on its matches running now. While the
+ * app isn't running, the API's silent pushes update the live matches (`liveScoresTask`).
  */
-export function useHomeScreenWidget() {
+export function useHomeScreenWidgets() {
     const hydrated = useSelectedGroupHydrated();
     const { groupId, seasonId, group, activeSeason } = useGroup();
     const query = useGetLeaderboardQuery(
@@ -123,25 +206,35 @@ export function useHomeScreenWidget() {
             rankingAlgorithm: activeSeason.seasonSettings?.rankingAlgorithm,
             minMatchesToQualify:
                 activeSeason.seasonSettings?.minMatchesToQualify ?? 0,
-            live: scores.map((i): WidgetLiveMatch => ({
+        });
+    }, [groupId, group, activeSeason, entries]);
+
+    const liveProps = useMemo<LiveMatchesWidgetProps | undefined>(() => {
+        if (!groupId) return { group: '', matches: [] };
+        if (!group?.data?.name) return;
+
+        return {
+            group: group.data.name,
+            matches: scores.map((i) => ({
                 id: i.id,
                 startedAt: Date.parse(i.startedAt) || Date.now(),
                 ...i.score,
+                players: i.players.map(({ name, team }) => ({ name, team })),
+                moves: i.moves,
             })),
-        });
-    }, [groupId, group, activeSeason, entries, scores]);
+        };
+    }, [groupId, group, scores]);
 
-    const json = hydrated && props ? JSON.stringify(props) : undefined;
-    useEffect(() => {
-        // reloading a widget is cheap while the app is open, but only reload it on a change
-        if (!leaderboardWidget || !json || json === writtenWidget) return;
-        try {
-            showOnWidget(JSON.parse(json));
-            writtenWidget = json;
-        } catch (err) {
-            logger.error('failed to update the widget', err);
-        }
-    }, [json]);
+    useWidgetProps(
+        hydrated && leaderboardWidget ? props : undefined,
+        () => writtenLeaderboard,
+        writeLeaderboard
+    );
+    useWidgetProps(
+        hydrated && liveMatchesWidget ? liveProps : undefined,
+        () => writtenLiveMatches,
+        writeLiveMatches
+    );
 }
 
 // Live Activities follow a broadcast channel per live match, which needs iOS 18

@@ -24,8 +24,6 @@ export interface LeaderboardWidgetRow {
 export interface LeaderboardWidgetProps {
     /** empty while no group is selected */
     group: string;
-    /** the group's matches running now; the widget shows them instead of the leaderboard */
-    live: WidgetLiveMatch[];
     season: string;
     /** what the value column is, e.g. "Elo" */
     metric: string;
@@ -34,7 +32,6 @@ export interface LeaderboardWidgetProps {
 
 export const emptyLeaderboardWidget: LeaderboardWidgetProps = {
     group: '',
-    live: [],
     season: '',
     metric: '',
     rows: [],
@@ -47,14 +44,12 @@ export function toLeaderboardWidget({
     players,
     rankingAlgorithm,
     minMatchesToQualify,
-    live,
 }: {
     group: string;
     season: string;
     players: Player[];
     rankingAlgorithm: RankingAlgorithm | null | undefined;
     minMatchesToQualify: number;
-    live: WidgetLiveMatch[];
 }): LeaderboardWidgetProps {
     const algo = getRankingAlgorithm(rankingAlgorithm);
     const ranked = rankPlayers(
@@ -66,7 +61,6 @@ export function toLeaderboardWidget({
 
     return {
         group,
-        live,
         season,
         metric: algo.shortName,
         rows: ranked
@@ -110,11 +104,61 @@ export function toLiveScore({
     };
 }
 
+export interface WidgetPlayer {
+    name: string;
+    team: 'red' | 'blue';
+    /** how much their season Elo changes if the match ends now; only the API's pushes have it */
+    elo?: number;
+}
+
+export interface WidgetMove {
+    name: string;
+    team: 'red' | 'blue';
+    move: string;
+}
+
 /** a match running now, on the widget */
 export interface WidgetLiveMatch extends LiveScore {
     id: string;
     /** epoch ms */
     startedAt: number;
+    players?: WidgetPlayer[];
+    /** newest first */
+    moves?: WidgetMove[];
+}
+
+export interface LiveMatchesWidgetProps {
+    /** empty while no group is selected */
+    group: string;
+    matches: WidgetLiveMatch[];
+    /** the match it shows; its button moves on to the next one */
+    selectedId?: string;
+}
+
+/**
+ * New props for the widget, keeping what only the widget knows (the match picked with its button)
+ * and what only the API's pushes have (the Elo), for the matches and players still there.
+ */
+export function mergeLiveMatches(
+    next: LiveMatchesWidgetProps,
+    previous: LiveMatchesWidgetProps | undefined
+): LiveMatchesWidgetProps {
+    const elo = new Map(
+        (previous?.matches ?? []).flatMap((m) =>
+            (m.players ?? []).map((p) => [`${m.id} ${p.name}`, p.elo] as const)
+        )
+    );
+    return {
+        ...next,
+        selectedId: previous?.selectedId,
+        matches: next.matches.map((m) => ({
+            ...m,
+            players: m.players?.map((p) => ({
+                ...p,
+                elo: p.elo ?? elo.get(`${m.id} ${p.name}`),
+            })),
+        })),
+    };
 }
 
 /** what the API pushes to a Live Activity (`activityPayload` in apps/api) */
@@ -134,14 +178,35 @@ export function liveScoresOf(
     if (typeof value?.groupId !== 'string' || !Array.isArray(value.matches)) {
         return;
     }
-    const matches = value.matches.filter(
-        (i): i is WidgetLiveMatch =>
-            typeof i?.id === 'string' &&
-            typeof i.blueNames === 'string' &&
-            typeof i.redNames === 'string' &&
-            typeof i.blueScore === 'number' &&
-            typeof i.redScore === 'number' &&
-            typeof i.startedAt === 'number'
-    );
+    const isTeam = (team: unknown) => team === 'red' || team === 'blue';
+    const matches = value.matches
+        .filter(
+            (i): i is WidgetLiveMatch =>
+                typeof i?.id === 'string' &&
+                typeof i.blueNames === 'string' &&
+                typeof i.redNames === 'string' &&
+                typeof i.blueScore === 'number' &&
+                typeof i.redScore === 'number' &&
+                typeof i.startedAt === 'number'
+        )
+        .map((i) => ({
+            ...i,
+            players: Array.isArray(i.players)
+                ? i.players.filter(
+                      (p): p is WidgetPlayer =>
+                          typeof p?.name === 'string' &&
+                          isTeam(p.team) &&
+                          (p.elo === undefined || typeof p.elo === 'number')
+                  )
+                : undefined,
+            moves: Array.isArray(i.moves)
+                ? i.moves.filter(
+                      (m): m is WidgetMove =>
+                          typeof m?.name === 'string' &&
+                          isTeam(m.team) &&
+                          typeof m.move === 'string'
+                  )
+                : undefined,
+        }));
     return { groupId: value.groupId, matches };
 }

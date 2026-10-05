@@ -68,9 +68,21 @@
                     "frequentUpdates": true,
                     "widgets": [
                         {
+                            "name": "LiveMatchesWidget",
+                            "displayName": "Live matches",
+                            "description": "The scores of your group's matches running now",
+                            "ios": {
+                                "supportedFamilies": [
+                                    "systemSmall",
+                                    "systemMedium",
+                                    "systemLarge"
+                                ]
+                            }
+                        },
+                        {
                             "name": "LeaderboardWidget",
-                            "displayName": "Versus",
-                            "description": "Your group's live matches, and its leaderboard",
+                            "displayName": "Leaderboard",
+                            "description": "Your group's season leaderboard",
                             "ios": {
                                 "supportedFamilies": [
                                     "systemSmall",

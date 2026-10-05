@@ -4,10 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import {
-    leaderboardWidget,
-    showOnWidget,
-} from '@/lib/widgets/LeaderboardWidget';
-import { type LeaderboardWidgetProps, liveScoresOf } from '@/lib/widgets/props';
+    liveMatchesWidget,
+    showLiveMatches,
+} from '@/lib/widgets/LiveMatchesWidget';
+import {
+    type LiveMatchesWidgetProps,
+    liveScoresOf,
+    mergeLiveMatches,
+} from '@/lib/widgets/props';
 import { ScopedLogger } from '@/utils/logging';
 
 // The API's silent push with a group's live scores (`pushWidgets` in apps/api). iOS wakes the
@@ -28,21 +32,26 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(
     TASK,
     async ({ data }) => {
         const scores = liveScoresOf('data' in data ? data.data : undefined);
-        if (!scores || !leaderboardWidget) {
+        if (!scores || !liveMatchesWidget) {
             return Notifications.BackgroundNotificationTaskResult.NoData;
         }
         try {
             if (scores.groupId !== (await selectedGroupId())) {
                 return Notifications.BackgroundNotificationTaskResult.NoData;
             }
-            // the rest (leaderboard, names) stays as the app left it
-            const timeline = await leaderboardWidget.getTimeline();
+            // the group's name stays as the app left it
+            const timeline = await liveMatchesWidget.getTimeline();
             const props = timeline[0]?.props as
-                LeaderboardWidgetProps | undefined;
+                LiveMatchesWidgetProps | undefined;
             if (!props?.group) {
                 return Notifications.BackgroundNotificationTaskResult.NoData;
             }
-            showOnWidget({ ...props, live: scores.matches });
+            showLiveMatches(
+                mergeLiveMatches(
+                    { group: props.group, matches: scores.matches },
+                    props
+                )
+            );
             return Notifications.BackgroundNotificationTaskResult.NewData;
         } catch (err) {
             logger.error('failed to update the widget from a push', err);

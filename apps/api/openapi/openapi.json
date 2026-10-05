@@ -3800,9 +3800,42 @@
                     "blueNames": { "type": "string" },
                     "blueScore": { "type": "integer", "format": "int32" },
                     "redNames": { "type": "string" },
-                    "redScore": { "type": "integer", "format": "int32" }
+                    "redScore": { "type": "integer", "format": "int32" },
+                    "teams": {
+                        "type": "array",
+                        "description": "[blue, red] as the match would be entered now, for the players' live Elo on the widget",
+                        "items": { "$ref": "#/components/schemas/TeamCreateDto" }
+                    },
+                    "players": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/LivePlayerDto" }
+                    },
+                    "moves": {
+                        "type": "array",
+                        "description": "the cup hits so far, newest first (at most 10)",
+                        "items": { "$ref": "#/components/schemas/LiveMoveDto" }
+                    }
                 },
                 "required": ["seq", "blueNames", "blueScore", "redNames", "redScore"]
+            },
+            "LivePlayerDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "team": { "type": "string", "enum": ["red", "blue"] }
+                },
+                "required": ["id", "name", "team"]
+            },
+            "LiveMoveDto": {
+                "type": "object",
+                "description": "a cup hit: who, on which team, with which move",
+                "properties": {
+                    "name": { "type": "string" },
+                    "team": { "type": "string", "enum": ["red", "blue"] },
+                    "move": { "type": "string" }
+                },
+                "required": ["name", "team", "move"]
             },
             "LiveMatchDisplayResultDto": {
                 "type": "object",
