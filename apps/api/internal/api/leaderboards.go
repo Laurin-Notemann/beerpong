@@ -216,18 +216,14 @@ func (s *Server) allTimeBoard(ctx context.Context, q *db.Queries, group groupDTO
 	if err != nil {
 		return board{}, internal(err)
 	}
+	inputs, err := s.groupInputs(ctx, q, group, seasons, projected)
+	if err != nil {
+		return board{}, internal(err)
+	}
 	all := leaderboard.Input{RuleMoves: map[string]leaderboard.RuleMove{}, ProfileOf: map[string]string{}}
 	b := board{startedAt: group.CreatedAt, seasons: map[string]seasonDTO{}}
 	onSeasonBoard := map[string]bool{} // by profile
-	for _, sn := range seasons {
-		var running []leaderboard.Match
-		if sn.ID == *group.ActiveSeasonID {
-			running = projected
-		}
-		li, res := s.leaderboardInput(ctx, q, group, "season", false, sn.ID, nil, running...)
-		if res != nil {
-			return board{}, res
-		}
+	for _, li := range inputs {
 		all.Players = append(all.Players, li.in.Players...)
 		all.Matches = append(all.Matches, li.in.Matches...)
 		maps.Copy(all.RuleMoves, li.in.RuleMoves)
@@ -312,66 +308,146 @@ func (s *Server) leaderboardInput(ctx context.Context, q *db.Queries, group grou
 		return leaderboardInput{}, fail(errLeaderboardScopeNotFound)
 	}
 
-	full, err := s.loadFullMatches(ctx, q, matches)
+	inputs, err := s.leaderboardInputs(ctx, q, keepStored, []seasonRows{{players: players, matches: matches, projected: projected, startedAt: startedAt}})
 	if err != nil {
 		return leaderboardInput{}, internal(err)
 	}
-	in := leaderboard.Input{
-		KeepStoredStats: keepStored,
-		RuleMoves:       map[string]leaderboard.RuleMove{},
-		ProfileOf:       map[string]string{},
+	return inputs[0], nil
+}
+
+// groupInputs is leaderboardInput("season") for each of seasons, all
+// seasons of the group, loaded together: a board over every season (all
+// time, the Elo simulation) costs as many queries as one season's. projected
+// matches count in the running season.
+func (s *Server) groupInputs(ctx context.Context, q *db.Queries, group groupDTO, seasons []db.SeasonsByGroupRow, projected []leaderboard.Match) ([]leaderboardInput, error) {
+	matches, err := q.MatchesByGroup(ctx, &group.ID)
+	if err != nil {
+		return nil, err
 	}
-	seasons := map[string]seasonDTO{}
-	for _, p := range players {
-		in.Players = append(in.Players, p.player())
-		if _, seen := seasons[p.SeasonID]; !seen {
-			seasons[p.SeasonID] = p.season()
+	players, err := q.PlayersWithStatsInGroup(ctx, &group.ID)
+	if err != nil {
+		return nil, err
+	}
+	parts := make([]seasonRows, len(seasons))
+	bySeason := map[string]*seasonRows{}
+	for i, sn := range seasons {
+		parts[i].startedAt = sn.StartDate
+		if group.ActiveSeasonID != nil && sn.ID == *group.ActiveSeasonID {
+			parts[i].projected = projected
+		}
+		bySeason[sn.ID] = &parts[i]
+	}
+	for _, m := range matches {
+		if p := bySeason[deref(m.SeasonID)]; p != nil {
+			p.matches = append(p.matches, m)
 		}
 	}
-	ruleMoves := map[string]db.RuleMove{}
+	for _, row := range players {
+		if p := bySeason[row.SeasonID]; p != nil {
+			p.players = append(p.players, playerRow(row))
+		}
+	}
+	return s.leaderboardInputs(ctx, q, false, parts)
+}
+
+// seasonRows is one season's players and matches, in database order, and the
+// projected matches that count after them.
+type seasonRows struct {
+	players   []playerRow
+	matches   []db.Match
+	projected []leaderboard.Match
+	startedAt *time.Time
+}
+
+// leaderboardInputs turns each season's rows into a board's input. It loads
+// the matches' teams, members and moves, their rule moves and the players'
+// profiles with one query each for all seasons.
+func (s *Server) leaderboardInputs(ctx context.Context, q *db.Queries, keepStored bool, parts []seasonRows) ([]leaderboardInput, error) {
+	var matches []db.Match
+	for _, p := range parts {
+		matches = append(matches, p.matches...)
+	}
+	full, err := s.loadFullMatches(ctx, q, matches)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]leaderboardInput, len(parts))
 	var memberPlayers, moveIDs []string
-	for _, m := range full {
-		in.Matches = append(in.Matches, m.input())
-		for _, tm := range m.members {
-			memberPlayers = append(memberPlayers, deref(tm.PlayerID))
+	for i, p := range parts {
+		n := len(p.matches)
+		li := leaderboardInput{
+			in: leaderboard.Input{
+				KeepStoredStats: keepStored,
+				RuleMoves:       map[string]leaderboard.RuleMove{},
+				ProfileOf:       map[string]string{},
+			},
+			startedAt: p.startedAt,
+			seasons:   map[string]seasonDTO{},
+			matches:   full[:n:n],
+			ruleMoves: map[string]db.RuleMove{},
 		}
-		for _, mv := range m.moves {
-			moveIDs = append(moveIDs, deref(mv.MoveID))
+		full = full[n:]
+		for _, pl := range p.players {
+			li.in.Players = append(li.in.Players, pl.player())
+			if _, seen := li.seasons[pl.SeasonID]; !seen {
+				li.seasons[pl.SeasonID] = pl.season()
+			}
 		}
+		for _, m := range li.matches {
+			li.in.Matches = append(li.in.Matches, m.input())
+		}
+		li.in.Matches = append(li.in.Matches, p.projected...)
+		for _, m := range li.in.Matches {
+			for _, tm := range m.Members {
+				memberPlayers = append(memberPlayers, tm.PlayerID)
+			}
+			for _, mv := range m.Moves {
+				moveIDs = append(moveIDs, mv.MoveID)
+			}
+		}
+		out[i] = li
 	}
-	for _, m := range projected {
-		in.Matches = append(in.Matches, m)
-		for _, tm := range m.Members {
-			memberPlayers = append(memberPlayers, tm.PlayerID)
-		}
-		for _, mv := range m.Moves {
-			moveIDs = append(moveIDs, mv.MoveID)
-		}
-	}
+
+	ruleMoves := map[string]db.RuleMove{}
 	if len(moveIDs) > 0 {
 		moves, err := q.RuleMovesByIDs(ctx, moveIDs)
 		if err != nil {
-			return leaderboardInput{}, internal(err)
+			return nil, err
 		}
 		for _, m := range moves {
 			ruleMoves[m.ID] = m
-			in.RuleMoves[m.ID] = leaderboard.RuleMove{PointsForScorer: m.PointsForScorer, PointsForTeam: m.PointsForTeam, Finishing: m.FinishingMove, Cups: cupsPerHit(m)}
 		}
 	}
+	profileOf := map[string]string{}
 	if len(memberPlayers) > 0 {
 		rows, err := q.ProfileIDsOfPlayers(ctx, memberPlayers)
 		if err != nil {
-			return leaderboardInput{}, internal(err)
+			return nil, err
 		}
 		for _, row := range rows {
 			if row.ProfileID == nil {
-				return leaderboardInput{}, internalf("player %s has no profile", row.ID)
+				return nil, fmt.Errorf("player %s has no profile", row.ID)
 			}
-			in.ProfileOf[row.ID] = *row.ProfileID
+			profileOf[row.ID] = *row.ProfileID
 		}
 	}
-
-	return leaderboardInput{in: in, startedAt: startedAt, seasons: seasons, matches: full, ruleMoves: ruleMoves}, nil
+	// each board gets the rule moves and profiles of its own matches
+	for _, li := range out {
+		for _, m := range li.in.Matches {
+			for _, tm := range m.Members {
+				if profile, found := profileOf[tm.PlayerID]; found {
+					li.in.ProfileOf[tm.PlayerID] = profile
+				}
+			}
+			for _, mv := range m.Moves {
+				if rm, found := ruleMoves[mv.MoveID]; found {
+					li.ruleMoves[rm.ID] = rm
+					li.in.RuleMoves[rm.ID] = leaderboard.RuleMove{PointsForScorer: rm.PointsForScorer, PointsForTeam: rm.PointsForTeam, Finishing: rm.FinishingMove, Cups: cupsPerHit(rm)}
+				}
+			}
+		}
+	}
+	return out, nil
 }
 
 // dayStart is when "today" began for the daily leaderboard.
