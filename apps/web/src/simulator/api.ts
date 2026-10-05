@@ -1,17 +1,18 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { apiUrl, socketUrl } from '~/apiUrl';
-import { type LiveMatchDto, liveTeams } from '~/simulator/liveMatch';
+import { type LiveMatchDto, liveTeams, type ReplayStep } from '~/simulator/liveMatch';
 
 // The API computes everything with the leaderboard's own Elo code
 // (/elo-simulation in apps/api); this page only shows it. A group opens with its
 // invite code, the same code that lets anyone join it in the app.
 
+// The Elo's weights, a season setting (EloParams in elo.go).
 export type Params = {
     k: number;
-    marginWeight: number;
-    perPoint: number;
-    topWeight: number;
+    kr: number;
+    ringWeight: number;
+    swing: number;
 };
 
 export type Score = { logLoss: number; correct: number; called: number; games: number };
@@ -41,15 +42,18 @@ export type GamePlayer = {
     after: number;
     result: number;
     hitting: number;
-    // own points expected in a full game, set before it
+    // the player's share of the game's own points, set before it
+    share: number;
+    // share × the game's points
     expected: number;
     moves: { name: string; count: number }[];
 };
 
 export type GameTeam = {
     won: boolean;
-    rating: number;
     winChance: number;
+    // the team's share of the game's own points, set before it
+    share: number;
     points: number;
     avgPoints: number;
     cups: number;
@@ -63,12 +67,12 @@ export type Game = {
     // the running live match this game is, counted as if it ended now
     liveMatchId: string | null;
     date: string;
-    gap: number;
-    scale: number;
-    teamPoints: number;
-    // how much of a full game this was: less than 1 when a ring ended it
-    // early or it's still running; each player's expected counts for this share
-    share: number;
+    // own points of both teams, what the shares are of
+    points: number;
+    // own points of an average full game before this one
+    fullPoints: number;
+    // what the result counted: more than 1 for a ring win
+    ring: number;
     finisher: string;
     finishMove: string;
     teams: GameTeam[];
@@ -85,15 +89,23 @@ export type RuleMove = {
 export type Simulation = {
     groupId: string;
     groupName: string | null;
+    // the selected season's weights
     defaults: Params;
     params: Params;
-    seasons: { id: string; name: string | null; numMatches: number; minMatchesToQualify: number }[];
+    seasons: {
+        id: string;
+        name: string | null;
+        numMatches: number;
+        minMatchesToQualify: number;
+        elo: Params;
+    }[];
     seasonId: string | null;
-    // what the standings' baseline is: the default weights, or with test or
+    // what the standings' baseline is: the season's weights, or with test or
     // live games the same weights without them
     baseline: 'defaults' | 'storedGames';
     standings: Standing[];
     games: Game[];
+    // defaults: every season with its own weights
     prediction: { params: Score; defaults: Score };
     // what a test game can be made of
     moves: RuleMove[];
@@ -201,3 +213,35 @@ export const searchWeights = createServerFn({ method: 'GET' })
     .handler(({ data: code }) =>
         call<Search>('/elo-simulation/search', { inviteCode: code.trim().toUpperCase() })
     );
+
+// The season's live matches that became a match, with their whole log, to replay.
+export const getReplays = createServerFn({ method: 'GET' })
+    .inputValidator((q: { code: string; season: string }) => q)
+    .handler(async ({ data: { code, season } }) => {
+        const list = await call<LiveMatchDto[]>('/elo-simulation/replays', {
+            inviteCode: code.trim().toUpperCase(),
+            seasonId: season,
+        });
+        return list ?? [];
+    });
+
+// A stored match rated after every step of its live log, then as stored: one game per step
+// and the stored one last, each from the ratings before the match.
+export const getReplay = createServerFn({ method: 'POST' })
+    .inputValidator(
+        (q: {
+            code: string;
+            season: string;
+            params: Params;
+            matchId: string;
+            steps: ReplayStep[];
+        }) => q
+    )
+    .handler(async ({ data: { code, season, params, matchId, steps } }) => {
+        const sim = await call<{ replay: Game[] }>(
+            '/elo-simulation',
+            { inviteCode: code.trim().toUpperCase(), seasonId: season, ...params },
+            { replay: { matchId, steps } }
+        );
+        return sim?.replay ?? [];
+    });

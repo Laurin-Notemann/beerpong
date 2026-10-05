@@ -57,8 +57,8 @@ export function Games({
                         <th>Teams (points)</th>
                         <th className="num">Cups</th>
                         <th>Finish</th>
-                        <th className="num">Gap / player</th>
-                        <th className="num">Counts as</th>
+                        <th className="num">Points</th>
+                        <th className="num">Ring</th>
                         <th className="num">Winner's chance</th>
                         <th className="num">Result</th>
                         <th />
@@ -131,9 +131,13 @@ export function Games({
                                             <span className="mv">{shortMove(g.finishMove)}</span>
                                         </span>
                                     </td>
-                                    <td className="num">{g.gap.toFixed(1)}</td>
+                                    <td className="num">{g.points}</td>
                                     <td className="num">
-                                        <span className="scale">×{g.scale.toFixed(2)}</span>
+                                        {g.ring === 1 ? (
+                                            <span className="chg same">–</span>
+                                        ) : (
+                                            <span className="scale">×{g.ring.toFixed(2)}</span>
+                                        )}
                                     </td>
                                     <td className="num">{pct(w.winChance)}</td>
                                     <td className="num">
@@ -219,7 +223,13 @@ function Inspector({ game }: { game: Game }) {
         12,
         ...players.flatMap((p) => [Math.abs(p.result), Math.abs(p.hitting)])
     );
-    const scaleMax = Math.max(1, ...players.flatMap((p) => [p.own, p.expected]));
+    // what an average player in a team of n scores in a game of this many points
+    const average = (n: number) => game.points / (2 * n);
+    const scaleMax = Math.max(
+        1,
+        ...players.flatMap((p) => [p.own, p.expected]),
+        ...game.teams.map((t) => average(t.players.length))
+    );
     const tick = (v: number, cls: string) => (
         <div
             className={cls}
@@ -249,6 +259,7 @@ function Inspector({ game }: { game: Game }) {
         <>
             <div className="inspector">
                 {game.teams.map((t, ti) => {
+                    const avg = average(t.players.length);
                     return (
                         <div className="teamcard" key={ti}>
                             <h4>
@@ -259,10 +270,11 @@ function Inspector({ game }: { game: Game }) {
                                 cups
                             </h4>
                             <div className="meta">
-                                Team rating {t.rating.toFixed(0)} → <b>{pct(t.winChance)}</b> win
-                                chance
+                                <b>{pct(t.winChance)}</b> win chance · expected{' '}
+                                <b>{pct(t.share)}</b> of the game's points
                                 {t.won &&
-                                    `, won by ${game.gap.toFixed(1)} points per player (counts ×${game.scale.toFixed(2)})`}{' '}
+                                    game.ring !== 1 &&
+                                    ` · ring win ×${game.ring.toFixed(2)}`}{' '}
                                 → result{' '}
                                 <b style={{ color: 'var(--result)' }}>
                                     {sgn(t.players[0]?.result ?? 0)}
@@ -307,14 +319,12 @@ function Inspector({ game }: { game: Game }) {
                                                         width: `${Math.min(100, (p.own / scaleMax) * 100)}%`,
                                                     }}
                                                 />
+                                                {tick(avg, 'exp part')}
                                                 {tick(p.expected, 'exp')}
-                                                {game.share < 1 &&
-                                                    tick(p.expected * game.share, 'exp part')}
                                             </div>
                                             <div className="share-lbl">
-                                                scored {p.own} · expected {p.expected.toFixed(1)}
-                                                {game.share < 1 &&
-                                                    ` · ${(p.expected * game.share).toFixed(1)} counted for ${pct(game.share)} of a game`}
+                                                scored {p.own} · expected {p.expected.toFixed(1)} (
+                                                {pct(p.share)} of {game.points})
                                             </div>
                                         </div>
                                         <div className="deltas">
@@ -351,12 +361,11 @@ function Inspector({ game }: { game: Game }) {
             </div>
             <div className="hint">
                 “Scored” is own points; the finish bonus goes to everyone and only counts in the
-                result. Orange bar: own points; tick: what the ratings expected for a full game, set
-                before it. A ring ends the game early and a live game is as far as the team with
-                more cups, so only that part counts (faint tick).{' '}
+                result. Orange bar: own points; tick: the player's share of the {game.points} points
+                the game had, set before it; faint tick: an average player in that spot.{' '}
                 <span style={{ color: 'var(--result)' }}>Blue</span> = team result,{' '}
-                <span style={{ color: 'var(--scoring)' }}>orange</span> = hitting: Elo per point ×
-                (scored − counted expectation).
+                <span style={{ color: 'var(--scoring)' }}>orange</span> = hitting: K × swing ×
+                (scored − expected) / an average player's points in a full game.
             </div>
         </>
     );
