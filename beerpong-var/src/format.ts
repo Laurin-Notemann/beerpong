@@ -9,3 +9,4 @@ export const when = (iso: string) =>
         hour: '2-digit',
         minute: '2-digit',
     });
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;

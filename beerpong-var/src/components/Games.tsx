@@ -4,16 +4,28 @@ import type { Game, GameTeam } from '@/api';
 import { isRing, pct, sgn, shortMove, when } from '@/format';
 
 // Every game of the season with what it was worth; a click opens its moves
-// and each player's change.
+// and each player's change. Test games sit between the real ones.
 export function Games({
     games,
     sel,
     onSelect,
+    onAdd,
+    onEdit,
+    onRemove,
 }: {
     games: Game[];
     sel: number | null;
     onSelect: (gi: number | null) => void;
+    // a new test game right after this game, or at the start or the end
+    onAdd: (after: Game | 'start' | 'end') => void;
+    onEdit: (testIndex: number) => void;
+    onRemove: (testIndex: number) => void;
 }) {
+    // real games keep their numbers when test games come in between
+    let real = 0;
+    const numbers = games.map((g) =>
+        g.testIndex == null ? String(++real) : `T${g.testIndex + 1}`
+    );
     // games that arrived live since the season was opened flash once
     const seen = useRef(new Set(games.map((g) => g.matchId)));
     useEffect(() => {
@@ -22,6 +34,17 @@ export function Games({
 
     return (
         <div className="card tbl-wrap">
+            <div className="gamesbar">
+                <button type="button" className="icon" onClick={() => onAdd('start')}>
+                    + Test game at the start
+                </button>
+                <button type="button" className="icon" onClick={() => onAdd('end')}>
+                    + Test game at the end
+                </button>
+                <span className="hint" style={{ margin: 0 }}>
+                    or + on a game to put one right after it
+                </span>
+            </div>
             <table className="games" id="games">
                 <thead>
                     <tr>
@@ -33,11 +56,15 @@ export function Games({
                         <th className="num">Counts as</th>
                         <th className="num">Winner's chance</th>
                         <th className="num">Result</th>
+                        <th />
                     </tr>
                 </thead>
                 <tbody>
                     {games.map((g, gi) => {
-                        const wi = Math.max(0, g.teams.findIndex((t) => t.won));
+                        const wi = Math.max(
+                            0,
+                            g.teams.findIndex((t) => t.won)
+                        );
                         const w = g.teams[wi];
                         const l = g.teams[1 - wi];
                         const open = sel === gi;
@@ -47,7 +74,11 @@ export function Games({
                                 <tr
                                     data-g={gi}
                                     tabIndex={0}
-                                    className={[open ? 'sel' : '', seen.current.has(g.matchId) ? '' : 'new'].join(' ')}
+                                    className={[
+                                        open ? 'sel' : '',
+                                        seen.current.has(g.matchId) ? '' : 'new',
+                                        g.testIndex == null ? '' : 'test',
+                                    ].join(' ')}
                                     aria-expanded={open}
                                     onClick={toggle}
                                     onKeyDown={(e) => {
@@ -58,9 +89,17 @@ export function Games({
                                     }}
                                 >
                                     <td className="num">
-                                        {gi + 1}
-                                        {/* the server renders UTC, the browser local time */}
-                                        <span className="when" suppressHydrationWarning>{when(g.date)}</span>
+                                        {numbers[gi]}
+                                        {g.testIndex == null ? (
+                                            // the server renders UTC, the browser local time
+                                            <span className="when" suppressHydrationWarning>
+                                                {when(g.date)}
+                                            </span>
+                                        ) : (
+                                            <span className="when">
+                                                <span className="tag">TEST</span>
+                                            </span>
+                                        )}
                                     </td>
                                     <td>
                                         <div className="teams">
@@ -75,8 +114,11 @@ export function Games({
                                         </span>
                                     </td>
                                     <td>
-                                        <span className={`fin ${isRing(g.finishMove) ? 'ring' : ''}`}>
-                                            {g.finisher} <span className="mv">{shortMove(g.finishMove)}</span>
+                                        <span
+                                            className={`fin ${isRing(g.finishMove) ? 'ring' : ''}`}
+                                        >
+                                            {g.finisher}{' '}
+                                            <span className="mv">{shortMove(g.finishMove)}</span>
                                         </span>
                                     </td>
                                     <td className="num">{g.gap.toFixed(1)}</td>
@@ -88,10 +130,45 @@ export function Games({
                                         <span className="chg up">{sgn(w.players[0].result)}</span> /{' '}
                                         <span className="chg down">{sgn(l.players[0].result)}</span>
                                     </td>
+                                    {/* the buttons don't open the game */}
+                                    <td
+                                        className="rowbtns"
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                    >
+                                        {g.testIndex != null && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    className="icon"
+                                                    onClick={() => onEdit(g.testIndex!)}
+                                                >
+                                                    Edit
+                                                </button>{' '}
+                                                <button
+                                                    type="button"
+                                                    className="icon"
+                                                    aria-label="Remove test game"
+                                                    onClick={() => onRemove(g.testIndex!)}
+                                                >
+                                                    ×
+                                                </button>{' '}
+                                            </>
+                                        )}
+                                        <button
+                                            type="button"
+                                            className="icon"
+                                            title="A test game right after this one"
+                                            aria-label={`Test game after game ${numbers[gi]}`}
+                                            onClick={() => onAdd(g)}
+                                        >
+                                            +
+                                        </button>
+                                    </td>
                                 </tr>
                                 {open && (
                                     <tr className="detail">
-                                        <td colSpan={8}>
+                                        <td colSpan={9}>
                                             <Inspector game={g} />
                                         </td>
                                     </tr>
@@ -121,10 +198,18 @@ function TeamLabel({ team }: { team: GameTeam }) {
 
 function Inspector({ game }: { game: Game }) {
     const players = game.teams.flatMap((t) => t.players);
-    const scale = Math.max(12, ...players.flatMap((p) => [Math.abs(p.result), Math.abs(p.hitting)]));
+    const scale = Math.max(
+        12,
+        ...players.flatMap((p) => [Math.abs(p.result), Math.abs(p.hitting)])
+    );
     const scaleMax = Math.max(1, ...players.flatMap((p) => [p.own, p.expected]));
     const half = (v: number, cls: string) => {
-        const bar = <div className={`bar ${cls}`} style={{ width: `${Math.min(100, (Math.abs(v) / scale) * 100)}%` }} />;
+        const bar = (
+            <div
+                className={`bar ${cls}`}
+                style={{ width: `${Math.min(100, (Math.abs(v) / scale) * 100)}%` }}
+            />
+        );
         return v < 0 ? (
             <>
                 <div className="half neg">{bar}</div>
@@ -144,18 +229,26 @@ function Inspector({ game }: { game: Game }) {
                     return (
                         <div className="teamcard" key={ti}>
                             <h4>
-                                <span className={`wl ${t.won ? 'w' : 'l'}`}>{t.won ? 'WON' : 'LOST'}</span> {t.points}{' '}
-                                points · {t.avgPoints.toFixed(1)} per player · {t.cups} cups
+                                <span className={`wl ${t.won ? 'w' : 'l'}`}>
+                                    {t.won ? 'WON' : 'LOST'}
+                                </span>{' '}
+                                {t.points} points · {t.avgPoints.toFixed(1)} per player · {t.cups}{' '}
+                                cups
                             </h4>
                             <div className="meta">
-                                Team rating {t.rating.toFixed(0)} → <b>{pct(t.winChance)}</b> win chance
+                                Team rating {t.rating.toFixed(0)} → <b>{pct(t.winChance)}</b> win
+                                chance
                                 {t.won &&
                                     `, won by ${game.gap.toFixed(1)} points per player (counts ×${game.scale.toFixed(2)})`}{' '}
-                                → result <b style={{ color: 'var(--result)' }}>{sgn(t.players[0].result)}</b> each
+                                → result{' '}
+                                <b style={{ color: 'var(--result)' }}>{sgn(t.players[0].result)}</b>{' '}
+                                each
                             </div>
                             {t.players.map((p) => {
                                 const moves = [...p.moves].sort(
-                                    (a, b) => Number(/^Finish/.test(a.name)) - Number(/^Finish/.test(b.name)),
+                                    (a, b) =>
+                                        Number(/^Finish/.test(a.name)) -
+                                        Number(/^Finish/.test(b.name))
                                 );
                                 return (
                                     <div className="prow" key={p.profileId}>
@@ -169,7 +262,11 @@ function Inspector({ game }: { game: Game }) {
                                                     ? moves.map((mv, i) => (
                                                           <Fragment key={mv.name}>
                                                               {i > 0 && ', '}
-                                                              <span className={isRing(mv.name) ? 'ring' : ''}>
+                                                              <span
+                                                                  className={
+                                                                      isRing(mv.name) ? 'ring' : ''
+                                                                  }
+                                                              >
                                                                   {mv.count} {mv.name}
                                                               </span>
                                                           </Fragment>
@@ -181,7 +278,9 @@ function Inspector({ game }: { game: Game }) {
                                             <div className="share">
                                                 <div
                                                     className="act"
-                                                    style={{ width: `${Math.min(100, (p.own / scaleMax) * 100)}%` }}
+                                                    style={{
+                                                        width: `${Math.min(100, (p.own / scaleMax) * 100)}%`,
+                                                    }}
                                                 />
                                                 <div
                                                     className="exp"
@@ -197,18 +296,26 @@ function Inspector({ game }: { game: Game }) {
                                         <div className="deltas">
                                             <div className="drow">
                                                 {half(p.result, 'r')}
-                                                <span className="val" style={{ color: 'var(--result)' }}>
+                                                <span
+                                                    className="val"
+                                                    style={{ color: 'var(--result)' }}
+                                                >
                                                     {sgn(p.result)}
                                                 </span>
                                             </div>
                                             <div className="drow">
                                                 {half(p.hitting, 's')}
-                                                <span className="val" style={{ color: 'var(--scoring)' }}>
+                                                <span
+                                                    className="val"
+                                                    style={{ color: 'var(--scoring)' }}
+                                                >
                                                     {sgn(p.hitting)}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className={`total chg ${p.after >= p.before ? 'up' : 'down'}`}>
+                                        <div
+                                            className={`total chg ${p.after >= p.before ? 'up' : 'down'}`}
+                                        >
                                             {sgn(p.after - p.before)}
                                         </div>
                                     </div>
@@ -219,10 +326,11 @@ function Inspector({ game }: { game: Game }) {
                 })}
             </div>
             <div className="hint">
-                “Scored” is own points; the finish bonus goes to everyone and only counts in the result. Orange bar:
-                own points; black tick: what the ratings expected before the game.{' '}
-                <span style={{ color: 'var(--result)' }}>Blue</span> = team result,{' '}
-                <span style={{ color: 'var(--scoring)' }}>orange</span> = hitting: Elo per point × (scored − expected).
+                “Scored” is own points; the finish bonus goes to everyone and only counts in the
+                result. Orange bar: own points; black tick: what the ratings expected before the
+                game. <span style={{ color: 'var(--result)' }}>Blue</span> = team result,{' '}
+                <span style={{ color: 'var(--scoring)' }}>orange</span> = hitting: Elo per point ×
+                (scored − expected).
             </div>
         </>
     );

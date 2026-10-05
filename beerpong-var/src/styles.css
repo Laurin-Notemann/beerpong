@@ -237,3 +237,31 @@ tr.new { animation: flash 2.4s ease-out; }
 .codeform .btn { padding: 0.55rem 1rem; }
 .err { color: var(--down); }
 @media (max-width: 900px) { .sliders { grid-template-columns: 1fr 1fr; } .pred { grid-template-columns: 1fr; } }
+
+/* ranked and unranked, test games */
+tr.unranked-head { cursor: default; background: transparent !important; }
+tr.unranked-head td { padding-top: 1.1rem; font-weight: 600; }
+tr.unranked-head span { font-weight: 400; color: var(--muted); font-size: 0.8125rem; }
+tr.unranked td { color: var(--text-2); }
+.games tr.test { background: color-mix(in srgb, var(--scoring) 8%, transparent); }
+.games tr.test > td:first-child { border-left: 3px solid var(--scoring); }
+.tag { display: inline-block; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px; padding: 0 0.3rem; background: var(--scoring); color: var(--surface); }
+.rowbtns { white-space: nowrap; text-align: right; }
+.icon { font: inherit; font-size: 0.8125rem; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); border-radius: 6px; padding: 0.1rem 0.45rem; cursor: pointer; }
+.icon:hover { background: var(--surface-2); color: var(--text); }
+.gamesbar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.testbar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; border-left: 3px solid var(--scoring); background: var(--surface); border-radius: 0 9px 9px 0; padding: 0.6rem 1rem; margin-top: 1rem; color: var(--text-2); font-size: 0.9375rem; }
+.testbar.err { border-left-color: var(--down); }
+.editor { border-top: 3px solid var(--scoring); margin-bottom: 1rem; }
+.editor h3 { margin: 0 0 0.2rem; font-size: 1.05rem; }
+.editor .teams2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.9rem 0; }
+.editor .tcol { background: var(--surface-2); border-radius: 8px; padding: 0.7rem 0.8rem; min-width: 0; }
+.editor .tcol h4 { margin: 0 0 0.5rem; font-size: 0.875rem; }
+.editor .prow2 { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; padding: 0.35rem 0; border-top: 1px solid var(--grid); }
+.editor select, .editor input[type=number] { font: inherit; font-size: 0.875rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; padding: 0.2rem 0.35rem; }
+.editor input[type=number] { width: 3.2rem; }
+.editor .cnt { display: inline-flex; flex-direction: column; font-size: 0.6875rem; color: var(--muted); }
+.editor .finish { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; font-size: 0.9375rem; }
+.editor .actions { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.9rem; flex-wrap: wrap; }
+.editor .problem { color: var(--down); font-size: 0.875rem; }
+@media (max-width: 900px) { .editor .teams2 { grid-template-columns: 1fr; } }

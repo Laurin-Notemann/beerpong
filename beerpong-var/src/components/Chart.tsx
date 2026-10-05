@@ -33,8 +33,10 @@ export function Chart({
     const lines = new Map(ids.map((id) => [id, [{ g: 0, v: 1500, played: false }]]));
     games.forEach((g, gi) =>
         g.teams.forEach((t) =>
-            t.players.forEach((p) => lines.get(p.profileId)?.push({ g: gi + 1, v: p.after, played: true })),
-        ),
+            t.players.forEach((p) =>
+                lines.get(p.profileId)?.push({ g: gi + 1, v: p.after, played: true })
+            )
+        )
     );
     const all = [...lines.values()].flatMap((pts) => pts.map((p) => p.v));
     const lo = Math.floor((Math.min(...all) - 5) / step) * step;
@@ -78,7 +80,12 @@ export function Chart({
 
     return (
         <figure style={{ margin: 0 }}>
-            <div className="chart" ref={box} role="img" aria-label="Every player's Elo after each game">
+            <div
+                className="chart"
+                ref={box}
+                role="img"
+                aria-label="Every player's Elo after each game"
+            >
                 <svg ref={svg} viewBox={`0 0 ${W} ${H}`}>
                     {ticks.map((v) => (
                         <g key={v}>
@@ -89,34 +96,83 @@ export function Chart({
                                 y2={y(v)}
                                 stroke={v === 1500 ? 'var(--axis)' : 'var(--grid)'}
                             />
-                            <text x={m.l - 8} y={y(v) + 4} textAnchor="end" fontSize={12} fill="var(--muted)">
+                            <text
+                                x={m.l - 8}
+                                y={y(v) + 4}
+                                textAnchor="end"
+                                fontSize={12}
+                                fill="var(--muted)"
+                            >
                                 {v}
                             </text>
                         </g>
                     ))}
                     {gticks.map((g) => (
-                        <text key={g} x={x(g)} y={H - m.b + 18} textAnchor="middle" fontSize={12} fill="var(--muted)">
+                        <text
+                            key={g}
+                            x={x(g)}
+                            y={H - m.b + 18}
+                            textAnchor="middle"
+                            fontSize={12}
+                            fill="var(--muted)"
+                        >
                             {g}
                         </text>
                     ))}
-                    <text x={(m.l + W - m.r) / 2} y={H - 2} textAnchor="middle" fontSize={12} fill="var(--muted)">
+                    <text
+                        x={(m.l + W - m.r) / 2}
+                        y={H - 2}
+                        textAnchor="middle"
+                        fontSize={12}
+                        fill="var(--muted)"
+                    >
                         after game
                     </text>
+                    {games.map(
+                        (g, gi) =>
+                            g.testIndex != null && (
+                                <line
+                                    key={g.matchId}
+                                    x1={x(gi + 1)}
+                                    x2={x(gi + 1)}
+                                    y1={m.t}
+                                    y2={H - m.b}
+                                    stroke="var(--scoring)"
+                                    strokeDasharray="4 4"
+                                />
+                            )
+                    )}
                     {sel != null && (
-                        <rect x={x(sel + 1) - 5} y={m.t} width={10} height={H - m.t - m.b} fill="var(--surface-2)" />
+                        <rect
+                            x={x(sel + 1) - 5}
+                            y={m.t}
+                            width={10}
+                            height={H - m.t - m.b}
+                            fill="var(--surface-2)"
+                        />
                     )}
                     {order.map((n) => {
                         const pts = lines.get(n)!;
                         const on = follow.has(n);
                         const d =
-                            pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.g).toFixed(1)},${y(p.v).toFixed(1)}`).join('') +
-                            `L${x(G).toFixed(1)},${y(last(n)).toFixed(1)}`;
+                            pts
+                                .map(
+                                    (p, i) =>
+                                        `${i ? 'L' : 'M'}${x(p.g).toFixed(1)},${y(p.v).toFixed(1)}`
+                                )
+                                .join('') + `L${x(G).toFixed(1)},${y(last(n)).toFixed(1)}`;
                         return (
                             <g key={n}>
                                 <path
                                     d={d}
                                     fill="none"
-                                    stroke={on ? 'var(--text)' : focus ? 'var(--line-muted)' : 'var(--muted)'}
+                                    stroke={
+                                        on
+                                            ? 'var(--text)'
+                                            : focus
+                                              ? 'var(--line-muted)'
+                                              : 'var(--muted)'
+                                    }
                                     strokeWidth={on ? 2.5 : 1.5}
                                     strokeLinejoin="round"
                                 />
@@ -152,7 +208,15 @@ export function Chart({
                             </text>
                         );
                     })}
-                    {hover && <line x1={x(hover.g)} x2={x(hover.g)} y1={m.t} y2={H - m.b} stroke="var(--axis)" />}
+                    {hover && (
+                        <line
+                            x1={x(hover.g)}
+                            x2={x(hover.g)}
+                            y1={m.t}
+                            y2={H - m.b}
+                            stroke="var(--axis)"
+                        />
+                    )}
                     <rect
                         x={m.l}
                         y={m.t}
@@ -166,7 +230,10 @@ export function Chart({
                     />
                 </svg>
                 {hover && games[hover.g - 1] && (
-                    <div className="tip" style={{ display: 'block', left: hover.left, top: hover.top }}>
+                    <div
+                        className="tip"
+                        style={{ display: 'block', left: hover.left, top: hover.top }}
+                    >
                         <h4>Game {hover.g}</h4>
                         <table>
                             <tbody>
@@ -174,15 +241,19 @@ export function Chart({
                                     t.players.map((p) => (
                                         <tr key={p.profileId}>
                                             <td>
-                                                <span className={`wl ${t.won ? 'w' : 'l'}`}>{t.won ? 'W' : 'L'}</span>
+                                                <span className={`wl ${t.won ? 'w' : 'l'}`}>
+                                                    {t.won ? 'W' : 'L'}
+                                                </span>
                                                 {p.name}
                                             </td>
                                             <td className="num">{p.after.toFixed(0)}</td>
-                                            <td className={`num chg ${p.after >= p.before ? 'up' : 'down'}`}>
+                                            <td
+                                                className={`num chg ${p.after >= p.before ? 'up' : 'down'}`}
+                                            >
                                                 {sgn(p.after - p.before)}
                                             </td>
                                         </tr>
-                                    )),
+                                    ))
                                 )}
                             </tbody>
                         </table>

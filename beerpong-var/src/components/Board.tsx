@@ -1,18 +1,32 @@
-import type { Standing } from '@/api';
-import { sgn } from '@/format';
+import { Fragment } from 'react';
 
+import type { Standing } from '@/api';
+import { plural, sgn } from '@/format';
+
+// The season's leaderboard as the app shows it: players with the season's
+// minimum of matches ranked, the others below. "vs" compares with the
+// baseline: the default weights, or the season without the test games.
 export function Board({
     standings,
-    isDefault,
+    baseline,
+    unchanged,
+    minMatches,
     follow,
     onToggle,
 }: {
     standings: Standing[];
-    isDefault: boolean;
+    baseline: 'defaults' | 'withoutTestGames';
+    // nothing to compare: default weights and no test games
+    unchanged: boolean;
+    minMatches: number;
     follow: Set<string>;
-    onToggle: (name: string) => void;
+    onToggle: (profileId: string) => void;
 }) {
-    const scale = Math.max(...standings.map((s) => Math.max(Math.abs(s.result), Math.abs(s.hitting))), 1);
+    const scale = Math.max(
+        ...standings.map((s) => Math.max(Math.abs(s.result), Math.abs(s.hitting))),
+        1
+    );
+    const firstUnranked = standings.findIndex((s) => s.rank == null);
     return (
         <div className="card tbl-wrap">
             <table>
@@ -21,7 +35,9 @@ export function Board({
                         <th className="num">#</th>
                         <th>Player</th>
                         <th className="num">Elo</th>
-                        <th className="num">vs defaults</th>
+                        <th className="num">
+                            {baseline === 'defaults' ? 'vs defaults' : 'vs without tests'}
+                        </th>
                         <th className="num">Games</th>
                         <th className="num">Won</th>
                         <th className="num">Points</th>
@@ -31,50 +47,81 @@ export function Board({
                 </thead>
                 <tbody>
                     {standings.map((s, i) => (
-                        <tr
-                            key={s.profileId}
-                            tabIndex={0}
-                            className={follow.has(s.profileId) ? 'hl' : ''}
-                            onClick={() => onToggle(s.profileId)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    onToggle(s.profileId);
-                                }
-                            }}
-                        >
-                            <td className="num rank">{i + 1}</td>
-                            <td>
-                                <b>{s.name}</b>
-                            </td>
-                            <td className="num elo">{s.elo.toFixed(0)}</td>
-                            <td className="num">
-                                {isDefault ? (
-                                    <span className="chg same">–</span>
-                                ) : (
-                                    <>
-                                        <RankChange delta={s.defaultRank - (i + 1)} />{' '}
-                                        <span className="chg same">{sgn(s.elo - s.defaultElo, 0)}</span>
-                                    </>
-                                )}
-                            </td>
-                            <td className="num">{s.matches}</td>
-                            <td className="num">{s.wins}</td>
-                            <td className="num">{s.points}</td>
-                            <td className="num">{(s.points / s.matches).toFixed(1)}</td>
-                            <td>
-                                <SplitBar result={s.result} hitting={s.hitting} scale={scale} />
-                                <div className="share-lbl">
-                                    <span style={{ color: 'var(--result)' }}>{sgn(s.result)}</span> ·{' '}
-                                    <span style={{ color: 'var(--scoring)' }}>{sgn(s.hitting)}</span>
-                                </div>
-                            </td>
-                        </tr>
+                        <Fragment key={s.profileId}>
+                            {i === firstUnranked && (
+                                <tr className="unranked-head">
+                                    <td colSpan={9}>
+                                        Unranked{' '}
+                                        <span>
+                                            · {plural(minMatches, 'game')} required to qualify
+                                        </span>
+                                    </td>
+                                </tr>
+                            )}
+                            <tr
+                                tabIndex={0}
+                                className={[
+                                    follow.has(s.profileId) ? 'hl' : '',
+                                    s.rank == null ? 'unranked' : '',
+                                ].join(' ')}
+                                onClick={() => onToggle(s.profileId)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        onToggle(s.profileId);
+                                    }
+                                }}
+                            >
+                                <td className="num rank">{s.rank ?? '–'}</td>
+                                <td>
+                                    <b>{s.name}</b>
+                                </td>
+                                <td className="num elo">{s.elo.toFixed(0)}</td>
+                                <td className="num">
+                                    {unchanged ? (
+                                        <span className="chg same">–</span>
+                                    ) : s.baselineElo == null ? (
+                                        <span className="chg up">new</span>
+                                    ) : (
+                                        <>
+                                            {s.rank != null &&
+                                                (s.baselineRank == null ? (
+                                                    <span className="chg up">ranked</span>
+                                                ) : (
+                                                    <RankChange delta={s.baselineRank - s.rank} />
+                                                ))}{' '}
+                                            <span className="chg same">
+                                                {sgn(s.elo - s.baselineElo, 0)}
+                                            </span>
+                                        </>
+                                    )}
+                                </td>
+                                <td className="num">{s.matches}</td>
+                                <td className="num">{s.wins}</td>
+                                <td className="num">{s.points}</td>
+                                <td className="num">{(s.points / s.matches).toFixed(1)}</td>
+                                <td>
+                                    <SplitBar result={s.result} hitting={s.hitting} scale={scale} />
+                                    <div className="share-lbl">
+                                        <span style={{ color: 'var(--result)' }}>
+                                            {sgn(s.result)}
+                                        </span>{' '}
+                                        ·{' '}
+                                        <span style={{ color: 'var(--scoring)' }}>
+                                            {sgn(s.hitting)}
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </Fragment>
                     ))}
                 </tbody>
             </table>
             <div className="hint">
-                Points and Avg are what the app shows. “vs defaults” is the move against the constants in elo.go.
+                Points and Avg are what the app shows.{' '}
+                {baseline === 'defaults'
+                    ? '“vs defaults” is the move against DefaultElo in elo.go.'
+                    : '“vs without tests” is what the test games change, with the same weights.'}{' '}
                 Click a player to follow them in the chart.
             </div>
         </div>
@@ -83,7 +130,11 @@ export function Board({
 
 function RankChange({ delta }: { delta: number }) {
     if (delta === 0) return <span className="chg same">=</span>;
-    return delta > 0 ? <span className="chg up">▲{delta}</span> : <span className="chg down">▼{-delta}</span>;
+    return delta > 0 ? (
+        <span className="chg up">▲{delta}</span>
+    ) : (
+        <span className="chg down">▼{-delta}</span>
+    );
 }
 
 function SplitBar({ result, hitting, scale }: { result: number; hitting: number; scale: number }) {

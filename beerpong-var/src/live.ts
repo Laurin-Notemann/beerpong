@@ -34,7 +34,10 @@ export function useLive(url: string, groupId: string, onChange: () => void) {
                 wasOpen = true;
             };
             ws.onmessage = (e) => {
-                const event = JSON.parse(String(e.data)) as { groupId?: string; eventType?: string };
+                const event = JSON.parse(String(e.data)) as {
+                    groupId?: string;
+                    eventType?: string;
+                };
                 if (event.groupId === groupId && relevant.has(event.eventType ?? '')) refetch();
             };
             ws.onclose = () => {
