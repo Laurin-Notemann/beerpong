@@ -79,12 +79,12 @@ jobs:
       actions: read
     steps:
       # The simulator needs the API it was written for: when the same push changes the API,
-      # deploy after it.
+      # deploy after it. Only its newest run counts; an earlier one may have been cancelled.
       - name: Wait for this commit's API deploy
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for id in $(gh run list -R "$GITHUB_REPOSITORY" --workflow api-staging-cd.yml --commit "$GITHUB_SHA" --json databaseId --jq '.[].databaseId'); do
+          for id in $(gh run list -R "$GITHUB_REPOSITORY" --workflow api-staging-cd.yml --commit "$GITHUB_SHA" --limit 1 --json databaseId --jq '.[].databaseId'); do
             gh run watch -R "$GITHUB_REPOSITORY" "$id" --exit-status > /dev/null || exit 1
           done
 
