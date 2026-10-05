@@ -24,24 +24,31 @@ export const isNetworkError = (error: unknown) =>
  * never sees a reload mid-session.
  */
 export function useOtaUpdates() {
-    const { isUpdatePending, isChecking, isDownloading } = Updates.useUpdates();
+    const { isUpdatePending, isChecking, isDownloading, downloadedUpdate } =
+        Updates.useUpdates();
 
     // AppState listeners are registered once; effect events read the latest flags.
     const applyPending = useEffectEvent(() => {
         if (!isUpdatePending || AppState.currentState !== 'background') return;
+        logger.info(
+            `applying update ${downloadedUpdate?.updateId ?? 'rollback'} (running ${Updates.updateId ?? 'embedded'})`
+        );
         Updates.reloadAsync().catch((error: unknown) => {
-            Sentry.captureException(error, {
-                tags: { ota: 'reload' },
-            });
+            Sentry.captureException(error, { tags: { ota: 'reload' } });
         });
     });
 
+    // Also checks while an update is pending: if its reload never happened, a newer one
+    // replaces it instead of the phone staying on it until a cold start.
     const checkForUpdate = useEffectEvent(async () => {
-        if (isUpdatePending || isChecking || isDownloading) return;
+        if (isChecking || isDownloading) return;
         try {
             const result = await Updates.checkForUpdateAsync();
             if (result.isAvailable || result.isRollBackToEmbedded) {
-                await Updates.fetchUpdateAsync();
+                const fetched = await Updates.fetchUpdateAsync();
+                logger.info(
+                    `downloaded update ${fetched.manifest?.id ?? 'rollback'}`
+                );
             }
         } catch (error) {
             if (isNetworkError(error)) {
@@ -64,14 +71,6 @@ export function useOtaUpdates() {
 
     // A download can finish after the app was already backgrounded.
     useEffect(() => {
-        if (
-            isUpdatePending &&
-            !__DEV__ &&
-            AppState.currentState === 'background'
-        ) {
-            Updates.reloadAsync().catch((error: unknown) => {
-                Sentry.captureException(error, { tags: { ota: 'reload' } });
-            });
-        }
-    }, [isUpdatePending]);
+        if (!__DEV__) applyPending();
+    }, [isUpdatePending, downloadedUpdate?.updateId]);
 }
