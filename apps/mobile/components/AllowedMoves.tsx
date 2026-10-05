@@ -1,13 +1,11 @@
 import { View } from 'react-native';
-import DraggableFlatList, {
-    RenderItemParams,
-} from 'react-native-draggable-flatlist';
 
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection, { MenuSectionProps } from '@/components/Menu/MenuSection';
 import PillButton from '@/components/PillButton';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
+import DraggableFlatList, { RenderItemParams } from '@/lib/draggableFlatList';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 
 const formatStats = (move: Move): string => {

@@ -1,11 +1,6 @@
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
-import {
-    NestableDraggableFlatList,
-    NestableScrollContainer,
-    RenderItemParams,
-} from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useGroup } from '@/api/calls/seasonHooks';
@@ -17,6 +12,11 @@ import { RefreshControl } from '@/components/RefreshControl';
 import { Rule } from '@/components/Rules/Rule';
 import { triggerHapticBump } from '@/haptics';
 import { AppBackground } from '@/lib/Background';
+import {
+    NestableDraggableFlatList,
+    NestableScrollContainer,
+    RenderItemParams,
+} from '@/lib/draggableFlatList';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
