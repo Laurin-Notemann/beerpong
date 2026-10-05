@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Versus Elo simulator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M8 6h16l-3 22H11z' fill='%23d2412f'/%3E%3Crect x='7' y='5' width='18' height='3' rx='1' fill='%23f3efe6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>/*__STYLE__*/</style>
+<style>
+.fin { white-space: nowrap; font-size: 0.875rem; }
+.fin .mv { color: var(--muted); }
+.fin.ring .mv { color: var(--scoring); font-weight: 600; }
+.cupscore { font-family: "IBM Plex Mono", monospace; font-weight: 600; white-space: nowrap; }
+.moves { display: block; font-weight: 400; color: var(--text-2); font-size: 0.75rem; }
+.moves .ring { color: var(--scoring); font-weight: 600; }
+.sliders { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.btns { display: flex; flex-direction: column; gap: 0.4rem; }
+.seg.seasons button { padding: 0.35rem 0.6rem; }
+.pred { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pred .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem 1.1rem; }
+.pred .tile.me { border-color: var(--text); }
+.pred .lbl { font-size: 0.8125rem; color: var(--text-2); }
+.pred .big { font-size: 1.9rem; font-weight: 700; line-height: 1.15; margin: 0.15rem 0; }
+.pred .sub { font-size: 0.8125rem; color: var(--muted); }
+.scale { font-family: "IBM Plex Mono", monospace; font-size: 0.8125rem; white-space: nowrap; }
+.searchout { margin-top: 0.8rem; color: var(--text-2); font-size: 0.9375rem; }
+@media (max-width: 900px) { .sliders { grid-template-columns: 1fr 1fr; } .pred { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="eyebrow">tools/elo-sim · runs api-go/internal/leaderboard/elo.go</div>
+  <h1>Versus Elo <span class="cup">simulator</span></h1>
+  <p class="lead">Every season of the group, replayed through the API's own Elo code, compiled to WebAssembly. Drag the sliders to try other values for the constants in <code>elo.go</code>; the leaderboard, every game and the prediction score follow live.</p>
+</header>
+
+<div class="controls" role="region" aria-label="Settings">
+  <div class="wrap">
+    <div>
+      <div class="seg seasons" role="group" aria-label="Season" id="seasons"></div>
+      <div class="engine" id="engine">Loading the Go code…</div>
+    </div>
+    <div class="sliders">
+      <div class="slider r"><label for="k">Result weight (eloK) <output id="kOut"></output></label><input id="k" type="range" min="50" max="800" step="10"></div>
+      <div class="slider r"><label for="marginWeight">Margin &amp; rings <output id="marginWeightOut"></output></label><input id="marginWeight" type="range" min="0" max="1.5" step="0.05"></div>
+      <div class="slider s"><label for="perPoint">Elo per point <output id="perPointOut"></output></label><input id="perPoint" type="range" min="0" max="100" step="1"></div>
+      <div class="slider"><label for="topWeight">Best player weight <output id="topWeightOut"></output></label><input id="topWeight" type="range" min="0" max="1" step="0.05"></div>
+    </div>
+    <div class="btns">
+      <button class="btn" id="reset" type="button">Reset</button>
+      <button class="btn" id="search" type="button">Find best settings</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section aria-labelledby="h-pred">
+    <div class="section-head"><h2 id="h-pred">How well do the ratings predict the next game?</h2><p id="predCtx"></p></div>
+    <div class="pred" id="pred"></div>
+    <div class="searchout" id="searchOut"></div>
+  </section>
+
+  <section aria-labelledby="h-parts">
+    <div class="section-head"><h2 id="h-parts">How a game changes a rating</h2><p id="partsCtx"></p></div>
+    <div class="parts">
+      <div class="card part">
+        <h3>Result: same for the whole team</h3>
+        <p class="who">Win or loss against the win chance, scaled by how big the win was in the app's points (finish bonus included).</p>
+        <div class="formula">
+          team&nbsp;rating = average + <span class="v" data-p="topWeight"></span> × (best&nbsp;player − average)<br>
+          win&nbsp;chance = 1 / (1 + 10<sup>(their&nbsp;rating − your&nbsp;rating) / 4000</sup>)<br>
+          counts&nbsp;as = ((1 + points&nbsp;gap&nbsp;per&nbsp;player) / 5)<sup><span class="v" data-p="marginWeight"></span></sup><br>
+          change = <span class="v" data-p="k"></span> × counts&nbsp;as × (won − win&nbsp;chance)
+        </div>
+        <p class="example" id="exR"></p>
+      </div>
+      <div class="card part s">
+        <h3>Hitting: points above or below what you should score</h3>
+        <p class="who">Before the game, the ratings set how many own points (Normal 1, Bomb 2, finish move 1) you should score: your team's share of an average game this season, more against weaker opponents. Your teammate's points don't matter; the finish bonus only counts in the result.</p>
+        <div class="formula">
+          expected = team&nbsp;points&nbsp;per&nbsp;game / team&nbsp;size × 2 × your&nbsp;win&nbsp;chance&nbsp;vs&nbsp;them<br>
+          change = team&nbsp;result + <span class="v" data-p="perPoint"></span> × (scored − expected)
+        </div>
+        <p class="example" id="exS"></p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-board">
+    <div class="section-head">
+      <h2 id="h-board">Leaderboard</h2>
+      <div class="split-legend"><span class="key"><i class="r"></i>from team results</span><span class="key"><i class="s"></i>from hitting above or below expectation</span></div>
+    </div>
+    <div class="card tbl-wrap">
+      <table id="board"><thead><tr><th class="num">#</th><th>Player</th><th class="num">Elo</th><th class="num">vs defaults</th><th class="num">Games</th><th class="num">Won</th><th class="num">Points</th><th class="num">Avg</th><th>Where the Elo came from</th></tr></thead><tbody></tbody></table>
+      <div class="hint">Points and Avg are what the app shows. “vs defaults” is the move against the constants in elo.go. Click a player to follow them in the chart.</div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-chart">
+    <div class="section-head"><h2 id="h-chart">Elo over the season</h2><p>Hover for the game, click to open it below.</p></div>
+    <div class="card">
+      <figure style="margin:0">
+        <div class="chart" id="lineChart" role="img" aria-label="Every player's Elo after each game"></div>
+        <figcaption class="hint">Everyone starts the season at 1500. A line only moves in games that player played.</figcaption>
+      </figure>
+      <div class="chips" id="chips" role="group" aria-label="Highlight players"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-games">
+    <div class="section-head"><h2 id="h-games">What every game was worth</h2><p>Points are what the app shows. Click a game for every move and change.</p></div>
+    <div class="card tbl-wrap">
+      <table class="games" id="games">
+        <thead><tr><th class="num">#</th><th>Teams (points)</th><th class="num">Cups</th><th>Finish</th><th class="num">Gap / player</th><th class="num">Counts as</th><th class="num">Winner's chance</th><th class="num">Result</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer class="wrap">Built by <code>tools/elo-sim/make-page.sh</code>. The replay is checked against <code>leaderboard.Compute</code> for every season when the page is built.</footer>
+
+<script>/*__WASM_EXEC__*/</script>
+<script>
+const SEASONS = /*__DATA__*/null;
+const WASM_B64 = "__WASM_B64__";
+let DEFAULTS = null;
+const SLIDERS = ["k", "marginWeight", "perPoint", "topWeight"];
+const state = { si: SEASONS.length - 1, params: null, sel: null, follow: new Set(), res: null, def: null };
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sgn = (v, d = 1) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+const pct = (v) => Math.round(v * 100) + "%";
+const isDefault = () => SLIDERS.every((k) => state.params[k] === DEFAULTS[k]);
+const raw = (gi) => SEASONS[state.si].games[gi];
+const isRing = (m) => /Ring/.test(m || "");
+const shortMove = (m) => (m || "").replace(/^Finish - /, "");
+const svgNS = "http://www.w3.org/2000/svg";
+const P = (p = state.params) => JSON.stringify(p);
+const totalGames = SEASONS.reduce((n, s) => n + s.games.length, 0);
+
+function chg(delta) {
+  if (delta === 0) return '<span class="chg same">=</span>';
+  return delta > 0 ? `<span class="chg up">▲${delta}</span>` : `<span class="chg down">▼${-delta}</span>`;
+}
+
+function splitBar(a, b, scale) {
+  const w = (v) => Math.min(100, (Math.abs(v) / scale) * 100);
+  const neg = [], pos = [];
+  (a < 0 ? neg : pos).push(`<div class="bar r" style="width:${w(a)}%"></div>`);
+  (b < 0 ? neg : pos).push(`<div class="bar s" style="width:${w(b)}%"></div>`);
+  return `<div class="split"><div class="half neg" style="gap:2px">${neg.reverse().join("")}</div><div class="half zero" style="display:flex;gap:2px">${pos.join("")}</div></div>`;
+}
+
+function renderPred() {
+  const cur = JSON.parse(eloPredict(P()));
+  const def = JSON.parse(eloPredict(P(DEFAULTS)));
+  const tile = (title, s, me) => `<div class="tile ${me ? "me" : ""}"><div class="lbl">${title}</div>
+    <div class="big">${pct(s.correct)}</div><div class="sub">favourite won · prediction score ${s.logLoss.toFixed(3)}</div></div>`;
+  $("#pred").innerHTML = tile("Defaults in elo.go", def, false) + tile(isDefault() ? "Your settings (= defaults)" : "Your settings", cur, true);
+  $("#predCtx").textContent = `All ${totalGames} games, every season from 1500, using only the ratings from before each game.`;
+  if (!$("#searchOut").dataset.done) $("#searchOut").innerHTML = `Prediction score: lower is better; a coin flip scores 0.693. “Favourite won” leaves out the ${cur.games - cur.called} games where both teams were rated the same (each season's first games).`;
+}
+
+function renderBoard() {
+  const st = state.res.standings;
+  const defRank = {}, defElo = {};
+  state.def.standings.forEach((s, i) => { defRank[s.name] = i + 1; defElo[s.name] = s.elo; });
+  const scale = Math.max(...st.map((s) => Math.max(Math.abs(s.resultSum), Math.abs(s.hittingSum))), 1);
+  $("#board tbody").innerHTML = st.map((s, i) => `<tr data-name="${esc(s.name)}" tabindex="0" class="${state.follow.has(s.name) ? "hl" : ""}">
+      <td class="num rank">${i + 1}</td><td><b>${esc(s.name)}</b></td>
+      <td class="num elo">${s.elo.toFixed(0)}</td>
+      <td class="num">${isDefault() ? '<span class="chg same">–</span>' : `${chg(defRank[s.name] - (i + 1))} <span class="chg same">${sgn(s.elo - defElo[s.name], 0)}</span>`}</td>
+      <td class="num">${s.games}</td><td class="num">${s.wins}</td><td class="num">${s.app}</td><td class="num">${(s.app / s.games).toFixed(1)}</td>
+      <td>${splitBar(s.resultSum, s.hittingSum, scale)}<div class="share-lbl"><span style="color:var(--result)">${sgn(s.resultSum)}</span> · <span style="color:var(--scoring)">${sgn(s.hittingSum)}</span></div></td>
+    </tr>`).join("");
+  document.querySelectorAll("#board tbody tr").forEach((tr) => {
+    const toggle = () => toggleFollow(tr.dataset.name);
+    tr.addEventListener("click", toggle);
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  });
+}
+
+function toggleFollow(name) {
+  if (state.follow.has(name)) state.follow.delete(name); else state.follow.add(name);
+  renderBoard(); renderChips(); renderLine();
+}
+
+function renderChips() {
+  const names = state.res.standings.map((s) => s.name);
+  $("#chips").innerHTML = names.map((n) => `<button type="button" class="chip" aria-pressed="${state.follow.has(n)}" data-name="${esc(n)}">${esc(n)}</button>`).join("") +
+    (state.follow.size ? `<button type="button" class="chip" data-clear="1">Clear</button>` : "");
+  $("#chips").querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.clear) { state.follow.clear(); renderBoard(); renderChips(); renderLine(); return; }
+    toggleFollow(b.dataset.name);
+  }));
+}
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(svgNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function renderLine() {
+  const box = $("#lineChart");
+  box.innerHTML = "";
+  const names = state.res.standings.map((s) => s.name);
+  const out = Object.fromEntries(names.map((n) => [n, [{ g: 0, v: 1500 }]]));
+  state.res.games.forEach((g, gi) => g.teams.forEach((t) => t.players.forEach((p) => out[p.name].push({ g: gi + 1, v: p.after, played: true }))));
+  const G = state.res.games.length;
+  if (!G) return;
+  const W = 1000, H = 400, m = { l: 52, r: 120, t: 14, b: 34 };
+  const all = names.flatMap((n) => out[n].map((p) => p.v));
+  const step = 250;
+  const lo = Math.floor((Math.min(...all) - 5) / step) * step, hi = Math.ceil((Math.max(...all) + 5) / step) * step;
+  const x = (g) => m.l + (g / G) * (W - m.l - m.r);
+  const y = (v) => m.t + (1 - (v - lo) / (hi - lo)) * (H - m.t - m.b);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, box);
+  const grid = (hi - lo) / step > 10 ? step * 2 : step;
+  for (let v = lo; v <= hi; v += grid) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 1500 ? "var(--axis)" : "var(--grid)" }, svg);
+    el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", "font-size": 12, fill: "var(--muted)" }, svg).textContent = v;
+  }
+  const tickEvery = G > 60 ? 10 : G > 25 ? 5 : G > 12 ? 2 : 1;
+  for (let g = 0; g <= G; g += tickEvery) el("text", { x: x(g), y: H - m.b + 18, "text-anchor": "middle", "font-size": 12, fill: "var(--muted)" }, svg).textContent = g;
+  el("text", { x: (m.l + W - m.r) / 2, y: H - 2, "text-anchor": "middle", "font-size": 12, fill: "var(--muted)" }, svg).textContent = "after game";
+  if (state.sel != null) el("rect", { x: x(state.sel + 1) - 5, y: m.t, width: 10, height: H - m.t - m.b, fill: "var(--surface-2)" }, svg);
+  const focus = state.follow.size > 0;
+  for (const n of names.slice().sort((a, b) => state.follow.has(a) - state.follow.has(b))) {
+    const pts = out[n], on = state.follow.has(n);
+    const d = pts.map((p, i) => `${i ? "L" : "M"}${x(p.g).toFixed(1)},${y(p.v).toFixed(1)}`).join("") + `L${x(G).toFixed(1)},${y(pts[pts.length - 1].v).toFixed(1)}`;
+    el("path", { d, fill: "none", stroke: on ? "var(--text)" : focus ? "var(--line-muted)" : "var(--muted)", "stroke-width": on ? 2.5 : 1.5, "stroke-linejoin": "round" }, svg);
+    if (on) pts.filter((p) => p.played).forEach((p) => el("circle", { cx: x(p.g), cy: y(p.v), r: 3.5, fill: "var(--text)", stroke: "var(--surface)", "stroke-width": 2 }, svg));
+  }
+  const labels = names.map((n) => ({ n, v: out[n][out[n].length - 1].v })).sort((a, b) => b.v - a.v);
+  let lastY = -Infinity;
+  labels.forEach((l) => { l.y = Math.max(y(l.v), lastY + 14); lastY = l.y; });
+  const over = lastY - (H - m.b);
+  if (over > 0) labels.forEach((l) => (l.y -= over));
+  for (const l of labels) {
+    const on = state.follow.has(l.n);
+    el("text", { x: W - m.r + 8, y: l.y + 4, "font-size": 12, fill: on ? "var(--text)" : "var(--text-2)", "font-weight": on ? 700 : 400 }, svg).textContent = `${l.n} ${l.v.toFixed(0)}`;
+  }
+  const cross = el("line", { y1: m.t, y2: H - m.b, stroke: "var(--axis)", visibility: "hidden" }, svg);
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent", style: "cursor:pointer" }, svg);
+  const tip = document.createElement("div");
+  tip.className = "tip";
+  box.appendChild(tip);
+  const gameAt = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((ev.clientX - r.left) / r.width) * W;
+    return Math.max(1, Math.min(G, Math.round(((px - m.l) / (W - m.l - m.r)) * G)));
+  };
+  hit.addEventListener("mousemove", (ev) => {
+    const g = gameAt(ev);
+    cross.setAttribute("x1", x(g)); cross.setAttribute("x2", x(g)); cross.setAttribute("visibility", "visible");
+    tip.innerHTML = `<h4>Game ${g}</h4><table>${state.res.games[g - 1].teams.map((t) => t.players.map((p) =>
+      `<tr><td>${t.won ? '<span class="wl w">W</span>' : '<span class="wl l">L</span>'}${esc(p.name)}</td><td class="num">${p.after.toFixed(0)}</td><td class="num chg ${p.after >= p.before ? "up" : "down"}">${sgn(p.after - p.before)}</td></tr>`).join("")).join("")}</table>`;
+    tip.style.display = "block";
+    const r = box.getBoundingClientRect();
+    let left = ev.clientX - r.left + 14;
+    if (left + 240 > r.width) left = ev.clientX - r.left - 254;
+    tip.style.left = left + "px";
+    tip.style.top = Math.max(0, ev.clientY - r.top - 40) + "px";
+  });
+  hit.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+  hit.addEventListener("click", (ev) => selectGame(gameAt(ev) - 1, true));
+}
+
+function teamLabel(t) {
+  return `<div class="t ${t.won ? "w" : ""}">${t.won ? '<span class="wl w">W</span>' : '<span class="wl l">L</span>'}${t.players.map((p) => `${esc(p.name)} <span class="pts">${p.app}</span>`).join(", ")}</div>`;
+}
+
+function renderGames() {
+  const rows = [];
+  state.res.games.forEach((g, gi) => {
+    const r = raw(gi);
+    const wi = g.teams.findIndex((t) => t.won), w = g.teams[wi], l = g.teams[1 - wi];
+    rows.push(`<tr data-g="${gi}" tabindex="0" class="${state.sel === gi ? "sel" : ""}" aria-expanded="${state.sel === gi}">
+      <td class="num">${gi + 1}</td>
+      <td><div class="teams">${teamLabel(g.teams[0])}${teamLabel(g.teams[1])}</div></td>
+      <td class="num"><span class="cupscore">${r.teams[wi].cups}:${r.teams[1 - wi].cups}</span></td>
+      <td><span class="fin ${isRing(r.finishMove) ? "ring" : ""}">${esc(r.finisher)} <span class="mv">${esc(shortMove(r.finishMove))}</span></span></td>
+      <td class="num">${g.gap.toFixed(1)}</td>
+      <td class="num"><span class="scale">×${g.scale.toFixed(2)}</span></td>
+      <td class="num">${pct(w.expWin)}</td>
+      <td class="num"><span class="chg up">${sgn(w.players[0].result)}</span> / <span class="chg down">${sgn(l.players[0].result)}</span></td></tr>`);
+    if (state.sel === gi) rows.push(`<tr class="detail"><td colspan="8">${inspector(gi)}</td></tr>`);
+  });
+  $("#games tbody").innerHTML = rows.join("");
+  document.querySelectorAll("#games tbody tr[data-g]").forEach((tr) => {
+    const go = () => selectGame(+tr.dataset.g === state.sel ? null : +tr.dataset.g, false);
+    tr.addEventListener("click", go);
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+}
+
+function inspector(gi) {
+  const g = state.res.games[gi], r = raw(gi);
+  const scale = Math.max(12, ...g.teams.flatMap((t) => t.players.flatMap((p) => [Math.abs(p.result), Math.abs(p.hitting)])));
+  const scaleMax = Math.max(1, ...g.teams.flatMap((t) => t.players.flatMap((q) => [q.own, q.expected])));
+  const half = (v, cls) => {
+    const w = Math.min(100, (Math.abs(v) / scale) * 100);
+    return v < 0
+      ? `<div class="half neg"><div class="bar ${cls}" style="width:${w}%"></div></div><div class="half zero"></div>`
+      : `<div class="half neg"></div><div class="half zero"><div class="bar ${cls}" style="width:${w}%"></div></div>`;
+  };
+  const movesOf = (rp) => (rp.moves || []).slice().sort((a, b) => /^Finish/.test(a.name) - /^Finish/.test(b.name))
+    .map((m) => `<span class="${isRing(m.name) ? "ring" : ""}">${m.value} ${esc(m.name)}</span>`).join(", ") || "no hits";
+  return `<div class="inspector">${g.teams.map((t, ti) => {
+    const rt = r.teams[ti];
+    return `<div class="teamcard">
+      <h4>${t.won ? '<span class="wl w">WON</span>' : '<span class="wl l">LOST</span>'} ${t.app} points · ${t.avgApp.toFixed(1)} per player · ${rt.cups} cups</h4>
+      <div class="meta">Team rating ${t.rating.toFixed(0)} → <b>${pct(t.expWin)}</b> win chance${t.won ? `, won by ${g.gap.toFixed(1)} points per player (counts ×${g.scale.toFixed(2)})` : ""} → result <b style="color:var(--result)">${sgn(t.players[0].result)}</b> each</div>
+      ${t.players.map((p, pi) => `<div class="prow">
+          <div class="nm">${esc(p.name)}<small>${p.before.toFixed(0)} → ${p.after.toFixed(0)}</small><span class="moves">${movesOf(rt.players[pi])}</span></div>
+          <div><div class="share"><div class="act" style="width:${Math.min(100, (p.own / scaleMax) * 100)}%"></div><div class="exp" style="left:calc(${Math.min(100, (p.expected / scaleMax) * 100)}% - 1px)"></div></div>
+            <div class="share-lbl">scored ${p.own} · expected ${p.expected.toFixed(1)}</div></div>
+          <div class="deltas">
+            <div class="drow">${half(p.result, "r")}<span class="val" style="color:var(--result)">${sgn(p.result)}</span></div>
+            <div class="drow">${half(p.hitting, "s")}<span class="val" style="color:var(--scoring)">${sgn(p.hitting)}</span></div>
+          </div>
+          <div class="total chg ${p.after >= p.before ? "up" : "down"}">${sgn(p.after - p.before)}</div>
+        </div>`).join("")}
+    </div>`;
+  }).join("")}</div>
+  <div class="hint">“Scored” is own points; the finish bonus goes to everyone and only counts in the result. Orange bar: own points; black tick: what the ratings expected before the game. <span style="color:var(--result)">Blue</span> = team result, <span style="color:var(--scoring)">orange</span> = hitting: Elo per point × (scored − expected).</div>`;
+}
+
+function selectGame(gi, scroll) {
+  state.sel = gi;
+  renderGames(); renderLine(); renderExamples();
+  if (scroll && gi != null) document.querySelector(`#games tr[data-g="${gi}"]`).scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderExamples() {
+  const p = state.params;
+  document.querySelectorAll(".v[data-p]").forEach((e) => (e.textContent = p[e.dataset.p]));
+  const games = SEASONS[state.si].games;
+  if (!games.length) return;
+  let gi = state.sel;
+  if (gi == null) { gi = games.findIndex((g) => isRing(g.finishMove)); if (gi < 0) gi = 0; }
+  const g = state.res.games[gi], r = raw(gi);
+  const wi = g.teams.findIndex((t) => t.won), w = g.teams[wi], l = g.teams[1 - wi];
+  $("#partsCtx").textContent = `Example: game ${gi + 1}, ${r.finisher} finished with ${r.finishMove}${state.sel == null ? " (click any game to switch)" : ""}.`;
+  $("#exR").innerHTML = `Winners rated ${w.rating.toFixed(0)} against ${l.rating.toFixed(0)}: a <b>${pct(w.expWin)}</b> win chance. They won by ${w.avgApp.toFixed(1)} − ${l.avgApp.toFixed(1)} = <b>${g.gap.toFixed(1)}</b> points per player, which counts as <b>×${g.scale.toFixed(2)}</b>: ${p.k} × ${g.scale.toFixed(2)} × (1 − ${w.expWin.toFixed(2)}) = <b>${sgn(w.players[0].result)}</b> each, <b>${sgn(l.players[0].result)}</b> for each loser.`;
+  const all = g.teams.flatMap((t) => t.players.map((q) => ({ q, t })));
+  const { q, t } = all.sort((a, b) => Math.abs(b.q.own - b.q.expected) - Math.abs(a.q.own - a.q.expected))[0];
+  const n = t.players.length, opp = g.teams.find((o) => o !== t);
+  const chance = q.expected / ((g.teamPoints / n) * 2);
+  $("#exS").innerHTML = `Teams scored <b>${g.teamPoints.toFixed(1)}</b> own points per game so far this season, so ${(g.teamPoints / n).toFixed(1)} per player in a team of ${n}. <b>${esc(q.name)}</b> (${q.before.toFixed(0)}) had a ${pct(chance)} chance against the opponents (${opp.rating.toFixed(0)}): expected ${(g.teamPoints / n).toFixed(1)} × 2 × ${chance.toFixed(2)} = <b>${q.expected.toFixed(1)}</b>. Scored ${q.own}: ${p.perPoint} × (${q.own} − ${q.expected.toFixed(1)}) = <b>${sgn(q.hitting)}</b> on top of the team's ${sgn(q.result)}.`;
+}
+
+function readParams() {
+  for (const k of SLIDERS) {
+    state.params[k] = +$("#" + k).value;
+    $("#" + k + "Out").textContent = state.params[k];
+  }
+  $("#reset").disabled = isDefault();
+}
+function writeParams() { for (const k of SLIDERS) $("#" + k).value = state.params[k]; readParams(); }
+
+let predTimer = null;
+function recompute() {
+  state.res = JSON.parse(eloRun(state.si, P()));
+  state.def = JSON.parse(eloRun(state.si, P(DEFAULTS)));
+  renderBoard(); renderChips(); renderLine(); renderGames(); renderExamples();
+  clearTimeout(predTimer);
+  predTimer = setTimeout(renderPred, 80);
+}
+
+function setSeason(si) {
+  state.si = si; state.sel = null; state.follow.clear();
+  document.querySelectorAll("[data-si]").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.si === si));
+  recompute();
+}
+
+async function boot() {
+  const bytes = Uint8Array.from(atob(WASM_B64), (c) => c.charCodeAt(0));
+  const go = new Go();
+  const { instance } = await WebAssembly.instantiate(bytes, go.importObject);
+  go.run(instance);
+  DEFAULTS = JSON.parse(eloDefaults());
+  state.params = { ...DEFAULTS };
+  eloLoad(JSON.stringify(SEASONS.map((s) => s.games.map((g) => ({ teams: g.teams.map((t) => ({ won: t.won, players: t.players.map((p) => ({ name: p.name, own: p.own, bonus: p.bonus })) })) })))));
+  $("#engine").textContent = "Running elo.go and leaderboard.go, compiled to WebAssembly";
+  $("#seasons").innerHTML = SEASONS.map((s, i) => `<button type="button" data-si="${i}" aria-pressed="${i === state.si}">${esc(s.name)} · ${s.games.length}</button>`).join("");
+  document.querySelectorAll("[data-si]").forEach((b) => b.addEventListener("click", () => setSeason(+b.dataset.si)));
+  writeParams();
+  for (const k of SLIDERS) $("#" + k).addEventListener("input", () => { readParams(); recompute(); });
+  $("#reset").addEventListener("click", () => { state.params = { ...DEFAULTS }; writeParams(); recompute(); });
+  $("#search").addEventListener("click", () => {
+    $("#search").disabled = true;
+    $("#searchOut").textContent = `Trying settings on all ${totalGames} games…`;
+    setTimeout(() => {
+      const best = JSON.parse(eloSearch());
+      const bp = best.params;
+      $("#searchOut").dataset.done = "1";
+      $("#searchOut").innerHTML = `Best of ${best.tried} settings: result weight <b>${bp.k}</b>, margin <b>${bp.marginWeight}</b>, Elo per point <b>${bp.perPoint}</b>, best player weight <b>${bp.topWeight}</b> → favourite won <b>${pct(best.score.correct)}</b>, score ${best.score.logLoss.toFixed(3)}. Applied. With a few hundred games, differences under ~0.005 are noise.`;
+      state.params = { ...bp };
+      writeParams(); recompute();
+      $("#search").disabled = false;
+    }, 30);
+  });
+  setSeason(state.si);
+}
+boot().catch((e) => { $("#engine").textContent = "Could not start the Go code: " + e; console.error(e); });
+</script>
+</body>
+</html>
