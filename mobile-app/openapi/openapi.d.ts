@@ -47,6 +47,10 @@ declare namespace Components {
         }
         export interface EloGameDto {
             matchId: string;
+            /**
+             * The test game's place in the request; missing for real games.
+             */
+            testIndex?: number; // int32
             date: string; // date-time
             gap: number; // double
             scale: number; // double
@@ -81,6 +85,17 @@ declare namespace Components {
             params: EloScoreDto;
             defaults: EloScoreDto;
         }
+        export interface EloProfileDto {
+            id: string;
+            name: string;
+        }
+        export interface EloRuleMoveDto {
+            id: string;
+            name: string;
+            pointsForScorer: number; // int32
+            pointsForTeam: number; // int32
+            finishing: boolean;
+        }
         export interface EloScoreDto {
             logLoss: number; // double
             correct: number; // double
@@ -96,6 +111,7 @@ declare namespace Components {
             id: string;
             name?: string;
             numMatches: number; // int32
+            minMatchesToQualify: number; // int32
         }
         export interface EloSimulationDto {
             groupId: string;
@@ -104,16 +120,29 @@ declare namespace Components {
             params: EloParamsDto;
             seasons: EloSeasonDto[];
             seasonId?: string;
+            /**
+             * What the standings' baseline values compare with.
+             */
+            baseline: 'defaults' | 'withoutTestGames';
             standings: EloStandingDto[];
             games: EloGameDto[];
             prediction: EloPredictionDto;
+            moves: EloRuleMoveDto[];
+            profiles: EloProfileDto[];
+        }
+        export interface EloSimulationRequestDto {
+            testGames?: EloTestGameDto[];
         }
         export interface EloStandingDto {
             profileId: string;
             name: string;
             elo: number; // double
-            defaultElo: number; // double
-            defaultRank: number; // int32
+            /**
+             * Place among the ranked players; missing while unranked.
+             */
+            rank?: number; // int32
+            baselineElo?: number; // double
+            baselineRank?: number; // int32
             matches: number; // int64
             wins: number; // int64
             points: number; // int64
@@ -128,6 +157,21 @@ declare namespace Components {
             avgPoints: number; // double
             cups: number; // int64
             players: EloPlayerDto[];
+        }
+        export interface EloTestGameDto {
+            /**
+             * "start", "end", or the id of the season's game it comes right after.
+             */
+            after: string;
+            teams: [EloTestPlayerDto[], EloTestPlayerDto[]];
+        }
+        export interface EloTestMoveDto {
+            moveId: string;
+            count: number; // int32
+        }
+        export interface EloTestPlayerDto {
+            profileId: string;
+            moves: EloTestMoveDto[];
         }
         export interface ErrorDetails {
             code?: string;
@@ -1229,6 +1273,29 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeAuthTokenDto;
         }
     }
+    namespace SimulateEloWithTestGames {
+        namespace Parameters {
+            export type InviteCode = string;
+            export type K = number; // double
+            export type MarginWeight = number; // double
+            export type PerPoint = number; // double
+            export type SeasonId = string;
+            export type TopWeight = number; // double
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+            seasonId?: Parameters.SeasonId;
+            k?: Parameters.K /* double */;
+            marginWeight?: Parameters.MarginWeight /* double */;
+            perPoint?: Parameters.PerPoint /* double */;
+            topWeight?: Parameters.TopWeight /* double */;
+        }
+        export type RequestBody = Components.Schemas.EloSimulationRequestDto;
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeEloSimulationDto;
+        }
+    }
     namespace StartNewSeason {
         namespace Parameters {
             export type GroupId = string;
@@ -1338,6 +1405,14 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
+    /**
+     * simulateEloWithTestGames - Like GET, with made-up test games counted where they say. Nothing is stored. The standings then compare with the season without the test games.
+     */
+    simulateEloWithTestGames(
+        parameters?: Parameters<Paths.SimulateEloWithTestGames.QueryParameters> | null,
+        data?: Paths.SimulateEloWithTestGames.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SimulateEloWithTestGames.Responses.$200>;
     /**
      * searchEloWeights - Tries a grid of Elo weights on all of a group's seasons and returns the one that predicts its games best.
      */
@@ -1801,6 +1876,14 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
+        /**
+         * simulateEloWithTestGames - Like GET, with made-up test games counted where they say. Nothing is stored. The standings then compare with the season without the test games.
+         */
+        post(
+            parameters?: Parameters<Paths.SimulateEloWithTestGames.QueryParameters> | null,
+            data?: Paths.SimulateEloWithTestGames.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SimulateEloWithTestGames.Responses.$200>;
     };
     ['/elo-simulation/search']: {
         /**
@@ -2348,12 +2431,19 @@ export type EloMoveDto = Components.Schemas.EloMoveDto;
 export type EloParamsDto = Components.Schemas.EloParamsDto;
 export type EloPlayerDto = Components.Schemas.EloPlayerDto;
 export type EloPredictionDto = Components.Schemas.EloPredictionDto;
+export type EloProfileDto = Components.Schemas.EloProfileDto;
+export type EloRuleMoveDto = Components.Schemas.EloRuleMoveDto;
 export type EloScoreDto = Components.Schemas.EloScoreDto;
 export type EloSearchDto = Components.Schemas.EloSearchDto;
 export type EloSeasonDto = Components.Schemas.EloSeasonDto;
 export type EloSimulationDto = Components.Schemas.EloSimulationDto;
+export type EloSimulationRequestDto =
+    Components.Schemas.EloSimulationRequestDto;
 export type EloStandingDto = Components.Schemas.EloStandingDto;
 export type EloTeamDto = Components.Schemas.EloTeamDto;
+export type EloTestGameDto = Components.Schemas.EloTestGameDto;
+export type EloTestMoveDto = Components.Schemas.EloTestMoveDto;
+export type EloTestPlayerDto = Components.Schemas.EloTestPlayerDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type FormationDto = Components.Schemas.FormationDto;
 export type FormationSaveDto = Components.Schemas.FormationSaveDto;
