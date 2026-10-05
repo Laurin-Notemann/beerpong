@@ -148,3 +148,10 @@ func TestAppleRefunds(t *testing.T) {
 	h.Equal(res.Status, 400, "forged notification")
 	h.Equal(premium(h, buyer, own), true, "a forged refund changes nothing")
 }
+
+func TestGoogleNotificationNeedsItsToken(t *testing.T) {
+	h := New(t)
+	push := map[string]any{"message": map[string]any{"data": "e30=", "messageId": "1"}}
+	h.Equal(h.Do(Req{Method: "POST", Path: "/webhooks/google", Body: push}).Status, 403, "no token")
+	h.Equal(h.Do(Req{Method: "POST", Path: "/webhooks/google?token=guessed", Body: push}).Status, 403, "wrong token")
+}

@@ -21,7 +21,8 @@ type Config struct {
 	AWS AWS
 
 	APNs APNs
-	Apple Apple
+	Apple  Apple
+	Google Google
 
 	SentryDSN         string `env:"BACKEND_SENTRY_DSN"`
 	SentryEnvironment string `env:"SENTRY_ENVIRONMENT" envDefault:"staging"`
@@ -65,6 +66,17 @@ type Apple struct {
 	// RootCAFile replaces Apple's root certificate with a PEM file. Only the
 	// contract suite sets it, to sign purchases with its own root.
 	RootCAFile string `env:"APPLE_ROOT_CA_FILE"`
+}
+
+type Google struct {
+	PackageName string `env:"GOOGLE_PLAY_PACKAGE_NAME" envDefault:"com.linusbolls.mobileapp"`
+	// ServiceAccount is the JSON key (or base64 of it) of a service account
+	// with access to the app in the Play Console. Without it, Play purchases
+	// can't be redeemed.
+	ServiceAccount string `env:"GOOGLE_PLAY_SERVICE_ACCOUNT"`
+	// NotificationToken authenticates the Pub/Sub push of Real-time
+	// Developer Notifications: the push URL ends in ?token=<it>.
+	NotificationToken string `env:"GOOGLE_PLAY_RTDN_TOKEN"`
 }
 
 func Load() (Config, error) {

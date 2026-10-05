@@ -1,0 +1,34 @@
+[
+  {
+    "request": "POST /webhooks/google",
+    "body": {
+      "message": {
+        "data": "e30=",
+        "messageId": "1"
+      }
+    },
+    "status": 403,
+    "response": {
+      "error": "Forbidden",
+      "path": "/webhooks/google",
+      "status": 403,
+      "timestamp": "\u003cts\u003e"
+    }
+  },
+  {
+    "request": "POST /webhooks/google?token=guessed",
+    "body": {
+      "message": {
+        "data": "e30=",
+        "messageId": "1"
+      }
+    },
+    "status": 403,
+    "response": {
+      "error": "Forbidden",
+      "path": "/webhooks/google",
+      "status": 403,
+      "timestamp": "\u003cts\u003e"
+    }
+  }
+]

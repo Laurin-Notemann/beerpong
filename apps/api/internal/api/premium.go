@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,7 +45,7 @@ func (s *Server) redeemPurchase(r *request) response {
 	}
 
 	ctx := r.Context()
-	p, err := s.verifyPurchase(*store, *token)
+	p, err := s.verifyPurchase(ctx, *store, *token)
 	if err == nil && (p.productID != purchases.Premium || p.revoked) {
 		err = fmt.Errorf("%w: product %q, revoked %v", purchases.ErrInvalid, p.productID, p.revoked)
 	}
@@ -90,7 +91,7 @@ func (s *Server) redeemPurchase(r *request) response {
 	return res
 }
 
-func (s *Server) verifyPurchase(store, token string) (purchase, error) {
+func (s *Server) verifyPurchase(ctx context.Context, store, token string) (purchase, error) {
 	switch store {
 	case "apple":
 		t, err := s.stores.Apple.Transaction(token)
@@ -100,6 +101,18 @@ func (s *Server) verifyPurchase(store, token string) (purchase, error) {
 		return purchase{
 			store: "apple", transactionID: t.OriginalTransactionID, productID: t.ProductID, environment: t.Environment,
 			purchasedAt: time.UnixMilli(t.PurchaseDate).UTC(), expiresAt: millis(t.ExpiresDate), revoked: t.RevocationDate != nil,
+		}, nil
+	case "google":
+		if s.stores.Google == nil {
+			return purchase{}, errors.New("google play purchase, but the API has no Play service account")
+		}
+		p, err := s.stores.Google.Product(ctx, purchases.Premium, token)
+		if err != nil {
+			return purchase{}, err
+		}
+		return purchase{
+			store: "google", transactionID: token, productID: purchases.Premium, environment: p.Environment(),
+			purchasedAt: p.PurchasedAt(), revoked: p.PurchaseState == 1,
 		}, nil
 	}
 	return purchase{}, fmt.Errorf("%w: unknown store", purchases.ErrInvalid)
@@ -145,6 +158,30 @@ func (s *Server) appleNotification(r *request) response {
 		return ok("OK")
 	}
 	return s.setRevoked(ctx, "apple", n.Transaction.OriginalTransactionID, revokedAt)
+}
+
+// googleNotification takes Google Play's Real-time Developer Notifications,
+// pushed by Pub/Sub. A voided one-time purchase (refund, chargeback) takes
+// premium away like an App Store refund; everything else is acknowledged.
+func (s *Server) googleNotification(r *request) response {
+	if s.stores.Google == nil || !s.stores.Google.Authorized(r.URL.Query().Get("token")) {
+		return springError(403)
+	}
+	raw, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil {
+		return springError(400)
+	}
+	ctx := r.Context()
+	n, err := purchases.ParseNotification(raw)
+	if err != nil {
+		s.log.WarnContext(ctx, "google notification rejected", "err", err)
+		return springError(400)
+	}
+	s.log.InfoContext(ctx, "google notification", "package", n.PackageName, "voided", n.Voided != nil)
+	if n.Voided == nil || n.Voided.ProductType != 2 || n.PackageName != s.stores.Google.PackageName() {
+		return ok("OK")
+	}
+	return s.setRevoked(ctx, "google", n.Voided.PurchaseToken, ptr(n.EventTime))
 }
 
 // setRevoked records the store's word on a purchase and updates the groups

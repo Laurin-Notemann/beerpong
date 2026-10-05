@@ -67,13 +67,20 @@ func run() error {
 		}
 		log.Warn("trusting a test root instead of Apple's for purchases", "file", cfg.Apple.RootCAFile)
 	}
-	apple, err := purchases.NewApple(cfg.Apple.BundleID, appleRoot)
-	if err != nil {
+	stores := purchases.Stores{}
+	if stores.Apple, err = purchases.NewApple(cfg.Apple.BundleID, appleRoot); err != nil {
 		return err
+	}
+	if cfg.Google.ServiceAccount != "" {
+		if stores.Google, err = purchases.NewGoogle(cfg.Google.PackageName, cfg.Google.ServiceAccount, cfg.Google.NotificationToken); err != nil {
+			return err
+		}
+	} else {
+		log.Warn("no Google Play service account: Play purchases can't be redeemed")
 	}
 
 	hub := realtime.NewHub(log)
-	server := api.NewServer(pool, auth.NewTokens(cfg.JWTSecret, cfg.AccessTokenTTL), storage.New(cfg.AWS), purchases.Stores{Apple: apple}, hub, log)
+	server := api.NewServer(pool, auth.NewTokens(cfg.JWTSecret, cfg.AccessTokenTTL), storage.New(cfg.AWS), stores, hub, log)
 	apns, err := push.New(cfg.APNs)
 	if err != nil {
 		return err

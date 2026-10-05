@@ -14,4 +14,6 @@ var ErrInvalid = errors.New("invalid purchase")
 // Stores are the verifiers the API checks purchases with.
 type Stores struct {
 	Apple *Apple
+	// Google is nil until the server has a Play service account.
+	Google *Google
 }

@@ -128,6 +128,7 @@ func (s *Server) routes() map[string]route {
 		"/elo-simulation/live-matches": {"GET": s.eloLiveMatches},
 		"/elo-simulation/replays":      {"GET": s.eloReplays},
 		"/webhooks/apple":              {"POST": s.appleNotification},
+		"/webhooks/google":             {"POST": s.googleNotification},
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
 		"/groups/user":                                                      {"GET": s.userGroups},
