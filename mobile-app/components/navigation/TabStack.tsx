@@ -62,6 +62,7 @@ export function TabStack({ root }: { root: string }) {
                 <FloatingLiveMatchDock
                     snapshot={floatingDock}
                     onPress={dock.open}
+                    onMore={dock.openList}
                 />
             )}
         </View>

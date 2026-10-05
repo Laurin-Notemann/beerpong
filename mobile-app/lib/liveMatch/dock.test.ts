@@ -138,13 +138,13 @@ describe('primaryLiveMatch', () => {
 describe('dockLabel', () => {
     it('reads one match with its score', () => {
         expect(dockLabel({ count: 1, blueScore: 4, redScore: 6 })).toBe(
-            'Live match, blue 4, red 6. Opens the match'
+            'Live match, blue 4, red 6'
         );
     });
 
     it('mentions the others when several are live', () => {
         expect(dockLabel({ count: 3, blueScore: 0, redScore: 1 })).toBe(
-            '3 live matches, this one blue 0, red 1. Opens the list'
+            '3 live matches, this one blue 0, red 1'
         );
     });
 });

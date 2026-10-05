@@ -6,9 +6,12 @@ import { LiveMatchRow } from '@/components/liveMatch/LiveMatchRow';
 import { useLiveMatchesSheet } from '@/lib/liveMatch/useLiveMatchDock';
 import { useInsets } from '@/lib/useInsets';
 
-/** Every live match of the group, opened from the dock when more than one is running. */
+/**
+ * Every live match of the group, opened from the dock's "+N" when more than one is running.
+ * Picking one makes the dock show it.
+ */
 export default function Page() {
-    const { groupId, matches, open } = useLiveMatchesSheet();
+    const { groupId, matches, shownId, show } = useLiveMatchesSheet();
     const insets = useInsets();
 
     return (
@@ -30,7 +33,8 @@ export default function Page() {
                                 key={i.id}
                                 groupId={groupId}
                                 match={i}
-                                onPress={() => open(i.id)}
+                                isShown={i.id === shownId}
+                                onPress={() => show(i.id)}
                             />
                         ))}
                 </ScrollView>
