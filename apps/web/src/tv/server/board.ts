@@ -52,6 +52,8 @@ export interface LiveMatchView {
     lastActivityAt: string;
     blue: LiveTeam;
     red: LiveTeam;
+    /** the cup hits so far, newest first */
+    moves: { name: string; team: 'blue' | 'red'; move: string }[];
 }
 
 /** everything a TV (and the phone controlling it) shows, in one request */
@@ -208,7 +210,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             numMatches: stored.numMatches ?? 0,
             numPlayers: stored.numPlayers ?? 0,
         },
-        liveMatches: folded.map(({ dto, players, blue, red }) => {
+        liveMatches: folded.map(({ dto, players, blue, red, moves }) => {
             const team = (t: typeof blue): LiveTeam => ({
                 score: t.score,
                 cups: t.cups,
@@ -224,6 +226,11 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
                 lastActivityAt: dto.lastActivityAt ?? dto.startedAt ?? '',
                 blue: team(blue),
                 red: team(red),
+                moves: moves.map((m) => ({
+                    name: profile(players.find((p) => p.id === m.playerId)?.profileId).name,
+                    team: m.team,
+                    move: m.move,
+                })),
             };
         }),
     };
