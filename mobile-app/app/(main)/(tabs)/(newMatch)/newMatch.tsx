@@ -19,7 +19,6 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -121,10 +120,8 @@ export default function NewMatchScreen() {
     const [swiperPage, setSwiperPage] = useState(0);
 
     // pro mode: Start match either goes live (see liveMatch.tsx) or, for a game that's already
-    // over, on to its cups and points here
-    const pages = beerpongProMode
-        ? (['teams', 'cups', 'points'] as const)
-        : (['teams', 'points'] as const);
+    // over, on to its points here; nobody remembers which cups were hit afterwards
+    const pages = ['teams', 'points'] as const;
 
     const profiles = playersQuery.data?.data ?? [];
 
@@ -341,15 +338,12 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                // pro mode adds a page, so toggling it re-mounts the carousel too
-                key={groupId + ':' + seasonId + ':' + beerpongProMode}
+                key={groupId + ':' + seasonId}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
-                    // in pro mode the cups have filled in the points already
                     if (
                         pages[pageIdx] === 'points' &&
-                        !beerpongProMode &&
                         !matchDraft.hasBeenOnPageTwo
                     ) {
                         nav.navigate('assignPointsToPlayerModal', {
@@ -417,9 +411,6 @@ export default function NewMatchScreen() {
                                 canStart={hasValidTeams}
                             />
                         );
-                    }
-                    if (page === 'cups') {
-                        return <NewMatchCups key={page} />;
                     }
                     return (
                         <CreateMatchAssignPoints
