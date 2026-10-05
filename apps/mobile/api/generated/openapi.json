@@ -1408,7 +1408,7 @@
             "post": {
                 "tags": ["premium-controller"],
                 "operationId": "redeemPurchase",
-                "description": "Links the caller's install to a store purchase of Versus Premium and unlocks this group plus every group a linked install created. Safe to repeat (after buying, restoring, or when the store reports a purchase the API doesn't know). Answers 400 purchaseInvalid for a purchase the store didn't sign, another product or a refunded one.",
+                "description": "Links the caller's install to a store purchase of Versus Premium, which unlocks every group a linked install created, and this group with unlockGroup. Safe to repeat (after buying, restoring, or when the store reports a purchase on a new install). Answers 400 purchaseInvalid for a purchase the store didn't sign, another product or a refunded one.",
                 "parameters": [
                     {
                         "name": "groupId",
@@ -3543,6 +3543,10 @@
                     "token": {
                         "type": "string",
                         "description": "Apple: the transaction's jwsRepresentation from StoreKit 2. Google: the purchase token."
+                    },
+                    "unlockGroup": {
+                        "type": "boolean",
+                        "description": "Set right after buying in this group: it is unlocked too. Without it (a restore, a new install) only the groups the linked installs created are."
                     }
                 },
                 "required": ["store", "token"]

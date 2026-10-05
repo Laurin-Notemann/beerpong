@@ -207,6 +207,15 @@
     }
   },
   {
+    "request": "POST /groups/\u003cid42\u003e/join",
+    "status": 200,
+    "response": {
+      "data": "OK",
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
     "request": "POST /groups/\u003cid3\u003e/join",
     "status": 200,
     "response": {
@@ -249,7 +258,8 @@
     "request": "POST /groups/\u003cid29\u003e/premium",
     "body": {
       "store": "apple",
-      "token": "\u003cjwt\u003e"
+      "token": "\u003cjwt\u003e",
+      "unlockGroup": true
     },
     "status": 200,
     "response": {
@@ -445,13 +455,14 @@
     }
   },
   {
-    "note": "redeeming again changes nothing"
+    "note": "redeeming again changes nothing, nor does a restore in another group someone else created"
   },
   {
     "request": "POST /groups/\u003cid29\u003e/premium",
     "body": {
       "store": "apple",
-      "token": "\u003cjwt\u003e"
+      "token": "\u003cjwt\u003e",
+      "unlockGroup": true
     },
     "status": 200,
     "response": {
@@ -477,6 +488,40 @@
       "httpCode": 200,
       "status": "OK"
     }
+  },
+  {
+    "request": "POST /groups/\u003cid42\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid40\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid41\u003e",
+        "customSportName": null,
+        "id": "\u003cid42\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Untouched",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "premium": false,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "events": []
   },
   {
     "events": []

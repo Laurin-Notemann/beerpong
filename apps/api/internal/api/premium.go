@@ -25,10 +25,11 @@ type purchase struct {
 	revoked       bool
 }
 
-// redeemPurchase links the caller's install to a store purchase and unlocks
-// the group in the path plus every group a linked install created. The app
-// sends it after buying, after a restore, and when the store reports a
-// purchase the API doesn't know about yet; it is safe to repeat.
+// redeemPurchase links the caller's install to a store purchase, which
+// unlocks every group a linked install created. Right after buying, the app
+// sets unlockGroup and the group in the path is unlocked too; after a restore
+// or when the store reports a purchase on a new install it doesn't, so a
+// purchase doesn't unlock every group its buyer opens. Safe to repeat.
 func (s *Server) redeemPurchase(r *request) response {
 	body, res := readJSON(r.Request, true)
 	if res != nil {
@@ -40,7 +41,8 @@ func (s *Server) redeemPurchase(r *request) response {
 	}
 	store, err1 := o.str("store")
 	token, err2 := o.str("token")
-	if err1 != nil || err2 != nil || store == nil || token == nil {
+	unlockGroup, err3 := o.primitiveBool("unlockGroup")
+	if err1 != nil || err2 != nil || err3 != nil || store == nil || token == nil {
 		return fail(errPurchaseInvalid)
 	}
 
@@ -58,6 +60,10 @@ func (s *Server) redeemPurchase(r *request) response {
 	}
 
 	groupID := r.path("groupId")
+	var unlock *string
+	if unlockGroup {
+		unlock = &groupID
+	}
 	var changed []db.Group
 	res = s.tx(ctx, func(q *db.Queries) (response, error) {
 		e, err := q.SaveEntitlement(ctx, db.SaveEntitlementParams{
@@ -73,7 +79,7 @@ func (s *Server) redeemPurchase(r *request) response {
 		if err := q.LinkEntitlementUser(ctx, db.LinkEntitlementUserParams{EntitlementID: e.ID, UserID: r.userID}); err != nil {
 			return nil, err
 		}
-		if err := q.UnlockGroups(ctx, db.UnlockGroupsParams{EntitlementID: e.ID, GroupID: groupID}); err != nil {
+		if err := q.UnlockGroups(ctx, db.UnlockGroupsParams{EntitlementID: e.ID, GroupID: unlock}); err != nil {
 			return nil, err
 		}
 		if changed, err = refreshEntitlementGroups(ctx, q, e.ID); err != nil {

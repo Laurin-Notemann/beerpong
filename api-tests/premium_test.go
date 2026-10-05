@@ -12,15 +12,21 @@ import (
 // newTransactionID is an App Store originalTransactionId nobody used before;
 // purchases outlive a test run in the database.
 func newTransactionID(h *H) string {
-	n, err := rand.Int(rand.Reader, big.NewInt(1e15))
-	if err != nil {
-		h.Fatalf("transaction id: %v", err)
-	}
-	return "2000" + n.String()
+    n, err := rand.Int(rand.Reader, big.NewInt(1e15))
+    if err != nil {
+        h.Fatalf("transaction id: %v", err)
+    }
+    return "2000" + n.String()
 }
 
+// redeem is what the app sends after a restore or on a new install; buy is
+// what it sends right after buying in g.
 func redeem(h *H, u *User, g *Group, token string) *Resp {
 	return h.Do(Req{Method: "POST", Path: g.Path("/premium"), Auth: u.Bearer(), Body: map[string]any{"store": "apple", "token": token}})
+}
+
+func buy(h *H, u *User, g *Group, token string) *Resp {
+	return h.Do(Req{Method: "POST", Path: g.Path("/premium"), Auth: u.Bearer(), Body: map[string]any{"store": "apple", "token": token, "unlockGroup": true}})
 }
 
 func premium(h *H, u *User, g *Group) bool {
@@ -35,6 +41,7 @@ func TestPremiumUnlocksTheBuyersGroups(t *testing.T) {
 	friends := h.NewGroup(friend, "Friends", "a")
 	untouched := h.NewGroup(friend, "Untouched", "a")
 	h.Join(buyer, friends)
+	h.Join(buyer, untouched)
 	h.Join(friend, own)
 	h.Equal(premium(h, buyer, own), false, "no premium before buying")
 
@@ -42,7 +49,7 @@ func TestPremiumUnlocksTheBuyersGroups(t *testing.T) {
 
 	h.Note("buying in a group someone else created")
 	token := h.Apple().Transaction(newTransactionID(h), nil)
-	res := h.OK(redeem(h, buyer, friends, token))
+	res := h.OK(buy(h, buyer, friends, token))
 	h.Equal(res.Data("premium"), true, "the group the buyer is in")
 	for _, s := range []*Socket{onOwn, onOther, onFriends} {
 		ev := s.Expect(1)
@@ -54,9 +61,11 @@ func TestPremiumUnlocksTheBuyersGroups(t *testing.T) {
 	h.Equal(premium(h, buyer, other), true, "every group the buyer created")
 	h.Equal(premium(h, friend, untouched), false, "the friend's other group stays locked")
 
-	h.Note("redeeming again changes nothing")
-	h.OK(redeem(h, buyer, friends, token))
+	h.Note("redeeming again changes nothing, nor does a restore in another group someone else created")
+	h.OK(buy(h, buyer, friends, token))
+	h.Equal(h.OK(redeem(h, buyer, untouched, token)).Data("premium"), false, "a restore doesn't unlock the group")
 	onOwn.ExpectNone()
+	onUntouched.ExpectNone()
 
 	h.Note("a group created after buying starts unlocked")
 	created := h.OK(h.Do(Req{Method: "POST", Path: "/groups", Auth: buyer.Bearer(), Body: map[string]any{"name": "Later", "profileNames": []string{"a"}, "sportPreset": "beerpong"}}))
@@ -119,7 +128,7 @@ func TestAppleRefunds(t *testing.T) {
 	token := apple.Transaction(transaction, nil)
 	h.OK(redeem(h, buyer, own, token))
 	h.OK(redeem(h, friend, shared, apple.Transaction(newTransactionID(h), nil)))
-	h.OK(redeem(h, buyer, shared, token))
+	h.OK(buy(h, buyer, shared, token))
 	onOwn, onShared := h.Listen(own.ID), h.Listen(shared.ID)
 
 	h.Note("refund")

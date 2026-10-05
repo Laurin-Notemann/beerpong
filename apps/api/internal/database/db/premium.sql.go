@@ -201,11 +201,11 @@ ON CONFLICT DO NOTHING
 
 type UnlockGroupsParams struct {
 	EntitlementID string
-	GroupID       string
+	GroupID       *string
 }
 
-// An entitlement unlocks the group the buyer is in and every group a linked
-// install created.
+// An entitlement unlocks every group a linked install created, and the group
+// the buyer was in when buying (group_id, null otherwise).
 func (q *Queries) UnlockGroups(ctx context.Context, arg UnlockGroupsParams) error {
 	_, err := q.db.Exec(ctx, unlockGroups, arg.EntitlementID, arg.GroupID)
 	return err

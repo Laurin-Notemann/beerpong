@@ -204,7 +204,8 @@
     "request": "POST /groups/\u003cid16\u003e/premium",
     "body": {
       "store": "apple",
-      "token": "\u003cjwt\u003e"
+      "token": "\u003cjwt\u003e",
+      "unlockGroup": true
     },
     "status": 200,
     "response": {

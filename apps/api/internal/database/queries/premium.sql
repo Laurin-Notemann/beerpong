@@ -18,11 +18,11 @@ INSERT INTO entitlement_users (entitlement_id, user_id) VALUES ($1, $2)
 ON CONFLICT DO NOTHING;
 
 -- name: UnlockGroups :exec
--- An entitlement unlocks the group the buyer is in and every group a linked
--- install created.
+-- An entitlement unlocks every group a linked install created, and the group
+-- the buyer was in when buying (group_id, null otherwise).
 INSERT INTO entitlement_groups (entitlement_id, group_id)
 SELECT @entitlement_id::text, g.id FROM groups g
-WHERE g.id = @group_id::text
+WHERE g.id = sqlc.narg(group_id)::text
     OR g.created_by IN (
         SELECT gm.id FROM group_members gm
         JOIN entitlement_users eu ON eu.user_id = gm.user_id
