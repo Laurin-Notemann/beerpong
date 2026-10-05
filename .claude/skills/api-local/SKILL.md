@@ -48,7 +48,7 @@ TestMatchPhotos, TestUpdateMatch, TestDeleteMatch, TestProfileAvatar. Anything e
 
 Goldens: record only the tests you changed, by adding `-e GOLDEN=record` and `-run '^(TestA|TestB)$'`
 to the command above. Then `git diff api-tests/testdata/golden` must touch only what you meant
-(an Elo change touches only `"elo"` lines). For the six S3 tests, edit their golden JSON by hand
+(Elo numbers aren't compared, so a weight change needs no re-record). For the six S3 tests, edit their golden JSON by hand
 and let CI check them.
 
 ## Before pushing
