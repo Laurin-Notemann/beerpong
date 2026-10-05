@@ -20,6 +20,7 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
 	"github.com/laurin-notemann/beerpong/api-go/internal/push"
+	"github.com/laurin-notemann/beerpong/api-go/internal/purchases"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 	"github.com/laurin-notemann/beerpong/api-go/openapi"
 )
@@ -36,6 +37,7 @@ type Server struct {
 	q      *db.Queries
 	tokens *auth.Tokens
 	bucket Bucket
+	stores purchases.Stores
 	hub    *realtime.Hub
 	log    *slog.Logger
 	// nil without an APNs key (SetAPNs)
@@ -46,12 +48,13 @@ type Server struct {
 	now func() time.Time
 }
 
-func NewServer(pool *pgxpool.Pool, tokens *auth.Tokens, bucket Bucket, hub *realtime.Hub, log *slog.Logger) *Server {
+func NewServer(pool *pgxpool.Pool, tokens *auth.Tokens, bucket Bucket, stores purchases.Stores, hub *realtime.Hub, log *slog.Logger) *Server {
 	return &Server{
 		pool:   pool,
 		q:      db.New(pool),
 		tokens: tokens,
 		bucket: bucket,
+		stores: stores,
 		hub:    hub,
 		log:    log,
 		pushes: newLiveScorePushes(),
@@ -124,6 +127,7 @@ func (s *Server) routes() map[string]route {
 		"/elo-simulation/search":       {"GET": s.eloSearch},
 		"/elo-simulation/live-matches": {"GET": s.eloLiveMatches},
 		"/elo-simulation/replays":      {"GET": s.eloReplays},
+		"/webhooks/apple":              {"POST": s.appleNotification},
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
 		"/groups/user":                                                      {"GET": s.userGroups},
@@ -132,6 +136,7 @@ func (s *Server) routes() map[string]route {
 		"/groups/{id}/wallpaper":                                            {"PUT": s.setWallpaper, "DELETE": s.deleteWallpaper},
 		"/groups/{id}/join":                                                 {"POST": s.joinGroup},
 		"/groups/{id}/leave":                                                {"POST": s.leaveGroup},
+		"/groups/{groupId}/premium":                                         {"POST": s.redeemPurchase},
 		"/groups/{groupId}/leaderboard":                                     {"GET": s.leaderboard},
 		"/groups/{groupId}/leaderboard/projection":                          {"POST": s.leaderboardProjection},
 		"/groups/{groupId}/active-season":                                   {"PUT": s.startSeason},

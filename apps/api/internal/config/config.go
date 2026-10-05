@@ -21,6 +21,7 @@ type Config struct {
 	AWS AWS
 
 	APNs APNs
+	Apple Apple
 
 	SentryDSN         string `env:"BACKEND_SENTRY_DSN"`
 	SentryEnvironment string `env:"SENTRY_ENVIRONMENT" envDefault:"staging"`
@@ -57,6 +58,13 @@ type APNs struct {
 	Topic string `env:"APNS_TOPIC" envDefault:"com.linusbolls.mobileapp"`
 	// TestFlight and App Store builds get production tokens; development builds sandbox ones
 	Production bool `env:"APNS_PRODUCTION" envDefault:"true"`
+}
+
+type Apple struct {
+	BundleID string `env:"APPLE_BUNDLE_ID" envDefault:"com.linusbolls.mobileapp"`
+	// RootCAFile replaces Apple's root certificate with a PEM file. Only the
+	// contract suite sets it, to sign purchases with its own root.
+	RootCAFile string `env:"APPLE_ROOT_CA_FILE"`
 }
 
 func Load() (Config, error) {

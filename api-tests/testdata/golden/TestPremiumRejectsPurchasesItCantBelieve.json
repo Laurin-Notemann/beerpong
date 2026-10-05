@@ -1,0 +1,298 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Locked",
+      "profileNames": [
+        "a"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Locked",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "premium": false,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "note": "another root"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "another app"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "another product"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "refunded"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "Xcode StoreKit tests"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "not a JWS"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "not-a-jws"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "note": "a tampered payload"
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "nokia",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple"
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "purchaseInvalid",
+        "description": "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/premium",
+    "body": {
+      "store": "apple",
+      "token": "\u003cjwt\u003e"
+    },
+    "status": 401,
+    "response": "No access to this group!"
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Locked",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 1,
+        "numberOfSeasons": 1,
+        "premium": false,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  }
+]

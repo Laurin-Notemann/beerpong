@@ -49,6 +49,27 @@ type Device struct {
 	UserID                *string
 }
 
+type Entitlement struct {
+	ID                 string
+	Store              string
+	ProductID          string
+	StoreTransactionID string
+	Environment        string
+	PurchasedAt        time.Time
+	ExpiresAt          *time.Time
+	RevokedAt          *time.Time
+}
+
+type EntitlementGroup struct {
+	EntitlementID string
+	GroupID       string
+}
+
+type EntitlementUser struct {
+	EntitlementID string
+	UserID        string
+}
+
 type Formation struct {
 	ID        string
 	GroupID   string
@@ -69,6 +90,7 @@ type Group struct {
 	ActiveSeasonID   *string
 	AssetIDWallpaper *string
 	CreatedBy        *string
+	Premium          bool
 }
 
 type GroupMember struct {

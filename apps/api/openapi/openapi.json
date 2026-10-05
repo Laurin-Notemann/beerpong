@@ -1418,6 +1418,72 @@
                 }
             }
         },
+        "/groups/{groupId}/premium": {
+            "post": {
+                "tags": ["premium-controller"],
+                "operationId": "redeemPurchase",
+                "description": "Links the caller's install to a store purchase of Versus Premium and unlocks this group plus every group a linked install created. Safe to repeat (after buying, restoring, or when the store reports a purchase the API doesn't know). Answers 400 purchaseInvalid for a purchase the store didn't sign, another product or a refunded one.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PurchaseDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks/apple": {
+            "post": {
+                "tags": ["premium-controller"],
+                "operationId": "appleNotification",
+                "description": "App Store Server Notifications V2. Refunds and revocations take premium away from the groups the purchase unlocked; a reversed refund gives it back.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppleNotificationDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{id}/join": {
             "post": {
                 "tags": ["group-controller"],
@@ -3471,7 +3537,11 @@
                     "customSportName": { "type": "string", "nullable": true },
                     "numberOfPlayers": { "type": "integer", "format": "int64" },
                     "numberOfMatches": { "type": "integer", "format": "int64" },
-                    "numberOfSeasons": { "type": "integer", "format": "int64" }
+                    "numberOfSeasons": { "type": "integer", "format": "int64" },
+                    "premium": {
+                        "type": "boolean",
+                        "description": "Versus Premium is unlocked for the group: seasons, photos, pro mode and the TV."
+                    }
                 },
                 "required": [
                     "id",
@@ -3485,7 +3555,8 @@
                     "customSportName",
                     "numberOfPlayers",
                     "numberOfMatches",
-                    "numberOfSeasons"
+                    "numberOfSeasons",
+                    "premium"
                 ]
             },
             "GroupPreset": {
@@ -3496,6 +3567,22 @@
                     "imageUrl": { "type": "string" }
                 },
                 "required": ["id", "title", "imageUrl"]
+            },
+            "PurchaseDto": {
+                "type": "object",
+                "properties": {
+                    "store": { "type": "string", "enum": ["apple"] },
+                    "token": {
+                        "type": "string",
+                        "description": "Apple: the transaction's jwsRepresentation from StoreKit 2."
+                    }
+                },
+                "required": ["store", "token"]
+            },
+            "AppleNotificationDto": {
+                "type": "object",
+                "properties": { "signedPayload": { "type": "string" } },
+                "required": ["signedPayload"]
             },
             "ResponseEnvelopeGroupDto": {
                 "type": "object",

@@ -18,6 +18,7 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/database"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
 	"github.com/laurin-notemann/beerpong/api-go/internal/push"
+	"github.com/laurin-notemann/beerpong/api-go/internal/purchases"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 	"github.com/laurin-notemann/beerpong/api-go/internal/storage"
 )
@@ -59,8 +60,20 @@ func run() error {
 		}
 	}
 
+	var appleRoot []byte
+	if cfg.Apple.RootCAFile != "" {
+		if appleRoot, err = os.ReadFile(cfg.Apple.RootCAFile); err != nil {
+			return err
+		}
+		log.Warn("trusting a test root instead of Apple's for purchases", "file", cfg.Apple.RootCAFile)
+	}
+	apple, err := purchases.NewApple(cfg.Apple.BundleID, appleRoot)
+	if err != nil {
+		return err
+	}
+
 	hub := realtime.NewHub(log)
-	server := api.NewServer(pool, auth.NewTokens(cfg.JWTSecret, cfg.AccessTokenTTL), storage.New(cfg.AWS), hub, log)
+	server := api.NewServer(pool, auth.NewTokens(cfg.JWTSecret, cfg.AccessTokenTTL), storage.New(cfg.AWS), purchases.Stores{Apple: apple}, hub, log)
 	apns, err := push.New(cfg.APNs)
 	if err != nil {
 		return err
