@@ -6,6 +6,8 @@ import type { ScoreClip } from '~/tv/lib/scoreClips';
 const MAX_SECONDS = 5;
 /** a clip that hasn't started by then is skipped */
 const LOAD_TIMEOUT_MS = 8_000;
+/** a local copy that hasn't loaded by then is streamed instead */
+const LOCAL_TIMEOUT_MS = 2_500;
 /** how long the column takes to close (`.score-clip.leaving` in styles.css) */
 const LEAVE_MS = 350;
 /** the full height of the screen, inside its padding */
@@ -30,7 +32,13 @@ export function ScoreClipPanel({
 }) {
     const video = useRef<HTMLVideoElement>(null);
     // a download that finishes while the clip streams doesn't restart it
-    const [source] = useState(src);
+    const [source, setSource] = useState(src);
+    // some TV players won't open a local copy (a blob: URL); then the clip streams
+    const local = source !== clip.url;
+    const stream = () => {
+        report(video.current!, 'local copy failed, streaming');
+        setSource(clip.url);
+    };
     const [playing, setPlaying] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const done = useRef(onDone);
@@ -48,7 +56,15 @@ export function ScoreClipPanel({
                 report(v, `play() failed: ${err}`);
                 setLeaving(true);
             });
-    }, []);
+    }, [source]);
+
+    useEffect(() => {
+        if (!local) return;
+        const timeout = setTimeout(() => {
+            if (video.current!.readyState === 0) stream();
+        }, LOCAL_TIMEOUT_MS);
+        return () => clearTimeout(timeout);
+    }, [local]);
 
     useEffect(() => {
         if (playing) return;
@@ -94,6 +110,7 @@ export function ScoreClipPanel({
                         onPlaying={() => setPlaying(true)}
                         onEnded={() => setLeaving(true)}
                         onError={(e) => {
+                            if (local) return stream();
                             report(e.currentTarget, `error ${e.currentTarget.error?.code}`);
                             setLeaving(true);
                         }}

@@ -19,6 +19,8 @@ ARG VITE_GIT_COMMIT
 RUN npm run build
 
 FROM node:24-alpine
+# converts score clips into MP4s the TV can play (src/tv/server/clips.ts)
+RUN apk add --no-cache ffmpeg
 WORKDIR /app
 COPY --from=build /src/apps/web/.output .output
 ENV NODE_ENV=production PORT=3000
