@@ -31,6 +31,7 @@ import {
 } from '@/lib/liveMatch/log';
 import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
 import { LiveMatchDto, LiveOp, toLiveOps } from '@/lib/liveMatch/types';
+import type { Rerack } from '@/lib/rerack';
 import { showErrorToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
 import {
@@ -307,6 +308,20 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
         enqueue([{ id: newOpId(), type: 'UNDO_CUP_HIT', team, cup }]);
     }
 
+    /** shows the team's cups in another formation on every phone and the TV; none: the pyramid */
+    function setRerack(team: CupTeam, rerack?: Rerack) {
+        enqueue([
+            {
+                id: newOpId(),
+                type: 'SET_RERACK',
+                team,
+                cups: rerack?.slots.map((i) => i.cup) ?? [],
+                drawn: rerack?.slots.map((i) => i.drawn) ?? [],
+                formationId: rerack?.formationId || undefined,
+            },
+        ]);
+    }
+
     async function refetch(): Promise<LiveMatchDto> {
         const fetched = await fetchLiveMatch(await api, groupId, id);
         const merged = mergeLiveMatch(cachedMatch(qc, groupId, id), fetched);
@@ -385,6 +400,7 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
         setMoveCount,
         recordCupHit,
         undoCupHit,
+        setRerack,
         finish,
         discard,
     };

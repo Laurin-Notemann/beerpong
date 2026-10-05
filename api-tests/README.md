@@ -20,7 +20,8 @@ API_BASE_URL=http://localhost:8080 go test ./...
 
 Every request and realtime event of a test is normalized (ids numbered by
 first appearance, timestamps, tokens and signatures masked) and compared with
-`testdata/golden/<Test>.json`. The goldens were recorded against the Java
+`testdata/golden/<Test>.json`. Numbers that follow the Elo weights (`eloKeys`
+in `harness/harness.go`) aren't compared, so tuning the Elo needs no re-record. The goldens were recorded against the Java
 backend, so a passing Go run means "same responses as Java", field by field.
 The Go API deliberately differs in two places, recorded against Go: rules
 keep their written order (`TestRuleOrderIsTheWrittenOrder`), and upload URLs

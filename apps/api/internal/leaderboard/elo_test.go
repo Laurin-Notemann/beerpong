@@ -1,6 +1,7 @@
 package leaderboard
 
 import (
+	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -8,13 +9,56 @@ import (
 
 func TestEloCloseWinCountsOnce(t *testing.T) {
 	// Equal ratings, a points gap of 4 per player (a close normal win) counts
-	// exactly once: 350 * (1 - 0.5) = 175. Both scored what a solo player is
+	// exactly once: 175 * (1 - 0.5) = 87.5. Both scored what a solo player is
 	// expected to (9 of a team's 9), so hitting adds nothing.
 	blue := &Stats{Elo: 1500, PlayerID: "b"}
 	red := &Stats{Elo: 1500, PlayerID: "r"}
 	calculateElo(DefaultElo, 1, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 8, "r": 4}, map[string]int64{"b": 9, "r": 9}, 9)
-	if blue.Elo != 1675 || red.Elo != 1325 {
-		t.Fatalf("got blue %v red %v, want 1675 / 1325", blue.Elo, red.Elo)
+	if blue.Elo != 1587.5 || red.Elo != 1412.5 {
+		t.Fatalf("got blue %v red %v, want 1587.5 / 1412.5", blue.Elo, red.Elo)
+	}
+}
+
+func TestEloCarrierPassesAWinnerWhoHitsLess(t *testing.T) {
+	// S hits 6 a game but always loses with W, who hits 1, against A (5 and
+	// the finish) and B (4).
+	profile := func(s string) *string { return &s }
+	in := Input{
+		RuleMoves: map[string]RuleMove{
+			"cup":    {PointsForScorer: 1, Cups: 1},
+			"normal": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true, Cups: 1},
+		},
+		ProfileOf: map[string]string{},
+	}
+	for _, id := range []string{"S", "W", "A", "B"} {
+		in.Players = append(in.Players, Player{ID: "p" + id, ProfileID: profile(id), SeasonID: "s", Active: true})
+		in.ProfileOf["p"+id] = id
+	}
+	start := time.Now()
+	for g := range 20 {
+		member := func(id string) string { return fmt.Sprintf("%d%s", g, id) }
+		m := Match{ID: fmt.Sprint(g), Date: start.Add(time.Duration(g) * time.Minute), TeamIDs: []string{"t1", "t2"}}
+		for _, x := range [][2]string{{"S", "t1"}, {"W", "t1"}, {"A", "t2"}, {"B", "t2"}} {
+			m.Members = append(m.Members, Member{ID: member(x[0]), TeamID: x[1], PlayerID: "p" + x[0]})
+		}
+		m.Moves = []Move{{member("S"), "cup", 6}, {member("W"), "cup", 1}, {member("A"), "cup", 5},
+			{member("A"), "normal", 1}, {member("B"), "cup", 4}}
+		in.Matches = append(in.Matches, m)
+	}
+	res, err := Compute(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	elo := map[string]float64{}
+	for _, e := range res.Entries {
+		elo[*e.Player.ProfileID] = e.Stats.Elo
+	}
+	if !(elo["S"] > elo["B"]) {
+		t.Fatalf("losing with a weak partner should not bury S below B, who hits less: S %v, B %v", elo["S"], elo["B"])
+	}
+	// winning still counts: A hits as much as S and wins
+	if !(elo["A"] > elo["S"]) {
+		t.Fatalf("A hits as much as S and wins, so should stay ahead: A %v, S %v", elo["A"], elo["S"])
 	}
 }
 

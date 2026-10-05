@@ -105,7 +105,7 @@ func TestEloSimulationTestGames(t *testing.T) {
 	}
 
 	atEnd := h.OK(post(test("end", "d")))
-	h.Equal(atEnd.Str("baseline"), "withoutTestGames", "baseline")
+	h.Equal(atEnd.Str("baseline"), "storedGames", "baseline")
 	games := atEnd.List("games")
 	h.Equal(len(games), 3, "the test game counts")
 	h.Equal(Get(games[2], "testIndex"), 0.0, "and comes last")
@@ -134,4 +134,43 @@ func TestEloSimulationTestGames(t *testing.T) {
 	h.Fail(post(test("end", "d", "b")), 400, "eloInvalidTestGame")
 	h.Fail(post(test("end")), 400, "eloInvalidTestGame")
 	h.Fail(post(test("not-a-game", "d")), 400, "eloInvalidTestGame")
+}
+
+// Running live matches count as if they ended now, like on the TV.
+func TestEloSimulationLiveMatches(t *testing.T) {
+	h := New(t)
+	owner, g := leaderboardGroup(h)
+	id := newLiveMatchID()
+	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b"), adjustMove(g, "a", 3)))
+
+	path := "/elo-simulation?inviteCode=" + g.InviteCode
+	running := h.OK(h.Do(Req{Method: "GET", Path: "/elo-simulation/live-matches?inviteCode=" + g.InviteCode, Ordered: true}))
+	h.Equal(len(running.List()), 1, "running live matches")
+	h.Equal(running.Str("0", "id"), id, "the live match")
+
+	// the teams as the app reduces the ops: blue b, red a with three Normals
+	teams := []any{
+		map[string]any{"teamMembers": []any{map[string]any{"playerId": g.Players["b"], "moves": []any{}}}},
+		map[string]any{"teamMembers": []any{map[string]any{"playerId": g.Players["a"], "moves": []any{
+			map[string]any{"moveId": g.Moves["Normal"], "count": 3}}}}},
+	}
+	post := func(liveID string) *Resp {
+		return h.Do(Req{Method: "POST", Path: path, Body: map[string]any{
+			"liveMatches": []any{map[string]any{"liveMatchId": liveID, "teams": teams}}}})
+	}
+	sim := h.OK(post(id))
+	h.Equal(sim.Str("baseline"), "storedGames", "baseline")
+	games := sim.List("games")
+	h.Equal(len(games), 3, "the live match counts")
+	h.Equal(Get(games[2], "liveMatchId"), id, "as the last game")
+	h.Equal(Get(games[2], "teams", "1", "won"), true, "the team with more cups leads")
+	for _, s := range sim.List("standings") {
+		if Get(s, "profileId") == g.Profiles["a"] {
+			h.True(Get(s, "elo").(float64) > Get(s, "baselineElo").(float64), "a gains from leading")
+		}
+	}
+
+	h.Equal(len(h.OK(post(newLiveMatchID())).List("games")), 2, "a live match that isn't running doesn't count")
+	h.Fail(h.Do(Req{Method: "POST", Path: path, Body: map[string]any{
+		"liveMatches": []any{map[string]any{"liveMatchId": id}}}}), 400, "eloInvalidLiveMatch")
 }

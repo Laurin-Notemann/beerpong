@@ -45,7 +45,68 @@ describe('foldLiveMatch', () => {
             moves
         );
         expect([blue.score, red.score]).toEqual([2, 1]);
-        expect([blue.standing.length, red.standing.length]).toEqual([9, 8]);
+        expect([blue.cups.filter((i) => i.up).length, red.cups.filter((i) => i.up).length]).toEqual(
+            [9, 8]
+        );
         expect(blue.playerIds).toEqual(['b1']);
+    });
+});
+
+describe('a re-rack', () => {
+    it('draws the team at the formation, hits included, like the phone that made it', () => {
+        const pyramidLeft = [
+            { x: 1, y: 2 },
+            { x: 3, y: 2 },
+            { x: 3, y: 6 },
+        ];
+        const { red } = foldLiveMatch(
+            {
+                ops: [
+                    op(1, { type: 'SET_TEAMS', bluePlayerIds: ['b1'], redPlayerIds: ['r1'] }),
+                    // seven hits leave red three cups
+                    ...[
+                        [0, 0],
+                        [2, 0],
+                        [4, 0],
+                        [6, 0],
+                        [5, 2],
+                        [2, 4],
+                        [4, 4],
+                    ].map(([x, y], i) =>
+                        op(2 + i, {
+                            type: 'RECORD_CUP_HIT',
+                            team: 'red',
+                            playerId: 'b1',
+                            moveId: 'normal',
+                            cups: [{ x, y }],
+                        })
+                    ),
+                    op(9, {
+                        type: 'SET_RERACK',
+                        team: 'red',
+                        cups: pyramidLeft,
+                        drawn: [
+                            { x: 2, y: 0 },
+                            { x: 4, y: 0 },
+                            { x: 3, y: 2 },
+                        ],
+                    }),
+                    // and one of them is hit after the re-rack
+                    op(10, {
+                        type: 'RECORD_CUP_HIT',
+                        team: 'red',
+                        playerId: 'b1',
+                        moveId: 'normal',
+                        cups: [{ x: 3, y: 6 }],
+                    }),
+                ],
+            },
+            moves
+        );
+        expect(red.cups).toEqual([
+            { at: { x: 2, y: 0 }, up: true },
+            { at: { x: 4, y: 0 }, up: true },
+            { at: { x: 3, y: 2 }, up: false },
+        ]);
     });
 });

@@ -54,11 +54,7 @@ export function LiveMatchCard({
                 <span className="tabular text-text-2">{elapsed}</span>
             </div>
             <div className="flex min-h-0 flex-1 items-center gap-[2rem]">
-                <CupRack
-                    standing={match.blue.standing}
-                    team="blue"
-                    className={`${s.rack} shrink-0`}
-                />
+                <CupRack cups={match.blue.cups} team="blue" className={`${s.rack} shrink-0`} />
                 <Players team={match.blue} side="blue" size={size} />
                 <div
                     className={`tabular flex shrink-0 items-center gap-[1.5rem] font-black leading-none ${s.score}`}
@@ -72,11 +68,7 @@ export function LiveMatchCard({
                     </span>
                 </div>
                 <Players team={match.red} side="red" size={size} />
-                <CupRack
-                    standing={match.red.standing}
-                    team="red"
-                    className={`${s.rack} shrink-0`}
-                />
+                <CupRack cups={match.red.cups} team="red" className={`${s.rack} shrink-0`} />
             </div>
         </section>
     );

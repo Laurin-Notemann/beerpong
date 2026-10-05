@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Events of the API's websocket that change what the page shows.
-const relevant = new Set(['MATCHES', 'PLAYERS', 'SEASONS', 'GROUPS', 'RULE_MOVES', 'PROFILES']);
+const relevant = new Set([
+    'MATCHES',
+    'PLAYERS',
+    'SEASONS',
+    'GROUPS',
+    'RULE_MOVES',
+    'PROFILES',
+    'LIVE_MATCHES',
+]);
 
 export type LiveStatus = 'connecting' | 'live' | 'offline';
 

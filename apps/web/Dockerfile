@@ -1,6 +1,6 @@
 # Built from the repo root (`docker build -f apps/web/Dockerfile .`): dependencies come from the
-# root lockfile, and the TV reduces live matches with the app's own code
-# (src/tv/lib/liveMatch.ts), so those parts of apps/mobile/ come along.
+# root lockfile, and the TV and the simulator reduce live matches with the app's own code
+# (src/tv/lib/liveMatch.ts, src/simulator/liveMatch.ts), so those parts of apps/mobile/ come along.
 FROM node:24-alpine AS build
 WORKDIR /src
 COPY package.json package-lock.json .npmrc ./

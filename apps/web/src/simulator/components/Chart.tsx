@@ -130,14 +130,16 @@ export function Chart({
                     </text>
                     {games.map(
                         (g, gi) =>
-                            g.testIndex != null && (
+                            (g.testIndex != null || g.liveMatchId != null) && (
                                 <line
                                     key={g.matchId}
                                     x1={x(gi + 1)}
                                     x2={x(gi + 1)}
                                     y1={m.t}
                                     y2={H - m.b}
-                                    stroke="var(--scoring)"
+                                    stroke={
+                                        g.liveMatchId != null ? 'var(--down)' : 'var(--scoring)'
+                                    }
                                     strokeDasharray="4 4"
                                 />
                             )

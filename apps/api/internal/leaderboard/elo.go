@@ -25,8 +25,8 @@ import "math"
 const (
 	StartingElo = 1500
 	// eloDivider: rating gap that makes a 10x win-chance ratio. Ten times the
-	// usual 400, with a ten times larger K, so a game moves a rating by about
-	// 100 to 250.
+	// usual 400, with a ten times larger K, so a game's result moves a rating
+	// by about 50 to 150.
 	eloDivider = 4000.0
 	// marginBase: points gap per player of a typical close normal win
 	// (2v2, 10:9), the game that counts exactly once.
@@ -44,12 +44,16 @@ type EloParams struct {
 	// PerPoint: rating for each own point above or below expectation.
 	PerPoint float64
 	// TopWeight: 0 = a team is as strong as its average player, 1 = as its
-	// strongest player. Halfway predicted Sackverein's games better than the
-	// plain average.
+	// strongest player. A team's points are its players' hits added up, and
+	// leaning toward the strongest player made a carrier's losses cost more.
 	TopWeight float64
 }
 
-var DefaultElo = EloParams{K: 350, MarginWeight: 0.5, PerPoint: 25, TopWeight: 0.5}
+// DefaultElo leans on hitting more than on the result: on Sackverein's games
+// the favourite wins only about 55% of the time, so one result says little
+// about a player, while every cup does. It predicts winners as well as the
+// heavier result weights did.
+var DefaultElo = EloParams{K: 175, MarginWeight: 0.5, PerPoint: 50, TopWeight: 0}
 
 // eloGame is how one match moved the ratings, for Input.Trace.
 type eloGame struct {

@@ -386,3 +386,61 @@ describe('toLiveOp', () => {
         ).toBeUndefined();
     });
 });
+
+describe('SET_RERACK', () => {
+    const rerack: OpBody = {
+        type: 'SET_RERACK',
+        team: 'red',
+        formationId: 'tri-6',
+        cups: [
+            { x: 1, y: 2 },
+            { x: 3, y: 2 },
+        ],
+        drawn: [
+            { x: 2, y: 0 },
+            { x: 3, y: 1 },
+        ],
+    };
+
+    it('draws the team in the formation, on every phone, and keeps it through later ops', () => {
+        const { state } = reduceLiveMatch(
+            log(
+                setTeams,
+                rerack,
+                hit('blue', 'anna', 'normal', [{ x: 0, y: 0 }])
+            )
+        );
+        expect(state.reracks.red).toEqual({
+            formationId: 'tri-6',
+            slots: [
+                { cup: { x: 1, y: 2 }, drawn: { x: 2, y: 0 } },
+                { cup: { x: 3, y: 2 }, drawn: { x: 3, y: 1 } },
+            ],
+        });
+        expect(state.reracks.blue).toBeUndefined();
+    });
+
+    it('puts the cups back in the pyramid when sent without cups', () => {
+        const { state } = reduceLiveMatch(
+            log(setTeams, rerack, {
+                type: 'SET_RERACK',
+                team: 'red',
+                cups: [],
+                drawn: [],
+            })
+        );
+        expect(state.reracks.red).toBeUndefined();
+    });
+
+    it('drops an op whose cups and drawn positions do not pair up', () => {
+        expect(
+            toLiveOp({
+                id: 'x',
+                type: 'SET_RERACK',
+                team: 'red',
+                cups: [{ x: 1, y: 2 }],
+                drawn: [],
+            })
+        ).toBeUndefined();
+    });
+});

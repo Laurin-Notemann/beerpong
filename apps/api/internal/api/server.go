@@ -109,13 +109,14 @@ func springHeaders(next http.Handler) http.Handler {
 // exactly these (TestSpecMatchesRoutes).
 func (s *Server) routes() map[string]route {
 	return map[string]route{
-		"/healthcheck":           {"GET": s.healthcheck},
-		"/group-presets":         {"GET": s.listPresets},
-		"/assets/{id}":           {"GET": s.getAsset},
-		"/auth/signup":           {"POST": s.signup},
-		"/auth/refresh":          {"POST": s.refresh},
-		"/elo-simulation":        {"GET": s.eloSimulation, "POST": s.eloSimulation},
-		"/elo-simulation/search": {"GET": s.eloSearch},
+		"/healthcheck":                 {"GET": s.healthcheck},
+		"/group-presets":               {"GET": s.listPresets},
+		"/assets/{id}":                 {"GET": s.getAsset},
+		"/auth/signup":                 {"POST": s.signup},
+		"/auth/refresh":                {"POST": s.refresh},
+		"/elo-simulation":              {"GET": s.eloSimulation, "POST": s.eloSimulation},
+		"/elo-simulation/search":       {"GET": s.eloSearch},
+		"/elo-simulation/live-matches": {"GET": s.eloLiveMatches},
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
 		"/groups/user":                                                      {"GET": s.userGroups},

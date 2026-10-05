@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { apiUrl, socketUrl } from '~/apiUrl';
+import { type LiveMatchDto, liveTeams } from '~/simulator/liveMatch';
 
 // The API computes everything with the leaderboard's own Elo code
 // (/elo-simulation in apps/api); this page only shows it. A group opens with its
@@ -56,8 +57,10 @@ export type GameTeam = {
 
 export type Game = {
     matchId: string;
-    // the test game's place in Search.tests; null for real games
+    // the test game's place in Search.tests; null for other games
     testIndex: number | null;
+    // the running live match this game is, counted as if it ended now
+    liveMatchId: string | null;
     date: string;
     gap: number;
     scale: number;
@@ -82,9 +85,9 @@ export type Simulation = {
     params: Params;
     seasons: { id: string; name: string | null; numMatches: number; minMatchesToQualify: number }[];
     seasonId: string | null;
-    // what the standings' baseline is: the default weights, or with test
-    // games the same weights without them
-    baseline: 'defaults' | 'withoutTestGames';
+    // what the standings' baseline is: the default weights, or with test or
+    // live games the same weights without them
+    baseline: 'defaults' | 'storedGames';
     standings: Standing[];
     games: Game[];
     prediction: { params: Score; defaults: Score };
@@ -148,24 +151,43 @@ async function call<T>(
     return json.data;
 }
 
+// The group's running live matches, reduced to their teams like on the phones; the API counts
+// them as if they ended now. A live match that can't be read is left out rather than failing
+// the page.
+async function liveMatches(inviteCode: string) {
+    const list = await call<LiveMatchDto[]>('/elo-simulation/live-matches', { inviteCode }).catch(
+        () => null
+    );
+    return (list ?? []).flatMap((dto) => {
+        try {
+            const teams = liveTeams(dto);
+            return teams && dto.id ? [{ liveMatchId: dto.id, teams }] : [];
+        } catch {
+            return [];
+        }
+    });
+}
+
 // POST so the test games don't have to fit in a URL
 export const getSimulation = createServerFn({ method: 'POST' })
     .inputValidator((q: SimulationQuery) => q)
     .handler(async ({ data: { code, season, tests, ...params } }): Promise<Simulation | null> => {
-        const query = { inviteCode: code.trim().toUpperCase(), seasonId: season, ...params };
+        const inviteCode = code.trim().toUpperCase();
+        const query = { inviteCode, seasonId: season, ...params };
         const socket = socketUrl();
         type Data = Omit<Simulation, 'socketUrl' | 'testError'>;
-        if (!tests?.length) {
-            const sim = await call<Data>('/elo-simulation', query);
-            return sim && { ...sim, socketUrl: socket };
-        }
+        const live = await liveMatches(inviteCode);
+        const simulate = (testGames: TestGame[]) =>
+            testGames.length || live.length
+                ? call<Data>('/elo-simulation', query, { testGames, liveMatches: live })
+                : call<Data>('/elo-simulation', query);
         try {
-            const sim = await call<Data>('/elo-simulation', query, { testGames: tests });
+            const sim = await simulate(tests ?? []);
             return sim && { ...sim, socketUrl: socket };
         } catch (e) {
             if (!(e instanceof ApiError) || e.code !== 'eloInvalidTestGame') throw e;
             // show the real games rather than nothing
-            const sim = await call<Data>('/elo-simulation', query);
+            const sim = await simulate([]);
             return sim && { ...sim, socketUrl: socket, testError: e.message };
         }
     });

@@ -8,6 +8,33 @@
         }
     ],
     "paths": {
+        "/elo-simulation/live-matches": {
+            "get": {
+                "tags": ["elo-simulation-controller"],
+                "operationId": "getEloLiveMatches",
+                "description": "The group's running live matches with their ops, for the simulator to reduce.",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/elo-simulation": {
             "get": {
                 "tags": ["elo-simulation-controller"],
@@ -68,7 +95,7 @@
             "post": {
                 "tags": ["elo-simulation-controller"],
                 "operationId": "simulateEloWithTestGames",
-                "description": "Like GET, with made-up test games counted where they say. Nothing is stored. The standings then compare with the season without the test games.",
+                "description": "Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone.",
                 "parameters": [
                     {
                         "name": "inviteCode",
@@ -1983,6 +2010,21 @@
     },
     "components": {
         "schemas": {
+            "EloLiveMatchDto": {
+                "type": "object",
+                "properties": {
+                    "liveMatchId": { "type": "string" },
+                    "teams": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                            "$ref": "#/components/schemas/TeamCreateDto"
+                        }
+                    }
+                },
+                "required": ["liveMatchId", "teams"]
+            },
             "EloRuleMoveDto": {
                 "type": "object",
                 "properties": {
@@ -2057,6 +2099,12 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/EloTestGameDto"
+                        }
+                    },
+                    "liveMatches": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EloLiveMatchDto"
                         }
                     }
                 },
@@ -2204,6 +2252,10 @@
                         "format": "int32",
                         "description": "The test game's place in the request; missing for real games."
                     },
+                    "liveMatchId": {
+                        "type": "string",
+                        "description": "The running live match this game is, counted as if it ended now; missing for other games."
+                    },
                     "date": { "type": "string", "format": "date-time" },
                     "gap": { "type": "number", "format": "double" },
                     "scale": { "type": "number", "format": "double" },
@@ -2240,8 +2292,8 @@
                     "seasonId": { "type": "string" },
                     "baseline": {
                         "type": "string",
-                        "enum": ["defaults", "withoutTestGames"],
-                        "description": "What the standings' baseline values compare with."
+                        "enum": ["defaults", "storedGames"],
+                        "description": "What the standings' baseline values compare with: the default weights, or with test or live games the same weights without them."
                     },
                     "standings": {
                         "type": "array",
@@ -3118,7 +3170,8 @@
                             "SET_PLAYER_TEAM",
                             "ADJUST_MOVE",
                             "RECORD_CUP_HIT",
-                            "UNDO_CUP_HIT"
+                            "UNDO_CUP_HIT",
+                            "SET_RERACK"
                         ]
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
@@ -3141,6 +3194,17 @@
                     "bluePlayerIds": {
                         "type": "array",
                         "items": { "type": "string" }
+                    },
+                    "drawn": {
+                        "type": "array",
+                        "description": "SET_RERACK: where each of `cups` is drawn, pairwise; both empty puts the team's cups back in the pyramid",
+                        "items": {
+                            "$ref": "#/components/schemas/CupPositionDto"
+                        }
+                    },
+                    "formationId": {
+                        "type": "string",
+                        "description": "SET_RERACK: the saved formation the cups were re-racked into"
                     }
                 }
             },

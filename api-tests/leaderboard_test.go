@@ -74,7 +74,7 @@ func TestLeaderboardSeason(t *testing.T) {
 	for _, e := range res.List("entries") {
 		elo[Get(e, "profileId").(string)] = Get(e, "statistics", "elo").(float64)
 	}
-	h.True(elo[g.Profiles["c"]] > 1500, "c won a match and gained elo: %v", elo[g.Profiles["c"]])
+	h.True(elo[g.Profiles["c"]] > elo[g.Profiles["d"]], "c and d lost together, then c outscored d and won: c %v, d %v", elo[g.Profiles["c"]], elo[g.Profiles["d"]])
 	h.True(elo[g.Profiles["d"]] < 1500, "d lost and scored little: %v", elo[g.Profiles["d"]])
 
 	extended := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/players/extended"), Auth: owner.Bearer()}))

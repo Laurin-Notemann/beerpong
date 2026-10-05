@@ -5,7 +5,7 @@ import { plural, sgn } from '~/simulator/format';
 
 // The season's leaderboard as the app shows it: players with the season's
 // minimum of matches ranked, the others below. "vs" compares with the
-// baseline: the default weights, or the season without the test games.
+// baseline: the default weights, or the season without test and live games.
 export function Board({
     standings,
     baseline,
@@ -15,7 +15,7 @@ export function Board({
     onToggle,
 }: {
     standings: Standing[];
-    baseline: 'defaults' | 'withoutTestGames';
+    baseline: 'defaults' | 'storedGames';
     // nothing to compare: default weights and no test games
     unchanged: boolean;
     minMatches: number;
@@ -36,7 +36,7 @@ export function Board({
                         <th>Player</th>
                         <th className="num">Elo</th>
                         <th className="num">
-                            {baseline === 'defaults' ? 'vs defaults' : 'vs without tests'}
+                            {baseline === 'defaults' ? 'vs defaults' : 'vs saved games'}
                         </th>
                         <th className="num">Games</th>
                         <th className="num">Won</th>
@@ -121,7 +121,7 @@ export function Board({
                 Points and Avg are what the app shows.{' '}
                 {baseline === 'defaults'
                     ? '“vs defaults” is the move against DefaultElo in elo.go.'
-                    : '“vs without tests” is what the test games change, with the same weights.'}{' '}
+                    : '“vs saved games” is what the test and live games change, with the same weights.'}{' '}
                 Click a player to follow them in the chart.
             </div>
         </div>

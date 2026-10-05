@@ -15,6 +15,7 @@ export function Parts({
     let gi = sel ?? games.findIndex((g) => isRing(g.finishMove));
     if (gi < 0) gi = 0;
     const g = games[gi];
+    if (!g) return null;
     const wi = Math.max(
         0,
         g.teams.findIndex((t) => t.won)
@@ -23,9 +24,11 @@ export function Parts({
     const l = g.teams[1 - wi];
 
     const all = g.teams.flatMap((t) => t.players.map((q) => ({ q, t })));
-    const { q, t } = all.sort(
+    const top = all.sort(
         (a, b) => Math.abs(b.q.own - b.q.expected) - Math.abs(a.q.own - a.q.expected)
     )[0];
+    if (!top) return null;
+    const { q, t } = top;
     const n = t.players.length;
     const opp = g.teams.find((o) => o !== t)!;
     const perPlayer = g.teamPoints / n;
@@ -67,8 +70,8 @@ export function Parts({
                         <b>{pct(w.winChance)}</b> win chance. They won by {w.avgPoints.toFixed(1)} −{' '}
                         {l.avgPoints.toFixed(1)} = <b>{g.gap.toFixed(1)}</b> points per player,
                         which counts as <b>×{g.scale.toFixed(2)}</b>: {p.k} × {g.scale.toFixed(2)} ×
-                        (1 − {w.winChance.toFixed(2)}) = <b>{sgn(w.players[0].result)}</b> each,{' '}
-                        <b>{sgn(l.players[0].result)}</b> for each loser.
+                        (1 − {w.winChance.toFixed(2)}) = <b>{sgn(w.players[0]?.result ?? 0)}</b>{' '}
+                        each, <b>{sgn(l.players[0]?.result ?? 0)}</b> for each loser.
                     </p>
                 </div>
                 <div className="card part s">

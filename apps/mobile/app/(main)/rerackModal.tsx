@@ -13,7 +13,6 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupLayout, rerack } from '@/lib/rerack';
 import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useReracks, useRerackStore } from '@/zustand/rerackStore';
 
 const TILE_SIZE = Math.floor((Dimensions.get('window').width - 32 - 16) / 3);
 
@@ -32,15 +31,11 @@ export default function Page() {
 
     const { groupId } = useGroup();
     const formations = useFormations(groupId).data ?? [];
-    const { setRerack } = useRerackStore((s) => s.actions);
-    const reracks = useReracks(liveMatchId);
-    const matchKey = liveMatchId ?? 'draft';
 
     function pick(team: CupTeam, formationId?: string) {
         const formation = formations.find((i) => i.id === formationId);
 
-        setRerack(
-            matchKey,
+        entry.actions.setRerack(
             team,
             formation ? rerack(entry.cupHits, team, formation) : undefined
         );
@@ -61,7 +56,7 @@ export default function Page() {
             <Stack.Screen options={{ headerTitle: 'Re-rack' }} />
             {(['red', 'blue'] as const).map((team) => {
                 const standing = standingCups(entry.cupHits, team).length;
-                const current = reracks?.[team];
+                const current = entry.reracks[team];
                 const isReracked =
                     !!current &&
                     cupLayout(entry.cupHits, team, current) === current.slots;

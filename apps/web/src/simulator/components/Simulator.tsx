@@ -12,6 +12,7 @@ import {
 import { Board } from '~/simulator/components/Board';
 import { Chart } from '~/simulator/components/Chart';
 import { Games } from '~/simulator/components/Games';
+import { LiveNow } from '~/simulator/components/LiveNow';
 import { Parts } from '~/simulator/components/Parts';
 import { TestEditor } from '~/simulator/components/TestEditor';
 import { pct } from '~/simulator/format';
@@ -110,7 +111,7 @@ export function Simulator({
                         </div>
                         <div className="engine">
                             <span
-                                className={`live ${live === 'live' ? 'on' : live === 'offline' ? 'off' : ''}`}
+                                className={`livestatus ${live === 'live' ? 'on' : live === 'offline' ? 'off' : ''}`}
                             >
                                 <i />
                                 {live === 'live'
@@ -284,7 +285,13 @@ function Season({
     unchanged: boolean;
     onTests: (tests: TestGame[]) => void;
 }) {
-    const [sel, setSel] = useState<number | null>(null);
+    // the open game by id: live games come and go, so positions shift and an
+    // open game can disappear
+    const [selId, setSelId] = useState<string | null>(null);
+    const found = selId == null ? -1 : sim.games.findIndex((g) => g.matchId === selId);
+    const sel = found >= 0 ? found : null;
+    const setSel = (gi: number | null) =>
+        setSelId(gi == null ? null : (sim.games[gi]?.matchId ?? null));
     const [editing, setEditing] = useState<Editing | null>(null);
     const season = sim.seasons.find((s) => s.id === sim.seasonId);
 
@@ -324,6 +331,18 @@ function Season({
     return (
         <>
             {sim.games.length > 0 && <Parts params={params} games={sim.games} sel={sel} />}
+
+            <LiveNow
+                games={sim.games}
+                onOpen={(gi) => {
+                    setSel(gi);
+                    setTimeout(() =>
+                        document
+                            .querySelector(`#games tr[data-g="${gi}"]`)
+                            ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    );
+                }}
+            />
 
             <section aria-labelledby="h-board">
                 <div className="section-head">
