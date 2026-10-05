@@ -8,6 +8,8 @@ import {
     CupTeam,
     finishForHit,
     hittableMoves,
+    ringCompletion,
+    ringHit,
     standingCups,
 } from '@/lib/cupHits';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
@@ -18,8 +20,20 @@ const bomb: CupMove = { id: 'bomb', cups: 1, isFinish: false };
 const bouncer: CupMove = { id: 'bouncer', cups: 2, isFinish: false };
 const save: CupMove = { id: 'save', cups: 0, isFinish: false };
 const finish: CupMove = { id: 'finish', cups: 0, isFinish: true };
-const ringOfFire: CupMove = { id: 'ring-of-fire', cups: 4, isFinish: true };
-const moves = [normal, bomb, bouncer, save, finish, ringOfFire];
+const ringOfFire: CupMove = { id: 'ring-of-fire', cups: 6, isFinish: true };
+const ringOfWater: CupMove = { id: 'ring-of-water', cups: 4, isFinish: true };
+const moves = [normal, bomb, bouncer, save, finish, ringOfFire, ringOfWater];
+
+const corner = (x: number, y: number) => ({ x, y });
+// the corners and the middle cup: ring of water's shape, and what ring of fire leaves out
+const cornersAndMiddle = [
+    corner(0, 0),
+    corner(6, 0),
+    corner(3, 2),
+    corner(3, 6),
+];
+const isCornerOrMiddle = (cup: { x: number; y: number }) =>
+    cornersAndMiddle.some((i) => i.x === cup.x && i.y === cup.y);
 
 const draft = () => useMatchDraftStore.getState();
 const actions = () => draft().actions;
@@ -180,23 +194,66 @@ describe('pro mode cups', () => {
     });
 
     it('offers only moves that fit the cups that are left', () => {
-        const ids = (n: number) =>
-            hittableMoves(moves, n, false).map((i) => i.id);
+        const ids = (standing: { x: number; y: number }[]) =>
+            hittableMoves(moves, standing, standing[0], false).map((i) => i.id);
 
-        expect(ids(10)).toEqual(['normal', 'bomb', 'bouncer']);
-        // a ring finishes the cups it takes, so it needs exactly that many
-        expect(ids(4)).toEqual(['normal', 'bomb', 'bouncer', 'ring-of-fire']);
-        expect(ids(1)).toEqual(['normal', 'bomb']);
+        expect(ids(CUP_FORMATION.cups)).toEqual(['normal', 'bomb', 'bouncer']);
+        expect(ids([corner(3, 6)])).toEqual(['normal', 'bomb']);
     });
 
-    it('a ring of fire takes the last four cups and is the finish itself', () => {
-        const cups = CUP_FORMATION.cups;
-        for (const cup of cups.slice(0, 6)) hit('blue', cup, 'anna', normal);
-        hit('blue', cups[6], 'ben', ringOfFire);
+    it('a ring of water is offered when only the corners and the middle cup are left', () => {
+        for (const cup of CUP_FORMATION.cups.filter(
+            (i) => !isCornerOrMiddle(i)
+        )) {
+            hit('blue', cup, 'anna', normal);
+        }
+        const left = standingCups(draft().cupHits, 'blue');
+        expect(
+            hittableMoves(moves, left, corner(3, 2), false).map((i) => i.id)
+        ).toContain('ring-of-water');
+
+        hit('blue', corner(3, 2), 'ben', ringOfWater);
 
         expect(standing('blue')).toBe(0);
-        expect(count('ben', 'ring-of-fire')).toBe(1);
+        expect(count('ben', 'ring-of-water')).toBe(1);
         expect(count('ben', 'finish')).toBe(0);
+    });
+
+    it('a ring is not offered for as many cups in another shape', () => {
+        // four cups left, but the top row
+        for (const cup of CUP_FORMATION.cups.slice(4)) {
+            hit('blue', cup, 'anna', normal);
+        }
+        const left = standingCups(draft().cupHits, 'blue');
+
+        expect(ringHit(ringOfWater, left, left[0])).toBeUndefined();
+    });
+
+    it('the cup that completes a ring of fire goes in together with the ring', () => {
+        // the corners are hit; the middle cup is the last one between the table and the ring
+        for (const cup of cornersAndMiddle.slice(0, 2).concat(corner(3, 6))) {
+            hit('red', cup, 'carl', normal);
+        }
+        const left = standingCups(draft().cupHits, 'red');
+        expect(ringHit(ringOfFire, left, corner(3, 2))).toBe('completes');
+        // any other cup doesn't complete the shape
+        expect(ringHit(ringOfFire, left, corner(2, 0))).toBeUndefined();
+
+        const completion = ringCompletion(
+            moves,
+            ringOfFire,
+            left,
+            corner(3, 2)
+        );
+        actions().recordCupHit({
+            team: 'red',
+            playerId: 'dora',
+            ...completion!,
+        });
+
+        expect(standing('red')).toBe(0);
+        expect(count('dora', 'normal')).toBe(1);
+        expect(count('dora', 'ring-of-fire')).toBe(1);
     });
 
     it('starting a new match puts every cup back', () => {
@@ -261,7 +318,12 @@ describe('pro mode cups', () => {
     });
 
     it('a ring is not offered once the match has a finish', () => {
-        const ids = hittableMoves(moves, 4, true).map((i) => i.id);
+        const ids = hittableMoves(
+            moves,
+            cornersAndMiddle,
+            corner(3, 2),
+            true
+        ).map((i) => i.id);
 
         expect(ids).toEqual(['normal', 'bomb', 'bouncer']);
     });

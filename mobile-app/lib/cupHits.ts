@@ -51,22 +51,95 @@ export const standingCups = (hits: CupHit[], team: CupTeam) =>
     CUP_FORMATION.cups.filter((cup) => !findHit(hits, team, cup));
 
 /**
- * The moves a hit on a team with `standing` cups left can be: anything that takes at least one
- * cup and no more than are left. A finish that takes cups (the rings) has to take all of them,
- * and a match has only one finish.
+ * A ring is thrown at a shape: the cups left right before it. Ring of fire leaves everything but
+ * the corners and the middle cup, ring of water just those four. Keyed by the cups the ring takes.
+ */
+const RING_SHAPES: Record<number, CupPosition[]> = {
+    6: [
+        { x: 2, y: 0 },
+        { x: 4, y: 0 },
+        { x: 1, y: 2 },
+        { x: 5, y: 2 },
+        { x: 2, y: 4 },
+        { x: 4, y: 4 },
+    ],
+    4: [
+        { x: 0, y: 0 },
+        { x: 6, y: 0 },
+        { x: 3, y: 2 },
+        { x: 3, y: 6 },
+    ],
+};
+
+const isShape = (cups: CupPosition[], shape: CupPosition[]) =>
+    cups.length === shape.length &&
+    shape.every((i) => cups.some((j) => samePosition(i, j)));
+
+/**
+ * How a finish that takes cups (a ring) can go in on a tap at `cup`: 'whole' when the cups left
+ * are its shape, 'completes' when the tapped cup is the one cup between the table and its shape
+ * (that hit and the ring go in together, see ringCompletion). A ring without a known shape
+ * needs exactly the cups that are left.
+ */
+export function ringHit(
+    move: CupMove,
+    standing: CupPosition[],
+    cup: CupPosition
+): 'whole' | 'completes' | undefined {
+    const shape = RING_SHAPES[move.cups];
+
+    if (!shape) return move.cups === standing.length ? 'whole' : undefined;
+    if (isShape(standing, shape)) return 'whole';
+    if (
+        isShape(
+            standing.filter((i) => !samePosition(i, cup)),
+            shape
+        )
+    ) {
+        return 'completes';
+    }
+}
+
+/**
+ * The moves a hit on `cup` can be, with `standing` cups left: anything that takes at least one
+ * cup and no more than are left. A ring only when the cups left (or left after this one) are its
+ * shape, and a match has only one finish.
  */
 export const hittableMoves = <T extends CupMove>(
     moves: T[],
-    standing: number,
+    standing: CupPosition[],
+    cup: CupPosition,
     hasFinish: boolean
 ) =>
     moves.filter(
         (move) =>
             move.cups >= 1 &&
             (move.isFinish
-                ? !hasFinish && move.cups === standing
-                : move.cups <= standing)
+                ? !hasFinish && !!ringHit(move, standing, cup)
+                : move.cups <= standing.length)
     );
+
+/**
+ * The hit on the cup that completes a ring's shape, thrown together with the ring: a normal hit
+ * (the first move that takes one cup) on the tapped cup, and the ring taking the rest.
+ */
+export function ringCompletion(
+    moves: CupMove[],
+    ring: CupMove,
+    standing: CupPosition[],
+    cup: CupPosition
+): Pick<CupHit, 'moveId' | 'cups' | 'finishMoveId'> | undefined {
+    const normal = moves.find((i) => !i.isFinish && i.cups === 1);
+    if (!normal || ringHit(ring, standing, cup) !== 'completes') return;
+
+    return {
+        moveId: normal.id,
+        cups: [cup, ...standing.filter((i) => !samePosition(i, cup))].map(
+            ({ x, y }) => ({ x, y })
+        ),
+        finishMoveId: ring.id,
+    };
+}
 
 /**
  * The finish that comes with a hit: the hit on a team's last cup also finishes the match, unless

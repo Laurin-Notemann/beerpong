@@ -21,6 +21,7 @@ import {
     finishForHit,
     hittableMoves,
     picksOtherCups,
+    ringCompletion,
     standingCups,
 } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
@@ -91,7 +92,7 @@ export default function Page() {
 
     const standing = standingCups(entry.cupHits, team);
     const isStanding = standing.some((i) => i.x === cup.x && i.y === cup.y);
-    const moveOptions = hittableMoves(moves, standing.length, hasFinish);
+    const moveOptions = hittableMoves(moves, standing, cup, hasFinish);
     const finishOptions = finishesOnTopOfLastCup(moves);
 
     const [playerId, setPlayerId] = useState<string | null>(
@@ -134,6 +135,21 @@ export default function Page() {
         setLastCupMove(null);
         setPickMove(null);
         setPicked([]);
+
+        // this cup completes the ring's shape: its hit and the ring go in together
+        const completion =
+            move.isFinish && ringCompletion(moves, move, standing, cup);
+        if (completion) {
+            if (player) {
+                entry.actions.recordCupHit({
+                    team,
+                    playerId: player.id,
+                    ...completion,
+                });
+            }
+            nav.goBack();
+            return;
+        }
 
         if (picksOtherCups(move, standing.length)) {
             setPickMove(move);
