@@ -27,8 +27,8 @@ server; `Api Staging Deploy` builds and redeploys it on every push to
   the Java controllers so responses match; comments mark deliberate quirks.
 - `internal/database` – `migrations/` (goose, embedded) and `queries/` (SQL),
   compiled by sqlc into `db/`. Run `sqlc generate` after editing queries.
-- `internal/leaderboard` – stats and Elo, a line-by-line port of the Java
-  `LeaderboardService`/`EloAlgorithm` so stored ratings stay identical.
+- `internal/leaderboard` – stats (a port of the Java `LeaderboardService`)
+  and the Elo (`elo.go`, tuned with `tools/elo-sim`).
 - `internal/realtime` – the websocket hub.
 - `internal/observability` – Sentry errors, request traces continued from the
   app, a span per SQL statement, and Sentry Logs via slog.

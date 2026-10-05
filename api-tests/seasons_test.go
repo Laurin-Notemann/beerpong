@@ -162,7 +162,8 @@ func TestStartSeasonCarriesPlayersRulesAndStats(t *testing.T) {
 	h.Equal(len(rules.List()), 1, "rules copied")
 	h.Equal(Get(rules.List()[0], "title"), "House rule", "copied rule")
 
-	// only players active at the end of the season are carried over, with their stats
+	// only players active at the end of the season are carried over, with
+	// their stats; the Elo starts over at 1500
 	players := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/players?showInactive=true"), Auth: owner.Bearer()}))
 	h.Equal(len(players.List()), 2, "active players carried over")
 	extended := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/players/extended"), Auth: owner.Bearer()}))
@@ -174,7 +175,7 @@ func TestStartSeasonCarriesPlayersRulesAndStats(t *testing.T) {
 		profile := Get(p, "profileId").(string)
 		want := Get(p, "statistics", "points")
 		h.Equal(Get(carried[profile], "points"), want, "carried points for "+profile)
-		h.Equal(Get(carried[profile], "elo"), Get(p, "statistics", "elo"), "carried elo for "+profile)
+		h.Equal(Get(carried[profile], "elo"), 1500.0, "elo starts over every season for "+profile)
 	}
 
 	seasons := h.OK(h.Do(Req{Method: "GET", Path: g.Path("/seasons"), Auth: owner.Bearer()}))

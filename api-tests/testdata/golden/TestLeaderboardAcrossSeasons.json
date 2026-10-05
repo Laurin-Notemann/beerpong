@@ -334,7 +334,7 @@
             "statistics": {
               "avgPointsPerMatch": 4,
               "avgTeamSize": 1,
-              "elo": 1487.5,
+              "elo": 1459.237621,
               "id": null,
               "matches": 1,
               "moves": 4,
@@ -366,7 +366,7 @@
             "statistics": {
               "avgPointsPerMatch": 4,
               "avgTeamSize": 1,
-              "elo": 1512.5,
+              "elo": 1540.762379,
               "id": null,
               "matches": 1,
               "moves": 0,
@@ -477,7 +477,7 @@
             "statistics": {
               "avgPointsPerMatch": 3.666666667,
               "avgTeamSize": 1.333333333,
-              "elo": 1488.639826,
+              "elo": 1459.237621,
               "id": null,
               "matches": 3,
               "moves": 7,
@@ -509,7 +509,7 @@
             "statistics": {
               "avgPointsPerMatch": 4.5,
               "avgTeamSize": 1.5,
-              "elo": 1523.022621,
+              "elo": 1540.762379,
               "id": null,
               "matches": 2,
               "moves": 1,
@@ -541,7 +541,7 @@
             "statistics": {
               "avgPointsPerMatch": 7,
               "avgTeamSize": 1.5,
-              "elo": 1504.136698,
+              "elo": 1500,
               "id": null,
               "matches": 2,
               "moves": 9,
@@ -588,7 +588,7 @@
             "statistics": {
               "avgPointsPerMatch": 7,
               "avgTeamSize": 1.5,
-              "elo": 1504.136698,
+              "elo": 1560.247409,
               "id": null,
               "matches": 2,
               "moves": 9,
@@ -620,7 +620,7 @@
             "statistics": {
               "avgPointsPerMatch": 3.5,
               "avgTeamSize": 1.5,
-              "elo": 1500.77619,
+              "elo": 1302.252591,
               "id": null,
               "matches": 2,
               "moves": 3,
@@ -652,7 +652,7 @@
             "statistics": {
               "avgPointsPerMatch": 5,
               "avgTeamSize": 2,
-              "elo": 1510.886257,
+              "elo": 1659.769577,
               "id": null,
               "matches": 1,
               "moves": 1,
@@ -698,7 +698,7 @@
           "statistics": {
             "avgPointsPerMatch": 7,
             "avgTeamSize": 1.5,
-            "elo": 1500.958205,
+            "elo": 1548.516895,
             "id": null,
             "matches": 2,
             "moves": 9,
@@ -730,7 +730,7 @@
           "statistics": {
             "avgPointsPerMatch": 3.5,
             "avgTeamSize": 1.5,
-            "elo": 1500.727295,
+            "elo": 1301.483105,
             "id": null,
             "matches": 2,
             "moves": 3,
@@ -762,7 +762,7 @@
           "statistics": {
             "avgPointsPerMatch": 5,
             "avgTeamSize": 2,
-            "elo": 1510.8145,
+            "elo": 1646.415505,
             "id": null,
             "matches": 1,
             "moves": 1,
@@ -884,7 +884,7 @@
             "statistics": {
               "avgPointsPerMatch": 3.666666667,
               "avgTeamSize": 1.333333333,
-              "elo": 1488.639826,
+              "elo": 1500,
               "id": null,
               "matches": 3,
               "moves": 7,
@@ -916,7 +916,7 @@
             "statistics": {
               "avgPointsPerMatch": 4.5,
               "avgTeamSize": 1.5,
-              "elo": 1523.022621,
+              "elo": 1500,
               "id": null,
               "matches": 2,
               "moves": 1,
@@ -948,7 +948,7 @@
             "statistics": {
               "avgPointsPerMatch": 7,
               "avgTeamSize": 1.5,
-              "elo": 1504.136698,
+              "elo": 1500,
               "id": null,
               "matches": 2,
               "moves": 9,

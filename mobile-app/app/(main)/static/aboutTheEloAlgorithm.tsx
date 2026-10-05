@@ -55,24 +55,24 @@ export default function Page() {
                     <Heading title="How it works" paragraph />
 
                     <Text paragraph>
-                        Every player starts the leaderboard with an Elo of{' '}
-                        <Text code>1500</Text>.{'\n'}When you play a match, we
-                        calculate your <Text code>expected performance</Text>{' '}
-                        based on the Elo of both your own team, and your
-                        opponents: When you play with stronger players, you're
-                        not expected to score as many points as them.{'\n'}We
-                        then compare this with your{' '}
-                        <Text code>actual performance</Text> based on how many
-                        points you scored in the match.{'\n'}Your Elo is then
-                        adjusted based on how <Text code>surprisingly</Text> you
-                        performed, be it better or worse than expected.
-                        {'\n'}This way, winning against stronger opponents
-                        results in a big Elo gain, while losing to stronger
-                        opponents only results in a small Elo loss.
-                        {'\n'}Individual performance is rewarded, but not more
-                        than the match result: If your team lost the match, you
-                        will <Text code>always</Text> lose Elo, even if you were
-                        the top scorer of the match.
+                        Every player starts each season with an Elo of{' '}
+                        <Text code>1500</Text>. After a match, two things move
+                        your Elo:{'\n'}
+                        {'\n'}
+                        <Text code>The result</Text>: did your team win, and how
+                        likely was that? Beating a stronger team earns more,
+                        losing to a weaker one costs more. A big win, like a
+                        ring of fire or a 10:0, counts more than a close one.
+                        Everyone on the team gets the same.{'\n'}
+                        {'\n'}
+                        <Text code>Your hitting</Text>: before the match, your
+                        Elo and your opponents' set how many points you should
+                        score. Every point above that earns Elo, every point
+                        below costs some. What your teammates score doesn't
+                        change yours.{'\n'}
+                        {'\n'}A win almost always gains Elo and a loss almost
+                        always costs some; only a very good or very bad game of
+                        your own can turn that around.
                     </Text>
 
                     {/* <Leaderboard

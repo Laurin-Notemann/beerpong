@@ -119,8 +119,10 @@ func Compute(in Input) (Result, error) {
 	sort.SliceStable(matches, func(i, j int) bool { return matches[i].Date.Before(matches[j].Date) })
 
 	var numMatches int64
+	// The Elo's expected points follow what teams scored so far this season.
+	var teamPoints teamPointsAverage
 	for _, m := range matches {
-		processed, err := processMatch(m, entries, memberProfile, in.RuleMoves)
+		processed, err := processMatch(m, entries, memberProfile, in.RuleMoves, &teamPoints)
 		if err != nil {
 			return Result{}, err
 		}
@@ -152,6 +154,9 @@ func buildEntries(players []Player, keepStored bool) (map[string]*Entry, []strin
 		stats := FreshStats()
 		if keepStored {
 			stats = p.Stored
+			// every season starts at StartingElo, so the all-time Elo is the
+			// running season's
+			stats.Elo = StartingElo
 		}
 		stats.PlayerID = p.ID
 		if !found {
@@ -172,7 +177,7 @@ func isNewer(candidate, existing Player) bool {
 	return candidate.SeasonEnd.After(*existing.SeasonEnd)
 }
 
-func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]string, ruleMoves map[string]RuleMove) (bool, error) {
+func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]string, ruleMoves map[string]RuleMove, teamPoints *teamPointsAverage) (bool, error) {
 	if len(m.TeamIDs) < 2 {
 		return false, nil
 	}
@@ -182,6 +187,9 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 	var bluePoints, redPoints int64
 	winner := ""
 	playerPoints := map[string]int64{}
+	// appPoints are the points the app shows for this match: own points plus
+	// every finish bonus of the team. The Elo rates on these.
+	appPoints := map[string]int64{}
 
 	entryOf := func(memberID string) *Entry {
 		profile, ok := memberProfile[memberID]
@@ -221,10 +229,12 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 			own := rm.PointsForScorer * mv.Value
 			e.Stats.Moves += int64(rm.Cups * mv.Value)
 			e.Stats.Points += int64(own)
+			appPoints[e.Stats.PlayerID] += int64(own)
 			if rm.PointsForTeam > 0 {
 				for _, tm := range members {
 					if mate := entryOf(tm.ID); mate != nil {
 						mate.Stats.Points += int64(rm.PointsForTeam * mv.Value)
+						appPoints[mate.Stats.PlayerID] += int64(rm.PointsForTeam * mv.Value)
 					}
 				}
 			}
@@ -254,7 +264,9 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 	for _, s := range winners {
 		s.Wins++
 	}
-	calculateElo(winner, blue, bluePoints, redPoints, blueStats, redStats, playerPoints)
+	calculateElo(winner == blue, blueStats, redStats, appPoints, playerPoints, teamPoints.value(bluePoints, redPoints))
+	teamPoints.add(bluePoints)
+	teamPoints.add(redPoints)
 	return true, nil
 }
 

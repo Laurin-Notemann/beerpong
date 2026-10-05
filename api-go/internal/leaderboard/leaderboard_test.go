@@ -7,39 +7,6 @@ import (
 	"time"
 )
 
-func TestEloEvenOneOnOne(t *testing.T) {
-	// Equal ratings, blue wins 3:2. Each player scored all of their team's
-	// points, so only the result moves the rating: 25 * (1 - 0.5) = 12.5.
-	blue := &Stats{Elo: 1500, PlayerID: "b"}
-	red := &Stats{Elo: 1500, PlayerID: "r"}
-	calculateElo("blue", "blue", 3, 2, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 3, "r": 2})
-	if blue.Elo != 1512.5 || red.Elo != 1487.5 {
-		t.Fatalf("got blue %v red %v, want 1512.5 / 1487.5", blue.Elo, red.Elo)
-	}
-}
-
-func TestEloRewardsShareOfTeamPoints(t *testing.T) {
-	// Same team, same result: the player who scored more gains more.
-	a := &Stats{Elo: 1500, PlayerID: "a"}
-	b := &Stats{Elo: 1500, PlayerID: "b"}
-	opp := &Stats{Elo: 1500, PlayerID: "o"}
-	calculateElo("blue", "blue", 6, 2, []*Stats{a, b}, []*Stats{opp}, map[string]int64{"a": 5, "b": 1, "o": 2})
-	if !(a.Elo > b.Elo && b.Elo > 1500) {
-		t.Fatalf("a %v should beat b %v and both should gain", a.Elo, b.Elo)
-	}
-}
-
-func TestEloChangeIsCapped(t *testing.T) {
-	// An underdog who scores everything in an upset win would gain ~44.
-	star := &Stats{Elo: 800, PlayerID: "s"}
-	mate := &Stats{Elo: 800, PlayerID: "m"}
-	favorite := &Stats{Elo: 2400, PlayerID: "f"}
-	calculateElo("blue", "blue", 100, 0, []*Stats{star, mate}, []*Stats{favorite}, map[string]int64{"s": 100})
-	if star.Elo != 840 {
-		t.Fatalf("got %v, want the gain capped at +40", star.Elo)
-	}
-}
-
 func TestComputeAggregatesStats(t *testing.T) {
 	profile := func(s string) *string { return &s }
 	in := Input{

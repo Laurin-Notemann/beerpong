@@ -2,156 +2,136 @@ package leaderboard
 
 import "math"
 
-// Elo parameters. The comments explain what each knob does; changing one
-// changes every rating the next time a leaderboard is computed.
+// Elo rates players on the same points the app shows, so a ring finish counts
+// here as much as it does for average points. Cups play no part. A match moves
+// a rating twice:
+//
+//   - Result: win or loss against the win chance of the two team ratings,
+//     scaled by how big the points gap per player was. A close normal win
+//     counts once; a ring or a 10:0 count about 1.4 times. Everyone on a team
+//     gets the same change.
+//   - Hitting: each own point (Normal 1, Bomb 2, a finish move 1) above or
+//     below what the player was expected to score is worth eloPerPoint. The
+//     expectation is set before the game, from the ratings alone: a team's
+//     points per game split over its players, more against weaker
+//     opponents. A teammate's points don't change it. The finish bonus
+//     belongs to every teammate and only counts in the result.
+//
+// Teams throw equally often and players take turns. Every season starts at
+// StartingElo. The constants were tuned on Sackverein's games with the
+// simulator in tools/elo-sim; changing one changes every rating the next time
+// a leaderboard is computed.
 const (
 	StartingElo = 1500
-	// eloDivider: rating difference that makes a 10x expected-score ratio.
-	eloDivider = 400
-	// kTeam: weight of the match result (higher = upsets move ratings more).
-	kTeam = 25.0
-	// kPerf: weight of a player's share of the team points versus expectation.
-	kPerf = 40.0
-	// alpha: how much the expected point share follows Elo (0 = everyone equal).
-	alpha = 0.5
-	// beta: softmax sharpness of the expected share.
-	beta = 0.02
-	// pseudoPoints: smoothing, so a few points don't swing shares to extremes.
-	pseudoPoints = 3.0
-	// perfPointsScale: how many points it takes before performance counts fully.
-	perfPointsScale = 3.0
-	// perfWeightFloor: performance always counts at least this much.
-	perfWeightFloor = 0.35
-	// capPerPlayer: max rating change per match.
-	capPerPlayer = 40.0
-	// expected share is clamped to [shareFloor, shareCeil] before renormalizing.
-	shareFloor = 0.05
-	shareCeil  = 0.9
+	// eloDivider: rating gap that makes a 10x win-chance ratio. Ten times the
+	// usual 400, with a ten times larger K, so a game moves a rating by about
+	// 100 to 250.
+	eloDivider = 4000.0
+	// eloK: rating at stake on a close normal win between equal teams (×0.5).
+	eloK = 350.0
+	// marginWeight: how much the points gap scales the result (0 = only
+	// win or loss). The scale is ((1 + gap) / (1 + marginBase))^weight.
+	marginWeight = 0.5
+	// marginBase: points gap per player of a typical close normal win
+	// (2v2, 10:9), the game that counts exactly once.
+	marginBase = 4.0
+	// eloPerPoint: rating for each own point above or below expectation.
+	eloPerPoint = 25.0
+	// topWeight: 0 = a team is as strong as its average player, 1 = as
+	// its strongest player. Halfway predicted Sackverein's games better than
+	// the plain average.
+	topWeight = 0.5
 )
 
-// calculateElo updates the ratings of both teams after one match. Every
-// expression keeps the Java implementation's operation order so ratings stay
-// identical to what the Java backend stored.
-func calculateElo(winningTeam, blueTeam string, bluePoints, redPoints int64, blue, red []*Stats, playerPoints map[string]int64) {
-	resultBlue := 0.0
-	if winningTeam == blueTeam {
-		resultBlue = 1.0
+// calculateElo updates the ratings of both teams after one match. points are the
+// app's points per player, own their points without the finish bonus, and
+// teamPoints what a team scores on its own in an average game this season.
+func calculateElo(blueWon bool, blue, red []*Stats, points, own map[string]int64, teamPoints float64) {
+	blueRating, redRating := teamElo(blue), teamElo(red)
+	expectedBlue := winChance(blueRating, redRating)
+
+	gap := averagePoints(blue, points) - averagePoints(red, points)
+	resultBlue := 1.0
+	if !blueWon {
+		resultBlue, gap = 0, -gap
 	}
-	resultRed := 1.0 - resultBlue
+	delta := eloK * marginScale(gap) * (resultBlue - expectedBlue)
 
-	avgBlue := averageElo(blue)
-	avgRed := averageElo(red)
-
-	expShare := map[string]float64{}
-	expectedShare(blue, expShare)
-	expectedShare(red, expShare)
-
-	actShare := map[string]float64{}
-	actualShare(blue, playerPoints, bluePoints, actShare)
-	actualShare(red, playerPoints, redPoints, actShare)
-
-	applyDeltas(blue, resultBlue, avgRed, expShare, actShare, bluePoints, redPoints)
-	applyDeltas(red, resultRed, avgBlue, expShare, actShare, redPoints, bluePoints)
+	// both expectations come from the ratings before the game
+	blueExpected := expectedPoints(blue, redRating, teamPoints)
+	redExpected := expectedPoints(red, blueRating, teamPoints)
+	applyElo(blue, delta, own, blueExpected)
+	applyElo(red, -delta, own, redExpected)
 }
 
-func applyDeltas(players []*Stats, result, avgOpponent float64, expShare, actShare map[string]float64, teamPoints, opponentPoints int64) {
-	m := max(0, teamPoints+opponentPoints)
-	wPoints := float64(m) / (float64(m) + perfPointsScale)
-	wRatio := 0.5
-	if teamPoints+opponentPoints > 0 {
-		wRatio = float64(teamPoints) / float64(teamPoints+opponentPoints)
-	}
-	wPerf := math.Max(perfWeightFloor, math.Sqrt(wPoints)*math.Sqrt(wRatio))
-
-	for _, p := range players {
-		expVsOpponent := expectedScore(p.Elo, avgOpponent)
-		deltaTeam := kTeam * (result - expVsOpponent)
-		dShare := actShare[p.PlayerID] - expShare[p.PlayerID]
-		deltaPerformance := (kPerf * wPerf) * dShare
-		change := math.Max(-capPerPlayer, math.Min(capPerPlayer, deltaTeam+deltaPerformance))
-		p.Elo = p.Elo + change
+func applyElo(players []*Stats, teamDelta float64, own map[string]int64, expected []float64) {
+	for i, p := range players {
+		p.Elo += teamDelta + eloPerPoint*(float64(own[p.PlayerID])-expected[i])
 	}
 }
 
-func expectedScore(elo, opponentElo float64) float64 {
-	return 1.0 / (1.0 + math.Pow(10.0, (opponentElo-elo)/eloDivider))
+// expectedPoints is what each player should score on their own: the team's
+// points per game split over its players, times twice their win chance
+// against the opponents (so the plain split against an equal team).
+func expectedPoints(players []*Stats, opponentRating, teamPoints float64) []float64 {
+	out := make([]float64, len(players))
+	for i, p := range players {
+		out[i] = teamPoints / float64(len(players)) * 2 * winChance(p.Elo, opponentRating)
+	}
+	return out
 }
 
-// averageElo is DoubleStream.average(): a compensated (Kahan) sum, starting
-// rating for an empty team.
-func averageElo(players []*Stats) float64 {
+// winChance is the chance that a team rated rating beats one rated
+// opponent.
+func winChance(rating, opponent float64) float64 {
+	return 1.0 / (1.0 + math.Pow(10.0, (opponent-rating)/eloDivider))
+}
+
+// marginScale is how much a win by gap points per player counts compared
+// with a close normal win.
+func marginScale(gap float64) float64 {
+	return math.Pow((1+math.Max(0, gap))/(1+marginBase), marginWeight)
+}
+
+func teamElo(players []*Stats) float64 {
 	if len(players) == 0 {
 		return StartingElo
 	}
-	var sum, compensation, simple float64
+	sum, top := 0.0, players[0].Elo
 	for _, p := range players {
-		y := p.Elo - compensation
-		t := sum + y
-		compensation = (t - sum) - y
-		sum = t
-		simple += p.Elo
+		sum += p.Elo
+		top = math.Max(top, p.Elo)
 	}
-	total := sum - compensation
-	if math.IsNaN(total) && math.IsInf(simple, 0) {
-		total = simple
-	}
-	return total / float64(len(players))
+	return (1-topWeight)*sum/float64(len(players)) + topWeight*top
 }
 
-// expectedShare: softmax over Elo blended with an even split, clamped and
-// renormalized, so nobody is expected to score 0% or 100% of the team points.
-func expectedShare(players []*Stats, out map[string]float64) {
-	n := len(players)
-	if n == 0 {
-		return
+func averagePoints(players []*Stats, points map[string]int64) float64 {
+	if len(players) == 0 {
+		return 0
 	}
-	logits := make([]float64, n)
-	sumExp := 0.0
-	for i, p := range players {
-		e := math.Exp(beta * p.Elo)
-		logits[i] = e
-		sumExp += e
+	var sum int64
+	for _, p := range players {
+		sum += points[p.PlayerID]
 	}
-	shares := make([]float64, n)
-	sum := 0.0
-	for i := range players {
-		denominator := 1.0
-		if sumExp > 0 {
-			denominator = sumExp
-		}
-		soft := logits[i] / denominator
-		blended := (1.0-alpha)*(1.0/float64(n)) + alpha*soft
-		blended = math.Max(shareFloor, math.Min(shareCeil, blended))
-		shares[i] = blended
-		sum += blended
-	}
-	for i, p := range players {
-		if sum == 0 {
-			out[p.PlayerID] = 0
-		} else {
-			out[p.PlayerID] = shares[i] / sum
-		}
-	}
+	return float64(sum) / float64(len(players))
 }
 
-// actualShare is each player's share of the team's own points, smoothed with
-// pseudo points spread evenly over the team.
-func actualShare(players []*Stats, playerPoints map[string]int64, teamPoints int64, out map[string]float64) {
-	n := len(players)
-	denominator := float64(teamPoints) + pseudoPoints
-	prior := 0.0
-	if n > 0 {
-		prior = pseudoPoints / float64(n)
+// teamPointsAverage is what a team scored on its own per game so far this
+// season (Sackverein: about 9, whatever the team size). The season's first
+// game has nothing to average, so it uses its own two teams.
+type teamPointsAverage struct {
+	sum   float64
+	teams int
+}
+
+func (a *teamPointsAverage) value(blue, red int64) float64 {
+	if a.teams == 0 {
+		return float64(blue+red) / 2
 	}
-	if denominator <= 0 {
-		uniform := 1.0 / float64(max(1, n))
-		for _, p := range players {
-			out[p.PlayerID] = uniform
-		}
-		return
-	}
-	for _, p := range players {
-		points := float64(playerPoints[p.PlayerID])
-		out[p.PlayerID] = (points + prior) / denominator
-	}
+	return a.sum / float64(a.teams)
+}
+
+func (a *teamPointsAverage) add(points int64) {
+	a.sum += float64(points)
+	a.teams++
 }
