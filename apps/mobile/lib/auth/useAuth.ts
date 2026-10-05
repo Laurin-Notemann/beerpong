@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react-native';
 import * as Application from 'expo-application';
 import { isAxiosError } from 'axios';
 // import * as Notifications from 'expo-notifications';
@@ -6,11 +5,12 @@ import { isAxiosError } from 'axios';
 import { Platform } from 'react-native';
 
 import { decodeJwt, JwtPayload } from '@/lib/auth/decodeJwt';
+import { createTokenCache, tokenExpiresAt } from '@/lib/auth/tokenCache';
 import { versusDeviceStorage } from '@/lib/deviceStorage';
 import { Client as BeerPongClient } from '@/openapi/openapi';
-import { ConsoleLogger } from '@/utils/logging';
+import { ScopedLogger } from '@/utils/logging';
 
-const REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS = 60;
+const logger = new ScopedLogger('auth');
 
 /**
  * should be unique for every device, even across reinstalls
@@ -88,7 +88,7 @@ async function getRefreshToken(api: BeerPongClient): Promise<string> {
 
         return refreshToken;
     } catch (err) {
-        ConsoleLogger.error('Failed to get refresh token:', err);
+        logger.error('Failed to get refresh token:', err);
 
         (err as Error).message =
             'Failed to get refresh token: ' +
@@ -112,6 +112,7 @@ const isRefreshTokenRejected = (err: unknown) =>
 interface GetAccessTokenResult {
     accessToken: string;
     accessTokenPayload: JwtPayload;
+    expiresAt: number;
 }
 
 async function getAccessToken(
@@ -125,6 +126,7 @@ async function getAccessToken(
             refreshToken,
         });
 
+        const receivedAt = Date.now();
         const accessToken = accessTokenRes.data.data?.token;
 
         if (!accessToken) {
@@ -133,7 +135,11 @@ async function getAccessToken(
         try {
             const accessTokenPayload = decodeJwt(accessToken);
 
-            return { accessToken, accessTokenPayload };
+            return {
+                accessToken,
+                accessTokenPayload,
+                expiresAt: tokenExpiresAt(accessTokenPayload, receivedAt),
+            };
         } catch (err) {
             throw new Error(
                 'Failed to decode: ' +
@@ -141,7 +147,7 @@ async function getAccessToken(
             );
         }
     } catch (err) {
-        ConsoleLogger.error('Failed to get access token:', err);
+        logger.error('Failed to get access token:', err);
         if (isAxiosError(err)) {
             // more detailed error response returned by the backend, can be found in apps/api/internal/api/errors.go
             const customErrorCode = err.response?.data.error?.code;
@@ -153,7 +159,7 @@ async function getAccessToken(
                 customErrorCode === 'authRefreshInvalidToken';
 
             if (isInvalidRefreshToken) {
-                ConsoleLogger.warn(
+                logger.warn(
                     'Refresh token not accepted by backend, signing up again'
                 );
                 await versusDeviceStorage.removeRefreshToken();
@@ -174,57 +180,45 @@ async function getAccessToken(
                 ((err as Error).message ?? 'Unknown error');
         }
 
-        // A rejected refresh token is recovered from by signing up again.
-        if (!isRefreshTokenRejected(err)) Sentry.captureException(err);
+        // Not reported here: the request this token was for fails with this error, and the
+        // API client's interceptor reports it (see create-api.tsx).
         throw err;
     }
 }
 
 // One token cache for every request in the app; access tokens expire after an hour.
-let cachedAccessToken: GetAccessTokenResult | null = null;
-let pendingAccessToken: Promise<GetAccessTokenResult> | null = null;
-
-const isFresh = (token: GetAccessTokenResult) =>
-    (token.accessTokenPayload.exp ?? 0) * 1000 - Date.now() >
-    REGENERATE_ACCESS_TOKEN_WHEN_ITS_ABOUT_TO_EXPIRE_IN_SECONDS * 1000;
+const tokenCache = createTokenCache<GetAccessTokenResult>();
 
 /** Returns a valid access token, refreshing (or signing up again) when needed. */
-export async function getValidAccessToken(
+export function getValidAccessToken(
     api: BeerPongClient
 ): Promise<GetAccessTokenResult> {
-    if (cachedAccessToken && isFresh(cachedAccessToken)) {
-        return cachedAccessToken;
-    }
-    if (!pendingAccessToken) {
-        ConsoleLogger.info('refreshing access token');
+    return tokenCache.get(() => {
+        logger.info('refreshing access token');
 
-        pendingAccessToken = getAccessToken(api)
-            .catch((err) => {
-                if (!isRefreshTokenRejected(err)) throw err;
-                // The stored refresh token belongs to a user the backend doesn't know
-                // (e.g. a Keychain entry from an older build). It was removed, so this
-                // signs the device up again.
-                return getAccessToken(api);
-            })
-            .then((token) => {
-                cachedAccessToken = token;
-                return token;
-            })
-            .finally(() => {
-                pendingAccessToken = null;
-            });
-    }
-    return pendingAccessToken;
+        return getAccessToken(api).catch((err) => {
+            if (!isRefreshTokenRejected(err)) throw err;
+            // The stored refresh token belongs to a user the backend doesn't know
+            // (e.g. a Keychain entry from an older build). It was removed, so this
+            // signs the device up again.
+            return getAccessToken(api);
+        });
+    });
 }
 
 /** Current session as seen by the token cache, for the debug menu. */
-export const getSessionDebugInfo = () => ({
-    userId: cachedAccessToken?.accessTokenPayload.sub ?? null,
-    accessTokenExpiresAt: cachedAccessToken?.accessTokenPayload.exp
-        ? new Date(cachedAccessToken.accessTokenPayload.exp * 1000)
-        : null,
-});
+export const getSessionDebugInfo = () => {
+    const token = tokenCache.peek();
+    return {
+        userId: token?.accessTokenPayload.sub ?? null,
+        accessTokenExpiresAt: token ? new Date(token.expiresAt) : null,
+    };
+};
 
 export function useAuth() {
-    return { getAccessToken: getValidAccessToken };
+    return {
+        getAccessToken: getValidAccessToken,
+        /** after the API rejected `accessToken` with a 401 */
+        invalidateAccessToken: tokenCache.invalidate,
+    };
 }

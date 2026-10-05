@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react-native';
+import NetInfo from '@react-native-community/netinfo';
 import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
@@ -6,6 +7,7 @@ import { env } from '@/api/env';
 import beerpongDefinition from '@/api/generated/openapi.json';
 import { RealtimeClient } from '@/api/realtime';
 import { useRealtimeConnection } from '@/api/realtime/useRealtimeConnection';
+import { installApiInterceptors } from '@/api/utils/apiInterceptors';
 import { useAuth } from '@/lib/auth/useAuth';
 import { Client as BeerPongClient } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
@@ -17,16 +19,6 @@ type ApiContextType = {
     isLoading: boolean;
     error: Error | null;
 };
-
-declare module 'axios' {
-    interface AxiosRequestConfig {
-        /**
-         * The caller retries this request in the background until it goes through (the live
-         * match sync), so getting no response while offline is expected and isn't reported.
-         */
-        retriedUntilOnline?: boolean;
-    }
-}
 
 const ApiContext = createContext<ApiContextType | undefined>(undefined);
 
@@ -55,69 +47,22 @@ export function ApiProvider({ children }: { children: ReactNode }) {
         const client = await openApi.init<BeerPongClient>();
         const authClient = await authApi.init<BeerPongClient>();
 
-        client.interceptors.request.use(async (config) => {
-            const { accessToken } = await auth.getAccessToken(authClient);
-            config.headers.Authorization = 'Bearer ' + accessToken;
-
-            return config;
-        });
-
-        client.interceptors.response.use(
-            (res) => {
-                return res;
+        installApiInterceptors(client, {
+            getAccessToken: async () =>
+                (await auth.getAccessToken(authClient)).accessToken,
+            invalidateAccessToken: auth.invalidateAccessToken,
+            // NetInfo is already in the app (useRefetchEverythingOnWifiReconnect). Unknown
+            // reachability (null) counts as online.
+            isOffline: async () => {
+                const state = await NetInfo.fetch();
+                return (
+                    state.isConnected === false ||
+                    state.isInternetReachable === false
+                );
             },
-            (err) => {
-                if (err.response) {
-                    writeLog(
-                        '[api] request failed:',
-                        err.config?.method?.toUpperCase(),
-                        err.config?.url,
-                        err.response.status,
-                        err.response.data
-                    );
-                    // the live match sync reports its client errors once itself, not on every retry
-                    if (
-                        err.config?.retriedUntilOnline &&
-                        err.response.status < 500
-                    ) {
-                        return Promise.reject(err);
-                    }
-                    Sentry.captureException(err, {
-                        extra: {
-                            url: err.config?.url,
-                            method: err.config?.method,
-                            status: err.response.status,
-                            statusText: err.response.statusText,
-                            responseData: err.response.data,
-                        },
-                    });
-                } else if (err.request) {
-                    writeLog(
-                        '[api] no response received:',
-                        err.config?.method,
-                        err.config?.url
-                    );
-                    if (err.config?.retriedUntilOnline) {
-                        return Promise.reject(err);
-                    }
-                    Sentry.captureException(err, {
-                        extra: {
-                            url: err.config?.url,
-                            method: err.config?.method,
-                            request: err.request,
-                        },
-                    });
-                } else {
-                    writeLog('[api] setup error:', err.message);
-                    Sentry.captureException(err, {
-                        extra: {
-                            message: err.message,
-                        },
-                    });
-                }
-                return Promise.reject(err);
-            }
-        );
+            reporter: Sentry,
+            log: writeLog,
+        });
         return client;
     });
 

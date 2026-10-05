@@ -66,14 +66,10 @@ export async function uploadImage(
         throw new Error(`uploadImage(${debugLabel}): fetch error: ${err}`);
     }
     if (!res.ok) {
-        try {
-            const text = await res.text();
-
-            throw new Error(
-                `uploadImage(${debugLabel}): HTTP ${res.status} ${text}`
-            );
-        } catch {
-            throw new Error(`uploadImage(${debugLabel}): HTTP ${res.status}`);
-        }
+        // S3 says why in the body (e.g. <Code>SignatureDoesNotMatch</Code>)
+        const body = await res.text().catch(() => '');
+        throw new Error(
+            `uploadImage(${debugLabel}): HTTP ${res.status} ${body.slice(0, 1000)}`.trim()
+        );
     }
 }
