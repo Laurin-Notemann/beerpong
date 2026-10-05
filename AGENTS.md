@@ -76,6 +76,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 - Smallest proof that the change works. Run the tests and checks for the scope you touched:
   - API: `cd api-go && go test ./...`, then the contract suite against the running API: `cd api-tests && API_BASE_URL=http://localhost:8080 go test ./...` (see `api-tests/README.md`).
   - App: `cd mobile-app && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`.
+  - TV: `cd tv && npm run typecheck && npm test && npm run build`.
 - Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.
 - Backend behavior changes ship with a contract test in `api-tests/` (observable behavior) or a unit test next to the Go code (Elo, leaderboard math).
 - Don't verify with simulators, devices or browsers unless the developer asks.
@@ -94,6 +95,7 @@ The page holds real player names and games, and the repo is public: never commit
 
 - **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`api-go/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
 - **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) ships iOS from GitHub's runners, not EAS cloud builds. Android only ships when you start the workflow by hand with `platform: android`. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
+- **TV:** push to `staging` → `TV Staging Deploy` builds `tv/Dockerfile` and redeploys the `tv` service in `~/docker/versus-tv` on the server.
 - The app checks for updates on foreground and applies a downloaded update when it goes to the background (`mobile-app/hooks/useOtaUpdates.ts`).
 
 ## Pull requests
@@ -128,6 +130,7 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 - `api/` - the retired Spring Boot API it replaced. Not deployed or running anywhere; kept for reference until it's removed.
 - `mobile-app/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
+- `tv/` - Versus TV: a TanStack Start web app that puts live matches and the leaderboard on a TV, controlled from phones. It reduces live matches with `mobile-app/lib/liveMatch` code, so keep what `tv/src/lib/liveMatch.ts` imports free of React Native. See `tv/README.md`.
 - `api-tests/` - black-box contract tests (HTTP and websocket, compared with recorded golden transcripts) and `shadowdiff`.
 - `tools/elo-sim/` - the Elo simulator (see [Testing the Elo](#testing-the-elo)).
 - `docker/` - local compose files for the database and backend.

@@ -1,0 +1,39 @@
+name: TV CI
+
+# Typecheck, tests and the production build of the TV app (tv/). It reduces live matches with
+# the app's code, so changes to those parts of mobile-app/ run it too. The staging deploy runs
+# this first.
+
+on:
+  push:
+    paths:
+      - "tv/**"
+      - "mobile-app/lib/**"
+      - "mobile-app/api/utils/**"
+      - "mobile-app/components/CupGrid/**"
+      - "mobile-app/utils/**"
+      - "mobile-app/openapi/**"
+      - ".github/workflows/tv-ci.yml"
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: tv
+
+jobs:
+  check:
+    name: Typecheck, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: tv/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
