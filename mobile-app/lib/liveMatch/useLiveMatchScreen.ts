@@ -135,6 +135,23 @@ export function useLiveMatchScreen(id: string) {
         }
     }
 
+    const hint = finishHint(finishes);
+    const openFinish = () =>
+        nav.navigate('assignPointsToPlayerModal', {
+            pageIdx: teamMembers.length,
+            liveMatchId: id,
+        });
+
+    /** the header's check mark: saves the match, or says what's missing and opens the finish */
+    function finishOrExplain() {
+        if (hint) {
+            showErrorToast(hint + '.');
+            openFinish();
+            return;
+        }
+        finish();
+    }
+
     function discard() {
         Alert.alert('Discard match?', "It ends for everyone and won't count.", [
             { text: 'Cancel', style: 'cancel' },
@@ -179,9 +196,10 @@ export function useLiveMatchScreen(id: string) {
             score: match.blueCups,
         },
         teamMembers,
-        hint: finishHint(finishes),
+        hint,
         isFinishing,
         finish,
+        finishOrExplain,
         discard,
         viewResult,
         close: () => nav.goBack(),
@@ -191,10 +209,6 @@ export function useLiveMatchScreen(id: string) {
                 liveMatchId: id,
             }),
         /** the modal's pages after the players are where the finish is entered */
-        openFinish: () =>
-            nav.navigate('assignPointsToPlayerModal', {
-                pageIdx: teamMembers.length,
-                liveMatchId: id,
-            }),
+        openFinish,
     };
 }

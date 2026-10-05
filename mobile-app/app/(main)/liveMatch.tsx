@@ -96,6 +96,8 @@ export default function LiveMatchPage() {
             <LiveMatchHeader
                 startedAt={screen.header?.startedAt}
                 isLive={isLive}
+                isFinishing={screen.isFinishing}
+                onFinish={screen.finishOrExplain}
                 onDiscard={screen.discard}
             />
             <AppBackground />

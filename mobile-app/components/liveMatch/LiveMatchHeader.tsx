@@ -34,16 +34,19 @@ function Title({ startedAt, isLive }: { startedAt?: string; isLive: boolean }) {
 }
 
 /**
- * Android's toolbar menu can't draw SF Symbols and needs an image; the app's icon font makes
+ * Android's toolbar can't draw SF Symbols and needs an image; the app's icon font makes
  * one. Undefined until it's rendered (a frame or two).
  */
-function useAndroidMenuIcon(color: string) {
+function useAndroidIcon(
+    name: keyof typeof MaterialCommunityIcons.glyphMap,
+    color: string
+) {
     const [icon, setIcon] = useState<ImageSourcePropType>();
 
     useEffect(() => {
         if (Platform.OS !== 'android') return;
         let cancelled = false;
-        MaterialCommunityIcons.getImageSource('dots-vertical', 24, color)
+        MaterialCommunityIcons.getImageSource(name, 24, color)
             .then((source) => {
                 if (!cancelled && source) setIcon(source);
             })
@@ -51,25 +54,38 @@ function useAndroidMenuIcon(color: string) {
         return () => {
             cancelled = true;
         };
-    }, [color]);
+    }, [name, color]);
 
     return icon;
 }
 
-/** The live match screen's header: title and timer, and a menu to discard the match. */
+/**
+ * The live match screen's header: title and timer, a check mark that saves the match, and a
+ * menu to discard it.
+ */
 export function LiveMatchHeader({
     startedAt,
     isLive,
+    isFinishing,
+    onFinish,
     onDiscard,
 }: {
     startedAt?: string;
     isLive: boolean;
+    isFinishing: boolean;
+    onFinish: () => void;
     onDiscard: () => void;
 }) {
     const theme = useTheme();
     const navStyles = useNavStyles();
-    const androidIcon = useAndroidMenuIcon(theme.color.text.primary);
-    const menuIcon = Platform.OS === 'ios' ? 'ellipsis' : androidIcon;
+    const isIos = Platform.OS === 'ios';
+    const androidMenuIcon = useAndroidIcon(
+        'dots-vertical',
+        theme.color.text.primary
+    );
+    const androidFinishIcon = useAndroidIcon('check', theme.color.text.primary);
+    const menuIcon = isIos ? 'ellipsis' : androidMenuIcon;
+    const finishIcon = isIos ? 'checkmark' : androidFinishIcon;
 
     return (
         <>
@@ -82,8 +98,15 @@ export function LiveMatchHeader({
                     ),
                 }}
             />
-            {isLive && menuIcon && (
+            {isLive && menuIcon && finishIcon && (
                 <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        icon={finishIcon}
+                        variant="done"
+                        accessibilityLabel="Finish match"
+                        disabled={isFinishing}
+                        onPress={onFinish}
+                    />
                     <Stack.Toolbar.Menu
                         icon={menuIcon}
                         accessibilityLabel="More"
