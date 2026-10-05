@@ -16,6 +16,8 @@ import {
 } from '@/api/liveMatch/useGroupLiveMatches';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
+import { moveLog } from '@/lib/liveMatch/labels';
+import { toTeamCreateDtos } from '@/lib/liveMatch/log';
 import { leaderboardWidget } from '@/lib/widgets/LeaderboardWidget';
 import {
     liveMatchesWidget,
@@ -26,9 +28,12 @@ import {
     type LeaderboardWidgetProps,
     type LiveMatchesWidgetProps,
     type LiveScore,
+    mergeLiveMatches,
     toLeaderboardWidget,
     toLiveScore,
+    type WidgetMove,
 } from '@/lib/widgets/props';
+import type { Components } from '@/openapi/openapi';
 import { ScopedLogger } from '@/utils/logging';
 import { useSelectedGroupHydrated } from '@/zustand/group/stateGroupStore';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
@@ -41,7 +46,14 @@ interface LiveScoreOf {
     /** the seq the score is at; undefined while this phone isn't in sync with the server */
     seq?: number;
     score: LiveScore;
+    /** for the "Live matches" widget: the API computes the players' live Elo from the teams */
+    teams: Components.Schemas.TeamCreateDto[];
+    players: { id: string; name: string; team: 'red' | 'blue' }[];
+    moves: WidgetMove[];
 }
+
+/** the most moves a report carries (the API takes 10, the widget shows fewer) */
+const REPORTED_MOVES = 10;
 
 /**
  * The group's live matches of the active season with their scores as this phone computes them,
@@ -56,16 +68,44 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
         if (!players || !moves) return [];
         return matches
             .filter((i) => i.seasonId === seasonId)
-            .map((i) => ({
-                id: i.id,
-                startedAt: i.startedAt,
-                seq: i.syncedSeq,
-                score: toLiveScore(liveMatchTeams(i.state, players, moves)),
-            }));
+            .map((i) => {
+                const teams = liveMatchTeams(i.state, players, moves);
+                const people = [
+                    ...teams.blue.players.map((p) => ({
+                        ...p,
+                        team: 'blue' as const,
+                    })),
+                    ...teams.red.players.map((p) => ({
+                        ...p,
+                        team: 'red' as const,
+                    })),
+                ];
+                const nameOf = (id: string) =>
+                    people.find((p) => p.id === id)?.name ?? '';
+                return {
+                    id: i.id,
+                    startedAt: i.startedAt,
+                    seq: i.syncedSeq,
+                    score: toLiveScore(teams),
+                    teams: toTeamCreateDtos(i.state),
+                    players: people.map(({ id, name, team }) => ({
+                        id,
+                        name,
+                        team,
+                    })),
+                    moves: moveLog(i.state.cupHits, moves)
+                        .slice(0, REPORTED_MOVES)
+                        .map((m) => ({
+                            name: nameOf(m.playerId),
+                            team: m.team,
+                            move: m.move,
+                        })),
+                };
+            });
     }, [matches, players, moves, seasonId]);
 }
 
-/** by live match: what this phone reported last, as `${seq} ${score}` */
+/** by live match: what this phone reported last */
 const reported = new Map<string, string>();
 
 /**
@@ -77,13 +117,14 @@ function useLiveScoreReports(groupId: ApiId | null, scores: LiveScoreOf[]) {
 
     useEffect(() => {
         if (!groupId) return;
-        for (const { id, seq, score } of scores) {
+        for (const { id, seq, score, teams, players, moves } of scores) {
             if (seq === undefined) continue;
-            const key = `${seq} ${JSON.stringify(score)}`;
+            const body = { seq, ...score, teams, players, moves };
+            const key = JSON.stringify(body);
             if (reported.get(id) === key) continue;
             reported.set(id, key);
             api.then((client) =>
-                client.setLiveMatchDisplay({ groupId, id }, { seq, ...score })
+                client.setLiveMatchDisplay({ groupId, id }, body)
             ).catch((err) => {
                 // the next change, or the next time this phone is in sync, tries again
                 reported.delete(id);
@@ -118,8 +159,22 @@ const writeLeaderboard = (json: string) => {
     writtenLeaderboard = json;
 };
 const writeLiveMatches = (json: string) => {
-    showLiveMatches(JSON.parse(json));
     writtenLiveMatches = json;
+    const next = JSON.parse(json) as LiveMatchesWidgetProps;
+    liveMatchesWidget
+        ?.getTimeline()
+        .then((timeline) =>
+            showLiveMatches(
+                mergeLiveMatches(
+                    next,
+                    timeline[0]?.props as LiveMatchesWidgetProps | undefined
+                )
+            )
+        )
+        .catch((err) => {
+            writtenLiveMatches = undefined;
+            logger.error('failed to update the live matches widget', err);
+        });
 };
 
 /**
@@ -164,6 +219,8 @@ export function useHomeScreenWidgets() {
                 id: i.id,
                 startedAt: Date.parse(i.startedAt) || Date.now(),
                 ...i.score,
+                players: i.players.map(({ name, team }) => ({ name, team })),
+                moves: i.moves,
             })),
         };
     }, [groupId, group, scores]);

@@ -262,6 +262,15 @@ declare namespace Components {
             blueScore: number; // int32
             redNames: string;
             redScore: number; // int32
+            /**
+             * [blue, red] as the match would be entered now, for the players' live Elo on the widget
+             */
+            teams?: TeamCreateDto[];
+            players?: LivePlayerDto[];
+            /**
+             * the cup hits so far, newest first (at most 10)
+             */
+            moves?: /* a cup hit: who, on which team, with which move */ LiveMoveDto[];
         }
         export interface LiveMatchDisplayResultDto {
             /**
@@ -326,6 +335,19 @@ declare namespace Components {
         export interface LiveMatchOpsResultDto {
             lastSeq: number; // int64
             ops: LiveMatchOpDto[];
+        }
+        /**
+         * a cup hit: who, on which team, with which move
+         */
+        export interface LiveMoveDto {
+            name: string;
+            team: 'red' | 'blue';
+            move: string;
+        }
+        export interface LivePlayerDto {
+            id: string;
+            name: string;
+            team: 'red' | 'blue';
         }
         export interface MatchCreateDto {
             /**
@@ -2719,6 +2741,8 @@ export type LiveMatchFinishDto = Components.Schemas.LiveMatchFinishDto;
 export type LiveMatchOpDto = Components.Schemas.LiveMatchOpDto;
 export type LiveMatchOpsDto = Components.Schemas.LiveMatchOpsDto;
 export type LiveMatchOpsResultDto = Components.Schemas.LiveMatchOpsResultDto;
+export type LiveMoveDto = Components.Schemas.LiveMoveDto;
+export type LivePlayerDto = Components.Schemas.LivePlayerDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchDtoExtended = Components.Schemas.MatchDtoExtended;

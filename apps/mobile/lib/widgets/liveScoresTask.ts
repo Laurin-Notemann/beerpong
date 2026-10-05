@@ -7,7 +7,11 @@ import {
     liveMatchesWidget,
     showLiveMatches,
 } from '@/lib/widgets/LiveMatchesWidget';
-import { type LiveMatchesWidgetProps, liveScoresOf } from '@/lib/widgets/props';
+import {
+    type LiveMatchesWidgetProps,
+    liveScoresOf,
+    mergeLiveMatches,
+} from '@/lib/widgets/props';
 import { ScopedLogger } from '@/utils/logging';
 
 // The API's silent push with a group's live scores (`pushWidgets` in apps/api). iOS wakes the
@@ -42,7 +46,12 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(
             if (!props?.group) {
                 return Notifications.BackgroundNotificationTaskResult.NoData;
             }
-            showLiveMatches({ ...props, matches: scores.matches });
+            showLiveMatches(
+                mergeLiveMatches(
+                    { group: props.group, matches: scores.matches },
+                    props
+                )
+            );
             return Notifications.BackgroundNotificationTaskResult.NewData;
         } catch (err) {
             logger.error('failed to update the widget from a push', err);
