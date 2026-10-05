@@ -11,7 +11,7 @@
         "seed": "node scripts/seed.mjs",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
-        "polyfills": "node scripts/build-polyfills.mjs"
+        "polyfills": "node scripts/polyfills.mjs"
     },
     "dependencies": {
         "@tanstack/react-query": "^5.104.1",

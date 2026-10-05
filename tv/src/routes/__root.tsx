@@ -45,7 +45,7 @@ const showErrors = `(function () {
 })();`;
 
 /**
- * Old browsers (TVs) get core-js before the app's modules run (scripts/build-polyfills.mjs);
+ * Old browsers (TVs) get core-js before the app's modules run (scripts/polyfills.mjs);
  * modern ones skip the download. `Array.prototype.at` (Chrome 92) is the newest built-in the
  * app and its libraries are known to need, so a browser with it needs nothing.
  */
