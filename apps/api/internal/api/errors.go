@@ -63,10 +63,11 @@ var (
 	errPlayerAlreadyDeleted = errorCode{403, "playerAlreadyDeleted", "This player has been deleted!"}
 	errPlayerNotOfGroup     = errorCode{400, "playerNotOfGroup", "The provided player and group id do not match!"}
 
-	errProfileNotFound      = errorCode{404, "profileNotFound", "The requested profile could not be found or the provided group id does not match the profiles group!"}
-	errProfileNotOfGroup    = errorCode{400, "profileNotOfGroup", "The provided profile and group id do not match!"}
-	errProfileAlreadyExists = errorCode{400, "profileAlreadyExists", "There already exists a profile with the provided name and an active player in the current season!"}
-	errProfileHasNoAvatar   = errorCode{404, "profileHasNoAvatar", "The provided profiles does not have an avatar saved!"}
+	errProfileNotFound       = errorCode{404, "profileNotFound", "The requested profile could not be found or the provided group id does not match the profiles group!"}
+	errProfileNotOfGroup     = errorCode{400, "profileNotOfGroup", "The provided profile and group id do not match!"}
+	errProfileAlreadyExists  = errorCode{400, "profileAlreadyExists", "There already exists a profile with the provided name and an active player in the current season!"}
+	errProfileHasNoAvatar    = errorCode{404, "profileHasNoAvatar", "The provided profiles does not have an avatar saved!"}
+	errProfileHasNoScoreClip = errorCode{404, "profileHasNoScoreClip", "The provided profile does not have a score clip saved!"}
 
 	errAssetNotFound         = errorCode{404, "assetNotFound", "The requested asset could not be found!"}
 	errAssetValidationFailed = errorCode{400, "assetValidationFailed", "The provided asset offsets or zoom have to be >= 0!"}

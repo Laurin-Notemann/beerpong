@@ -850,6 +850,69 @@
                 }
             }
         },
+        "/groups/{groupId}/profiles/{id}/score-clip": {
+            "put": {
+                "tags": ["profile-controller"],
+                "operationId": "setScoreClip",
+                "description": "Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetUploadResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["profile-controller"],
+                "operationId": "deleteScoreClip",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/active-season": {
             "put": {
                 "tags": ["season-controller"],
@@ -2487,6 +2550,7 @@
                             "GROUP_WALLPAPER",
                             "PROFILE_AVATAR",
                             "TEAM_PHOTO",
+                            "PROFILE_SCORE_CLIP",
                             null
                         ],
                         "nullable": true
@@ -2781,7 +2845,8 @@
                     "assetIdAvatar": { "type": "string", "nullable": true },
                     "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
-                    "createdById": { "type": "string", "nullable": true }
+                    "createdById": { "type": "string", "nullable": true },
+                    "scoreClipUrl": { "type": "string", "nullable": true }
                 },
                 "required": [
                     "id",
@@ -2789,7 +2854,8 @@
                     "assetIdAvatar",
                     "avatarUrl",
                     "groupId",
-                    "createdById"
+                    "createdById",
+                    "scoreClipUrl"
                 ]
             },
             "ResponseEnvelopeProfileDto": {
@@ -2833,6 +2899,7 @@
                     "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true },
+                    "scoreClipUrl": { "type": "string", "nullable": true },
                     "reactivated": { "type": "boolean" },
                     "lastActiveSeasonId": { "type": "string", "nullable": true }
                 },
@@ -2843,6 +2910,7 @@
                     "avatarUrl",
                     "groupId",
                     "createdById",
+                    "scoreClipUrl",
                     "reactivated",
                     "lastActiveSeasonId"
                 ]
@@ -3288,6 +3356,7 @@
                             "GROUP_WALLPAPER",
                             "PROFILE_AVATAR",
                             "TEAM_PHOTO",
+                            "PROFILE_SCORE_CLIP",
                             null
                         ],
                         "nullable": true

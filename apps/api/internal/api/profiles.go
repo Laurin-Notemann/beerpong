@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
@@ -206,11 +207,65 @@ func (s *Server) profileInGroup(r *request) response {
 	return nil
 }
 
+// profileAsset is a picture or video a profile carries: its avatar or its
+// score clip. Both are set and removed the same way.
+type profileAsset struct {
+	typ      int16
+	current  func(db.Profile) *string
+	set      func(ctx context.Context, q *db.Queries, profileID string, assetID *string) (db.Profile, error)
+	none     errorCode
+	setEvent string
+	delEvent string
+}
+
+var (
+	profileAvatar = profileAsset{
+		typ:     assetProfileAvatar,
+		current: func(p db.Profile) *string { return p.AssetIDAvatar },
+		set: func(ctx context.Context, q *db.Queries, id string, assetID *string) (db.Profile, error) {
+			return q.SetProfileAvatar(ctx, db.SetProfileAvatarParams{ID: id, AssetIDAvatar: assetID})
+		},
+		none:     errProfileHasNoAvatar,
+		setEvent: "profileAvatarSet",
+		delEvent: "profileAvatarDelete",
+	}
+	// the clip Versus TV plays when the player scores in a live match
+	profileScoreClip = profileAsset{
+		typ:     assetProfileScoreClip,
+		current: func(p db.Profile) *string { return p.AssetIDScoreClip },
+		set: func(ctx context.Context, q *db.Queries, id string, assetID *string) (db.Profile, error) {
+			return q.SetProfileScoreClip(ctx, db.SetProfileScoreClipParams{ID: id, AssetIDScoreClip: assetID})
+		},
+		none:     errProfileHasNoScoreClip,
+		setEvent: "profileScoreClipSet",
+		delEvent: "profileScoreClipDelete",
+	}
+)
+
 func (s *Server) setAvatar(r *request) response {
 	c, res := readCrop(r)
 	if res != nil {
 		return res
 	}
+	return s.setProfileAsset(r, profileAvatar, c)
+}
+
+func (s *Server) deleteAvatar(r *request) response {
+	return s.deleteProfileAsset(r, profileAvatar)
+}
+
+// setScoreClip takes no body: a video has no crop.
+func (s *Server) setScoreClip(r *request) response {
+	return s.setProfileAsset(r, profileScoreClip, crop{})
+}
+
+func (s *Server) deleteScoreClip(r *request) response {
+	return s.deleteProfileAsset(r, profileScoreClip)
+}
+
+// setProfileAsset replaces the profile's asset with a new one and answers
+// where to upload it.
+func (s *Server) setProfileAsset(r *request, a profileAsset, c crop) response {
 	if res := s.profileInGroup(r); res != nil {
 		return res
 	}
@@ -219,20 +274,20 @@ func (s *Server) setAvatar(r *request) response {
 	}
 	profileID := r.path("id")
 	ctx := r.Context()
-	res = s.tx(ctx, func(q *db.Queries) (response, error) {
+	res := s.tx(ctx, func(q *db.Queries) (response, error) {
 		profile, err := q.GetProfile(ctx, profileID)
 		if err != nil {
 			return nil, err
 		}
-		asset, err := insertAsset(ctx, q, assetProfileAvatar, c)
+		asset, err := insertAsset(ctx, q, a.typ, c)
 		if err != nil {
 			return nil, err
 		}
-		if _, err := q.SetProfileAvatar(ctx, db.SetProfileAvatarParams{ID: profileID, AssetIDAvatar: &asset.ID}); err != nil {
+		if _, err := a.set(ctx, q, profileID, &asset.ID); err != nil {
 			return nil, err
 		}
-		if profile.AssetIDAvatar != nil {
-			if err := s.deleteAsset(ctx, q, *profile.AssetIDAvatar); err != nil {
+		if old := a.current(profile); old != nil {
+			if err := s.deleteAsset(ctx, q, *old); err != nil {
 				return nil, err
 			}
 		}
@@ -243,12 +298,12 @@ func (s *Server) setAvatar(r *request) response {
 		return ok(upload), nil
 	})
 	if o, isOK := res.(okResponse); isOK {
-		s.hub.Publish(r.path("groupId"), realtime.Assets, "profileAvatarSet", o.data)
+		s.hub.Publish(r.path("groupId"), realtime.Assets, a.setEvent, o.data)
 	}
 	return res
 }
 
-func (s *Server) deleteAvatar(r *request) response {
+func (s *Server) deleteProfileAsset(r *request, a profileAsset) response {
 	if res := s.profileInGroup(r); res != nil {
 		return res
 	}
@@ -259,20 +314,21 @@ func (s *Server) deleteAvatar(r *request) response {
 		if err != nil {
 			return nil, err
 		}
-		if profile.AssetIDAvatar == nil {
-			return fail(errProfileHasNoAvatar), nil
+		old := a.current(profile)
+		if old == nil {
+			return fail(a.none), nil
 		}
-		updated, err := q.SetProfileAvatar(ctx, db.SetProfileAvatarParams{ID: profileID})
+		updated, err := a.set(ctx, q, profileID, nil)
 		if err != nil {
 			return nil, err
 		}
-		if err := s.deleteAsset(ctx, q, *profile.AssetIDAvatar); err != nil {
+		if err := s.deleteAsset(ctx, q, *old); err != nil {
 			return nil, err
 		}
 		return ok(s.toProfileDTO(updated)), nil
 	})
 	if o, isOK := res.(okResponse); isOK {
-		s.hub.Publish(r.path("groupId"), realtime.Assets, "profileAvatarDelete", o.data)
+		s.hub.Publish(r.path("groupId"), realtime.Assets, a.delEvent, o.data)
 	}
 	return res
 }

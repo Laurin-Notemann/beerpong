@@ -9,6 +9,8 @@ export interface BoardPlayer {
     id: string;
     name: string;
     avatarUrl: string | null;
+    /** the clip the TV plays when they score in a live match */
+    scoreClipUrl: string | null;
 }
 
 /** what a player's live match does to their standing, if it ended now */
@@ -92,6 +94,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             id: profileId ?? '',
             name: p?.name ?? 'Unknown',
             avatarUrl: avatars.get(profileId ?? '') ?? null,
+            scoreClipUrl: p?.scoreClipUrl ?? null,
         };
     };
 

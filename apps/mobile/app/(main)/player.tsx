@@ -1,9 +1,12 @@
+import { VideoExportPreset } from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import {
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
+    useDeleteScoreClipMutation,
+    useUpdateScoreClipMutation,
 } from '@/api/calls/playerHooks';
 import {
     getPastSeasons,
@@ -19,8 +22,11 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { putTemp } from '@/lib/tempRouteStore';
 import { usePlayerPageScope } from '@/lib/usePlayerPageScope';
 import { showErrorToast, showSuccessToast } from '@/toast';
-import { launchImageLibrary } from '@/utils/fileUpload';
+import { launchImageLibrary, readAsByteArray } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
+
+/** how long the score clip Versus TV plays may be */
+const SCORE_CLIP_SECONDS = 5;
 
 export default function Page() {
     const router = useRouter();
@@ -48,6 +54,9 @@ export default function Page() {
     const deleteAvatarMutation = useDeletePlayerAvatarMutation();
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+    const updateScoreClipMutation = useUpdateScoreClipMutation();
+    const deleteScoreClipMutation = useDeleteScoreClipMutation();
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -120,12 +129,67 @@ export default function Page() {
         }
     }
 
+    async function onUploadScoreClipPress() {
+        if (!groupId || !profileId) return;
+
+        const [result] = await launchImageLibrary({
+            mediaTypes: ['videos'],
+            // iOS trims to `videoMaxDuration` and exports H.264, which the TV's old Chromium
+            // plays (it can't play the HEVC iPhones record); Android hands over the file as is
+            allowsEditing: true,
+            videoMaxDuration: SCORE_CLIP_SECONDS,
+            videoExportPreset: VideoExportPreset.H264_1280x720,
+        });
+
+        // cancelled
+        if (!result) return;
+
+        // Android can't trim in the picker; the TV would cut a longer clip off anyway
+        if ((result.duration ?? 0) > (SCORE_CLIP_SECONDS + 0.5) * 1000) {
+            showErrorToast(
+                `Trim the clip to ${SCORE_CLIP_SECONDS} seconds first.`
+            );
+            return;
+        }
+
+        triggerHapticBump('light');
+
+        try {
+            await updateScoreClipMutation.mutateAsync({
+                byteArray: await readAsByteArray(result.uri),
+                groupId,
+                profileId,
+            });
+            showSuccessToast('Score clip uploaded.');
+        } catch (err) {
+            ConsoleLogger.error('failed to upload score clip:', err);
+            showErrorToast('Failed to upload score clip.', err);
+        }
+    }
+
+    async function onDeleteScoreClipPress() {
+        if (!groupId || !profileId) return;
+
+        try {
+            await deleteScoreClipMutation.mutateAsync({ groupId, profileId });
+            showSuccessToast('Score clip removed.');
+        } catch (err) {
+            ConsoleLogger.error('failed to delete score clip:', err);
+            showErrorToast('Failed to remove score clip.', err);
+        }
+    }
+
     return (
         <>
             <PlayerScreen
                 scopes={scopes}
                 name={playerName}
-                isPending={isUploadingAvatar || deletePlayerMutation.isPending}
+                isPending={
+                    isUploadingAvatar ||
+                    deletePlayerMutation.isPending ||
+                    updateScoreClipMutation.isPending ||
+                    deleteScoreClipMutation.isPending
+                }
                 id={id}
                 profileId={profileId!}
                 hasPremium={false}
@@ -134,6 +198,10 @@ export default function Page() {
                 avatarUrl={player?.profile?.avatarUrl}
                 onUploadAvatarPress={onUploadAvatarPress}
                 onDeleteAvatarPress={onDeleteAvatarPress}
+                hasScoreClip={!!player?.profile?.scoreClipUrl}
+                isUploadingScoreClip={updateScoreClipMutation.isPending}
+                onUploadScoreClipPress={onUploadScoreClipPress}
+                onDeleteScoreClipPress={onDeleteScoreClipPress}
                 refresh={refresh}
             />
         </>

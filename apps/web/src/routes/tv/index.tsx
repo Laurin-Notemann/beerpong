@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FocusView } from '~/tv/components/FocusView';
 import { FullscreenButton } from '~/tv/components/FullscreenButton';
@@ -7,6 +7,7 @@ import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { LiveMatchPanel } from '~/tv/components/LiveMatchPanel';
 import { Qr } from '~/tv/components/Qr';
+import { ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import {
     type DisplayConfig,
     emptyConfig,
@@ -15,6 +16,7 @@ import {
     pickMatches,
 } from '~/tv/lib/display';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
+import { type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -104,7 +106,20 @@ function Tv() {
         onEvent,
         register
     );
-    const board = useBoard(identity.id, identity.secret, registered ? identity.config : undefined);
+    // every score with a clip queues it; they play one after another
+    const [clips, setClips] = useState<ScoreClip[]>([]);
+    const liveMatches = useRef<Board['liveMatches']>([]);
+    const board = useBoard(
+        identity.id,
+        identity.secret,
+        registered ? identity.config : undefined,
+        (event) => {
+            const scored = scoreClipsOf(event, liveMatches.current);
+            if (scored.length) setClips((queue) => [...queue, ...scored]);
+        }
+    );
+    liveMatches.current = board.data?.liveMatches ?? [];
+    const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const remoteUrl = `${location.origin}/tv/remote/${identity.id}?k=${identity.key}`;
     const { config } = identity;
@@ -117,6 +132,8 @@ function Tv() {
                     config={config}
                     remoteUrl={remoteUrl}
                     offline={!connected || board.isError}
+                    clip={clips[0]}
+                    onClipDone={clipDone}
                 />
             ) : (
                 <Pairing remoteUrl={remoteUrl} />
@@ -154,11 +171,15 @@ function Screen({
     config,
     remoteUrl,
     offline,
+    clip,
+    onClipDone,
 }: {
     board: Board | null;
     config: DisplayConfig;
     remoteUrl: string;
     offline: boolean;
+    clip: ScoreClip | undefined;
+    onClipDone: () => void;
 }) {
     const live = board?.liveMatches ?? [];
     const matches = pickMatches(live, config.pinnedMatchIds);
@@ -218,6 +239,16 @@ function Screen({
                 </div>
             ) : (
                 <Empty>No matches played {config.scope === 'today' ? 'today' : 'yet'}</Empty>
+            )}
+            {clip && (
+                <ScoreClipPanel
+                    key={clip.id}
+                    clip={clip}
+                    // next to the leaderboard the live match is on the right; elsewhere the
+                    // scorer's team side (blue plays on the left)
+                    from={layout === 'split' || clip.team === 'red' ? 'right' : 'left'}
+                    onDone={onClipDone}
+                />
             )}
         </main>
     );

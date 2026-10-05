@@ -16,7 +16,12 @@ declare namespace Components {
         export interface AssetMetadataDto {
             id: string;
             url: string;
-            type: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO' | null;
+            type:
+                | 'GROUP_WALLPAPER'
+                | 'PROFILE_AVATAR'
+                | 'TEAM_PHOTO'
+                | 'PROFILE_SCORE_CLIP'
+                | null;
             offsetX: number; // double
             offsetY: number; // double
             zoom: number; // double
@@ -24,7 +29,12 @@ declare namespace Components {
         export interface AssetUploadResponse {
             id: string;
             url: string;
-            type: 'GROUP_WALLPAPER' | 'PROFILE_AVATAR' | 'TEAM_PHOTO' | null;
+            type:
+                | 'GROUP_WALLPAPER'
+                | 'PROFILE_AVATAR'
+                | 'TEAM_PHOTO'
+                | 'PROFILE_SCORE_CLIP'
+                | null;
             offsetX: number; // double
             offsetY: number; // double
             zoom: number; // double
@@ -388,6 +398,7 @@ declare namespace Components {
             avatarUrl: string | null;
             groupId: string | null;
             createdById: string | null;
+            scoreClipUrl: string | null;
             reactivated: boolean;
             lastActiveSeasonId: string | null;
         }
@@ -398,6 +409,7 @@ declare namespace Components {
             avatarUrl: string | null;
             groupId: string | null;
             createdById: string | null;
+            scoreClipUrl: string | null;
         }
         export interface ResponseEnvelopeAssetMetadataDto {
             status: 'OK' | 'ERROR';
@@ -855,6 +867,19 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
+    namespace DeleteScoreClip {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
     namespace DeleteWallpaper {
@@ -1325,6 +1350,20 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeAssetUploadResponse;
         }
     }
+    namespace SetScoreClip {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeAssetUploadResponse;
+        }
+    }
     namespace SetWallpaper {
         namespace Parameters {
             export type Id = string;
@@ -1644,6 +1683,22 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteAvatar.Responses.$200>;
+    /**
+     * setScoreClip - Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.
+     */
+    setScoreClip(
+        parameters?: Parameters<Paths.SetScoreClip.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetScoreClip.Responses.$200>;
+    /**
+     * deleteScoreClip
+     */
+    deleteScoreClip(
+        parameters?: Parameters<Paths.DeleteScoreClip.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteScoreClip.Responses.$200>;
     /**
      * startNewSeason
      */
@@ -2145,6 +2200,24 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeleteAvatar.Responses.$200>;
+    };
+    ['/groups/{groupId}/profiles/{id}/score-clip']: {
+        /**
+         * setScoreClip - Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.
+         */
+        put(
+            parameters?: Parameters<Paths.SetScoreClip.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetScoreClip.Responses.$200>;
+        /**
+         * deleteScoreClip
+         */
+        delete(
+            parameters?: Parameters<Paths.DeleteScoreClip.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteScoreClip.Responses.$200>;
     };
     ['/groups/{groupId}/active-season']: {
         /**

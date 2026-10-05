@@ -11,7 +11,7 @@ import { ApiId, WithProfile } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { uploadImage } from '@/api/utils/uploadImage';
+import { uploadAsset } from '@/api/utils/uploadAsset';
 import { Client, Paths, PlayerDto } from '@/openapi/openapi';
 
 /** every player of the season, inactive (deleted) ones too: they still appear in matches */
@@ -125,7 +125,7 @@ export const useUpdatePlayerAvatarMutation = () => {
                 groupId,
                 id: profileId,
             });
-            await uploadImage(
+            await uploadAsset(
                 res.data.data?.singleUploadUrl ?? '',
                 byteArray,
                 'profilePicture',
@@ -134,6 +134,56 @@ export const useUpdatePlayerAvatarMutation = () => {
             return res.data;
         },
         onError: captureMutationErr('updateAvatar'),
+    });
+};
+
+/** uploads the clip Versus TV plays when the player scores (an H.264 MP4) */
+export const useUpdateScoreClipMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.SetScoreClip.Responses.$200 | null,
+        Error,
+        {
+            byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>;
+            groupId: ApiId;
+            profileId: ApiId;
+        }
+    >({
+        mutationFn: async ({ byteArray, groupId, profileId }) => {
+            const res = await (
+                await api
+            ).setScoreClip({
+                groupId,
+                id: profileId,
+            });
+            await uploadAsset(
+                res.data.data?.singleUploadUrl ?? '',
+                byteArray,
+                'scoreClip',
+                'video/mp4'
+            );
+            return res.data;
+        },
+        onError: captureMutationErr('updateScoreClip'),
+    });
+};
+
+export const useDeleteScoreClipMutation = () => {
+    const { api } = useApi();
+
+    return useMutation<
+        Paths.DeleteScoreClip.Responses.$200 | null,
+        Error,
+        { groupId: ApiId; profileId: ApiId }
+    >({
+        mutationFn: async ({ groupId, profileId }) => {
+            const res = await (
+                await api
+            ).deleteScoreClip({ groupId, id: profileId });
+            return res?.data;
+        },
+        onError: captureMutationErr('deleteScoreClip'),
     });
 };
 

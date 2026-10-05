@@ -55,16 +55,24 @@ export function useDisplayEvents(
     return connected;
 }
 
-/** what the display shows, refetched when its config changes and when the group changes */
+/**
+ * what the display shows, refetched when its config changes and when the group changes;
+ * `onSocketEvent` gets each of the group's socket events as it arrives
+ */
 export function useBoard(
     id: string | undefined,
     key: string | undefined,
-    config: DisplayConfig | undefined
+    config: DisplayConfig | undefined,
+    onSocketEvent?: (event: unknown) => void
 ) {
     const queryClient = useQueryClient();
     const groupId = config?.groupId;
 
-    useGroupSocket(groupId, () => queryClient.invalidateQueries({ queryKey: ['board'] }));
+    useGroupSocket(
+        groupId,
+        () => queryClient.invalidateQueries({ queryKey: ['board'] }),
+        onSocketEvent
+    );
 
     return useQuery({
         queryKey: ['board', id, config?.groupId, config?.scope, config?.seasonId],
@@ -80,10 +88,17 @@ export function useBoard(
  * Subscribes to the group on the API's websocket (apps/api/README-Socket-Updates.md) and calls
  * `onChange` for every event, debounced: a match entry sends several at once. Reconnects with
  * a backoff and counts a reconnect as a change, since events may have been missed meanwhile.
+ * `onEvent` gets every event itself, right away.
  */
-function useGroupSocket(groupId: string | null | undefined, onChange: () => void) {
+function useGroupSocket(
+    groupId: string | null | undefined,
+    onChange: () => void,
+    onEvent?: (event: unknown) => void
+) {
     const callback = useRef(onChange);
     callback.current = onChange;
+    const eventCallback = useRef(onEvent);
+    eventCallback.current = onEvent;
 
     useEffect(() => {
         if (!groupId) return;
@@ -107,7 +122,14 @@ function useGroupSocket(groupId: string | null | undefined, onChange: () => void
                 if (attempt > 0) changed();
                 attempt = 0;
             };
-            socket.onmessage = changed;
+            socket.onmessage = (e) => {
+                changed();
+                try {
+                    eventCallback.current?.(JSON.parse(e.data));
+                } catch {
+                    // not JSON: only a change
+                }
+            };
             socket.onclose = () => {
                 if (closed) return;
                 attempt++;

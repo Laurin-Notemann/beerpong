@@ -10,7 +10,7 @@ import (
 )
 
 const getProfile = `-- name: GetProfile :one
-SELECT id, name, asset_id_avatar, group_id, created_by FROM profiles WHERE id = $1
+SELECT id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip FROM profiles WHERE id = $1
 `
 
 func (q *Queries) GetProfile(ctx context.Context, id string) (Profile, error) {
@@ -22,6 +22,7 @@ func (q *Queries) GetProfile(ctx context.Context, id string) (Profile, error) {
 		&i.AssetIDAvatar,
 		&i.GroupID,
 		&i.CreatedBy,
+		&i.AssetIDScoreClip,
 	)
 	return i, err
 }
@@ -29,7 +30,7 @@ func (q *Queries) GetProfile(ctx context.Context, id string) (Profile, error) {
 const insertProfile = `-- name: InsertProfile :one
 INSERT INTO profiles (id, name, asset_id_avatar, group_id, created_by)
 VALUES ($1, $2, NULL, $3, $4)
-RETURNING id, name, asset_id_avatar, group_id, created_by
+RETURNING id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip
 `
 
 type InsertProfileParams struct {
@@ -53,6 +54,7 @@ func (q *Queries) InsertProfile(ctx context.Context, arg InsertProfileParams) (P
 		&i.AssetIDAvatar,
 		&i.GroupID,
 		&i.CreatedBy,
+		&i.AssetIDScoreClip,
 	)
 	return i, err
 }
@@ -65,7 +67,7 @@ type InsertProfilesParams struct {
 }
 
 const profileByGroupAndName = `-- name: ProfileByGroupAndName :one
-SELECT id, name, asset_id_avatar, group_id, created_by FROM profiles WHERE group_id = $1 AND name IS NOT DISTINCT FROM $2::text
+SELECT id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip FROM profiles WHERE group_id = $1 AND name IS NOT DISTINCT FROM $2::text
 LIMIT 1
 `
 
@@ -85,6 +87,7 @@ func (q *Queries) ProfileByGroupAndName(ctx context.Context, arg ProfileByGroupA
 		&i.AssetIDAvatar,
 		&i.GroupID,
 		&i.CreatedBy,
+		&i.AssetIDScoreClip,
 	)
 	return i, err
 }
@@ -106,7 +109,7 @@ func (q *Queries) ProfileExistsInGroup(ctx context.Context, arg ProfileExistsInG
 }
 
 const profilesByGroup = `-- name: ProfilesByGroup :many
-SELECT id, name, asset_id_avatar, group_id, created_by FROM profiles WHERE group_id = $1 ORDER BY ctid
+SELECT id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip FROM profiles WHERE group_id = $1 ORDER BY ctid
 `
 
 func (q *Queries) ProfilesByGroup(ctx context.Context, groupID *string) ([]Profile, error) {
@@ -124,6 +127,7 @@ func (q *Queries) ProfilesByGroup(ctx context.Context, groupID *string) ([]Profi
 			&i.AssetIDAvatar,
 			&i.GroupID,
 			&i.CreatedBy,
+			&i.AssetIDScoreClip,
 		); err != nil {
 			return nil, err
 		}
@@ -137,7 +141,7 @@ func (q *Queries) ProfilesByGroup(ctx context.Context, groupID *string) ([]Profi
 
 const setProfileAvatar = `-- name: SetProfileAvatar :one
 UPDATE profiles SET asset_id_avatar = $2 WHERE id = $1
-RETURNING id, name, asset_id_avatar, group_id, created_by
+RETURNING id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip
 `
 
 type SetProfileAvatarParams struct {
@@ -154,13 +158,38 @@ func (q *Queries) SetProfileAvatar(ctx context.Context, arg SetProfileAvatarPara
 		&i.AssetIDAvatar,
 		&i.GroupID,
 		&i.CreatedBy,
+		&i.AssetIDScoreClip,
+	)
+	return i, err
+}
+
+const setProfileScoreClip = `-- name: SetProfileScoreClip :one
+UPDATE profiles SET asset_id_score_clip = $2 WHERE id = $1
+RETURNING id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip
+`
+
+type SetProfileScoreClipParams struct {
+	ID               string
+	AssetIDScoreClip *string
+}
+
+func (q *Queries) SetProfileScoreClip(ctx context.Context, arg SetProfileScoreClipParams) (Profile, error) {
+	row := q.db.QueryRow(ctx, setProfileScoreClip, arg.ID, arg.AssetIDScoreClip)
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.AssetIDAvatar,
+		&i.GroupID,
+		&i.CreatedBy,
+		&i.AssetIDScoreClip,
 	)
 	return i, err
 }
 
 const updateProfileName = `-- name: UpdateProfileName :one
 UPDATE profiles SET name = $2 WHERE id = $1
-RETURNING id, name, asset_id_avatar, group_id, created_by
+RETURNING id, name, asset_id_avatar, group_id, created_by, asset_id_score_clip
 `
 
 type UpdateProfileNameParams struct {
@@ -177,6 +206,7 @@ func (q *Queries) UpdateProfileName(ctx context.Context, arg UpdateProfileNamePa
 		&i.AssetIDAvatar,
 		&i.GroupID,
 		&i.CreatedBy,
+		&i.AssetIDScoreClip,
 	)
 	return i, err
 }

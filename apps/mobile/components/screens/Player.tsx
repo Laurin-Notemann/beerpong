@@ -84,6 +84,11 @@ export interface PlayerScreenProps {
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
+    /** the player has a clip Versus TV plays when they score */
+    hasScoreClip: boolean;
+    isUploadingScoreClip: boolean;
+    onUploadScoreClipPress: () => void;
+    onDeleteScoreClipPress: () => void;
     refresh: RefreshProps;
 
     scopes: Map<string, ScopeInfo>;
@@ -99,6 +104,10 @@ export default function PlayerScreen({
     onDelete,
     onUploadAvatarPress,
     onDeleteAvatarPress,
+    hasScoreClip,
+    isUploadingScoreClip,
+    onUploadScoreClipPress,
+    onDeleteScoreClipPress,
     refresh,
 
     scopes,
@@ -433,6 +442,35 @@ export default function PlayerScreen({
                                         title: 'Remove Profile Picture',
                                         description:
                                             "Are you sure you want to remove this player's profile picture?",
+                                    }}
+                                />
+                            )}
+                            <MenuItem
+                                title={
+                                    isUploadingScoreClip
+                                        ? 'Uploading Score Clip…'
+                                        : hasScoreClip
+                                          ? 'Replace Score Clip'
+                                          : 'Add Score Clip'
+                                }
+                                subtitle="Plays on Versus TV when they score"
+                                headIcon="movie-open-outline"
+                                onPress={
+                                    isPending
+                                        ? undefined
+                                        : onUploadScoreClipPress
+                                }
+                            />
+                            {hasScoreClip && (
+                                <MenuItem
+                                    title="Remove Score Clip"
+                                    headIcon="delete-outline"
+                                    onPress={onDeleteScoreClipPress}
+                                    type="danger"
+                                    confirmationPrompt={{
+                                        title: 'Remove Score Clip',
+                                        description:
+                                            "Are you sure you want to remove this player's score clip?",
                                     }}
                                 />
                             )}

@@ -28,3 +28,7 @@ RETURNING *;
 
 -- name: InsertProfiles :copyfrom
 INSERT INTO profiles (id, name, group_id, created_by) VALUES ($1, $2, $3, $4);
+
+-- name: SetProfileScoreClip :one
+UPDATE profiles SET asset_id_score_clip = $2 WHERE id = $1
+RETURNING *;

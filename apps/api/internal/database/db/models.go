@@ -101,11 +101,12 @@ type Player struct {
 }
 
 type Profile struct {
-	ID            string
-	Name          *string
-	AssetIDAvatar *string
-	GroupID       *string
-	CreatedBy     *string
+	ID               string
+	Name             *string
+	AssetIDAvatar    *string
+	GroupID          *string
+	CreatedBy        *string
+	AssetIDScoreClip *string
 }
 
 type Rule struct {

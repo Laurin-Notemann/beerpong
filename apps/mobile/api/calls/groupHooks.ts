@@ -5,7 +5,7 @@ import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { migrateLegacyGroups } from '@/api/utils/migrateLegacyGroups';
 import { QK } from '@/api/utils/reactQuery';
-import { uploadImage } from '@/api/utils/uploadImage';
+import { uploadAsset } from '@/api/utils/uploadAsset';
 import { Paths } from '@/openapi/openapi';
 import { liveMatchOutbox } from '@/zustand/liveMatchOutboxStore';
 
@@ -137,7 +137,7 @@ export const useUpdateGroupWallpaperMutation = () => {
         mutationFn: async ({ byteArray, groupId, mimeType }) => {
             const res = await (await api).setWallpaper({ id: groupId });
 
-            await uploadImage(
+            await uploadAsset(
                 res.data.data?.singleUploadUrl ?? '',
                 byteArray,
                 'groupWallpaper',

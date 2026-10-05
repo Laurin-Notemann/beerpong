@@ -21,7 +21,7 @@ import { captureMutationErr } from '@/api/utils/captureException';
 import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { uploadImage } from '@/api/utils/uploadImage';
+import { uploadAsset } from '@/api/utils/uploadAsset';
 import { Client, Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { describeError, showErrorToast, showSuccessToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
@@ -227,7 +227,7 @@ export async function uploadTeamPhoto(
         IMAGE_SIZES.teamPhoto
     );
 
-    await uploadImage(
+    await uploadAsset(
         photoUpload?.teamPhoto?.singleUploadUrl ?? '',
         byteArray,
         'matchPhoto',

@@ -12,15 +12,16 @@ import (
 // follow the Java DTOs; fields that were nullable there are pointers here.
 
 var (
-	rankingAlgorithms   = []string{"AVERAGE", "ELO"}
-	dailyLeaderboards   = []string{"RESET_AT_MIDNIGHT", "WAKE_TIME", "LAST_24_HOURS"}
-	assetTypes          = []string{"GROUP_WALLPAPER", "PROFILE_AVATAR", "TEAM_PHOTO"}
-	installationTypes   = []string{"IOS", "ANDROID"}
-	rankingAverage      = int16(0)
-	dailyWakeTime       = int16(1)
-	assetGroupWallpaper = int16(0)
-	assetProfileAvatar  = int16(1)
-	assetTeamPhoto      = int16(2)
+	rankingAlgorithms     = []string{"AVERAGE", "ELO"}
+	dailyLeaderboards     = []string{"RESET_AT_MIDNIGHT", "WAKE_TIME", "LAST_24_HOURS"}
+	assetTypes            = []string{"GROUP_WALLPAPER", "PROFILE_AVATAR", "TEAM_PHOTO", "PROFILE_SCORE_CLIP"}
+	installationTypes     = []string{"IOS", "ANDROID"}
+	rankingAverage        = int16(0)
+	dailyWakeTime         = int16(1)
+	assetGroupWallpaper   = int16(0)
+	assetProfileAvatar    = int16(1)
+	assetTeamPhoto        = int16(2)
+	assetProfileScoreClip = int16(3)
 )
 
 func enumName(names []string, ordinal *int16) *string {
@@ -182,14 +183,18 @@ type profileDTO struct {
 	AvatarURL   *string `json:"avatarUrl"`
 	GroupID     *string `json:"groupId"`
 	CreatedByID *string `json:"createdById"`
+	// ScoreClipURL is the video Versus TV plays when the player scores.
+	ScoreClipURL *string `json:"scoreClipUrl"`
 }
 
 func (s *Server) toProfileDTO(p db.Profile) profileDTO {
-	var avatarURL *string
-	if p.AssetIDAvatar != nil {
-		avatarURL = ptr(s.bucket.PublicURL(*p.AssetIDAvatar))
+	url := func(assetID *string) *string {
+		if assetID == nil {
+			return nil
+		}
+		return ptr(s.bucket.PublicURL(*assetID))
 	}
-	return profileDTO{ID: p.ID, Name: p.Name, AssetIDAvatar: p.AssetIDAvatar, AvatarURL: avatarURL, GroupID: p.GroupID, CreatedByID: p.CreatedBy}
+	return profileDTO{ID: p.ID, Name: p.Name, AssetIDAvatar: p.AssetIDAvatar, AvatarURL: url(p.AssetIDAvatar), GroupID: p.GroupID, CreatedByID: p.CreatedBy, ScoreClipURL: url(p.AssetIDScoreClip)}
 }
 
 type profileCreatedDTO struct {

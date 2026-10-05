@@ -1,4 +1,4 @@
-const IMAGE_MIME_TYPES = [
+const MIME_TYPES = [
     'image/jpeg',
     'image/png',
     'image/webp',
@@ -7,14 +7,14 @@ const IMAGE_MIME_TYPES = [
     'image/heif',
     'image/apng',
     'image/avif',
+    // score clips
+    'video/mp4',
 ] as const;
 
-const isValidImageMimeType = (
+const isValidMimeType = (
     mimeType: string
-): mimeType is (typeof IMAGE_MIME_TYPES)[number] => {
-    return IMAGE_MIME_TYPES.includes(
-        mimeType as (typeof IMAGE_MIME_TYPES)[number]
-    );
+): mimeType is (typeof MIME_TYPES)[number] => {
+    return MIME_TYPES.includes(mimeType as (typeof MIME_TYPES)[number]);
 };
 
 const isValidByteArray = (
@@ -30,11 +30,11 @@ const isValidSingleUploadUrl = (url: string | null | undefined) => {
 /**
  * upload to a `singleUploadUrl` returned from our backend
  *
- * @param mimeType - must be of type image, e.g. "image/jpeg", "image/png", "image/webp"
+ * @param mimeType - an image type, e.g. "image/jpeg", "image/png", "image/webp", or "video/mp4"
  *
  * @see https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html
  */
-export async function uploadImage(
+export async function uploadAsset(
     singleUploadUrl: string,
     byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>,
     debugLabel: string,
@@ -42,15 +42,15 @@ export async function uploadImage(
 ): Promise<void> {
     if (!isValidSingleUploadUrl(singleUploadUrl)) {
         throw new Error(
-            `uploadImage(${debugLabel}): invalid singleUploadUrl "${singleUploadUrl}"`
+            `uploadAsset(${debugLabel}): invalid singleUploadUrl "${singleUploadUrl}"`
         );
     }
     if (!isValidByteArray(byteArray)) {
-        throw new Error(`uploadImage(${debugLabel}): invalid byteArray`);
+        throw new Error(`uploadAsset(${debugLabel}): invalid byteArray`);
     }
-    if (!isValidImageMimeType(mimeType)) {
+    if (!isValidMimeType(mimeType)) {
         throw new Error(
-            `uploadImage(${debugLabel}): invalid mimeType "${mimeType}"`
+            `uploadAsset(${debugLabel}): invalid mimeType "${mimeType}"`
         );
     }
     let res: Response;
@@ -63,13 +63,13 @@ export async function uploadImage(
             body: byteArray as Uint8Array<ArrayBuffer>,
         });
     } catch (err) {
-        throw new Error(`uploadImage(${debugLabel}): fetch error: ${err}`);
+        throw new Error(`uploadAsset(${debugLabel}): fetch error: ${err}`);
     }
     if (!res.ok) {
         // S3 says why in the body (e.g. <Code>SignatureDoesNotMatch</Code>)
         const body = await res.text().catch(() => '');
         throw new Error(
-            `uploadImage(${debugLabel}): HTTP ${res.status} ${body.slice(0, 1000)}`.trim()
+            `uploadAsset(${debugLabel}): HTTP ${res.status} ${body.slice(0, 1000)}`.trim()
         );
     }
 }
