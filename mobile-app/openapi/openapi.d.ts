@@ -227,6 +227,10 @@ declare namespace Components {
             ops?: LiveMatchOpDto[];
         }
         export interface MatchCreateDto {
+            /**
+             * The app's id for a new match (a UUID). Creating a match with an id that already exists in the season returns that match instead of saving a copy.
+             */
+            id?: string;
             teams?: TeamCreateDto[];
         }
         export interface MatchDto {

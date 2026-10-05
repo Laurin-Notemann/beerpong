@@ -1,3 +1,4 @@
+import { uuid } from 'expo';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -5,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
 import {
+    attachTeamPhotos,
     uploadTeamPhoto,
     useCreateMatchMutation,
     useMatchesQuery,
@@ -13,6 +15,7 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { startLiveMatch } from '@/api/liveMatch/useLiveMatch';
+import { useApi } from '@/api/utils/create-api';
 import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import { NewMatchStack } from '@/components/NewMatchStack';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
@@ -148,6 +151,7 @@ export default function NewMatchScreen() {
     const bothTeamsEmpty = teamMembers.length === 0;
 
     const createMatchMutation = useCreateMatchMutation();
+    const { api } = useApi();
 
     const finishes = teamMembers
         .flatMap((i) => i.moves)
@@ -172,10 +176,18 @@ export default function NewMatchScreen() {
 
         const { blueTeamPhotoUri, redTeamPhotoUri } = matchDraft;
 
+        // read and set right away, so a second tap before the next render sends the same id
+        let matchId = useMatchDraftStore.getState().matchId;
+        if (!matchId) {
+            matchId = uuid.v4();
+            useMatchDraftStore.setState({ matchId });
+        }
+
         const savePhoto = !!blueTeamPhotoUri && !!redTeamPhotoUri;
 
         try {
             const matchRes = await createMatchMutation.mutateAsync({
+                id: matchId,
                 groupId,
                 seasonId,
                 teams: [
@@ -191,8 +203,7 @@ export default function NewMatchScreen() {
             router.replace('/');
             carouselRef.current?.prev();
 
-            const matchId = matchRes?.data?.id;
-            if (!savePhoto && matchId) {
+            if (!savePhoto) {
                 // no photo was taken on the points page, so ask for one
                 nav.navigate('matchPhotoModal', { matchId, seasonId });
             }
@@ -202,8 +213,20 @@ export default function NewMatchScreen() {
                 const [bluePhotoUpload, redPhotoUpload] =
                     matchRes?.data?.photoUploads ?? [];
                 try {
-                    await uploadTeamPhoto(bluePhotoUpload, blueTeamPhotoUri);
-                    await uploadTeamPhoto(redPhotoUpload, redTeamPhotoUri);
+                    if (bluePhotoUpload && redPhotoUpload) {
+                        await uploadTeamPhoto(
+                            bluePhotoUpload,
+                            blueTeamPhotoUri
+                        );
+                        await uploadTeamPhoto(redPhotoUpload, redTeamPhotoUri);
+                    } else {
+                        // a repeated create returns the match without upload urls
+                        await attachTeamPhotos(
+                            api,
+                            { groupId, seasonId, matchId },
+                            { blueTeamPhotoUri, redTeamPhotoUri }
+                        );
+                    }
                 } catch (err) {
                     ConsoleLogger.error('failed to upload team photos:', err);
                     showErrorToast(

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -325,6 +326,9 @@ func (s *Server) getMatchOverview(r *request) response {
 // matchInput is a MatchCreateDto. Nil pointers mark JSON nulls, which the
 // Java backend failed on with a server error at the point it touched them.
 type matchInput struct {
+	// id is the app's id for a new match, so that sending the same match again
+	// returns it instead of creating a copy; optional.
+	id    *string
 	teams []*teamInput
 }
 
@@ -350,6 +354,9 @@ func parseMatchInput(body any) (matchInput, error) {
 		return matchInput{}, err
 	}
 	var in matchInput
+	if in.id, err = o.str("id"); err != nil {
+		return in, err
+	}
 	teams, present, err := o.list("teams")
 	if err != nil {
 		return in, err
@@ -515,7 +522,7 @@ func invalidMatch(ctx context.Context, q *db.Queries, seasonID string, in matchI
 // caller's membership, then inserts it with its teams. POST /matches and
 // finishing a live match both end here. A non-nil response is the error to
 // answer with; the transaction must roll back.
-func (s *Server) insertValidMatch(r *request, q *db.Queries, groupID string, sn season, in matchInput) (matchDTO, response, error) {
+func (s *Server) insertValidMatch(r *request, q *db.Queries, groupID string, sn season, matchID string, in matchInput) (matchDTO, response, error) {
 	ctx := r.Context()
 	wrong, err := wrongTeamSizes(in, sn.Settings)
 	if err != nil {
@@ -542,8 +549,8 @@ func (s *Server) insertValidMatch(r *request, q *db.Queries, groupID string, sn 
 		return matchDTO{}, fail(errMatchDtoValidationFailed), nil
 	}
 
-	now := s.now()
-	matchID := uuid.NewString()
+	// as stored, so a repeated create answers with the same date
+	now := s.now().Truncate(time.Microsecond)
 	if err := q.InsertMatch(ctx, db.InsertMatchParams{ID: matchID, Date: &now, SeasonID: &sn.ID, CreatedBy: &memberID}); err != nil {
 		return matchDTO{}, nil, err
 	}
@@ -564,21 +571,40 @@ func (s *Server) createMatch(r *request) response {
 		return springError(400)
 	}
 	groupID, seasonID := r.path("groupId"), r.path("seasonId")
+	matchID := uuid.NewString()
+	if in.id != nil {
+		if !isUUID(*in.id) {
+			return fail(errMatchDtoValidationFailed)
+		}
+		matchID = *in.id
+	}
 	ctx := r.Context()
 	var created matchDTO
+	var isNew bool
 	res = s.tx(ctx, func(q *db.Queries) (response, error) {
 		_, sn, res := s.activeSeason(ctx, q, groupID, seasonID)
 		if res != nil {
 			return res, nil
 		}
-		match, failure, err := s.insertValidMatch(r, q, groupID, sn, in)
+		// a retry of a create that went through (its response got lost) returns the match
+		if existing, err := q.GetMatch(ctx, matchID); err == nil {
+			if deref(existing.SeasonID) != sn.ID {
+				return fail(errMatchDtoValidationFailed), nil
+			}
+			created = toMatchDTO(existing)
+			created.PhotoUploads = &[]teamPhotoDTO{}
+			return ok(created), nil
+		} else if !notFound(err) {
+			return nil, err
+		}
+		match, failure, err := s.insertValidMatch(r, q, groupID, sn, matchID, in)
 		if err != nil || failure != nil {
 			return failure, err
 		}
-		created = match
+		created, isNew = match, true
 		return ok(created), nil
 	})
-	if _, isOK := res.(okResponse); isOK {
+	if _, isOK := res.(okResponse); isOK && isNew {
 		s.hub.Publish(groupID, realtime.Matches, "matchCreate", created)
 	}
 	return res

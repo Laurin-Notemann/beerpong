@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
@@ -105,7 +106,7 @@ func (s *Server) finishLiveMatch(r *request) response {
 		if res != nil {
 			return res, nil
 		}
-		if match, res, err = s.insertValidMatch(r, q, groupID, sn, in); err != nil || res != nil {
+		if match, res, err = s.insertValidMatch(r, q, groupID, sn, uuid.NewString(), in); err != nil || res != nil {
 			return res, err
 		}
 		if ended, err = s.endLiveMatch(ctx, q, lm, liveFinished, &match.ID); err != nil {

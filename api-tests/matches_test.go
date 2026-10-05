@@ -143,6 +143,39 @@ func TestCreateMatchValidation(t *testing.T) {
 	ws.ExpectNone()
 }
 
+// The app sends its own id with a new match, so a create whose response got
+// lost can be sent again without saving the match twice.
+func TestCreateMatchIsIdempotentPerID(t *testing.T) {
+	h := New(t)
+	owner := h.NewUser()
+	g := h.NewGroup(owner, "Idempotent create", "a", "b")
+	other := h.NewGroup(owner, "Idempotent other", "y", "z")
+	ws := h.Listen(g.ID)
+	id := newLiveMatchID()
+	body := g.MatchBody([]Member{{"a", map[string]int{"Finish - Normal": 1}}}, []Member{{"b", nil}})
+	body["id"] = id
+
+	created := h.OK(h.Do(Req{Method: "POST", Path: g.SeasonPath("/matches"), Auth: owner.Bearer(), Body: body}))
+	h.Equal(created.Str("id"), id, "the app's id")
+	ev := ws.Expect(1)
+	h.Equal(EventScope(ev[0]), "matchCreate", "create event")
+
+	again := h.OK(h.Do(Req{Method: "POST", Path: g.SeasonPath("/matches"), Auth: owner.Bearer(), Body: body}))
+	h.Equal(again.Str("id"), id, "same match")
+	h.Equal(again.Str("date"), created.Str("date"), "same date")
+	ws.ExpectNone()
+	list := h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/matches"), Auth: owner.Bearer()}))
+	h.Equal(len(list.List()), 1, "saved once")
+
+	// the id can't be taken by a match of another season, and has to be a UUID
+	elsewhere := other.MatchBody([]Member{{"y", map[string]int{"Finish - Normal": 1}}}, []Member{{"z", nil}})
+	elsewhere["id"] = id
+	h.Fail(h.Do(Req{Method: "POST", Path: other.SeasonPath("/matches"), Auth: owner.Bearer(), Body: elsewhere}), 400, "matchDtoValidationFailed")
+	body["id"] = "nope"
+	h.Fail(h.Do(Req{Method: "POST", Path: g.SeasonPath("/matches"), Auth: owner.Bearer(), Body: body}), 400, "matchDtoValidationFailed")
+	ws.ExpectNone()
+}
+
 func TestInactivePlayersCanPlay(t *testing.T) {
 	h := New(t)
 	owner := h.NewUser()
