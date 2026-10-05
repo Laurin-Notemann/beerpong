@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 
 import { FocusView } from '~/components/FocusView';
+import { FullscreenButton } from '~/components/FullscreenButton';
 import { LeaderboardList, Podium } from '~/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/components/LiveMatchCard';
 import { LiveMatchPanel } from '~/components/LiveMatchPanel';
@@ -108,15 +109,20 @@ function Tv() {
     const remoteUrl = `${location.origin}${import.meta.env.BASE_URL}remote/${identity.id}?k=${identity.key}`;
     const { config } = identity;
 
-    if (!config.groupId) return <Pairing remoteUrl={remoteUrl} />;
-
     return (
-        <Screen
-            board={board.data ?? null}
-            config={config}
-            remoteUrl={remoteUrl}
-            offline={!connected || board.isError}
-        />
+        <>
+            {config.groupId ? (
+                <Screen
+                    board={board.data ?? null}
+                    config={config}
+                    remoteUrl={remoteUrl}
+                    offline={!connected || board.isError}
+                />
+            ) : (
+                <Pairing remoteUrl={remoteUrl} />
+            )}
+            <FullscreenButton />
+        </>
     );
 }
 

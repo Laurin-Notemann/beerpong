@@ -28,6 +28,10 @@ body {
 html.tv {
     font-size: calc(100vw / 120);
     overflow: hidden;
+}
+
+/* the pointer is how the TV remote reaches the fullscreen button; once fullscreen it's in the way */
+html.tv.fullscreen {
     cursor: none;
 }
 
