@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    queryOptions,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useGroup } from '@/api/calls/seasonHooks';
@@ -7,16 +12,15 @@ import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { mockRules } from '@/components/mockData/rules';
-import { Paths } from '@/openapi/openapi';
+import { Client, Paths } from '@/openapi/openapi';
 import { showErrorToast } from '@/toast';
 
-export const useMoves = (
+export const movesQueryOptions = (
+    api: Promise<Client>,
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined
-) => {
-    const { api } = useApi();
-
-    return useQuery<Paths.GetAllRuleMoves.Responses.$200 | null>({
+) =>
+    queryOptions<Paths.GetAllRuleMoves.Responses.$200 | null>({
         queryKey: [
             QK.group,
             groupId ?? 'NULL',
@@ -36,6 +40,14 @@ export const useMoves = (
             return res?.data;
         },
     });
+
+export const useMoves = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null | undefined
+) => {
+    const { api } = useApi();
+
+    return useQuery(movesQueryOptions(api, groupId, seasonId));
 };
 
 export const useGetRules = (

@@ -8,7 +8,7 @@ export type ScreenState<Props> = {
     error: unknown;
 };
 
-export interface Profile extends ProfileDto {
+export interface Profile extends Omit<ProfileDto, 'avatarUrl'> {
     avatarUrl: string | null;
 }
 

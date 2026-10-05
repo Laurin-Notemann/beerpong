@@ -2,7 +2,11 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import { View } from 'react-native';
 
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
 import { env } from '@/api/env';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
@@ -50,10 +54,7 @@ export function LeaderboardSwiper() {
 
     const insets = useInsets(true);
 
-    const pastSeasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasons = getPastSeasons(seasonsQuery.data?.data);
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 

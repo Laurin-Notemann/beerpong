@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
-
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
+import { useSeasonMatches } from '@/api/calls/seasonMatchesHooks';
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
-import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
-import MatchesList from '@/components/MatchesList';
+import MatchesList, { MatchesListProps } from '@/components/MatchesList';
 import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { usePastSeasonCardStyle } from '@/components/screens/usePastSeasonCardStyle';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
@@ -20,26 +22,7 @@ export function PastMatchesSwiper() {
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const seasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
-
-    const allSeasons = seasonsQuery.data?.data;
-    const seasonMatches = useMemo(
-        () =>
-            new Map(
-                (allSeasons ?? []).map((season) => [
-                    season.id!,
-                    season.matches.map(
-                        matchDtoToMatch(season.rawPlayers, season.ruleMoves)
-                    ),
-                ])
-            ),
-        [allSeasons]
-    );
-
-    const cardStyle = usePastSeasonCardStyle();
+    const seasons = getPastSeasons(seasonsQuery.data?.data);
 
     const { props, isLoading, error } = useMatchlistProps();
 
@@ -52,14 +35,33 @@ export function PastMatchesSwiper() {
     return (
         <Swiper {...swiper} lazyWindow={1}>
             {seasons.map((season) => (
-                <MatchesList
+                <PastSeasonMatches
                     key={season.id}
-                    contentContainerStyle={{ paddingBottom: 48 }}
                     {...props!}
-                    matches={seasonMatches.get(season.id!) ?? []}
-                    style={cardStyle}
+                    seasonId={season.id!}
                 />
             ))}
         </Swiper>
+    );
+}
+
+/** One past season's matches; they load when the pager mounts its page. */
+function PastSeasonMatches({
+    seasonId,
+    ...props
+}: Omit<MatchesListProps, 'matches'> & { seasonId: string }) {
+    const { groupId } = useGroup();
+
+    const { matchesBySeason } = useSeasonMatches(groupId, [seasonId]);
+
+    const cardStyle = usePastSeasonCardStyle();
+
+    return (
+        <MatchesList
+            contentContainerStyle={{ paddingBottom: 48 }}
+            {...props}
+            matches={matchesBySeason.get(seasonId) ?? []}
+            style={cardStyle}
+        />
     );
 }

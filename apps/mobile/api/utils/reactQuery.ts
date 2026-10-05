@@ -66,6 +66,11 @@ export function useQueryInvalidation() {
     function invalidatePlayers(groupId: string, seasonId: string) {
         ConsoleLogger.info('useQueryInvalidation.invalidatePlayers');
 
+        // players and leaderboards read names and avatars from the cached profiles
+        qc.invalidateQueries({
+            queryKey: [QK.group, groupId, QK.profiles],
+            exact: true,
+        });
         return qc.invalidateQueries({
             predicate: queryKeyStartsWith([
                 QK.group,

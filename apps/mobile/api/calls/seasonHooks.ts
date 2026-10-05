@@ -1,18 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useGroupQuery } from '@/api/calls/groupHooks';
-import { LeaderboardScope } from '@/api/calls/leaderboardHooks';
-import { fetchProfiles, withProfiles } from '@/api/calls/profileHooks';
 import { ApiId, WithProfile } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import {
-    MatchDtoExtended,
     Paths,
     PlayerDtoExtended,
-    RuleMoveDto,
-    SeasonDto,
+    SeasonListDto,
     SeasonSettingsDto,
 } from '@/openapi/openapi';
 import { useSelectedGroupId } from '@/zustand/group/stateGroupStore';
@@ -42,70 +38,31 @@ export const useSeasonQuery = (
     });
 };
 
+/**
+ * The group's seasons. What a season shows (matches, players, leaderboard) loads separately,
+ * when a screen shows it (`useSeasonMatches`, `useSeasonLeaderboards`).
+ */
 export const useAllSeasonsQuery = (groupId: ApiId | null) => {
     const { api } = useApi();
 
-    const qc = useQueryClient();
-
-    // built here rather than taken from one response, so it has no status
-    return useQuery<{
-        data?: (SeasonDto & {
-            numMatches: number;
-            players: Player[];
-            rawPlayers: WithProfile<PlayerDtoExtended>[];
-            matches: MatchDtoExtended[];
-            ruleMoves: RuleMoveDto[] | undefined;
-        })[];
-    } | null>({
+    return useQuery<Paths.GetAllSeasons.Responses.$200 | null>({
         queryKey: [QK.group, groupId, QK.seasons],
         queryFn: async () => {
             if (!groupId) {
                 return null;
             }
-            const [res, profiles] = await Promise.all([
-                (await api).getAllSeasons(groupId),
-                fetchProfiles(qc, api, groupId),
-            ]);
-
-            const rawSeasons = res.data.data ?? [];
-
-            const seasons = await Promise.all(
-                rawSeasons.map(async (season) => {
-                    const client = await api;
-                    const ids = { groupId, seasonId: season.id! };
-                    const [matches, ruleMoves, leaderboard] = await Promise.all(
-                        [
-                            client.getAllMatchesExtended(ids),
-                            client.getAllRuleMoves(ids),
-                            client.getLeaderboard({
-                                ...ids,
-                                scope: LeaderboardScope.SEASON,
-                            }),
-                        ]
-                    );
-
-                    const players = withProfiles(
-                        leaderboard.data.data?.entries ?? [],
-                        profiles
-                    );
-
-                    return {
-                        ...season,
-                        numMatches: matches.data.data?.length ?? 0,
-                        players: players.map(toPlayer),
-                        rawPlayers: players,
-                        matches: matches.data.data ?? [],
-                        ruleMoves: ruleMoves.data.data,
-                    };
-                })
-            );
-
-            return {
-                data: seasons,
-            };
+            const res = await (await api).getAllSeasons(groupId);
+            return res.data;
         },
     });
 };
+
+/**
+ * Ended seasons that had matches, the ones the past seasons screens show. `numMatches` is
+ * missing from an API older than this app; those seasons count as having matches.
+ */
+export const getPastSeasons = (seasons: SeasonListDto[] | null | undefined) =>
+    seasons?.filter((i) => i.endDate != null && (i.numMatches ?? 1) > 0) ?? [];
 
 export const useStartNewSeasonMutation = () => {
     const { api } = useApi();

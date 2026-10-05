@@ -1,22 +1,27 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    QueryClient,
+    queryOptions,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 
 import { fetchProfiles, withProfiles } from '@/api/calls/profileHooks';
 import { ApiId, WithProfile } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
-import { QK } from '@/api/utils/reactQuery';
+import { QK, replaceWildcards } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
-import { Paths, PlayerDto } from '@/openapi/openapi';
+import { Client, Paths, PlayerDto } from '@/openapi/openapi';
 
-export const usePlayersQuery = (
+/** every player of the season, inactive (deleted) ones too: they still appear in matches */
+export const playersQueryOptions = (
+    api: Promise<Client>,
+    qc: QueryClient,
     groupId: ApiId | null,
     seasonId: ApiId | null | undefined
-) => {
-    const { api } = useApi();
-
-    const qc = useQueryClient();
-
-    return useQuery<
+) =>
+    queryOptions<
         | (Omit<Paths.GetPlayers.Responses.$200, 'data'> & {
               data?: WithProfile<PlayerDto>[];
           })
@@ -50,6 +55,16 @@ export const usePlayersQuery = (
             };
         },
     });
+
+export const usePlayersQuery = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null | undefined
+) => {
+    const { api } = useApi();
+
+    const qc = useQueryClient();
+
+    return useQuery(playersQueryOptions(api, qc, groupId, seasonId));
 };
 
 export const useCreatePlayerMutation = () => {
@@ -141,6 +156,8 @@ export const useDeletePlayerMutation = () => {
 export const useDeletePlayerAvatarMutation = () => {
     const { api } = useApi();
 
+    const qc = useQueryClient();
+
     return useMutation<
         Paths.DeleteAvatar.Responses.$200 | null,
         Error,
@@ -151,6 +168,20 @@ export const useDeletePlayerAvatarMutation = () => {
                 await api
             ).deleteAvatar({ groupId, id: profileId });
             return res?.data;
+        },
+        // The API sends no group event for a removed avatar, so this phone refetches the
+        // profiles and everything that shows them.
+        onSuccess: (_, { groupId }) => {
+            qc.invalidateQueries({
+                queryKey: [QK.group, groupId, QK.profiles],
+                exact: true,
+            });
+            qc.invalidateQueries({
+                predicate: replaceWildcards(
+                    [QK.group, groupId, QK.season, '*', QK.players],
+                    { startsWith: true }
+                ),
+            });
         },
         onError: captureMutationErr('deleteAvatar'),
     });

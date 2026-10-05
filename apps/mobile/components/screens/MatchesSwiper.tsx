@@ -1,12 +1,17 @@
 import { useMemo } from 'react';
 
-import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import {
+    getPastSeasons,
+    useAllSeasonsQuery,
+    useGroup,
+} from '@/api/calls/seasonHooks';
+import { useSeasonMatches } from '@/api/calls/seasonMatchesHooks';
 import { useMatchlistProps } from '@/api/propHooks/matchlistPropHooks';
-import { matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
+import { Match } from '@/api/utils/matchDtoToMatch';
 import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
-import MatchesList from '@/components/MatchesList';
+import MatchesList, { MatchesListProps } from '@/components/MatchesList';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
 import { useInsets } from '@/lib/useInsets';
 import { getWakeTimeDayStart } from '@/utils/wakeTime';
@@ -17,15 +22,12 @@ export function MatchesSwiper() {
 
     const insets = useInsets(true, true);
 
-    const { groupId, seasonId, activeSeason } = useGroup();
+    const { groupId, activeSeason } = useGroup();
     const scopePicker = useScopePicker();
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
 
-    const pastSeasons =
-        seasonsQuery.data?.data
-            ?.filter((i) => i.endDate != null)
-            ?.filter((i) => i.numMatches > 0) ?? [];
+    const pastSeasons = getPastSeasons(seasonsQuery.data?.data);
 
     const groupHasPastSeasons = pastSeasons.length > 0;
 
@@ -44,24 +46,6 @@ export function MatchesSwiper() {
                 todayStart
         );
     }, [seasonMatches, wakeTime]);
-
-    const seasons = seasonsQuery.data?.data;
-    // past seasons from the season list, the current season from the live matches query
-    const allTimeMatches = useMemo(
-        () => [
-            ...(seasonMatches ?? []),
-            ...(seasons ?? [])
-                .filter((s) => s.id !== seasonId)
-                .flatMap((s) =>
-                    s.ruleMoves && s.rawPlayers
-                        ? s.matches.map(
-                              matchDtoToMatch(s.rawPlayers, s.ruleMoves)
-                          )
-                        : []
-                ),
-        ],
-        [seasons, seasonMatches, seasonId]
-    );
 
     if (isLoading) return <LoadingScreen />;
     if (!props)
@@ -91,18 +75,49 @@ export function MatchesSwiper() {
                 }
             />
             {groupHasPastSeasons && (
-                <MatchesList
+                <AllTimeMatchesList
+                    {...props}
                     contentContainerStyle={{
                         paddingTop: insets.top,
                         paddingBottom: insets.bottom + 64,
                     }}
-                    {...props}
-                    matches={allTimeMatches}
-                    ListEmptyComponent={
-                        <NoMatchesPlayedYet message="No matches played yet in this group." />
-                    }
+                    pastSeasonIds={pastSeasons.map((i) => i.id!)}
                 />
             )}
         </Swiper>
+    );
+}
+
+/**
+ * The current season's matches and every past season's. Its own component, so the past
+ * seasons load when the pager mounts this page, not with the matches tab.
+ */
+function AllTimeMatchesList({
+    pastSeasonIds,
+    matches: seasonMatches,
+    ...props
+}: MatchesListProps & { pastSeasonIds: string[] }) {
+    const { groupId } = useGroup();
+
+    const { matchesBySeason } = useSeasonMatches(groupId, pastSeasonIds);
+
+    const matches = useMemo(
+        () =>
+            seasonMatches.concat(
+                pastSeasonIds.flatMap(
+                    (id): Match[] => matchesBySeason.get(id) ?? []
+                )
+            ),
+        [seasonMatches, pastSeasonIds, matchesBySeason]
+    );
+
+    return (
+        <MatchesList
+            {...props}
+            matches={matches}
+            ListEmptyComponent={
+                <NoMatchesPlayedYet message="No matches played yet in this group." />
+            }
+        />
     );
 }

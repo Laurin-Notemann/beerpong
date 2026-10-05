@@ -9,8 +9,8 @@ import { Client } from '@/openapi/openapi';
  * fetches all profiles of a group, including their avatar urls.
  *
  * meant to be used inside of other query functions (e.g. for players or leaderboards),
- * which only receive `profileId`s from the backend.
- * always refetches, so the profiles are as fresh as the query using them. concurrent calls share a single request.
+ * which only receive `profileId`s from the backend. concurrent calls share a single request,
+ * and realtime profile and asset events invalidate it (useRealtimeConnection).
  */
 export async function fetchProfiles(
     qc: QueryClient,
@@ -25,15 +25,19 @@ export async function fetchProfiles(
             return Promise.all(
                 (res.data.data ?? []).map(async (profile) => ({
                     ...profile,
-                    avatarUrl: await fetchAssetUrl(
-                        qc,
-                        api,
-                        profile.assetIdAvatar
-                    ),
+                    // `avatarUrl` is null without an avatar; an API older than this app
+                    // leaves it out, and then the asset is looked up
+                    avatarUrl:
+                        profile.avatarUrl !== undefined
+                            ? profile.avatarUrl
+                            : await fetchAssetUrl(
+                                  qc,
+                                  api,
+                                  profile.assetIdAvatar
+                              ),
                 }))
             );
         },
-        staleTime: 0,
     });
 }
 
