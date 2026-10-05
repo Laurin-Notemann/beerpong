@@ -38,6 +38,7 @@ const (
 	Assets      = "ASSETS"
 	Profiles    = "PROFILES"
 	LiveMatches = "LIVE_MATCHES"
+	Formations  = "FORMATIONS"
 )
 
 type event struct {

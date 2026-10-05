@@ -14,7 +14,7 @@ import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
 import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useReracks } from '@/zustand/formationStore';
+import { useReracks } from '@/zustand/rerackStore';
 
 const HINT_HEIGHT = 64;
 const GRID_GAP = 32;

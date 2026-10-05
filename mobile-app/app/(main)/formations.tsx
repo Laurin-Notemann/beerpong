@@ -2,6 +2,8 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { Dimensions, Platform, ScrollView, Text, View } from 'react-native';
 
+import { useFormations } from '@/api/calls/formationHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
 import { FormationTile } from '@/components/FormationTile';
 import { CUP_FORMATION } from '@/lib/cupHits';
 import { useNavStyles } from '@/lib/navigation/navStyles';
@@ -9,17 +11,17 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useAndroidIcon } from '@/lib/useAndroidIcon';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
-import { useFormationStore } from '@/zustand/formationStore';
 
 const TILE_SIZE = Math.floor((Dimensions.get('window').width - 32 - 16) / 3);
 
-/** The formations saved on this phone, to re-rack a team's cups into during a match. */
+/** The group's formations, to re-rack a team's cups into during a match. */
 export default function Formations() {
     const insets = useInsets(true);
     const theme = useTheme();
     const nav = useNavigation();
 
-    const formations = useFormationStore((s) => s.formations);
+    const { groupId } = useGroup();
+    const formations = useFormations(groupId).data ?? [];
     const androidPlus = useAndroidIcon('plus', theme.color.text.primary);
     const plusIcon = Platform.OS === 'ios' ? 'plus' : androidPlus;
 
@@ -55,8 +57,9 @@ export default function Formations() {
                         fontSize: 13,
                     }}
                 >
-                    During a match, re-rack a team&apos;s cups into a formation
-                    with as many cups as it has left.
+                    Everyone in the group shares these. During a match, re-rack
+                    a team&apos;s cups into a formation with as many cups as it
+                    has left.
                 </Text>
                 <View
                     style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}

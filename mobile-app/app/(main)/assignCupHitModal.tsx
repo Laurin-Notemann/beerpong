@@ -27,7 +27,7 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupAt, cupLayout } from '@/lib/rerack';
 import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useReracks } from '@/zustand/formationStore';
+import { useReracks } from '@/zustand/rerackStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 /** Pro mode: who hit the tapped cup, and how. Opened from the live match's cups page. */

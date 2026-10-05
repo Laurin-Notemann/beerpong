@@ -49,6 +49,17 @@ declare namespace Components {
             code?: string;
             description?: string;
         }
+        export interface FormationDto {
+            id?: string;
+            groupId?: string;
+            name?: string;
+            cups?: CupPositionDto[];
+            updatedAt?: string; // date-time
+        }
+        export interface FormationSaveDto {
+            name?: string;
+            cups?: CupPositionDto[];
+        }
         export interface GroupCreateDto {
             name?: string;
             profileNames?: string[];
@@ -238,6 +249,12 @@ declare namespace Components {
             data?: AuthTokenDto;
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeFormationDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: FormationDto;
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeGroupDto {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
@@ -248,6 +265,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: LeaderboardDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeListFormationDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: FormationDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListGroupDto {
@@ -568,6 +591,19 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
+    namespace DeleteFormation {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
     namespace DeleteMatchById {
         namespace Parameters {
             export type GroupId = string;
@@ -744,6 +780,18 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+        }
+    }
+    namespace GetFormations {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListFormationDto;
         }
     }
     namespace GetGroupById {
@@ -958,6 +1006,20 @@ declare namespace Paths {
         export type RequestBody = Components.Schemas.AuthRefreshDto;
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeAuthTokenDto;
+        }
+    }
+    namespace SaveFormation {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.FormationSaveDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeFormationDto;
         }
     }
     namespace SetAvatar {
@@ -1514,6 +1576,30 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.AppendOps.Responses.$200>;
     /**
+     * getFormations
+     */
+    getFormations(
+        parameters?: Parameters<Paths.GetFormations.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetFormations.Responses.$200>;
+    /**
+     * saveFormation
+     */
+    saveFormation(
+        parameters?: Parameters<Paths.SaveFormation.PathParameters> | null,
+        data?: Paths.SaveFormation.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SaveFormation.Responses.$200>;
+    /**
+     * deleteFormation
+     */
+    deleteFormation(
+        parameters?: Parameters<Paths.DeleteFormation.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteFormation.Responses.$200>;
+    /**
      * getActiveLiveMatches
      */
     getActiveLiveMatches(
@@ -1993,6 +2079,34 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.AppendOps.Responses.$200>;
     };
+    ['/groups/{groupId}/formations']: {
+        /**
+         * getFormations
+         */
+        get(
+            parameters?: Parameters<Paths.GetFormations.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetFormations.Responses.$200>;
+    };
+    ['/groups/{groupId}/formations/{id}']: {
+        /**
+         * saveFormation
+         */
+        put(
+            parameters?: Parameters<Paths.SaveFormation.PathParameters> | null,
+            data?: Paths.SaveFormation.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SaveFormation.Responses.$200>;
+        /**
+         * deleteFormation
+         */
+        delete(
+            parameters?: Parameters<Paths.DeleteFormation.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteFormation.Responses.$200>;
+    };
     ['/groups/{groupId}/live-matches']: {
         /**
          * getActiveLiveMatches
@@ -2015,6 +2129,8 @@ export type AuthSignupDto = Components.Schemas.AuthSignupDto;
 export type AuthTokenDto = Components.Schemas.AuthTokenDto;
 export type CupPositionDto = Components.Schemas.CupPositionDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
+export type FormationDto = Components.Schemas.FormationDto;
+export type FormationSaveDto = Components.Schemas.FormationSaveDto;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
@@ -2046,10 +2162,14 @@ export type ResponseEnvelopeAssetUploadResponse =
     Components.Schemas.ResponseEnvelopeAssetUploadResponse;
 export type ResponseEnvelopeAuthTokenDto =
     Components.Schemas.ResponseEnvelopeAuthTokenDto;
+export type ResponseEnvelopeFormationDto =
+    Components.Schemas.ResponseEnvelopeFormationDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
 export type ResponseEnvelopeLeaderboardDto =
     Components.Schemas.ResponseEnvelopeLeaderboardDto;
+export type ResponseEnvelopeListFormationDto =
+    Components.Schemas.ResponseEnvelopeListFormationDto;
 export type ResponseEnvelopeListGroupDto =
     Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListGroupPreset =

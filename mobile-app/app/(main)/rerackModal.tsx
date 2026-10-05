@@ -2,6 +2,8 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Dimensions, ScrollView, View } from 'react-native';
 
+import { useFormations } from '@/api/calls/formationHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
 import { FormationTile } from '@/components/FormationTile';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import Text from '@/components/Text';
@@ -11,7 +13,7 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupLayout, rerack } from '@/lib/rerack';
 import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useFormationStore, useReracks } from '@/zustand/formationStore';
+import { useReracks, useRerackStore } from '@/zustand/rerackStore';
 
 const TILE_SIZE = Math.floor((Dimensions.get('window').width - 32 - 16) / 3);
 
@@ -28,8 +30,9 @@ export default function Page() {
     const entry = useMatchEntry(liveMatchId);
     useCloseWhenEnded(entry.isEnded);
 
-    const formations = useFormationStore((s) => s.formations);
-    const { setRerack } = useFormationStore((s) => s.actions);
+    const { groupId } = useGroup();
+    const formations = useFormations(groupId).data ?? [];
+    const { setRerack } = useRerackStore((s) => s.actions);
     const reracks = useReracks(liveMatchId);
     const matchKey = liveMatchId ?? 'draft';
 

@@ -34,7 +34,7 @@ function connect() {
         // deserialize the event
         // format:
         //  groupId: string,
-        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES | LIVE_MATCHES
+        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES | LIVE_MATCHES | FORMATIONS
         //  scope: string
         //  body: a dto matching the eventType (MatchDto, PlayerDto, ...)
         const socketEvent = JSON.parse(event.data);
@@ -137,6 +137,11 @@ A list of all event types with their corresponding dto and all available scopes:
 * **liveMatchStart:** When a live match is started (LiveMatchDto with all ops)
 * **liveMatchOps:** When ops are appended to a live match (LiveMatchOpsEventDto: liveMatchId, lastSeq and only the new ops)
 * **liveMatchEnd:** When a live match is finished, abandoned or expired after 6 hours without activity (LiveMatchDto without ops). Finishing also sends `matchCreate`
+
+#### Formations (body: FormationDto | FormationId)
+
+* **formationUpdate:** When a formation is created or changed
+* **formationDelete:** When a formation is deleted, result is its id
 
 ### TODO
 

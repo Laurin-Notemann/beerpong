@@ -1655,6 +1655,53 @@
                 }
             }
         },
+        "/groups/{groupId}/formations": {
+            "get": {
+                "tags": ["formation-controller"],
+                "operationId": "getFormations",
+                "parameters": [{ "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponseEnvelopeListFormationDto" } } }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/formations/{id}": {
+            "put": {
+                "tags": ["formation-controller"],
+                "operationId": "saveFormation",
+                "parameters": [
+                    { "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } },
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "requestBody": {
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FormationSaveDto" } } },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponseEnvelopeFormationDto" } } }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["formation-controller"],
+                "operationId": "deleteFormation",
+                "parameters": [
+                    { "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } },
+                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponseEnvelopeString" } } }
+                    }
+                }
+            }
+        },
         "/groups/{groupId}/live-matches": {
             "get": {
                 "tags": ["live-match-controller"],
@@ -2394,6 +2441,41 @@
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/TeamDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "FormationSaveDto": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "cups": { "type": "array", "items": { "$ref": "#/components/schemas/CupPositionDto" } }
+                }
+            },
+            "FormationDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "groupId": { "type": "string" },
+                    "name": { "type": "string" },
+                    "cups": { "type": "array", "items": { "$ref": "#/components/schemas/CupPositionDto" } },
+                    "updatedAt": { "type": "string", "format": "date-time" }
+                }
+            },
+            "ResponseEnvelopeFormationDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/FormationDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "ResponseEnvelopeListFormationDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/FormationDto" } },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },

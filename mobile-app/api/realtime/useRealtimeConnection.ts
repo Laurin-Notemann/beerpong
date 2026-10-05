@@ -7,6 +7,7 @@ import {
     useState,
 } from 'react';
 
+import { applyFormationEvent } from '@/api/calls/formationHooks';
 import { env } from '@/api/env';
 import {
     applyLiveMatchEvent,
@@ -206,6 +207,9 @@ export function useRealtimeConnection() {
             case 'LIVE_MATCHES':
                 // applied directly: ops arrive often and carry everything needed
                 applyLiveMatchEvent(qc, e.groupId, e.scope, e.body);
+                break;
+            case 'FORMATIONS':
+                applyFormationEvent(qc, e.groupId, e.scope, e.body);
                 break;
         }
     });

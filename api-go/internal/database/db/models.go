@@ -26,6 +26,16 @@ type Device struct {
 	UserID                *string
 }
 
+type Formation struct {
+	ID        string
+	GroupID   string
+	Name      string
+	Cups      string
+	CreatedBy string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type Group struct {
 	ID               string
 	CreatedAt        *time.Time

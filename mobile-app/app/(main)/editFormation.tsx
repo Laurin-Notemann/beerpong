@@ -3,6 +3,13 @@ import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import {
+    newFormationId,
+    useDeleteFormation,
+    useFormations,
+    useSaveFormation,
+} from '@/api/calls/formationHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
 import CupGrid from '@/components/CupGrid';
 import { FormationType } from '@/components/CupGrid/Formation';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -14,7 +21,6 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
-import { useFormationStore } from '@/zustand/formationStore';
 
 /** Creates a formation, or edits the one with `id`. */
 export default function EditFormation() {
@@ -24,10 +30,10 @@ export default function EditFormation() {
     const theme = useTheme();
     const insets = useInsets(true);
 
-    const saved = useFormationStore((s) =>
-        s.formations.find((i) => i.id === id)
-    );
-    const { save, remove } = useFormationStore((s) => s.actions);
+    const { groupId } = useGroup();
+    const saved = useFormations(groupId).data?.find((i) => i.id === id);
+    const save = useSaveFormation(groupId);
+    const remove = useDeleteFormation(groupId);
 
     const [name, setName] = useState(saved?.name ?? '');
     const [formation, setFormation] = useState<FormationType>({
@@ -44,8 +50,8 @@ export default function EditFormation() {
             showErrorToast('A formation needs at least one cup.');
             return;
         }
-        save({
-            id: saved?.id ?? String(Date.now()),
+        save.mutate({
+            id: saved?.id ?? newFormationId(),
             name: name.trim(),
             cups: formation.cups.map(({ x, y }) => ({ x, y })),
         });
@@ -126,7 +132,7 @@ export default function EditFormation() {
                                 title="Delete Formation"
                                 headIcon="delete-outline"
                                 onPress={() => {
-                                    remove(saved.id);
+                                    remove.mutate(saved.id);
                                     nav.goBack();
                                 }}
                                 type="danger"
