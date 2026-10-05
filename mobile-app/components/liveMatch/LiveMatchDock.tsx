@@ -1,6 +1,12 @@
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NativeTabs } from 'expo-router/native-tabs';
-import { Text, useWindowDimensions, View } from 'react-native';
+import {
+    AccessibilityActionEvent,
+    Pressable,
+    Text,
+    useWindowDimensions,
+    View,
+} from 'react-native';
 import Animated, {
     FadeIn,
     LayoutAnimationConfig,
@@ -42,16 +48,23 @@ export const FLOATING_DOCK_INSET = FLOATING_HEIGHT + 2 * FLOATING_GAP;
 
 interface DockProps {
     snapshot: LiveMatchDockSnapshot;
+    /** opens the match the dock shows */
     onPress: () => void;
+    /** opens the list of live matches, to pick the one the dock shows */
+    onMore: () => void;
 }
 
 interface RowProps {
     snapshot: LiveMatchDockSnapshot;
     teams: ReturnType<typeof useLiveMatchTeams>;
+    onMore: () => void;
 }
 
-/** "+2": how many more matches are live than the one shown */
-function MoreChip({ count }: { count: number }) {
+// the "+N" is small; this makes it easy to hit without catching taps meant for the dock
+const MORE_HIT_SLOP = { top: 12, bottom: 12, left: 8, right: 12 };
+
+/** "+2": how many more matches are live than the one shown. Tapping it opens the list. */
+function MoreChip({ count, onPress }: { count: number; onPress: () => void }) {
     const t = useNextTokens();
     const reducedMotion = useReducedMotion();
 
@@ -59,26 +72,34 @@ function MoreChip({ count }: { count: number }) {
         <Animated.View
             entering={popIn(reducedMotion)}
             exiting={popOut(reducedMotion)}
-            style={{
-                height: 24,
-                minWidth: 28,
-                paddingHorizontal: 7,
-                borderRadius: 12,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: withAlpha(t.text, t.isLight ? 0.08 : 0.14),
-            }}
         >
-            <Text
-                style={{
-                    color: t.text,
-                    fontSize: 13,
-                    fontWeight: '600',
-                    fontVariant: ['tabular-nums'],
-                }}
+            <Pressable
+                onPress={onPress}
+                hitSlop={MORE_HIT_SLOP}
+                style={({ pressed }) => ({
+                    height: 24,
+                    minWidth: 28,
+                    paddingHorizontal: 7,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: withAlpha(
+                        t.text,
+                        (t.isLight ? 0.08 : 0.14) * (pressed ? 2 : 1)
+                    ),
+                })}
             >
-                +{count}
-            </Text>
+                <Text
+                    style={{
+                        color: t.text,
+                        fontSize: 13,
+                        fontWeight: '600',
+                        fontVariant: ['tabular-nums'],
+                    }}
+                >
+                    +{count}
+                </Text>
+            </Pressable>
         </Animated.View>
     );
 }
@@ -89,7 +110,7 @@ function MoreChip({ count }: { count: number }) {
  * space between timer and "+N"; the badges give way (`dockBadgeLayout`: names only where they
  * fit, fewer avatars on narrow phones), so the scores never move.
  */
-function DockRow({ snapshot, teams }: RowProps) {
+function DockRow({ snapshot, teams, onMore }: RowProps) {
     const t = useNextTokens();
     const { width } = useWindowDimensions();
     const { primary, count } = snapshot;
@@ -185,7 +206,9 @@ function DockRow({ snapshot, teams }: RowProps) {
                             />
                         </View>
                     </View>
-                    {count > 1 && <MoreChip count={count - 1} />}
+                    {count > 1 && (
+                        <MoreChip count={count - 1} onPress={onMore} />
+                    )}
                 </View>
             </LayoutAnimationConfig>
         </Animated.View>
@@ -193,7 +216,7 @@ function DockRow({ snapshot, teams }: RowProps) {
 }
 
 /** The minimized tab bar's slim dock: live dot, "LIVE", timer, the score (blue–red), "+N". */
-function InlineDockRow({ snapshot, teams }: RowProps) {
+function InlineDockRow({ snapshot, teams, onMore }: RowProps) {
     const t = useNextTokens();
     const score = {
         fontSize: 14,
@@ -231,46 +254,63 @@ function InlineDockRow({ snapshot, teams }: RowProps) {
                 <Text style={[score, { color: t.red }]}>{teams.red.score}</Text>
             </Text>
             {snapshot.count > 1 && (
-                <Text
-                    style={{
-                        color: t.textSecondary,
-                        fontSize: 13,
-                        fontWeight: '600',
-                    }}
-                >
-                    +{snapshot.count - 1}
-                </Text>
+                <Pressable onPress={onMore} hitSlop={MORE_HIT_SLOP}>
+                    {({ pressed }) => (
+                        <Text
+                            style={{
+                                color: pressed ? t.text : t.textSecondary,
+                                fontSize: 13,
+                                fontWeight: '600',
+                            }}
+                        >
+                            +{snapshot.count - 1}
+                        </Text>
+                    )}
+                </Pressable>
             )}
         </View>
     );
 }
 
-/** the dock's teams, and what screen readers say for it */
-function useDock(snapshot: LiveMatchDockSnapshot) {
+/**
+ * the dock's teams, and what screen readers say for it; they reach the list through an action,
+ * since the "+N" inside the dock's button isn't focusable on its own
+ */
+function useDock(snapshot: LiveMatchDockSnapshot, onMore: () => void) {
     const teams = useLiveMatchTeams(snapshot.groupId, snapshot.primary);
-    const label = dockLabel({
-        count: snapshot.count,
-        blueScore: teams.blue.score,
-        redScore: teams.red.score,
-    });
-    return { teams, label };
+    const a11y = {
+        accessibilityRole: 'button',
+        accessibilityLabel: dockLabel({
+            count: snapshot.count,
+            blueScore: teams.blue.score,
+            redScore: teams.red.score,
+        }),
+        accessibilityHint: 'Opens the match',
+        accessibilityActions:
+            snapshot.count > 1
+                ? [{ name: 'showAll', label: 'All live matches' }]
+                : undefined,
+        onAccessibilityAction: (e: AccessibilityActionEvent) => {
+            if (e.nativeEvent.actionName === 'showAll') onMore();
+        },
+    } as const;
+    return { teams, a11y };
 }
 
 /**
  * Content of `NativeTabs.BottomAccessory`. iOS renders it twice (regular and inline) and shows
  * one, so it keeps no data of its own: everything comes in through props.
  */
-export function LiveMatchAccessory({ snapshot, onPress }: DockProps) {
+export function LiveMatchAccessory({ snapshot, onPress, onMore }: DockProps) {
     const placement = NativeTabs.BottomAccessory.usePlacement();
     const reducedMotion = useReducedMotion();
-    const { teams, label } = useDock(snapshot);
+    const { teams, a11y } = useDock(snapshot, onMore);
 
     return (
         <PressableScale
             {...pressFeedback(reducedMotion)}
-            accessibilityRole="button"
+            {...a11y}
             onPress={onPress}
-            accessibilityLabel={label}
             pressableStyle={{ flex: 1 }}
             style={{
                 flex: 1,
@@ -280,9 +320,17 @@ export function LiveMatchAccessory({ snapshot, onPress }: DockProps) {
         >
             <LayoutAnimationConfig skipEntering>
                 {placement === 'inline' ? (
-                    <InlineDockRow snapshot={snapshot} teams={teams} />
+                    <InlineDockRow
+                        snapshot={snapshot}
+                        teams={teams}
+                        onMore={onMore}
+                    />
                 ) : (
-                    <DockRow snapshot={snapshot} teams={teams} />
+                    <DockRow
+                        snapshot={snapshot}
+                        teams={teams}
+                        onMore={onMore}
+                    />
                 )}
             </LayoutAnimationConfig>
         </PressableScale>
@@ -298,9 +346,9 @@ export function LiveMatchAccessory({ snapshot, onPress }: DockProps) {
 export function FloatingLiveMatchDock({
     snapshot,
     onPress,
-}: {
+    onMore,
+}: Omit<DockProps, 'snapshot'> & {
     snapshot: LiveMatchDockSnapshot | undefined;
-    onPress: () => void;
 }) {
     const reducedMotion = useReducedMotion();
     // the bottom of the tab's content, i.e. the top of the tab bar
@@ -320,24 +368,27 @@ export function FloatingLiveMatchDock({
                         bottom: tabBarTop + FLOATING_GAP,
                     }}
                 >
-                    <FloatingDockCard snapshot={snapshot} onPress={onPress} />
+                    <FloatingDockCard
+                        snapshot={snapshot}
+                        onPress={onPress}
+                        onMore={onMore}
+                    />
                 </Animated.View>
             )}
         </LayoutAnimationConfig>
     );
 }
 
-function FloatingDockCard({ snapshot, onPress }: DockProps) {
+function FloatingDockCard({ snapshot, onPress, onMore }: DockProps) {
     const t = useNextTokens();
     const reducedMotion = useReducedMotion();
-    const { teams, label } = useDock(snapshot);
+    const { teams, a11y } = useDock(snapshot, onMore);
 
     return (
         <PressableScale
             {...pressFeedback(reducedMotion)}
-            accessibilityRole="button"
+            {...a11y}
             onPress={onPress}
-            accessibilityLabel={label}
             style={{
                 height: FLOATING_HEIGHT,
                 paddingHorizontal: 14,
@@ -354,7 +405,7 @@ function FloatingDockCard({ snapshot, onPress }: DockProps) {
                 elevation: 6,
             }}
         >
-            <DockRow snapshot={snapshot} teams={teams} />
+            <DockRow snapshot={snapshot} teams={teams} onMore={onMore} />
         </PressableScale>
     );
 }

@@ -55,13 +55,16 @@ export function groupLiveMatches(
     );
 }
 
-/** the match the dock shows: the one opened last on this phone while it's live, else the latest */
+/**
+ * the match the dock shows: the one opened or picked in the live matches sheet last on this
+ * phone while it's live, else the latest
+ */
 export const primaryLiveMatch = <T extends { id: string }>(
     matches: T[],
     lastOpenedId: string | undefined
 ) => matches.find((i) => i.id === lastOpenedId) ?? matches[0];
 
-/** what VoiceOver/TalkBack read for the dock */
+/** what VoiceOver/TalkBack read for the dock (what tapping does is its hint) */
 export function dockLabel({
     count,
     blueScore,
@@ -74,8 +77,8 @@ export function dockLabel({
     const score = `blue ${blueScore}, red ${redScore}`;
 
     return count > 1
-        ? `${count} live matches, this one ${score}. Opens the list`
-        : `Live match, ${score}. Opens the match`;
+        ? `${count} live matches, this one ${score}`
+        : `Live match, ${score}`;
 }
 
 // Rough widths in the dock's row (see `DockRow`), to decide what fits before laying it out

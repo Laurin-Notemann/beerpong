@@ -15,15 +15,18 @@ import { dockLabel } from '@/lib/liveMatch/dock';
 
 /**
  * One live match in the live matches sheet: live dot and timer (and "Not synced yet" while
- * the server doesn't have it), over the match's scoreboard card.
+ * the server doesn't have it, "In the dock" for the one the dock shows), over the match's
+ * scoreboard card.
  */
 export function LiveMatchRow({
     groupId,
     match,
+    isShown,
     onPress,
 }: {
     groupId: string;
     match: GroupLiveMatch;
+    isShown: boolean;
     onPress: () => void;
 }) {
     const t = useNextTokens();
@@ -34,6 +37,8 @@ export function LiveMatchRow({
         <PressableScale
             onPress={onPress}
             accessibilityRole="button"
+            accessibilityState={{ selected: isShown }}
+            accessibilityHint="Shows it in the dock"
             accessibilityLabel={
                 dockLabel({
                     count: 1,
@@ -61,6 +66,14 @@ export function LiveMatchRow({
                         style={{ color: t.textSecondary, fontSize: 12 }}
                     >
                         Not synced yet
+                    </Text>
+                )}
+                {isShown && (
+                    <Text
+                        numberOfLines={1}
+                        style={{ color: t.textSecondary, fontSize: 12 }}
+                    >
+                        In the dock
                     </Text>
                 )}
             </View>

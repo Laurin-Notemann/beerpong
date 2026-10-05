@@ -81,6 +81,7 @@ export default function TabLayout() {
                     <LiveMatchAccessory
                         snapshot={accessory}
                         onPress={dock.open}
+                        onMore={dock.openList}
                     />
                 </NativeTabs.BottomAccessory>
             )}

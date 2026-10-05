@@ -8,6 +8,7 @@ import {
 } from '@/api/liveMatch/useGroupLiveMatches';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useSelectedGroupId } from '@/zustand/group/stateGroupStore';
+import { liveMatchOutbox } from '@/zustand/liveMatchOutboxStore';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 
 /** what the dock shows: the primary match, and how many are live in the group */
@@ -19,7 +20,8 @@ export interface LiveMatchDockSnapshot {
 
 /**
  * The live match dock's data. It shows (`snapshot` is set) in pro mode while the selected group
- * has a live match. Tapping it opens the match, or the list when several are live. `enabled`
+ * has a live match. Tapping it opens the match it shows; with several live, its "+N" opens the
+ * list, where you pick the match the dock shows. `enabled`
  * is false where this platform doesn't show the dock (the tab bar's accessory or the tab
  * stacks' floating one), so it's computed only once.
  */
@@ -39,19 +41,24 @@ export function useLiveMatchDock({ enabled }: { enabled: boolean }) {
     );
 
     function open() {
-        if (!snapshot) return;
-        if (snapshot.count > 1) nav.navigate('liveMatches');
-        else nav.navigate('liveMatch', { id: snapshot.primary.id });
+        if (snapshot) nav.navigate('liveMatch', { id: snapshot.primary.id });
     }
 
-    return { snapshot, open };
+    function openList() {
+        if (snapshot) nav.navigate('liveMatches');
+    }
+
+    return { snapshot, open, openList };
 }
 
-/** The live matches sheet: the group's live matches. It closes itself once none are left. */
+/**
+ * The live matches sheet: the group's live matches, to pick the one the dock shows. It closes
+ * itself once none are left.
+ */
 export function useLiveMatchesSheet() {
     const router = useRouter();
     const groupId = useSelectedGroupId();
-    const { matches } = useGroupLiveMatches(groupId);
+    const { matches, primary } = useGroupLiveMatches(groupId);
     const isFocused = useIsFocused();
     const isClosing = useRef(false);
 
@@ -69,11 +76,12 @@ export function useLiveMatchesSheet() {
     return {
         groupId,
         matches,
-        /** the sheet goes away first, so the match isn't pushed inside it */
-        open(id: string) {
-            if (isClosing.current) return;
+        shownId: primary?.id,
+        /** the dock shows this match from now on */
+        show(id: string) {
+            if (isClosing.current || !groupId) return;
+            liveMatchOutbox().actions.setLastOpened(groupId, id);
             close();
-            router.push({ pathname: '/liveMatch', params: { id } });
         },
     };
 }
