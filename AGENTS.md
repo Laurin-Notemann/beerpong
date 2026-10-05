@@ -24,7 +24,7 @@ Errors, logs and traces from the app and the server go to Sentry (org `versus-zr
 
 ## A note from Laurin
 
-Keep it simple. This is a small team side project, so the best change is usually the smallest one that makes the behavior obvious. Don't add machinery because it looks architecturally impressive. Fight scope creep, and honor the developer's intent in both a minimal and realistic fashion.
+Keep it simple. This is a small team side project, so the best change is usually the smallest one that makes the behavior obvious. Don't add machinery because it looks architecturally impressive. Fight scope creep, but finish what was asked: minimal means no extra machinery, not half a feature. If the feature needs the API to work, or a bug you found is a one-liner in code you're touching, do it and say so. When a change you shipped turns out wrong, fix it toward what the developer describes; a blind revert ships a second regression.
 
 The rest of this document is meant to help you navigate the codebase and make changes effectively. Think of these instructions less as "hard rules", more as "good defaults". The developer's preferences should be able to override anything here.
 
@@ -32,7 +32,6 @@ The rest of this document is meant to help you navigate the codebase and make ch
 
 We need to be on the same page with terminology. When communicating, use this language:
 
-- **you** means the agent reading this file and changing Versus.
 - **we, us, and maintainers** mean Laurin, Linus, Thies and the people building Versus.
 - **user** means a person playing beer pong with the app.
 - **group** means a set of players who compete together. Joined with a group code.
@@ -44,16 +43,16 @@ We need to be on the same page with terminology. When communicating, use this la
 
 ## The three ways to hurt yourself
 
-1. **Touching the live server by hand.** `ssh privaten` hosts the staging API (`~/docker/beerpong-api-go`) and its Postgres (`~/docker/beerpong-api`). The database there is real user data. Never run destructive SQL, `docker compose down -v`, or volume prunes against it. Read logs freely; change things through the deploy workflow.
-2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, or changing permissions changes the fingerprint. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
-3. **Hand-editing generated API types.** `apps/mobile/api/generated/openapi.json` and `apps/mobile/openapi/openapi.d.ts` are generated from `apps/api/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile.
+1. **Touching the live server by hand.** `ssh privaten` hosts the staging API (`~/docker/beerpong-api-go`) and its Postgres (`~/docker/beerpong-api`). The database there is real user data. Never run destructive SQL, `docker compose down -v`, or volume prunes against it. Read logs freely; change things through the deploy workflow. If `ssh privaten` doesn't connect, ask. Never reach the server through CI secrets or a temporary workflow.
+2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, `apps/mobile/package.json` scripts, or permissions changes the fingerprint. So does hoisting the app's packages: the root `package-lock.json` keeps them under `apps/mobile/node_modules`, so never `npm dedupe` or regenerate the lockfile from scratch. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
+3. **Hand-editing generated API types.** `apps/mobile/api/generated/openapi.json` and `apps/mobile/openapi/openapi.d.ts` are generated from `apps/api/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile. Edit `openapi.json` as text in place; re-serializing it or running Prettier on it reformats the whole file.
 
 ## Hit every surface
 
 The most common defect in this repo is a change that works on the path you tested and is missing everywhere else. Before calling work done, walk this list and say which entries applied:
 
 - **Both ends of the wire.** A DTO change in `apps/api/` needs `apps/api/openapi/openapi.json` updated, regenerated types and every consuming hook in `apps/mobile/api/calls` and `apps/mobile/api/propHooks` updated.
-- **Realtime.** If a mutation changes data other group members see, the server must emit the socket event and the app must apply it (`apps/mobile/api/realtime`).
+- **Realtime.** If a mutation changes data other group members see, the server must emit the socket event and the app must apply it (`apps/mobile/api/realtime`). Anything the group shares (formations, photos, rules) lives in the API; phone-only stores are for drafts and preferences.
 - **Cache.** React Query is persisted to disk. A changed response shape must not crash on an old cached value.
 - **Platforms.** iOS and Android. Permissions and native behavior differ.
 - **Reverse states.** If you added a way in, add the way out. Create needs delete, join needs leave.
@@ -61,9 +60,10 @@ The most common defect in this repo is a change that works on the path you teste
 
 ## Dev servers
 
+- On this machine Go isn't installed and port 5432 is taken: run the API and its tests with the `api-local` skill instead of the next two lines.
 - Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN` and the `AWS_*` S3 settings from the environment.
 - API: `set -a; source .env; set +a; cd apps/api && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
-- App: `cd apps/mobile && npm install && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
+- App: `npm install` at the root, then `cd apps/mobile && npx expo start` (`npm start`'s `prestart` still points at the old `.env.example` path; fix it with the next native build). Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
 - npm is the package manager (npm workspaces, one root `package-lock.json`). Don't add a second lockfile.
 - Stop what you started. This machine runs other projects' servers too.
 
@@ -74,8 +74,9 @@ An empty database is a bad test. For realistic data, dump the staging database r
 ## Verifying
 
 - Smallest proof that the change works. Run the tests and checks for the scope you touched:
-  - API: `cd apps/api && go test ./...`, then the contract suite against the running API: `cd api-tests && API_BASE_URL=http://localhost:8080 go test ./...` (see `api-tests/README.md`).
-  - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`.
+  - Everything: `npx turbo run lint typecheck test format:check` from the root (the API's tasks need Go on the PATH).
+  - API: `go test ./...` in `apps/api`, then the contract suite in `api-tests/` against a running API (the `api-local` skill does both).
+  - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`. Lint and format before every push, even when told to skip tests: CI fails on Prettier.
   - Web (the simulator and the TV): `cd apps/web && npm run format:check && npm run typecheck && npm test && npm run build`.
 - Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.
 - Backend behavior changes ship with a contract test in `api-tests/` (observable behavior) or a unit test next to the Go code (Elo, leaderboard math).
@@ -87,7 +88,7 @@ The Elo lives in `apps/api/internal/leaderboard/elo.go`; its comment explains th
 
 - `cd apps/api && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
 - beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `apps/web/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
-- Contract goldens with `elo` values (`api-tests/testdata/golden`) change with the Elo. Re-record only the tests that fail on `elo` (`GOLDEN=record ... go test -run '<those tests>' ./...`) and check that the diff touches nothing but `"elo"` lines.
+- Contract goldens with `elo` values (`api-tests/testdata/golden`) change with the Elo. Re-record only the tests that fail on `elo` (`GOLDEN=record` with `-run '<those tests>'`, see the `api-local` skill) and check that the diff touches nothing but `"elo"` lines.
 
 ## Shipping
 
@@ -126,8 +127,8 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 
 - `apps/api/` - the API (Go, pgx + sqlc, goose migrations). `internal/api` (handlers), `internal/database` (migrations, SQL queries, generated code), `internal/leaderboard` (stats and Elo), `internal/realtime` (websocket), `openapi/` (the API document). See `apps/api/README.md`.
 - `apps/mobile/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
-- `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
-- `apps/web/` - one TanStack Start web app: the Elo simulator on the API's `/elo-simulation` (see [Testing the Elo](#testing-the-elo)), and under `/tv` Versus TV, which puts live matches and the leaderboard on a TV, controlled from phones. The TV reduces live matches with `apps/mobile/lib/liveMatch` code, so keep what `apps/web/src/tv/lib/liveMatch.ts` imports free of React Native. See `apps/web/README.md`.
+- `.github/workflows/` - API CI/CD, mobile CI, web CI/CD, OpenAPI generation, and the workflow that builds and updates the app.
+- `apps/web/` - one TanStack Start web app: the Elo simulator on the API's `/elo-simulation` (see [Testing the Elo](#testing-the-elo)), and under `/tv` Versus TV, which puts live matches and the leaderboard on a TV, controlled from phones. The TV reduces live matches with `apps/mobile/lib/liveMatch` code, so keep what `apps/web/src/tv/lib/liveMatch.ts` imports free of React Native. The TV must run in Chromium 63 (Samsung Tizen 5) behind Traefik; see `apps/web/README.md`.
 - `api-tests/` - black-box contract tests (HTTP and websocket, compared with recorded golden transcripts) and `shadowdiff`.
 - `docker/` - local compose files for the database and backend.
 
@@ -136,6 +137,7 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 - Complexity belongs at the boundaries (API mapping, client hooks). Screens stay dumb.
 - Inferred types over annotations. `any` is the enemy. Imports use the `@/` alias; eslint forbids relative imports.
 - Never import `@react-navigation/*` in the app. Expo Router bundles its own React Navigation; use `expo-router/react-navigation`, the `Drawer`/`Stack`/`NativeTabs` layouts and `Stack.Toolbar`. A second copy builds and type-checks fine but crashes at launch ("Couldn't register the navigator").
+- `NativeTabs.Trigger` reads only its direct `Icon` children; Android icons use `VectorIcon` (`expo-symbols` isn't installed). With React Compiler on, read store state through selectors, not `actions.getX()`.
 - Native UI over JS imitations: header buttons are `Stack.Toolbar` items, menus are native (`Stack.Toolbar.Menu` / `@expo/ui` `MenuView`), confirmations are `Alert.alert`.
 - Comments describe how a thing is used, and move when the code moves.
 - No `console.*` in app code outside `utils/logging.ts`. Use a `ScopedLogger`; its output also reaches Sentry Logs.
@@ -143,5 +145,4 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 
 ## Additional tips
 
-- Don't verify with browsers, simulators or computer use unless the developer explicitly agrees or requests it.
 - Security is important, but shouldn't be over-indexed on for dev-only tooling.
