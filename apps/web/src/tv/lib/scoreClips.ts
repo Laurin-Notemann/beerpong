@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
-
 import type { LiveMatchOpDto } from '@/openapi/openapi';
 
 import type { LiveMatchView } from '~/tv/server/board';
@@ -39,48 +37,4 @@ export function scoreClipsOf(event: unknown, matches: LiveMatchView[]): ScoreCli
         }
         return [];
     });
-}
-
-/**
- * Every clip the live matches' players (and the queue) need, downloaded once when it first shows
- * up (a match starting, or a player uploading a new clip, which gets a new URL) and kept in
- * memory until nothing needs it anymore, so a score plays its clip without waiting on the
- * network. Gives the local copy of a clip, or its URL to stream while that's still loading.
- */
-export function useClipCache(matches: LiveMatchView[], queue: ScoreClip[]) {
-    const urls = [
-        ...matches.flatMap((i) => [...i.blue.players, ...i.red.players].map((p) => p.scoreClipUrl)),
-        ...queue.map((i) => i.url),
-    ].filter((i): i is string => !!i);
-    const key = [...new Set(urls)].sort().join(' ');
-
-    /** object URLs by clip URL, null while downloading */
-    const cache = useRef(new Map<string, string | null>());
-    const [, setLoaded] = useState(0);
-    useEffect(() => {
-        const wanted = new Set(key.split(' ').filter(Boolean));
-        for (const [url, local] of cache.current) {
-            if (wanted.has(url)) continue;
-            if (local) URL.revokeObjectURL(local);
-            cache.current.delete(url);
-        }
-        for (const url of wanted) {
-            if (cache.current.has(url)) continue;
-            cache.current.set(url, null);
-            fetch(url)
-                .then((res) => {
-                    if (!res.ok) throw new Error(`score clip: HTTP ${res.status}`);
-                    return res.blob();
-                })
-                .then((blob) => {
-                    if (cache.current.get(url) !== null) return; // not needed anymore
-                    cache.current.set(url, URL.createObjectURL(blob));
-                    setLoaded((n) => n + 1);
-                })
-                // streamed for now; downloaded again when the matches change
-                .catch(() => cache.current.delete(url));
-        }
-    }, [key]);
-
-    return (url: string) => cache.current.get(url) ?? url;
 }

@@ -6,11 +6,11 @@ import { promisify } from 'node:util';
 
 /**
  * Score clips reach the TV through this server, by asset id, so a new upload (a new asset) gets a
- * new path and is never mixed up with the old one. The bucket sends no CORS headers, so the TV
- * couldn't download them into memory itself (useClipCache), and the TV's player shows black for
- * what phones upload (QuickTime, the index at the end, turned by a rotation flag). So each clip
- * is converted once with ffmpeg (in the Docker image) into a plain MP4 the player can start
- * right away: H.264 with AAC, upright, at most 1280 pixels, index first.
+ * new path and is never mixed up with the old one. The TV's player shows black for what phones
+ * upload (QuickTime, the index at the end, turned by a rotation flag), so each clip is converted
+ * once with ffmpeg (in the Docker image) into a plain MP4 the player can start right away: H.264
+ * with AAC, upright, at most 1280 pixels, index first. That starts when a board shows the
+ * player, so the clip is ready before they score.
  */
 const clipUrls = new Map<string, string>();
 const converted = new Map<string, Promise<string | null>>();

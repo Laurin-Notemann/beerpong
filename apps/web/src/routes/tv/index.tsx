@@ -16,7 +16,7 @@ import {
     pickMatches,
 } from '~/tv/lib/display';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
-import { type ScoreClip, scoreClipsOf, useClipCache } from '~/tv/lib/scoreClips';
+import { type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -126,7 +126,6 @@ function Tv() {
         }
     );
     liveMatches.current = board.data?.liveMatches ?? [];
-    const clipSrc = useClipCache(liveMatches.current, clips);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const remoteUrl = identity.code ? `${location.origin}/tv/rem/${identity.code}` : undefined;
@@ -141,7 +140,6 @@ function Tv() {
                     remoteUrl={remoteUrl}
                     offline={!connected || board.isError}
                     clip={clips[0]}
-                    clipSrc={clipSrc}
                     onClipDone={clipDone}
                 />
             ) : (
@@ -181,7 +179,6 @@ function Screen({
     remoteUrl,
     offline,
     clip,
-    clipSrc,
     onClipDone,
 }: {
     board: Board | null;
@@ -189,7 +186,6 @@ function Screen({
     remoteUrl: string | undefined;
     offline: boolean;
     clip: ScoreClip | undefined;
-    clipSrc: (url: string) => string;
     onClipDone: () => void;
 }) {
     const live = board?.liveMatches ?? [];
@@ -207,7 +203,6 @@ function Screen({
                 <ScoreClipPanel
                     key={clip.id}
                     clip={clip}
-                    src={clipSrc(clip.url)}
                     // next to the leaderboard the live match is on the right; elsewhere the
                     // scorer's team side (blue plays on the left)
                     from={layout === 'split' || clip.team === 'red' ? 'right' : 'left'}
