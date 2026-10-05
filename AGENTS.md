@@ -12,7 +12,7 @@ Entering a match has to be quicker than arguing about the score. Screens render 
 
 ### 2. Realtime, but offline tolerant
 
-Every group member sees new matches, players and seasons live via the `/update-socket` websocket (see `api/README-Socket-Updates.md`, still accurate for the Go API). The app must keep working when the socket drops and must catch up on reconnect (`useRefetchEverythingOnWifiReconnect`).
+Every group member sees new matches, players and seasons live via the `/update-socket` websocket (see `api-go/README-Socket-Updates.md`). The app must keep working when the socket drops and must catch up on reconnect (`useRefetchEverythingOnWifiReconnect`).
 
 ### 3. Ship without the stores
 
@@ -126,7 +126,6 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 ## Where code lives
 
 - `api-go/` - the API (Go, pgx + sqlc, goose migrations). `internal/api` (handlers), `internal/database` (migrations, SQL queries, generated code), `internal/leaderboard` (stats and Elo), `internal/realtime` (websocket), `openapi/` (the API document). See `api-go/README.md`.
-- `api/` - the retired Spring Boot API it replaced. Not deployed or running anywhere; kept for reference until it's removed.
 - `mobile-app/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
 - `tv/` - Versus TV: a TanStack Start web app that puts live matches and the leaderboard on a TV, controlled from phones. It reduces live matches with `mobile-app/lib/liveMatch` code, so keep what `tv/src/lib/liveMatch.ts` imports free of React Native. See `tv/README.md`.

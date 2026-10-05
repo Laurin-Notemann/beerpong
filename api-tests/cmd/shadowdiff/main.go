@@ -2,7 +2,7 @@
 // to on two backends that share one database and reports responses that
 // differ. It only sends GET requests, so it is safe against production data.
 //
-//	shadowdiff -a http://java:8080 -b http://go:8080 -token <access token>
+//	shadowdiff -a http://reference:8080 -b http://candidate:8080 -token <access token>
 //	JWT_SECRET=... shadowdiff -a ... -b ... -user <user id>
 package main
 
@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	baseA   = flag.String("a", "", "reference backend (Java)")
-	baseB   = flag.String("b", "", "candidate backend (Go)")
+	baseA   = flag.String("a", "", "reference backend")
+	baseB   = flag.String("b", "", "candidate backend")
 	token   = flag.String("token", "", "access token")
 	secret  = flag.String("secret", "", "JWT secret to mint an access token for -user")
 	user    = flag.String("user", "", "user id for -secret")

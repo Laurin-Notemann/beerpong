@@ -1,6 +1,6 @@
 # api-go
 
-The Versus API. It replaced the Spring Boot API in `api/` with the same REST
+The Versus API. It replaced the retired Spring Boot API with the same REST
 endpoints, error envelopes and `/update-socket` events, against the same
 Postgres schema, with the same environment variables; `api-tests/` holds the
 contract it was checked against.
