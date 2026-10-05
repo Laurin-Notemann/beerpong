@@ -2260,6 +2260,11 @@
                     "gap": { "type": "number", "format": "double" },
                     "scale": { "type": "number", "format": "double" },
                     "teamPoints": { "type": "number", "format": "double" },
+                    "share": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "How much of a full game this was: 1, less when a ring ended it early or it is still running. Each player's expected counts for this share."
+                    },
                     "finisher": { "type": "string" },
                     "finishMove": { "type": "string" },
                     "teams": {
@@ -2273,6 +2278,7 @@
                     "gap",
                     "scale",
                     "teamPoints",
+                    "share",
                     "finisher",
                     "finishMove",
                     "teams"

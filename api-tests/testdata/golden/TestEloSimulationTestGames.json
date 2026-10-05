@@ -228,7 +228,8 @@
             "liveMatchId": null,
             "matchId": "\u003cid20\u003e",
             "scale": 0.9486832981,
-            "teamPoints": 4.5,
+            "share": 1,
+            "teamPoints": 9.5,
             "teams": [
               {
                 "avgPoints": 2,
@@ -333,6 +334,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid21\u003e",
             "scale": 1.483239697,
+            "share": 0,
             "teamPoints": 4.5,
             "teams": [
               {
@@ -615,7 +617,8 @@
             "liveMatchId": null,
             "matchId": "\u003cid20\u003e",
             "scale": 0.9486832981,
-            "teamPoints": 4.5,
+            "share": 1,
+            "teamPoints": 9.5,
             "teams": [
               {
                 "avgPoints": 2,
@@ -720,7 +723,8 @@
             "liveMatchId": null,
             "matchId": "test-0",
             "scale": 1,
-            "teamPoints": 2.75,
+            "share": 1,
+            "teamPoints": 4.5,
             "teams": [
               {
                 "avgPoints": 3,
@@ -791,6 +795,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid21\u003e",
             "scale": 1.483239697,
+            "share": 0,
             "teamPoints": 4.5,
             "teams": [
               {
@@ -1073,6 +1078,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid20\u003e",
             "scale": 0.9486832981,
+            "share": 1,
             "teamPoints": 3.5,
             "teams": [
               {
@@ -1178,7 +1184,8 @@
             "liveMatchId": null,
             "matchId": "test-0",
             "scale": 1,
-            "teamPoints": 3.5,
+            "share": 1,
+            "teamPoints": 9.5,
             "teams": [
               {
                 "avgPoints": 3,
@@ -1249,6 +1256,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid21\u003e",
             "scale": 1.483239697,
+            "share": 0,
             "teamPoints": 4,
             "teams": [
               {
@@ -1496,7 +1504,8 @@
             "liveMatchId": null,
             "matchId": "\u003cid20\u003e",
             "scale": 0.9486832981,
-            "teamPoints": 4.5,
+            "share": 1,
+            "teamPoints": 9.5,
             "teams": [
               {
                 "avgPoints": 2,
@@ -1601,6 +1610,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid21\u003e",
             "scale": 1.483239697,
+            "share": 0,
             "teamPoints": 4.5,
             "teams": [
               {

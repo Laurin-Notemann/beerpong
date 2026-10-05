@@ -113,14 +113,17 @@ type eloGameDTO struct {
 	TestIndex *int `json:"testIndex"`
 	// LiveMatchID is the live match a running game is, counted as if it ended
 	// now; nil for other games
-	LiveMatchID *string      `json:"liveMatchId"`
-	Date        time.Time    `json:"date"`
-	Gap         float64      `json:"gap"`
-	Scale       float64      `json:"scale"`
-	TeamPoints  float64      `json:"teamPoints"`
-	Finisher    string       `json:"finisher"`
-	FinishMove  string       `json:"finishMove"`
-	Teams       []eloTeamDTO `json:"teams"`
+	LiveMatchID *string   `json:"liveMatchId"`
+	Date        time.Time `json:"date"`
+	Gap         float64   `json:"gap"`
+	Scale       float64   `json:"scale"`
+	TeamPoints  float64   `json:"teamPoints"`
+	// Share is how much of a full game this was (a ring ends it early, a
+	// live game is under way); each player's expected counts for this share
+	Share      float64      `json:"share"`
+	Finisher   string       `json:"finisher"`
+	FinishMove string       `json:"finishMove"`
+	Teams      []eloTeamDTO `json:"teams"`
 }
 
 type eloTeamDTO struct {
@@ -622,7 +625,7 @@ func (g eloGroup) games(in leaderboard.Input, moves map[string]db.RuleMove, trac
 	out := make([]eloGameDTO, 0, len(traced))
 	for _, tg := range traced {
 		m := matches[tg.MatchID]
-		dto := eloGameDTO{MatchID: tg.MatchID, Date: tg.Date.UTC(), Gap: tg.Gap, Scale: tg.Scale, TeamPoints: tg.TeamPoints}
+		dto := eloGameDTO{MatchID: tg.MatchID, Date: tg.Date.UTC(), Gap: tg.Gap, Scale: tg.Scale, TeamPoints: tg.TeamPoints, Share: tg.Share}
 		if i, isTest := extra.test[tg.MatchID]; isTest {
 			dto.TestIndex = &i
 		}

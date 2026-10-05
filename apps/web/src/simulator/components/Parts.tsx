@@ -25,7 +25,8 @@ export function Parts({
 
     const all = g.teams.flatMap((t) => t.players.map((q) => ({ q, t })));
     const top = all.sort(
-        (a, b) => Math.abs(b.q.own - b.q.expected) - Math.abs(a.q.own - a.q.expected)
+        (a, b) =>
+            Math.abs(b.q.own - b.q.expected * g.share) - Math.abs(a.q.own - a.q.expected * g.share)
     )[0];
     if (!top) return null;
     const { q, t } = top;
@@ -78,25 +79,34 @@ export function Parts({
                     <h3>Hitting: points above or below what you should score</h3>
                     <p className="who">
                         Before the game, the ratings set how many own points (Normal 1, Bomb 2,
-                        finish move 1) you should score: your team's share of an average game this
-                        season, more against weaker opponents. Your teammate's points don't matter;
-                        the finish bonus only counts in the result.
+                        finish move 1) you should score: your team's share of an average full game
+                        this season, more against weaker opponents. It counts for the part of a game
+                        that was played: a ring ends it after the cups before it, a live game is as
+                        far as the team with more cups (out of 10). Your teammate's points don't
+                        matter; the finish bonus only counts in the result.
                     </p>
                     <div className="formula">
                         expected = team&nbsp;points&nbsp;per&nbsp;game / team&nbsp;size × 2 ×
                         your&nbsp;win&nbsp;chance&nbsp;vs&nbsp;them
                         <br />
                         change = team&nbsp;result + <span className="v">{p.perPoint}</span> ×
-                        (scored − expected)
+                        (scored − expected × part&nbsp;of&nbsp;a&nbsp;game&nbsp;played)
                     </div>
                     <p className="example">
-                        Teams scored <b>{g.teamPoints.toFixed(1)}</b> own points per game so far
-                        this season, so {perPlayer.toFixed(1)} per player in a team of {n}.{' '}
+                        Teams scored <b>{g.teamPoints.toFixed(1)}</b> own points per full game so
+                        far this season, so {perPlayer.toFixed(1)} per player in a team of {n}.{' '}
                         <b>{q.name}</b> ({q.before.toFixed(0)}) had a {pct(chance)} chance against
                         the opponents ({opp.rating.toFixed(0)}): expected {perPlayer.toFixed(1)} × 2
-                        × {chance.toFixed(2)} = <b>{q.expected.toFixed(1)}</b>. Scored {q.own}:{' '}
-                        {p.perPoint} × ({q.own} − {q.expected.toFixed(1)}) = <b>{sgn(q.hitting)}</b>{' '}
-                        on top of the team's {sgn(q.result)}.
+                        × {chance.toFixed(2)} = <b>{q.expected.toFixed(1)}</b>
+                        {g.share < 1 && (
+                            <>
+                                {' '}
+                                in a full game; this one was <b>{pct(g.share)}</b> of a game
+                            </>
+                        )}
+                        . Scored {q.own}: {p.perPoint} × ({q.own} − {q.expected.toFixed(1)}
+                        {g.share < 1 && ` × ${g.share.toFixed(2)}`}) = <b>{sgn(q.hitting)}</b> on
+                        top of the team's {sgn(q.result)}.
                     </p>
                 </div>
             </div>

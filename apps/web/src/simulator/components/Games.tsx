@@ -219,7 +219,7 @@ function Inspector({ game }: { game: Game }) {
         12,
         ...players.flatMap((p) => [Math.abs(p.result), Math.abs(p.hitting)])
     );
-    const scaleMax = Math.max(1, ...players.flatMap((p) => [p.own, p.expected]));
+    const scaleMax = Math.max(1, ...players.flatMap((p) => [p.own, p.expected * game.share]));
     const half = (v: number, cls: string) => {
         const bar = (
             <div
@@ -304,12 +304,15 @@ function Inspector({ game }: { game: Game }) {
                                                 <div
                                                     className="exp"
                                                     style={{
-                                                        left: `calc(${Math.min(100, (p.expected / scaleMax) * 100)}% - 1px)`,
+                                                        left: `calc(${Math.min(100, ((p.expected * game.share) / scaleMax) * 100)}% - 1px)`,
                                                     }}
                                                 />
                                             </div>
                                             <div className="share-lbl">
-                                                scored {p.own} · expected {p.expected.toFixed(1)}
+                                                scored {p.own} · expected{' '}
+                                                {(p.expected * game.share).toFixed(1)}
+                                                {game.share < 1 &&
+                                                    ` (${pct(game.share)} of a game; ${p.expected.toFixed(1)} in a full one)`}
                                             </div>
                                         </div>
                                         <div className="deltas">
@@ -347,7 +350,9 @@ function Inspector({ game }: { game: Game }) {
             <div className="hint">
                 “Scored” is own points; the finish bonus goes to everyone and only counts in the
                 result. Orange bar: own points; black tick: what the ratings expected before the
-                game. <span style={{ color: 'var(--result)' }}>Blue</span> = team result,{' '}
+                game, for the part of a game that was played (a ring ends it early, a live game is
+                as far as the team with more cups).{' '}
+                <span style={{ color: 'var(--result)' }}>Blue</span> = team result,{' '}
                 <span style={{ color: 'var(--scoring)' }}>orange</span> = hitting: Elo per point ×
                 (scored − expected).
             </div>

@@ -59,6 +59,10 @@ declare namespace Components {
             gap: number; // double
             scale: number; // double
             teamPoints: number; // double
+            /**
+             * How much of a full game this was: 1, less when a ring ended it early or it is still running. Each player's expected counts for this share.
+             */
+            share: number; // double
             finisher: string;
             finishMove: string;
             teams: EloTeamDto[];

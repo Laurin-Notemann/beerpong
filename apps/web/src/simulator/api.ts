@@ -41,6 +41,7 @@ export type GamePlayer = {
     after: number;
     result: number;
     hitting: number;
+    // own points expected in a full game, set before it
     expected: number;
     moves: { name: string; count: number }[];
 };
@@ -65,6 +66,9 @@ export type Game = {
     gap: number;
     scale: number;
     teamPoints: number;
+    // how much of a full game this was: less than 1 when a ring ended it
+    // early or it's still running; each player's expected counts for this share
+    share: number;
     finisher: string;
     finishMove: string;
     teams: GameTeam[];

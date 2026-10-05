@@ -6,7 +6,6 @@ package leaderboard
 import (
 	"errors"
 	"fmt"
-	"math"
 	"sort"
 	"time"
 )
@@ -113,7 +112,8 @@ type Game struct {
 	Date       time.Time
 	Gap        float64 // winners' app points per player minus losers'
 	Scale      float64 // how many close normal wins the result counted as
-	TeamPoints float64 // own points a team scored per game before this one
+	TeamPoints float64 // own points a team scored per full game before this one
+	Share      float64 // how much of a full game this was; Expected counts for this share
 	Teams      [2]GameTeam
 }
 
@@ -133,8 +133,8 @@ type GamePlayer struct {
 	Before    float64
 	After     float64
 	Result    float64 // the team's share of the change
-	Hitting   float64 // PerPoint × (Own − Expected)
-	Expected  float64
+	Hitting   float64 // PerPoint × (Own − Expected × Share)
+	Expected  float64 // own points expected in a full game, set before it
 }
 
 // draw stands for the winner of a tied projected match.
@@ -240,6 +240,8 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 
 	var bluePoints, redPoints, blueCups, redCups int64
 	winner := ""
+	// finishCups: what the finish took off the table itself (a ring's cups)
+	var finishCups int64
 	playerPoints := map[string]int64{}
 	// appPoints are the points the app shows for this match: own points plus
 	// every finish bonus of the team. The Elo rates on these.
@@ -300,6 +302,7 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 			// Old matches stored every move, finishes included, with value 0.
 			if rm.Finishing && mv.Value > 0 {
 				winner = team
+				finishCups = int64(rm.Cups * mv.Value)
 			}
 			playerPoints[e.Stats.PlayerID] += int64(own)
 			if team == blue {
@@ -344,20 +347,19 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 			before = append(before, s.Elo)
 		}
 	}
-	teamPoints := r.teamPoints.value(bluePoints, redPoints)
-	if inProgress {
-		// part of a game: a full game's expected points would sink everyone's rating early
-		// on, so a team is expected to have scored no more than the teams' average so far
-		teamPoints = math.Min(teamPoints, float64(bluePoints+redPoints)/2)
+	teamPoints := r.teamPoints.value()
+	winnerCups := map[string]int64{blue: blueCups, red: redCups}[winner]
+	share := gameShare(inProgress, blueCups, redCups, winnerCups, finishCups)
+	g := calculateElo(r.elo, resultBlue, blueStats, redStats, appPoints, playerPoints, teamPoints, share)
+	if share == 1 && !m.Projected {
+		r.teamPoints.add(bluePoints)
+		r.teamPoints.add(redPoints)
 	}
-	g := calculateElo(r.elo, resultBlue, blueStats, redStats, appPoints, playerPoints, teamPoints)
-	r.teamPoints.add(bluePoints)
-	r.teamPoints.add(redPoints)
 	if !r.trace {
 		return true, nil
 	}
 
-	game := Game{MatchID: m.ID, Date: m.Date, Gap: g.gap, Scale: g.scale, TeamPoints: teamPoints}
+	game := Game{MatchID: m.ID, Date: m.Date, Gap: g.gap, Scale: g.scale, TeamPoints: teamPoints, Share: share}
 	sides := [2][]*Stats{blueStats, redStats}
 	members := [2][]string{blueMembers, redMembers}
 	for k, team := range [2]string{blue, red} {
@@ -373,7 +375,7 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 			gt.Players = append(gt.Players, GamePlayer{
 				MemberID: members[k][i], ProfileID: memberProfile[members[k][i]],
 				Points: appPoints[s.PlayerID], Own: own, Before: b, After: s.Elo,
-				Result: delta, Hitting: r.elo.PerPoint * (float64(own) - g.expected[k][i]), Expected: g.expected[k][i],
+				Result: delta, Hitting: hitting(r.elo, own, g.expected[k][i], share), Expected: g.expected[k][i],
 			})
 		}
 		game.Teams[k] = gt

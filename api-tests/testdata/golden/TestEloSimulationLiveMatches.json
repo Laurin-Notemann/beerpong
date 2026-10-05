@@ -365,7 +365,8 @@
             "liveMatchId": "\u003cid22\u003e",
             "matchId": "live-\u003cid22\u003e",
             "scale": 0.894427191,
-            "teamPoints": 1.5,
+            "share": 0.3,
+            "teamPoints": 4.5,
             "teams": [
               {
                 "avgPoints": 0,
@@ -427,7 +428,8 @@
             "liveMatchId": null,
             "matchId": "\u003cid20\u003e",
             "scale": 0.9486832981,
-            "teamPoints": 4.5,
+            "share": 1,
+            "teamPoints": 9.5,
             "teams": [
               {
                 "avgPoints": 2,
@@ -532,6 +534,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid21\u003e",
             "scale": 1.483239697,
+            "share": 0,
             "teamPoints": 4.5,
             "teams": [
               {
@@ -809,7 +812,8 @@
             "liveMatchId": null,
             "matchId": "\u003cid20\u003e",
             "scale": 0.9486832981,
-            "teamPoints": 4.5,
+            "share": 1,
+            "teamPoints": 9.5,
             "teams": [
               {
                 "avgPoints": 2,
@@ -914,6 +918,7 @@
             "liveMatchId": null,
             "matchId": "\u003cid21\u003e",
             "scale": 1.483239697,
+            "share": 0,
             "teamPoints": 4.5,
             "teams": [
               {
