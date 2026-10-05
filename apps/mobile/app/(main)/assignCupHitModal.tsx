@@ -22,6 +22,7 @@ import {
     hittableMoves,
     picksOtherCups,
     ringCompletion,
+    ringLeftBy,
     standingCups,
 } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
@@ -98,8 +99,14 @@ export default function Page() {
     // a hit on the last cup that still needs to know which finish it was
     const [lastCupMove, setLastCupMove] = useState<CupMove | null>(null);
     // a hit that takes more cups than the tapped one (a bouncer), and the other cups picked so far
-    const [pickMove, setPickMove] = useState<CupMove | null>(null);
+    const [pickMove, setPickMove] = useState<(typeof moves)[number] | null>(
+        null
+    );
     const [picked, setPicked] = useState<CupPosition[]>([]);
+    // the cups picked leave a ring's shape: whether the hit threw the ring too
+    const [ringLeft, setRingLeft] = useState<(typeof moves)[number] | null>(
+        null
+    );
 
     const isSame = (a: CupPosition, b: CupPosition) =>
         a.x === b.x && a.y === b.y;
@@ -130,6 +137,7 @@ export default function Page() {
         setLastCupMove(null);
         setPickMove(null);
         setPicked([]);
+        setRingLeft(null);
 
         // this cup completes the ring's shape: its hit and the ring go in together
         const completion =
@@ -183,11 +191,38 @@ export default function Page() {
             ? picked.filter((i) => !isSame(i, position))
             : [...picked, position];
 
-        if (next.length === pickMove.cups - 1) {
+        if (next.length > pickMove.cups - 1) return;
+
+        const ring =
+            next.length === pickMove.cups - 1
+                ? ringLeftBy(moves, standing, [cup, ...next], hasFinish)
+                : undefined;
+
+        if (next.length === pickMove.cups - 1 && !ring) {
             record(pickMove, undefined, next);
         } else {
             setPicked(next);
+            setRingLeft(ring ?? null);
         }
+    }
+
+    /** the picked hit, and the ring with it taking the cups that are left */
+    function recordWithRing(move: CupMove, ring: CupMove) {
+        const cups = cupsTakenBy(entry.cupHits, team, cup, move, picked);
+
+        if (player && cups) {
+            entry.actions.recordCupHit({
+                team,
+                playerId: player.id,
+                moveId: move.id,
+                cups: [
+                    ...cups,
+                    ...standing.filter((i) => !cups.some((j) => isSame(i, j))),
+                ],
+                finishMoveId: ring.id,
+            });
+        }
+        nav.goBack();
     }
 
     // the team's cups as they're drawn on the cups page, the tapped (and picked) ones stand out
@@ -262,6 +297,7 @@ export default function Page() {
                             setLastCupMove(null);
                             setPickMove(null);
                             setPicked([]);
+                            setRingLeft(null);
                         }}
                         value={playerId}
                     />
@@ -285,12 +321,31 @@ export default function Page() {
                     />
                 </>
             )}
-            {isStanding && player && pickMove && (
+            {isStanding && player && pickMove && !ringLeft && (
                 <Text color="primary" variant="h3">
                     {pickMove.cups === 2
                         ? 'Which other cup does it take? Tap it above.'
                         : `Which ${pickMove.cups - 1} other cups does it take? Tap them above.`}
                 </Text>
+            )}
+            {isStanding && player && pickMove && ringLeft && (
+                <>
+                    <Text color="primary" variant="h3">
+                        The cups left make a ring. Did the {pickMove.name}{' '}
+                        trigger it?
+                    </Text>
+                    <Select
+                        items={[
+                            { value: ringLeft.id, title: ringLeft.name },
+                            { value: '', title: 'No' },
+                        ]}
+                        onChange={(ringId) =>
+                            ringId
+                                ? recordWithRing(pickMove, ringLeft)
+                                : record(pickMove, undefined, picked)
+                        }
+                    />
+                </>
             )}
             {isStanding && player && lastCupMove && (
                 <>

@@ -142,6 +142,28 @@ export function ringCompletion(
 }
 
 /**
+ * The ring a hit taking `taken` (a bouncer's two cups) leaves the shape of, if the match has no
+ * finish yet. The scorer may have thrown the ring with it: then the hit takes the rest too.
+ */
+export function ringLeftBy<T extends CupMove>(
+    moves: T[],
+    standing: CupPosition[],
+    taken: CupPosition[],
+    hasFinish: boolean
+): T | undefined {
+    if (hasFinish) return;
+
+    const left = standing.filter((i) => !taken.some((j) => samePosition(i, j)));
+
+    return moves.find(
+        (move) =>
+            move.isFinish &&
+            !!RING_SHAPES[move.cups] &&
+            isShape(left, RING_SHAPES[move.cups])
+    );
+}
+
+/**
  * The finish that comes with a hit: the hit on a team's last cup also finishes the match, unless
  * its move is a finish itself (the rings) or the match already has one. Several finishes that
  * take no cups means the scorer has to pick one ('ask').
