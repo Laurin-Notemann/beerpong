@@ -1,9 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
-import { useMatchesQuery } from '@/api/calls/matchHooks';
+import { attachTeamPhotos, useMatchesQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useSeasonQuery } from '@/api/calls/seasonHooks';
@@ -11,7 +12,9 @@ import {
     useLiveMatch,
     useLiveMatchActions,
 } from '@/api/liveMatch/useLiveMatch';
+import { useApi } from '@/api/utils/create-api';
 import { matchDtoToMatch, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { QK } from '@/api/utils/reactQuery';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
 import {
     LiveMatchOfflineError,
@@ -23,6 +26,7 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
 import { liveMatchOutbox } from '@/zustand/liveMatchOutboxStore';
+import { useLiveMatchPhotoStore } from '@/zustand/liveMatchPhotoStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 const logger = new ScopedLogger('live-match');
@@ -42,6 +46,8 @@ export function useLiveMatchScreen(id: string) {
     const live = useLiveMatch(groupId ?? '', id);
     const actions = useLiveMatchActions(groupId ?? '', id);
     const header = live.liveMatch;
+    const { api } = useApi();
+    const qc = useQueryClient();
 
     // the match's own season: it may have started before the active one changed
     const seasonId = header?.seasonId || activeSeasonId;
@@ -103,6 +109,51 @@ export function useLiveMatchScreen(id: string) {
         };
     }, [isFocused]);
 
+    // a team photo taken on this phone during the match goes onto the match once it's finished
+    const isAttaching = useRef(false);
+    /** starts attaching this phone's team photo, if it took one; returns whether it did */
+    function attachPhoto(matchId: string, seasonId: string) {
+        const photos = useLiveMatchPhotoStore.getState().photos[id];
+        if (!photos || !groupId || isAttaching.current) return !!photos;
+
+        isAttaching.current = true;
+        attachTeamPhotos(api, { groupId, seasonId, matchId }, photos)
+            .then(() => {
+                useLiveMatchPhotoStore.getState().actions.set(id, null);
+                qc.invalidateQueries({
+                    queryKey: [
+                        QK.group,
+                        groupId,
+                        QK.season,
+                        seasonId,
+                        QK.matches,
+                    ],
+                });
+            })
+            .catch((err) => {
+                logger.error('failed to attach the team photo', id, err);
+                showErrorToast(
+                    "The match is saved, but its team photo couldn't be uploaded.",
+                    err
+                );
+            })
+            .finally(() => {
+                isAttaching.current = false;
+            });
+        return true;
+    }
+
+    // finished on another phone: attach this phone's photo too
+    const resultMatchId =
+        header?.status === 'FINISHED' ? header.resultMatchId : undefined;
+    const resultSeasonId = header?.seasonId;
+    const onFinished = useEffectEvent(attachPhoto);
+    useEffect(() => {
+        if (resultMatchId && resultSeasonId) {
+            onFinished(resultMatchId, resultSeasonId);
+        }
+    }, [resultMatchId, resultSeasonId]);
+
     async function finish() {
         if (finishInFlight.current) return;
         finishInFlight.current = true;
@@ -116,11 +167,13 @@ export function useLiveMatchScreen(id: string) {
                 pathname: '/match',
                 params: { id: result.matchId, seasonId: result.seasonId },
             });
-            // a live match never has a team photo, so ask for one
-            nav.navigate('matchPhotoModal', {
-                matchId: result.matchId,
-                seasonId: result.seasonId,
-            });
+            if (!attachPhoto(result.matchId, result.seasonId)) {
+                // no team photo was taken during the match, so ask for one
+                nav.navigate('matchPhotoModal', {
+                    matchId: result.matchId,
+                    seasonId: result.seasonId,
+                });
+            }
         } catch (err) {
             if (err instanceof LiveMatchOfflineError) {
                 showErrorToast(
@@ -166,6 +219,7 @@ export function useLiveMatchScreen(id: string) {
                 onPress: () => {
                     setIsLeaving(true);
                     actions.discard();
+                    useLiveMatchPhotoStore.getState().actions.set(id, null);
                     nav.goBack();
                 },
             },

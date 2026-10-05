@@ -8,7 +8,7 @@ import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadImage } from '@/api/utils/uploadImage';
-import { Paths, TeamPhotoDto } from '@/openapi/openapi';
+import { Client, Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { useLogging } from '@/utils/useLogging';
 
 export const useMatchesQuery = (
@@ -163,3 +163,38 @@ export const useDeleteMatchPhotoMutation = () => {
         onError: captureMutationErr('deleteMatchPhoto'),
     });
 };
+
+/**
+ * Attaches a team photo (one picture per team) to a match that already exists: one entered
+ * without a photo, or a finished live match.
+ */
+export async function attachTeamPhotos(
+    api: Promise<Client>,
+    match: { groupId: ApiId; seasonId: ApiId; matchId: ApiId },
+    photos: { blueTeamPhotoUri: string; redTeamPhotoUri: string }
+) {
+    const client = await api;
+    const { groupId, seasonId, matchId } = match;
+
+    const res = await client.getMatchByIdExtended({
+        groupId,
+        seasonId,
+        id: matchId,
+    });
+    // the teams in the order the match was created in: blue, then red
+    const [blue, red] = res.data.data?.teams ?? [];
+    if (!blue?.id || !red?.id) throw new Error(`match ${matchId} has no teams`);
+
+    for (const [teamId, uri] of [
+        [blue.id, photos.blueTeamPhotoUri],
+        [red.id, photos.redTeamPhotoUri],
+    ] as const) {
+        const upload = await client.setPhoto({
+            groupId,
+            seasonId,
+            id: matchId,
+            teamId,
+        });
+        await uploadTeamPhoto({ teamPhoto: upload.data.data }, uri);
+    }
+}

@@ -3,7 +3,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { uploadTeamPhoto, useMatchesQuery } from '@/api/calls/matchHooks';
+import { attachTeamPhotos } from '@/api/calls/matchHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
@@ -34,29 +34,15 @@ export default function Page() {
     const { api } = useApi();
     const { groupId } = useGroup();
 
-    const match = useMatchesQuery(groupId, seasonId).data?.data?.find(
-        (i) => i.id === matchId
-    );
-    // the teams in the order the match was created in: blue, then red
-    const [blueTeamId, redTeamId] = (match?.teams ?? []).map((i) => i.id);
-
     const [photos, setPhotos] = useState<DualCameraPhoto | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
     async function save() {
-        if (!photos || !groupId || !blueTeamId || !redTeamId) return;
+        if (!photos || !groupId) return;
 
         setIsSaving(true);
         try {
-            for (const [teamId, uri] of [
-                [blueTeamId, photos.blueTeamPhotoUri],
-                [redTeamId, photos.redTeamPhotoUri],
-            ] as const) {
-                const res = await (
-                    await api
-                ).setPhoto({ groupId, seasonId, id: matchId, teamId });
-                await uploadTeamPhoto({ teamPhoto: res.data.data }, uri);
-            }
+            await attachTeamPhotos(api, { groupId, seasonId, matchId }, photos);
             qc.invalidateQueries({
                 queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
             });
@@ -111,7 +97,7 @@ export default function Page() {
                     fullWidth
                     title="Save"
                     isPending={isSaving}
-                    disabled={!photos || !blueTeamId || !redTeamId}
+                    disabled={!photos}
                     onPress={save}
                 />
             </View>
