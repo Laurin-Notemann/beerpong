@@ -51,6 +51,10 @@ declare namespace Components {
              * The test game's place in the request; missing for real games.
              */
             testIndex?: number; // int32
+            /**
+             * The running live match this game is, counted as if it ended now; missing for other games.
+             */
+            liveMatchId?: string;
             date: string; // date-time
             gap: number; // double
             scale: number; // double
@@ -58,6 +62,10 @@ declare namespace Components {
             finisher: string;
             finishMove: string;
             teams: EloTeamDto[];
+        }
+        export interface EloLiveMatchDto {
+            liveMatchId: string;
+            teams: [TeamCreateDto, TeamCreateDto];
         }
         export interface EloMoveDto {
             name: string;
@@ -121,9 +129,9 @@ declare namespace Components {
             seasons: EloSeasonDto[];
             seasonId?: string;
             /**
-             * What the standings' baseline values compare with.
+             * What the standings' baseline values compare with: the default weights, or with test or live games the same weights without them.
              */
-            baseline: 'defaults' | 'withoutTestGames';
+            baseline: 'defaults' | 'storedGames';
             standings: EloStandingDto[];
             games: EloGameDto[];
             prediction: EloPredictionDto;
@@ -132,6 +140,7 @@ declare namespace Components {
         }
         export interface EloSimulationRequestDto {
             testGames?: EloTestGameDto[];
+            liveMatches?: EloLiveMatchDto[];
         }
         export interface EloStandingDto {
             profileId: string;
@@ -929,6 +938,18 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeAssetMetadataDto;
         }
     }
+    namespace GetEloLiveMatches {
+        namespace Parameters {
+            export type InviteCode = string;
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListLiveMatchDto;
+        }
+    }
     namespace GetEloSimulation {
         namespace Parameters {
             export type InviteCode = string;
@@ -1398,6 +1419,14 @@ declare namespace Paths {
 
 export interface OperationMethods {
     /**
+     * getEloLiveMatches - The group's running live matches with their ops, for the simulator to reduce.
+     */
+    getEloLiveMatches(
+        parameters?: Parameters<Paths.GetEloLiveMatches.QueryParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetEloLiveMatches.Responses.$200>;
+    /**
      * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.
      */
     getEloSimulation(
@@ -1406,7 +1435,7 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
     /**
-     * simulateEloWithTestGames - Like GET, with made-up test games counted where they say. Nothing is stored. The standings then compare with the season without the test games.
+     * simulateEloWithTestGames - Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone.
      */
     simulateEloWithTestGames(
         parameters?: Parameters<Paths.SimulateEloWithTestGames.QueryParameters> | null,
@@ -1867,6 +1896,16 @@ export interface OperationMethods {
 }
 
 export interface PathsDictionary {
+    ['/elo-simulation/live-matches']: {
+        /**
+         * getEloLiveMatches - The group's running live matches with their ops, for the simulator to reduce.
+         */
+        get(
+            parameters?: Parameters<Paths.GetEloLiveMatches.QueryParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetEloLiveMatches.Responses.$200>;
+    };
     ['/elo-simulation']: {
         /**
          * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.
@@ -1877,7 +1916,7 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
         /**
-         * simulateEloWithTestGames - Like GET, with made-up test games counted where they say. Nothing is stored. The standings then compare with the season without the test games.
+         * simulateEloWithTestGames - Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone.
          */
         post(
             parameters?: Parameters<Paths.SimulateEloWithTestGames.QueryParameters> | null,
@@ -2427,6 +2466,7 @@ export type AuthSignupDto = Components.Schemas.AuthSignupDto;
 export type AuthTokenDto = Components.Schemas.AuthTokenDto;
 export type CupPositionDto = Components.Schemas.CupPositionDto;
 export type EloGameDto = Components.Schemas.EloGameDto;
+export type EloLiveMatchDto = Components.Schemas.EloLiveMatchDto;
 export type EloMoveDto = Components.Schemas.EloMoveDto;
 export type EloParamsDto = Components.Schemas.EloParamsDto;
 export type EloPlayerDto = Components.Schemas.EloPlayerDto;
