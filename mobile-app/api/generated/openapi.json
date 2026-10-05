@@ -8,6 +8,92 @@
         }
     ],
     "paths": {
+        "/elo-simulation": {
+            "get": {
+                "tags": ["elo-simulation-controller"],
+                "operationId": "getEloSimulation",
+                "description": "A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" },
+                        "description": "The group's invite code; it is all the simulator needs to open a group."
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "k",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "marginWeight",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "perPoint",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "topWeight",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeEloSimulationDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/elo-simulation/search": {
+            "get": {
+                "tags": ["elo-simulation-controller"],
+                "operationId": "searchEloWeights",
+                "description": "Tries a grid of Elo weights on all of a group's seasons and returns the one that predicts its games best.",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" },
+                        "description": "The group's invite code; it is all the simulator needs to open a group."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeEloSearchDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{id}": {
             "get": {
                 "tags": ["group-controller"],
@@ -1782,6 +1868,223 @@
     },
     "components": {
         "schemas": {
+            "EloParamsDto": {
+                "type": "object",
+                "properties": {
+                    "k": { "type": "number", "format": "double" },
+                    "marginWeight": { "type": "number", "format": "double" },
+                    "perPoint": { "type": "number", "format": "double" },
+                    "topWeight": { "type": "number", "format": "double" }
+                },
+                "required": ["k", "marginWeight", "perPoint", "topWeight"]
+            },
+            "EloScoreDto": {
+                "type": "object",
+                "properties": {
+                    "logLoss": { "type": "number", "format": "double" },
+                    "correct": { "type": "number", "format": "double" },
+                    "called": { "type": "integer", "format": "int32" },
+                    "games": { "type": "integer", "format": "int32" }
+                },
+                "required": ["logLoss", "correct", "called", "games"]
+            },
+            "EloSeasonDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "numMatches": { "type": "integer", "format": "int32" }
+                },
+                "required": ["id", "numMatches"]
+            },
+            "EloPredictionDto": {
+                "type": "object",
+                "properties": {
+                    "params": { "$ref": "#/components/schemas/EloScoreDto" },
+                    "defaults": { "$ref": "#/components/schemas/EloScoreDto" }
+                },
+                "required": ["params", "defaults"]
+            },
+            "EloStandingDto": {
+                "type": "object",
+                "properties": {
+                    "profileId": { "type": "string" },
+                    "name": { "type": "string" },
+                    "elo": { "type": "number", "format": "double" },
+                    "defaultElo": { "type": "number", "format": "double" },
+                    "defaultRank": { "type": "integer", "format": "int32" },
+                    "matches": { "type": "integer", "format": "int64" },
+                    "wins": { "type": "integer", "format": "int64" },
+                    "points": { "type": "integer", "format": "int64" },
+                    "result": { "type": "number", "format": "double" },
+                    "hitting": { "type": "number", "format": "double" }
+                },
+                "required": [
+                    "profileId",
+                    "name",
+                    "elo",
+                    "defaultElo",
+                    "defaultRank",
+                    "matches",
+                    "wins",
+                    "points",
+                    "result",
+                    "hitting"
+                ]
+            },
+            "EloMoveDto": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "count": { "type": "integer", "format": "int32" }
+                },
+                "required": ["name", "count"]
+            },
+            "EloPlayerDto": {
+                "type": "object",
+                "properties": {
+                    "profileId": { "type": "string" },
+                    "name": { "type": "string" },
+                    "points": { "type": "integer", "format": "int64" },
+                    "own": { "type": "integer", "format": "int64" },
+                    "before": { "type": "number", "format": "double" },
+                    "after": { "type": "number", "format": "double" },
+                    "result": { "type": "number", "format": "double" },
+                    "hitting": { "type": "number", "format": "double" },
+                    "expected": { "type": "number", "format": "double" },
+                    "moves": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/EloMoveDto" }
+                    }
+                },
+                "required": [
+                    "profileId",
+                    "name",
+                    "points",
+                    "own",
+                    "before",
+                    "after",
+                    "result",
+                    "hitting",
+                    "expected",
+                    "moves"
+                ]
+            },
+            "EloTeamDto": {
+                "type": "object",
+                "properties": {
+                    "won": { "type": "boolean" },
+                    "rating": { "type": "number", "format": "double" },
+                    "winChance": { "type": "number", "format": "double" },
+                    "points": { "type": "integer", "format": "int64" },
+                    "avgPoints": { "type": "number", "format": "double" },
+                    "cups": { "type": "integer", "format": "int64" },
+                    "players": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/EloPlayerDto" }
+                    }
+                },
+                "required": [
+                    "won",
+                    "rating",
+                    "winChance",
+                    "points",
+                    "avgPoints",
+                    "cups",
+                    "players"
+                ]
+            },
+            "EloGameDto": {
+                "type": "object",
+                "properties": {
+                    "matchId": { "type": "string" },
+                    "date": { "type": "string", "format": "date-time" },
+                    "gap": { "type": "number", "format": "double" },
+                    "scale": { "type": "number", "format": "double" },
+                    "teamPoints": { "type": "number", "format": "double" },
+                    "finisher": { "type": "string" },
+                    "finishMove": { "type": "string" },
+                    "teams": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/EloTeamDto" }
+                    }
+                },
+                "required": [
+                    "matchId",
+                    "date",
+                    "gap",
+                    "scale",
+                    "teamPoints",
+                    "finisher",
+                    "finishMove",
+                    "teams"
+                ]
+            },
+            "EloSimulationDto": {
+                "type": "object",
+                "properties": {
+                    "groupId": { "type": "string" },
+                    "groupName": { "type": "string" },
+                    "defaults": { "$ref": "#/components/schemas/EloParamsDto" },
+                    "params": { "$ref": "#/components/schemas/EloParamsDto" },
+                    "seasons": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/EloSeasonDto" }
+                    },
+                    "seasonId": { "type": "string" },
+                    "standings": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EloStandingDto"
+                        }
+                    },
+                    "games": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/EloGameDto" }
+                    },
+                    "prediction": {
+                        "$ref": "#/components/schemas/EloPredictionDto"
+                    }
+                },
+                "required": [
+                    "groupId",
+                    "defaults",
+                    "params",
+                    "seasons",
+                    "standings",
+                    "games",
+                    "prediction"
+                ]
+            },
+            "EloSearchDto": {
+                "type": "object",
+                "properties": {
+                    "params": { "$ref": "#/components/schemas/EloParamsDto" },
+                    "prediction": {
+                        "$ref": "#/components/schemas/EloScoreDto"
+                    },
+                    "tried": { "type": "integer", "format": "int32" }
+                },
+                "required": ["params", "prediction", "tried"]
+            },
+            "ResponseEnvelopeEloSimulationDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/EloSimulationDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
+            "ResponseEnvelopeEloSearchDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": { "$ref": "#/components/schemas/EloSearchDto" },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                }
+            },
             "GroupCreateDto": {
                 "type": "object",
                 "properties": {
