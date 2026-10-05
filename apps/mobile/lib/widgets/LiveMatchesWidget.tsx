@@ -17,6 +17,7 @@ import {
     font,
     foregroundStyle,
     frame,
+    layoutPriority,
     lineLimit,
     monospacedDigit,
     padding,
@@ -148,7 +149,8 @@ const LiveMatchesWidget = (
     }
 
     const scoreLine = (size: number) => (
-        <HStack spacing={size / 5}>
+        // the score keeps its size; the team columns next to it give way
+        <HStack spacing={size / 5} modifiers={[fixedSize(), layoutPriority(1)]}>
             <Text
                 modifiers={[
                     font({ weight: 'heavy', size, design: 'rounded' }),
