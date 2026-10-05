@@ -24,6 +24,7 @@ export type RootStackParamList = {
     liveMatch: { id: string };
     liveMatches: undefined;
     liveMatchTeamsModal: { liveMatchId: string };
+    matchPhotoModal: { matchId: string; seasonId: string };
     matches: undefined;
     newMatch: undefined;
 

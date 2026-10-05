@@ -116,6 +116,11 @@ export function useLiveMatchScreen(id: string) {
                 pathname: '/match',
                 params: { id: result.matchId, seasonId: result.seasonId },
             });
+            // a live match never has a team photo, so ask for one
+            nav.navigate('matchPhotoModal', {
+                matchId: result.matchId,
+                seasonId: result.seasonId,
+            });
         } catch (err) {
             if (err instanceof LiveMatchOfflineError) {
                 showErrorToast(

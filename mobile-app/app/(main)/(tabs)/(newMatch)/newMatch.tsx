@@ -191,6 +191,12 @@ export default function NewMatchScreen() {
             router.replace('/');
             carouselRef.current?.prev();
 
+            const matchId = matchRes?.data?.id;
+            if (!savePhoto && matchId) {
+                // no photo was taken on the points page, so ask for one
+                nav.navigate('matchPhotoModal', { matchId, seasonId });
+            }
+
             if (blueTeamPhotoUri && redTeamPhotoUri) {
                 // the upload urls are returned in the same order as the teams
                 const [bluePhotoUpload, redPhotoUpload] =
