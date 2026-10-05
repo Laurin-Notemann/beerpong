@@ -281,3 +281,35 @@ tr.unranked td { color: var(--text-2); }
 .liveteam.w .cups { color: var(--up); }
 .liveplayer { white-space: nowrap; font-size: 0.9375rem; }
 .liveplayer .mv { color: var(--muted); font-size: 0.8125rem; }
+
+/* replay: the table, a felt in both modes, and each team's players in shades of its colour */
+:root { --table: #23352b; --table-line: rgba(255, 255, 255, 0.38); --team-blue: #2a6fd0; --team-red: #d2412f; --p-blue-0: #1b4f9e; --p-blue-1: #3c8de6; --p-blue-2: #38b2d6; --p-red-0: #a3271c; --p-red-1: #e0503c; --p-red-2: #ef9150; }
+@media (prefers-color-scheme: dark) {
+  :root { --table: #1d2b23; --team-blue: #3d84e6; --team-red: #e0574a; --p-blue-0: #3070d6; --p-blue-1: #6aa6ee; --p-blue-2: #22a8c4; --p-red-0: #c83a2c; --p-red-1: #f07a62; --p-red-2: #d98a2a; }
+}
+.replay { display: grid; gap: 1rem; }
+.replay-controls { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.replay-controls select { font: inherit; font-size: 0.875rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; padding: 0.3rem 0.45rem; max-width: 100%; }
+.replay-controls input[type=range] { flex: 1; min-width: 10rem; accent-color: var(--text); }
+.replay-btns { display: inline-flex; gap: 0.3rem; }
+.icon:disabled { opacity: 0.4; cursor: default; }
+.icon.play { min-width: 5.2rem; }
+.replay-step { font-size: 0.9375rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.replay-step b { color: var(--text); }
+.replay-grid { display: grid; gap: 1rem; }
+.replay-score { font-size: 0.9375rem; color: var(--text-2); text-align: center; }
+.replay-score b { font-family: "IBM Plex Mono", monospace; color: var(--text); }
+.replay-score .blue b { color: var(--team-blue); }
+.replay-score .red b { color: var(--team-red); }
+.replay-table { display: block; width: 100%; height: auto; }
+.replay-table text { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+.slices { display: grid; gap: 2px; margin-bottom: 0.75rem; }
+.slices-row { display: flex; gap: 2px; }
+.slice { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 0.75rem; padding: 0.15rem 0.4rem; border-radius: 4px; color: #fff; font-variant-numeric: tabular-nums; }
+.slice.team { color: var(--text); font-weight: 600; }
+.slice.team.blue { background: color-mix(in srgb, var(--team-blue) 20%, transparent); }
+.slice.team.red { background: color-mix(in srgb, var(--team-red) 20%, transparent); }
+.replay-rows tbody tr { cursor: default; }
+.replay-rows .drow { min-width: 150px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 0.45rem; vertical-align: 0.05em; }
+.replay-chart svg { display: block; width: 100%; height: auto; overflow: visible; }

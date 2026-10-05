@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
+	"github.com/laurin-notemann/beerpong/api-go/internal/leaderboard"
 )
 
 // The JSON shapes below are the API contract the app is generated from
@@ -93,6 +94,11 @@ type seasonSettingsDTO struct {
 	RankingAlgorithm    *string `json:"rankingAlgorithm"`
 	DailyLeaderboard    *string `json:"dailyLeaderboard"`
 	WakeTime            *string `json:"wakeTime"`
+	// the Elo weights in effect (the defaults where none are set)
+	EloK          *float64 `json:"eloK"`
+	EloKr         *float64 `json:"eloKr"`
+	EloRingWeight *float64 `json:"eloRingWeight"`
+	EloSwing      *float64 `json:"eloSwing"`
 }
 
 type seasonDTO struct {
@@ -124,13 +130,32 @@ type settings struct {
 	RankingAlgorithm    *int16
 	DailyLeaderboard    *int16
 	WakeTime            string // HH:MM:SS
+	Elo                 eloWeights
+}
+
+// eloWeights are a season's Elo weights; nil is the default.
+type eloWeights struct {
+	K, KR, RingWeight, Swing *float64
+}
+
+func (w eloWeights) params() leaderboard.EloParams {
+	p := leaderboard.DefaultElo
+	for _, f := range []struct {
+		set *float64
+		to  *float64
+	}{{w.K, &p.K}, {w.KR, &p.KR}, {w.RingWeight, &p.RingWeight}, {w.Swing, &p.Swing}} {
+		if f.set != nil {
+			*f.to = *f.set
+		}
+	}
+	return p
 }
 
 func (s *settings) dto() *seasonSettingsDTO {
 	if s == nil {
 		return nil
 	}
-	wake := s.WakeTime
+	wake, elo := s.WakeTime, s.Elo.params()
 	return &seasonSettingsDTO{
 		MinMatchesToQualify: &s.MinMatchesToQualify,
 		MinTeamSize:         &s.MinTeamSize,
@@ -138,6 +163,10 @@ func (s *settings) dto() *seasonSettingsDTO {
 		RankingAlgorithm:    enumName(rankingAlgorithms, s.RankingAlgorithm),
 		DailyLeaderboard:    enumName(dailyLeaderboards, s.DailyLeaderboard),
 		WakeTime:            &wake,
+		EloK:                &elo.K,
+		EloKr:               &elo.KR,
+		EloRingWeight:       &elo.RingWeight,
+		EloSwing:            &elo.Swing,
 	}
 }
 
@@ -164,6 +193,7 @@ func seasonFromRow(r db.GetSeasonRow) season {
 			RankingAlgorithm:    r.RankingAlgorithm,
 			DailyLeaderboard:    r.DailyLeaderboard,
 			WakeTime:            r.WakeTime,
+			Elo:                 eloWeights{K: r.EloK, KR: r.EloKr, RingWeight: r.EloRingWeight, Swing: r.EloSwing},
 		}
 	}
 	return s

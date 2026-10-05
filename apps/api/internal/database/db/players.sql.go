@@ -234,6 +234,7 @@ SELECT
     s.id AS season_id, s.name AS season_name, s.start_date AS season_start_date, s.end_date AS season_end_date,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM players p
 JOIN statistics st ON st.id = p.statistics_id
@@ -264,6 +265,10 @@ type PlayersWithStatsInGroupRow struct {
 	MaxTeamSize         *int32
 	RankingAlgorithm    *int16
 	DailyLeaderboard    *int16
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 	WakeTime            string
 }
 
@@ -298,6 +303,10 @@ func (q *Queries) PlayersWithStatsInGroup(ctx context.Context, groupID *string) 
 			&i.MaxTeamSize,
 			&i.RankingAlgorithm,
 			&i.DailyLeaderboard,
+			&i.EloK,
+			&i.EloKr,
+			&i.EloRingWeight,
+			&i.EloSwing,
 			&i.WakeTime,
 		); err != nil {
 			return nil, err
@@ -318,6 +327,7 @@ SELECT
     s.id AS season_id, s.name AS season_name, s.start_date AS season_start_date, s.end_date AS season_end_date,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM players p
@@ -355,6 +365,10 @@ type PlayersWithStatsInSeasonRow struct {
 	MaxTeamSize         *int32
 	RankingAlgorithm    *int16
 	DailyLeaderboard    *int16
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 	WakeTime            string
 }
 
@@ -388,6 +402,10 @@ func (q *Queries) PlayersWithStatsInSeason(ctx context.Context, arg PlayersWithS
 			&i.MaxTeamSize,
 			&i.RankingAlgorithm,
 			&i.DailyLeaderboard,
+			&i.EloK,
+			&i.EloKr,
+			&i.EloRingWeight,
+			&i.EloSwing,
 			&i.WakeTime,
 		); err != nil {
 			return nil, err

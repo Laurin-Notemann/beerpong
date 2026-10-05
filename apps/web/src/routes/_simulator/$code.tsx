@@ -17,9 +17,9 @@ export const Route = createFileRoute('/_simulator/$code')({
     validateSearch: (search: Record<string, unknown>): Search => ({
         season: typeof search.season === 'string' ? search.season : undefined,
         k: number(search.k),
-        marginWeight: number(search.marginWeight),
-        perPoint: number(search.perPoint),
-        topWeight: number(search.topWeight),
+        kr: number(search.kr),
+        ringWeight: number(search.ringWeight),
+        swing: number(search.swing),
         // the API checks them; a broken one shows as an error, not a crash
         tests:
             Array.isArray(search.tests) && search.tests.length

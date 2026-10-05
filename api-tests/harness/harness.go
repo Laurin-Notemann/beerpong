@@ -249,9 +249,10 @@ func indent(raw json.RawMessage) string {
 var eloKeys = map[string]bool{
 	"elo": true, "baselineElo": true, "rank": true, "baselineRank": true,
 	"result": true, "hitting": true, "before": true, "after": true, "expected": true,
-	"rating": true, "winChance": true, "scale": true,
+	"winChance": true, "share": true, "ring": true,
 	"logLoss": true, "correct": true, "called": true,
-	"k": true, "marginWeight": true, "perPoint": true, "topWeight": true,
+	"k": true, "kr": true, "ringWeight": true, "swing": true,
+	"eloK": true, "eloKr": true, "eloRingWeight": true, "eloSwing": true,
 }
 
 // withoutElo masks the eloKeys numbers of one transcript entry. A list of

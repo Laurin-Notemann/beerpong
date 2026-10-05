@@ -123,6 +123,7 @@ func (s *Server) routes() map[string]route {
 		"/elo-simulation":              {"GET": s.eloSimulation, "POST": s.eloSimulation},
 		"/elo-simulation/search":       {"GET": s.eloSearch},
 		"/elo-simulation/live-matches": {"GET": s.eloLiveMatches},
+		"/elo-simulation/replays":      {"GET": s.eloReplays},
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
 		"/groups/user":                                                      {"GET": s.userGroups},

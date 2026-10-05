@@ -1,70 +1,89 @@
 package leaderboard
 
 import (
-	"fmt"
 	"math"
 	"testing"
 	"time"
 )
 
-func TestEloCloseWinCountsOnce(t *testing.T) {
-	// Equal ratings, a points gap of 4 per player (a close normal win) counts
-	// exactly once: 175 * (1 - 0.5) = 87.5. Both scored what a solo player is
-	// expected to (9 of a team's 9), so hitting adds nothing.
+func TestEloEvenGameOnlyTheResultMoves(t *testing.T) {
+	// Equal ratings and equal points: both scored their half of the game, so
+	// hitting adds nothing, and the winner gets KR × Swing × (1 − 0.5).
 	blue := &Stats{Elo: 1500, PlayerID: "b"}
 	red := &Stats{Elo: 1500, PlayerID: "r"}
-	calculateElo(DefaultElo, 1, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 8, "r": 4}, map[string]int64{"b": 9, "r": 9}, 9, 1)
-	if blue.Elo != 1587.5 || red.Elo != 1412.5 {
-		t.Fatalf("got blue %v red %v, want 1587.5 / 1412.5", blue.Elo, red.Elo)
+	g := calculateElo(DefaultElo, 1, 1, [2][]*Stats{{blue}, {red}}, map[string]int64{"b": 9, "r": 9}, startingGamePoints)
+	want := DefaultElo.KR * DefaultElo.Swing / 2
+	if math.Abs(blue.Elo-(1500+want)) > 1e-9 || math.Abs(red.Elo-(1500-want)) > 1e-9 {
+		t.Fatalf("got blue %v red %v, want ±%v", blue.Elo, red.Elo, want)
+	}
+	if g.hitting[0][0] != 0 || g.hitting[1][0] != 0 {
+		t.Fatalf("hitting %v / %v, want 0", g.hitting[0][0], g.hitting[1][0])
 	}
 }
 
-func TestEloCarrierPassesAWinnerWhoHitsLess(t *testing.T) {
-	// S hits 6 a game but always loses with W, who hits 1, against A (5 and
-	// the finish) and B (4).
-	profile := func(s string) *string { return &s }
-	in := Input{
-		RuleMoves: map[string]RuleMove{
-			"cup":    {PointsForScorer: 1, Cups: 1},
-			"normal": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true, Cups: 1},
-		},
-		ProfileOf: map[string]string{},
-	}
-	for _, id := range []string{"S", "W", "A", "B"} {
-		in.Players = append(in.Players, Player{ID: "p" + id, ProfileID: profile(id), SeasonID: "s", Active: true})
-		in.ProfileOf["p"+id] = id
-	}
-	start := time.Now()
-	for g := range 20 {
-		member := func(id string) string { return fmt.Sprintf("%d%s", g, id) }
-		m := Match{ID: fmt.Sprint(g), Date: start.Add(time.Duration(g) * time.Minute), TeamIDs: []string{"t1", "t2"}}
-		for _, x := range [][2]string{{"S", "t1"}, {"W", "t1"}, {"A", "t2"}, {"B", "t2"}} {
-			m.Members = append(m.Members, Member{ID: member(x[0]), TeamID: x[1], PlayerID: "p" + x[0]})
+func TestEloOneOnOneCountsLikeTwoOnTwo(t *testing.T) {
+	// 10:8 in a 1v1 and 5+5 against 4+4 in a 2v2 are the same performance
+	// for what was possible: 1 point above 9 of a 9.5 full game, half a point
+	// above 4.5 of a 4.75 one.
+	p := EloParams{K: 40, Swing: 1}
+	stats := func(ids ...string) []*Stats {
+		var out []*Stats
+		for _, id := range ids {
+			out = append(out, &Stats{Elo: 1500, PlayerID: id})
 		}
-		m.Moves = []Move{{member("S"), "cup", 6}, {member("W"), "cup", 1}, {member("A"), "cup", 5},
-			{member("A"), "normal", 1}, {member("B"), "cup", 4}}
-		in.Matches = append(in.Matches, m)
+		return out
 	}
-	res, err := Compute(in)
-	if err != nil {
-		t.Fatal(err)
-	}
-	elo := map[string]float64{}
-	for _, e := range res.Entries {
-		elo[*e.Player.ProfileID] = e.Stats.Elo
-	}
-	if !(elo["S"] > elo["B"]) {
-		t.Fatalf("losing with a weak partner should not bury S below B, who hits less: S %v, B %v", elo["S"], elo["B"])
-	}
-	// winning still counts: A hits as much as S and wins
-	if !(elo["A"] > elo["S"]) {
-		t.Fatalf("A hits as much as S and wins, so should stay ahead: A %v, S %v", elo["A"], elo["S"])
+	single := calculateElo(p, 1, 1, [2][]*Stats{stats("a"), stats("b")}, map[string]int64{"a": 10, "b": 8}, 19)
+	double := calculateElo(p, 1, 1, [2][]*Stats{stats("a", "b"), stats("c", "d")}, map[string]int64{"a": 5, "b": 5, "c": 4, "d": 4}, 19)
+	if math.Abs(single.hitting[0][0]-double.hitting[0][0]) > 1e-9 || math.Abs(single.hitting[0][0]-40/9.5) > 1e-9 {
+		t.Fatalf("1v1 hitting %v, 2v2 hitting %v, want %v", single.hitting[0][0], double.hitting[0][0], 40/9.5)
 	}
 }
 
-// twoOnTwo is one 2v2 match: A and B (A finishing with finish) beat C and D,
-// everyone hitting at the same rate. A normal finish comes after 10 cups, a
-// ring of fire after 4, so everyone hit 40% as many cups.
+func TestEloSharesFollowThrowsAndRatings(t *testing.T) {
+	// 3v2 with equal ratings: teams throw equally often, so each of the pair
+	// throws 1.5 times as often: a quarter of the points each, a sixth each
+	// for the three
+	var three, two []*Stats
+	own := map[string]int64{}
+	for _, id := range []string{"a", "b", "c"} {
+		three = append(three, &Stats{Elo: 1500, PlayerID: id})
+		own[id] = 2
+	}
+	for _, id := range []string{"d", "e"} {
+		two = append(two, &Stats{Elo: 1500, PlayerID: id})
+		own[id] = 3
+	}
+	g := calculateElo(DefaultElo, 0.5, 1, [2][]*Stats{three, two}, own, startingGamePoints)
+	if math.Abs(g.share[0][0]-1.0/6) > 1e-9 || math.Abs(g.share[1][0]-0.25) > 1e-9 {
+		t.Fatalf("shares %v (three) and %v (two), want 1/6 and 1/4", g.share[0][0], g.share[1][0])
+	}
+
+	// a player 10 times as strong takes 10 of the 13 parts of a 2v2
+	strong := []*Stats{{Elo: 1500 + eloDivider*DefaultElo.Swing, PlayerID: "s"}, {Elo: 1500, PlayerID: "w"}}
+	others := []*Stats{{Elo: 1500, PlayerID: "x"}, {Elo: 1500, PlayerID: "y"}}
+	g = calculateElo(DefaultElo, 1, 1, [2][]*Stats{strong, others}, map[string]int64{"s": 1, "w": 1, "x": 1, "y": 1}, startingGamePoints)
+	if math.Abs(g.share[0][0]-10.0/13) > 1e-9 {
+		t.Fatalf("strong player's share %v, want 10/13", g.share[0][0])
+	}
+}
+
+func TestEloScoringMoreNeverCostsTheLeader(t *testing.T) {
+	// A live 1v1, the favourite ahead: every cup they score adds rating
+	last := math.Inf(-1)
+	for cups := int64(1); cups <= 9; cups++ {
+		fav := &Stats{Elo: 1800, PlayerID: "f"}
+		dog := &Stats{Elo: 1400, PlayerID: "d"}
+		calculateElo(DefaultElo, 1, 1, [2][]*Stats{{fav}, {dog}}, map[string]int64{"f": cups, "d": 1}, startingGamePoints)
+		if !(fav.Elo > last) {
+			t.Fatalf("%d:1 gives %v, not more than %v", cups, fav.Elo, last)
+		}
+		last = fav.Elo
+	}
+}
+
+// twoOnTwo is one 2v2 match: A and B (A finishing with finish) beat C and D.
+// A normal finish comes after 10 cups, a ring of fire after 4.
 func twoOnTwo(finish string) Input {
 	profile := func(s string) *string { return &s }
 	cups := [4]int32{5, 5, 4, 4} // A, B, C, D
@@ -95,76 +114,51 @@ func twoOnTwo(finish string) Input {
 	}
 }
 
-func TestEloRingFinishCountsMoreThanNormalFinish(t *testing.T) {
-	game := func(finish string) (map[string]*Stats, Game) {
+func TestEloRingWinCountsMore(t *testing.T) {
+	game := func(finish string) Game {
 		in := twoOnTwo(finish)
 		in.Trace = true
 		res, err := Compute(in)
 		if err != nil {
 			t.Fatal(err)
 		}
-		out := map[string]*Stats{}
-		for _, e := range res.Entries {
-			out[*e.Player.ProfileID] = e.Stats
-		}
-		return out, res.Games[0]
+		return res.Games[0]
 	}
-	normal, normalGame := game("normal")
-	ring, ringGame := game("ring")
-	// the ring ended the game after 4 cups, so only 40% of a game's points
-	// were expected
-	if ringGame.Share != 0.4 || normalGame.Share != 1 {
-		t.Fatalf("share of a game: ring %v, normal %v", ringGame.Share, normalGame.Share)
+	normal, ring := game("normal"), game("ring")
+	// the ring's team bonus is 10 against a normal finish's 3, at the default
+	// RingWeight its square root
+	want := math.Sqrt(10.0 / 3)
+	if normal.Ring != 1 || math.Abs(ring.Ring-want) > 1e-9 {
+		t.Fatalf("result factor: normal %v, ring %v, want 1 and %v", normal.Ring, ring.Ring, want)
 	}
-	// the bonus belongs to every teammate: both gain more than with a normal
-	// finish at the same hitting rate
-	for _, id := range []string{"A", "B"} {
-		if !(ring[id].Elo > normal[id].Elo+20) {
-			t.Fatalf("a ring should clearly lift %s: %v vs %v", id, ring[id].Elo, normal[id].Elo)
-		}
+	if got := ring.Teams[0].Players[0].Result / normal.Teams[0].Players[0].Result; math.Abs(got-want) > 1e-9 {
+		t.Fatalf("a ring win counted %v normal wins, want %v", got, want)
 	}
-	if loser := ringGame.Teams[1].Players[0]; !(loser.Result < normalGame.Teams[1].Players[0].Result) {
-		t.Fatalf("losing to a ring should cost more: %v", loser.Result)
+	if ringFactor(EloParams{RingWeight: 0}, 10, 3) != 1 || ringFactor(EloParams{RingWeight: 1}, 3, 3) != 1 {
+		t.Fatal("a ring weight of 0, or a ring bonus no bigger than a normal finish's, counts like a normal win")
 	}
 }
 
-func TestEloFirstGameStartsFromAFixedExpectation(t *testing.T) {
-	// the season's first game has no average yet: what it expects doesn't
-	// depend on how it went
-	expected := func(finish string) float64 {
-		in := twoOnTwo(finish)
+func TestEloScalesToTheFullGamesSoFar(t *testing.T) {
+	// the first game has no full game to average; a normal finish is one (19
+	// own points), a ring isn't
+	full := func(first string) float64 {
+		in := twoOnTwo(first)
+		second := twoOnTwo("normal").Matches[0]
+		second.ID, second.Date = "m2", in.Matches[0].Date.Add(time.Hour)
+		in.Matches = append(in.Matches, second)
 		in.Trace = true
 		res, err := Compute(in)
 		if err != nil {
 			t.Fatal(err)
 		}
-		return res.Games[0].Teams[0].Players[0].Expected
+		if res.Games[0].FullPoints != startingGamePoints {
+			t.Fatalf("first game scaled to %v, want %v", res.Games[0].FullPoints, startingGamePoints)
+		}
+		return res.Games[1].FullPoints
 	}
-	if normal, ring := expected("normal"), expected("ring"); normal != ring || normal != startingTeamPoints/2 {
-		t.Fatalf("first game expected %v (normal) and %v (ring), want %v", normal, ring, startingTeamPoints/2)
-	}
-}
-
-func TestEloHittingIsWorthAFixedAmountPerPoint(t *testing.T) {
-	// Equal ratings: each player is expected to score 4.5 of a team's 9.
-	// Every own point above or below that is worth PerPoint, whatever the
-	// teammate scored.
-	game := func(mateOwn int64) (me, mate float64) {
-		a := &Stats{Elo: 1500, PlayerID: "a"}
-		b := &Stats{Elo: 1500, PlayerID: "b"}
-		c := &Stats{Elo: 1500, PlayerID: "c"}
-		d := &Stats{Elo: 1500, PlayerID: "d"}
-		points := map[string]int64{"a": 8, "b": 8, "c": 2, "d": 2}
-		own := map[string]int64{"a": 2, "b": mateOwn, "c": 2, "d": 2}
-		calculateElo(DefaultElo, 1, []*Stats{a, b}, []*Stats{c, d}, points, own, 9, 1)
-		return a.Elo, b.Elo
-	}
-	me, mate := game(10)
-	if d := mate - me; math.Abs(d-8*DefaultElo.PerPoint) > 1e-9 {
-		t.Fatalf("8 more points should be worth %v, got %v", 8*DefaultElo.PerPoint, d)
-	}
-	if again, _ := game(4); again != me {
-		t.Fatalf("a teammate's points changed my rating: %v vs %v", again, me)
+	if afterNormal, afterRing := full("normal"), full("ring"); afterNormal != 19 || afterRing != startingGamePoints {
+		t.Fatalf("after a normal finish %v (want 19), after a ring %v (want %v)", afterNormal, afterRing, startingGamePoints)
 	}
 }
 
@@ -188,6 +182,9 @@ func TestTraceExplainsEveryChange(t *testing.T) {
 				if d := p.After - p.Before - p.Result - p.Hitting; math.Abs(d) > 1e-9 {
 					t.Fatalf("%s in %s: result and hitting miss %v of the change", p.ProfileID, g.MatchID, d)
 				}
+				if d := p.Expected - p.Share*float64(g.Points); math.Abs(d) > 1e-9 {
+					t.Fatalf("%s in %s: expected isn't the share of the game's points", p.ProfileID, g.MatchID)
+				}
 				last[p.ProfileID] = p.After
 			}
 		}
@@ -201,6 +198,7 @@ func TestTraceExplainsEveryChange(t *testing.T) {
 		}
 	}
 }
+
 func TestProjectedLiveMatch(t *testing.T) {
 	profile := func(s string) *string { return &s }
 	// one finished match, then a live one in progress: blue has taken bc cups, red rc
@@ -246,7 +244,7 @@ func TestProjectedLiveMatch(t *testing.T) {
 		t.Fatal("a stored match without a finish still has no winner")
 	}
 	before, _ := board(true, 0, 0)
-	atStart := live.Teams[0].Players[0].Expected
+	atStart := live.Teams[0].Players[0].Share
 	leads, err := board(true, 3, 5)
 	if err != nil {
 		t.Fatal(err)
@@ -258,12 +256,11 @@ func TestProjectedLiveMatch(t *testing.T) {
 	if leads["B"].Elo <= before["B"].Elo || leads["A"].Elo >= before["A"].Elo {
 		t.Fatalf("the leader should gain: A %v -> %v, B %v -> %v", before["A"].Elo, leads["A"].Elo, before["B"].Elo, leads["B"].Elo)
 	}
-	// the expectation is set before the game and counts for the share played:
-	// the leading team's cups out of 10
-	if got := live.Teams[0].Players[0].Expected; got != atStart || live.Share != 0.5 {
-		t.Fatalf("3:5 expected %v (at 0:0: %v), share %v", got, atStart, live.Share)
+	// the share is set before the game; the expectation is that share of the
+	// points scored so far
+	if got := live.Teams[0].Players[0]; got.Share != atStart || math.Abs(got.Expected-got.Share*8) > 1e-9 {
+		t.Fatalf("3:5 share %v (at 0:0: %v), expected %v", got.Share, atStart, got.Expected)
 	}
-	// early in a game the leader gains: only a tenth of a game's points is expected
 	early, _ := board(true, 1, 0)
 	if early["A"].Elo <= before["A"].Elo || early["B"].Elo >= before["B"].Elo {
 		t.Fatalf("1:0 early: A %v -> %v, B %v -> %v", before["A"].Elo, early["A"].Elo, before["B"].Elo, early["B"].Elo)

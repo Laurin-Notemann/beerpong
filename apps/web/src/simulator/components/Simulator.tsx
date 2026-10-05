@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
     type Game,
+    getReplays,
     type Params,
     type Score,
     type Search,
@@ -14,29 +15,39 @@ import { Chart } from '~/simulator/components/Chart';
 import { Games } from '~/simulator/components/Games';
 import { LiveNow } from '~/simulator/components/LiveNow';
 import { Parts } from '~/simulator/components/Parts';
+import { Replay } from '~/simulator/components/Replay';
 import { TestEditor } from '~/simulator/components/TestEditor';
 import { pct } from '~/simulator/format';
 import type { LiveStatus } from '~/simulator/live';
+import type { LiveMatchDto } from '~/simulator/liveMatch';
 
 const sliders: {
-    key: keyof Params;
+    key: 'k' | 'kr' | 'swing';
     label: string;
     min: number;
     max: number;
     step: number;
     tone?: 'r' | 's';
 }[] = [
-    { key: 'k', label: 'Result weight (K)', min: 50, max: 800, step: 10, tone: 'r' },
-    { key: 'marginWeight', label: 'Margin & rings', min: 0, max: 1.5, step: 0.05, tone: 'r' },
-    { key: 'perPoint', label: 'Elo per point', min: 0, max: 100, step: 1, tone: 's' },
-    { key: 'topWeight', label: 'Best player weight', min: 0, max: 1, step: 0.05 },
+    { key: 'k', label: 'Hitting (K)', min: 0, max: 400, step: 5, tone: 's' },
+    { key: 'kr', label: 'Result (KR)', min: 0, max: 400, step: 5, tone: 'r' },
+    { key: 'swing', label: 'Swing: how far ratings move', min: 0.5, max: 10, step: 0.5 },
 ];
+
+// what a ring win's result counts, against a normal win's
+const ringChoices = [
+    { value: 0, label: 'like a normal win' },
+    { value: 0.5, label: '√ of the bonus ratio' },
+    { value: 1, label: 'the bonus ratio' },
+];
+
+const weights = ['k', 'kr', 'ringWeight', 'swing'] as const;
 
 const noWeights = {
     k: undefined,
-    marginWeight: undefined,
-    perPoint: undefined,
-    topWeight: undefined,
+    kr: undefined,
+    ringWeight: undefined,
+    swing: undefined,
 };
 
 type Change = { season?: string; tests?: TestGame[] } & Partial<Params>;
@@ -64,15 +75,14 @@ export function Simulator({
     }, [draft]);
     // the API caught up with the sliders
     useEffect(() => {
-        if (draft && sliders.every(({ key }) => draft[key] === sim.params[key]))
-            setDraft(undefined);
+        if (draft && weights.every((key) => draft[key] === sim.params[key])) setDraft(undefined);
     }, [sim.params]);
 
     const [best, setBest] = useState<Search>();
     const [searching, setSearching] = useState(false);
     const [failed, setFailed] = useState<string>();
 
-    const isDefault = sliders.every(({ key }) => params[key] === sim.defaults[key]);
+    const isDefault = weights.every((key) => params[key] === sim.defaults[key]);
     const totalGames = sim.seasons.reduce((n, s) => n + s.numMatches, 0);
     const pred = sim.prediction;
 
@@ -85,9 +95,9 @@ export function Simulator({
                 </h1>
                 <p className="lead">
                     Every season of the group, computed by the API with the leaderboard's own Elo
-                    code and updated live when a match is entered. Drag the sliders to try other
-                    weights than <code>DefaultElo</code> in <code>elo.go</code>; the leaderboard,
-                    every game and the prediction score follow.
+                    code and updated live when a match is entered. Every season has its own weights;
+                    drag the sliders to try others. The leaderboard, every game and the prediction
+                    score follow.
                 </p>
             </header>
 
@@ -141,18 +151,41 @@ export function Simulator({
                                 />
                             </div>
                         ))}
+                        <div className="slider">
+                            <label htmlFor="ringWeight">A ring win counts</label>
+                            <select
+                                id="ringWeight"
+                                value={params.ringWeight}
+                                onChange={(e) =>
+                                    setDraft({ ...params, ringWeight: Number(e.target.value) })
+                                }
+                            >
+                                {/* a weight from the URL that isn't one of the three */}
+                                {!ringChoices.some((c) => c.value === params.ringWeight) && (
+                                    <option value={params.ringWeight}>
+                                        bonus ratio^{params.ringWeight}
+                                    </option>
+                                )}
+                                {ringChoices.map((c) => (
+                                    <option key={c.value} value={c.value}>
+                                        {c.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     <div className="btns">
                         <button
                             className="btn"
                             type="button"
                             disabled={isDefault}
+                            title="Back to the season's settings"
                             onClick={() => {
                                 setDraft(undefined);
                                 onChange(noWeights);
                             }}
                         >
-                            Reset
+                            Reset to the season's settings
                         </button>
                         <button
                             className="btn"
@@ -187,9 +220,13 @@ export function Simulator({
                         </p>
                     </div>
                     <div className="pred">
-                        <Tile title="Defaults in elo.go" score={pred.defaults} />
+                        <Tile title="Every season's own settings" score={pred.defaults} />
                         <Tile
-                            title={isDefault ? 'Your settings (= defaults)' : 'Your settings'}
+                            title={
+                                isDefault
+                                    ? "Your settings (= the season's settings)"
+                                    : 'Your settings, on every season'
+                            }
                             score={pred.params}
                             me
                         />
@@ -201,11 +238,10 @@ export function Simulator({
                             <span className="err">The search failed: {failed}</span>
                         ) : best ? (
                             <>
-                                Best of {best.tried} settings: result weight <b>{best.params.k}</b>,
-                                margin <b>{best.params.marginWeight}</b>, Elo per point{' '}
-                                <b>{best.params.perPoint}</b>, best player weight{' '}
-                                <b>{best.params.topWeight}</b> → favourite won{' '}
-                                <b>{pct(best.prediction.correct)}</b>, score{' '}
+                                Best of {best.tried} settings: hitting <b>{best.params.k}</b>,
+                                result <b>{best.params.kr}</b>, ring weight{' '}
+                                <b>{best.params.ringWeight}</b>, swing <b>{best.params.swing}</b> →
+                                favourite won <b>{pct(best.prediction.correct)}</b>, score{' '}
                                 {best.prediction.logLoss.toFixed(3)}. Applied. With a few hundred
                                 games, differences under ~0.005 are noise.
                             </>
@@ -250,11 +286,12 @@ export function Simulator({
                     <Season
                         key={sim.seasonId}
                         sim={sim}
+                        code={code}
                         params={sim.params}
                         tests={sim.testError ? [] : tests}
                         unchanged={
                             sim.baseline === 'defaults' &&
-                            sliders.every(({ key }) => sim.params[key] === sim.defaults[key])
+                            weights.every((key) => sim.params[key] === sim.defaults[key])
                         }
                         onTests={(next) => onChange({ tests: next.length ? next : undefined })}
                     />
@@ -262,7 +299,8 @@ export function Simulator({
             </main>
             <footer className="wrap">
                 beerpong-var shows what the API's <code>GET /elo-simulation</code> computes with the
-                leaderboard's own code, so with the defaults it shows exactly the app's Elo.
+                leaderboard's own code, so with the season's settings it shows exactly the app's
+                Elo.
             </footer>
         </>
     );
@@ -274,17 +312,44 @@ type Editing = { after: string; at: number } | { index: number };
 // Season is one season's breakdown; switching seasons starts it fresh.
 function Season({
     sim,
+    code,
     params,
     tests,
     unchanged,
     onTests,
 }: {
     sim: Simulation;
+    code: string;
     params: Params;
     tests: TestGame[];
     unchanged: boolean;
     onTests: (tests: TestGame[]) => void;
 }) {
+    // the season's games entered live, to replay; fetched again when a game comes in. A failed
+    // fetch only leaves the replay out (the server reports it).
+    const [liveLogs, setLiveLogs] = useState<LiveMatchDto[]>([]);
+    const stored = sim.games.filter((g) => g.testIndex == null && g.liveMatchId == null);
+    useEffect(() => {
+        if (!sim.seasonId) return;
+        let stale = false;
+        getReplays({ data: { code, season: sim.seasonId } })
+            .then((list) => !stale && setLiveLogs(list))
+            .catch(() => {});
+        return () => {
+            stale = true;
+        };
+    }, [code, sim.seasonId, stored.length]);
+    // newest first, each with its stored game
+    const replays = useMemo(
+        () =>
+            stored
+                .flatMap((game) => {
+                    const dto = liveLogs.find((l) => l.resultMatchId === game.matchId);
+                    return dto ? [{ dto, game }] : [];
+                })
+                .reverse(),
+        [liveLogs, sim.games]
+    );
     // the open game by id: live games come and go, so positions shift and an
     // open game can disappear
     const [selId, setSelId] = useState<string | null>(null);
@@ -343,6 +408,8 @@ function Season({
                     );
                 }}
             />
+
+            {replays.length > 0 && <Replay sim={sim} code={code} replays={replays} />}
 
             <section aria-labelledby="h-board">
                 <div className="section-head">

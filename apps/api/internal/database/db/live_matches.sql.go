@@ -31,6 +31,63 @@ func (q *Queries) EndLiveMatch(ctx context.Context, arg EndLiveMatchParams) erro
 	return err
 }
 
+const finishedLiveMatchesBySeason = `-- name: FinishedLiveMatchesBySeason :many
+SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, gm.user_id AS created_by_user_id
+FROM live_matches lm
+JOIN group_members gm ON gm.id = lm.created_by
+JOIN matches m ON m.id = lm.result_match_id
+WHERE lm.group_id = $1 AND lm.season_id = $2 AND lm.status = 'FINISHED'
+ORDER BY lm.started_at, lm.id
+`
+
+type FinishedLiveMatchesBySeasonParams struct {
+	GroupID  string
+	SeasonID string
+}
+
+type FinishedLiveMatchesBySeasonRow struct {
+	LiveMatch       LiveMatch
+	CreatedByUserID *string
+}
+
+// the season's live matches that became a match, oldest first: the Elo
+// simulator replays their ops
+func (q *Queries) FinishedLiveMatchesBySeason(ctx context.Context, arg FinishedLiveMatchesBySeasonParams) ([]FinishedLiveMatchesBySeasonRow, error) {
+	rows, err := q.db.Query(ctx, finishedLiveMatchesBySeason, arg.GroupID, arg.SeasonID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FinishedLiveMatchesBySeasonRow
+	for rows.Next() {
+		var i FinishedLiveMatchesBySeasonRow
+		if err := rows.Scan(
+			&i.LiveMatch.ID,
+			&i.LiveMatch.GroupID,
+			&i.LiveMatch.SeasonID,
+			&i.LiveMatch.CreatedBy,
+			&i.LiveMatch.Status,
+			&i.LiveMatch.StartedAt,
+			&i.LiveMatch.LastActivityAt,
+			&i.LiveMatch.EndedAt,
+			&i.LiveMatch.LastSeq,
+			&i.LiveMatch.ResultMatchID,
+			&i.LiveMatch.Display,
+			&i.LiveMatch.DisplaySeq,
+			&i.LiveMatch.ActivityChannel,
+			&i.LiveMatch.ActivityEnded,
+			&i.CreatedByUserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getLiveMatch = `-- name: GetLiveMatch :one
 SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, gm.user_id AS created_by_user_id
 FROM live_matches lm

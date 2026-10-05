@@ -25,6 +25,16 @@ JOIN group_members gm ON gm.id = lm.created_by
 WHERE lm.group_id = $1 AND lm.status = 'IN_PROGRESS'
 ORDER BY lm.last_activity_at DESC, lm.started_at DESC, lm.id;
 
+-- name: FinishedLiveMatchesBySeason :many
+-- the season's live matches that became a match, oldest first: the Elo
+-- simulator replays their ops
+SELECT sqlc.embed(lm), gm.user_id AS created_by_user_id
+FROM live_matches lm
+JOIN group_members gm ON gm.id = lm.created_by
+JOIN matches m ON m.id = lm.result_match_id
+WHERE lm.group_id = $1 AND lm.season_id = $2 AND lm.status = 'FINISHED'
+ORDER BY lm.started_at, lm.id;
+
 -- name: SetLiveMatchProgress :exec
 UPDATE live_matches SET last_seq = $2, last_activity_at = $3 WHERE id = $1;
 

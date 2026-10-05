@@ -251,6 +251,7 @@ func (s *Server) allTimeBoard(ctx context.Context, q *db.Queries, group groupDTO
 // leaderboardInput is what a board is computed from.
 type leaderboardInput struct {
 	in        leaderboard.Input
+	elo       leaderboard.EloParams // the season's weights
 	startedAt *time.Time
 	seasons   map[string]seasonDTO // season of every player
 	matches   []fullMatch
@@ -264,6 +265,7 @@ func (s *Server) leaderboardInput(ctx context.Context, q *db.Queries, group grou
 		matches   []db.Match
 		players   []playerRow
 		startedAt *time.Time
+		elo       = leaderboard.DefaultElo
 		err       error
 	)
 	switch scope {
@@ -304,11 +306,14 @@ func (s *Server) leaderboardInput(ctx context.Context, q *db.Queries, group grou
 			players = append(players, playerRow(row))
 		}
 		startedAt = sn.StartDate
+		if sn.Settings != nil {
+			elo = sn.Settings.Elo.params()
+		}
 	default:
 		return leaderboardInput{}, fail(errLeaderboardScopeNotFound)
 	}
 
-	inputs, err := s.leaderboardInputs(ctx, q, keepStored, []seasonRows{{players: players, matches: matches, projected: projected, startedAt: startedAt}})
+	inputs, err := s.leaderboardInputs(ctx, q, keepStored, []seasonRows{{players: players, matches: matches, projected: projected, startedAt: startedAt, elo: elo}})
 	if err != nil {
 		return leaderboardInput{}, internal(err)
 	}
@@ -332,6 +337,7 @@ func (s *Server) groupInputs(ctx context.Context, q *db.Queries, group groupDTO,
 	bySeason := map[string]*seasonRows{}
 	for i, sn := range seasons {
 		parts[i].startedAt = sn.StartDate
+		parts[i].elo = eloWeights{K: sn.EloK, KR: sn.EloKr, RingWeight: sn.EloRingWeight, Swing: sn.EloSwing}.params()
 		if group.ActiveSeasonID != nil && sn.ID == *group.ActiveSeasonID {
 			parts[i].projected = projected
 		}
@@ -357,6 +363,7 @@ type seasonRows struct {
 	matches   []db.Match
 	projected []leaderboard.Match
 	startedAt *time.Time
+	elo       leaderboard.EloParams // the season's weights
 }
 
 // leaderboardInputs turns each season's rows into a board's input. It loads
@@ -381,6 +388,7 @@ func (s *Server) leaderboardInputs(ctx context.Context, q *db.Queries, keepStore
 				RuleMoves:       map[string]leaderboard.RuleMove{},
 				ProfileOf:       map[string]string{},
 			},
+			elo:       p.elo,
 			startedAt: p.startedAt,
 			seasons:   map[string]seasonDTO{},
 			matches:   full[:n:n],
@@ -397,6 +405,9 @@ func (s *Server) leaderboardInputs(ctx context.Context, q *db.Queries, keepStore
 			li.in.Matches = append(li.in.Matches, m.input())
 		}
 		li.in.Matches = append(li.in.Matches, p.projected...)
+		for k := range li.in.Matches {
+			li.in.Matches[k].Elo = &p.elo
+		}
 		for _, m := range li.in.Matches {
 			for _, tm := range m.Members {
 				memberPlayers = append(memberPlayers, tm.PlayerID)
@@ -502,6 +513,7 @@ func (p playerRow) season() seasonDTO {
 			RankingAlgorithm:    p.RankingAlgorithm,
 			DailyLeaderboard:    p.DailyLeaderboard,
 			WakeTime:            p.WakeTime,
+			Elo:                 eloWeights{K: p.EloK, KR: p.EloKr, RingWeight: p.EloRingWeight, Swing: p.EloSwing},
 		}
 	}
 	return sn.dto()

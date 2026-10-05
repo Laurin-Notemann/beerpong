@@ -42,6 +42,7 @@ SELECT
     s.id, s.name, s.start_date, s.end_date, s.group_id, s.created_by, s.season_settings_id,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM seasons s
@@ -62,6 +63,10 @@ type GetSeasonRow struct {
 	MaxTeamSize         *int32
 	RankingAlgorithm    *int16
 	DailyLeaderboard    *int16
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 	WakeTime            string
 }
 
@@ -83,6 +88,10 @@ func (q *Queries) GetSeason(ctx context.Context, id string) (GetSeasonRow, error
 		&i.MaxTeamSize,
 		&i.RankingAlgorithm,
 		&i.DailyLeaderboard,
+		&i.EloK,
+		&i.EloKr,
+		&i.EloRingWeight,
+		&i.EloSwing,
 		&i.WakeTime,
 	)
 	return i, err
@@ -113,8 +122,10 @@ func (q *Queries) InsertSeason(ctx context.Context, arg InsertSeasonParams) erro
 }
 
 const insertSeasonSettings = `-- name: InsertSeasonSettings :exec
-INSERT INTO season_settings (id, daily_leaderboard, max_team_size, min_matches_to_qualify, min_team_size, ranking_algorithm, wake_time)
-VALUES ($1, $2, $3, $4, $5, $6, $7::text::time)
+INSERT INTO season_settings (id, daily_leaderboard, max_team_size, min_matches_to_qualify, min_team_size, ranking_algorithm, wake_time,
+    elo_k, elo_kr, elo_ring_weight, elo_swing)
+VALUES ($1, $2, $3, $4, $5, $6, $7::text::time,
+    $8, $9, $10, $11)
 `
 
 type InsertSeasonSettingsParams struct {
@@ -125,6 +136,10 @@ type InsertSeasonSettingsParams struct {
 	MinTeamSize         int32
 	RankingAlgorithm    *int16
 	WakeTime            *string
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 }
 
 func (q *Queries) InsertSeasonSettings(ctx context.Context, arg InsertSeasonSettingsParams) error {
@@ -136,6 +151,10 @@ func (q *Queries) InsertSeasonSettings(ctx context.Context, arg InsertSeasonSett
 		arg.MinTeamSize,
 		arg.RankingAlgorithm,
 		arg.WakeTime,
+		arg.EloK,
+		arg.EloKr,
+		arg.EloRingWeight,
+		arg.EloSwing,
 	)
 	return err
 }
@@ -172,6 +191,7 @@ SELECT
     s.id, s.name, s.start_date, s.end_date, s.group_id, s.created_by, s.season_settings_id,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM seasons s
@@ -193,6 +213,10 @@ type SeasonsByGroupRow struct {
 	MaxTeamSize         *int32
 	RankingAlgorithm    *int16
 	DailyLeaderboard    *int16
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 	WakeTime            string
 }
 
@@ -218,6 +242,10 @@ func (q *Queries) SeasonsByGroup(ctx context.Context, groupID *string) ([]Season
 			&i.MaxTeamSize,
 			&i.RankingAlgorithm,
 			&i.DailyLeaderboard,
+			&i.EloK,
+			&i.EloKr,
+			&i.EloRingWeight,
+			&i.EloSwing,
 			&i.WakeTime,
 		); err != nil {
 			return nil, err
@@ -237,7 +265,11 @@ UPDATE season_settings SET
     min_matches_to_qualify = $4,
     min_team_size = $5,
     ranking_algorithm = $6,
-    wake_time = $7::text::time
+    wake_time = $7::text::time,
+    elo_k = $8,
+    elo_kr = $9,
+    elo_ring_weight = $10,
+    elo_swing = $11
 WHERE id = $1
 `
 
@@ -249,6 +281,10 @@ type UpdateSeasonSettingsParams struct {
 	MinTeamSize         int32
 	RankingAlgorithm    *int16
 	WakeTime            *string
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 }
 
 func (q *Queries) UpdateSeasonSettings(ctx context.Context, arg UpdateSeasonSettingsParams) error {
@@ -260,6 +296,10 @@ func (q *Queries) UpdateSeasonSettings(ctx context.Context, arg UpdateSeasonSett
 		arg.MinTeamSize,
 		arg.RankingAlgorithm,
 		arg.WakeTime,
+		arg.EloK,
+		arg.EloKr,
+		arg.EloRingWeight,
+		arg.EloSwing,
 	)
 	return err
 }
