@@ -254,8 +254,10 @@ var eloKeys = map[string]bool{
 	"k": true, "marginWeight": true, "perPoint": true, "topWeight": true,
 }
 
-// withoutElo masks the eloKeys numbers of one transcript entry and puts
-// /elo-simulation standings, which come sorted by Elo, in profile order.
+// withoutElo masks the eloKeys numbers of one transcript entry. A list of
+// objects that hold one is sorted by its masked content: /elo-simulation
+// standings come sorted by Elo, and the recorder sorts unordered lists by
+// content, Elo included, so a weight change would reorder them.
 func withoutElo(raw json.RawMessage) json.RawMessage {
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.UseNumber()
@@ -278,13 +280,19 @@ func maskElo(key string, v any) any {
 		}
 		return t
 	case []any:
+		holdsElo := len(t) > 0
 		for i, e := range t {
+			obj, isObj := e.(map[string]any)
+			holdsElo = holdsElo && isObj && hasEloKey(obj)
 			t[i] = maskElo(key, e)
 		}
-		if key == "standings" {
-			sort.SliceStable(t, func(i, j int) bool {
-				return fmt.Sprint(t[i].(map[string]any)["profileId"]) < fmt.Sprint(t[j].(map[string]any)["profileId"])
-			})
+		if holdsElo {
+			masked := make([]string, len(t))
+			for i, e := range t {
+				b, _ := json.Marshal(e)
+				masked[i] = string(b)
+			}
+			sort.Sort(byMasked{t, masked})
 		}
 		return t
 	case json.Number:
@@ -293,4 +301,26 @@ func maskElo(key string, v any) any {
 		}
 	}
 	return v
+}
+
+func hasEloKey(obj map[string]any) bool {
+	for k := range obj {
+		if eloKeys[k] {
+			return true
+		}
+	}
+	return false
+}
+
+// byMasked sorts a list by the masked JSON of its items.
+type byMasked struct {
+	items  []any
+	masked []string
+}
+
+func (b byMasked) Len() int           { return len(b.items) }
+func (b byMasked) Less(i, j int) bool { return b.masked[i] < b.masked[j] }
+func (b byMasked) Swap(i, j int) {
+	b.items[i], b.items[j] = b.items[j], b.items[i]
+	b.masked[i], b.masked[j] = b.masked[j], b.masked[i]
 }
