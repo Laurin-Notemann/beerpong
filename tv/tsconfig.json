@@ -1,5 +1,5 @@
 {
-    "include": ["src", "vite.config.ts", "vitest.config.ts", "aliases.ts"],
+    "include": ["src", "vite.config.ts", "vitest.config.ts", "aliases.ts", "flexGapFallback.ts"],
     "compilerOptions": {
         "target": "ES2022",
         "lib": ["DOM", "DOM.Iterable", "ES2023"],
