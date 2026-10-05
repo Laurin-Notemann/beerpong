@@ -14,6 +14,8 @@ interface LocalSettingsStore {
     newDesign: boolean;
     /** pro mode: a Miss button in live matches, so every throw is in the log */
     trackMisses: boolean;
+    /** iOS: the group's live matches start a Live Activity on this phone */
+    liveActivities: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -26,6 +28,7 @@ interface LocalSettingsStore {
         toggleScopedPlayerPage: () => void;
         toggleNewDesign: () => void;
         toggleTrackMisses: () => void;
+        toggleLiveActivities: () => void;
     };
 }
 
@@ -45,6 +48,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             scopedPlayerPage: false,
             newDesign: false,
             trackMisses: false,
+            liveActivities: true,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -89,6 +93,9 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 toggleTrackMisses: () => {
                     set(() => ({ trackMisses: !get().trackMisses }));
                 },
+                toggleLiveActivities: () => {
+                    set(() => ({ liveActivities: !get().liveActivities }));
+                },
             },
         }),
         {
@@ -105,6 +112,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 scopedPlayerPage: state.scopedPlayerPage,
                 newDesign: state.newDesign,
                 trackMisses: state.trackMisses,
+                liveActivities: state.liveActivities,
             }),
         }
     )

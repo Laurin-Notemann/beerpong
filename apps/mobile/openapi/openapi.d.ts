@@ -243,6 +243,22 @@ declare namespace Components {
             seasonId?: string;
             ops?: LiveMatchOpDto[];
         }
+        /**
+         * A live match's score as the app shows it, computed at seq (the live match's lastSeq).
+         */
+        export interface LiveMatchDisplayDto {
+            seq: number; // int64
+            blueNames: string;
+            blueScore: number; // int32
+            redNames: string;
+            redScore: number; // int32
+        }
+        export interface LiveMatchDisplayResultDto {
+            /**
+             * false if seq isn't the live match's lastSeq (or it ended): nothing changed
+             */
+            accepted: boolean;
+        }
         export interface LiveMatchDto {
             id: string;
             groupId: string;
@@ -399,6 +415,13 @@ declare namespace Components {
             groupId: string | null;
             createdById: string | null;
         }
+        /**
+         * The calling phone's APNs tokens. A null token is forgotten; no activityStartToken means no Live Activities.
+         */
+        export interface PushTokensDto {
+            deviceToken: string | null;
+            activityStartToken: string | null;
+        }
         export interface ResponseEnvelopeAssetMetadataDto {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
@@ -525,6 +548,12 @@ declare namespace Components {
             data: SeasonListDto[];
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeLiveMatchDisplayResultDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: LiveMatchDisplayResultDto;
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeLiveMatchDto {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
@@ -565,6 +594,12 @@ declare namespace Components {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
             data: ProfileDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopePushTokensDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: /* The calling phone's APNs tokens. A null token is forgotten; no activityStartToken means no Live Activities. */ PushTokensDto;
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeRuleMoveDto {
@@ -1307,6 +1342,22 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeAssetUploadResponse;
         }
     }
+    namespace SetLiveMatchDisplay {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody =
+            /* A live match's score as the app shows it, computed at seq (the live match's lastSeq). */ Components.Schemas.LiveMatchDisplayDto;
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeLiveMatchDisplayResultDto;
+        }
+    }
     namespace SetPhoto {
         namespace Parameters {
             export type GroupId = string;
@@ -1323,6 +1374,13 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeAssetUploadResponse;
+        }
+    }
+    namespace SetPushTokens {
+        export type RequestBody =
+            /* The calling phone's APNs tokens. A null token is forgotten; no activityStartToken means no Live Activities. */ Components.Schemas.PushTokensDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopePushTokensDto;
         }
     }
     namespace SetWallpaper {
@@ -1840,6 +1898,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetLeaderboardProjection.Responses.$200>;
     /**
+     * setPushTokens
+     */
+    setPushTokens(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: Paths.SetPushTokens.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetPushTokens.Responses.$200>;
+    /**
      * findUserGroups
      */
     findUserGroups(
@@ -1895,6 +1961,14 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.AbandonLiveMatch.Responses.$200>;
+    /**
+     * setLiveMatchDisplay
+     */
+    setLiveMatchDisplay(
+        parameters?: Parameters<Paths.SetLiveMatchDisplay.PathParameters> | null,
+        data?: Paths.SetLiveMatchDisplay.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SetLiveMatchDisplay.Responses.$200>;
     /**
      * finishLiveMatch
      */
@@ -2380,6 +2454,16 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetLeaderboardProjection.Responses.$200>;
     };
+    ['/groups/user/push-tokens']: {
+        /**
+         * setPushTokens
+         */
+        put(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: Paths.SetPushTokens.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetPushTokens.Responses.$200>;
+    };
     ['/groups/user']: {
         /**
          * findUserGroups
@@ -2445,6 +2529,16 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.AbandonLiveMatch.Responses.$200>;
+    };
+    ['/groups/{groupId}/live-matches/{id}/display']: {
+        /**
+         * setLiveMatchDisplay
+         */
+        put(
+            parameters?: Parameters<Paths.SetLiveMatchDisplay.PathParameters> | null,
+            data?: Paths.SetLiveMatchDisplay.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SetLiveMatchDisplay.Responses.$200>;
     };
     ['/groups/{groupId}/live-matches/{id}/finish']: {
         /**
@@ -2544,6 +2638,9 @@ export type LeaderboardDto = Components.Schemas.LeaderboardDto;
 export type LeaderboardProjectionDto =
     Components.Schemas.LeaderboardProjectionDto;
 export type LiveMatchCreateDto = Components.Schemas.LiveMatchCreateDto;
+export type LiveMatchDisplayDto = Components.Schemas.LiveMatchDisplayDto;
+export type LiveMatchDisplayResultDto =
+    Components.Schemas.LiveMatchDisplayResultDto;
 export type LiveMatchDto = Components.Schemas.LiveMatchDto;
 export type LiveMatchFinishDto = Components.Schemas.LiveMatchFinishDto;
 export type LiveMatchOpDto = Components.Schemas.LiveMatchOpDto;
@@ -2564,6 +2661,7 @@ export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileCreatedDto = Components.Schemas.ProfileCreatedDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
+export type PushTokensDto = Components.Schemas.PushTokensDto;
 export type ResponseEnvelopeAssetMetadataDto =
     Components.Schemas.ResponseEnvelopeAssetMetadataDto;
 export type ResponseEnvelopeAssetUploadResponse =
@@ -2606,6 +2704,8 @@ export type ResponseEnvelopeListRuleMoveDto =
     Components.Schemas.ResponseEnvelopeListRuleMoveDto;
 export type ResponseEnvelopeListSeasonDto =
     Components.Schemas.ResponseEnvelopeListSeasonDto;
+export type ResponseEnvelopeLiveMatchDisplayResultDto =
+    Components.Schemas.ResponseEnvelopeLiveMatchDisplayResultDto;
 export type ResponseEnvelopeLiveMatchDto =
     Components.Schemas.ResponseEnvelopeLiveMatchDto;
 export type ResponseEnvelopeLiveMatchOpsResultDto =
@@ -2620,6 +2720,8 @@ export type ResponseEnvelopeProfileCreatedDto =
     Components.Schemas.ResponseEnvelopeProfileCreatedDto;
 export type ResponseEnvelopeProfileDto =
     Components.Schemas.ResponseEnvelopeProfileDto;
+export type ResponseEnvelopePushTokensDto =
+    Components.Schemas.ResponseEnvelopePushTokensDto;
 export type ResponseEnvelopeRuleMoveDto =
     Components.Schemas.ResponseEnvelopeRuleMoveDto;
 export type ResponseEnvelopeSeasonDto =

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Player } from '@/api/calls/seasonHooks';
-import { toLeaderboardWidget, toLiveMatchActivity } from '@/lib/widgets/props';
+import {
+    liveScoresOf,
+    toLeaderboardWidget,
+    toLiveScore,
+} from '@/lib/widgets/props';
 
 const player = (name: string, elo: number, matches = 3): Player => ({
     id: name,
@@ -22,6 +26,7 @@ const widget = (players: Player[], minMatchesToQualify = 0) =>
         players,
         rankingAlgorithm: 'ELO',
         minMatchesToQualify,
+        live: [],
     });
 
 describe('toLeaderboardWidget', () => {
@@ -62,25 +67,50 @@ describe('toLeaderboardWidget', () => {
     });
 });
 
-describe('toLiveMatchActivity', () => {
+describe('toLiveScore', () => {
     const team = (names: string[], score: number) => ({
         players: names.map((name) => ({ id: name, name })),
         score,
     });
 
     it('says how many more players a team has than its names show', () => {
-        const props = toLiveMatchActivity({
-            blue: team(['Anna', 'Ben', 'Cleo', 'Dan'], 3),
-            red: team(['Eve'], 5),
-            startedAt: '2026-10-05T18:00:00Z',
-        });
-
-        expect(props).toMatchObject({
+        expect(
+            toLiveScore({
+                blue: team(['Anna', 'Ben', 'Cleo', 'Dan'], 3),
+                red: team(['Eve'], 5),
+            })
+        ).toEqual({
             blueNames: 'Anna, Ben +2',
             blueScore: 3,
             redNames: 'Eve',
             redScore: 5,
-            startedAt: Date.parse('2026-10-05T18:00:00Z'),
         });
+    });
+});
+
+describe('liveScoresOf', () => {
+    const match = {
+        id: 'm1',
+        blueNames: 'Anna',
+        blueScore: 1,
+        redNames: 'Eve',
+        redScore: 0,
+        startedAt: 1,
+    };
+
+    it("reads the API's widget push and drops malformed matches", () => {
+        expect(
+            liveScoresOf({
+                liveScores: {
+                    groupId: 'g1',
+                    matches: [match, { id: 'm2', blueNames: 'Ben' }],
+                },
+            })
+        ).toEqual({ groupId: 'g1', matches: [match] });
+    });
+
+    it('ignores other pushes', () => {
+        expect(liveScoresOf({ other: true })).toBeUndefined();
+        expect(liveScoresOf(null)).toBeUndefined();
     });
 });

@@ -80,6 +80,10 @@ jobs:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
           DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-go-staging:${{ github.sha }}
+          # the Apple push key for Live Activities and the widget (base64 of the .p8); without
+          # it the API runs and pushes nothing
+          APNS_KEY_ID: ${{ secrets.APNS_KEY_ID }}
+          APNS_KEY: ${{ secrets.APNS_KEY }}
         run: |
           # The script arrives on stdin, so every command that could read
           # stdin gets /dev/null; otherwise it eats the rest of the script.
@@ -92,6 +96,8 @@ jobs:
             gcloud auth configure-docker europe-west10-docker.pkg.dev --quiet < /dev/null || exit 1
 
             sed -i 's|^\(\s*image:\).*|\1 $DOCKER_IMAGE|' docker-compose.yml || exit 1
+            sed -i '/^APNS_KEY/d' .env || exit 1
+            printf 'APNS_KEY_ID=%s\nAPNS_KEY=%s\n' "$APNS_KEY_ID" "$APNS_KEY" >> .env || exit 1
             docker compose pull < /dev/null || exit 1
             docker compose up -d < /dev/null || exit 1
 

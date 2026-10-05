@@ -24,6 +24,8 @@ export interface LeaderboardWidgetRow {
 export interface LeaderboardWidgetProps {
     /** empty while no group is selected */
     group: string;
+    /** the group's matches running now; the widget shows them instead of the leaderboard */
+    live: WidgetLiveMatch[];
     season: string;
     /** what the value column is, e.g. "Elo" */
     metric: string;
@@ -32,6 +34,7 @@ export interface LeaderboardWidgetProps {
 
 export const emptyLeaderboardWidget: LeaderboardWidgetProps = {
     group: '',
+    live: [],
     season: '',
     metric: '',
     rows: [],
@@ -44,12 +47,14 @@ export function toLeaderboardWidget({
     players,
     rankingAlgorithm,
     minMatchesToQualify,
+    live,
 }: {
     group: string;
     season: string;
     players: Player[];
     rankingAlgorithm: RankingAlgorithm | null | undefined;
     minMatchesToQualify: number;
+    live: WidgetLiveMatch[];
 }): LeaderboardWidgetProps {
     const algo = getRankingAlgorithm(rankingAlgorithm);
     const ranked = rankPlayers(
@@ -61,6 +66,7 @@ export function toLeaderboardWidget({
 
     return {
         group,
+        live,
         season,
         metric: algo.shortName,
         rows: ranked
@@ -73,26 +79,24 @@ export function toLeaderboardWidget({
     };
 }
 
-export interface LiveMatchActivityProps {
+/**
+ * A live match's score as the app shows it. Phones report it to the API at the seq they computed
+ * it for (`PUT .../display`), and the API pushes it to Live Activities and widgets.
+ */
+export interface LiveScore {
     blueNames: string;
     blueScore: number;
     redNames: string;
     redScore: number;
-    /** epoch ms; the timer counts up from it */
-    startedAt: number;
-    /** the match was saved: the activity shows the final score until it's dismissed */
-    finished: boolean;
 }
 
-export function toLiveMatchActivity({
+export function toLiveScore({
     blue,
     red,
-    startedAt,
 }: {
     blue: LiveMatchTeam;
     red: LiveMatchTeam;
-    startedAt: string;
-}): LiveMatchActivityProps {
+}): LiveScore {
     // there's no "+N" avatar here, so the names say how many more there are
     const names = ({ players }: LiveMatchTeam) =>
         teamNames(players.map((i) => i.name)) +
@@ -103,7 +107,41 @@ export function toLiveMatchActivity({
         blueScore: blue.score,
         redNames: names(red),
         redScore: red.score,
-        startedAt: Date.parse(startedAt) || Date.now(),
-        finished: false,
     };
+}
+
+/** a match running now, on the widget */
+export interface WidgetLiveMatch extends LiveScore {
+    id: string;
+    /** epoch ms */
+    startedAt: number;
+}
+
+/** what the API pushes to a Live Activity (`activityPayload` in apps/api) */
+export interface LiveMatchActivityProps extends LiveScore {
+    /** epoch ms; the timer counts up from it */
+    startedAt: number;
+    /** the match was saved: the activity shows the final score until it's dismissed */
+    finished: boolean;
+}
+
+/** the `liveScores` of the API's silent widget push (`pushWidgets` in apps/api), if it is one */
+export function liveScoresOf(
+    data: unknown
+): { groupId: string; matches: WidgetLiveMatch[] } | undefined {
+    const value = (data as { liveScores?: unknown } | null)?.liveScores as
+        { groupId?: unknown; matches?: unknown } | undefined;
+    if (typeof value?.groupId !== 'string' || !Array.isArray(value.matches)) {
+        return;
+    }
+    const matches = value.matches.filter(
+        (i): i is WidgetLiveMatch =>
+            typeof i?.id === 'string' &&
+            typeof i.blueNames === 'string' &&
+            typeof i.redNames === 'string' &&
+            typeof i.blueScore === 'number' &&
+            typeof i.redScore === 'number' &&
+            typeof i.startedAt === 'number'
+    );
+    return { groupId: value.groupId, matches };
 }

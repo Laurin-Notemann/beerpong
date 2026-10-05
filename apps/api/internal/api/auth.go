@@ -19,7 +19,7 @@ func isGroupsPath(path string) bool {
 // membership in the group: listing and creating groups, lookups by invite
 // code, and joining.
 func membershipExempt(path string) bool {
-	if path == "/groups" || path == "/groups/user" {
+	if path == "/groups" || path == "/groups/user" || path == "/groups/user/push-tokens" {
 		return true
 	}
 	segments := strings.Split(strings.TrimPrefix(path, "/groups/"), "/")

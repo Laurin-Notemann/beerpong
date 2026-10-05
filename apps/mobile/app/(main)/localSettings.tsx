@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { ScrollView, Switch } from 'react-native';
+import { Platform, ScrollView, Switch } from 'react-native';
 
 import { env } from '@/api/env';
 import MenuItem from '@/components/Menu/MenuItem';
@@ -57,6 +57,24 @@ export default function Page() {
                         ]}
                     />
                 </MenuSection>
+                {Platform.OS === 'ios' && (
+                    <MenuSection title="Lock Screen">
+                        <MenuItem
+                            border={false}
+                            title="Live Activities for live matches"
+                            headIcon="cellphone-lock"
+                            onPress={settings.toggleLiveActivities}
+                            tailContent={
+                                <Switch
+                                    value={settings.liveActivities}
+                                    onValueChange={
+                                        settings.toggleLiveActivities
+                                    }
+                                />
+                            }
+                        />
+                    </MenuSection>
+                )}
                 <MenuSection title="Development">
                     <MenuItem
                         border={false}

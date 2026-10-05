@@ -119,6 +119,7 @@ func (s *Server) finishLiveMatch(r *request) response {
 	if _, isOK := res.(okResponse); isOK && finished {
 		s.hub.Publish(groupID, realtime.Matches, "matchCreate", match)
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)
+		s.queueLiveScore(groupID, id)
 	}
 	return res
 }
@@ -151,6 +152,7 @@ func (s *Server) abandonLiveMatch(r *request) response {
 	})
 	if _, isOK := res.(okResponse); isOK && changed {
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)
+		s.queueLiveScore(groupID, id)
 	}
 	return res
 }
@@ -249,6 +251,7 @@ func (s *Server) abandonIfExpired(ctx context.Context, id, groupID string, cutof
 	}
 	if changed {
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)
+		s.queueLiveScore(groupID, id)
 	}
 	return changed, nil
 }

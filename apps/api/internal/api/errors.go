@@ -51,6 +51,9 @@ var (
 	errLiveMatchInvalidOps = errorCode{400, "liveMatchInvalidOps", "The ops are invalid: at most 50 per request, ids have to be UUIDs, every op needs the fields of its type, delta has to be between -20 and 20 but not 0, a cup hit has 1 to 10 cups with coordinates between 0 and 9, and teams are 'red' or 'blue'!"}
 	errLiveMatchTooManyOps = errorCode{400, "liveMatchTooManyOps", "A live match can have at most 2000 ops!"}
 
+	errLiveMatchInvalidDisplay = errorCode{400, "liveMatchInvalidDisplay", "A live match's display needs a seq, blueNames and redNames of at most 200 characters, and blueScore and redScore between 0 and 1000!"}
+	errInvalidPushToken        = errorCode{400, "invalidPushToken", "Push tokens have to be hex strings of at most 512 characters, or null!"}
+
 	errFormationNotFound = errorCode{404, "formationNotFound", "The requested formation could not be found in this group!"}
 	errInvalidFormation  = errorCode{400, "invalidFormation", "A formation needs a UUID id, a name of 1 to 50 characters and 1 to 49 different cups with coordinates between 0 and 6!"}
 

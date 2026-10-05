@@ -17,6 +17,7 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/config"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
+	"github.com/laurin-notemann/beerpong/api-go/internal/push"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 	"github.com/laurin-notemann/beerpong/api-go/internal/storage"
 )
@@ -60,6 +61,14 @@ func run() error {
 
 	hub := realtime.NewHub(log)
 	server := api.NewServer(pool, auth.NewTokens(cfg.JWTSecret, cfg.AccessTokenTTL), storage.New(cfg.AWS), hub, log)
+	apns, err := push.New(cfg.APNs)
+	if err != nil {
+		return err
+	}
+	if apns == nil {
+		log.Warn("no APNs key: live scores aren't pushed to Live Activities and widgets")
+	}
+	server.SetAPNs(apns)
 	httpServer := &http.Server{
 		Addr:              ":" + strconv.Itoa(cfg.Port),
 		Handler:           server.Handler(),
@@ -78,6 +87,10 @@ func run() error {
 		stopExpiry()
 		<-expiryDone
 	}()
+
+	pushCtx, stopPushes := context.WithCancel(ctx)
+	defer stopPushes()
+	go server.RunLiveScorePushes(pushCtx)
 
 	errs := make(chan error, 1)
 	go func() { errs <- httpServer.ListenAndServe() }()

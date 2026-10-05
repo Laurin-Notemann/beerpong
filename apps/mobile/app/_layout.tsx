@@ -23,6 +23,10 @@ import { CrashFallback } from '@/components/CrashFallback';
 import { Sidebar } from '@/components/screens/Sidebar';
 import { useOtaUpdates } from '@/hooks/useOtaUpdates';
 import { useSentryScreenTransactions } from '@/hooks/useSentryScreenTransactions';
+// iOS runs these when the app is woken in the background, so they load first: the Live
+// Activity's layout for the API's pushes, and the task that updates the widget from them
+import '@/lib/widgets/LiveMatchActivity';
+import '@/lib/widgets/liveScoresTask';
 import { useTheme } from '@/theme';
 import { Sentry } from '@/utils/sentry';
 import { LoggingProvider } from '@/utils/useLogging';

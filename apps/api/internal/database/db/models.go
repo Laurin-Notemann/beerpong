@@ -56,16 +56,20 @@ type GroupMember struct {
 }
 
 type LiveMatch struct {
-	ID             string
-	GroupID        string
-	SeasonID       string
-	CreatedBy      string
-	Status         string
-	StartedAt      time.Time
-	LastActivityAt time.Time
-	EndedAt        *time.Time
-	LastSeq        int64
-	ResultMatchID  *string
+	ID              string
+	GroupID         string
+	SeasonID        string
+	CreatedBy       string
+	Status          string
+	StartedAt       time.Time
+	LastActivityAt  time.Time
+	EndedAt         *time.Time
+	LastSeq         int64
+	ResultMatchID   *string
+	Display         *string
+	DisplaySeq      *int64
+	ActivityChannel *string
+	ActivityEnded   bool
 }
 
 type LiveMatchOp struct {
@@ -106,6 +110,13 @@ type Profile struct {
 	AssetIDAvatar *string
 	GroupID       *string
 	CreatedBy     *string
+}
+
+type PushToken struct {
+	UserID             string
+	DeviceToken        *string
+	ActivityStartToken *string
+	UpdatedAt          time.Time
 }
 
 type Rule struct {
