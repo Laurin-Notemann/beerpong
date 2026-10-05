@@ -22,10 +22,12 @@ export const NewMatchStack: React.FC<{
     onNext: () => void;
     onCreate: () => void;
     /**
-     * pro mode: the teams page starts a live match instead of going on to the next page. The
-     * toolbar button only shows on iOS (Android needs an icon); Android has one in the page
+     * pro mode: the teams page's Start match asks whether the match is live or entered after
+     * the game. The toolbar menu only shows on iOS (Android needs an icon); Android has a
+     * button in the page
      */
     onStart?: () => void;
+    onEnterAfterGame?: () => void;
     canStart?: boolean;
 }> = ({
     onCreateRandomTeams,
@@ -40,6 +42,7 @@ export const NewMatchStack: React.FC<{
     onNext,
     onCreate,
     onStart,
+    onEnterAfterGame,
     canStart = false,
 }) => {
     const { activeSeason } = useGroup();
@@ -92,13 +95,24 @@ export const NewMatchStack: React.FC<{
                             Generate
                         </Stack.Toolbar.Button>
                     ) : onStart ? (
-                        <Stack.Toolbar.Button
+                        <Stack.Toolbar.Menu
+                            title="Start match"
                             variant="done"
-                            onPress={onStart}
                             disabled={!canStart}
                         >
-                            Start match
-                        </Stack.Toolbar.Button>
+                            <Stack.Toolbar.MenuAction
+                                icon="dot.radiowaves.left.and.right"
+                                onPress={onStart}
+                            >
+                                Live match
+                            </Stack.Toolbar.MenuAction>
+                            <Stack.Toolbar.MenuAction
+                                icon="clock.arrow.circlepath"
+                                onPress={onEnterAfterGame}
+                            >
+                                After the game
+                            </Stack.Toolbar.MenuAction>
+                        </Stack.Toolbar.Menu>
                     ) : (
                         <Stack.Toolbar.Button
                             onPress={onNext}

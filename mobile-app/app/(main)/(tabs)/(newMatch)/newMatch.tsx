@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
@@ -19,6 +19,7 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
+import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -119,9 +120,10 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    // in pro mode the match is entered live (see liveMatch.tsx), so only the teams are picked here
+    // pro mode: Start match either goes live (see liveMatch.tsx) or, for a game that's already
+    // over, on to its cups and points here
     const pages = beerpongProMode
-        ? (['teams'] as const)
+        ? (['teams', 'cups', 'points'] as const)
         : (['teams', 'points'] as const);
 
     const profiles = playersQuery.data?.data ?? [];
@@ -255,6 +257,17 @@ export default function NewMatchScreen() {
         nav.navigate('liveMatch', { id });
     }
 
+    const onEnterAfterGame = () => carouselRef.current?.next();
+
+    /** Android's in-page Start match button; iOS asks in the toolbar's menu */
+    function chooseStart() {
+        Alert.alert('Start match', undefined, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'After the game', onPress: onEnterAfterGame },
+            { text: 'Live match', onPress: onStartLiveMatch },
+        ]);
+    }
+
     const [randomTeamsMode, setRandomTeamsMode] = useState<{
         players: string[];
     } | null>(null);
@@ -319,6 +332,7 @@ export default function NewMatchScreen() {
                 onCreate={onCreateMatch}
                 isCreating={createMatchMutation.isPending}
                 onStart={beerpongProMode ? onStartLiveMatch : undefined}
+                onEnterAfterGame={onEnterAfterGame}
                 canStart={hasValidTeams}
             />
             <Swiper
@@ -327,13 +341,15 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                // pro mode has no points page, so toggling it re-mounts the carousel too
+                // pro mode adds a page, so toggling it re-mounts the carousel too
                 key={groupId + ':' + seasonId + ':' + beerpongProMode}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
+                    // in pro mode the cups have filled in the points already
                     if (
                         pages[pageIdx] === 'points' &&
+                        !beerpongProMode &&
                         !matchDraft.hasBeenOnPageTwo
                     ) {
                         nav.navigate('assignPointsToPlayerModal', {
@@ -343,7 +359,10 @@ export default function NewMatchScreen() {
                     }
                     setSwiperPage(pageIdx);
                 }}
-                enabled={!(swiperPage === 0 && !hasValidTeams)}
+                // in pro mode, leaving the teams page is Start match's choice
+                enabled={
+                    !(swiperPage === 0 && (!hasValidTeams || beerpongProMode))
+                }
             >
                 {pages.map((page) => {
                     if (page === 'teams') {
@@ -392,12 +411,15 @@ export default function NewMatchScreen() {
                                 setTeam={matchDraft.actions.setPlayerTeam}
                                 onStart={
                                     beerpongProMode && Platform.OS === 'android'
-                                        ? onStartLiveMatch
+                                        ? chooseStart
                                         : undefined
                                 }
                                 canStart={hasValidTeams}
                             />
                         );
+                    }
+                    if (page === 'cups') {
+                        return <NewMatchCups key={page} />;
                     }
                     return (
                         <CreateMatchAssignPoints
