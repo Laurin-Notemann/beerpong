@@ -63,6 +63,10 @@ jobs:
           file: apps/web/Dockerfile
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/web-staging:${{ github.sha }}
+          # the TV's pages report to the Sentry project `web` (DSNs are public)
+          build-args: |
+            VITE_SENTRY_DSN=https://548828a0a9d9b664f5dc99fb9f41c21d@o4512187370766336.ingest.de.sentry.io/4512204020645968
+            VITE_GIT_COMMIT=${{ github.sha }}
 
   deploy:
     needs: build

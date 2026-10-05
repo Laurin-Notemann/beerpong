@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
 import appCss from '~/tv/styles.css?url';
 
@@ -74,6 +75,12 @@ const detectFlexGap = `(function () {
 
 function TvLayout() {
     const { queryClient } = Route.useRouteContext();
+
+    // only the TV's pages report to Sentry, and only they load the SDK
+    useEffect(() => {
+        void import('~/tv/sentry').then((m) => m.initTvSentry());
+    }, []);
+
     return (
         <QueryClientProvider client={queryClient}>
             <Outlet />
