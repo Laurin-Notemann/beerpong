@@ -47,18 +47,16 @@ export const useAllSeasonsQuery = (groupId: ApiId | null) => {
 
     const qc = useQueryClient();
 
-    return useQuery<
-        | (Omit<Paths.GetAllSeasons.Responses.$200, 'data'> & {
-              data?: (SeasonDto & {
-                  numMatches: number;
-                  players: Player[];
-                  rawPlayers: WithProfile<PlayerDtoExtended>[];
-                  matches: MatchDtoExtended[];
-                  ruleMoves: RuleMoveDto[] | undefined;
-              })[];
-          })
-        | null
-    >({
+    // built here rather than taken from one response, so it has no status
+    return useQuery<{
+        data?: (SeasonDto & {
+            numMatches: number;
+            players: Player[];
+            rawPlayers: WithProfile<PlayerDtoExtended>[];
+            matches: MatchDtoExtended[];
+            ruleMoves: RuleMoveDto[] | undefined;
+        })[];
+    } | null>({
         queryKey: [QK.group, groupId, QK.seasons],
         queryFn: async () => {
             if (!groupId) {
@@ -184,16 +182,17 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
 
             qc.setQueryData<Paths.GetSeasonById.Responses.$200 | null>(
                 [QK.group, groupId, QK.seasons, seasonId],
-                (prev) => ({
-                    ...prev,
-                    data: {
-                        ...prev?.data,
-                        seasonSettings: {
-                            ...seasonSettings,
-                            ...partialUpdate,
+                (prev) =>
+                    prev && {
+                        ...prev,
+                        data: {
+                            ...prev.data,
+                            seasonSettings: {
+                                ...seasonSettings,
+                                ...partialUpdate,
+                            },
                         },
-                    },
-                })
+                    }
             );
             await settingsMutation.mutateAsync({
                 groupId,

@@ -2134,14 +2134,14 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "name": { "type": "string" },
+                    "name": { "type": "string", "nullable": true },
                     "numMatches": { "type": "integer", "format": "int32" },
                     "minMatchesToQualify": {
                         "type": "integer",
                         "format": "int32"
                     }
                 },
-                "required": ["id", "numMatches", "minMatchesToQualify"]
+                "required": ["id", "name", "numMatches", "minMatchesToQualify"]
             },
             "EloPredictionDto": {
                 "type": "object",
@@ -2160,10 +2160,19 @@
                     "rank": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "Place among the ranked players; missing while unranked."
+                        "description": "Place among the ranked players; null while unranked.",
+                        "nullable": true
                     },
-                    "baselineElo": { "type": "number", "format": "double" },
-                    "baselineRank": { "type": "integer", "format": "int32" },
+                    "baselineElo": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "baselineRank": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
                     "matches": { "type": "integer", "format": "int64" },
                     "wins": { "type": "integer", "format": "int64" },
                     "points": { "type": "integer", "format": "int64" },
@@ -2174,6 +2183,9 @@
                     "profileId",
                     "name",
                     "elo",
+                    "rank",
+                    "baselineElo",
+                    "baselineRank",
                     "matches",
                     "wins",
                     "points",
@@ -2250,11 +2262,13 @@
                     "testIndex": {
                         "type": "integer",
                         "format": "int32",
-                        "description": "The test game's place in the request; missing for real games."
+                        "description": "The test game's place in the request; null for real games.",
+                        "nullable": true
                     },
                     "liveMatchId": {
                         "type": "string",
-                        "description": "The running live match this game is, counted as if it ended now; missing for other games."
+                        "description": "The running live match this game is, counted as if it ended now; null for other games.",
+                        "nullable": true
                     },
                     "date": { "type": "string", "format": "date-time" },
                     "gap": { "type": "number", "format": "double" },
@@ -2274,6 +2288,8 @@
                 },
                 "required": [
                     "matchId",
+                    "testIndex",
+                    "liveMatchId",
                     "date",
                     "gap",
                     "scale",
@@ -2288,14 +2304,14 @@
                 "type": "object",
                 "properties": {
                     "groupId": { "type": "string" },
-                    "groupName": { "type": "string" },
+                    "groupName": { "type": "string", "nullable": true },
                     "defaults": { "$ref": "#/components/schemas/EloParamsDto" },
                     "params": { "$ref": "#/components/schemas/EloParamsDto" },
                     "seasons": {
                         "type": "array",
                         "items": { "$ref": "#/components/schemas/EloSeasonDto" }
                     },
-                    "seasonId": { "type": "string" },
+                    "seasonId": { "type": "string", "nullable": true },
                     "baseline": {
                         "type": "string",
                         "enum": ["defaults", "storedGames"],
@@ -2329,9 +2345,11 @@
                 },
                 "required": [
                     "groupId",
+                    "groupName",
                     "defaults",
                     "params",
                     "seasons",
+                    "seasonId",
                     "baseline",
                     "standings",
                     "games",
@@ -2358,7 +2376,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/EloSimulationDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeEloSearchDto": {
                 "type": "object",
@@ -2367,7 +2386,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/EloSearchDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "GroupCreateDto": {
                 "type": "object",
@@ -2386,26 +2406,48 @@
                 "properties": {
                     "code": { "type": "string" },
                     "description": { "type": "string" }
-                }
+                },
+                "required": ["code", "description"]
             },
             "GroupDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "inviteCode": { "type": "string" },
-                    "activeSeasonId": { "type": "string" },
-                    "assetIdWallpaper": { "type": "string" },
-                    "createdById": { "type": "string" },
-                    "createdAt": { "type": "string", "format": "date-time" },
-                    "sportPreset": {
-                        "$ref": "#/components/schemas/GroupPreset"
+                    "name": { "type": "string", "nullable": true },
+                    "inviteCode": { "type": "string", "nullable": true },
+                    "activeSeasonId": { "type": "string", "nullable": true },
+                    "assetIdWallpaper": { "type": "string", "nullable": true },
+                    "createdById": { "type": "string", "nullable": true },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
                     },
-                    "customSportName": { "type": "string" },
+                    "sportPreset": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/GroupPreset" }
+                        ],
+                        "nullable": true
+                    },
+                    "customSportName": { "type": "string", "nullable": true },
                     "numberOfPlayers": { "type": "integer", "format": "int64" },
                     "numberOfMatches": { "type": "integer", "format": "int64" },
                     "numberOfSeasons": { "type": "integer", "format": "int64" }
-                }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "inviteCode",
+                    "activeSeasonId",
+                    "assetIdWallpaper",
+                    "createdById",
+                    "createdAt",
+                    "sportPreset",
+                    "customSportName",
+                    "numberOfPlayers",
+                    "numberOfMatches",
+                    "numberOfSeasons"
+                ]
             },
             "GroupPreset": {
                 "type": "object",
@@ -2413,7 +2455,8 @@
                     "id": { "type": "string" },
                     "title": { "type": "string" },
                     "imageUrl": { "type": "string" }
-                }
+                },
+                "required": ["id", "title", "imageUrl"]
             },
             "ResponseEnvelopeGroupDto": {
                 "type": "object",
@@ -2422,7 +2465,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/GroupDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "AssetCropDto": {
                 "type": "object",
@@ -2442,14 +2486,25 @@
                         "enum": [
                             "GROUP_WALLPAPER",
                             "PROFILE_AVATAR",
-                            "TEAM_PHOTO"
-                        ]
+                            "TEAM_PHOTO",
+                            null
+                        ],
+                        "nullable": true
                     },
                     "offsetX": { "type": "number", "format": "double" },
                     "offsetY": { "type": "number", "format": "double" },
                     "zoom": { "type": "number", "format": "double" },
                     "singleUploadUrl": { "type": "string" }
-                }
+                },
+                "required": [
+                    "id",
+                    "url",
+                    "type",
+                    "offsetX",
+                    "offsetY",
+                    "zoom",
+                    "singleUploadUrl"
+                ]
             },
             "ResponseEnvelopeAssetUploadResponse": {
                 "type": "object",
@@ -2460,7 +2515,8 @@
                         "$ref": "#/components/schemas/AssetUploadResponse"
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "RuleCreateDto": {
                 "type": "object",
@@ -2479,17 +2535,25 @@
                         "items": { "$ref": "#/components/schemas/RuleDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "RuleDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "title": { "type": "string" },
-                    "description": { "type": "string" },
-                    "createdById": { "type": "string" },
-                    "seasonId": { "type": "string" }
-                }
+                    "title": { "type": "string", "nullable": true },
+                    "description": { "type": "string", "nullable": true },
+                    "createdById": { "type": "string", "nullable": true },
+                    "seasonId": { "type": "string", "nullable": true }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "description",
+                    "createdById",
+                    "seasonId"
+                ]
             },
             "RuleMoveCreateDto": {
                 "type": "object",
@@ -2508,19 +2572,29 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/RuleMoveDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "RuleMoveDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "seasonId": { "type": "string" },
+                    "name": { "type": "string", "nullable": true },
+                    "seasonId": { "type": "string", "nullable": true },
                     "pointsForTeam": { "type": "integer", "format": "int32" },
                     "pointsForScorer": { "type": "integer", "format": "int32" },
                     "finishingMove": { "type": "boolean" },
                     "cups": { "type": "integer", "format": "int32" }
-                }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "seasonId",
+                    "pointsForTeam",
+                    "pointsForScorer",
+                    "finishingMove",
+                    "cups"
+                ]
             },
             "MatchCreateDto": {
                 "type": "object",
@@ -2540,9 +2614,10 @@
             "MatchMoveDto": {
                 "type": "object",
                 "properties": {
-                    "moveId": { "type": "string" },
+                    "moveId": { "type": "string", "nullable": true },
                     "count": { "type": "integer", "format": "int32" }
-                }
+                },
+                "required": ["moveId"]
             },
             "TeamCreateDto": {
                 "type": "object",
@@ -2571,14 +2646,28 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "date": { "type": "string", "format": "date-time" },
-                    "seasonId": { "type": "string" },
-                    "createdById": { "type": "string" },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "seasonId": { "type": "string", "nullable": true },
+                    "createdById": { "type": "string", "nullable": true },
                     "photoUploads": {
                         "type": "array",
-                        "items": { "$ref": "#/components/schemas/TeamPhotoDto" }
+                        "items": {
+                            "$ref": "#/components/schemas/TeamPhotoDto"
+                        },
+                        "nullable": true
                     }
-                }
+                },
+                "required": [
+                    "id",
+                    "date",
+                    "seasonId",
+                    "createdById",
+                    "photoUploads"
+                ]
             },
             "ResponseEnvelopeMatchDto": {
                 "type": "object",
@@ -2587,16 +2676,18 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/MatchDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "TeamPhotoDto": {
                 "type": "object",
                 "properties": {
-                    "teamId": { "type": "string" },
+                    "teamId": { "type": "string", "nullable": true },
                     "teamPhoto": {
                         "$ref": "#/components/schemas/AssetUploadResponse"
                     }
-                }
+                },
+                "required": ["teamId", "teamPhoto"]
             },
             "SeasonSettingsDto": {
                 "type": "object",
@@ -2609,15 +2700,18 @@
                     "maxTeamSize": { "type": "integer", "format": "int32" },
                     "rankingAlgorithm": {
                         "type": "string",
-                        "enum": ["AVERAGE", "ELO"]
+                        "enum": ["AVERAGE", "ELO", null],
+                        "nullable": true
                     },
                     "dailyLeaderboard": {
                         "type": "string",
                         "enum": [
                             "RESET_AT_MIDNIGHT",
                             "WAKE_TIME",
-                            "LAST_24_HOURS"
-                        ]
+                            "LAST_24_HOURS",
+                            null
+                        ],
+                        "nullable": true
                     },
                     "wakeTime": { "type": "string" }
                 }
@@ -2638,21 +2732,42 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/SeasonDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "SeasonDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "startDate": { "type": "string", "format": "date-time" },
-                    "endDate": { "type": "string", "format": "date-time" },
-                    "groupId": { "type": "string" },
-                    "seasonSettings": {
-                        "$ref": "#/components/schemas/SeasonSettingsDto"
+                    "name": { "type": "string", "nullable": true },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
                     },
-                    "createdById": { "type": "string" }
-                }
+                    "endDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "groupId": { "type": "string", "nullable": true },
+                    "seasonSettings": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/SeasonSettingsDto" }
+                        ],
+                        "nullable": true
+                    },
+                    "createdById": { "type": "string", "nullable": true }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "startDate",
+                    "endDate",
+                    "groupId",
+                    "seasonSettings",
+                    "createdById"
+                ]
             },
             "ProfileCreateDto": {
                 "type": "object",
@@ -2662,11 +2777,18 @@
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "assetIdAvatar": { "type": "string" },
-                    "groupId": { "type": "string" },
-                    "createdById": { "type": "string" }
-                }
+                    "name": { "type": "string", "nullable": true },
+                    "assetIdAvatar": { "type": "string", "nullable": true },
+                    "groupId": { "type": "string", "nullable": true },
+                    "createdById": { "type": "string", "nullable": true }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "assetIdAvatar",
+                    "groupId",
+                    "createdById"
+                ]
             },
             "ResponseEnvelopeProfileDto": {
                 "type": "object",
@@ -2675,7 +2797,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/ProfileDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "SeasonCreateDto": {
                 "type": "object",
@@ -2696,19 +2819,29 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "type": "string" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ProfileCreatedDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "assetIdAvatar": { "type": "string" },
-                    "groupId": { "type": "string" },
-                    "createdById": { "type": "string" },
+                    "name": { "type": "string", "nullable": true },
+                    "assetIdAvatar": { "type": "string", "nullable": true },
+                    "groupId": { "type": "string", "nullable": true },
+                    "createdById": { "type": "string", "nullable": true },
                     "reactivated": { "type": "boolean" },
-                    "lastActiveSeasonId": { "type": "string" }
-                }
+                    "lastActiveSeasonId": { "type": "string", "nullable": true }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "assetIdAvatar",
+                    "groupId",
+                    "createdById",
+                    "reactivated",
+                    "lastActiveSeasonId"
+                ]
             },
             "ResponseEnvelopeProfileCreatedDto": {
                 "type": "object",
@@ -2719,7 +2852,8 @@
                         "$ref": "#/components/schemas/ProfileCreatedDto"
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "AuthSignupDto": {
                 "type": "object",
@@ -2736,7 +2870,8 @@
                 "properties": {
                     "token": { "type": "string" },
                     "type": { "type": "string", "enum": ["ACCESS", "REFRESH"] }
-                }
+                },
+                "required": ["token", "type"]
             },
             "ResponseEnvelopeAuthTokenDto": {
                 "type": "object",
@@ -2745,7 +2880,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/AuthTokenDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "AuthRefreshDto": {
                 "type": "object",
@@ -2761,7 +2897,8 @@
                         "items": { "$ref": "#/components/schemas/SeasonDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListRuleMoveDto": {
                 "type": "object",
@@ -2773,17 +2910,25 @@
                         "items": { "$ref": "#/components/schemas/RuleMoveDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "PlayerDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "profileId": { "type": "string" },
-                    "seasonId": { "type": "string" },
+                    "profileId": { "type": "string", "nullable": true },
+                    "seasonId": { "type": "string", "nullable": true },
                     "activeThisSeason": { "type": "boolean" },
-                    "statisticsId": { "type": "string" }
-                }
+                    "statisticsId": { "type": "string", "nullable": true }
+                },
+                "required": [
+                    "id",
+                    "profileId",
+                    "seasonId",
+                    "activeThisSeason",
+                    "statisticsId"
+                ]
             },
             "ResponseEnvelopeListPlayerDto": {
                 "type": "object",
@@ -2795,24 +2940,32 @@
                         "items": { "$ref": "#/components/schemas/PlayerDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "PlayerDtoExtended": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "profileId": { "type": "string" },
+                    "profileId": { "type": "string", "nullable": true },
                     "season": { "$ref": "#/components/schemas/SeasonDto" },
                     "activeThisSeason": { "type": "boolean" },
                     "statistics": {
                         "$ref": "#/components/schemas/PlayerStatisticsDto"
                     }
-                }
+                },
+                "required": [
+                    "id",
+                    "profileId",
+                    "season",
+                    "activeThisSeason",
+                    "statistics"
+                ]
             },
             "PlayerStatisticsDto": {
                 "type": "object",
                 "properties": {
-                    "id": { "type": "string" },
+                    "id": { "type": "string", "nullable": true },
                     "points": { "type": "integer", "format": "int64" },
                     "matches": { "type": "integer", "format": "int64" },
                     "wins": { "type": "integer", "format": "int64" },
@@ -2824,7 +2977,18 @@
                     },
                     "avgTeamSize": { "type": "number", "format": "double" },
                     "elo": { "type": "number", "format": "double" }
-                }
+                },
+                "required": [
+                    "id",
+                    "points",
+                    "matches",
+                    "wins",
+                    "moves",
+                    "totalTeamSize",
+                    "avgPointsPerMatch",
+                    "avgTeamSize",
+                    "elo"
+                ]
             },
             "ResponseEnvelopeListPlayerDtoExtended": {
                 "type": "object",
@@ -2838,7 +3002,8 @@
                         }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListMatchDto": {
                 "type": "object",
@@ -2850,46 +3015,54 @@
                         "items": { "$ref": "#/components/schemas/MatchDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "MatchOverviewDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "date": { "type": "string", "format": "date-time" },
-                    "seasonId": { "type": "string" },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "seasonId": { "type": "string", "nullable": true },
                     "blueTeam": {
                         "$ref": "#/components/schemas/MatchOverviewTeamDto"
                     },
                     "redTeam": {
                         "$ref": "#/components/schemas/MatchOverviewTeamDto"
                     }
-                }
+                },
+                "required": ["id", "date", "seasonId", "blueTeam", "redTeam"]
             },
             "MatchOverviewTeamDto": {
                 "type": "object",
                 "properties": {
                     "points": { "type": "integer", "format": "int32" },
                     "teamId": { "type": "string" },
-                    "assetPhotoId": { "type": "string" },
+                    "assetPhotoId": { "type": "string", "nullable": true },
                     "members": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/MatchOverviewTeamMemberDto"
                         }
                     }
-                }
+                },
+                "required": ["points", "teamId", "assetPhotoId", "members"]
             },
             "MatchOverviewTeamMemberDto": {
                 "type": "object",
                 "properties": {
-                    "playerId": { "type": "string" },
+                    "playerId": { "type": "string", "nullable": true },
                     "points": { "type": "integer", "format": "int32" },
                     "moves": {
                         "type": "array",
                         "items": { "$ref": "#/components/schemas/MatchMoveDto" }
                     }
-                }
+                },
+                "required": ["playerId", "points", "moves"]
             },
             "ResponseEnvelopeMatchOverviewDto": {
                 "type": "object",
@@ -2898,18 +3071,26 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/MatchOverviewDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "MatchDtoExtended": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "date": { "type": "string", "format": "date-time" },
-                    "seasonId": { "type": "string" },
-                    "createdById": { "type": "string" },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "seasonId": { "type": "string", "nullable": true },
+                    "createdById": { "type": "string", "nullable": true },
                     "photoUploads": {
                         "type": "array",
-                        "items": { "$ref": "#/components/schemas/TeamPhotoDto" }
+                        "items": {
+                            "$ref": "#/components/schemas/TeamPhotoDto"
+                        },
+                        "nullable": true
                     },
                     "teams": {
                         "type": "array",
@@ -2927,16 +3108,27 @@
                             "$ref": "#/components/schemas/MatchMoveDtoComplete"
                         }
                     }
-                }
+                },
+                "required": [
+                    "id",
+                    "date",
+                    "seasonId",
+                    "createdById",
+                    "photoUploads",
+                    "teams",
+                    "teamMembers",
+                    "matchMoves"
+                ]
             },
             "MatchMoveDtoComplete": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
                     "value": { "type": "integer", "format": "int32" },
-                    "teamMemberId": { "type": "string" },
-                    "moveId": { "type": "string" }
-                }
+                    "teamMemberId": { "type": "string", "nullable": true },
+                    "moveId": { "type": "string", "nullable": true }
+                },
+                "required": ["id", "value", "teamMemberId", "moveId"]
             },
             "ResponseEnvelopeMatchDtoExtended": {
                 "type": "object",
@@ -2945,23 +3137,26 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/MatchDtoExtended" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "TeamDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "matchId": { "type": "string" },
-                    "photoAssetId": { "type": "string" }
-                }
+                    "matchId": { "type": "string", "nullable": true },
+                    "photoAssetId": { "type": "string", "nullable": true }
+                },
+                "required": ["id", "matchId", "photoAssetId"]
             },
             "TeamMemberDto": {
                 "type": "object",
                 "properties": {
                     "id": { "type": "string" },
-                    "teamId": { "type": "string" },
-                    "playerId": { "type": "string" }
-                }
+                    "teamId": { "type": "string", "nullable": true },
+                    "playerId": { "type": "string", "nullable": true }
+                },
+                "required": ["id", "teamId", "playerId"]
             },
             "ResponseEnvelopeListMatchOverviewDto": {
                 "type": "object",
@@ -2975,7 +3170,8 @@
                         }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListMatchDtoExtended": {
                 "type": "object",
@@ -2989,7 +3185,8 @@
                         }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListProfileDto": {
                 "type": "object",
@@ -3001,21 +3198,27 @@
                         "items": { "$ref": "#/components/schemas/ProfileDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "LeaderboardDto": {
                 "type": "object",
                 "properties": {
                     "numPlayers": { "type": "integer", "format": "int64" },
                     "numMatches": { "type": "integer", "format": "int64" },
-                    "startedAt": { "type": "string", "format": "date-time" },
+                    "startedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
                     "entries": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/PlayerDtoExtended"
                         }
                     }
-                }
+                },
+                "required": ["numPlayers", "numMatches", "startedAt", "entries"]
             },
             "ResponseEnvelopeLeaderboardDto": {
                 "type": "object",
@@ -3024,7 +3227,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/LeaderboardDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListGroupDto": {
                 "type": "object",
@@ -3036,7 +3240,8 @@
                         "items": { "$ref": "#/components/schemas/GroupDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListGroupPreset": {
                 "type": "object",
@@ -3048,7 +3253,8 @@
                         "items": { "$ref": "#/components/schemas/GroupPreset" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "AssetMetadataDto": {
                 "type": "object",
@@ -3060,13 +3266,16 @@
                         "enum": [
                             "GROUP_WALLPAPER",
                             "PROFILE_AVATAR",
-                            "TEAM_PHOTO"
-                        ]
+                            "TEAM_PHOTO",
+                            null
+                        ],
+                        "nullable": true
                     },
                     "offsetX": { "type": "number", "format": "double" },
                     "offsetY": { "type": "number", "format": "double" },
                     "zoom": { "type": "number", "format": "double" }
-                }
+                },
+                "required": ["id", "url", "type", "offsetX", "offsetY", "zoom"]
             },
             "ResponseEnvelopeAssetMetadataDto": {
                 "type": "object",
@@ -3075,7 +3284,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/AssetMetadataDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeTeamDto": {
                 "type": "object",
@@ -3084,7 +3294,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/TeamDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "FormationSaveDto": {
                 "type": "object",
@@ -3111,7 +3322,8 @@
                         }
                     },
                     "updatedAt": { "type": "string", "format": "date-time" }
-                }
+                },
+                "required": ["id", "groupId", "name", "cups", "updatedAt"]
             },
             "ResponseEnvelopeFormationDto": {
                 "type": "object",
@@ -3120,7 +3332,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/FormationDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListFormationDto": {
                 "type": "object",
@@ -3132,14 +3345,16 @@
                         "items": { "$ref": "#/components/schemas/FormationDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "CupPositionDto": {
                 "type": "object",
                 "properties": {
                     "x": { "type": "integer", "format": "int32" },
                     "y": { "type": "integer", "format": "int32" }
-                }
+                },
+                "required": ["x", "y"]
             },
             "LeaderboardProjectionDto": {
                 "type": "object",
@@ -3183,25 +3398,37 @@
                         ]
                     },
                     "createdAt": { "type": "string", "format": "date-time" },
-                    "playerId": { "type": "string" },
-                    "team": { "type": "string" },
-                    "moveId": { "type": "string" },
-                    "delta": { "type": "integer", "format": "int32" },
+                    "playerId": { "type": "string", "nullable": true },
+                    "team": { "type": "string", "nullable": true },
+                    "moveId": { "type": "string", "nullable": true },
+                    "delta": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
                     "cups": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/CupPositionDto"
-                        }
+                        },
+                        "nullable": true
                     },
-                    "cup": { "$ref": "#/components/schemas/CupPositionDto" },
-                    "finishMoveId": { "type": "string" },
+                    "cup": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/CupPositionDto" }
+                        ],
+                        "nullable": true
+                    },
+                    "finishMoveId": { "type": "string", "nullable": true },
                     "redPlayerIds": {
                         "type": "array",
-                        "items": { "type": "string" }
+                        "items": { "type": "string" },
+                        "nullable": true
                     },
                     "bluePlayerIds": {
                         "type": "array",
-                        "items": { "type": "string" }
+                        "items": { "type": "string" },
+                        "nullable": true
                     },
                     "drawn": {
                         "type": "array",
@@ -3214,7 +3441,8 @@
                         "type": "string",
                         "description": "SET_RERACK: the saved formation the cups were re-racked into"
                     }
-                }
+                },
+                "required": ["id", "type"]
             },
             "LiveMatchDto": {
                 "type": "object",
@@ -3231,17 +3459,34 @@
                         "type": "string",
                         "format": "date-time"
                     },
-                    "endedAt": { "type": "string", "format": "date-time" },
-                    "createdByUserId": { "type": "string" },
+                    "endedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "createdByUserId": { "type": "string", "nullable": true },
                     "lastSeq": { "type": "integer", "format": "int64" },
-                    "resultMatchId": { "type": "string" },
+                    "resultMatchId": { "type": "string", "nullable": true },
                     "ops": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/LiveMatchOpDto"
                         }
                     }
-                }
+                },
+                "required": [
+                    "id",
+                    "groupId",
+                    "seasonId",
+                    "status",
+                    "startedAt",
+                    "lastActivityAt",
+                    "endedAt",
+                    "createdByUserId",
+                    "lastSeq",
+                    "resultMatchId",
+                    "ops"
+                ]
             },
             "LiveMatchFinishDto": {
                 "type": "object",
@@ -3276,7 +3521,8 @@
                             "$ref": "#/components/schemas/LiveMatchOpDto"
                         }
                     }
-                }
+                },
+                "required": ["lastSeq", "ops"]
             },
             "ResponseEnvelopeLiveMatchDto": {
                 "type": "object",
@@ -3285,7 +3531,8 @@
                     "httpCode": { "type": "integer", "format": "int32" },
                     "data": { "$ref": "#/components/schemas/LiveMatchDto" },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeLiveMatchOpsResultDto": {
                 "type": "object",
@@ -3296,7 +3543,8 @@
                         "$ref": "#/components/schemas/LiveMatchOpsResultDto"
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             },
             "ResponseEnvelopeListLiveMatchDto": {
                 "type": "object",
@@ -3308,7 +3556,8 @@
                         "items": { "$ref": "#/components/schemas/LiveMatchDto" }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
-                }
+                },
+                "required": ["status", "httpCode", "data"]
             }
         }
     }

@@ -116,7 +116,7 @@ export function apiFor(refreshToken: string) {
 const assetUrls = new Map<string, { url: string | null; expiresAt: number }>();
 
 /** where an avatar can be loaded from; asset URLs are signed, so they're kept for 10 minutes */
-export async function assetUrl(assetId: string | undefined) {
+export async function assetUrl(assetId: string | null | undefined) {
     if (!assetId) return null;
     const cached = assetUrls.get(assetId);
     if (cached && cached.expiresAt > Date.now()) return cached.url;

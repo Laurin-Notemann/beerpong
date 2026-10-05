@@ -37,7 +37,7 @@ export async function fetchProfiles(
     });
 }
 
-export function withProfiles<T extends { profileId?: string }>(
+export function withProfiles<T extends { profileId?: string | null }>(
     items: T[],
     profiles: Profile[]
 ): WithProfile<T>[] {

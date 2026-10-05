@@ -51,10 +51,10 @@ export interface LiveMatchHeader {
     status: NonNullable<LiveMatchDto['status']>;
     startedAt: string;
     lastActivityAt?: string;
-    endedAt?: string;
-    createdByUserId?: string;
+    endedAt?: string | null;
+    createdByUserId?: string | null;
     /** the `Match` a finished live match became */
-    resultMatchId?: string;
+    resultMatchId?: string | null;
     /** not on the server yet: started offline, or the create is still on its way */
     isPendingCreate: boolean;
 }

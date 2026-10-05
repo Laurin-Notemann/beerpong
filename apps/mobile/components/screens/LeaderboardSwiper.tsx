@@ -197,7 +197,7 @@ export function LeaderboardSwiper() {
     );
 }
 
-const getDayStartedAt = (settings: SeasonSettingsDto | undefined) => {
+const getDayStartedAt = (settings: SeasonSettingsDto | null | undefined) => {
     if (!settings) return 'Daily leaderboard.';
 
     return settings?.dailyLeaderboard === 'LAST_24_HOURS'

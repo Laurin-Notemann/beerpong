@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { foldLiveMatch } from '~/tv/lib/liveMatch';
 
 const moves = [
-    { id: 'normal', name: 'Normal', cups: 1 },
-    { id: 'bouncer', name: 'Bouncer', cups: 2 },
+    { id: 'normal', name: 'Normal', finishingMove: false, cups: 1 },
+    { id: 'bouncer', name: 'Bouncer', finishingMove: false, cups: 2 },
 ];
 const op = (seq: number, rest: Record<string, unknown>) =>
     ({ id: `op${seq}`, seq, ...rest }) as never;

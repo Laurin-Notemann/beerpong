@@ -86,7 +86,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             profiles.map(async (i) => [i.id!, await assetUrl(i.assetIdAvatar)] as const)
         )
     );
-    const profile = (profileId: string | undefined): BoardPlayer => {
+    const profile = (profileId: string | null | undefined): BoardPlayer => {
         const p = profiles.find((i) => i.id === profileId);
         return {
             id: profileId ?? '',

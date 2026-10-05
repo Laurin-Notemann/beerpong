@@ -125,7 +125,7 @@ export const useUpdateMatchMutation = () => {
  * this uploads a team photo to such a url.
  */
 export async function uploadTeamPhoto(
-    photoUpload: TeamPhotoDto | undefined,
+    photoUpload: Pick<TeamPhotoDto, 'teamPhoto'> | undefined,
     photoUri: string
 ): Promise<void> {
     const { byteArray, mimeType } = await compressImage(

@@ -85,7 +85,7 @@ export const getInfluenceOfMatchOnAveragePoints = (
     matches: MinimalMatch[],
     playerId: string,
     matchId: string,
-    rankingAlgorithm: 'AVERAGE' | 'ELO' = 'AVERAGE'
+    rankingAlgorithm: 'AVERAGE' | 'ELO' | null = 'AVERAGE'
 ) => {
     if (rankingAlgorithm === 'AVERAGE') {
         const match = matches.find((i) => i.id === matchId);

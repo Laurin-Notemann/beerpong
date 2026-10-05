@@ -28,7 +28,7 @@ export default function Page() {
     const [onStartNewSeason, isCreating] = useSingleFlight(
         async (
             oldSeasonName: string,
-            ruleMoves: Components.Schemas.RuleMoveDto[]
+            ruleMoves: Components.Schemas.RuleMoveCreateDto[]
         ) => {
             if (!groupId) return;
             try {

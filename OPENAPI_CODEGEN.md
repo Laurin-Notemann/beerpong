@@ -31,8 +31,13 @@ action runs the generation for every push that changes `openapi.json` and commit
 (1) `openapicmd` only parses responses with `content-type: "application/json"`. springdoc wrote
 `"*/*"`; the document uses `application/json` throughout, keep it that way.
 
-(2) for the typescript client, all fields are optional, for both request bodies and responses,
-because the document doesn't mark any as `required`.
+(2) a response schema lists in `required` every field the API always sends in it, and marks the
+ones that can be null `nullable`; the generated types follow. A schema that requests use too only
+requires what both sides always have. `openapicmd` ignores `nullable` next to a `$ref` and on an
+enum, so a nullable `$ref` is `"allOf": [{ "$ref": ... }]` with `nullable`, and a nullable enum
+lists `null`. `TestGoldensMatchTheAPIDocument` in `api-tests` checks the recorded
+responses against the document. The persisted React Query cache can hold values from older app
+versions and values the app built itself, so keep the fallbacks (`?.`, `??`) when reading it.
 
 (3) schema names become TypeScript type names, so they must be valid identifiers. List responses
 are `ResponseEnvelopeList<Name>` schemas with an `array` `data` property; a name like

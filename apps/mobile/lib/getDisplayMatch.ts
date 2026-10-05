@@ -12,7 +12,7 @@ import { PlayerDraft } from '@/zustand/matchEditDraftStore';
 
 export function getDisplayMatch(
     draftPlayers: (PlayerDraft & { team: TeamId })[],
-    rankingAlgorithm: 'AVERAGE' | 'ELO' | undefined,
+    rankingAlgorithm: 'AVERAGE' | 'ELO' | null | undefined,
     profiles: WithProfile<PlayerDto>[],
     matches: MinimalMatch[],
     allowedMoves: RuleMoveDto[]

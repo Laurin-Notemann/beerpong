@@ -4,7 +4,8 @@ import type { LiveMatchDto, LiveMatchOpDto } from '@/lib/liveMatch/types';
 /**
  * The next values of the cached live matches, as pure functions. The caches hold the wire DTOs
  * and are persisted to disk, so everything read from them goes through `asLiveMatch` /
- * `asLiveMatchList` first: a value written by an older app version can't crash this one.
+ * `asLiveMatchList` first: a value written by an older app version can't crash this one. They
+ * only check the id, so the other fields keep their fallbacks even where the DTO requires them.
  */
 
 /** `LiveMatchOpsEventDto`, the body of the `liveMatchOps` socket event */
@@ -18,7 +19,9 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null;
 
 const asOps = (value: unknown) =>
-    Array.isArray(value) ? (value.filter(isObject) as LiveMatchOpDto[]) : [];
+    Array.isArray(value)
+        ? (value.filter(isObject) as unknown as LiveMatchOpDto[])
+        : [];
 
 /**
  * Older servers wrote socket dates as `2026-10-04T18:15:30Z[Etc/UTC]`, which `Date.parse` can't
@@ -30,7 +33,7 @@ export const withoutZoneId = <T>(date: T) =>
 export function asLiveMatch(value: unknown): LiveMatchDto | undefined {
     if (!isObject(value) || typeof value.id !== 'string') return;
 
-    const match = value as LiveMatchDto;
+    const match = value as unknown as LiveMatchDto;
     return {
         ...match,
         startedAt: withoutZoneId(match.startedAt),
@@ -98,7 +101,7 @@ export function withOps(
 ): LiveMatchDto {
     return mergeLiveMatch(cached, {
         ...cached,
-        lastSeq: event.lastSeq,
+        lastSeq: event.lastSeq ?? 0,
         ops: event.ops,
     });
 }
