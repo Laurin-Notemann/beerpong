@@ -43,6 +43,7 @@ export interface ScopeInfo {
     matchesWon: number;
     points: number;
     cups: number;
+    avgTeamSize: number;
     elo: number;
     rankingAlgorithm: 'AVERAGE' | 'ELO';
     isUnranked: boolean;
@@ -57,6 +58,7 @@ const emptyScope: Omit<ScopeInfo, 'name'> = {
     matchesWon: 0,
     points: 0,
     cups: 0,
+    avgTeamSize: 1,
     elo: 0,
     rankingAlgorithm: 'ELO',
     isUnranked: true,
@@ -395,6 +397,7 @@ export default function PlayerScreen({
                         matchesWon={0} // doesn't get shown because this is only ever editable
                         points={0} // doesn't get shown because this is only ever editable
                         cups={0} // doesn't get shown because this is only ever editable
+                        avgTeamSize={1} // doesn't get shown because this is only ever editable
                         isUnranked={false} // doesn't get shown because this is only ever editable
                         editable
                         onUploadAvatarPress={onUploadAvatarPress}

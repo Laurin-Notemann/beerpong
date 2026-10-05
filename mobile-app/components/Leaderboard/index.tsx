@@ -192,6 +192,7 @@ export default function Leaderboard({
                         <LeaderboardPlayerItem
                             name={item.player.name}
                             cups={item.player.cups}
+                            avgTeamSize={item.player.avgTeamSize}
                             id={item.player.id}
                             placement={item.placement}
                             points={item.player.points}

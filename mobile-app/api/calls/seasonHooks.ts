@@ -230,6 +230,7 @@ export interface Player {
     avatarUrl?: string | null;
     profileId: string;
     cups: number;
+    avgTeamSize: number;
 }
 
 export const toPlayer = (i: WithProfile<PlayerDtoExtended>): Player => {
@@ -243,5 +244,6 @@ export const toPlayer = (i: WithProfile<PlayerDtoExtended>): Player => {
         avatarUrl: i.profile?.avatarUrl,
         profileId: i.profileId!,
         cups: i.statistics?.moves ?? 0,
+        avgTeamSize: i.statistics?.avgTeamSize ?? 1,
     };
 };

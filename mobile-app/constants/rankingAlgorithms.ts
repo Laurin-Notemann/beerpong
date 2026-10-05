@@ -20,6 +20,22 @@ const byDescendingTotalPoints = (a: RankingPlayer, b: RankingPlayer) =>
 const byDescendingTotalCups = (a: RankingPlayer, b: RankingPlayer) =>
     b.cups - a.cups;
 
+const averageCups = (a: RankingPlayer) => (a.matches ? a.cups / a.matches : 0);
+
+/**
+ * Average cups times the average team size: what a player would hit playing
+ * alone, so sharing the cups in a 2v2 doesn't put them behind 1v1 players.
+ * Seasons persisted before `avgTeamSize` existed count as 1v1.
+ */
+const teamAdjustedCups = (a: RankingPlayer) =>
+    averageCups(a) * (a.avgTeamSize || 1);
+
+const byDescendingAverageCups = (a: RankingPlayer, b: RankingPlayer) =>
+    averageCups(b) - averageCups(a);
+
+const byDescendingTeamAdjustedCups = (a: RankingPlayer, b: RankingPlayer) =>
+    teamAdjustedCups(b) - teamAdjustedCups(a);
+
 const formatElo = (value?: number) =>
     Number.isNaN(value) ? '--' : (value?.toFixed(0) ?? '--');
 
@@ -101,6 +117,24 @@ export const rankingAlgorithms = {
         sortFunc: byDescendingTotalCups,
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0 ? a!.cups.toString() : '--',
+        showInSelect: true,
+        showInStats: true,
+    },
+    AVERAGE_CUPS: {
+        name: 'Average cups',
+        shortName: 'Avg. cups',
+        sortFunc: byDescendingAverageCups,
+        getDisplayValue: (a) =>
+            (a?.matches ?? 0) > 0 ? formatAverage(averageCups(a!)) : '--',
+        showInSelect: true,
+        showInStats: true,
+    },
+    TEAM_ADJUSTED_CUPS: {
+        name: 'Average cups by team size',
+        shortName: 'Cups by team size',
+        sortFunc: byDescendingTeamAdjustedCups,
+        getDisplayValue: (a) =>
+            (a?.matches ?? 0) > 0 ? formatAverage(teamAdjustedCups(a!)) : '--',
         showInSelect: true,
         showInStats: true,
     },

@@ -20,6 +20,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#1',
@@ -30,6 +31,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#2',
@@ -40,6 +42,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#3',
@@ -50,6 +53,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#4',
@@ -60,6 +64,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
         ],
         numMatches: 0,
@@ -81,6 +86,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#1',
@@ -91,6 +97,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#2',
@@ -101,6 +108,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#3',
@@ -111,6 +119,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#4',
@@ -121,6 +130,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
         ],
         numMatches: 0,
@@ -142,6 +152,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#1',
@@ -152,6 +163,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#2',
@@ -162,6 +174,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#3',
@@ -172,6 +185,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
             {
                 id: '#4',
@@ -182,6 +196,7 @@ export const mockSeasons: SeasonCardProps[] = [
                 elo: 1500,
                 profileId: '',
                 cups: 0,
+                avgTeamSize: 1,
             },
         ],
         numMatches: 0,

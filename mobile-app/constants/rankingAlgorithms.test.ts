@@ -9,6 +9,7 @@ const player = (name: string, elo: number) => ({
     matches: 1,
     matchesWon: 0,
     cups: 0,
+    avgTeamSize: 1,
 });
 
 const ranks = (players: ReturnType<typeof player>[]) =>
@@ -41,5 +42,27 @@ describe('rankPlayers', () => {
         const players = [player('Bo', 1), player('Ali', 2)];
         rankPlayers(players, 'ELO');
         expect(players.map((i) => i.name)).toEqual(['Bo', 'Ali']);
+    });
+});
+
+describe('cups by team size', () => {
+    const cupsPlayer = (
+        name: string,
+        cups: number,
+        matches: number,
+        avgTeamSize: number
+    ) => ({ ...player(name, 0), cups, matches, avgTeamSize });
+
+    it('puts a 2v2 player sharing the cups level with a 1v1 player', () => {
+        const players = [
+            cupsPlayer('Solo', 10, 2, 1), // 5 a match alone
+            cupsPlayer('Duo', 6, 2, 2), // 3 a match, half the team's cups
+        ];
+        expect(
+            rankPlayers(players, 'AVERAGE_CUPS').map((i) => i.player.name)
+        ).toEqual(['Solo', 'Duo']);
+        expect(
+            rankPlayers(players, 'TEAM_ADJUSTED_CUPS').map((i) => i.player.name)
+        ).toEqual(['Duo', 'Solo']);
     });
 });

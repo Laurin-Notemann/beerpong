@@ -28,6 +28,7 @@ export interface LeaderboardPlayerItemProps {
     unranked?: boolean;
 
     cups: number;
+    avgTeamSize: number;
 
     onPlayerPress?: (id: string) => void;
 
@@ -46,6 +47,7 @@ function LeaderboardPlayerItem({
     onPlayerPress,
     rankingAlgorithm,
     cups,
+    avgTeamSize,
 }: LeaderboardPlayerItemProps) {
     const theme = useTheme();
 
@@ -110,6 +112,7 @@ function LeaderboardPlayerItem({
                     avatarUrl,
                     name,
                     cups,
+                    avgTeamSize,
                     matchesWon,
                     matches: matches,
                     elo,

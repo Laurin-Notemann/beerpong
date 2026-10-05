@@ -16,6 +16,7 @@ export function PlayerPageHeadSection({
     name,
     onUploadAvatarPress,
     cups,
+    avgTeamSize,
     matchesWon,
     matches,
     elo,
@@ -30,6 +31,7 @@ export function PlayerPageHeadSection({
     name: string;
     onUploadAvatarPress: () => void;
     cups: number;
+    avgTeamSize: number;
     matchesWon: number;
     matches: Match[];
     elo: number;
@@ -45,6 +47,7 @@ export function PlayerPageHeadSection({
         avatarUrl,
         name,
         cups,
+        avgTeamSize,
         matchesWon,
         matches: matches.length,
         elo,

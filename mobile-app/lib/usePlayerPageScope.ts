@@ -153,6 +153,18 @@ const getAllTimeCups = (profileId: string | undefined, matches: Match[]) => {
     }, 0);
 };
 
+const getAverageTeamSize = (
+    profileId: string | undefined,
+    matches: Match[]
+) => {
+    const sizes = matches.flatMap((i) =>
+        [i.blueTeam, i.redTeam]
+            .filter((team) => team.some((j) => j.profileId === profileId))
+            .map((team) => team.length)
+    );
+    return sizes.length ? sizes.reduce((a, b) => a + b) / sizes.length : 1;
+};
+
 const getScope = (
     profileId: string | undefined,
     matches: Match[],
@@ -176,6 +188,7 @@ const getScope = (
         matchesWon: getMatchesWon(profileId, matches),
         points: player?.points ?? 0,
         cups: getAllTimeCups(profileId, matches),
+        avgTeamSize: getAverageTeamSize(profileId, matches),
         matches: matches,
         rankingAlgorithm: seasonSettings?.rankingAlgorithm ?? 'AVERAGE',
         isUnranked: matches.length < (seasonSettings?.minMatchesToQualify ?? 0),
