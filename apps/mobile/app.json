@@ -54,6 +54,27 @@
             "expo-secure-store",
             "expo-web-browser",
             [
+                "expo-widgets",
+                {
+                    "bundleIdentifier": "com.linusbolls.mobileapp.ExpoWidgetsTarget",
+                    "groupIdentifier": "group.com.linusbolls.mobileapp",
+                    "widgets": [
+                        {
+                            "name": "LeaderboardWidget",
+                            "displayName": "Leaderboard",
+                            "description": "Your group's leaderboard at a glance",
+                            "ios": {
+                                "supportedFamilies": [
+                                    "systemSmall",
+                                    "systemMedium",
+                                    "systemLarge"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
+            [
                 "expo-splash-screen",
                 {
                     "image": "./assets/images/splash.png",

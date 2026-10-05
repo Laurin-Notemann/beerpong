@@ -5,6 +5,10 @@ import { useLiveMatchSync } from '@/api/liveMatch/useLiveMatchSync';
 import { useApi } from '@/api/utils/create-api';
 import { useModalStyles } from '@/lib/navigation/modalStyles';
 import {
+    useLeaderboardWidget,
+    useLiveMatchActivity,
+} from '@/lib/widgets/useWidgets';
+import {
     useEnsureGroupSelected,
     useGroupStore,
 } from '@/zustand/group/stateGroupStore';
@@ -24,6 +28,9 @@ export default function MainLayout() {
 
     // sends live match edits queued on this phone, also those from before an app kill
     useLiveMatchSync();
+    // the home screen widget and the Lock Screen's live match (iOS)
+    useLeaderboardWidget();
+    useLiveMatchActivity();
 
     const modalStyles = useModalStyles();
 

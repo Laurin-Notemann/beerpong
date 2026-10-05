@@ -42,6 +42,11 @@ export function useSelectedGroupId() {
     return useStore((s) => s.selectedGroupId);
 }
 
+/** false until the saved selection has been read from storage */
+export function useSelectedGroupHydrated() {
+    return useStore((s) => s.hydrated);
+}
+
 export function useGroupStore() {
     const store = useStore();
 
