@@ -4,6 +4,7 @@ import {
 } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import CreateNewPlayer from '@/components/screens/CreateNewPlayer';
+import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
@@ -21,28 +22,30 @@ export default function Page() {
 
     const createPlayerMutation = useCreatePlayerMutation();
 
-    async function onSubmit(player: { name: string }) {
-        if (!groupId || !seasonId) return;
+    const [onSubmit, isCreating] = useSingleFlight(
+        async (player: { name: string }) => {
+            if (!groupId || !seasonId) return;
 
-        try {
-            await createPlayerMutation.mutateAsync({
-                groupId,
-                seasonId,
-                name: player.name,
-            });
-            showSuccessToast(`Created player "${player.name}".`);
-            nav.goBack();
-        } catch (err) {
-            ConsoleLogger.error('failed to create player:', err);
-            showErrorToast('Failed to create player.', err);
+            try {
+                await createPlayerMutation.mutateAsync({
+                    groupId,
+                    seasonId,
+                    name: player.name,
+                });
+                showSuccessToast(`Created player "${player.name}".`);
+                nav.goBack();
+            } catch (err) {
+                ConsoleLogger.error('failed to create player:', err);
+                showErrorToast('Failed to create player.', err);
+            }
         }
-    }
+    );
 
     return (
         <CreateNewPlayer
             onCreate={onSubmit}
             existingPlayers={existingPlayers}
-            isPending={createPlayerMutation.isPending}
+            isPending={isCreating}
         />
     );
 }

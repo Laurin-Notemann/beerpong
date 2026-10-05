@@ -9,6 +9,7 @@ import {
 import { QK } from '@/api/utils/reactQuery';
 import LoadingScreen from '@/components/LoadingScreen';
 import { CreateGroupSetGame } from '@/components/screens/CreateGroupSetGame';
+import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useCreateGroupStore } from '@/zustand/group/stateCreateGroupStore';
@@ -31,39 +32,41 @@ export default function Page() {
             imageUrl: i.imageUrl!,
         })) ?? [];
 
-    async function createGroup(sport: {
-        preset?: string;
-        custom?: {
-            name: string;
-        };
-    }) {
-        if (!name) return;
+    const [createGroup, isCreating] = useSingleFlight(
+        async (sport: {
+            preset?: string;
+            custom?: {
+                name: string;
+            };
+        }) => {
+            if (!name) return;
 
-        try {
-            const data = await createGroupMutation.mutateAsync({
-                name,
-                profileNames: members.map((m) => m.name),
-                sportPreset: sport.preset,
-                customSportName: sport.custom?.name,
-            });
-            if (!data?.data?.id) {
-                throw new Error('invalid create group response');
+            try {
+                const data = await createGroupMutation.mutateAsync({
+                    name,
+                    profileNames: members.map((m) => m.name),
+                    sportPreset: sport.preset,
+                    customSportName: sport.custom?.name,
+                });
+                if (!data?.data?.id) {
+                    throw new Error('invalid create group response');
+                }
+                await queryClient.invalidateQueries({
+                    queryKey: [QK.group, 'myGroups'],
+                });
+                matchDraft.actions.clear();
+                selectGroup(data.data.id);
+
+                showSuccessToast(`You created "${name}"`);
+
+                router.dismissAll();
+                router.replace('/');
+            } catch (err) {
+                ConsoleLogger.error('failed to create group:', err);
+                showErrorToast('Failed to create group.', err);
             }
-            await queryClient.invalidateQueries({
-                queryKey: [QK.group, 'myGroups'],
-            });
-            matchDraft.actions.clear();
-            selectGroup(data.data.id);
-
-            showSuccessToast(`You created "${name}"`);
-
-            router.dismissAll();
-            router.replace('/');
-        } catch (err) {
-            ConsoleLogger.error('failed to create group:', err);
-            showErrorToast('Failed to create group.', err);
         }
-    }
+    );
 
     if (presetsQuery.isLoading) {
         return <LoadingScreen />;
@@ -73,7 +76,7 @@ export default function Page() {
         <CreateGroupSetGame
             games={presets}
             onSubmit={createGroup}
-            isPending={createGroupMutation.isPending}
+            isPending={isCreating}
         />
     );
 }

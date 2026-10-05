@@ -28,9 +28,11 @@ import {
     SwiperRef,
 } from '@/components/Swiper';
 import { triggerHapticBump } from '@/haptics';
+import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { AppBackground } from '@/lib/Background';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { Client, TeamPhotoDto } from '@/openapi/openapi';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useLocalSettings } from '@/zustand/localSettingsStore';
@@ -81,6 +83,33 @@ const areTeamsEqual = (
 
     return result;
 };
+
+/** after a match is created with `savePhoto`; says when it's done, as Create doesn't wait for it */
+async function uploadTeamPhotos(
+    api: Promise<Client>,
+    match: { groupId: string; seasonId: string; matchId: string },
+    photoUploads: TeamPhotoDto[],
+    photos: { blueTeamPhotoUri: string; redTeamPhotoUri: string }
+) {
+    // the upload urls are returned in the same order as the teams
+    const [bluePhotoUpload, redPhotoUpload] = photoUploads;
+    try {
+        if (bluePhotoUpload && redPhotoUpload) {
+            await uploadTeamPhoto(bluePhotoUpload, photos.blueTeamPhotoUri);
+            await uploadTeamPhoto(redPhotoUpload, photos.redTeamPhotoUri);
+        } else {
+            // a repeated create returns the match without upload urls
+            await attachTeamPhotos(api, match, photos);
+        }
+        showSuccessToast('Created match.');
+    } catch (err) {
+        ConsoleLogger.error('failed to upload team photos:', err);
+        showErrorToast(
+            "Match created, but the team photos couldn't be uploaded.",
+            err
+        );
+    }
+}
 
 export default function NewMatchScreen() {
     const router = useRouter();
@@ -161,7 +190,7 @@ export default function NewMatchScreen() {
 
     const isValidGame = numFinishes === 1;
 
-    async function onCreateMatch() {
+    const [onCreateMatch, isCreating] = useSingleFlight(async () => {
         if (!groupId || !seasonId) {
             ConsoleLogger.warn('no groupId or seasonId');
             return;
@@ -185,8 +214,9 @@ export default function NewMatchScreen() {
 
         const savePhoto = !!blueTeamPhotoUri && !!redTeamPhotoUri;
 
+        let matchRes;
         try {
-            const matchRes = await createMatchMutation.mutateAsync({
+            matchRes = await createMatchMutation.mutateAsync({
                 id: matchId,
                 groupId,
                 seasonId,
@@ -195,53 +225,38 @@ export default function NewMatchScreen() {
                     { ...matchDraft.redTeam, savePhoto },
                 ],
             });
-            matchDraft.actions.clear();
-            // show the new match where it lands: the current season, today
-            scopePicker.setIsPastSeasonsMode(false);
-            scrollControlledSwipers(scopePicker.leaderboardSwiperProgress, 0);
-            router.dismissAll();
-            router.replace('/');
-            carouselRef.current?.prev();
-
-            if (!savePhoto) {
-                // no photo was taken on the points page, so ask for one
-                nav.navigate('matchPhotoModal', { matchId, seasonId });
-            }
-
-            if (blueTeamPhotoUri && redTeamPhotoUri) {
-                // the upload urls are returned in the same order as the teams
-                const [bluePhotoUpload, redPhotoUpload] =
-                    matchRes?.data?.photoUploads ?? [];
-                try {
-                    if (bluePhotoUpload && redPhotoUpload) {
-                        await uploadTeamPhoto(
-                            bluePhotoUpload,
-                            blueTeamPhotoUri
-                        );
-                        await uploadTeamPhoto(redPhotoUpload, redTeamPhotoUri);
-                    } else {
-                        // a repeated create returns the match without upload urls
-                        await attachTeamPhotos(
-                            api,
-                            { groupId, seasonId, matchId },
-                            { blueTeamPhotoUri, redTeamPhotoUri }
-                        );
-                    }
-                } catch (err) {
-                    ConsoleLogger.error('failed to upload team photos:', err);
-                    showErrorToast(
-                        "Match created, but the team photos couldn't be uploaded.",
-                        err
-                    );
-                    return;
-                }
-            }
-            showSuccessToast('Created match.');
         } catch (err) {
+            // the draft keeps its match id, so tapping Create again can't save it twice
             ConsoleLogger.error('failed to create match:', err);
             showErrorToast('Failed to create match.', err);
+            return;
         }
-    }
+
+        matchDraft.actions.clear();
+        // show the new match where it lands: the current season, today
+        scopePicker.setIsPastSeasonsMode(false);
+        scrollControlledSwipers(scopePicker.leaderboardSwiperProgress, 0);
+        router.dismissAll();
+        router.replace('/');
+        carouselRef.current?.prev();
+
+        if (!savePhoto) {
+            // no photo was taken on the points page, so ask for one
+            nav.navigate('matchPhotoModal', { matchId, seasonId });
+        }
+
+        if (blueTeamPhotoUri && redTeamPhotoUri) {
+            // not awaited: the next match can be entered while the photos upload
+            uploadTeamPhotos(
+                api,
+                { groupId, seasonId, matchId },
+                matchRes?.data?.photoUploads ?? [],
+                { blueTeamPhotoUri, redTeamPhotoUri }
+            );
+        } else {
+            showSuccessToast('Created match.');
+        }
+    });
 
     // a second tap in the same frame is ignored; after that the cleared draft has no teams
     const isStarting = useRef(false);
@@ -380,7 +395,7 @@ export default function NewMatchScreen() {
                     carouselRef.current?.next();
                 }}
                 onCreate={onCreateMatch}
-                isCreating={createMatchMutation.isPending}
+                isCreating={isCreating}
                 onStart={beerpongProMode ? onStartLiveMatch : undefined}
                 onEnterAfterGame={onEnterAfterGame}
                 canStart={hasValidTeams}
@@ -467,7 +482,7 @@ export default function NewMatchScreen() {
                     return (
                         <CreateMatchAssignPoints
                             key={page}
-                            isPending={createMatchMutation.isPending}
+                            isPending={isCreating}
                             players={teamMembers}
                             onSubmit={onCreateMatch}
                             onCancel={() => {

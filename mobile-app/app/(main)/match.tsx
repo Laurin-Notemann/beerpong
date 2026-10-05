@@ -27,6 +27,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import Text from '@/components/Text';
+import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { AppBackground } from '@/lib/Background';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
 import { useNavStyles } from '@/lib/navigation/navStyles';
@@ -140,9 +141,7 @@ export default function Page() {
 
     const deleteMatchPhotoMutation = useDeleteMatchPhotoMutation();
 
-    const [isSaving, setIsSaving] = useState(false);
-
-    async function updateMatch() {
+    const [updateMatch, isSaving] = useSingleFlight(async () => {
         if (!groupId || !seasonId || !match?.id || !displayMatch) {
             ConsoleLogger.error(
                 'Failed to update match: Group ID or Season ID is missing'
@@ -188,8 +187,6 @@ export default function Page() {
             groupId,
             seasonId,
         };
-        setIsSaving(true);
-
         try {
             if (photosChanged && !savePhoto) {
                 // updating a match re-creates its teams (and keeps their photos), so the photos are removed beforehand
@@ -235,10 +232,8 @@ export default function Page() {
                 JSON.stringify(data, null, 2)
             );
             showErrorToast('Failed to update match.', err);
-        } finally {
-            setIsSaving(false);
         }
-    }
+    });
 
     const isLoading =
         !groupId ||

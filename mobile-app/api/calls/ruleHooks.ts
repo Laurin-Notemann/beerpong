@@ -110,23 +110,37 @@ export function useRules() {
         [data?.data]
     );
 
-    async function _setRules(
+    /** shows the rules right away; if saving fails, they go back to what they were and this throws */
+    async function saveRules(
         rules: { id: string; title: string; description: string }[]
     ) {
         const hasChanges = JSON.stringify(rules) !== JSON.stringify(localRules);
         if (!hasChanges) return;
 
+        const queryKey = [QK.group, groupId, QK.season, seasonId, QK.rules];
+        const previous = qc.getQueryData(queryKey);
+
         setLocalRules(rules);
-        qc.setQueryData([QK.group, groupId, QK.season, seasonId, QK.rules], {
-            data: rules,
-        });
+        qc.setQueryData(queryKey, { data: rules });
         try {
             await setRulesMutation.mutateAsync({
                 groupId: groupId!,
                 seasonId: seasonId!,
                 rules,
             });
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err) {
+            setLocalRules(localRules);
+            qc.setQueryData(queryKey, previous);
+            throw err;
+        }
+    }
+
+    /** for the rules list, which has no error handling of its own */
+    async function _setRules(
+        rules: { id: string; title: string; description: string }[]
+    ) {
+        try {
+            await saveRules(rules);
         } catch (err) {
             showErrorToast('Failed to update rules.', err);
         }
@@ -152,7 +166,7 @@ export function useRules() {
         }[]
     >({
         mutationFn: (input) =>
-            _setRules([
+            saveRules([
                 ...rules,
                 ...input.map((i, idx) => ({ ...i, id: idx.toString() })),
             ]),
@@ -177,7 +191,7 @@ export function useRules() {
     return {
         isMutationPending: setRulesMutation.isPending,
         ...rulesQuery,
-        setRules: _setRules,
+        setRules: saveRules,
         rules: useMemo(() => localRules, [localRules]),
         reorderRules,
         createRulesMutation,

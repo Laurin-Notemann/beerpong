@@ -5,6 +5,7 @@ import React from 'react';
 
 import { QK } from '@/api/utils/reactQuery';
 import JoinGroup from '@/components/screens/JoinGroup';
+import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { showSuccessToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { useGroupStore } from '@/zustand/group/stateGroupStore';
@@ -16,7 +17,8 @@ export default function Page() {
 
     const queryClient = useQueryClient();
 
-    async function onSubmit(code: string) {
+    // typing the last character submits too, so the Join button can be a second submit
+    const [onSubmit, isJoining] = useSingleFlight(async (code: string) => {
         try {
             const data = await joinGroupMutation.mutateAsync(code);
 
@@ -34,7 +36,7 @@ export default function Page() {
         } catch (err) {
             ConsoleLogger.error('Error joining group:', err);
         }
-    }
+    });
 
     const isNotFound =
         (joinGroupMutation.error as AxiosError | undefined)?.status === 404;
@@ -42,7 +44,7 @@ export default function Page() {
     return (
         <JoinGroup
             isNotFound={isNotFound}
-            isLoading={joinGroupMutation.isPending}
+            isLoading={isJoining}
             onSubmit={onSubmit}
             joinGroupError={joinGroupMutation.error}
         />
