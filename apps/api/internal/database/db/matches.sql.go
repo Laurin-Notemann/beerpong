@@ -132,6 +132,38 @@ type InsertTeamsParams struct {
 	AssetIDPhoto *string
 }
 
+const matchCountsBySeason = `-- name: MatchCountsBySeason :many
+SELECT m.season_id, count(*) AS matches FROM matches m
+JOIN seasons s ON s.id = m.season_id
+WHERE s.group_id = $1
+GROUP BY m.season_id
+`
+
+type MatchCountsBySeasonRow struct {
+	SeasonID *string
+	Matches  int64
+}
+
+func (q *Queries) MatchCountsBySeason(ctx context.Context, groupID *string) ([]MatchCountsBySeasonRow, error) {
+	rows, err := q.db.Query(ctx, matchCountsBySeason, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MatchCountsBySeasonRow
+	for rows.Next() {
+		var i MatchCountsBySeasonRow
+		if err := rows.Scan(&i.SeasonID, &i.Matches); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const matchExistsInSeason = `-- name: MatchExistsInSeason :one
 SELECT EXISTS (SELECT 1 FROM matches WHERE id = $1 AND season_id = $2)
 `

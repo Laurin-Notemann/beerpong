@@ -17,6 +17,12 @@ SELECT * FROM matches WHERE season_id = $1 AND date >= $2 ORDER BY ctid;
 -- name: MatchExistsInSeason :one
 SELECT EXISTS (SELECT 1 FROM matches WHERE id = $1 AND season_id = $2);
 
+-- name: MatchCountsBySeason :many
+SELECT m.season_id, count(*) AS matches FROM matches m
+JOIN seasons s ON s.id = m.season_id
+WHERE s.group_id = $1
+GROUP BY m.season_id;
+
 -- name: TeamsByMatchIDs :many
 SELECT * FROM teams WHERE match_id = ANY (@match_ids::text[]) ORDER BY ctid;
 

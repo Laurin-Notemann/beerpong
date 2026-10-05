@@ -137,6 +137,7 @@
     "response": {
       "data": {
         "assetIdAvatar": "\u003cid27\u003e",
+        "avatarUrl": "https://versus-bucket.fsn1.your-objectstorage.com/\u003cid27\u003e",
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid4\u003e",
@@ -261,6 +262,7 @@
     "response": {
       "data": {
         "assetIdAvatar": null,
+        "avatarUrl": null,
         "createdById": "\u003cid2\u003e",
         "groupId": "\u003cid3\u003e",
         "id": "\u003cid4\u003e",
@@ -278,6 +280,7 @@
       {
         "body": {
           "assetIdAvatar": null,
+          "avatarUrl": null,
           "createdById": "\u003cid2\u003e",
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid4\u003e",

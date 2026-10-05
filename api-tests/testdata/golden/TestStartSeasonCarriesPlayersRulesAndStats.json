@@ -601,6 +601,7 @@
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid1\u003e",
           "name": "Season One",
+          "numMatches": 2,
           "seasonSettings": {
             "dailyLeaderboard": "WAKE_TIME",
             "maxTeamSize": 10,
@@ -617,6 +618,7 @@
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid22\u003e",
           "name": null,
+          "numMatches": 0,
           "seasonSettings": {
             "dailyLeaderboard": "WAKE_TIME",
             "maxTeamSize": 10,

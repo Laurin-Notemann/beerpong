@@ -395,6 +395,7 @@
       "data": [
         {
           "assetIdAvatar": null,
+          "avatarUrl": null,
           "createdById": null,
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid4\u003e",
@@ -402,6 +403,7 @@
         },
         {
           "assetIdAvatar": null,
+          "avatarUrl": null,
           "createdById": null,
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid5\u003e",
@@ -423,6 +425,7 @@
           "groupId": "\u003cid3\u003e",
           "id": "\u003cid1\u003e",
           "name": null,
+          "numMatches": 1,
           "seasonSettings": {
             "dailyLeaderboard": "WAKE_TIME",
             "maxTeamSize": 10,

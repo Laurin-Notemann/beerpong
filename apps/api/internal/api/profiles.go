@@ -48,7 +48,7 @@ func (s *Server) listProfiles(r *request) response {
 	}
 	out := make([]profileDTO, len(rows))
 	for i, p := range rows {
-		out[i] = toProfileDTO(p)
+		out[i] = s.toProfileDTO(p)
 	}
 	return ok(out)
 }
@@ -86,13 +86,13 @@ func (s *Server) createProfile(r *request) response {
 				if err := q.SetPlayerActive(ctx, db.SetPlayerActiveParams{ID: playerID, ActiveThisSeason: true}); err != nil {
 					return nil, err
 				}
-				created = profileCreatedDTO{profileDTO: toProfileDTO(existing), Reactivated: true, LastActiveSeasonID: &seasonID}
+				created = profileCreatedDTO{profileDTO: s.toProfileDTO(existing), Reactivated: true, LastActiveSeasonID: &seasonID}
 				return ok(created), nil
 			case !notFound(err):
 				return nil, err
 			}
 			// No player this season: continue from the most recent one.
-			created = profileCreatedDTO{profileDTO: toProfileDTO(existing)}
+			created = profileCreatedDTO{profileDTO: s.toProfileDTO(existing)}
 			last, err := q.LatestPlayerOfProfile(ctx, &existing.ID)
 			if notFound(err) {
 				return ok(created), nil
@@ -139,7 +139,7 @@ func (s *Server) createProfile(r *request) response {
 		if err := insertPlayers(ctx, q, []newPlayer{{profileID: profile.ID, seasonID: *group.ActiveSeasonID, active: true, stats: freshStats()}}); err != nil {
 			return nil, err
 		}
-		created = profileCreatedDTO{profileDTO: toProfileDTO(profile)}
+		created = profileCreatedDTO{profileDTO: s.toProfileDTO(profile)}
 		return ok(created), nil
 	})
 	if _, isOK := res.(okResponse); isOK {
@@ -159,7 +159,7 @@ func (s *Server) getProfile(r *request) response {
 	if err != nil {
 		return internal(err)
 	}
-	return ok(toProfileDTO(profile))
+	return ok(s.toProfileDTO(profile))
 }
 
 func (s *Server) updateProfile(r *request) response {
@@ -185,7 +185,7 @@ func (s *Server) updateProfile(r *request) response {
 	if err != nil {
 		return internal(err)
 	}
-	dto := toProfileDTO(updated)
+	dto := s.toProfileDTO(updated)
 	s.hub.Publish(groupID, realtime.Profiles, "profileUpdate", dto)
 	return ok(dto)
 }
@@ -269,7 +269,7 @@ func (s *Server) deleteAvatar(r *request) response {
 		if err := s.deleteAsset(ctx, q, *profile.AssetIDAvatar); err != nil {
 			return nil, err
 		}
-		return ok(toProfileDTO(updated)), nil
+		return ok(s.toProfileDTO(updated)), nil
 	})
 	if o, isOK := res.(okResponse); isOK {
 		// Addressed to the profile id, as the Java backend did.
