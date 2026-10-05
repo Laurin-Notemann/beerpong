@@ -1,0 +1,98 @@
+name: Beerpong-var Deploy
+
+# Builds and deploys beerpong-var (the Elo simulator, beerpong-var/) to the
+# staging server, where it runs as beerpong-var in ~/docker/beerpong-var and
+# Traefik serves it on var.beerpong.laurinnotemann.dev. It reads everything
+# from the staging API's /elo-simulation, which ships with Api Staging Deploy.
+
+on:
+  push:
+    branches:
+      - "staging"
+    paths:
+      - "beerpong-var/**"
+      - ".github/workflows/beerpong-var-cd.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: beerpong-var-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    name: Build and push the image to Google ACR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: true
+          token_format: access_token
+          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
+          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
+      - name: Login to GAR
+        uses: docker/login-action@v3
+        with:
+          registry: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+      # the image build type-checks and builds the app
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: beerpong-var
+          platforms: linux/amd64
+          tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/beerpong-var:${{ github.sha }}
+
+  deploy:
+    needs: build
+    name: Deploy on the staging server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_SECRET }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy and wait until it answers
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
+          DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/beerpong-var:${{ github.sha }}
+        run: |
+          # Same shape as Api Staging Deploy: stdin is the script, so every
+          # command that could read it gets /dev/null, and no `set -e`.
+          ssh $SERVER_USER@$SERVER_IP << EOF
+            cd ~/docker/beerpong-var || exit 1
+
+            gcloud auth activate-service-account --key-file=$FILE_PATH < /dev/null || exit 1
+            gcloud auth configure-docker europe-west10-docker.pkg.dev --quiet < /dev/null || exit 1
+
+            sed -i 's|^\(\s*image:\).*|\1 $DOCKER_IMAGE|' docker-compose.yml || exit 1
+            docker compose pull < /dev/null || exit 1
+            docker compose up -d < /dev/null || exit 1
+
+            for i in \$(seq 1 30); do
+              if curl -sf https://var.beerpong.laurinnotemann.dev/ < /dev/null > /dev/null; then
+                exit 0
+              fi
+              sleep 2
+            done
+            docker compose logs --tail 50 < /dev/null
+            exit 1
+          EOF
