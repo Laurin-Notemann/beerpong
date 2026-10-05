@@ -13,6 +13,7 @@ export const emptyLiveMatchState: LiveMatchState = {
     redTeam: { teamMembers: [] },
     blueTeam: { teamMembers: [] },
     cupHits: [],
+    reracks: {},
 };
 
 const teamOf = (state: DraftTeams, playerId: string): CupTeam | undefined =>
@@ -41,8 +42,14 @@ function countHit(state: DraftTeams, hit: CupHit, by: 1 | -1) {
     return teams;
 }
 
-/** Applies one op. Returns undefined if the op is invalid in this state and changes nothing. */
-function apply(state: LiveMatchState, op: LiveOp): LiveMatchState | undefined {
+/**
+ * Applies one op: the parts of the state it changes. Returns undefined if the op is invalid in
+ * this state and changes nothing.
+ */
+function apply(
+    state: LiveMatchState,
+    op: LiveOp
+): Partial<LiveMatchState> | undefined {
     switch (op.type) {
         case 'SET_TEAMS': {
             // players keep their moves if they stay on the same team
@@ -135,6 +142,19 @@ function apply(state: LiveMatchState, op: LiveOp): LiveMatchState | undefined {
                 cupHits: state.cupHits.filter((i) => i !== hit),
             });
         }
+        case 'SET_RERACK': {
+            // whether it still fits the cups standing is up to the screens (cupLayout)
+            const rerack = op.cups.length
+                ? {
+                      formationId: op.formationId ?? '',
+                      slots: op.cups.map((cup, idx) => ({
+                          cup,
+                          drawn: op.drawn[idx],
+                      })),
+                  }
+                : undefined;
+            return { reracks: { ...state.reracks, [op.team]: rerack } };
+        }
     }
 }
 
@@ -149,7 +169,7 @@ export function reduceLiveMatch(ops: LiveOp[]) {
 
     for (const op of ops) {
         const next = apply(state, op);
-        if (next) state = next;
+        if (next) state = { ...state, ...next };
         else ignoredOpIds.push(op.id);
     }
     return { state, ignoredOpIds };

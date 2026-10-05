@@ -1,5 +1,5 @@
 import type { DisplayConfig } from '~/lib/display';
-import { type CupPosition, foldLiveMatch } from '~/lib/liveMatch';
+import { foldLiveMatch, type RackCup } from '~/lib/liveMatch';
 import { type RankingAlgorithm, rankingNames, rankPlayers } from '~/lib/ranking';
 import type * as Dto from '@/openapi/openapi';
 
@@ -40,7 +40,7 @@ export interface LeaderboardRow extends BoardPlayer {
 export interface LiveTeam {
     players: (BoardPlayer & { change: PlayerChange | null })[];
     score: number;
-    standing: CupPosition[];
+    cups: RackCup[];
 }
 
 export interface LiveMatchView {
@@ -207,7 +207,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
         liveMatches: folded.map(({ dto, players, blue, red }) => {
             const team = (t: typeof blue): LiveTeam => ({
                 score: t.score,
-                standing: t.standing,
+                cups: t.cups,
                 players: t.playerIds.map((id) => ({
                     ...profile(players.find((p) => p.id === id)?.profileId),
                     id,

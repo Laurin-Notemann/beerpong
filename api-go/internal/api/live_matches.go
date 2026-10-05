@@ -26,7 +26,7 @@ const (
 const liveInProgress = "IN_PROGRESS"
 
 var (
-	liveOpTypes = []string{"SET_TEAMS", "SET_PLAYER_TEAM", "ADJUST_MOVE", "RECORD_CUP_HIT", "UNDO_CUP_HIT"}
+	liveOpTypes = []string{"SET_TEAMS", "SET_PLAYER_TEAM", "ADJUST_MOVE", "RECORD_CUP_HIT", "UNDO_CUP_HIT", "SET_RERACK"}
 )
 
 // ---- binding and validation ----
@@ -81,25 +81,14 @@ func parseLiveOp(o object) (*liveMatchOpDTO, error) {
 	if op.FinishMoveID, err = o.str("finishMoveId"); err != nil {
 		return nil, err
 	}
-	cups, present, err := o.list("cups")
-	if err != nil {
+	if op.Cups, err = parseCupList(o, "cups"); err != nil {
 		return nil, err
 	}
-	if present {
-		op.Cups = make([]cupPositionDTO, len(cups))
-		for i, c := range cups {
-			// a null cup stays {x: nil, y: nil}, which is invalid
-			if c == nil {
-				continue
-			}
-			co, err := asObject(c)
-			if err != nil {
-				return nil, err
-			}
-			if op.Cups[i], err = parseCup(co); err != nil {
-				return nil, err
-			}
-		}
+	if op.Drawn, err = parseCupList(o, "drawn"); err != nil {
+		return nil, err
+	}
+	if op.FormationID, err = o.str("formationId"); err != nil {
+		return nil, err
 	}
 	cup, err := o.child("cup")
 	if err != nil {
@@ -119,6 +108,29 @@ func parseLiveOp(o object) (*liveMatchOpDTO, error) {
 		return nil, err
 	}
 	return op, nil
+}
+
+// parseCupList binds a list of cups; a missing list stays nil, a null cup
+// stays {x: nil, y: nil}, which is invalid.
+func parseCupList(o object, key string) ([]cupPositionDTO, error) {
+	items, present, err := o.list(key)
+	if err != nil || !present {
+		return nil, err
+	}
+	cups := make([]cupPositionDTO, len(items))
+	for i, c := range items {
+		if c == nil {
+			continue
+		}
+		co, err := asObject(c)
+		if err != nil {
+			return nil, err
+		}
+		if cups[i], err = parseCup(co); err != nil {
+			return nil, err
+		}
+	}
+	return cups, nil
 }
 
 func parseCup(o object) (cupPositionDTO, error) {
@@ -195,6 +207,16 @@ func normalizeLiveOp(op *liveMatchOpDTO) (liveMatchOpDTO, bool) {
 			return out, false
 		}
 		out.Team, out.Cup = op.Team, op.Cup
+	case "SET_RERACK":
+		// a team's standing cups (cups) drawn in another formation (drawn, pairwise);
+		// none puts them back in the pyramid. Clients pair them up; the server only stores it.
+		if !isTeam(op.Team) || op.Cups == nil || len(op.Cups) != len(op.Drawn) || len(op.Cups) > maxCupsPerHit ||
+			slices.ContainsFunc(op.Cups, func(c cupPositionDTO) bool { return !isCup(&c) }) ||
+			slices.ContainsFunc(op.Drawn, func(c cupPositionDTO) bool { return !isCup(&c) }) ||
+			(op.FormationID != nil && !isUUID(*op.FormationID)) {
+			return out, false
+		}
+		out.Team, out.Cups, out.Drawn, out.FormationID = op.Team, op.Cups, op.Drawn, op.FormationID
 	default:
 		return out, false
 	}

@@ -14,7 +14,6 @@ import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
 import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { useReracks } from '@/zustand/rerackStore';
 
 const HINT_HEIGHT = 64;
 const GRID_GAP = 32;
@@ -39,7 +38,6 @@ export default function NewMatchCups({
     const insets = useInsets(true, true);
 
     const entry = useMatchEntry(liveMatchId);
-    const reracks = useReracks(liveMatchId);
 
     const { groupId } = useGroup();
     const playersQuery = usePlayersQuery(groupId, entry.seasonId);
@@ -61,7 +59,7 @@ export default function NewMatchCups({
     );
 
     const layoutOf = (team: CupTeam) =>
-        cupLayout(entry.cupHits, team, reracks?.[team]);
+        cupLayout(entry.cupHits, team, entry.reracks[team]);
 
     function formationOf(team: CupTeam) {
         const formation = {

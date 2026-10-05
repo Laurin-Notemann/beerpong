@@ -9,8 +9,8 @@ import {
 /**
  * Pro mode: a team's cups put back together in another formation (e.g. 6 cups into a pyramid).
  * Each cup drawn in the new formation stands for one cup of the original pyramid, so hits keep
- * recording pyramid positions and the hit log, the server and other phones don't change.
- * A re-rack only shows on the phone that made it.
+ * recording pyramid positions. In a live match a re-rack is an op (SET_RERACK), so every phone
+ * and the TV draw the same cups.
  */
 export interface Rerack {
     /** the saved formation it was made from */

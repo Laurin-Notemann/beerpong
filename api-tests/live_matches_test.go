@@ -401,3 +401,40 @@ func TestLiveMatchRequiresMembership(t *testing.T) {
 }
 
 func rawLiveJSON(s string) *string { return &s }
+
+// A re-rack (a team's standing cups drawn in another formation) is an op like the others, so
+// every phone and the TV draw the same cups. The server only checks and stores it.
+func TestLiveMatchRerack(t *testing.T) {
+	h := New(t)
+	owner := h.NewUser()
+	g := h.NewGroup(owner, "Live rerack", "a", "b")
+	id := newLiveMatchID()
+	h.OK(putLiveMatch(h, owner, g, id, setTeams(g, "a", "b")))
+	ws := h.Listen(g.ID)
+
+	formation := newLiveMatchID()
+	rerack := liveOp{"id": newLiveMatchID(), "type": "SET_RERACK", "team": "red", "formationId": formation,
+		"cups":  []liveOp{{"x": 0, "y": 0}, {"x": 2, "y": 0}},
+		"drawn": []liveOp{{"x": 2, "y": 1}, {"x": 3, "y": 2}},
+		// not a field of the type: dropped
+		"playerId": g.Players["a"]}
+	back := liveOp{"id": newLiveMatchID(), "type": "SET_RERACK", "team": "red", "cups": []liveOp{}, "drawn": []liveOp{}}
+	res := h.OK(appendLiveOps(h, owner, g, id, rerack, back))
+	h.Equal(res.Data("ops", "0", "drawn"), []any{liveOp{"x": 2.0, "y": 1.0}, liveOp{"x": 3.0, "y": 2.0}}, "drawn")
+	h.Equal(res.Data("ops", "0", "formationId"), formation, "formationId")
+	h.Equal(res.Data("ops", "0", "playerId"), nil, "other fields dropped")
+	h.Equal(res.Data("ops", "1", "cups"), []any{}, "back to the pyramid")
+	ws.Expect(1)
+
+	invalid := map[string]liveOp{
+		"unpaired":      {"id": newLiveMatchID(), "type": "SET_RERACK", "team": "red", "cups": []liveOp{{"x": 0, "y": 0}}, "drawn": []liveOp{}},
+		"no cups":       {"id": newLiveMatchID(), "type": "SET_RERACK", "team": "red"},
+		"drawn x is 10": {"id": newLiveMatchID(), "type": "SET_RERACK", "team": "red", "cups": []liveOp{{"x": 0, "y": 0}}, "drawn": []liveOp{{"x": 10, "y": 0}}},
+		"no team":       {"id": newLiveMatchID(), "type": "SET_RERACK", "cups": []liveOp{}, "drawn": []liveOp{}},
+		"formation id":  {"id": newLiveMatchID(), "type": "SET_RERACK", "team": "red", "formationId": "nope", "cups": []liveOp{}, "drawn": []liveOp{}},
+	}
+	for _, name := range []string{"unpaired", "no cups", "drawn x is 10", "no team", "formation id"} {
+		h.Fail(appendLiveOpsQuiet(h, owner, g, id, invalid[name]), 400, "liveMatchInvalidOps")
+	}
+	ws.ExpectNone()
+}

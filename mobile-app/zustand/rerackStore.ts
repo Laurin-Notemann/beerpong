@@ -6,8 +6,9 @@ import { CupTeam } from '@/lib/cupHits';
 import { Rerack } from '@/lib/rerack';
 
 /**
- * The teams this phone re-racked, per match ('draft' or a live match id). The formations
- * themselves belong to the group (see formationHooks).
+ * The teams re-racked in the local draft (key 'draft'); a live match's re-racks are in its log
+ * (SET_RERACK), so every phone and the TV see them. The formations themselves belong to the
+ * group (see formationHooks).
  */
 interface RerackStore {
     reracks: Record<string, Partial<Record<CupTeam, Rerack>>>;
@@ -43,6 +44,5 @@ export const useRerackStore = create<RerackStore>()(
     )
 );
 
-/** the re-racks of the match being entered: a live match, or the local draft */
-export const useReracks = (liveMatchId?: string) =>
-    useRerackStore((s) => s.reracks[liveMatchId ?? 'draft']);
+/** the re-racks of the local draft */
+export const useReracks = () => useRerackStore((s) => s.reracks.draft);

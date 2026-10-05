@@ -29,7 +29,6 @@ import { cupAt, cupLayout } from '@/lib/rerack';
 import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
-import { useReracks } from '@/zustand/rerackStore';
 
 /** Pro mode: who hit the tapped cup, and how. Opened from the live match's cups page. */
 export default function Page() {
@@ -50,11 +49,7 @@ export default function Page() {
 
     const entry = useMatchEntry(params.liveMatchId);
     useCloseWhenEnded(entry.isEnded);
-    const layout = cupLayout(
-        entry.cupHits,
-        team,
-        useReracks(params.liveMatchId)?.[team]
-    );
+    const layout = cupLayout(entry.cupHits, team, entry.reracks[team]);
 
     const { groupId } = useGroup();
     const movesQuery = useMoves(groupId, entry.seasonId);

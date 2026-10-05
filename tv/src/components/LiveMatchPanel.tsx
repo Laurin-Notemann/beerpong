@@ -29,8 +29,8 @@ export function LiveMatchPanel({
                 </span>
             </div>
             <div className="flex items-center justify-between gap-[1rem]">
-                <CupRack standing={match.blue.standing} team="blue" className="w-[11rem]" />
-                <CupRack standing={match.red.standing} team="red" className="w-[11rem]" />
+                <CupRack cups={match.blue.cups} team="blue" className="w-[11rem]" />
+                <CupRack cups={match.red.cups} team="red" className="w-[11rem]" />
             </div>
             <div className="tabular flex items-center justify-center gap-[2rem] text-[9rem] leading-none font-black">
                 <span key={`b${match.blue.score}`} className="pop inline-block text-blue">
