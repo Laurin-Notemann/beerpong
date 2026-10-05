@@ -183,6 +183,7 @@ tr.sel { background: color-mix(in srgb, var(--text) 6%, transparent); }
 .share { position: relative; height: 12px; background: var(--surface-2); border-radius: 3px; }
 .share .act { position: absolute; left: 0; top: 0; bottom: 0; background: var(--scoring); border-radius: 3px; opacity: 0.85; }
 .share .exp { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); }
+.share .exp.part { opacity: 0.4; }
 .share-lbl { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; font-variant-numeric: tabular-nums; }
 .deltas { display: grid; gap: 3px; }
 .drow { display: grid; grid-template-columns: 1fr 1fr 3rem; gap: 2px; align-items: center; font-size: 0.75rem; }
