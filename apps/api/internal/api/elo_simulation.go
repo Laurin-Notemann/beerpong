@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"net/http"
 	"slices"
@@ -23,14 +24,14 @@ import (
 // group's invite code.
 
 type eloParamsDTO struct {
-	K            float64 `json:"k"`
-	MarginWeight float64 `json:"marginWeight"`
-	PerPoint     float64 `json:"perPoint"`
-	TopWeight    float64 `json:"topWeight"`
+	K          float64 `json:"k"`
+	KR         float64 `json:"kr"`
+	RingWeight float64 `json:"ringWeight"`
+	Swing      float64 `json:"swing"`
 }
 
 func toEloParamsDTO(p leaderboard.EloParams) eloParamsDTO {
-	return eloParamsDTO{K: p.K, MarginWeight: p.MarginWeight, PerPoint: p.PerPoint, TopWeight: p.TopWeight}
+	return eloParamsDTO{K: p.K, KR: p.KR, RingWeight: p.RingWeight, Swing: p.Swing}
 }
 
 type eloScoreDTO struct {
@@ -45,15 +46,16 @@ func toEloScoreDTO(s leaderboard.Score) eloScoreDTO {
 }
 
 type eloSimulationDTO struct {
-	GroupID   string         `json:"groupId"`
-	GroupName *string        `json:"groupName"`
-	Defaults  eloParamsDTO   `json:"defaults"`
-	Params    eloParamsDTO   `json:"params"`
-	Seasons   []eloSeasonDTO `json:"seasons"`
-	SeasonID  *string        `json:"seasonId"`
+	GroupID   string  `json:"groupId"`
+	GroupName *string `json:"groupName"`
+	// Defaults are the season's weights, as its settings have them
+	Defaults eloParamsDTO   `json:"defaults"`
+	Params   eloParamsDTO   `json:"params"`
+	Seasons  []eloSeasonDTO `json:"seasons"`
+	SeasonID *string        `json:"seasonId"`
 	// Baseline is what the standings compare with: "storedGames" (the same
 	// weights without test and live games) when the request has any, else
-	// "defaults" (the default weights).
+	// "defaults" (the season's weights).
 	Baseline   string           `json:"baseline"`
 	Standings  []eloStandingDTO `json:"standings"`
 	Games      []eloGameDTO     `json:"games"`
@@ -62,13 +64,17 @@ type eloSimulationDTO struct {
 	// players who weren't removed
 	Moves    []eloRuleMoveDTO `json:"moves"`
 	Profiles []eloProfileDTO  `json:"profiles"`
+	// Replay is the game the request's replay asked for, once after every
+	// step and last as stored; empty without one
+	Replay []eloGameDTO `json:"replay"`
 }
 
 type eloSeasonDTO struct {
-	ID                  string  `json:"id"`
-	Name                *string `json:"name"`
-	NumMatches          int     `json:"numMatches"`
-	MinMatchesToQualify int32   `json:"minMatchesToQualify"`
+	ID                  string       `json:"id"`
+	Name                *string      `json:"name"`
+	NumMatches          int          `json:"numMatches"`
+	MinMatchesToQualify int32        `json:"minMatchesToQualify"`
+	Elo                 eloParamsDTO `json:"elo"`
 }
 
 type eloRuleMoveDTO struct {
@@ -85,7 +91,8 @@ type eloProfileDTO struct {
 }
 
 type eloPredictionDTO struct {
-	Params   eloScoreDTO `json:"params"`
+	Params eloScoreDTO `json:"params"`
+	// Defaults: every season with its own weights
 	Defaults eloScoreDTO `json:"defaults"`
 }
 
@@ -115,21 +122,23 @@ type eloGameDTO struct {
 	// now; nil for other games
 	LiveMatchID *string   `json:"liveMatchId"`
 	Date        time.Time `json:"date"`
-	Gap         float64   `json:"gap"`
-	Scale       float64   `json:"scale"`
-	TeamPoints  float64   `json:"teamPoints"`
-	// Share is how much of a full game this was (a ring ends it early, a
-	// live game is under way); each player's expected counts for this share
-	Share      float64      `json:"share"`
+	// Points: own points both teams scored, what the shares are of
+	Points int64 `json:"points"`
+	// FullPoints: own points of an average full game before this one; an
+	// average player scores FullPoints / 2 / team size
+	FullPoints float64 `json:"fullPoints"`
+	// Ring is what the result counted: more than 1 for a ring win
+	Ring       float64      `json:"ring"`
 	Finisher   string       `json:"finisher"`
 	FinishMove string       `json:"finishMove"`
 	Teams      []eloTeamDTO `json:"teams"`
 }
 
 type eloTeamDTO struct {
-	Won       bool           `json:"won"`
-	Rating    float64        `json:"rating"`
-	WinChance float64        `json:"winChance"`
+	Won       bool    `json:"won"`
+	WinChance float64 `json:"winChance"`
+	// Share of the game's own points, set before it
+	Share     float64        `json:"share"`
 	Points    int64          `json:"points"`
 	AvgPoints float64        `json:"avgPoints"`
 	Cups      int64          `json:"cups"`
@@ -137,16 +146,19 @@ type eloTeamDTO struct {
 }
 
 type eloPlayerDTO struct {
-	ProfileID string       `json:"profileId"`
-	Name      string       `json:"name"`
-	Points    int64        `json:"points"`
-	Own       int64        `json:"own"`
-	Before    float64      `json:"before"`
-	After     float64      `json:"after"`
-	Result    float64      `json:"result"`
-	Hitting   float64      `json:"hitting"`
-	Expected  float64      `json:"expected"`
-	Moves     []eloMoveDTO `json:"moves"`
+	ProfileID string  `json:"profileId"`
+	Name      string  `json:"name"`
+	Points    int64   `json:"points"`
+	Own       int64   `json:"own"`
+	Before    float64 `json:"before"`
+	After     float64 `json:"after"`
+	Result    float64 `json:"result"`
+	Hitting   float64 `json:"hitting"`
+	// Share of the game's own points, set before it; Expected is Share ×
+	// the game's points
+	Share    float64      `json:"share"`
+	Expected float64      `json:"expected"`
+	Moves    []eloMoveDTO `json:"moves"`
 }
 
 type eloMoveDTO struct {
@@ -208,8 +220,10 @@ func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, respon
 	}
 	for i, sn := range seasons {
 		li := inputs[i]
+		weights := eloWeights{K: sn.EloK, KR: sn.EloKr, RingWeight: sn.EloRingWeight, Swing: sn.EloSwing}
 		g.seasons = append(g.seasons, eloSeasonDTO{
 			ID: sn.ID, Name: sn.Name, NumMatches: len(li.matches), MinMatchesToQualify: deref(sn.MinMatchesToQualify),
+			Elo: toEloParamsDTO(weights.params()),
 		})
 		g.inputs = append(g.inputs, li)
 		for _, p := range li.in.Players {
@@ -245,20 +259,25 @@ func (s *Server) eloSimulation(r *request) response {
 	if res != nil {
 		return res
 	}
-	params, valid := eloParamsFromQuery(r)
+	si := g.pickSeason(r.URL.Query().Get("seasonId"))
+	stored := leaderboard.DefaultElo
+	if si >= 0 {
+		stored = g.inputs[si].elo
+	}
+	params, valid := eloParamsFromQuery(r, stored)
 	if !valid {
 		return springError(400)
 	}
-	tests, live, res := readExtraGames(r, time.Now())
+	tests, live, replay, res := readExtraGames(r, time.Now())
 	if res != nil {
 		return res
 	}
 
 	out := eloSimulationDTO{
 		GroupID: g.group.ID, GroupName: g.group.Name,
-		Defaults: toEloParamsDTO(leaderboard.DefaultElo), Params: toEloParamsDTO(params),
+		Defaults: toEloParamsDTO(stored), Params: toEloParamsDTO(params),
 		Seasons: g.seasons, Baseline: "defaults", Standings: []eloStandingDTO{}, Games: []eloGameDTO{},
-		Moves: []eloRuleMoveDTO{}, Profiles: []eloProfileDTO{},
+		Moves: []eloRuleMoveDTO{}, Profiles: []eloProfileDTO{}, Replay: []eloGameDTO{},
 	}
 	if out.Seasons == nil {
 		out.Seasons = []eloSeasonDTO{}
@@ -270,17 +289,16 @@ func (s *Server) eloSimulation(r *request) response {
 	}
 	sort.Slice(out.Profiles, func(i, j int) bool { return out.Profiles[i].Name < out.Profiles[j].Name })
 	all := g.allInputs()
-	predicted, err := leaderboard.Predict(all, params)
+	predicted, err := leaderboard.Predict(all, &params)
 	if err != nil {
 		return internal(err)
 	}
-	defaults, err := leaderboard.Predict(all, leaderboard.DefaultElo)
+	defaults, err := leaderboard.Predict(all, nil)
 	if err != nil {
 		return internal(err)
 	}
 	out.Prediction = eloPredictionDTO{Params: toEloScoreDTO(predicted), Defaults: toEloScoreDTO(defaults)}
 
-	si := g.pickSeason(r.URL.Query().Get("seasonId"))
 	if si < 0 {
 		if len(tests) > 0 {
 			return fail(errEloInvalidTestGame)
@@ -340,6 +358,84 @@ func (s *Server) eloSimulation(r *request) response {
 	}
 	out.Games = g.games(in, moves, result.Games, extra)
 	out.Standings = g.standings(result, before, int64(sn.MinMatchesToQualify))
+	if replay != nil {
+		games, res := g.replay(li.in, params, *replay, moves)
+		if res != nil {
+			return res
+		}
+		out.Replay = games
+	}
+	return ok(out)
+}
+
+// replay rates a stored match of the season after every step of its live
+// log, then as stored (leaderboard.Replay), with the request's weights.
+func (g eloGroup) replay(base leaderboard.Input, params leaderboard.EloParams, rp eloReplay, moves map[string]db.RuleMove) ([]eloGameDTO, response) {
+	in := base
+	in.Elo = &params
+	in.RuleMoves = maps.Clone(base.RuleMoves)
+	for id, m := range moves {
+		in.RuleMoves[id] = leaderboard.RuleMove{PointsForScorer: m.PointsForScorer, PointsForTeam: m.PointsForTeam, Finishing: m.FinishingMove, Cups: cupsPerHit(m)}
+	}
+	known := map[string]bool{}
+	for _, p := range base.Players {
+		known[p.ID] = true
+	}
+	for _, step := range rp.steps {
+		for _, tm := range step.Members {
+			if !known[tm.PlayerID] {
+				return nil, fail(errEloInvalidLiveMatch)
+			}
+		}
+		for _, mv := range step.Moves {
+			if _, ok := moves[mv.MoveID]; !ok {
+				return nil, fail(errEloInvalidLiveMatch)
+			}
+		}
+	}
+	traced, err := leaderboard.Replay(in, rp.matchID, rp.steps)
+	if errors.Is(err, leaderboard.ErrNoMatch) || errors.Is(err, leaderboard.ErrNoWinner) {
+		return nil, fail(errEloInvalidLiveMatch)
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+	played := leaderboard.Input{Matches: rp.steps}
+	for _, m := range base.Matches {
+		if m.ID == rp.matchID {
+			played.Matches = append(played.Matches, m)
+		}
+	}
+	return g.games(played, moves, traced, extraGames{}), nil
+}
+
+// eloReplays answers GET /elo-simulation/replays: the season's live matches
+// that became a match, with their ops, for the simulator to replay.
+func (s *Server) eloReplays(r *request) response {
+	row, res := s.eloGroupByCode(r.Context(), r)
+	if res != nil {
+		return res
+	}
+	seasonID := r.URL.Query().Get("seasonId")
+	if seasonID == "" {
+		seasonID = deref(row.ActiveSeasonID)
+	}
+	rows, err := s.q.FinishedLiveMatchesBySeason(r.Context(), db.FinishedLiveMatchesBySeasonParams{GroupID: row.ID, SeasonID: seasonID})
+	if err != nil {
+		return internal(err)
+	}
+	ids := make([]string, len(rows))
+	for i, lm := range rows {
+		ids[i] = lm.LiveMatch.ID
+	}
+	ops, err := liveMatchOps(r.Context(), s.q, ids)
+	if err != nil {
+		return internal(err)
+	}
+	out := make([]liveMatchDTO, len(rows))
+	for i, lm := range rows {
+		out[i] = toLiveMatchDTO(lm.LiveMatch, lm.CreatedByUserID, ops[lm.LiveMatch.ID])
+	}
 	return ok(out)
 }
 
@@ -372,10 +468,9 @@ func (s *Server) eloSearch(r *request) response {
 	return ok(eloSearchDTO{Params: toEloParamsDTO(best), Prediction: toEloScoreDTO(score), Tried: tried})
 }
 
-// eloParamsFromQuery reads the weights; any left out stay at the default.
-func eloParamsFromQuery(r *request) (leaderboard.EloParams, bool) {
-	p := leaderboard.DefaultElo
-	for name, field := range map[string]*float64{"k": &p.K, "marginWeight": &p.MarginWeight, "perPoint": &p.PerPoint, "topWeight": &p.TopWeight} {
+// eloParamsFromQuery reads the weights; any left out stay at the season's.
+func eloParamsFromQuery(r *request, p leaderboard.EloParams) (leaderboard.EloParams, bool) {
+	for name, field := range map[string]*float64{"k": &p.K, "kr": &p.KR, "ringWeight": &p.RingWeight, "swing": &p.Swing} {
 		raw := r.URL.Query().Get(name)
 		if raw == "" {
 			continue
@@ -426,6 +521,15 @@ type eloTestMove struct {
 	Count  int32  `json:"count"`
 }
 
+// eloReplay is a stored match to replay, step by step: the teams after
+// every op of its live log, in the match create format.
+type eloReplay struct {
+	matchID string
+	steps   []leaderboard.Match
+}
+
+const maxReplaySteps = 300
+
 // eloLiveGame is a running live match as it would be entered now.
 type eloLiveGame struct {
 	id    string
@@ -433,49 +537,82 @@ type eloLiveGame struct {
 }
 
 // readExtraGames reads the body of a POST: {"testGames": [...],
-// "liveMatches": [{"liveMatchId": ..., "teams": [blue, red]}]}, the teams in
-// the match create format.
-func readExtraGames(r *request, now time.Time) ([]eloTestGame, []eloLiveGame, response) {
+// "liveMatches": [{"liveMatchId": ..., "teams": [blue, red]}], "replay":
+// {"matchId": ..., "steps": [{"teams": [blue, red]}]}}, the teams in the
+// match create format.
+func readExtraGames(r *request, now time.Time) ([]eloTestGame, []eloLiveGame, *eloReplay, response) {
 	if r.Method != http.MethodPost {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 	body, res := readJSON(r.Request, false)
 	if res != nil || body == nil {
-		return nil, nil, res
+		return nil, nil, nil, res
 	}
 	o, err := asObject(body)
 	if err != nil {
-		return nil, nil, springError(400)
+		return nil, nil, nil, springError(400)
 	}
 	raw, err := json.Marshal(o["testGames"])
 	if err != nil {
-		return nil, nil, springError(400)
+		return nil, nil, nil, springError(400)
 	}
 	var tests []eloTestGame
 	if err := json.Unmarshal(raw, &tests); err != nil || len(tests) > maxTestGames {
-		return nil, nil, fail(errEloInvalidTestGame)
+		return nil, nil, nil, fail(errEloInvalidTestGame)
 	}
 	list, _, err := o.list("liveMatches")
 	if err != nil || len(list) > maxProjectedMatches {
-		return nil, nil, fail(errEloInvalidLiveMatch)
+		return nil, nil, nil, fail(errEloInvalidLiveMatch)
 	}
 	var live []eloLiveGame
 	for _, item := range list {
 		lo, err := asObject(item)
 		if err != nil {
-			return nil, nil, fail(errEloInvalidLiveMatch)
+			return nil, nil, nil, fail(errEloInvalidLiveMatch)
 		}
 		id, err := lo.str("liveMatchId")
 		if err != nil || id == nil {
-			return nil, nil, fail(errEloInvalidLiveMatch)
+			return nil, nil, nil, fail(errEloInvalidLiveMatch)
 		}
 		m, err := parseProjectedMatch(item, "live-"+*id, now)
 		if err != nil {
-			return nil, nil, fail(errEloInvalidLiveMatch)
+			return nil, nil, nil, fail(errEloInvalidLiveMatch)
 		}
 		live = append(live, eloLiveGame{id: *id, match: m})
 	}
-	return tests, live, nil
+	replay, err := readReplay(o, now)
+	if err != nil {
+		return nil, nil, nil, fail(errEloInvalidLiveMatch)
+	}
+	return tests, live, replay, nil
+}
+
+// readReplay reads the body's replay, nil without one.
+func readReplay(o object, now time.Time) (*eloReplay, error) {
+	if o["replay"] == nil {
+		return nil, nil
+	}
+	ro, err := o.child("replay")
+	if err != nil {
+		return nil, err
+	}
+	id, err := ro.str("matchId")
+	if err != nil || id == nil {
+		return nil, errBadBody
+	}
+	steps, _, err := ro.list("steps")
+	if err != nil || len(steps) > maxReplaySteps {
+		return nil, errBadBody
+	}
+	rp := &eloReplay{matchID: *id}
+	for i, item := range steps {
+		m, err := parseProjectedMatch(item, fmt.Sprintf("replay-%d", i), now)
+		if err != nil {
+			return nil, err
+		}
+		rp.steps = append(rp.steps, m)
+	}
+	return rp, nil
 }
 
 // extraGames maps the match ids of test and live games to where they came
@@ -626,7 +763,7 @@ func (g eloGroup) games(in leaderboard.Input, moves map[string]db.RuleMove, trac
 	out := make([]eloGameDTO, 0, len(traced))
 	for _, tg := range traced {
 		m := matches[tg.MatchID]
-		dto := eloGameDTO{MatchID: tg.MatchID, Date: tg.Date.UTC(), Gap: tg.Gap, Scale: tg.Scale, TeamPoints: tg.TeamPoints, Share: tg.Share}
+		dto := eloGameDTO{MatchID: tg.MatchID, Date: tg.Date.UTC(), Points: tg.Points, FullPoints: tg.FullPoints, Ring: tg.Ring}
 		if i, isTest := extra.test[tg.MatchID]; isTest {
 			dto.TestIndex = &i
 		}
@@ -634,11 +771,11 @@ func (g eloGroup) games(in leaderboard.Input, moves map[string]db.RuleMove, trac
 			dto.LiveMatchID = &id
 		}
 		for _, tt := range tg.Teams {
-			team := eloTeamDTO{Won: tt.Won, Rating: tt.Rating, WinChance: tt.WinChance}
+			team := eloTeamDTO{Won: tt.Won, WinChance: tt.WinChance, Share: tt.Share}
 			for _, tp := range tt.Players {
 				p := eloPlayerDTO{
 					ProfileID: tp.ProfileID, Name: g.profiles[tp.ProfileID], Points: tp.Points, Own: tp.Own,
-					Before: tp.Before, After: tp.After, Result: tp.Result, Hitting: tp.Hitting, Expected: tp.Expected,
+					Before: tp.Before, After: tp.After, Result: tp.Result, Hitting: tp.Hitting, Share: tp.Share, Expected: tp.Expected,
 					Moves: []eloMoveDTO{},
 				}
 				for _, mv := range m.Moves {

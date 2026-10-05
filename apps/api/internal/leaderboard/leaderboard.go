@@ -55,6 +55,8 @@ type Match struct {
 	// Projected is a live match counted as if it ended now. Until a finish
 	// decides it, the team that took more cups wins; a tie is a draw.
 	Projected bool
+	// Elo is the weights of the match's season; DefaultElo without.
+	Elo *EloParams
 }
 
 type Member struct {
@@ -86,7 +88,7 @@ type Input struct {
 	// KeepStoredStats starts from the stored statistics instead of zero
 	// (season boards used to carry stats forward).
 	KeepStoredStats bool
-	// Elo replaces DefaultElo (the simulator).
+	// Elo replaces every match's weights (the simulator).
 	Elo *EloParams
 	// Trace records how every match moved the ratings in Result.Games.
 	Trace bool
@@ -110,18 +112,17 @@ type Result struct {
 type Game struct {
 	MatchID    string
 	Date       time.Time
-	Gap        float64 // winners' app points per player minus losers'
-	Scale      float64 // how many close normal wins the result counted as
-	TeamPoints float64 // own points a team scored per full game before this one
-	Share      float64 // how much of a full game this was; Expected counts for this share
+	Points     int64   // own points both teams scored
+	FullPoints float64 // own points of an average full game before this one
+	Ring       float64 // what the result counted: more than 1 for a ring win
 	Teams      [2]GameTeam
 }
 
 type GameTeam struct {
 	TeamID    string
 	Won       bool
-	Rating    float64
 	WinChance float64
+	Share     float64 // of the game's points, set before it
 	Players   []GamePlayer
 }
 
@@ -132,9 +133,10 @@ type GamePlayer struct {
 	Own       int64 // without the finish bonus
 	Before    float64
 	After     float64
-	Result    float64 // the team's share of the change
-	Hitting   float64 // PerPoint × (Own − Expected × Share)
-	Expected  float64 // own points expected in a full game, set before it
+	Result    float64 // the team's result, the same for every player
+	Hitting   float64 // K × (Own − Expected) / an average player's full game
+	Share     float64 // of the game's points, set before it
+	Expected  float64 // Share × the game's points
 }
 
 // draw stands for the winner of a tied projected match.
@@ -161,10 +163,7 @@ func Compute(in Input) (Result, error) {
 	sort.SliceStable(matches, func(i, j int) bool { return matches[i].Date.Before(matches[j].Date) })
 
 	var numMatches int64
-	r := &rating{elo: DefaultElo, trace: in.Trace}
-	if in.Elo != nil {
-		r.elo = *in.Elo
-	}
+	r := &rating{override: in.Elo, normalBonus: normalFinishBonus(in.RuleMoves), trace: in.Trace}
 	for _, m := range matches {
 		processed, err := processMatch(m, entries, memberProfile, in.RuleMoves, r)
 		if err != nil {
@@ -186,12 +185,38 @@ func Compute(in Input) (Result, error) {
 
 // rating is the Elo state of one Compute.
 type rating struct {
-	elo EloParams
-	// teamPoints: the Elo's expected points follow what teams scored so far
-	// this season.
-	teamPoints teamPointsAverage
-	trace      bool
-	games      []Game
+	override *EloParams
+	// full: hitting is scaled to what an average full game had so far
+	full fullGames
+	// normalBonus is a normal finish's team bonus, what a ring's is compared
+	// with
+	normalBonus int32
+	trace       bool
+	games       []Game
+}
+
+func (r *rating) params(m Match) EloParams {
+	switch {
+	case r.override != nil:
+		return *r.override
+	case m.Elo != nil:
+		return *m.Elo
+	default:
+		return DefaultElo
+	}
+}
+
+// normalFinishBonus is the team bonus of a finish that takes no cups of its
+// own (a normal finish; a ring takes its formation), the smallest if the
+// rules have several.
+func normalFinishBonus(moves map[string]RuleMove) int32 {
+	var bonus int32
+	for _, m := range moves {
+		if m.Finishing && m.Cups == 0 && m.PointsForTeam > 0 && (bonus == 0 || m.PointsForTeam < bonus) {
+			bonus = m.PointsForTeam
+		}
+	}
+	return bonus
 }
 
 // buildEntries keeps one player per profile: the one from the most recent
@@ -242,6 +267,7 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 	winner := ""
 	// finishCups: what the finish took off the table itself (a ring's cups)
 	var finishCups int64
+	var finishBonus int32
 	playerPoints := map[string]int64{}
 	// appPoints are the points the app shows for this match: own points plus
 	// every finish bonus of the team. The Elo rates on these.
@@ -303,6 +329,7 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 			if rm.Finishing && mv.Value > 0 {
 				winner = team
 				finishCups = int64(rm.Cups * mv.Value)
+				finishBonus = rm.PointsForTeam
 			}
 			playerPoints[e.Stats.PlayerID] += int64(own)
 			if team == blue {
@@ -347,36 +374,41 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 			before = append(before, s.Elo)
 		}
 	}
-	teamPoints := r.teamPoints.value()
-	winnerCups := map[string]int64{blue: blueCups, red: redCups}[winner]
-	share := gameShare(inProgress, blueCups, redCups, winnerCups, finishCups)
-	g := calculateElo(r.elo, resultBlue, blueStats, redStats, appPoints, playerPoints, teamPoints, share)
-	if share == 1 && !m.Projected {
-		r.teamPoints.add(bluePoints)
-		r.teamPoints.add(redPoints)
+	params := r.params(m)
+	ring := 1.0
+	if !inProgress && finishCups > 0 {
+		ring = ringFactor(params, finishBonus, r.normalBonus)
+	}
+	full := r.full.value()
+	g := calculateElo(params, resultBlue, ring, [2][]*Stats{blueStats, redStats}, playerPoints, full)
+	if !m.Projected && finishCups == 0 {
+		r.full.add(bluePoints + redPoints)
 	}
 	if !r.trace {
 		return true, nil
 	}
 
-	game := Game{MatchID: m.ID, Date: m.Date, Gap: g.gap, Scale: g.scale, TeamPoints: teamPoints, Share: share}
+	game := Game{MatchID: m.ID, Date: m.Date, Points: bluePoints + redPoints, FullPoints: full, Ring: ring}
 	sides := [2][]*Stats{blueStats, redStats}
 	members := [2][]string{blueMembers, redMembers}
 	for k, team := range [2]string{blue, red} {
-		delta, chance := g.delta, g.winChance
+		chance := g.winChance
 		if k == 1 {
-			delta, chance = -delta, 1-chance
+			chance = 1 - chance
 		}
-		gt := GameTeam{TeamID: team, Won: winner == team, Rating: g.rating[k], WinChance: chance}
+		gt := GameTeam{TeamID: team, Won: winner == team, WinChance: chance}
 		for i, s := range sides[k] {
 			b := before[0]
 			before = before[1:]
-			own := playerPoints[s.PlayerID]
-			gt.Players = append(gt.Players, GamePlayer{
+			gp := GamePlayer{
 				MemberID: members[k][i], ProfileID: memberProfile[members[k][i]],
-				Points: appPoints[s.PlayerID], Own: own, Before: b, After: s.Elo,
-				Result: delta, Hitting: hitting(r.elo, own, g.expected[k][i], share), Expected: g.expected[k][i],
-			})
+				Points: appPoints[s.PlayerID], Own: playerPoints[s.PlayerID], Before: b, After: s.Elo,
+			}
+			if len(g.share[k]) > i {
+				gp.Result, gp.Hitting, gp.Share, gp.Expected = g.result[k], g.hitting[k][i], g.share[k][i], g.expected[k][i]
+				gt.Share += gp.Share
+			}
+			gt.Players = append(gt.Players, gp)
 		}
 		game.Teams[k] = gt
 	}

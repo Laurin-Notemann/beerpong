@@ -52,7 +52,7 @@ func TestEloSimulation(t *testing.T) {
 	h.Equal(Get(ring, "finisher"), "c", "finisher")
 
 	// without weight nobody moves
-	still := h.OK(h.Do(Req{Method: "GET", Path: "/elo-simulation?k=0&perPoint=0&inviteCode=" + g.InviteCode}))
+	still := h.OK(h.Do(Req{Method: "GET", Path: "/elo-simulation?k=0&kr=0&inviteCode=" + g.InviteCode}))
 	for _, s := range still.List("standings") {
 		h.Equal(Get(s, "elo"), 1500.0, "elo without weight")
 	}

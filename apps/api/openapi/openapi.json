@@ -39,7 +39,7 @@
             "get": {
                 "tags": ["elo-simulation-controller"],
                 "operationId": "getEloSimulation",
-                "description": "A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.",
+                "description": "A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the season's (its settings'); without seasonId the running season.",
                 "parameters": [
                     {
                         "name": "inviteCode",
@@ -61,19 +61,19 @@
                         "schema": { "type": "number", "format": "double" }
                     },
                     {
-                        "name": "marginWeight",
+                        "name": "kr",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
                     },
                     {
-                        "name": "perPoint",
+                        "name": "ringWeight",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
                     },
                     {
-                        "name": "topWeight",
+                        "name": "swing",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
@@ -95,7 +95,7 @@
             "post": {
                 "tags": ["elo-simulation-controller"],
                 "operationId": "simulateEloWithTestGames",
-                "description": "Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone.",
+                "description": "Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone. With a replay, the response's replay rates one stored match after every step of its live log, then as stored.",
                 "parameters": [
                     {
                         "name": "inviteCode",
@@ -117,19 +117,19 @@
                         "schema": { "type": "number", "format": "double" }
                     },
                     {
-                        "name": "marginWeight",
+                        "name": "kr",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
                     },
                     {
-                        "name": "perPoint",
+                        "name": "ringWeight",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
                     },
                     {
-                        "name": "topWeight",
+                        "name": "swing",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
@@ -156,6 +156,40 @@
                         }
                     },
                     "required": true
+                }
+            }
+        },
+        "/elo-simulation/replays": {
+            "get": {
+                "tags": ["elo-simulation-controller"],
+                "operationId": "getEloReplays",
+                "description": "The season's live matches that became a match, with their ops, for the simulator to replay move by move. Without seasonId the running season.",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" },
+                        "description": "The group's invite code; it is all the simulator needs to open a group."
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListLiveMatchDto"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -2239,19 +2273,49 @@
                         "items": {
                             "$ref": "#/components/schemas/EloLiveMatchDto"
                         }
-                    }
+                    },
+                    "replay": { "$ref": "#/components/schemas/EloReplayDto" }
                 },
                 "required": []
+            },
+            "EloReplayDto": {
+                "type": "object",
+                "description": "A stored match of the season and the teams after every step of its live log.",
+                "properties": {
+                    "matchId": { "type": "string" },
+                    "steps": {
+                        "type": "array",
+                        "description": "At most 300.",
+                        "items": {
+                            "$ref": "#/components/schemas/EloReplayStepDto"
+                        }
+                    }
+                },
+                "required": ["matchId", "steps"]
+            },
+            "EloReplayStepDto": {
+                "type": "object",
+                "properties": {
+                    "teams": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                            "$ref": "#/components/schemas/TeamCreateDto"
+                        }
+                    }
+                },
+                "required": ["teams"]
             },
             "EloParamsDto": {
                 "type": "object",
                 "properties": {
                     "k": { "type": "number", "format": "double" },
-                    "marginWeight": { "type": "number", "format": "double" },
-                    "perPoint": { "type": "number", "format": "double" },
-                    "topWeight": { "type": "number", "format": "double" }
+                    "kr": { "type": "number", "format": "double" },
+                    "ringWeight": { "type": "number", "format": "double" },
+                    "swing": { "type": "number", "format": "double" }
                 },
-                "required": ["k", "marginWeight", "perPoint", "topWeight"]
+                "required": ["k", "kr", "ringWeight", "swing"]
             },
             "EloScoreDto": {
                 "type": "object",
@@ -2272,9 +2336,16 @@
                     "minMatchesToQualify": {
                         "type": "integer",
                         "format": "int32"
-                    }
+                    },
+                    "elo": { "$ref": "#/components/schemas/EloParamsDto" }
                 },
-                "required": ["id", "name", "numMatches", "minMatchesToQualify"]
+                "required": [
+                    "id",
+                    "name",
+                    "numMatches",
+                    "minMatchesToQualify",
+                    "elo"
+                ]
             },
             "EloPredictionDto": {
                 "type": "object",
@@ -2345,7 +2416,16 @@
                     "after": { "type": "number", "format": "double" },
                     "result": { "type": "number", "format": "double" },
                     "hitting": { "type": "number", "format": "double" },
-                    "expected": { "type": "number", "format": "double" },
+                    "share": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "The player's share of the game's own points, set before it."
+                    },
+                    "expected": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "share × the game's points."
+                    },
                     "moves": {
                         "type": "array",
                         "items": { "$ref": "#/components/schemas/EloMoveDto" }
@@ -2360,6 +2440,7 @@
                     "after",
                     "result",
                     "hitting",
+                    "share",
                     "expected",
                     "moves"
                 ]
@@ -2368,8 +2449,12 @@
                 "type": "object",
                 "properties": {
                     "won": { "type": "boolean" },
-                    "rating": { "type": "number", "format": "double" },
                     "winChance": { "type": "number", "format": "double" },
+                    "share": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "The team's share of the game's own points, set before it."
+                    },
                     "points": { "type": "integer", "format": "int64" },
                     "avgPoints": { "type": "number", "format": "double" },
                     "cups": { "type": "integer", "format": "int64" },
@@ -2380,8 +2465,8 @@
                 },
                 "required": [
                     "won",
-                    "rating",
                     "winChance",
+                    "share",
                     "points",
                     "avgPoints",
                     "cups",
@@ -2404,13 +2489,20 @@
                         "nullable": true
                     },
                     "date": { "type": "string", "format": "date-time" },
-                    "gap": { "type": "number", "format": "double" },
-                    "scale": { "type": "number", "format": "double" },
-                    "teamPoints": { "type": "number", "format": "double" },
-                    "share": {
+                    "points": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Own points both teams scored, what the shares are of."
+                    },
+                    "fullPoints": {
                         "type": "number",
                         "format": "double",
-                        "description": "How much of a full game this was: 1, less when a ring ended it early or it is still running. Each player's expected counts for this share."
+                        "description": "Own points of an average full game before this one; an average player scores fullPoints / 2 / team size."
+                    },
+                    "ring": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "What the result counted: more than 1 for a ring win."
                     },
                     "finisher": { "type": "string" },
                     "finishMove": { "type": "string" },
@@ -2424,10 +2516,9 @@
                     "testIndex",
                     "liveMatchId",
                     "date",
-                    "gap",
-                    "scale",
-                    "teamPoints",
-                    "share",
+                    "points",
+                    "fullPoints",
+                    "ring",
                     "finisher",
                     "finishMove",
                     "teams"
@@ -2448,7 +2539,7 @@
                     "baseline": {
                         "type": "string",
                         "enum": ["defaults", "storedGames"],
-                        "description": "What the standings' baseline values compare with: the default weights, or with test or live games the same weights without them."
+                        "description": "What the standings' baseline values compare with: the season's weights, or with test or live games the same weights without them."
                     },
                     "standings": {
                         "type": "array",
@@ -2474,6 +2565,11 @@
                         "items": {
                             "$ref": "#/components/schemas/EloProfileDto"
                         }
+                    },
+                    "replay": {
+                        "type": "array",
+                        "description": "The requested replay: the match after every step, last as stored; empty without one.",
+                        "items": { "$ref": "#/components/schemas/EloGameDto" }
                     }
                 },
                 "required": [
@@ -2488,7 +2584,8 @@
                     "games",
                     "prediction",
                     "moves",
-                    "profiles"
+                    "profiles",
+                    "replay"
                 ]
             },
             "EloSearchDto": {
@@ -2847,7 +2944,31 @@
                         ],
                         "nullable": true
                     },
-                    "wakeTime": { "type": "string" }
+                    "wakeTime": { "type": "string" },
+                    "eloK": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.",
+                        "nullable": true
+                    },
+                    "eloKr": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Elo: rating at stake on the result (at swing 1).",
+                        "nullable": true
+                    },
+                    "eloRingWeight": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Elo: a ring win counts (ring bonus / normal finish bonus) to this power: 0 like a normal win, 0.5 the square root, 1 the ratio.",
+                        "nullable": true
+                    },
+                    "eloSwing": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Elo: how far ratings move and spread, without changing who's ahead.",
+                        "nullable": true
+                    }
                 }
             },
             "SeasonUpdateDto": {

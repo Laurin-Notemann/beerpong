@@ -174,6 +174,22 @@ func toInt32(s string) (*int32, error) {
 	return &v, nil
 }
 
+// optionalFloat binds a Double field that can be cleared: set reports
+// whether the key is present, and the value is nil when it's null.
+func (o object) optionalFloat(key string) (value *float64, set bool, err error) {
+	if !o.has(key) {
+		return nil, false, nil
+	}
+	if o[key] == nil {
+		return nil, true, nil
+	}
+	f, err := o.primitiveFloat(key)
+	if err != nil || math.IsNaN(f) || math.IsInf(f, 0) {
+		return nil, true, errBadBody
+	}
+	return &f, true, nil
+}
+
 // primitiveFloat binds a double field: missing or null is 0.
 func (o object) primitiveFloat(key string) (float64, error) {
 	switch t := o[key].(type) {

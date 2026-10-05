@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -176,6 +177,14 @@ func (s *Server) updateSeason(r *request) response {
 		if update.rankingAlgorithm != nil {
 			next.RankingAlgorithm = update.rankingAlgorithm
 		}
+		for _, w := range []struct {
+			update optionalWeight
+			to     **float64
+		}{{update.eloK, &next.Elo.K}, {update.eloKr, &next.Elo.KR}, {update.eloRingWeight, &next.Elo.RingWeight}, {update.eloSwing, &next.Elo.Swing}} {
+			if w.update.set {
+				*w.to = w.update.value
+			}
+		}
 		if err := q.UpdateSeasonSettings(ctx, db.UpdateSeasonSettingsParams{
 			ID:                  next.ID,
 			DailyLeaderboard:    next.DailyLeaderboard,
@@ -184,6 +193,10 @@ func (s *Server) updateSeason(r *request) response {
 			MinTeamSize:         next.MinTeamSize,
 			RankingAlgorithm:    next.RankingAlgorithm,
 			WakeTime:            &next.WakeTime,
+			EloK:                next.Elo.K,
+			EloKr:               next.Elo.KR,
+			EloRingWeight:       next.Elo.RingWeight,
+			EloSwing:            next.Elo.Swing,
 		}); err != nil {
 			return nil, err
 		}
@@ -198,11 +211,21 @@ func (s *Server) updateSeason(r *request) response {
 }
 
 // settingsUpdate is the SeasonSettingsDto of an update. A missing wakeTime
-// is "00:00" (the Java DTO's default); an explicit null keeps the old one.
+// is "00:00" (the Java DTO's default); an explicit null keeps the old one. A
+// missing Elo weight keeps the old one (apps from before them send none);
+// null is back to the default.
 type settingsUpdate struct {
 	minMatchesToQualify, minTeamSize, maxTeamSize *int32
 	rankingAlgorithm, dailyLeaderboard            *int16
 	wakeTime                                      *string
+	eloK, eloKr, eloRingWeight, eloSwing          optionalWeight
+}
+
+// optionalWeight is an Elo weight of an update: set when the key is there,
+// value nil for null (the default).
+type optionalWeight struct {
+	set   bool
+	value *float64
 }
 
 func parseSettingsUpdate(o object) (settingsUpdate, error) {
@@ -226,6 +249,25 @@ func parseSettingsUpdate(o object) (settingsUpdate, error) {
 	if !o.has("wakeTime") {
 		u.wakeTime = ptr("00:00")
 	} else if u.wakeTime, err = o.str("wakeTime"); err != nil {
+		return u, err
+	}
+	weight := func(key string, lo, hi float64) (optionalWeight, error) {
+		v, set, err := o.optionalFloat(key)
+		if v != nil {
+			*v = math.Min(math.Max(*v, lo), hi)
+		}
+		return optionalWeight{set: set, value: v}, err
+	}
+	if u.eloK, err = weight("eloK", 0, 1000); err != nil {
+		return u, err
+	}
+	if u.eloKr, err = weight("eloKr", 0, 1000); err != nil {
+		return u, err
+	}
+	if u.eloRingWeight, err = weight("eloRingWeight", 0, 2); err != nil {
+		return u, err
+	}
+	if u.eloSwing, err = weight("eloSwing", 0.1, 20); err != nil {
 		return u, err
 	}
 	return u, nil
@@ -414,6 +456,10 @@ func insertSettings(ctx context.Context, q *db.Queries, s settings) error {
 		MinTeamSize:         s.MinTeamSize,
 		RankingAlgorithm:    s.RankingAlgorithm,
 		WakeTime:            &s.WakeTime,
+		EloK:                s.Elo.K,
+		EloKr:               s.Elo.KR,
+		EloRingWeight:       s.Elo.RingWeight,
+		EloSwing:            s.Elo.Swing,
 	})
 }
 

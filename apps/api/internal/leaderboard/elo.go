@@ -2,199 +2,161 @@ package leaderboard
 
 import "math"
 
-// Elo rates players on the same points the app shows, so a ring finish counts
-// here as much as it does for average points. Cups play no part. A match moves
-// a rating twice:
+// Elo rates how well players score against the players they play with and
+// against. Before a game the ratings split it: every player is expected a
+// share of all the own points the game will have (Normal 1, Bomb 2, a finish
+// move 1, as the group's rules say; the finish bonus isn't anyone's own). A
+// stronger player's share is bigger, and so is a stronger team's. Both teams
+// throw equally often and a team's players take turns, so in a 3v2 each of
+// the pair throws 1.5 times as often and their shares are that much bigger.
+// A match moves a rating twice:
 //
-//   - Result: win or loss against the win chance of the two team ratings,
-//     scaled by how big the points gap per player was. A close normal win
-//     counts once; a ring or a 10:0 count about 1.4 times. Everyone on a team
-//     gets the same change.
-//   - Hitting: each own point (Normal 1, Bomb 2, a finish move 1) above or
-//     below what the player was expected to score is worth PerPoint. The
-//     expectation is set before the game, from the ratings alone: a team's
-//     points per full game split over its players, more against weaker
-//     opponents. A teammate's points don't change it. It counts for the
-//     share of a game that was played: a ring ends the game early, so only
-//     the cups before it are expected, and a live game expects its cups so
-//     far. The finish bonus belongs to every teammate and only counts in the
-//     result.
+//   - Hitting: own points against the share of the points the game actually
+//     had (a ring ends it early, a live game is under way), scaled to what an
+//     average player in that spot scores in a full game, so a 1v1 and a 2v2
+//     count alike.
+//   - Result: win or loss against the team's chance to reach 10 cups first
+//     at these strengths. Everyone on a team gets the same. A ring win counts
+//     more, by the group's ring bonus against its normal finish bonus.
 //
-// Teams throw equally often and players take turns. Every season starts at
-// StartingElo; the all-time board replays every season from it once.
-// DefaultElo was tuned on Sackverein's games with beerpong-var
-// (the Elo simulator); changing it changes every rating the next time a
-// leaderboard is computed.
+// A player who keeps scoring above their share rises until their share is
+// what they score. Every season starts at StartingElo; the all-time board
+// replays every season from it once, each match with its season's weights.
 const (
 	StartingElo = 1500
-	// eloDivider: rating gap that makes a 10x win-chance ratio. Ten times the
-	// usual 400, with a ten times larger K, so a game's result moves a rating
-	// by about 50 to 150.
+	// eloDivider: at Swing 1, the rating gap between a player and one who
+	// scores 10 times as often in the same throws.
 	eloDivider = 4000.0
-	// marginBase: points gap per player of a typical close normal win
-	// (2v2, 10:9), the game that counts exactly once.
-	marginBase = 4.0
-	// gameCups: cups a team takes to win a full game.
-	gameCups = 10.0
-	// startingTeamPoints: what a team is expected to score on its own in the
-	// season's first game, before there's an average (Sackverein's full
-	// games: about 9.7).
-	startingTeamPoints = 9.5
+	// gameCups: cups a team takes to win.
+	gameCups = 10
+	// startingGamePoints: own points both teams score in a full game, before
+	// the season has one to average (Sackverein: about 19).
+	startingGamePoints = 19.0
 )
 
-// EloParams are the weights of the Elo. Leaderboards use DefaultElo; the
-// simulator tries others.
+// EloParams are the weights of the Elo, a season setting.
 type EloParams struct {
-	// K: rating at stake on a close normal win between equal teams (×0.5).
+	// K: rating for scoring, above your share, as many points as an average
+	// player in your spot scores in a full game (at Swing 1).
 	K float64
-	// MarginWeight: how much the points gap scales the result (0 = only win
-	// or loss). The scale is ((1 + gap) / (1 + marginBase))^MarginWeight.
-	MarginWeight float64
-	// PerPoint: rating for each own point above or below expectation.
-	PerPoint float64
-	// TopWeight: 0 = a team is as strong as its average player, 1 = as its
-	// strongest player. A team's points are its players' hits added up, and
-	// leaning toward the strongest player made a carrier's losses cost more.
-	TopWeight float64
+	// KR: rating at stake on the result; a win gives KR × (1 − win chance).
+	KR float64
+	// RingWeight: a ring win counts (ring bonus / normal finish bonus) to the
+	// power of RingWeight: 0 like a normal win, 0.5 the square root, 1 the
+	// bonus ratio.
+	RingWeight float64
+	// Swing scales how far ratings move and spread without changing who's
+	// ahead: K, KR and the rating gap of a strength ratio all grow with it.
+	Swing float64
 }
 
-// DefaultElo leans on hitting more than on the result: on Sackverein's games
-// the favourite wins only about 55% of the time, so one result says little
-// about a player, while every cup does. It predicts winners as well as the
-// heavier result weights did.
-var DefaultElo = EloParams{K: 175, MarginWeight: 0.5, PerPoint: 50, TopWeight: 0}
+// DefaultElo is a new season's weights. On Sackverein's games a game moves a
+// player by about 85 and at most about 240.
+var DefaultElo = EloParams{K: 40, KR: 40, RingWeight: 0.5, Swing: 3}
+
+func (p EloParams) swing() float64 {
+	if p.Swing <= 0 {
+		return 1
+	}
+	return p.Swing
+}
 
 // eloGame is how one match moved the ratings, for Input.Trace.
 type eloGame struct {
-	rating    [2]float64 // blue, red
 	winChance float64    // blue's
-	gap       float64    // winners' points per player minus losers'
-	scale     float64
-	delta     float64 // blue's result; red gets -delta
+	result    [2]float64 // per player of each team
+	share     [2][]float64
 	expected  [2][]float64
+	hitting   [2][]float64
 }
 
 // calculateElo updates the ratings of both teams after one match. resultBlue
 // is 1 when blue won and 0 when red won; a projected live match that is tied
-// counts as a draw (0.5, no margin). points are the app's points per player,
-// own their points without the finish bonus, teamPoints what a team scores on
-// its own in an average full game this season, and share how much of a game
-// was played (1 for a full one).
-func calculateElo(p EloParams, resultBlue float64, blue, red []*Stats, points, own map[string]int64, teamPoints, share float64) eloGame {
-	blueRating, redRating := teamElo(p, blue), teamElo(p, red)
-	expectedBlue := winChance(blueRating, redRating)
-
-	// the winner's points gap per player
-	gap := averagePoints(blue, points) - averagePoints(red, points)
-	switch resultBlue {
-	case 0:
-		gap = -gap
-	case 0.5:
-		gap = 0
+// counts as a draw (0.5). own are the players' own points, ring what the
+// result counts (ringFactor) and full the own points of an average full game.
+func calculateElo(p EloParams, resultBlue, ring float64, teams [2][]*Stats, own map[string]int64, full float64) eloGame {
+	var g eloGame
+	if len(teams[0]) == 0 || len(teams[1]) == 0 {
+		return g
 	}
-	scale := marginScale(p, gap)
-	delta := p.K * scale * (resultBlue - expectedBlue)
+	swing := p.swing()
+	strength := func(s *Stats) float64 { return math.Pow(10, (s.Elo-StartingElo)/(eloDivider*swing)) }
 
-	// both expectations come from the ratings before the game
-	blueExpected := expectedPoints(blue, redRating, teamPoints)
-	redExpected := expectedPoints(red, blueRating, teamPoints)
-	applyElo(p, blue, delta, own, blueExpected, share)
-	applyElo(p, red, -delta, own, redExpected, share)
-	return eloGame{rating: [2]float64{blueRating, redRating}, winChance: expectedBlue, gap: gap, scale: scale,
-		delta: delta, expected: [2][]float64{blueExpected, redExpected}}
-}
-
-func applyElo(p EloParams, players []*Stats, teamDelta float64, own map[string]int64, expected []float64, share float64) {
-	for i, s := range players {
-		s.Elo += teamDelta + hitting(p, own[s.PlayerID], expected[i], share)
+	// each player's weight: strength × share of the team's throws (2 / team
+	// size, so a 2v2 player is 1)
+	var total, points float64
+	var teamStrength [2]float64
+	weights := [2][]float64{}
+	for k, team := range teams {
+		for _, s := range team {
+			w := strength(s) * 2 / float64(len(team))
+			weights[k] = append(weights[k], w)
+			total += w
+			teamStrength[k] += strength(s) / float64(len(team))
+			points += float64(own[s.PlayerID])
+		}
 	}
+	g.winChance = winChance(teamStrength[0] / (teamStrength[0] + teamStrength[1]))
+	g.result[0] = p.KR * swing * ring * (resultBlue - g.winChance)
+	g.result[1] = -g.result[0]
+
+	for k, team := range teams {
+		average := full / float64(2*len(team))
+		for i, s := range team {
+			share := weights[k][i] / total
+			expected := share * points
+			hitting := p.K * swing * (float64(own[s.PlayerID]) - expected) / average
+			g.share[k] = append(g.share[k], share)
+			g.expected[k] = append(g.expected[k], expected)
+			g.hitting[k] = append(g.hitting[k], hitting)
+		}
+	}
+	for k, team := range teams {
+		for i, s := range team {
+			s.Elo += g.result[k] + g.hitting[k][i]
+		}
+	}
+	return g
 }
 
-// hitting is the rating for own points above or below the expectation of the
-// part of a game that was played.
-func hitting(p EloParams, own int64, expected, share float64) float64 {
-	return p.PerPoint * (float64(own) - expected*share)
+// winChance is the chance that a team that scores a share q of the cups
+// reaches gameCups first.
+func winChance(q float64) float64 {
+	sum, ways := 0.0, 1.0 // ways: (gameCups-1+k choose k)
+	for k := range gameCups {
+		if k > 0 {
+			ways = ways * float64(gameCups-1+k) / float64(k)
+		}
+		sum += ways * math.Pow(q, gameCups) * math.Pow(1-q, float64(k))
+	}
+	return sum
 }
 
-// gameShare is how much of a full game a match was. A game won with a normal
-// finish is a full one. A ring takes its cups in one throw, so the game ended
-// after the winners' cups before it. A live game is as far as the team with
-// more cups, never assuming it will end with a ring.
-func gameShare(inProgress bool, blueCups, redCups, winnerCups, finishCups int64) float64 {
-	switch {
-	case inProgress:
-		return math.Min(1, float64(max(blueCups, redCups))/gameCups)
-	case finishCups > 0:
-		return math.Min(1, float64(winnerCups-finishCups)/gameCups)
-	default:
+// ringFactor is what a ring win's result counts: its team bonus against a
+// normal finish's, to the power of RingWeight, never less than a normal win.
+func ringFactor(p EloParams, ringBonus, normalBonus int32) float64 {
+	if ringBonus <= normalBonus || normalBonus <= 0 {
 		return 1
 	}
+	return math.Pow(float64(ringBonus)/float64(normalBonus), p.RingWeight)
 }
 
-// expectedPoints is what each player should score on their own in a full
-// game: the team's points per game split over its players, times twice their
-// win chance against the opponents (so the plain split against an equal
-// team).
-func expectedPoints(players []*Stats, opponentRating, teamPoints float64) []float64 {
-	out := make([]float64, len(players))
-	for i, p := range players {
-		out[i] = teamPoints / float64(len(players)) * 2 * winChance(p.Elo, opponentRating)
-	}
-	return out
-}
-
-// winChance is the chance that a team rated rating beats one rated
-// opponent.
-func winChance(rating, opponent float64) float64 {
-	return 1.0 / (1.0 + math.Pow(10.0, (opponent-rating)/eloDivider))
-}
-
-// marginScale is how much a win by gap points per player counts compared
-// with a close normal win.
-func marginScale(p EloParams, gap float64) float64 {
-	return math.Pow((1+math.Max(0, gap))/(1+marginBase), p.MarginWeight)
-}
-
-func teamElo(p EloParams, players []*Stats) float64 {
-	if len(players) == 0 {
-		return StartingElo
-	}
-	sum, top := 0.0, players[0].Elo
-	for _, s := range players {
-		sum += s.Elo
-		top = math.Max(top, s.Elo)
-	}
-	return (1-p.TopWeight)*sum/float64(len(players)) + p.TopWeight*top
-}
-
-func averagePoints(players []*Stats, points map[string]int64) float64 {
-	if len(players) == 0 {
-		return 0
-	}
-	var sum int64
-	for _, p := range players {
-		sum += points[p.PlayerID]
-	}
-	return float64(sum) / float64(len(players))
-}
-
-// teamPointsAverage is what a team scored on its own per full game so far
-// this season (Sackverein: about 9.7, whatever the team size). Only finished
-// full games count: a ring or a live game ends early. The season's first game
-// has nothing to average and uses startingTeamPoints.
-type teamPointsAverage struct {
+// fullGames averages the own points both teams scored in the full games so
+// far: a ring ends a game early and a live game is under way. The season's
+// first game has nothing to average and uses startingGamePoints.
+type fullGames struct {
 	sum   float64
-	teams int
+	games int
 }
 
-func (a *teamPointsAverage) value() float64 {
-	if a.teams == 0 {
-		return startingTeamPoints
+func (a *fullGames) value() float64 {
+	if a.games == 0 {
+		return startingGamePoints
 	}
-	return a.sum / float64(a.teams)
+	return a.sum / float64(a.games)
 }
 
-func (a *teamPointsAverage) add(points int64) {
+func (a *fullGames) add(points int64) {
 	a.sum += float64(points)
-	a.teams++
+	a.games++
 }

@@ -157,6 +157,10 @@ type SeasonSetting struct {
 	MinTeamSize         int32
 	RankingAlgorithm    *int16
 	WakeTime            pgtype.Time
+	EloK                *float64
+	EloKr               *float64
+	EloRingWeight       *float64
+	EloSwing            *float64
 }
 
 type Statistic struct {

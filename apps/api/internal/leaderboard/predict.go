@@ -11,12 +11,12 @@ type Score struct {
 }
 
 // Predict scores the Elo with p on every game of seasons, each a season's
-// Input.
-func Predict(seasons []Input, p EloParams) (Score, error) {
+// Input; with p nil, each match with its season's weights.
+func Predict(seasons []Input, p *EloParams) (Score, error) {
 	var s Score
 	right := 0
 	for _, in := range seasons {
-		in.Elo, in.Trace = &p, true
+		in.Elo, in.Trace = p, true
 		res, err := Compute(in)
 		if err != nil {
 			return Score{}, err
@@ -51,19 +51,18 @@ func Predict(seasons []Input, p EloParams) (Score, error) {
 // predicts best, its score and how many it tried.
 func Search(seasons []Input) (EloParams, Score, int, error) {
 	best, bestScore, tried := DefaultElo, Score{LogLoss: math.Inf(1)}, 0
-	for _, k := range []float64{150, 200, 250, 300, 350, 400, 500} {
-		for _, mw := range []float64{0, 0.25, 0.5, 0.75, 1} {
-			for _, pp := range []float64{0, 10, 20, 25, 30, 40, 60} {
-				for _, tw := range []float64{0, 0.25, 0.5, 0.75, 1} {
-					p := EloParams{K: k, MarginWeight: mw, PerPoint: pp, TopWeight: tw}
-					s, err := Predict(seasons, p)
-					if err != nil {
-						return EloParams{}, Score{}, tried, err
-					}
-					tried++
-					if s.LogLoss < bestScore.LogLoss {
-						best, bestScore = p, s
-					}
+	// Swing doesn't change who's favoured, so it keeps the default
+	for _, k := range []float64{0, 10, 20, 30, 40, 60, 80, 120} {
+		for _, kr := range []float64{0, 10, 20, 40, 60, 80, 120} {
+			for _, rw := range []float64{0, 0.5, 1} {
+				p := EloParams{K: k, KR: kr, RingWeight: rw, Swing: DefaultElo.Swing}
+				s, err := Predict(seasons, &p)
+				if err != nil {
+					return EloParams{}, Score{}, tried, err
+				}
+				tried++
+				if s.LogLoss < bestScore.LogLoss {
+					best, bestScore = p, s
 				}
 			}
 		}
