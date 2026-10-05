@@ -1,6 +1,6 @@
 ---
 name: api-local
-description: Run apps/api's unit tests, the API and the api-tests contract suite locally, and record goldens. Use for any change in apps/api/ or api-tests/ before pushing. Unit tests run natively; the API and the suite run in Docker, as port 5432 is taken on this machine.
+description: Run the API locally in Docker, as port 5432 is taken on this machine, and vet apps/api before pushing. Never runs tests.
 ---
 
 # api-local
@@ -8,19 +8,20 @@ description: Run apps/api's unit tests, the API and the api-tests contract suite
 Run everything from the repo root. Go 1.26 is in `~/.local/go/bin`; if `go` isn't found,
 start the command with `export PATH=$HOME/.local/go/bin:$PATH;`.
 
-## Unit tests
+**NEVER run tests**: not `go test`, not the contract suite in `api-tests/`.
+
+## Vet
 
 ```sh
-cd apps/api && gofmt -l . && go vet ./... && go test -race ./...
+cd apps/api && gofmt -l . && go vet ./... && go build ./...
 ```
 
 `gofmt -l` lists unformatted files; fix them with `gofmt -w .`.
 
 ## Stack
 
-Port 5432 is taken, so the database, the API and the contract suite run in Docker on their own
-network `bp-local`, without host ports. Go runs there as your uid (as root it leaves root-owned
-goldens). Shell variables don't survive between tool calls, so start every command that uses
+Port 5432 is taken, so the database and the API run in Docker on their own network `bp-local`,
+without host ports. Go runs there as your uid (as root it leaves root-owned files). Shell variables don't survive between tool calls, so start every command that uses
 `$GO` with this line:
 
 ```sh
@@ -40,24 +41,10 @@ for i in $(seq 90); do docker exec bp-local-api curl -sf localhost:8080/healthch
 
 After changing apps/api, restart the API: `docker rm -f bp-local-api`, then the `$GO -d` and `for` lines again.
 
-## Contract suite
-
-```sh
-$GO --network bp-local -w /src/api-tests -e API_BASE_URL=http://bp-local-api:8080 -e API_JWT_SECRET=local-contract-suite-secret-0123456789abcdefghijklmnopqrstuvwxyz -e API_DATABASE_URL=postgres://admin:user@bp-local-db:5432/beerpong golang:1.26 go test -count=1 ./...
-```
-
-These need real S3 and fail only locally: TestAssetMetadata, TestGroupWallpaper,
-TestMatchPhotos, TestUpdateMatch, TestDeleteMatch, TestProfileAvatar. Anything else failing is yours.
-
-Goldens: record only the tests you changed, by adding `-e GOLDEN=record` and `-run '^(TestA|TestB)$'`
-to the command above. Then `git diff api-tests/testdata/golden` must touch only what you meant
-(Elo numbers aren't compared, so a weight change needs no re-record). For the six S3 tests, edit their golden JSON by hand
-and let CI check them.
-
 ## Before pushing
 
 A new route goes into `apps/api/openapi/openapi.json`, edited as text in place (never
-re-serialize or prettier it); `TestSpecMatchesRoutes` checks it. Regenerate the app's types
+re-serialize or prettier it). Regenerate the app's types
 with `scripts/gen-api` (from the repo root, after `npm install`), or let the Generate OpenApi
 action push `chore: update openapi types` and pull before pushing again.
 

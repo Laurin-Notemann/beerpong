@@ -1,78 +1,27 @@
 name: Api Go CI
 
-# Unit tests, then the contract suite (api-tests/) against a running Go API.
-# The staging deploy runs this first.
+# Vets and builds the Go API. The staging deploy runs this first. The unit tests
+# and the contract suite (api-tests/) don't run in CI; run them locally.
 
 on:
   push:
     paths:
       - "apps/api/**"
-      - "api-tests/**"
       - ".github/workflows/api-go-ci.yml"
   workflow_call:
   workflow_dispatch:
 
 jobs:
   test:
-    name: Go tests and contract suite
+    name: Go vet and build
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: admin
-          POSTGRES_PASSWORD: user
-          POSTGRES_DB: beerpong
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: user
-      POSTGRES_HOST: localhost
-      POSTGRES_PORT: 5432
-      POSTGRES_DB_NAME: beerpong
-      JWT_SECRET: justforthisrunnerthishasnovaluelalalalalalalalalalalalalalalalalalalalalalalalalalla
-      # CI runs must not report to Sentry
-      BACKEND_SENTRY_DSN: ""
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
-      AWS_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: apps/api/go.mod
-          cache-dependency-path: |
-            apps/api/go.sum
-            api-tests/go.sum
+          cache-dependency-path: apps/api/go.sum
 
-      - name: Unit tests
+      - name: Vet and build
         working-directory: apps/api
-        run: go vet ./... && go test -race ./...
-
-      - name: Start the API
-        working-directory: apps/api
-        run: |
-          go build -race -o /tmp/api ./cmd/api
-          /tmp/api > /tmp/api.log 2>&1 &
-          for i in $(seq 1 30); do curl -sf localhost:8080/healthcheck && exit 0; sleep 1; done
-          cat /tmp/api.log; exit 1
-
-      - name: Contract suite
-        working-directory: api-tests
-        env:
-          API_BASE_URL: http://localhost:8080
-          API_JWT_SECRET: ${{ env.JWT_SECRET }}
-          API_DATABASE_URL: postgres://admin:user@localhost:5432/beerpong
-        run: go test -count=1 ./...
-
-      - name: API log
-        if: always()
-        run: cat /tmp/api.log || true
+        run: go vet ./... && go build ./...

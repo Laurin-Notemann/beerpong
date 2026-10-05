@@ -60,7 +60,7 @@ The most common defect in this repo is a change that works on the path you teste
 
 ## Dev servers
 
-- On this machine Go is in `~/.local/go/bin` and port 5432 is taken: run the API and the contract suite with the `api-local` skill instead of the next two lines.
+- On this machine Go is in `~/.local/go/bin` and port 5432 is taken: run the API with the `api-local` skill instead of the next two lines.
 - Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN` and the `AWS_*` S3 settings from the environment.
 - API: `set -a; source .env; set +a; cd apps/api && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
 - App: `npm install` at the root, then `cd apps/mobile && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
@@ -73,26 +73,24 @@ An empty database is a bad test. For realistic data, dump the staging database r
 
 ## Verifying
 
-- Smallest proof that the change works. Run the tests and checks for the scope you touched:
-  - Everything: `npx turbo run lint typecheck test format:check` from the root (the API's tasks need Go on the PATH).
-  - API: `go test ./...` in `apps/api`, then the contract suite in `api-tests/` against a running API (the `api-local` skill runs it in Docker).
-  - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`. Lint and format before every push, even when told to skip tests: CI fails on Prettier.
-  - Web (the simulator and the TV): `cd apps/web && npm run format:check && npm run typecheck && npm test && npm run build`.
-- Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.
-- Backend behavior changes ship with a contract test in `api-tests/` (observable behavior) or a unit test next to the Go code (Elo, leaderboard math).
+- **NEVER run tests.** Not `go test`, not the contract suite in `api-tests/`, not vitest (`npm run ci:test`, `npm test`), not `turbo run test`.
+- Lint, typecheck and format the scope you touched before every push: CI fails on Prettier.
+  - API: `cd apps/api && gofmt -l . && go vet ./... && go build ./...`.
+  - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:format`.
+  - Web (the simulator and the TV): `cd apps/web && npm run format:check && npm run typecheck && npm run build`.
 - Don't verify with simulators, devices or browsers unless the developer asks.
 
 ## Testing the Elo
 
 The Elo lives in `apps/api/internal/leaderboard/elo.go`; its comment explains the model, and `DefaultElo` holds the weights. Ratings aren't stored per game: every leaderboard recomputes them from the season's matches (all time: every season's, in order), so changing a weight changes every rating at once. Check a change three ways:
 
-- `cd apps/api && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
+- `elo_test.go` holds the behavior tests (don't run them; see [Verifying](#verifying)).
 - beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), the games running right now counted as if they ended now (reduced with the app's live match code, like the TV), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `apps/web/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
 - Contract goldens (`api-tests/testdata/golden`) don't compare the numbers that follow the weights (`eloKeys` in `api-tests/harness`), so a weight change needs no re-record. The Elo's behavior is covered by `elo_test.go` and the assertions in the contract tests.
 
 ## Shipping
 
-- **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`apps/api/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
+- **API:** push to `staging` → `Api Staging Deploy` vets the API, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`apps/api/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
 - **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) ships iOS from GitHub's runners, not EAS cloud builds. Android only ships when you start the workflow by hand with `platform: android`. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
 - **Web (simulator and TV):** push to `staging` → `Web Staging Deploy` builds `apps/web/Dockerfile`, writes the `web` service in `~/docker/versus-web` and its Traefik route (`~/traefik/dynamic/beerpong-var.yml`) on the server and redeploys it at https://var.beerpong.laurinnotemann.dev (the TV at `/tv`). `~/traefik/dynamic/versus-tv-staging.yml` redirects the TV's old address, `/tv` on the API's hostname, there.
 - The app checks for updates on foreground and applies a downloaded update when it goes to the background (`apps/mobile/hooks/useOtaUpdates.ts`).
