@@ -10,19 +10,6 @@ import (
 	"time"
 )
 
-const countMatchesInPastSeasons = `-- name: CountMatchesInPastSeasons :one
-SELECT count(*) FROM matches m
-JOIN seasons s ON s.id = m.season_id
-WHERE s.group_id = $1 AND s.end_date IS NOT NULL
-`
-
-func (q *Queries) CountMatchesInPastSeasons(ctx context.Context, groupID *string) (int64, error) {
-	row := q.db.QueryRow(ctx, countMatchesInPastSeasons, groupID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const countTeams = `-- name: CountTeams :one
 SELECT count(id) FROM teams WHERE id = ANY ($1::text[])
 `

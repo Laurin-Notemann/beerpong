@@ -148,7 +148,7 @@ func (s *Server) leaderboardQuery(r *request) (groupDTO, string, string, respons
 }
 
 type board struct {
-	active     []*leaderboard.Entry // entries shown (all of them for all-time)
+	active     []*leaderboard.Entry // entries shown
 	numMatches int64
 	startedAt  *time.Time
 	seasons    map[string]seasonDTO // season of every entry's player
@@ -182,6 +182,9 @@ func (b board) entries() []playerExtendedDTO {
 // playerIDs, when not nil, limits the board to those players. projected live
 // matches count after the stored ones.
 func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupDTO, scope string, keepStored bool, seasonID string, playerIDs []string, projected ...leaderboard.Match) (board, response) {
+	if scope == "all-time" {
+		return s.allTimeBoard(ctx, q, group, projected...)
+	}
 	li, res := s.leaderboardInput(ctx, q, group, scope, keepStored, seasonID, playerIDs, projected...)
 	if res != nil {
 		return board{}, res
@@ -192,63 +195,61 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 	}
 	b := board{numMatches: result.NumMatches, startedAt: li.startedAt, seasons: li.seasons}
 	for _, e := range result.Entries {
-		if scope == "all-time" || e.Player.Active {
+		if e.Player.Active {
 			b.active = append(b.active, e)
-		}
-	}
-	if scope == "all-time" {
-		past, err := q.CountMatchesInPastSeasons(ctx, &group.ID)
-		if err != nil {
-			return board{}, internal(err)
-		}
-		b.numMatches += past
-
-		elo, res := s.allTimeElo(ctx, q, group, projected...)
-		if res != nil {
-			return board{}, res
-		}
-		for _, e := range b.active {
-			if rating, found := elo[deref(e.Player.ProfileID)]; found {
-				e.Stats.Elo = rating
-			}
 		}
 	}
 	return b, nil
 }
 
-// allTimeElo replays every match of the group, oldest first, so a player's
-// rating carries across seasons; a season board starts everyone at
-// StartingElo. Keyed by profile id. Projected matches belong to the running
-// season.
-func (s *Server) allTimeElo(ctx context.Context, q *db.Queries, group groupDTO, projected ...leaderboard.Match) (map[string]float64, response) {
+// allTimeBoard replays every match of the group, oldest first, so every
+// all-time number comes from the matches and a player's rating carries
+// across seasons; a season board starts everyone at StartingElo. Projected
+// matches belong to the running season. A profile is on it when it played or
+// is on a season board: removing a player keeps the profile, and a removed
+// profile that never played (a duplicate) stays off, as in the simulator.
+func (s *Server) allTimeBoard(ctx context.Context, q *db.Queries, group groupDTO, projected ...leaderboard.Match) (board, response) {
+	if group.ActiveSeasonID == nil {
+		return board{}, fail(errGeneric)
+	}
 	seasons, err := q.SeasonsByGroup(ctx, &group.ID)
 	if err != nil {
-		return nil, internal(err)
+		return board{}, internal(err)
 	}
 	all := leaderboard.Input{RuleMoves: map[string]leaderboard.RuleMove{}, ProfileOf: map[string]string{}}
+	b := board{startedAt: group.CreatedAt, seasons: map[string]seasonDTO{}}
+	onSeasonBoard := map[string]bool{} // by profile
 	for _, sn := range seasons {
 		var running []leaderboard.Match
-		if sn.ID == deref(group.ActiveSeasonID) {
+		if sn.ID == *group.ActiveSeasonID {
 			running = projected
 		}
 		li, res := s.leaderboardInput(ctx, q, group, "season", false, sn.ID, nil, running...)
 		if res != nil {
-			return nil, res
+			return board{}, res
 		}
 		all.Players = append(all.Players, li.in.Players...)
 		all.Matches = append(all.Matches, li.in.Matches...)
 		maps.Copy(all.RuleMoves, li.in.RuleMoves)
 		maps.Copy(all.ProfileOf, li.in.ProfileOf)
+		maps.Copy(b.seasons, li.seasons)
+		for _, p := range li.in.Players {
+			if p.Active {
+				onSeasonBoard[deref(p.ProfileID)] = true
+			}
+		}
 	}
 	result, err := leaderboard.Compute(all)
 	if err != nil {
-		return nil, internal(err)
+		return board{}, internal(err)
 	}
-	elo := map[string]float64{}
+	b.numMatches = result.NumMatches
 	for _, e := range result.Entries {
-		elo[deref(e.Player.ProfileID)] = e.Stats.Elo
+		if e.Stats.Matches > 0 || onSeasonBoard[deref(e.Player.ProfileID)] {
+			b.active = append(b.active, e)
+		}
 	}
-	return elo, nil
+	return b, nil
 }
 
 // leaderboardInput is what a board is computed from.
@@ -270,23 +271,6 @@ func (s *Server) leaderboardInput(ctx context.Context, q *db.Queries, group grou
 		err       error
 	)
 	switch scope {
-	case "all-time":
-		if group.ActiveSeasonID == nil {
-			return leaderboardInput{}, fail(errGeneric)
-		}
-		if matches, err = q.MatchesBySeason(ctx, group.ActiveSeasonID); err != nil {
-			return leaderboardInput{}, internal(err)
-		}
-		rows, err := q.PlayersWithStatsInGroup(ctx, &group.ID)
-		if err != nil {
-			return leaderboardInput{}, internal(err)
-		}
-		for _, row := range rows {
-			if playerIDs == nil || contains(playerIDs, row.ID) {
-				players = append(players, playerRow(row))
-			}
-		}
-		startedAt = group.CreatedAt
 	case "season", "today":
 		if scope == "today" {
 			if group.ActiveSeasonID == nil {
@@ -333,7 +317,7 @@ func (s *Server) leaderboardInput(ctx context.Context, q *db.Queries, group grou
 		return leaderboardInput{}, internal(err)
 	}
 	in := leaderboard.Input{
-		KeepStoredStats: scope == "all-time" || keepStored,
+		KeepStoredStats: keepStored,
 		RuleMoves:       map[string]leaderboard.RuleMove{},
 		ProfileOf:       map[string]string{},
 	}
@@ -413,7 +397,7 @@ func dayStart(now time.Time, st *settings) (time.Time, error) {
 	}
 }
 
-// playerRow is a player with statistics and season, from either players query.
+// playerRow is a player with statistics and season.
 type playerRow db.PlayersWithStatsInSeasonRow
 
 func (p playerRow) player() leaderboard.Player {

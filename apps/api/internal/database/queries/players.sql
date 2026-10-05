@@ -40,24 +40,6 @@ WHERE p.profile_id = $1
 ORDER BY s.start_date DESC
 LIMIT 1;
 
--- name: PlayersWithStatsInGroup :many
--- Leaderboard input: players with their stored statistics and season.
-SELECT
-    p.id, p.profile_id, p.active_this_season,
-    st.points, st.matches, st.wins, st.moves, st.total_team_size,
-    st.avg_points_per_match, st.avg_team_size, st.elo,
-    s.id AS season_id, s.name AS season_name, s.start_date AS season_start_date, s.end_date AS season_end_date,
-    ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
-    ss.ranking_algorithm, ss.daily_leaderboard,
-    -- Java's DTO renders a missing wake time as its default "00:00"
-    COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
-FROM players p
-JOIN statistics st ON st.id = p.statistics_id
-JOIN seasons s ON s.id = p.season_id
-LEFT JOIN season_settings ss ON ss.id = s.season_settings_id
-WHERE s.group_id = $1
-ORDER BY p.ctid;
-
 -- name: PlayersWithStatsInSeason :many
 SELECT
     p.id, p.profile_id, p.active_this_season,
