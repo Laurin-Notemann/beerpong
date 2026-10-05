@@ -7,7 +7,7 @@ export type RootStackParamList = {
     formations: undefined;
     createGroupSetName: undefined;
     createGroupSetGame: undefined;
-    editFormation: undefined;
+    editFormation: { id?: string };
     createGroup: undefined;
     joinGroup: undefined;
     editPlayerName: { id: string };
@@ -24,7 +24,6 @@ export type RootStackParamList = {
     liveMatch: { id: string };
     liveMatches: undefined;
     matches: undefined;
-    editFormationName: undefined;
     newMatch: undefined;
 
     localSettings: undefined;
@@ -57,6 +56,7 @@ export type RootStackParamList = {
         liveMatchId?: string;
     };
     editMatchPoints: { pageIdx: number };
+    rerackModal: { liveMatchId?: string };
     createNewRule: undefined;
 };
 export type StackNavigation = NavigationProp<RootStackParamList>;

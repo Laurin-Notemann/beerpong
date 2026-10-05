@@ -1,61 +1,27 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { Dimensions, Text, TouchableHighlight, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Dimensions, Platform, ScrollView, Text, View } from 'react-native';
 
-import CupGrid from '@/components/CupGrid';
+import { FormationTile } from '@/components/FormationTile';
+import { CUP_FORMATION } from '@/lib/cupHits';
 import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { useAndroidIcon } from '@/lib/useAndroidIcon';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { useFormationStore } from '@/zustand/formationStore';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+const TILE_SIZE = Math.floor((Dimensions.get('window').width - 32 - 16) / 3);
 
-function Item() {
-    const size = Math.floor((SCREEN_WIDTH - 32 - 16) / 3);
-
-    const nav = useNavigation();
-
-    const theme = useTheme();
-
-    return (
-        <TouchableHighlight
-            style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-
-                gap: 8,
-
-                width: size,
-                height: size,
-
-                borderRadius: 10,
-
-                backgroundColor: theme.panel.light.bg,
-            }}
-            underlayColor={theme.panel.dark.active}
-            onPress={() => nav.navigate('editFormation')}
-        >
-            <>
-                <CupGrid width={60} showGrid={false} />
-
-                <Text
-                    style={{
-                        fontSize: 16,
-                        color: theme.color.text.primary,
-                    }}
-                >
-                    10x Pyramid
-                </Text>
-            </>
-        </TouchableHighlight>
-    );
-}
-
+/** The formations saved on this phone, to re-rack a team's cups into during a match. */
 export default function Formations() {
     const insets = useInsets(true);
-
     const theme = useTheme();
+    const nav = useNavigation();
+
+    const formations = useFormationStore((s) => s.formations);
+    const androidPlus = useAndroidIcon('plus', theme.color.text.primary);
+    const plusIcon = Platform.OS === 'ios' ? 'plus' : androidPlus;
 
     return (
         <>
@@ -65,35 +31,49 @@ export default function Formations() {
                     headerTitle: 'Formations',
                 }}
             />
-            <Stack.Toolbar placement="right">
-                <Stack.Toolbar.Button>Edit</Stack.Toolbar.Button>
-            </Stack.Toolbar>
-            <GestureHandlerRootView
-                style={{
-                    flex: 1,
-                    backgroundColor: theme.color.bg,
-
+            {plusIcon && (
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        icon={plusIcon}
+                        accessibilityLabel="New formation"
+                        onPress={() => nav.navigate('editFormation', {})}
+                    />
+                </Stack.Toolbar>
+            )}
+            <ScrollView
+                style={{ flex: 1, backgroundColor: theme.color.bg }}
+                contentContainerStyle={{
                     paddingTop: insets.top + 16,
+                    paddingBottom: insets.bottom + 16,
+                    paddingHorizontal: 16,
+                    gap: 16,
                 }}
             >
-                <View
+                <Text
                     style={{
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-
-                        paddingHorizontal: 16,
-                        gap: 8,
-
-                        paddingTop: 48,
+                        color: theme.color.text.secondary,
+                        fontSize: 13,
                     }}
                 >
-                    <Item />
-                    <Item />
-                    <Item />
-                    <Item />
-                    <Item />
+                    During a match, re-rack a team&apos;s cups into a formation
+                    with as many cups as it has left.
+                </Text>
+                <View
+                    style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
+                >
+                    {formations.map((i) => (
+                        <FormationTile
+                            key={i.id}
+                            name={`${i.name} (${i.cups.length})`}
+                            size={TILE_SIZE}
+                            formation={{ ...CUP_FORMATION, cups: i.cups }}
+                            onPress={() =>
+                                nav.navigate('editFormation', { id: i.id })
+                            }
+                        />
+                    ))}
                 </View>
-            </GestureHandlerRootView>
+            </ScrollView>
         </>
     );
 }

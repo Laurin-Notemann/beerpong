@@ -1,16 +1,12 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ImageSourcePropType, Platform, View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { HeaderTitle } from '@/components/HeaderTitle';
 import { LiveDot } from '@/components/liveMatch/LiveDot';
 import { LiveTimer } from '@/components/liveMatch/LiveTimer';
 import { useNavStyles } from '@/lib/navigation/navStyles';
+import { useAndroidIcon } from '@/lib/useAndroidIcon';
 import { useTheme } from '@/theme';
-import { ScopedLogger } from '@/utils/logging';
-
-const logger = new ScopedLogger('live-match');
 
 /** "Live match" with the pulsing dot and the running time under it */
 function Title({ startedAt, isLive }: { startedAt?: string; isLive: boolean }) {
@@ -31,32 +27,6 @@ function Title({ startedAt, isLive }: { startedAt?: string; isLive: boolean }) {
             )}
         </View>
     );
-}
-
-/**
- * Android's toolbar can't draw SF Symbols and needs an image; the app's icon font makes
- * one. Undefined until it's rendered (a frame or two).
- */
-function useAndroidIcon(
-    name: keyof typeof MaterialCommunityIcons.glyphMap,
-    color: string
-) {
-    const [icon, setIcon] = useState<ImageSourcePropType>();
-
-    useEffect(() => {
-        if (Platform.OS !== 'android') return;
-        let cancelled = false;
-        MaterialCommunityIcons.getImageSource(name, 24, color)
-            .then((source) => {
-                if (!cancelled && source) setIcon(source);
-            })
-            .catch((err) => logger.error('failed to render menu icon', err));
-        return () => {
-            cancelled = true;
-        };
-    }, [name, color]);
-
-    return icon;
 }
 
 /**

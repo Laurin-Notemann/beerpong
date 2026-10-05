@@ -24,8 +24,10 @@ import {
     standingCups,
 } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { cupAt, cupLayout } from '@/lib/rerack';
 import { useCloseWhenEnded, useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
+import { useReracks } from '@/zustand/formationStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 /** Pro mode: who hit the tapped cup, and how. Opened from the live match's cups page. */
@@ -47,6 +49,11 @@ export default function Page() {
 
     const entry = useMatchEntry(params.liveMatchId);
     useCloseWhenEnded(entry.isEnded);
+    const layout = cupLayout(
+        entry.cupHits,
+        team,
+        useReracks(params.liveMatchId)?.[team]
+    );
 
     const { groupId } = useGroup();
     const movesQuery = useMoves(groupId, entry.seasonId);
@@ -145,10 +152,13 @@ export default function Page() {
     function onCupTap(drawn: CupPosition) {
         if (!pickMove) return;
 
-        const tapped =
+        const tapped = cupAt(
+            layout,
             params.rotated === 'true'
                 ? rotatePoint(CUP_FORMATION, drawn)
-                : drawn;
+                : drawn
+        );
+        if (!tapped) return;
         const position = { x: tapped.x, y: tapped.y };
 
         if (
@@ -172,12 +182,12 @@ export default function Page() {
     // the team's cups as they're drawn on the cups page, the tapped (and picked) ones stand out
     const formation = {
         ...CUP_FORMATION,
-        cups: CUP_FORMATION.cups.map((i) => {
+        cups: layout.map(({ drawn, cup: i }) => {
             const isTapped = isSame(i, cup) || picked.some((j) => isSame(i, j));
             const isStanding = standing.some((j) => j.x === i.x && j.y === i.y);
 
             return {
-                ...i,
+                ...drawn,
                 disabled: !isStanding,
                 // 8-digit hex: the team color at 40% opacity
                 color: isTapped ? undefined : theme.color.team[team] + '66',
