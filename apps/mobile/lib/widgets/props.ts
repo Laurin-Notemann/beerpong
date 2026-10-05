@@ -24,8 +24,6 @@ export interface LeaderboardWidgetRow {
 export interface LeaderboardWidgetProps {
     /** empty while no group is selected */
     group: string;
-    /** the group's matches running now; the widget shows them instead of the leaderboard */
-    live: WidgetLiveMatch[];
     season: string;
     /** what the value column is, e.g. "Elo" */
     metric: string;
@@ -34,7 +32,6 @@ export interface LeaderboardWidgetProps {
 
 export const emptyLeaderboardWidget: LeaderboardWidgetProps = {
     group: '',
-    live: [],
     season: '',
     metric: '',
     rows: [],
@@ -47,14 +44,12 @@ export function toLeaderboardWidget({
     players,
     rankingAlgorithm,
     minMatchesToQualify,
-    live,
 }: {
     group: string;
     season: string;
     players: Player[];
     rankingAlgorithm: RankingAlgorithm | null | undefined;
     minMatchesToQualify: number;
-    live: WidgetLiveMatch[];
 }): LeaderboardWidgetProps {
     const algo = getRankingAlgorithm(rankingAlgorithm);
     const ranked = rankPlayers(
@@ -66,7 +61,6 @@ export function toLeaderboardWidget({
 
     return {
         group,
-        live,
         season,
         metric: algo.shortName,
         rows: ranked
@@ -115,6 +109,12 @@ export interface WidgetLiveMatch extends LiveScore {
     id: string;
     /** epoch ms */
     startedAt: number;
+}
+
+export interface LiveMatchesWidgetProps {
+    /** empty while no group is selected */
+    group: string;
+    matches: WidgetLiveMatch[];
 }
 
 /** what the API pushes to a Live Activity (`activityPayload` in apps/api) */

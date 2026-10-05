@@ -16,17 +16,18 @@ import {
 } from '@/api/liveMatch/useGroupLiveMatches';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
+import { leaderboardWidget } from '@/lib/widgets/LeaderboardWidget';
 import {
-    leaderboardWidget,
-    showOnWidget,
-} from '@/lib/widgets/LeaderboardWidget';
+    liveMatchesWidget,
+    showLiveMatches,
+} from '@/lib/widgets/LiveMatchesWidget';
 import {
     emptyLeaderboardWidget,
     type LeaderboardWidgetProps,
+    type LiveMatchesWidgetProps,
     type LiveScore,
     toLeaderboardWidget,
     toLiveScore,
-    type WidgetLiveMatch,
 } from '@/lib/widgets/props';
 import { ScopedLogger } from '@/utils/logging';
 import { useSelectedGroupHydrated } from '@/zustand/group/stateGroupStore';
@@ -92,14 +93,41 @@ function useLiveScoreReports(groupId: ApiId | null, scores: LiveScoreOf[]) {
     }, [api, groupId, scores]);
 }
 
-let writtenWidget: string | undefined;
+let writtenLeaderboard: string | undefined;
+let writtenLiveMatches: string | undefined;
+
+/** writes props to a widget if they changed: reloading a widget is cheap, but not free */
+function useWidgetProps(
+    props: object | undefined,
+    written: () => string | undefined,
+    write: (json: string) => void
+) {
+    const json = props ? JSON.stringify(props) : undefined;
+    useEffect(() => {
+        if (!json || json === written()) return;
+        try {
+            write(json);
+        } catch (err) {
+            logger.error('failed to update a widget', err);
+        }
+    }, [json, written, write]);
+}
+
+const writeLeaderboard = (json: string) => {
+    leaderboardWidget?.updateSnapshot(JSON.parse(json));
+    writtenLeaderboard = json;
+};
+const writeLiveMatches = (json: string) => {
+    showLiveMatches(JSON.parse(json));
+    writtenLiveMatches = json;
+};
 
 /**
- * Reports this phone's live scores, and keeps the home screen widget on the selected group: its
- * matches running now, else its season leaderboard. While the app isn't running, the API's
- * silent pushes update the widget's matches (`liveScoresTask`).
+ * Reports this phone's live scores, and keeps both home screen widgets on the selected group:
+ * "Leaderboard" on its season leaderboard, "Live matches" on its matches running now. While the
+ * app isn't running, the API's silent pushes update the live matches (`liveScoresTask`).
  */
-export function useHomeScreenWidget() {
+export function useHomeScreenWidgets() {
     const hydrated = useSelectedGroupHydrated();
     const { groupId, seasonId, group, activeSeason } = useGroup();
     const query = useGetLeaderboardQuery(
@@ -123,25 +151,33 @@ export function useHomeScreenWidget() {
             rankingAlgorithm: activeSeason.seasonSettings?.rankingAlgorithm,
             minMatchesToQualify:
                 activeSeason.seasonSettings?.minMatchesToQualify ?? 0,
-            live: scores.map((i): WidgetLiveMatch => ({
+        });
+    }, [groupId, group, activeSeason, entries]);
+
+    const liveProps = useMemo<LiveMatchesWidgetProps | undefined>(() => {
+        if (!groupId) return { group: '', matches: [] };
+        if (!group?.data?.name) return;
+
+        return {
+            group: group.data.name,
+            matches: scores.map((i) => ({
                 id: i.id,
                 startedAt: Date.parse(i.startedAt) || Date.now(),
                 ...i.score,
             })),
-        });
-    }, [groupId, group, activeSeason, entries, scores]);
+        };
+    }, [groupId, group, scores]);
 
-    const json = hydrated && props ? JSON.stringify(props) : undefined;
-    useEffect(() => {
-        // reloading a widget is cheap while the app is open, but only reload it on a change
-        if (!leaderboardWidget || !json || json === writtenWidget) return;
-        try {
-            showOnWidget(JSON.parse(json));
-            writtenWidget = json;
-        } catch (err) {
-            logger.error('failed to update the widget', err);
-        }
-    }, [json]);
+    useWidgetProps(
+        hydrated && leaderboardWidget ? props : undefined,
+        () => writtenLeaderboard,
+        writeLeaderboard
+    );
+    useWidgetProps(
+        hydrated && liveMatchesWidget ? liveProps : undefined,
+        () => writtenLiveMatches,
+        writeLiveMatches
+    );
 }
 
 // Live Activities follow a broadcast channel per live match, which needs iOS 18
