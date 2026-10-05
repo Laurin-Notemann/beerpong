@@ -22,6 +22,9 @@ export interface MoveLogEntry {
     team: 'red' | 'blue';
     /** e.g. "Bouncer", or "Normal · Finish - Ring of fire" with the finish it ended the match with */
     move: string;
+    /** the cups each team had taken off the table right after it */
+    blue: number;
+    red: number;
 }
 
 /** a live match's cup hits, newest first, labelled with the rule's move names */
@@ -31,19 +34,27 @@ export function moveLog(
         playerId: string;
         moveId: string;
         finishMoveId?: string;
+        cups: unknown[];
     }[],
     moves: { id?: string; name?: string | null }[]
 ): MoveLogEntry[] {
     const name = (id: string) => moves.find((i) => i.id === id)?.name || 'Hit';
 
+    const score = { blue: 0, red: 0 };
     return cupHits
-        .map((hit) => ({
-            playerId: hit.playerId,
+        .map((hit) => {
             // the hit team is the one whose cups went down; the scorer plays against it
-            team: hit.team === 'red' ? ('blue' as const) : ('red' as const),
-            move: hit.finishMoveId
-                ? `${name(hit.moveId)} · ${name(hit.finishMoveId)}`
-                : name(hit.moveId),
-        }))
+            const team =
+                hit.team === 'red' ? ('blue' as const) : ('red' as const);
+            score[team] += hit.cups.length;
+            return {
+                playerId: hit.playerId,
+                team,
+                move: hit.finishMoveId
+                    ? `${name(hit.moveId)} · ${name(hit.finishMoveId)}`
+                    : name(hit.moveId),
+                ...score,
+            };
+        })
         .reverse();
 }

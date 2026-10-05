@@ -115,6 +115,8 @@ export interface WidgetMove {
     name: string;
     team: 'red' | 'blue';
     move: string;
+    /** the score right after it, e.g. "2–0" */
+    score?: string;
 }
 
 /** a match running now, on the widget */

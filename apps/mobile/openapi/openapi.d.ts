@@ -377,6 +377,10 @@ declare namespace Components {
             name: string;
             team: 'red' | 'blue';
             move: string;
+            /**
+             * the score right after it, e.g. "2–0"
+             */
+            score?: string;
         }
         export interface LivePlayerDto {
             id: string;
