@@ -326,6 +326,7 @@
     "status": 200,
     "response": {
       "data": {
+        "baseline": "defaults",
         "defaults": {
           "k": 350,
           "marginWeight": 0.5,
@@ -434,7 +435,8 @@
                 "winChance": 0.5,
                 "won": true
               }
-            ]
+            ],
+            "testIndex": null
           },
           {
             "date": "\u003cts\u003e",
@@ -499,11 +501,70 @@
                 "winChance": 0.4523606718,
                 "won": true
               }
-            ]
+            ],
+            "testIndex": null
           }
         ],
         "groupId": "\u003cid3\u003e",
         "groupName": "Leaderboard",
+        "moves": [
+          {
+            "finishing": false,
+            "id": "\u003cid12\u003e",
+            "name": "Bomb",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid13\u003e",
+            "name": "Bouncer",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid17\u003e",
+            "name": "Normal",
+            "pointsForScorer": 1,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid18\u003e",
+            "name": "Save",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid19\u003e",
+            "name": "Trickshot",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid14\u003e",
+            "name": "Finish - Normal",
+            "pointsForScorer": 1,
+            "pointsForTeam": 3
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid15\u003e",
+            "name": "Finish - Ring of fire",
+            "pointsForScorer": 1,
+            "pointsForTeam": 10
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid16\u003e",
+            "name": "Finish - Ring of water",
+            "pointsForScorer": 1,
+            "pointsForTeam": 10
+          }
+        ],
         "params": {
           "k": 350,
           "marginWeight": 0.5,
@@ -524,60 +585,83 @@
             "logLoss": 0.7432113257
           }
         },
+        "profiles": [
+          {
+            "id": "\u003cid4\u003e",
+            "name": "a"
+          },
+          {
+            "id": "\u003cid5\u003e",
+            "name": "b"
+          },
+          {
+            "id": "\u003cid6\u003e",
+            "name": "c"
+          },
+          {
+            "id": "\u003cid7\u003e",
+            "name": "d"
+          }
+        ],
         "seasonId": "\u003cid1\u003e",
         "seasons": [
           {
             "id": "\u003cid1\u003e",
+            "minMatchesToQualify": 1,
             "name": null,
             "numMatches": 2
           }
         ],
         "standings": [
           {
-            "defaultElo": 1302.252591,
-            "defaultRank": 4,
+            "baselineElo": 1302.252591,
+            "baselineRank": 4,
             "elo": 1302.252591,
             "hitting": -79.46884883,
             "matches": 2,
             "name": "a",
             "points": 7,
             "profileId": "\u003cid4\u003e",
+            "rank": 4,
             "result": -118.2785598,
             "wins": 1
           },
           {
-            "defaultElo": 1302.730423,
-            "defaultRank": 3,
+            "baselineElo": 1302.730423,
+            "baselineRank": 3,
             "elo": 1302.730423,
             "hitting": -31.25,
             "matches": 1,
             "name": "d",
             "points": 1,
             "profileId": "\u003cid7\u003e",
+            "rank": 3,
             "result": -166.0195772,
             "wins": 0
           },
           {
-            "defaultElo": 1560.247409,
-            "defaultRank": 2,
+            "baselineElo": 1560.247409,
+            "baselineRank": 2,
             "elo": 1560.247409,
             "hitting": -58.03115117,
             "matches": 2,
             "name": "c",
             "points": 14,
             "profileId": "\u003cid6\u003e",
+            "rank": 2,
             "result": 118.2785598,
             "wins": 1
           },
           {
-            "defaultElo": 1659.769577,
-            "defaultRank": 1,
+            "baselineElo": 1659.769577,
+            "baselineRank": 1,
             "elo": 1659.769577,
             "hitting": -6.25,
             "matches": 1,
             "name": "b",
             "points": 5,
             "profileId": "\u003cid5\u003e",
+            "rank": 1,
             "result": 166.0195772,
             "wins": 1
           }
@@ -592,6 +676,7 @@
     "status": 200,
     "response": {
       "data": {
+        "baseline": "defaults",
         "defaults": {
           "k": 350,
           "marginWeight": 0.5,
@@ -700,7 +785,8 @@
                 "winChance": 0.5,
                 "won": true
               }
-            ]
+            ],
+            "testIndex": null
           },
           {
             "date": "\u003cts\u003e",
@@ -765,11 +851,70 @@
                 "winChance": 0.5,
                 "won": true
               }
-            ]
+            ],
+            "testIndex": null
           }
         ],
         "groupId": "\u003cid3\u003e",
         "groupName": "Leaderboard",
+        "moves": [
+          {
+            "finishing": false,
+            "id": "\u003cid12\u003e",
+            "name": "Bomb",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid13\u003e",
+            "name": "Bouncer",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid17\u003e",
+            "name": "Normal",
+            "pointsForScorer": 1,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid18\u003e",
+            "name": "Save",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": false,
+            "id": "\u003cid19\u003e",
+            "name": "Trickshot",
+            "pointsForScorer": 2,
+            "pointsForTeam": 0
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid14\u003e",
+            "name": "Finish - Normal",
+            "pointsForScorer": 1,
+            "pointsForTeam": 3
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid15\u003e",
+            "name": "Finish - Ring of fire",
+            "pointsForScorer": 1,
+            "pointsForTeam": 10
+          },
+          {
+            "finishing": true,
+            "id": "\u003cid16\u003e",
+            "name": "Finish - Ring of water",
+            "pointsForScorer": 1,
+            "pointsForTeam": 10
+          }
+        ],
         "params": {
           "k": 0,
           "marginWeight": 0.5,
@@ -790,60 +935,83 @@
             "logLoss": 0.6931471806
           }
         },
+        "profiles": [
+          {
+            "id": "\u003cid4\u003e",
+            "name": "a"
+          },
+          {
+            "id": "\u003cid5\u003e",
+            "name": "b"
+          },
+          {
+            "id": "\u003cid6\u003e",
+            "name": "c"
+          },
+          {
+            "id": "\u003cid7\u003e",
+            "name": "d"
+          }
+        ],
         "seasonId": "\u003cid1\u003e",
         "seasons": [
           {
             "id": "\u003cid1\u003e",
+            "minMatchesToQualify": 1,
             "name": null,
             "numMatches": 2
           }
         ],
         "standings": [
           {
-            "defaultElo": 1302.252591,
-            "defaultRank": 4,
+            "baselineElo": 1302.252591,
+            "baselineRank": 4,
             "elo": 1500,
             "hitting": 0,
             "matches": 2,
             "name": "a",
             "points": 7,
             "profileId": "\u003cid4\u003e",
+            "rank": 2,
             "result": 0,
             "wins": 1
           },
           {
-            "defaultElo": 1302.730423,
-            "defaultRank": 3,
+            "baselineElo": 1302.730423,
+            "baselineRank": 3,
             "elo": 1500,
             "hitting": 0,
             "matches": 1,
             "name": "d",
             "points": 1,
             "profileId": "\u003cid7\u003e",
+            "rank": 4,
             "result": 0,
             "wins": 0
           },
           {
-            "defaultElo": 1560.247409,
-            "defaultRank": 2,
+            "baselineElo": 1560.247409,
+            "baselineRank": 2,
             "elo": 1500,
             "hitting": 0,
             "matches": 2,
             "name": "c",
             "points": 14,
             "profileId": "\u003cid6\u003e",
+            "rank": 1,
             "result": 0,
             "wins": 1
           },
           {
-            "defaultElo": 1659.769577,
-            "defaultRank": 1,
+            "baselineElo": 1659.769577,
+            "baselineRank": 1,
             "elo": 1500,
             "hitting": 0,
             "matches": 1,
             "name": "b",
             "points": 5,
             "profileId": "\u003cid5\u003e",
+            "rank": 3,
             "result": 0,
             "wins": 1
           }

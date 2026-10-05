@@ -31,7 +31,8 @@ func TestEloSimulation(t *testing.T) {
 		id := Get(s, "profileId").(string)
 		elo := Get(s, "elo").(float64)
 		h.Equal(elo, boardElo[id], "elo of "+id)
-		h.Equal(Get(s, "defaultRank"), float64(i+1), "default rank of "+id)
+		h.Equal(Get(s, "rank"), float64(i+1), "rank of "+id)
+		h.Equal(Get(s, "baselineElo"), elo, "the baseline is the default weights")
 		parts := Get(s, "result").(float64) + Get(s, "hitting").(float64)
 		h.True(math.Abs(1500+parts-elo) < 1e-9, "result and hitting explain %s's elo: %v vs %v", id, 1500+parts, elo)
 	}
@@ -62,4 +63,75 @@ func TestEloSimulation(t *testing.T) {
 	h.Fail(h.Do(Req{Method: "GET", Path: "/elo-simulation?inviteCode=NOPE12345"}), 404, "groupInviteNotFound")
 	h.Fail(h.Do(Req{Method: "GET", Path: "/elo-simulation?inviteCode="}), 400, "invalidGroupInviteCode")
 	h.SpringError(h.Do(Req{Method: "GET", Path: "/elo-simulation?k=lots&inviteCode=" + g.InviteCode}), 400, "Bad Request", "/elo-simulation")
+}
+
+// Test games count where they say and are never stored.
+func TestEloSimulationTestGames(t *testing.T) {
+	h := New(t)
+	owner, g := leaderboardGroup(h)
+	// a and c played twice, b and d once
+	h.OK(h.Do(Req{Method: "PUT", Path: g.Path("/seasons/" + g.SeasonID), Auth: owner.Bearer(),
+		Body: map[string]any{"seasonSettings": map[string]any{"minMatchesToQualify": 2}}}))
+
+	path := "/elo-simulation?inviteCode=" + g.InviteCode
+	ranks := func(res *Resp) map[string]any {
+		out := map[string]any{}
+		for _, s := range res.List("standings") {
+			out[Get(s, "profileId").(string)] = Get(s, "rank")
+		}
+		return out
+	}
+	stored := h.OK(h.Do(Req{Method: "GET", Path: path}))
+	h.Equal(stored.Num("seasons", "0", "minMatchesToQualify"), 2, "the season's minimum")
+	r := ranks(stored)
+	h.True(r[g.Profiles["a"]] != nil && r[g.Profiles["c"]] != nil, "a and c are ranked: %v", r)
+	h.Equal(r[g.Profiles["b"]], nil, "b is unranked")
+	h.Equal(r[g.Profiles["d"]], nil, "d is unranked")
+
+	test := func(after string, finishers ...string) map[string]any {
+		team := func(name string) []any {
+			moves := []any{map[string]any{"moveId": g.Moves["Normal"], "count": 3}}
+			for _, f := range finishers {
+				if f == name {
+					moves = append(moves, map[string]any{"moveId": g.Moves["Finish - Normal"], "count": 1})
+				}
+			}
+			return []any{map[string]any{"profileId": g.Profiles[name], "moves": moves}}
+		}
+		return map[string]any{"after": after, "teams": []any{team("d"), team("b")}}
+	}
+	post := func(games ...any) *Resp {
+		return h.Do(Req{Method: "POST", Path: path, Body: map[string]any{"testGames": games}})
+	}
+
+	atEnd := h.OK(post(test("end", "d")))
+	h.Equal(atEnd.Str("baseline"), "withoutTestGames", "baseline")
+	games := atEnd.List("games")
+	h.Equal(len(games), 3, "the test game counts")
+	h.Equal(Get(games[2], "testIndex"), 0.0, "and comes last")
+	h.Equal(Get(games[0], "testIndex"), nil, "real games aren't tests")
+	h.True(ranks(atEnd)[g.Profiles["d"]] != nil, "d's second game ranks them")
+	for _, s := range atEnd.List("standings") {
+		played := Get(s, "profileId") == g.Profiles["b"] || Get(s, "profileId") == g.Profiles["d"]
+		if !played {
+			h.Equal(Get(s, "elo"), Get(s, "baselineElo"), "a game at the end moves only its players")
+		}
+	}
+
+	// at the start it changes the ratings every later game starts from
+	atStart := h.OK(post(test("start", "d")))
+	h.Equal(Get(atStart.List("games")[0], "testIndex"), 0.0, "the test game comes first")
+	for _, s := range atStart.List("standings") {
+		if Get(s, "profileId") == g.Profiles["c"] {
+			h.True(Get(s, "elo") != Get(s, "baselineElo"), "c's later games change")
+		}
+	}
+
+	// nothing was stored
+	again := h.OK(h.Do(Req{Method: "GET", Path: path}))
+	h.Equal(len(again.List("games")), 2, "real games after the tests")
+
+	h.Fail(post(test("end", "d", "b")), 400, "eloInvalidTestGame")
+	h.Fail(post(test("end")), 400, "eloInvalidTestGame")
+	h.Fail(post(test("not-a-game", "d")), 400, "eloInvalidTestGame")
 }

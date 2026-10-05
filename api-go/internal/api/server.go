@@ -114,7 +114,7 @@ func (s *Server) routes() map[string]route {
 		"/assets/{id}":           {"GET": s.getAsset},
 		"/auth/signup":           {"POST": s.signup},
 		"/auth/refresh":          {"POST": s.refresh},
-		"/elo-simulation":        {"GET": s.eloSimulation},
+		"/elo-simulation":        {"GET": s.eloSimulation, "POST": s.eloSimulation},
 		"/elo-simulation/search": {"GET": s.eloSearch},
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},

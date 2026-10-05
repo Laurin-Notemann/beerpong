@@ -64,6 +64,72 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": ["elo-simulation-controller"],
+                "operationId": "simulateEloWithTestGames",
+                "description": "Like GET, with made-up test games counted where they say. Nothing is stored. The standings then compare with the season without the test games.",
+                "parameters": [
+                    {
+                        "name": "inviteCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" },
+                        "description": "The group's invite code; it is all the simulator needs to open a group."
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "k",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "marginWeight",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "perPoint",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "topWeight",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeEloSimulationDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EloSimulationRequestDto"
+                            }
+                        }
+                    },
+                    "required": true
+                }
             }
         },
         "/elo-simulation/search": {
@@ -1794,11 +1860,24 @@
             "get": {
                 "tags": ["formation-controller"],
                 "operationId": "getFormations",
-                "parameters": [{ "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponseEnvelopeListFormationDto" } } }
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListFormationDto"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1808,17 +1887,39 @@
                 "tags": ["formation-controller"],
                 "operationId": "saveFormation",
                 "parameters": [
-                    { "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } },
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
                 ],
                 "requestBody": {
-                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FormationSaveDto" } } },
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FormationSaveDto"
+                            }
+                        }
+                    },
                     "required": true
                 },
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponseEnvelopeFormationDto" } } }
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeFormationDto"
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -1826,13 +1927,29 @@
                 "tags": ["formation-controller"],
                 "operationId": "deleteFormation",
                 "parameters": [
-                    { "name": "groupId", "in": "path", "required": true, "schema": { "type": "string" } },
-                    { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ResponseEnvelopeString" } } }
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1866,6 +1983,85 @@
     },
     "components": {
         "schemas": {
+            "EloRuleMoveDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "pointsForScorer": { "type": "integer", "format": "int32" },
+                    "pointsForTeam": { "type": "integer", "format": "int32" },
+                    "finishing": { "type": "boolean" }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "pointsForScorer",
+                    "pointsForTeam",
+                    "finishing"
+                ]
+            },
+            "EloProfileDto": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+            },
+            "EloTestMoveDto": {
+                "type": "object",
+                "properties": {
+                    "moveId": { "type": "string" },
+                    "count": { "type": "integer", "format": "int32" }
+                },
+                "required": ["moveId", "count"]
+            },
+            "EloTestPlayerDto": {
+                "type": "object",
+                "properties": {
+                    "profileId": { "type": "string" },
+                    "moves": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EloTestMoveDto"
+                        }
+                    }
+                },
+                "required": ["profileId", "moves"]
+            },
+            "EloTestGameDto": {
+                "type": "object",
+                "properties": {
+                    "after": {
+                        "type": "string",
+                        "description": "\"start\", \"end\", or the id of the season's game it comes right after."
+                    },
+                    "teams": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/EloTestPlayerDto"
+                            }
+                        }
+                    }
+                },
+                "required": ["after", "teams"]
+            },
+            "EloSimulationRequestDto": {
+                "type": "object",
+                "properties": {
+                    "testGames": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EloTestGameDto"
+                        }
+                    }
+                },
+                "required": []
+            },
             "EloParamsDto": {
                 "type": "object",
                 "properties": {
@@ -1891,9 +2087,13 @@
                 "properties": {
                     "id": { "type": "string" },
                     "name": { "type": "string" },
-                    "numMatches": { "type": "integer", "format": "int32" }
+                    "numMatches": { "type": "integer", "format": "int32" },
+                    "minMatchesToQualify": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
                 },
-                "required": ["id", "numMatches"]
+                "required": ["id", "numMatches", "minMatchesToQualify"]
             },
             "EloPredictionDto": {
                 "type": "object",
@@ -1909,8 +2109,13 @@
                     "profileId": { "type": "string" },
                     "name": { "type": "string" },
                     "elo": { "type": "number", "format": "double" },
-                    "defaultElo": { "type": "number", "format": "double" },
-                    "defaultRank": { "type": "integer", "format": "int32" },
+                    "rank": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Place among the ranked players; missing while unranked."
+                    },
+                    "baselineElo": { "type": "number", "format": "double" },
+                    "baselineRank": { "type": "integer", "format": "int32" },
                     "matches": { "type": "integer", "format": "int64" },
                     "wins": { "type": "integer", "format": "int64" },
                     "points": { "type": "integer", "format": "int64" },
@@ -1921,8 +2126,6 @@
                     "profileId",
                     "name",
                     "elo",
-                    "defaultElo",
-                    "defaultRank",
                     "matches",
                     "wins",
                     "points",
@@ -1996,6 +2199,11 @@
                 "type": "object",
                 "properties": {
                     "matchId": { "type": "string" },
+                    "testIndex": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "The test game's place in the request; missing for real games."
+                    },
                     "date": { "type": "string", "format": "date-time" },
                     "gap": { "type": "number", "format": "double" },
                     "scale": { "type": "number", "format": "double" },
@@ -2030,6 +2238,11 @@
                         "items": { "$ref": "#/components/schemas/EloSeasonDto" }
                     },
                     "seasonId": { "type": "string" },
+                    "baseline": {
+                        "type": "string",
+                        "enum": ["defaults", "withoutTestGames"],
+                        "description": "What the standings' baseline values compare with."
+                    },
                     "standings": {
                         "type": "array",
                         "items": {
@@ -2042,6 +2255,18 @@
                     },
                     "prediction": {
                         "$ref": "#/components/schemas/EloPredictionDto"
+                    },
+                    "moves": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EloRuleMoveDto"
+                        }
+                    },
+                    "profiles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EloProfileDto"
+                        }
                     }
                 },
                 "required": [
@@ -2049,9 +2274,12 @@
                     "defaults",
                     "params",
                     "seasons",
+                    "baseline",
                     "standings",
                     "games",
-                    "prediction"
+                    "prediction",
+                    "moves",
+                    "profiles"
                 ]
             },
             "EloSearchDto": {
@@ -2804,7 +3032,12 @@
                 "type": "object",
                 "properties": {
                     "name": { "type": "string" },
-                    "cups": { "type": "array", "items": { "$ref": "#/components/schemas/CupPositionDto" } }
+                    "cups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CupPositionDto"
+                        }
+                    }
                 }
             },
             "FormationDto": {
@@ -2813,7 +3046,12 @@
                     "id": { "type": "string" },
                     "groupId": { "type": "string" },
                     "name": { "type": "string" },
-                    "cups": { "type": "array", "items": { "$ref": "#/components/schemas/CupPositionDto" } },
+                    "cups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CupPositionDto"
+                        }
+                    },
                     "updatedAt": { "type": "string", "format": "date-time" }
                 }
             },
@@ -2831,7 +3069,10 @@
                 "properties": {
                     "status": { "type": "string", "enum": ["OK", "ERROR"] },
                     "httpCode": { "type": "integer", "format": "int32" },
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/FormationDto" } },
+                    "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/FormationDto" }
+                    },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
                 }
             },
