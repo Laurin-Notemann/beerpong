@@ -1,3 +1,4 @@
+import { MenuView } from '@expo/ui/community/menu';
 import React, { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
@@ -14,6 +15,7 @@ import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
 import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
+import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 
 const HINT_HEIGHT = 64;
 const GRID_GAP = 32;
@@ -25,7 +27,8 @@ const SIDE_BUTTONS_WIDTH = 72;
  * The live match screen's cups page: both teams' cups, as on the table. Tapping a cup records
  * who hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
  * the other team, and the swap button switches which team that is. The button below it re-racks
- * a team's cups into a saved formation.
+ * a team's cups into a saved formation. With Track Misses on, a live match also gets a Miss
+ * button: a menu of the players, and taking back the latest miss.
  */
 export default function NewMatchCups({
     liveMatchId,
@@ -47,6 +50,9 @@ export default function NewMatchCups({
     const topTeam: CupTeam = bottomTeam === 'blue' ? 'red' : 'blue';
 
     const [size, setSize] = useState({ width: 0, height: 0 });
+
+    const trackMisses =
+        useLocalSettingsStore((s) => s.trackMisses) && !!liveMatchId;
 
     // fit both pyramids on screen: a 7x7 grid is about 0.9 times as high as it is wide
     const gridWidth = Math.max(
@@ -72,13 +78,54 @@ export default function NewMatchCups({
         return team === bottomTeam ? rotateFormation(formation) : formation;
     }
 
+    const nameOf = (playerId: string) =>
+        playersQuery.data?.data?.find((i) => i.id === playerId)?.profile
+            ?.name || 'Unknown';
+
+    const lastMiss = entry.misses.at(-1);
+    const missActions = [
+        ...(['red', 'blue'] as const).map((team) => ({
+            id: team,
+            title: team === 'red' ? 'Red' : 'Blue',
+            displayInline: true,
+            subactions: entry[
+                team === 'red' ? 'redTeam' : 'blueTeam'
+            ].teamMembers.map(({ playerId }) => {
+                const misses = entry.misses.filter(
+                    (i) => i.playerId === playerId
+                ).length;
+                return {
+                    id: 'miss:' + playerId,
+                    title: nameOf(playerId) + (misses ? ` (${misses})` : ''),
+                };
+            }),
+        })),
+        ...(lastMiss
+            ? [
+                  {
+                      id: 'undo:' + lastMiss.playerId,
+                      title: `Take Back ${nameOf(lastMiss.playerId)}'s Miss`,
+                      image: 'arrow.uturn.backward' as const,
+                      attributes: { destructive: true },
+                  },
+              ]
+            : []),
+    ];
+
+    function onMissAction(event: string) {
+        const [kind, playerId] = event.split(':');
+        if (!playerId) return;
+
+        triggerHapticBump('selection');
+        if (kind === 'miss') entry.actions.recordMiss(playerId);
+        else if (kind === 'undo') entry.actions.undoMiss(playerId);
+    }
+
     function confirmPutBack(team: CupTeam, cup: CupPosition) {
         const hit = findHit(entry.cupHits, team, cup);
         if (!hit) return;
 
-        const name =
-            playersQuery.data?.data?.find((i) => i.id === hit.playerId)?.profile
-                ?.name || 'Unknown';
+        const name = nameOf(hit.playerId);
         const move = movesQuery.data?.data?.find((i) => i.id === hit.moveId);
         const cups = hit.cups.length;
 
@@ -176,6 +223,22 @@ export default function NewMatchCups({
                             nav.navigate('rerackModal', { liveMatchId });
                         }}
                     />
+                    {trackMisses && (
+                        <MenuView
+                            title="Who Missed?"
+                            actions={missActions}
+                            onPressAction={({ nativeEvent }) =>
+                                onMissAction(nativeEvent.event)
+                            }
+                        >
+                            <View
+                                pointerEvents="none"
+                                accessibilityLabel="Miss"
+                            >
+                                <OverlayIconButton iconName="close-circle-outline" />
+                            </View>
+                        </MenuView>
+                    )}
                 </View>
                 {gridWidth > 0 && (
                     <View style={{ gap: GRID_GAP }}>

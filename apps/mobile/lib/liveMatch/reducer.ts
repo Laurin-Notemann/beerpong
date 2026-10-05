@@ -14,6 +14,7 @@ export const emptyLiveMatchState: LiveMatchState = {
     blueTeam: { teamMembers: [] },
     cupHits: [],
     reracks: {},
+    misses: [],
 };
 
 const teamOf = (state: DraftTeams, playerId: string): CupTeam | undefined =>
@@ -155,8 +156,33 @@ function apply(
                 : undefined;
             return { reracks: { ...state.reracks, [op.team]: rerack } };
         }
+        case 'RECORD_MISS': {
+            const team = teamOf(state, op.playerId);
+            if (!team) return;
+
+            return {
+                misses: [...state.misses, { playerId: op.playerId, team }],
+            };
+        }
+        case 'UNDO_MISS': {
+            // no findLastIndex: the TV's browser (Chromium 63) runs this too
+            const idx = state.misses
+                .map((i) => i.playerId)
+                .lastIndexOf(op.playerId);
+            if (idx < 0) return;
+
+            return { misses: state.misses.filter((_, i) => i !== idx) };
+        }
     }
 }
+
+/** misses go with their player, like hits: gone when the player leaves or switches teams */
+const keepMisses = (state: LiveMatchState): LiveMatchState => {
+    const misses = state.misses.filter(
+        (i) => teamOf(state, i.playerId) === i.team
+    );
+    return misses.length === state.misses.length ? state : { ...state, misses };
+};
 
 /**
  * Every phone reduces the same ordered log, so all of them end up in the same state. Ops that
@@ -169,7 +195,7 @@ export function reduceLiveMatch(ops: LiveOp[]) {
 
     for (const op of ops) {
         const next = apply(state, op);
-        if (next) state = { ...state, ...next };
+        if (next) state = keepMisses({ ...state, ...next });
         else ignoredOpIds.push(op.id);
     }
     return { state, ignoredOpIds };

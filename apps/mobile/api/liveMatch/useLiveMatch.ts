@@ -322,6 +322,14 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
         ]);
     }
 
+    function recordMiss(playerId: string) {
+        enqueue([{ id: newOpId(), type: 'RECORD_MISS', playerId }]);
+    }
+
+    function undoMiss(playerId: string) {
+        enqueue([{ id: newOpId(), type: 'UNDO_MISS', playerId }]);
+    }
+
     async function refetch(): Promise<LiveMatchDto> {
         const fetched = await fetchLiveMatch(await api, groupId, id);
         const merged = mergeLiveMatch(cachedMatch(qc, groupId, id), fetched);
@@ -401,6 +409,8 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
         recordCupHit,
         undoCupHit,
         setRerack,
+        recordMiss,
+        undoMiss,
         finish,
         discard,
     };

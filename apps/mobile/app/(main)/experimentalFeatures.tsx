@@ -19,6 +19,8 @@ export default function Page() {
         toggleShowWallpaper,
         newDesign,
         toggleNewDesign,
+        trackMisses,
+        toggleTrackMisses,
     } = useLocalSettings();
 
     return (
@@ -79,6 +81,18 @@ export default function Page() {
                             <Switch
                                 value={showWallpaper}
                                 onChange={toggleShowWallpaper}
+                            />
+                        }
+                    />
+                </MenuSection>
+                <MenuSection footer="Pro mode: a Miss button on a live match's cups page. Enter every throw, hit or miss, to get hit rates and turns.">
+                    <MenuItem
+                        border={false}
+                        title="Track Misses"
+                        tailContent={
+                            <Switch
+                                value={trackMisses}
+                                onChange={toggleTrackMisses}
                             />
                         }
                     />

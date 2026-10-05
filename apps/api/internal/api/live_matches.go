@@ -26,7 +26,7 @@ const (
 const liveInProgress = "IN_PROGRESS"
 
 var (
-	liveOpTypes = []string{"SET_TEAMS", "SET_PLAYER_TEAM", "ADJUST_MOVE", "RECORD_CUP_HIT", "UNDO_CUP_HIT", "SET_RERACK"}
+	liveOpTypes = []string{"SET_TEAMS", "SET_PLAYER_TEAM", "ADJUST_MOVE", "RECORD_CUP_HIT", "UNDO_CUP_HIT", "SET_RERACK", "RECORD_MISS", "UNDO_MISS"}
 )
 
 // ---- binding and validation ----
@@ -217,6 +217,12 @@ func normalizeLiveOp(op *liveMatchOpDTO) (liveMatchOpDTO, bool) {
 			return out, false
 		}
 		out.Team, out.Cups, out.Drawn, out.FormationID = op.Team, op.Cups, op.Drawn, op.FormationID
+	case "RECORD_MISS", "UNDO_MISS":
+		// a throw that missed, or taking back the player's latest one (only phones that track misses send them)
+		if !isUUIDPtr(op.PlayerID) {
+			return out, false
+		}
+		out.PlayerID = op.PlayerID
 	default:
 		return out, false
 	}

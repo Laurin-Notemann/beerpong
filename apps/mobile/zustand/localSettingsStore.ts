@@ -12,6 +12,8 @@ interface LocalSettingsStore {
     scopedPlayerPage: boolean;
     /** experimental redesign of the main screens (Experimental Features → New Design) */
     newDesign: boolean;
+    /** pro mode: a Miss button in live matches, so every throw is in the log */
+    trackMisses: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -23,6 +25,7 @@ interface LocalSettingsStore {
         toggleShowWallpaper: () => void;
         toggleScopedPlayerPage: () => void;
         toggleNewDesign: () => void;
+        toggleTrackMisses: () => void;
     };
 }
 
@@ -41,6 +44,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             dailyLeaderboard: false,
             scopedPlayerPage: false,
             newDesign: false,
+            trackMisses: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -82,6 +86,9 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 toggleNewDesign: () => {
                     set(() => ({ newDesign: !get().newDesign }));
                 },
+                toggleTrackMisses: () => {
+                    set(() => ({ trackMisses: !get().trackMisses }));
+                },
             },
         }),
         {
@@ -97,6 +104,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 showWallpaper: state.showWallpaper,
                 scopedPlayerPage: state.scopedPlayerPage,
                 newDesign: state.newDesign,
+                trackMisses: state.trackMisses,
             }),
         }
     )

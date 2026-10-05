@@ -261,7 +261,9 @@ declare namespace Components {
                 | 'ADJUST_MOVE'
                 | 'RECORD_CUP_HIT'
                 | 'UNDO_CUP_HIT'
-                | 'SET_RERACK';
+                | 'SET_RERACK'
+                | 'RECORD_MISS'
+                | 'UNDO_MISS';
             createdAt?: string; // date-time
             playerId?: string;
             team?: string;

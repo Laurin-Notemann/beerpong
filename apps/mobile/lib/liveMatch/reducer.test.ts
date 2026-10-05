@@ -444,3 +444,47 @@ describe('SET_RERACK', () => {
         ).toBeUndefined();
     });
 });
+
+describe('misses', () => {
+    const miss = (playerId: string): OpBody => ({
+        type: 'RECORD_MISS',
+        playerId,
+    });
+
+    it('keeps the misses in order, with the thrower’s team', () => {
+        const { state } = reduceLiveMatch(
+            log(setTeams, miss('anna'), miss('carl'), miss('anna'))
+        );
+        expect(state.misses).toEqual([
+            { playerId: 'anna', team: 'red' },
+            { playerId: 'carl', team: 'blue' },
+            { playerId: 'anna', team: 'red' },
+        ]);
+    });
+
+    it('UNDO_MISS takes back the player’s latest miss, and is ignored without one', () => {
+        const ops = log(
+            setTeams,
+            miss('anna'),
+            miss('carl'),
+            { type: 'UNDO_MISS', playerId: 'anna' },
+            { type: 'UNDO_MISS', playerId: 'anna' }
+        );
+        const { state, ignoredOpIds } = reduceLiveMatch(ops);
+
+        expect(state.misses).toEqual([{ playerId: 'carl', team: 'blue' }]);
+        expect(ignoredOpIds).toEqual([ops[4].id]);
+    });
+
+    it('ignores a miss of someone not in the match and drops the misses of a player who leaves', () => {
+        const ops = log(setTeams, miss('erik'), miss('anna'), miss('ben'), {
+            type: 'SET_PLAYER_TEAM',
+            playerId: 'anna',
+            team: 'blue',
+        });
+        const { state, ignoredOpIds } = reduceLiveMatch(ops);
+
+        expect(state.misses).toEqual([{ playerId: 'ben', team: 'red' }]);
+        expect(ignoredOpIds).toEqual([ops[1].id]);
+    });
+});

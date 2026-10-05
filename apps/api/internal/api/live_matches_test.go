@@ -50,6 +50,8 @@ func TestNormalizeLiveOps(t *testing.T) {
 		"hit":                `"type":"RECORD_CUP_HIT","team":"red","playerId":"` + p + `","moveId":"` + m + `","cups":` + cups(10),
 		"hit with finish":    `"type":"RECORD_CUP_HIT","team":"red","playerId":"` + p + `","moveId":"` + m + `","finishMoveId":"` + m + `","cups":` + cups(1),
 		"undo":               `"type":"UNDO_CUP_HIT","team":"blue","cup":{"x":9,"y":0}`,
+		"miss":               `"type":"RECORD_MISS","playerId":"` + p + `"`,
+		"undo miss":          `"type":"UNDO_MISS","playerId":"` + p + `"`,
 		"numeric strings ok": `"type":"ADJUST_MOVE","playerId":"` + p + `","moveId":"` + m + `","delta":"5"`,
 	}
 	for name, rest := range valid {
@@ -67,6 +69,7 @@ func TestNormalizeLiveOps(t *testing.T) {
 		"delta -21":          `"type":"ADJUST_MOVE","playerId":"` + p + `","moveId":"` + m + `","delta":-21`,
 		"no player":          `"type":"ADJUST_MOVE","moveId":"` + m + `","delta":1`,
 		"player not a uuid":  `"type":"ADJUST_MOVE","playerId":"nope","moveId":"` + m + `","delta":1`,
+		"miss of no one":     `"type":"RECORD_MISS"`,
 		"green team":         `"type":"SET_PLAYER_TEAM","playerId":"` + p + `","team":"green"`,
 		"x is 10":            `"type":"UNDO_CUP_HIT","team":"red","cup":{"x":10,"y":0}`,
 		"y is -1":            `"type":"UNDO_CUP_HIT","team":"red","cup":{"x":0,"y":-1}`,

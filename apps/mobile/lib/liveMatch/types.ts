@@ -40,6 +40,10 @@ export type LiveOp = OpBase &
               drawn: CupPosition[];
               formationId?: string;
           }
+        /** a throw that missed; only phones that track misses (Experimental Features) send it */
+        | { type: 'RECORD_MISS'; playerId: string }
+        /** takes back the player's latest miss */
+        | { type: 'UNDO_MISS'; playerId: string }
     );
 
 /** the state the entry screens render, shaped like the match draft store's */
@@ -47,6 +51,8 @@ export interface LiveMatchState extends DraftTeams {
     cupHits: CupHit[];
     /** teams whose cups were put back together in another formation, on any phone */
     reracks: Partial<Record<CupTeam, Rerack>>;
+    /** the throws that missed, in order, by the thrower's team */
+    misses: { playerId: string; team: CupTeam }[];
 }
 
 const logger = new ScopedLogger('live-match');
@@ -129,6 +135,10 @@ export function toLiveOp(dto: LiveMatchOpDto): LiveOp | undefined {
                     formationId: dto.formationId ?? undefined,
                 };
             }
+            case 'RECORD_MISS':
+            case 'UNDO_MISS':
+                if (!dto.playerId) return;
+                return { ...base, type: dto.type, playerId: dto.playerId };
         }
     })();
 
