@@ -3,7 +3,8 @@ import type { Plugin, Rule } from 'postcss';
 /**
  * Flexbox `gap` needs Chromium 84; older TV browsers ignore it, and everything touches. For
  * those (`no-flex-gap` on <html>, set in __root.tsx) every gap utility also puts margins
- * between the children of a flex container. Grids keep their gap, which those browsers have.
+ * between the children of a flex container. Grids get the old `grid-gap` names too, which
+ * are all Chromium before 66 knows.
  */
 export function flexGapFallback(): Plugin {
     return {
@@ -14,6 +15,12 @@ export function flexGapFallback(): Plugin {
             if (decl?.type !== 'decl' || !['gap', 'column-gap', 'row-gap'].includes(decl.prop)) {
                 return;
             }
+            const legacy = {
+                gap: 'grid-gap',
+                'column-gap': 'grid-column-gap',
+                'row-gap': 'grid-row-gap',
+            };
+            decl.cloneBefore({ prop: legacy[decl.prop as keyof typeof legacy] });
             const sel = `.no-flex-gap ${rule.selector}`;
             const between = (selector: string, prop: string) =>
                 rule.cloneAfter({ selector: `${selector} > * + *`, nodes: [] }).append({
