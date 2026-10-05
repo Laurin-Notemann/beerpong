@@ -185,8 +185,6 @@ export function useLiveMatchScreen(id: string) {
         /** couldn't be loaded for another reason than not existing (e.g. offline) */
         error: !header && !isNotFound ? live.error : null,
         ended,
-        syncStatus: live.syncStatus,
-        pendingCount: live.pendingCount,
         red: {
             players: match.redTeam.map(toBadgePlayer),
             score: match.redCups,

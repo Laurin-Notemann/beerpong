@@ -1,29 +1,22 @@
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-import type { LiveMatchSyncStatus } from '@/api/liveMatch/useLiveMatch';
 import { EASE_OUT, ENTER_MS, EXIT_MS } from '@/components/liveMatch/motion';
-import { SyncPill } from '@/components/liveMatch/SyncPill';
 import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { useTheme } from '@/theme';
 
 const HINT_HEIGHT = 20;
 
 /**
- * The bottom of the live match screen: how far this phone's edits got, the Finish button, and
- * one line on why it's disabled. The hint's line is always reserved, so the button doesn't
+ * The bottom of the live match screen: the Finish button, and one line on why it's disabled. The hint's line is always reserved, so the button doesn't
  * jump when it appears.
  */
 export function FinishBar({
-    syncStatus,
-    pendingCount,
     hint,
     isFinishing,
     onFinish,
     onHintPress,
 }: {
-    syncStatus: LiveMatchSyncStatus;
-    pendingCount: number;
     /** set while the match can't be finished */
     hint: string | undefined;
     isFinishing: boolean;
@@ -34,7 +27,6 @@ export function FinishBar({
 
     return (
         <View style={{ gap: 10, paddingHorizontal: 8 }}>
-            <SyncPill status={syncStatus} pendingCount={pendingCount} />
             <View style={{ flexDirection: 'row' }}>
                 <OverlayTextButton
                     fullWidth

@@ -80,8 +80,6 @@ export default function LiveMatchPage() {
                     </InsetFree>
                 </View>
                 <FinishBar
-                    syncStatus={screen.syncStatus}
-                    pendingCount={screen.pendingCount}
                     hint={screen.hint}
                     isFinishing={screen.isFinishing}
                     onFinish={screen.finish}

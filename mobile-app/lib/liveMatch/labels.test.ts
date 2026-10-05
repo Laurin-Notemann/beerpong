@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { finishHint, syncLabel, teamNames } from '@/lib/liveMatch/labels';
+import { finishHint, teamNames } from '@/lib/liveMatch/labels';
 
 describe('teamNames', () => {
     it('names one player', () => {
@@ -36,17 +36,5 @@ describe('finishHint', () => {
         expect(finishHint(2)).toBe(
             'Only one finish can count. Remove the extra one'
         );
-    });
-});
-
-describe('syncLabel', () => {
-    it('labels each sync state', () => {
-        expect(syncLabel('synced', 0)).toBe('Saved');
-        expect(syncLabel('syncing', 2)).toBe('Saving…');
-        expect(syncLabel('offline', 3)).toBe('Offline · 3 waiting');
-    });
-
-    it('leaves out the count when nothing is waiting', () => {
-        expect(syncLabel('offline', 0)).toBe('Offline');
     });
 });
