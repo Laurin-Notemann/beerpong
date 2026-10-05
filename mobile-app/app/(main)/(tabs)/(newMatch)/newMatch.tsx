@@ -19,7 +19,6 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -120,9 +119,9 @@ export default function NewMatchScreen() {
 
     const [swiperPage, setSwiperPage] = useState(0);
 
-    // pro mode: Start goes live (see liveMatch.tsx); Next enters a match after the game, cups first
+    // in pro mode the match is entered live (see liveMatch.tsx), so only the teams are picked here
     const pages = beerpongProMode
-        ? (['teams', 'cups', 'points'] as const)
+        ? (['teams'] as const)
         : (['teams', 'points'] as const);
 
     const profiles = playersQuery.data?.data ?? [];
@@ -328,15 +327,13 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                // pro mode adds a page, so toggling it re-mounts the carousel too
+                // pro mode has no points page, so toggling it re-mounts the carousel too
                 key={groupId + ':' + seasonId + ':' + beerpongProMode}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
-                    // in pro mode the cups have filled in the points already
                     if (
                         pages[pageIdx] === 'points' &&
-                        !beerpongProMode &&
                         !matchDraft.hasBeenOnPageTwo
                     ) {
                         nav.navigate('assignPointsToPlayerModal', {
@@ -398,17 +395,9 @@ export default function NewMatchScreen() {
                                         ? onStartLiveMatch
                                         : undefined
                                 }
-                                onNext={
-                                    beerpongProMode && Platform.OS === 'android'
-                                        ? () => carouselRef.current?.next()
-                                        : undefined
-                                }
                                 canStart={hasValidTeams}
                             />
                         );
-                    }
-                    if (page === 'cups') {
-                        return <NewMatchCups key={page} />;
                     }
                     return (
                         <CreateMatchAssignPoints
