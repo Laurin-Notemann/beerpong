@@ -1,12 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import {
     DefaultOptions,
     MutationCache,
+    onlineManager,
     QueryCache,
     QueryClient,
 } from '@tanstack/react-query';
+import { PersistQueryClientOptions } from '@tanstack/react-query-persist-client';
 
+import { isCreateMatch, shouldPersistMutation } from '@/api/calls/matchQueue';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
 import { hours, minutes } from '@/utils/time';
@@ -19,11 +23,26 @@ const defaultQueryOptions: DefaultOptions = {
         staleTime: minutes(2), // Data becomes stale after 2 minutes
         retry: false, // Don't retry failed queries
         gcTime: hours(24), // Keep unused data in garbage collection for 24 hours
+        // Only match entry waits for the network (matchQueue); everything else fails
+        // right away offline, and useRefetchEverythingOnWifiReconnect refetches.
+        networkMode: 'always',
+        refetchOnReconnect: false,
     },
     mutations: {
         retry: false, // Don't retry failed mutations
+        networkMode: 'always',
     },
 };
+
+// React Query only knows the browser's online events; on a phone NetInfo says. Unknown
+// reachability (null) counts as online, like the API client's offline check.
+onlineManager.setEventListener((setOnline) =>
+    NetInfo.addEventListener((state) =>
+        setOnline(
+            state.isConnected !== false && state.isInternetReachable !== false
+        )
+    )
+);
 
 /**
  * Creates and configures a new QueryClient instance
@@ -40,9 +59,11 @@ export const createQueryClient = () => {
         },
     });
 
-    // Call sites usually show a more specific toast right after; it replaces this one.
+    // Call sites usually show a more specific toast right after; it replaces this one. A
+    // rejected queued match gets an alert instead (MatchQueue).
     const mutationCache = new MutationCache({
-        onError: (error) => {
+        onError: (error, _variables, _context, mutation) => {
+            if (isCreateMatch(mutation)) return;
             showErrorToast('Something went wrong.', error);
         },
     });
@@ -67,3 +88,10 @@ export const persister = createAsyncStoragePersister({
     serialize: JSON.stringify,
     deserialize: JSON.parse,
 });
+
+export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
+    persister,
+    // the persisted cache holds matches entered offline, so it outlives a week without the app
+    maxAge: hours(24 * 7),
+    dehydrateOptions: { shouldDehydrateMutation: shouldPersistMutation },
+};

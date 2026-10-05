@@ -14,8 +14,10 @@ import 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 
+import { MatchQueue } from '@/api/calls/matchHooks';
+import { resumeQueuedMatches } from '@/api/calls/matchQueue';
 import { ApiProvider } from '@/api/utils/create-api';
-import { createQueryClient, persister } from '@/api/utils/query-client';
+import { createQueryClient, persistOptions } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
 import { CrashFallback } from '@/components/CrashFallback';
 import { Sidebar } from '@/components/screens/Sidebar';
@@ -74,10 +76,12 @@ function RootLayout() {
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <PersistQueryClientProvider
                     client={queryClient}
-                    persistOptions={{ persister }}
+                    persistOptions={persistOptions}
+                    onSuccess={() => resumeQueuedMatches(queryClient)}
                 >
                     <LoggingProvider>
                         <ApiProvider>
+                            <MatchQueue />
                             <ThemeProvider value={appTheme}>
                                 <ScopePickerProvider>
                                     <StatusBar barStyle={theme.barStyle} />

@@ -273,9 +273,6 @@
     }
   },
   {
-    "events": []
-  },
-  {
     "events": [
       {
         "body": {
@@ -287,10 +284,13 @@
           "name": "a"
         },
         "eventType": "ASSETS",
-        "groupId": "\u003cid4\u003e",
+        "groupId": "\u003cid3\u003e",
         "scope": "profileAvatarDelete"
       }
     ]
+  },
+  {
+    "events": []
   },
   {
     "request": "GET /assets/\u003cid28\u003e",

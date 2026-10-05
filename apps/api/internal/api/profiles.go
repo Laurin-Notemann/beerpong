@@ -272,8 +272,7 @@ func (s *Server) deleteAvatar(r *request) response {
 		return ok(s.toProfileDTO(updated)), nil
 	})
 	if o, isOK := res.(okResponse); isOK {
-		// Addressed to the profile id, as the Java backend did.
-		s.hub.Publish(profileID, realtime.Assets, "profileAvatarDelete", o.data)
+		s.hub.Publish(r.path("groupId"), realtime.Assets, "profileAvatarDelete", o.data)
 	}
 	return res
 }

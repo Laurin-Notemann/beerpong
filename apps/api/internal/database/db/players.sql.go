@@ -226,6 +226,90 @@ func (q *Queries) PlayersInSeason(ctx context.Context, arg PlayersInSeasonParams
 	return items, nil
 }
 
+const playersWithStatsInGroup = `-- name: PlayersWithStatsInGroup :many
+SELECT
+    p.id, p.profile_id, p.active_this_season,
+    st.points, st.matches, st.wins, st.moves, st.total_team_size,
+    st.avg_points_per_match, st.avg_team_size, st.elo,
+    s.id AS season_id, s.name AS season_name, s.start_date AS season_start_date, s.end_date AS season_end_date,
+    ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
+    ss.ranking_algorithm, ss.daily_leaderboard,
+    COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
+FROM players p
+JOIN statistics st ON st.id = p.statistics_id
+JOIN seasons s ON s.id = p.season_id
+LEFT JOIN season_settings ss ON ss.id = s.season_settings_id
+WHERE s.group_id = $1
+ORDER BY p.ctid
+`
+
+type PlayersWithStatsInGroupRow struct {
+	ID                  string
+	ProfileID           *string
+	ActiveThisSeason    bool
+	Points              int64
+	Matches             int64
+	Wins                *int64
+	Moves               int64
+	TotalTeamSize       int64
+	AvgPointsPerMatch   float64
+	AvgTeamSize         float64
+	Elo                 float64
+	SeasonID            string
+	SeasonName          *string
+	SeasonStartDate     *time.Time
+	SeasonEndDate       *time.Time
+	MinMatchesToQualify *int32
+	MinTeamSize         *int32
+	MaxTeamSize         *int32
+	RankingAlgorithm    *int16
+	DailyLeaderboard    *int16
+	WakeTime            string
+}
+
+// PlayersWithStatsInSeason for every season of a group.
+func (q *Queries) PlayersWithStatsInGroup(ctx context.Context, groupID *string) ([]PlayersWithStatsInGroupRow, error) {
+	rows, err := q.db.Query(ctx, playersWithStatsInGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PlayersWithStatsInGroupRow
+	for rows.Next() {
+		var i PlayersWithStatsInGroupRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProfileID,
+			&i.ActiveThisSeason,
+			&i.Points,
+			&i.Matches,
+			&i.Wins,
+			&i.Moves,
+			&i.TotalTeamSize,
+			&i.AvgPointsPerMatch,
+			&i.AvgTeamSize,
+			&i.Elo,
+			&i.SeasonID,
+			&i.SeasonName,
+			&i.SeasonStartDate,
+			&i.SeasonEndDate,
+			&i.MinMatchesToQualify,
+			&i.MinTeamSize,
+			&i.MaxTeamSize,
+			&i.RankingAlgorithm,
+			&i.DailyLeaderboard,
+			&i.WakeTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const playersWithStatsInSeason = `-- name: PlayersWithStatsInSeason :many
 SELECT
     p.id, p.profile_id, p.active_this_season,

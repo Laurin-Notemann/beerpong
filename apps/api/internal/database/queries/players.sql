@@ -58,6 +58,23 @@ WHERE p.season_id = $1
   AND (sqlc.narg(player_ids)::text[] IS NULL OR p.id = ANY (sqlc.narg(player_ids)::text[]))
 ORDER BY p.ctid;
 
+-- name: PlayersWithStatsInGroup :many
+-- PlayersWithStatsInSeason for every season of a group.
+SELECT
+    p.id, p.profile_id, p.active_this_season,
+    st.points, st.matches, st.wins, st.moves, st.total_team_size,
+    st.avg_points_per_match, st.avg_team_size, st.elo,
+    s.id AS season_id, s.name AS season_name, s.start_date AS season_start_date, s.end_date AS season_end_date,
+    ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
+    ss.ranking_algorithm, ss.daily_leaderboard,
+    COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
+FROM players p
+JOIN statistics st ON st.id = p.statistics_id
+JOIN seasons s ON s.id = p.season_id
+LEFT JOIN season_settings ss ON ss.id = s.season_settings_id
+WHERE s.group_id = $1
+ORDER BY p.ctid;
+
 -- name: ProfileIDsOfPlayers :many
 SELECT id, profile_id FROM players WHERE id = ANY (@ids::text[]);
 

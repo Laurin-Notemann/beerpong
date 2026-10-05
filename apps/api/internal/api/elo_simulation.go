@@ -202,11 +202,12 @@ func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, respon
 		a, b := seasons[i].StartDate, seasons[j].StartDate
 		return a != nil && (b == nil || a.Before(*b))
 	})
-	for _, sn := range seasons {
-		li, res := s.leaderboardInput(ctx, s.q, g.group, "season", false, sn.ID, nil)
-		if res != nil {
-			return eloGroup{}, res
-		}
+	inputs, err := s.groupInputs(ctx, s.q, g.group, seasons, nil)
+	if err != nil {
+		return eloGroup{}, internal(err)
+	}
+	for i, sn := range seasons {
+		li := inputs[i]
 		g.seasons = append(g.seasons, eloSeasonDTO{
 			ID: sn.ID, Name: sn.Name, NumMatches: len(li.matches), MinMatchesToQualify: deref(sn.MinMatchesToQualify),
 		})

@@ -20,7 +20,7 @@ Most fixes reach users as OTA updates, not store releases. Native changes (new n
 
 ### 4. Observable
 
-Errors, logs and traces from the app and the server go to Sentry (org `versus-zr`, projects `mobile` and `server`; the TV's errors to `web`). The app's traces propagate into the API, so one trace spans both. If something can fail silently, make sure it shows up there.
+Errors, logs and traces from the app and the server go to Sentry (org `versus-zr`, projects `mobile` and `server`; the web app's, TV and server, to `web`). The app's traces propagate into the API, so one trace spans both. If something can fail silently, make sure it shows up there.
 
 ## A note from Laurin
 
@@ -60,10 +60,10 @@ The most common defect in this repo is a change that works on the path you teste
 
 ## Dev servers
 
-- On this machine Go isn't installed and port 5432 is taken: run the API and its tests with the `api-local` skill instead of the next two lines.
+- On this machine Go is in `~/.local/go/bin` and port 5432 is taken: run the API and the contract suite with the `api-local` skill instead of the next two lines.
 - Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN` and the `AWS_*` S3 settings from the environment.
 - API: `set -a; source .env; set +a; cd apps/api && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
-- App: `npm install` at the root, then `cd apps/mobile && npx expo start` (`npm start`'s `prestart` still points at the old `.env.example` path; fix it with the next native build). Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
+- App: `npm install` at the root, then `cd apps/mobile && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
 - npm is the package manager (npm workspaces, one root `package-lock.json`). Don't add a second lockfile.
 - Stop what you started. This machine runs other projects' servers too.
 
@@ -75,7 +75,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 
 - Smallest proof that the change works. Run the tests and checks for the scope you touched:
   - Everything: `npx turbo run lint typecheck test format:check` from the root (the API's tasks need Go on the PATH).
-  - API: `go test ./...` in `apps/api`, then the contract suite in `api-tests/` against a running API (the `api-local` skill does both).
+  - API: `go test ./...` in `apps/api`, then the contract suite in `api-tests/` against a running API (the `api-local` skill runs it in Docker).
   - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`. Lint and format before every push, even when told to skip tests: CI fails on Prettier.
   - Web (the simulator and the TV): `cd apps/web && npm run format:check && npm run typecheck && npm test && npm run build`.
 - Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.

@@ -209,6 +209,36 @@ func (q *Queries) MatchMovesByTeamMemberIDs(ctx context.Context, teamMemberIds [
 	return items, nil
 }
 
+const matchesByGroup = `-- name: MatchesByGroup :many
+SELECT id, date, season_id, created_by FROM matches WHERE season_id IN (SELECT id FROM seasons WHERE group_id = $1) ORDER BY ctid
+`
+
+// Every season's matches of a group, for boards that replay all seasons.
+func (q *Queries) MatchesByGroup(ctx context.Context, groupID *string) ([]Match, error) {
+	rows, err := q.db.Query(ctx, matchesByGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Match
+	for rows.Next() {
+		var i Match
+		if err := rows.Scan(
+			&i.ID,
+			&i.Date,
+			&i.SeasonID,
+			&i.CreatedBy,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const matchesBySeason = `-- name: MatchesBySeason :many
 SELECT id, date, season_id, created_by FROM matches WHERE season_id = $1 ORDER BY ctid
 `

@@ -10,6 +10,7 @@ import {
     LeaderboardScope,
 } from '@/api/calls/leaderboardHooks';
 import { matchesQueryOptions } from '@/api/calls/matchHooks';
+import { useQueuedMatches, withQueuedMatches } from '@/api/calls/matchQueue';
 import { playersQueryOptions } from '@/api/calls/playerHooks';
 import { movesQueryOptions } from '@/api/calls/ruleHooks';
 import { Player, toPlayer } from '@/api/calls/seasonHooks';
@@ -30,7 +31,8 @@ const combine = <T>(results: QueryObserverResult<T>[]) => ({
  * The matches of the given seasons, ready to show, by season id. A season's matches are
  * converted once its matches, players (deleted ones too, they still played) and moves have
  * all loaded. Only the seasons asked for are loaded, so a past season loads when a screen
- * shows it.
+ * shows it. Matches entered on this phone that the server doesn't have yet are listed too
+ * (`Match.isQueued`).
  */
 export function useSeasonMatches(groupId: ApiId | null, seasonIds: ApiId[]) {
     const { api } = useApi();
@@ -50,6 +52,7 @@ export function useSeasonMatches(groupId: ApiId | null, seasonIds: ApiId[]) {
         queries: seasonIds.map((id) => movesQueryOptions(api, groupId, id)),
         combine,
     });
+    const queued = useQueuedMatches(groupId);
 
     const { matchesBySeason, playersBySeason } = useMemo(() => {
         const out = {
@@ -62,14 +65,20 @@ export function useSeasonMatches(groupId: ApiId | null, seasonIds: ApiId[]) {
             const seasonMoves = moves.data[idx]?.data;
             if (seasonPlayers) out.playersBySeason.set(id, seasonPlayers);
             if (dtos && seasonPlayers && seasonMoves) {
+                const all = withQueuedMatches(dtos, queued, id);
+                const convert = matchDtoToMatch(seasonPlayers, seasonMoves);
                 out.matchesBySeason.set(
                     id,
-                    dtos.map(matchDtoToMatch(seasonPlayers, seasonMoves))
+                    all.matches.map((dto) =>
+                        all.queuedIds.has(dto.id)
+                            ? { ...convert(dto), isQueued: true }
+                            : convert(dto)
+                    )
                 );
             }
         });
         return out;
-    }, [seasonIds, matches.data, players.data, moves.data]);
+    }, [seasonIds, matches.data, players.data, moves.data, queued]);
 
     return {
         matchesBySeason,

@@ -1,14 +1,27 @@
 ---
 name: api-local
-description: Run apps/api's unit tests, the API and the api-tests contract suite locally, and record goldens. Use for any change in apps/api/ or api-tests/ before pushing. This machine has no Go and port 5432 is taken.
+description: Run apps/api's unit tests, the API and the api-tests contract suite locally, and record goldens. Use for any change in apps/api/ or api-tests/ before pushing. Unit tests run natively; the API and the suite run in Docker, as port 5432 is taken on this machine.
 ---
 
 # api-local
 
-Run everything from the repo root. Go runs in Docker as your uid (as root it leaves
-root-owned goldens and gofmt output). The stack lives on its own network `bp-local`
-without host ports. Shell variables don't survive between tool calls, so start every
-command that uses `$GO` with this line:
+Run everything from the repo root. Go 1.26 is in `~/.local/go/bin`; if `go` isn't found,
+start the command with `export PATH=$HOME/.local/go/bin:$PATH;`.
+
+## Unit tests
+
+```sh
+cd apps/api && gofmt -l . && go vet ./... && go test -race ./...
+```
+
+`gofmt -l` lists unformatted files; fix them with `gofmt -w .`.
+
+## Stack
+
+Port 5432 is taken, so the database, the API and the contract suite run in Docker on their own
+network `bp-local`, without host ports. Go runs there as your uid (as root it leaves root-owned
+goldens). Shell variables don't survive between tool calls, so start every command that uses
+`$GO` with this line:
 
 ```sh
 GO="docker run --rm -u $(id -u):$(id -g) -e HOME=/tmp -e GOCACHE=/cache/build -e GOMODCACHE=/cache/mod -e GOFLAGS=-buildvcs=false -v beerpong-gocache:/cache -v $PWD:/src"
@@ -16,16 +29,6 @@ GO="docker run --rm -u $(id -u):$(id -g) -e HOME=/tmp -e GOCACHE=/cache/build -e
 
 Once per machine (keep the volume, it is the module and build cache):
 `docker volume create beerpong-gocache && docker run --rm -v beerpong-gocache:/cache golang:1.26 chown -R $(id -u):$(id -g) /cache`
-
-## Unit tests
-
-```sh
-$GO -w /src/apps/api golang:1.26 sh -c 'gofmt -l .; go vet ./... && go test -race ./...'
-```
-
-`gofmt -l` lists unformatted files; fix them with `$GO -w /src/apps/api golang:1.26 gofmt -w .`.
-
-## Stack
 
 ```sh
 docker network create bp-local

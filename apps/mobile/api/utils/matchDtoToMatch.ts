@@ -45,6 +45,8 @@ export type Match = {
     blueTeamPhotoUrl?: string | null;
     /** has to be resolved from `redTeamPhotoAssetId` */
     redTeamPhotoUrl?: string | null;
+    /** entered on this phone and not on the server yet (`matchQueue`) */
+    isQueued?: boolean;
 };
 
 const noPlayers: PlayerWithProfile[] = [];

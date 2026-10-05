@@ -11,6 +11,10 @@ SELECT * FROM matches WHERE id = $1;
 -- name: MatchesBySeason :many
 SELECT * FROM matches WHERE season_id = $1 ORDER BY ctid;
 
+-- name: MatchesByGroup :many
+-- Every season's matches of a group, for boards that replay all seasons.
+SELECT * FROM matches WHERE season_id IN (SELECT id FROM seasons WHERE group_id = $1) ORDER BY ctid;
+
 -- name: MatchesBySeasonSince :many
 SELECT * FROM matches WHERE season_id = $1 AND date >= $2 ORDER BY ctid;
 

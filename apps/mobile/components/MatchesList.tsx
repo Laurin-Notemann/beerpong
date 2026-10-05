@@ -1,6 +1,7 @@
 import { LegendList, LegendListProps } from '@legendapp/list/react-native';
 import React, { useMemo } from 'react';
 
+import { useExplainQueuedMatch } from '@/api/calls/matchHooks';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
@@ -53,6 +54,8 @@ export default function MatchesList({
     ListEmptyComponent = <NoMatchesPlayedYet />,
     ...rest
 }: MatchesListProps) {
+    const explainQueuedMatch = useExplainQueuedMatch();
+
     // flat rows with a header row per day, so the day separators scroll with the matches
     const rows = useMemo(() => {
         const out: MatchesListRow[] = [];
@@ -99,7 +102,11 @@ export default function MatchesList({
                     <MatchesListItem
                         border={!item.isFirstOfDay}
                         match={item.match}
-                        onPress={() => onMatchPress(item.match)}
+                        onPress={() =>
+                            item.match.isQueued
+                                ? explainQueuedMatch(item.match.id)
+                                : onMatchPress(item.match)
+                        }
                         highlightedId={forPlayer?.profileId}
                     />
                 );
