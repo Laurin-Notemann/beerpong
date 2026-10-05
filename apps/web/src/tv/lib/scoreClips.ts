@@ -39,21 +39,23 @@ export function scoreClipsOf(event: unknown, matches: LiveMatchView[]): ScoreCli
     });
 }
 
-/** the clip's first frame (server/clips.ts), shown until the clip plays */
-export const posterOf = (url: string) => `${url}?poster`;
+/** the clip's first or last frame (server/clips.ts), over the video while it starts and stops */
+export const frameOf = (url: string, frame: 'first' | 'last') => `${url}?frame=${frame}`;
 
 const preloaded = new Set<string>();
 
 /**
- * Loads the poster of every player on the board into the browser's cache, so a clip shows the
- * moment they score. The clips themselves can't be: the TV's video player fetches them itself.
+ * Loads the first and last frame of every player's clip on the board into the browser's cache, so
+ * a clip shows the moment they score. The clips themselves can't be: the TV's video player fetches
+ * them itself.
  */
-export function preloadPosters(matches: LiveMatchView[]) {
+export function preloadFrames(matches: LiveMatchView[]) {
     for (const m of matches) {
         for (const p of [...m.blue.players, ...m.red.players]) {
             if (!p.scoreClipUrl || preloaded.has(p.scoreClipUrl)) continue;
             preloaded.add(p.scoreClipUrl);
-            new Image().src = posterOf(p.scoreClipUrl);
+            new Image().src = frameOf(p.scoreClipUrl, 'first');
+            new Image().src = frameOf(p.scoreClipUrl, 'last');
         }
     }
 }

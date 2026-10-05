@@ -16,7 +16,7 @@ import {
     pickMatches,
 } from '~/tv/lib/display';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
-import { preloadPosters, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
+import { preloadFrames, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -126,7 +126,7 @@ function Tv() {
         }
     );
     liveMatches.current = board.data?.liveMatches ?? [];
-    useEffect(() => preloadPosters(liveMatches.current), [board.data]);
+    useEffect(() => preloadFrames(liveMatches.current), [board.data]);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const remoteUrl = identity.code ? `${location.origin}/tv/rem/${identity.code}` : undefined;

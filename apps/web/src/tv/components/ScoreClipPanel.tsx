@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { posterOf, type ScoreClip } from '~/tv/lib/scoreClips';
+import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
 
 /** a clip plays at most this long, whatever was uploaded */
 const MAX_SECONDS = 5;
+/**
+ * The TV's video layer is black for a moment after the video says it plays and when it ends, so
+ * the first frame stays over it until it played this long, and the last frame covers it this long
+ * before its end (seconds)
+ */
+const SHOWN_AT = 0.2;
+const COVER_BEFORE_END = 0.2;
 /** a clip that hasn't started by then is skipped */
 const LOAD_TIMEOUT_MS = 8_000;
 /** how long the board takes to grow back over the clip (`.tv-board` in styles.css) */
@@ -29,8 +36,9 @@ export function boardScale() {
  *
  * The TV plays video on a layer of its own behind the page, placed where the `<video>` is when it
  * starts; a video that moves while it starts stays black. So the column never moves and the clip
- * loads the moment it mounts, while the board is still moving aside. Until it plays, its first
- * frame (preloaded with the board) stands in. The clip streams from this server (server/clips.ts);
+ * loads the moment it mounts, while the board is still moving aside. Images of its first and last
+ * frame (preloaded with the board) cover it while it starts and stops, when that layer is black
+ * for a moment. The clip streams from this server (server/clips.ts);
  * the TV's player fetches it itself, so it can't come from the page's memory or the browser's
  * cache (a blob: URL; Sentry WEB-4).
  */
@@ -46,7 +54,8 @@ export function ScoreClipPanel({
     const video = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
     const [leaving, setLeaving] = useState(false);
-    const [poster, setPoster] = useState(true);
+    const [shown, setShown] = useState(false);
+    const [frames, setFrames] = useState(true);
     const done = useRef(onDone);
     done.current = onDone;
 
@@ -79,16 +88,32 @@ export function ScoreClipPanel({
 
     useEffect(() => {
         if (!playing) return;
+        const v = video.current!;
+        const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
+        let frame = 0;
+        const tick = () => {
+            if (v.currentTime >= SHOWN_AT) setShown(true);
+            if (v.currentTime >= end) setLeaving(true);
+            else frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+        // in case it gets stuck
         const cap = setTimeout(() => setLeaving(true), MAX_SECONDS * 1000);
-        return () => clearTimeout(cap);
+        return () => {
+            cancelAnimationFrame(frame);
+            clearTimeout(cap);
+        };
     }, [playing]);
 
     useEffect(() => {
         if (!leaving) return;
+        // under a frame by now
         video.current!.pause();
         const timeout = setTimeout(() => done.current(), LEAVE_MS);
         return () => clearTimeout(timeout);
     }, [leaving]);
+
+    const cover = !frames ? null : !shown ? 'first' : leaving ? 'last' : null;
 
     return (
         <div
@@ -113,11 +138,12 @@ export function ScoreClipPanel({
                     }}
                     className={`block h-full w-full object-contain ${playing ? 'bg-black' : ''}`}
                 />
-                {!playing && poster && (
+                {cover && (
                     <img
-                        src={posterOf(clip.url)}
+                        key={cover}
+                        src={frameOf(clip.url, cover)}
                         alt=""
-                        onError={() => setPoster(false)}
+                        onError={() => setFrames(false)}
                         className="absolute inset-0 h-full w-full bg-black object-contain"
                     />
                 )}

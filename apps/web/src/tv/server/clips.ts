@@ -9,9 +9,9 @@ import { promisify } from 'node:util';
  * new path and is never mixed up with the old one. The TV's player shows black for what phones
  * upload (QuickTime, the index at the end, turned by a rotation flag), so each clip is converted
  * once with ffmpeg (in the Docker image) into a plain MP4 the player can start right away: H.264
- * with AAC, upright, at most 1280 pixels, index first. Its first frame becomes a poster (`?poster`)
- * the TV shows while its player starts. That starts when a board shows the player, so the clip is
- * ready before they score.
+ * with AAC, upright, at most 1280 pixels, index first. Its first and last frame become images
+ * (`?frame=first`, `?frame=last`) the TV covers the video with while its player starts and stops.
+ * That starts when a board shows the player, so the clip is ready before they score.
  */
 const clipUrls = new Map<string, string>();
 const converted = new Map<string, Promise<string | null>>();
@@ -57,24 +57,32 @@ async function convertOnce(id: string, url: string) {
         ...['-movflags', '+faststart', '-f', 'mp4', output],
     ]);
     await promisify(execFile)('ffmpeg', [
-        ...['-v', 'error', '-y', '-i', output, '-frames:v', '1', '-q:v', '4', posterOf(output)],
+        ...['-v', 'error', '-y', '-i', output],
+        ...['-frames:v', '1', '-q:v', '4', frameOf(output, 'first')],
+    ]);
+    // every frame of the last half second, each overwriting the one before
+    await promisify(execFile)('ffmpeg', [
+        ...['-v', 'error', '-y', '-sseof', '-0.5', '-i', output],
+        ...['-update', '1', '-q:v', '4', frameOf(output, 'last')],
     ]);
     return output;
 }
 
-const posterOf = (file: string) => file.replace(/\.mp4$/, '.jpg');
+const frameOf = (file: string, frame: 'first' | 'last') => file.replace(/\.mp4$/, `.${frame}.jpg`);
 
-/** the clip, with ranges, so a `<video>` can also stream it; or its poster */
-export async function clipResponse(id: string, range: string | null, poster: boolean) {
+/** the clip, with ranges, so a `<video>` can also stream it; or its first or last frame */
+export async function clipResponse(id: string, range: string | null, frame: string | null) {
     const url = clipUrls.get(id);
     if (!url) return new Response(null, { status: 404 });
     const headers = new Headers({ 'Cache-Control': 'private, max-age=31536000, immutable' });
 
     const file = await convert(id);
-    if (poster) {
-        if (!file) return new Response(null, { status: 404 });
+    if (frame) {
+        if (!file || (frame !== 'first' && frame !== 'last')) {
+            return new Response(null, { status: 404 });
+        }
         headers.set('Content-Type', 'image/jpeg');
-        return new Response(await readFile(posterOf(file)), { headers });
+        return new Response(await readFile(frameOf(file, frame)), { headers });
     }
     if (!file) {
         const res = await fetch(url, { headers: range ? { Range: range } : {} });
