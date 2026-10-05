@@ -137,8 +137,13 @@ export function Games({
                                     </td>
                                     <td className="num">{pct(w.winChance)}</td>
                                     <td className="num">
-                                        <span className="chg up">{sgn(w.players[0].result)}</span> /{' '}
-                                        <span className="chg down">{sgn(l.players[0].result)}</span>
+                                        <span className="chg up">
+                                            {sgn(w.players[0]?.result ?? 0)}
+                                        </span>{' '}
+                                        /{' '}
+                                        <span className="chg down">
+                                            {sgn(l.players[0]?.result ?? 0)}
+                                        </span>
                                     </td>
                                     {/* the buttons don't open the game */}
                                     <td
@@ -253,7 +258,9 @@ function Inspector({ game }: { game: Game }) {
                                 {t.won &&
                                     `, won by ${game.gap.toFixed(1)} points per player (counts ×${game.scale.toFixed(2)})`}{' '}
                                 → result{' '}
-                                <b style={{ color: 'var(--result)' }}>{sgn(t.players[0].result)}</b>{' '}
+                                <b style={{ color: 'var(--result)' }}>
+                                    {sgn(t.players[0]?.result ?? 0)}
+                                </b>{' '}
                                 each
                             </div>
                             {t.players.map((p) => {

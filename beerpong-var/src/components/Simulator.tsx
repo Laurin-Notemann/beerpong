@@ -285,7 +285,13 @@ function Season({
     unchanged: boolean;
     onTests: (tests: TestGame[]) => void;
 }) {
-    const [sel, setSel] = useState<number | null>(null);
+    // the open game by id: live games come and go, so positions shift and an
+    // open game can disappear
+    const [selId, setSelId] = useState<string | null>(null);
+    const found = selId == null ? -1 : sim.games.findIndex((g) => g.matchId === selId);
+    const sel = found >= 0 ? found : null;
+    const setSel = (gi: number | null) =>
+        setSelId(gi == null ? null : (sim.games[gi]?.matchId ?? null));
     const [editing, setEditing] = useState<Editing | null>(null);
     const season = sim.seasons.find((s) => s.id === sim.seasonId);
 

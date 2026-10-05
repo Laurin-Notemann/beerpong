@@ -38,7 +38,32 @@ export const Route = createFileRoute('/$code')({
         ],
     }),
     component: GroupPage,
+    errorComponent: PageError,
 });
+
+// An error doesn't take the page down for good: retrying loads everything again.
+function PageError({ error, reset }: { error: unknown; reset: () => void }) {
+    const router = useRouter();
+    return (
+        <main className="wrap gate">
+            <div className="eyebrow">beerpong-var</div>
+            <h1>Something went wrong</h1>
+            <p className="lead">{error instanceof Error ? error.message : String(error)}</p>
+            <div className="codeform">
+                <button
+                    className="btn"
+                    type="button"
+                    onClick={() => {
+                        reset();
+                        void router.invalidate();
+                    }}
+                >
+                    Try again
+                </button>
+            </div>
+        </main>
+    );
+}
 
 function GroupPage() {
     const sim = Route.useLoaderData();
