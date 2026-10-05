@@ -1455,6 +1455,55 @@
                 }
             }
         },
+        "/groups/{groupId}/leaderboard/projection": {
+            "post": {
+                "tags": ["leaderboard-controller"],
+                "operationId": "getLeaderboardProjection",
+                "description": "The leaderboard with live matches counted as if they ended now: until a finish decides a match, the team that took more cups wins; a tie is a draw. The client sends the teams, since only clients reduce a live match's op log. Nothing is stored.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeaderboardProjectionDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeLeaderboardDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/user": {
             "get": {
                 "tags": ["group-controller"],
@@ -2787,6 +2836,17 @@
                 "properties": {
                     "x": { "type": "integer", "format": "int32" },
                     "y": { "type": "integer", "format": "int32" }
+                }
+            },
+            "LeaderboardProjectionDto": {
+                "type": "object",
+                "properties": {
+                    "matches": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MatchCreateDto"
+                        }
+                    }
                 }
             },
             "LiveMatchCreateDto": {

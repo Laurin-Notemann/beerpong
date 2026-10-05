@@ -6,6 +6,7 @@ package leaderboard
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 )
@@ -52,6 +53,9 @@ type Match struct {
 	TeamIDs []string // first team is blue, second red
 	Members []Member
 	Moves   []Move
+	// Projected is a live match counted as if it ended now. Until a finish
+	// decides it, the team that took more cups wins; a tie is a draw.
+	Projected bool
 }
 
 type Member struct {
@@ -132,6 +136,9 @@ type GamePlayer struct {
 	Hitting   float64 // PerPoint × (Own − Expected)
 	Expected  float64
 }
+
+// draw stands for the winner of a tied projected match.
+const draw = "draw"
 
 // ErrNoWinner is returned for a match without a finishing move. The Java
 // backend failed the whole request in that case.
@@ -231,7 +238,7 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 	blue := m.TeamIDs[0]
 	red := m.TeamIDs[1]
 
-	var bluePoints, redPoints int64
+	var bluePoints, redPoints, blueCups, redCups int64
 	winner := ""
 	playerPoints := map[string]int64{}
 	// appPoints are the points the app shows for this match: own points plus
@@ -274,6 +281,11 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 				continue
 			}
 			own := rm.PointsForScorer * mv.Value
+			if team == blue {
+				blueCups += int64(rm.Cups * mv.Value)
+			} else {
+				redCups += int64(rm.Cups * mv.Value)
+			}
 			e.Stats.Moves += int64(rm.Cups * mv.Value)
 			e.Stats.Points += int64(own)
 			appPoints[e.Stats.PlayerID] += int64(own)
@@ -298,16 +310,31 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 		}
 	}
 
+	inProgress := winner == "" && m.Projected
+	if inProgress {
+		switch {
+		case blueCups > redCups:
+			winner = blue
+		case redCups > blueCups:
+			winner = red
+		default:
+			winner = draw
+		}
+	}
 	if winner == "" {
 		return false, fmt.Errorf("%w: match %s", ErrNoWinner, m.ID)
 	}
 
 	blueStats, blueMembers := teamStats(m, blue, entryOf)
 	redStats, redMembers := teamStats(m, red, entryOf)
-	winners := redStats
-	if winner == blue {
-		winners = blueStats
+	resultBlue := 0.5
+	switch winner {
+	case blue:
+		resultBlue = 1
+	case red:
+		resultBlue = 0
 	}
+	winners := map[string][]*Stats{blue: blueStats, red: redStats}[winner]
 	for _, s := range winners {
 		s.Wins++
 	}
@@ -318,7 +345,12 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 		}
 	}
 	teamPoints := r.teamPoints.value(bluePoints, redPoints)
-	g := calculateElo(r.elo, winner == blue, blueStats, redStats, appPoints, playerPoints, teamPoints)
+	if inProgress {
+		// part of a game: a full game's expected points would sink everyone's rating early
+		// on, so a team is expected to have scored no more than the teams' average so far
+		teamPoints = math.Min(teamPoints, float64(bluePoints+redPoints)/2)
+	}
+	g := calculateElo(r.elo, resultBlue, blueStats, redStats, appPoints, playerPoints, teamPoints)
 	r.teamPoints.add(bluePoints)
 	r.teamPoints.add(redPoints)
 	if !r.trace {

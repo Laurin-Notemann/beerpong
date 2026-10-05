@@ -218,3 +218,52 @@ func TestLeaderboardWithoutFinishingMove(t *testing.T) {
 	// match overviews don't need a winner
 	h.OK(h.Do(Req{Method: "GET", Path: g.SeasonPath("/matches/overview"), Auth: owner.Bearer()}))
 }
+
+// A projection counts live matches as if they ended now, without storing them.
+func TestLeaderboardProjection(t *testing.T) {
+	h := New(t)
+	owner, g := leaderboardGroup(h)
+	path := g.Path("/leaderboard/projection?scope=season&seasonId=" + g.SeasonID)
+	project := func(matches ...map[string]any) *Resp {
+		return h.Do(Req{Method: "POST", Path: path, Auth: owner.Bearer(), Body: map[string]any{"matches": matches}})
+	}
+
+	// b leads d 3 cups to 1: counted as b's win, with the points so far
+	leading := g.MatchBody([]Member{{"b", map[string]int{"Normal": 3}}}, []Member{{"d", map[string]int{"Normal": 1}}})
+	res := h.OK(project(leading))
+	h.Equal(res.Num("numMatches"), 3, "numMatches with the live match")
+	want := map[string]wantStats{
+		"a": seasonStats["a"],
+		"b": {points: 8, matches: 2, wins: 2, moves: 4, teamSize: 3, avgPoints: 4, avgTeamSize: 1.5},
+		"c": seasonStats["c"],
+		"d": {points: 2, matches: 2, wins: 0, moves: 2, teamSize: 3, avgPoints: 1, avgTeamSize: 1.5},
+	}
+	checkStats(h, g, res.List("entries"), want)
+
+	// a tie is a draw: nobody wins
+	tied := g.MatchBody([]Member{{"b", map[string]int{"Normal": 2}}}, []Member{{"d", map[string]int{"Normal": 2}}})
+	res = h.OK(project(tied))
+	wins := map[string]float64{}
+	for _, e := range res.List("entries") {
+		wins[Get(e, "profileId").(string)] = Get(e, "statistics", "wins").(float64)
+	}
+	h.Equal(wins[g.Profiles["b"]], 1.0, "b wins nothing more on a tie")
+	h.Equal(wins[g.Profiles["d"]], 0.0, "d wins nothing on a tie")
+
+	// a recorded finish decides, whoever took more cups
+	finished := g.MatchBody([]Member{{"b", map[string]int{"Normal": 1, "Finish - Normal": 1}}}, []Member{{"d", map[string]int{"Normal": 3}}})
+	res = h.OK(project(finished))
+	for _, e := range res.List("entries") {
+		if Get(e, "profileId") == g.Profiles["b"] {
+			h.Equal(Get(e, "statistics", "wins"), 2.0, "the finish wins")
+		}
+	}
+
+	// nothing was stored
+	stored := h.OK(h.Do(Req{Method: "GET", Path: g.Path("/leaderboard?scope=season&seasonId=" + g.SeasonID), Auth: owner.Bearer()}))
+	checkStats(h, g, stored.List("entries"), seasonStats)
+
+	h.Fail(h.Do(Req{Method: "POST", Path: path, Auth: owner.Bearer(), Body: map[string]any{}}), 400, "leaderboardInvalidProjection")
+	oneTeam := map[string]any{"teams": []any{leading["teams"].([]any)[0]}}
+	h.Fail(project(oneTeam), 400, "leaderboardInvalidProjection")
+}

@@ -1,0 +1,905 @@
+[
+  {
+    "request": "POST /auth/signup",
+    "body": {
+      "deviceId": "api-tests-device",
+      "installationType": "IOS"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "REFRESH"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /auth/refresh",
+    "body": {
+      "refreshToken": "\u003cjwt\u003e"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "token": "\u003cjwt\u003e",
+        "type": "ACCESS"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups",
+    "body": {
+      "name": "Leaderboard",
+      "profileNames": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "sportPreset": "beerpong"
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "activeSeasonId": "\u003cid1\u003e",
+        "assetIdWallpaper": null,
+        "createdAt": "\u003cts\u003e",
+        "createdById": "\u003cid2\u003e",
+        "customSportName": null,
+        "id": "\u003cid3\u003e",
+        "inviteCode": "\u003cinviteCode\u003e",
+        "name": "Leaderboard",
+        "numberOfMatches": 0,
+        "numberOfPlayers": 0,
+        "numberOfSeasons": 0,
+        "sportPreset": {
+          "id": "beerpong",
+          "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
+          "title": "Beerpong"
+        }
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid14\u003e"
+                },
+                {
+                  "count": 2,
+                  "moveId": "\u003cid17\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid12\u003e"
+                }
+              ],
+              "playerId": "\u003cid9\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 3,
+                  "moveId": "\u003cid17\u003e"
+                }
+              ],
+              "playerId": "\u003cid10\u003e"
+            },
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid17\u003e"
+                }
+              ],
+              "playerId": "\u003cid11\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid20\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/seasons/\u003cid1\u003e/matches",
+    "body": {
+      "teams": [
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid15\u003e"
+                }
+              ],
+              "playerId": "\u003cid10\u003e"
+            }
+          ]
+        },
+        {
+          "teamMembers": [
+            {
+              "moves": [
+                {
+                  "count": 1,
+                  "moveId": "\u003cid17\u003e"
+                }
+              ],
+              "playerId": "\u003cid8\u003e"
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "createdById": "\u003cid2\u003e",
+        "date": "\u003cts\u003e",
+        "id": "\u003cid21\u003e",
+        "photoUploads": [],
+        "seasonId": "\u003cid1\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/leaderboard/projection?scope=season\u0026seasonId=\u003cid1\u003e",
+    "body": {
+      "matches": [
+        {
+          "teams": [
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 3,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid9\u003e"
+                }
+              ]
+            },
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 1,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid11\u003e"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid10\u003e",
+            "profileId": "\u003cid6\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 7,
+              "avgTeamSize": 1.5,
+              "elo": 1560.247409,
+              "id": null,
+              "matches": 2,
+              "moves": 9,
+              "points": 14,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid11\u003e",
+            "profileId": "\u003cid7\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 1,
+              "avgTeamSize": 1.5,
+              "elo": 1161.177503,
+              "id": null,
+              "matches": 2,
+              "moves": 2,
+              "points": 2,
+              "totalTeamSize": 3,
+              "wins": 0
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid8\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 3.5,
+              "avgTeamSize": 1.5,
+              "elo": 1302.252591,
+              "id": null,
+              "matches": 2,
+              "moves": 3,
+              "points": 7,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid9\u003e",
+            "profileId": "\u003cid5\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 4,
+              "avgTeamSize": 1.5,
+              "elo": 1801.322497,
+              "id": null,
+              "matches": 2,
+              "moves": 4,
+              "points": 8,
+              "totalTeamSize": 3,
+              "wins": 2
+            }
+          }
+        ],
+        "numMatches": 3,
+        "numPlayers": 4,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/leaderboard/projection?scope=season\u0026seasonId=\u003cid1\u003e",
+    "body": {
+      "matches": [
+        {
+          "teams": [
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 2,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid9\u003e"
+                }
+              ]
+            },
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 2,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid11\u003e"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid10\u003e",
+            "profileId": "\u003cid6\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 7,
+              "avgTeamSize": 1.5,
+              "elo": 1560.247409,
+              "id": null,
+              "matches": 2,
+              "moves": 9,
+              "points": 14,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid11\u003e",
+            "profileId": "\u003cid7\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 1.5,
+              "avgTeamSize": 1.5,
+              "elo": 1315.864991,
+              "id": null,
+              "matches": 2,
+              "moves": 3,
+              "points": 3,
+              "totalTeamSize": 3,
+              "wins": 0
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid8\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 3.5,
+              "avgTeamSize": 1.5,
+              "elo": 1302.252591,
+              "id": null,
+              "matches": 2,
+              "moves": 3,
+              "points": 7,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid9\u003e",
+            "profileId": "\u003cid5\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 3.5,
+              "avgTeamSize": 1.5,
+              "elo": 1646.635009,
+              "id": null,
+              "matches": 2,
+              "moves": 3,
+              "points": 7,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          }
+        ],
+        "numMatches": 3,
+        "numPlayers": 4,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/leaderboard/projection?scope=season\u0026seasonId=\u003cid1\u003e",
+    "body": {
+      "matches": [
+        {
+          "teams": [
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 1,
+                      "moveId": "\u003cid14\u003e"
+                    },
+                    {
+                      "count": 1,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid9\u003e"
+                }
+              ]
+            },
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 3,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid11\u003e"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid10\u003e",
+            "profileId": "\u003cid6\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 7,
+              "avgTeamSize": 1.5,
+              "elo": 1560.247409,
+              "id": null,
+              "matches": 2,
+              "moves": 9,
+              "points": 14,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid11\u003e",
+            "profileId": "\u003cid7\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 2,
+              "avgTeamSize": 1.5,
+              "elo": 1194.347576,
+              "id": null,
+              "matches": 2,
+              "moves": 4,
+              "points": 4,
+              "totalTeamSize": 3,
+              "wins": 0
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid8\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 3.5,
+              "avgTeamSize": 1.5,
+              "elo": 1302.252591,
+              "id": null,
+              "matches": 2,
+              "moves": 3,
+              "points": 7,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid9\u003e",
+            "profileId": "\u003cid5\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 5,
+              "avgTeamSize": 1.5,
+              "elo": 1755.652424,
+              "id": null,
+              "matches": 2,
+              "moves": 2,
+              "points": 10,
+              "totalTeamSize": 3,
+              "wins": 2
+            }
+          }
+        ],
+        "numMatches": 3,
+        "numPlayers": 4,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "GET /groups/\u003cid3\u003e/leaderboard?scope=season\u0026seasonId=\u003cid1\u003e",
+    "status": 200,
+    "response": {
+      "data": {
+        "entries": [
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid10\u003e",
+            "profileId": "\u003cid6\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 7,
+              "avgTeamSize": 1.5,
+              "elo": 1560.247409,
+              "id": null,
+              "matches": 2,
+              "moves": 9,
+              "points": 14,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid11\u003e",
+            "profileId": "\u003cid7\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 1,
+              "avgTeamSize": 2,
+              "elo": 1302.730423,
+              "id": null,
+              "matches": 1,
+              "moves": 1,
+              "points": 1,
+              "totalTeamSize": 2,
+              "wins": 0
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid8\u003e",
+            "profileId": "\u003cid4\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 3.5,
+              "avgTeamSize": 1.5,
+              "elo": 1302.252591,
+              "id": null,
+              "matches": 2,
+              "moves": 3,
+              "points": 7,
+              "totalTeamSize": 3,
+              "wins": 1
+            }
+          },
+          {
+            "activeThisSeason": true,
+            "id": "\u003cid9\u003e",
+            "profileId": "\u003cid5\u003e",
+            "season": {
+              "createdById": null,
+              "endDate": null,
+              "groupId": null,
+              "id": "\u003cid1\u003e",
+              "name": null,
+              "seasonSettings": {
+                "dailyLeaderboard": "WAKE_TIME",
+                "maxTeamSize": 10,
+                "minMatchesToQualify": 1,
+                "minTeamSize": 1,
+                "rankingAlgorithm": "AVERAGE",
+                "wakeTime": "00:00:00"
+              },
+              "startDate": "\u003cts\u003e"
+            },
+            "statistics": {
+              "avgPointsPerMatch": 5,
+              "avgTeamSize": 2,
+              "elo": 1659.769577,
+              "id": null,
+              "matches": 1,
+              "moves": 1,
+              "points": 5,
+              "totalTeamSize": 2,
+              "wins": 1
+            }
+          }
+        ],
+        "numMatches": 2,
+        "numPlayers": 4,
+        "startedAt": "\u003cts\u003e"
+      },
+      "httpCode": 200,
+      "status": "OK"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/leaderboard/projection?scope=season\u0026seasonId=\u003cid1\u003e",
+    "body": {},
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "leaderboardInvalidProjection",
+        "description": "A projection needs matches: [{teams: [blue, red]}], every member with a playerId and moves, at most 20 matches."
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  },
+  {
+    "request": "POST /groups/\u003cid3\u003e/leaderboard/projection?scope=season\u0026seasonId=\u003cid1\u003e",
+    "body": {
+      "matches": [
+        {
+          "teams": [
+            {
+              "teamMembers": [
+                {
+                  "moves": [
+                    {
+                      "count": 3,
+                      "moveId": "\u003cid17\u003e"
+                    }
+                  ],
+                  "playerId": "\u003cid9\u003e"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "status": 400,
+    "response": {
+      "error": {
+        "code": "leaderboardInvalidProjection",
+        "description": "A projection needs matches: [{teams: [blue, red]}], every member with a playerId and moves, at most 20 matches."
+      },
+      "httpCode": 400,
+      "status": "ERROR"
+    }
+  }
+]

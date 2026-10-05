@@ -175,6 +175,9 @@ declare namespace Components {
             startedAt?: string; // date-time
             entries?: PlayerDtoExtended[];
         }
+        export interface LeaderboardProjectionDto {
+            matches?: MatchCreateDto[];
+        }
         export interface LiveMatchCreateDto {
             seasonId?: string;
             ops?: LiveMatchOpDto[];
@@ -946,6 +949,25 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeLeaderboardDto;
         }
     }
+    namespace GetLeaderboardProjection {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Scope = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        export interface QueryParameters {
+            scope: Parameters.Scope;
+            seasonId?: Parameters.SeasonId;
+        }
+        export type RequestBody = Components.Schemas.LeaderboardProjectionDto;
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeLeaderboardDto;
+        }
+    }
     namespace GetLiveMatch {
         namespace Parameters {
             export type GroupId = string;
@@ -1649,6 +1671,17 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
     /**
+     * getLeaderboardProjection - The leaderboard with live matches counted as if they ended now: until a finish decides a match, the team that took more cups wins; a tie is a draw. The client sends the teams, since only clients reduce a live match's op log. Nothing is stored.
+     */
+    getLeaderboardProjection(
+        parameters?: Parameters<
+            Paths.GetLeaderboardProjection.QueryParameters &
+                Paths.GetLeaderboardProjection.PathParameters
+        > | null,
+        data?: Paths.GetLeaderboardProjection.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetLeaderboardProjection.Responses.$200>;
+    /**
      * findUserGroups
      */
     findUserGroups(
@@ -2158,6 +2191,19 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetLeaderboard.Responses.$200>;
     };
+    ['/groups/{groupId}/leaderboard/projection']: {
+        /**
+         * getLeaderboardProjection - The leaderboard with live matches counted as if they ended now: until a finish decides a match, the team that took more cups wins; a tie is a draw. The client sends the teams, since only clients reduce a live match's op log. Nothing is stored.
+         */
+        post(
+            parameters?: Parameters<
+                Paths.GetLeaderboardProjection.QueryParameters &
+                    Paths.GetLeaderboardProjection.PathParameters
+            > | null,
+            data?: Paths.GetLeaderboardProjection.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetLeaderboardProjection.Responses.$200>;
+    };
     ['/groups/user']: {
         /**
          * findUserGroups
@@ -2311,6 +2357,8 @@ export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
 export type LeaderboardDto = Components.Schemas.LeaderboardDto;
+export type LeaderboardProjectionDto =
+    Components.Schemas.LeaderboardProjectionDto;
 export type LiveMatchCreateDto = Components.Schemas.LiveMatchCreateDto;
 export type LiveMatchDto = Components.Schemas.LiveMatchDto;
 export type LiveMatchFinishDto = Components.Schemas.LiveMatchFinishDto;
