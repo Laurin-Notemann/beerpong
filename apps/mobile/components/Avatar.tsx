@@ -142,6 +142,10 @@ function Avatar({
                             }}
                             contentFit="cover"
                             cachePolicy="memory-disk"
+                            // iOS: decodes at the avatar's size off the main thread. A large cached
+                            // avatar was otherwise shrunk on the main thread on every reload (a
+                            // recycled row), which hung the app (MOBILE-P).
+                            enforceEarlyResizing
                             // list rows are recycled; without this a reused row flashes the previous avatar
                             recyclingKey={url}
                             transition={variant === 'list' ? 0 : 100}

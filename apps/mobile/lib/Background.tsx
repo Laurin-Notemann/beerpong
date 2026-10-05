@@ -59,6 +59,11 @@ export const AppBackground: React.FC = () => {
                     backgroundColor: theme.color.bg,
                 }}
                 cachePolicy="memory-disk"
+                // Window-sized and mounted on many screens: every mount drew its own shrunk copy
+                // of an uploaded wallpaper on the main thread, which hangs when it's large
+                // (MOBILE-P). Uploads are at most 2000 px (compressImage), so keeping the one
+                // full image is fine; the bundled theme image is far larger and stays downscaled.
+                allowDownscaling={!customWallpaperSource}
                 transition={100} // fade in
             />
             <View
