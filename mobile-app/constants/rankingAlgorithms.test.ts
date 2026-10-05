@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { rankPlayers } from '@/constants/rankingAlgorithms';
+import { rankingAlgorithms, rankPlayers } from '@/constants/rankingAlgorithms';
 
 const player = (name: string, elo: number) => ({
     name,
@@ -53,11 +53,16 @@ describe('cups by team size', () => {
         avgTeamSize: number
     ) => ({ ...player(name, 0), cups, matches, avgTeamSize });
 
-    it('puts a 2v2 player sharing the cups level with a 1v1 player', () => {
+    it('normalizes to a 2v2, so a 1v1 player counts half', () => {
         const players = [
             cupsPlayer('Solo', 10, 2, 1), // 5 a match alone
             cupsPlayer('Duo', 6, 2, 2), // 3 a match, half the team's cups
         ];
+        expect(
+            players.map((i) =>
+                rankingAlgorithms.TEAM_ADJUSTED_CUPS.getDisplayValue(i)
+            )
+        ).toEqual(['2.5', '3.0']);
         expect(
             rankPlayers(players, 'AVERAGE_CUPS').map((i) => i.player.name)
         ).toEqual(['Solo', 'Duo']);

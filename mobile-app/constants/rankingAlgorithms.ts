@@ -22,13 +22,16 @@ const byDescendingTotalCups = (a: RankingPlayer, b: RankingPlayer) =>
 
 const averageCups = (a: RankingPlayer) => (a.matches ? a.cups / a.matches : 0);
 
+// the team size the cups are normalized to
+const NORM_TEAM_SIZE = 2;
+
 /**
- * Average cups times the average team size: what a player would hit playing
- * alone, so sharing the cups in a 2v2 doesn't put them behind 1v1 players.
- * Seasons persisted before `avgTeamSize` existed count as 1v1.
+ * Average cups scaled to a 2v2: a 2v2 player keeps their average, a 1v1
+ * player's is halved, so hitting every cup alone doesn't beat sharing them.
+ * Seasons persisted before `avgTeamSize` existed count as 2v2.
  */
 const teamAdjustedCups = (a: RankingPlayer) =>
-    averageCups(a) * (a.avgTeamSize || 1);
+    (averageCups(a) * (a.avgTeamSize || NORM_TEAM_SIZE)) / NORM_TEAM_SIZE;
 
 const byDescendingAverageCups = (a: RankingPlayer, b: RankingPlayer) =>
     averageCups(b) - averageCups(a);
