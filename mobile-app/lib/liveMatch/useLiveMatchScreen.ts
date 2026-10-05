@@ -208,5 +208,7 @@ export function useLiveMatchScreen(id: string) {
             }),
         /** the modal's pages after the players are where the finish is entered */
         openFinish,
+        openTeams: () =>
+            nav.navigate('liveMatchTeamsModal', { liveMatchId: id }),
     };
 }

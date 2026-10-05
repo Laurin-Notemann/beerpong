@@ -210,7 +210,8 @@ export type Player = Pick<TeamMember, 'id' | 'name' | 'team' | 'avatarUrl'>;
 export interface NewMatchAssignTeamsProps {
     randomTeamsMode: { players: string[] } | null;
     onRandomTeamSelect: (playerId: string) => void;
-    onRandomTeamsPress: () => void;
+    /** without it, there's no Random Teams (e.g. while a live match runs) */
+    onRandomTeamsPress?: () => void;
     minTeamSize: number;
     maxTeamSize: number;
     players: Player[];
@@ -304,14 +305,17 @@ export default function NewMatchAssignTeams({
                     {!isRandomTeamsMode && (
                         <>
                             <MenuSection style={{ marginBottom: 20 }}>
+                                {onRandomTeamsPress && (
+                                    <MenuItem
+                                        border={false}
+                                        headIcon="dice-multiple-outline"
+                                        title="Random Teams"
+                                        tailIconType="next"
+                                        onPress={onRandomTeamsPress}
+                                    />
+                                )}
                                 <MenuItem
-                                    border={false}
-                                    headIcon="dice-multiple-outline"
-                                    title="Random Teams"
-                                    tailIconType="next"
-                                    onPress={onRandomTeamsPress}
-                                />
-                                <MenuItem
+                                    border={!!onRandomTeamsPress}
                                     headIcon="account-plus-outline"
                                     title="Create new Player"
                                     tailIconType="next"

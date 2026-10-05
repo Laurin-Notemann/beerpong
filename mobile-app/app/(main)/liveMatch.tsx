@@ -95,6 +95,7 @@ export default function LiveMatchPage() {
                 startedAt={screen.header?.startedAt}
                 isLive={isLive}
                 isFinishing={screen.isFinishing}
+                onEditTeams={screen.openTeams}
                 onFinish={screen.finishOrExplain}
                 onDiscard={screen.discard}
             />

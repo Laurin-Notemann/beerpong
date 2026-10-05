@@ -30,19 +30,21 @@ function Title({ startedAt, isLive }: { startedAt?: string; isLive: boolean }) {
 }
 
 /**
- * The live match screen's header: title and timer, a check mark that saves the match, and a
- * menu to discard it.
+ * The live match screen's header: title and timer, a button to add players to the teams, a check
+ * mark that saves the match, and a menu to discard it.
  */
 export function LiveMatchHeader({
     startedAt,
     isLive,
     isFinishing,
+    onEditTeams,
     onFinish,
     onDiscard,
 }: {
     startedAt?: string;
     isLive: boolean;
     isFinishing: boolean;
+    onEditTeams: () => void;
     onFinish: () => void;
     onDiscard: () => void;
 }) {
@@ -54,7 +56,12 @@ export function LiveMatchHeader({
         theme.color.text.primary
     );
     const androidFinishIcon = useAndroidIcon('check', theme.color.text.primary);
+    const androidTeamsIcon = useAndroidIcon(
+        'account-plus',
+        theme.color.text.primary
+    );
     const menuIcon = isIos ? 'ellipsis' : androidMenuIcon;
+    const teamsIcon = isIos ? 'person.badge.plus' : androidTeamsIcon;
     const finishIcon = isIos ? 'checkmark' : androidFinishIcon;
 
     return (
@@ -68,8 +75,13 @@ export function LiveMatchHeader({
                     ),
                 }}
             />
-            {isLive && menuIcon && finishIcon && (
+            {isLive && menuIcon && finishIcon && teamsIcon && (
                 <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        icon={teamsIcon}
+                        accessibilityLabel="Add players"
+                        onPress={onEditTeams}
+                    />
                     <Stack.Toolbar.Button
                         icon={finishIcon}
                         variant="done"
