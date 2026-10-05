@@ -2,13 +2,18 @@
 export interface DisplayConfig {
     groupId: string | null;
     groupName: string | null;
-    /** auto: live matches next to the leaderboard while any are live, else the leaderboard */
+    /** auto: the leaderboard next to a live match while any is live, else only the leaderboard */
     view: View;
     scope: Scope;
     /** the season of the leaderboard; null follows the group's active season */
     seasonId: string | null;
-    /** live matches the TV shows first, in this order; the rest fill up by latest activity */
+    /**
+     * live matches the TV shows first, in this order; the rest fill up by latest activity. Next
+     * to the leaderboard only the first one shows.
+     */
     pinnedMatchIds: string[];
+    /** a live match on the whole screen, until it ends or a phone leaves it */
+    focusMatchId: string | null;
 }
 
 export const views = ['auto', 'leaderboard', 'live'] as const;
@@ -17,7 +22,7 @@ export type View = (typeof views)[number];
 export const scopes = ['season', 'today', 'all-time'] as const;
 export type Scope = (typeof scopes)[number];
 
-/** how many live matches fit next to the leaderboard on a 1080p screen */
+/** how many live matches the Live view shows at once */
 export const MAX_MATCHES = 3;
 
 export const emptyConfig: DisplayConfig = {
@@ -27,11 +32,12 @@ export const emptyConfig: DisplayConfig = {
     scope: 'season',
     seasonId: null,
     pinnedMatchIds: [],
+    focusMatchId: null,
 };
 
 /** what a phone may change; the group goes through connectGroup, which joins it */
 export type DisplayPatch = Partial<
-    Pick<DisplayConfig, 'view' | 'scope' | 'seasonId' | 'pinnedMatchIds'>
+    Pick<DisplayConfig, 'view' | 'scope' | 'seasonId' | 'pinnedMatchIds' | 'focusMatchId'>
 >;
 
 const isString = (v: unknown): v is string => typeof v === 'string';
@@ -45,6 +51,7 @@ export function parsePatch(value: unknown): DisplayPatch {
     if (views.includes(v.view as View)) patch.view = v.view as View;
     if (scopes.includes(v.scope as Scope)) patch.scope = v.scope as Scope;
     if (v.seasonId === null || isString(v.seasonId)) patch.seasonId = v.seasonId;
+    if (v.focusMatchId === null || isString(v.focusMatchId)) patch.focusMatchId = v.focusMatchId;
     if (Array.isArray(v.pinnedMatchIds) && v.pinnedMatchIds.every(isString)) {
         patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(0, MAX_MATCHES);
     }
@@ -83,9 +90,13 @@ export function pickMatches<T extends { id: string; startedAt: string }>(
 export const byStart = (a: { startedAt: string }, b: { startedAt: string }) =>
     a.startedAt.localeCompare(b.startedAt);
 
-/** what the TV shows with this many live matches */
-export function layoutFor(view: View, liveCount: number) {
-    if (view === 'leaderboard') return 'leaderboard';
-    if (view === 'live') return 'live';
-    return liveCount > 0 ? 'split' : 'leaderboard';
+/**
+ * What the TV shows: a focused live match on the whole screen while it's live; in auto the
+ * leaderboard next to one live match while any is live, else only the leaderboard.
+ */
+export function layoutFor(config: Pick<DisplayConfig, 'view' | 'focusMatchId'>, liveIds: string[]) {
+    if (config.focusMatchId && liveIds.includes(config.focusMatchId)) return 'focus';
+    if (config.view === 'leaderboard') return 'leaderboard';
+    if (config.view === 'live') return 'live';
+    return liveIds.length > 0 ? 'split' : 'leaderboard';
 }

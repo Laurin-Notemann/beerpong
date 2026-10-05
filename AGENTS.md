@@ -95,7 +95,7 @@ The page holds real player names and games, and the repo is public: never commit
 
 - **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`api-go/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
 - **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) ships iOS from GitHub's runners, not EAS cloud builds. Android only ships when you start the workflow by hand with `platform: android`. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
-- **TV:** push to `staging` → `TV Staging Deploy` builds `tv/Dockerfile` and redeploys the `tv` service in `~/docker/versus-tv` on the server.
+- **TV:** push to `staging` → `TV Staging Deploy` builds `tv/Dockerfile`, writes the `tv` service in `~/docker/versus-tv` and its Traefik route (`~/traefik/dynamic/versus-tv-staging.yml`) on the server and redeploys it at https://beerpong.lb.staging.laurinnotemann.dev/tv.
 - The app checks for updates on foreground and applies a downloaded update when it goes to the background (`mobile-app/hooks/useOtaUpdates.ts`).
 
 ## Pull requests

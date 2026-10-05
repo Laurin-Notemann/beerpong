@@ -1,7 +1,9 @@
 name: TV Staging Deploy
 
-# Tests, builds and deploys the TV app (tv/) to the staging server, where it runs in
-# ~/docker/versus-tv as the compose service `tv` (see tv/README.md for the one-time setup).
+# Tests, builds and deploys the TV app (tv/) to the staging server, next to the API: the
+# compose service `tv` in ~/docker/versus-tv on the `traefik_web` network, served by Traefik
+# at https://beerpong.lb.staging.laurinnotemann.dev/tv. The deploy writes the compose file and
+# the Traefik route itself, so the server needs no setup by hand.
 
 on:
   push:
@@ -73,30 +75,71 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
+      - name: Write the compose file and the Traefik route
+        env:
+          DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/tv-staging:${{ github.sha }}
+        run: |
+          mkdir deploy
+          cat > deploy/docker-compose.yml << EOF
+          services:
+            tv:
+              container_name: versus-tv-staging
+              image: $DOCKER_IMAGE
+              restart: unless-stopped
+              networks:
+                - traefik_web
+              environment:
+                # the server reaches the API inside the network, browsers its websocket outside
+                VERSUS_API_URL: http://beerpong-api-go-staging:8080
+                VERSUS_API_PUBLIC_URL: https://beerpong.lb.staging.laurinnotemann.dev
+                PORT: "3000"
+          networks:
+            traefik_web:
+              external: true
+          EOF
+          # Traefik watches ~/traefik/dynamic; this route beats the API's (a longer rule wins)
+          cat > deploy/versus-tv-staging.yml << 'EOF'
+          http:
+            routers:
+              versus-tv-staging:
+                entryPoints:
+                  - websecure
+                rule: "Host(`beerpong.lb.staging.laurinnotemann.dev`) && (Path(`/tv`) || PathPrefix(`/tv/`))"
+                tls:
+                  certResolver: le-acme
+                service: versus-tv-staging
+                middlewares:
+                  - staging-ratelimit@file
+            services:
+              versus-tv-staging:
+                loadBalancer:
+                  servers:
+                    - url: "http://versus-tv-staging:3000/"
+          EOF
+
       - name: Deploy and wait until it answers
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
-          DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/tv-staging:${{ github.sha }}
         run: |
+          ssh $SERVER_USER@$SERVER_IP 'mkdir -p ~/docker/versus-tv' < /dev/null
+          scp deploy/docker-compose.yml $SERVER_USER@$SERVER_IP:docker/versus-tv/docker-compose.yml
           # Same shape as the API deploy (api-staging-cd.yml): stdin is the script, no `set -e`.
           ssh $SERVER_USER@$SERVER_IP << EOF
             cd ~/docker/versus-tv || exit 1
-
             gcloud auth activate-service-account --key-file=$FILE_PATH < /dev/null || exit 1
             gcloud auth configure-docker europe-west10-docker.pkg.dev --quiet < /dev/null || exit 1
-
-            sed -i 's|^\(\s*image:\).*|\1 $DOCKER_IMAGE|' docker-compose.yml || exit 1
             docker compose pull < /dev/null || exit 1
             docker compose up -d < /dev/null || exit 1
-
-            for i in \$(seq 1 30); do
-              if docker compose exec -T tv wget -qO /dev/null http://127.0.0.1:3000/ < /dev/null; then
-                exit 0
-              fi
-              sleep 2
-            done
-            docker compose logs --tail 50 < /dev/null
-            exit 1
           EOF
+          scp deploy/versus-tv-staging.yml $SERVER_USER@$SERVER_IP:traefik/dynamic/versus-tv-staging.yml
+
+          for i in $(seq 1 30); do
+            if curl -sf https://beerpong.lb.staging.laurinnotemann.dev/tv/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          ssh $SERVER_USER@$SERVER_IP 'cd ~/docker/versus-tv && docker compose logs --tail 50' < /dev/null
+          exit 1

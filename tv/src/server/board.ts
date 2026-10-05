@@ -11,19 +11,34 @@ export interface BoardPlayer {
     avatarUrl: string | null;
 }
 
+/** what a player's live match does to their standing, if it ended now */
+export interface PlayerChange {
+    points: number;
+    elo: number;
+    /** places gained (negative: lost) */
+    rank: number;
+    /** their rank and Elo with the change */
+    newRank: number;
+    newElo: number;
+}
+
 export interface LeaderboardRow extends BoardPlayer {
     rank: number;
     tied: boolean;
     /** the ranking's value as shown, e.g. "1204" Elo or "3.4" average points */
     value: string;
+    elo: number;
+    points: number;
     matches: number;
     wins: number;
     /** fewer matches than the season needs to be ranked */
     unranked: boolean;
+    /** set while the player is in a live match */
+    change: PlayerChange | null;
 }
 
 export interface LiveTeam {
-    players: BoardPlayer[];
+    players: (BoardPlayer & { change: PlayerChange | null })[];
     score: number;
     standing: CupPosition[];
 }
@@ -42,6 +57,10 @@ export interface Board {
     seasons: { id: string; name: string; active: boolean }[];
     season: { id: string; name: string } | null;
     ranking: string;
+    /**
+     * Live matches count as if they ended now (the leading team wins, a tie is a draw), so the
+     * table moves while they play. `change` says by how much, against the stored standings.
+     */
     leaderboard: { rows: LeaderboardRow[]; numMatches: number; numPlayers: number };
     /** every live match of the group, most recently active first */
     liveMatches: LiveMatchView[];
@@ -88,55 +107,88 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
         return seasonData.get(seasonId)!;
     };
 
-    const [board, liveMatches] = await Promise.all([
-        api.leaderboard(groupId, config.scope, season?.id ?? null),
-        Promise.all(
-            live
-                .filter((i) => i.id && i.seasonId)
-                .sort((a, b) =>
-                    (b.lastActivityAt ?? b.startedAt ?? '').localeCompare(
-                        a.lastActivityAt ?? a.startedAt ?? ''
-                    )
+    const folded = await Promise.all(
+        live
+            .filter((i) => i.id && i.seasonId)
+            .sort((a, b) =>
+                (b.lastActivityAt ?? b.startedAt ?? '').localeCompare(
+                    a.lastActivityAt ?? a.startedAt ?? ''
                 )
-                .map(async (dto): Promise<LiveMatchView> => {
-                    const [players, moves] = await dataOf(dto.seasonId!);
-                    const { blue, red } = foldLiveMatch(dto, moves);
-                    const team = (t: typeof blue): LiveTeam => ({
-                        ...t,
-                        players: t.playerIds.map((id) => ({
-                            ...profile(players.find((p) => p.id === id)?.profileId),
-                            id,
-                        })),
-                    });
-                    return {
-                        id: dto.id!,
-                        startedAt: dto.startedAt ?? '',
-                        lastActivityAt: dto.lastActivityAt ?? dto.startedAt ?? '',
-                        blue: team(blue),
-                        red: team(red),
-                    };
-                })
-        ),
+            )
+            .map(async (dto) => {
+                const [players, moves] = await dataOf(dto.seasonId!);
+                return { dto, players, ...foldLiveMatch(dto, moves) };
+            })
+    );
+
+    // the live matches this board counts: those of its season (the running one for today and
+    // all time) with players on both sides
+    const boardSeasonId = config.scope === 'season' ? season?.id : group.activeSeasonId;
+    const projected = folded.filter(
+        (i) => i.dto.seasonId === boardSeasonId && i.blue.playerIds.length && i.red.playerIds.length
+    );
+
+    const [stored, withLive] = await Promise.all([
+        api.leaderboard(groupId, config.scope, season?.id ?? null),
+        projected.length
+            ? api
+                  .projection(
+                      groupId,
+                      config.scope,
+                      season?.id ?? null,
+                      projected.map((i) => ({ teams: i.teams }))
+                  )
+                  // an API without projections: the stored standings
+                  .catch(() => null)
+            : null,
     ]);
 
     const algo: RankingAlgorithm = season?.seasonSettings?.rankingAlgorithm ?? 'ELO';
     const minMatches = season?.seasonSettings?.minMatchesToQualify ?? 0;
-    const entries = (board.entries ?? []).map((i) => ({
-        ...profile(i.profileId),
-        id: i.id ?? '',
-        elo: i.statistics?.elo ?? 0,
-        points: i.statistics?.points ?? 0,
-        matches: i.statistics?.matches ?? 0,
-        wins: i.statistics?.wins ?? 0,
-    }));
-    const ranked = rankPlayers(
-        entries.filter((i) => i.matches >= minMatches),
-        algo
-    );
-    const unranked = rankPlayers(
-        entries.filter((i) => i.matches < minMatches && i.matches > 0),
-        algo
-    );
+    const rank = (board: Dto.LeaderboardDto) => {
+        const entries = (board.entries ?? []).map((i) => ({
+            ...profile(i.profileId),
+            id: i.id ?? '',
+            elo: i.statistics?.elo ?? 0,
+            points: i.statistics?.points ?? 0,
+            matches: i.statistics?.matches ?? 0,
+            wins: i.statistics?.wins ?? 0,
+        }));
+        const ranked = rankPlayers(
+            entries.filter((i) => i.matches >= minMatches),
+            algo
+        ).map((i) => ({
+            ...i.player,
+            rank: i.rank,
+            tied: i.tied,
+            value: i.value,
+            unranked: false,
+        }));
+        const unranked = rankPlayers(
+            entries.filter((i) => i.matches < minMatches && i.matches > 0),
+            algo
+        ).map((i) => ({ ...i.player, rank: i.rank, tied: i.tied, value: i.value, unranked: true }));
+        return [...ranked, ...unranked];
+    };
+
+    const before = new Map(rank(stored).map((i) => [i.id, i]));
+    const playing = new Set(projected.flatMap((i) => [...i.blue.playerIds, ...i.red.playerIds]));
+    const rows: LeaderboardRow[] = rank(withLive ?? stored).map((row) => {
+        const old = before.get(row.id);
+        const change: PlayerChange | null =
+            withLive && playing.has(row.id)
+                ? {
+                      points: row.points - (old?.points ?? 0),
+                      // a player's first match starts them at the API's 1500
+                      elo: row.elo - (old?.elo ?? 1500),
+                      rank: old && !old.unranked && !row.unranked ? old.rank - row.rank : 0,
+                      newRank: row.rank,
+                      newElo: row.elo,
+                  }
+                : null;
+        return { ...row, change };
+    });
+    const changeOf = (playerId: string) => rows.find((i) => i.id === playerId)?.change ?? null;
 
     return {
         group: { id: groupId, name: group.name ?? '' },
@@ -148,25 +200,27 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
         season: season ? { id: season.id!, name: season.name || 'Current season' } : null,
         ranking: rankingNames[algo],
         leaderboard: {
-            rows: [
-                ...ranked.map((i) => ({
-                    ...i.player,
-                    rank: i.rank,
-                    tied: i.tied,
-                    value: i.value,
-                    unranked: false,
-                })),
-                ...unranked.map((i) => ({
-                    ...i.player,
-                    rank: i.rank,
-                    tied: i.tied,
-                    value: i.value,
-                    unranked: true,
-                })),
-            ],
-            numMatches: board.numMatches ?? 0,
-            numPlayers: board.numPlayers ?? 0,
+            rows,
+            numMatches: stored.numMatches ?? 0,
+            numPlayers: stored.numPlayers ?? 0,
         },
-        liveMatches,
+        liveMatches: folded.map(({ dto, players, blue, red }) => {
+            const team = (t: typeof blue): LiveTeam => ({
+                score: t.score,
+                standing: t.standing,
+                players: t.playerIds.map((id) => ({
+                    ...profile(players.find((p) => p.id === id)?.profileId),
+                    id,
+                    change: changeOf(id),
+                })),
+            });
+            return {
+                id: dto.id!,
+                startedAt: dto.startedAt ?? '',
+                lastActivityAt: dto.lastActivityAt ?? dto.startedAt ?? '',
+                blue: team(blue),
+                red: team(red),
+            };
+        }),
     };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parsePatch, pickMatches } from '~/lib/display';
+import { layoutFor, parsePatch, pickMatches } from '~/lib/display';
 
 // most recently active first, as the board lists them
 const live = [
@@ -42,5 +42,17 @@ describe('parsePatch', () => {
         expect(parsePatch({ pinnedMatchIds: ['a', 'a', 'b', 'c', 'd'] })).toEqual({
             pinnedMatchIds: ['a', 'b', 'c'],
         });
+    });
+});
+
+describe('layoutFor', () => {
+    it('puts a focused match on the whole screen only while it is live', () => {
+        expect(layoutFor({ view: 'leaderboard', focusMatchId: 'a' }, ['a', 'b'])).toBe('focus');
+        expect(layoutFor({ view: 'leaderboard', focusMatchId: 'gone' }, ['a'])).toBe('leaderboard');
+    });
+
+    it('shows the leaderboard next to a live match in auto, alone without one', () => {
+        expect(layoutFor({ view: 'auto', focusMatchId: null }, ['a'])).toBe('split');
+        expect(layoutFor({ view: 'auto', focusMatchId: null }, [])).toBe('leaderboard');
     });
 });

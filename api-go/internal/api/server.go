@@ -122,6 +122,7 @@ func (s *Server) routes() map[string]route {
 		"/groups/{id}/join":                                                 {"POST": s.joinGroup},
 		"/groups/{id}/leave":                                                {"POST": s.leaveGroup},
 		"/groups/{groupId}/leaderboard":                                     {"GET": s.leaderboard},
+		"/groups/{groupId}/leaderboard/projection":                          {"POST": s.leaderboardProjection},
 		"/groups/{groupId}/active-season":                                   {"PUT": s.startSeason},
 		"/groups/{groupId}/seasons":                                         {"GET": s.listSeasons},
 		"/groups/{groupId}/seasons/{id}":                                    {"GET": s.getSeason, "PUT": s.updateSeason},

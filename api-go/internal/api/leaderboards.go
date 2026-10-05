@@ -12,10 +12,96 @@ import (
 )
 
 func (s *Server) leaderboard(r *request) response {
+	group, scope, seasonID, res := s.leaderboardQuery(r)
+	if res != nil {
+		return res
+	}
+	board, res := s.leaderboardFor(r.Context(), s.q, group, scope, false, seasonID, nil)
+	if res != nil {
+		return res
+	}
+	return ok(board.dto())
+}
+
+// maxProjectedMatches caps the live matches one projection counts.
+const maxProjectedMatches = 20
+
+// leaderboardProjection is the leaderboard with live matches counted as if
+// they ended now (leaderboard.Match.Projected), for screens that show the
+// standings changing during a game. The client sends their teams in the
+// match create format, since only clients reduce a live match's op log.
+// Nothing is stored.
+func (s *Server) leaderboardProjection(r *request) response {
+	group, scope, seasonID, res := s.leaderboardQuery(r)
+	if res != nil {
+		return res
+	}
+	body, res := readJSON(r.Request, true)
+	if res != nil {
+		return res
+	}
+	matches, err := parseProjectedMatches(body, s.now())
+	if err != nil {
+		return fail(errLeaderboardInvalidProjection)
+	}
+	board, res := s.leaderboardFor(r.Context(), s.q, group, scope, false, seasonID, nil, matches...)
+	if res != nil {
+		return res
+	}
+	return ok(board.dto())
+}
+
+// parseProjectedMatches reads {"matches": [{"teams": [blue, red]}]}: two
+// teams each, with players and their move counts.
+func parseProjectedMatches(body any, now time.Time) ([]leaderboard.Match, error) {
+	o, err := asObject(body)
+	if err != nil {
+		return nil, err
+	}
+	list, present, err := o.list("matches")
+	if err != nil || !present || len(list) > maxProjectedMatches {
+		return nil, errors.New("matches missing or too many")
+	}
+	out := make([]leaderboard.Match, len(list))
+	for i, raw := range list {
+		in, err := parseMatchInput(raw)
+		if err != nil || len(in.teams) != 2 {
+			return nil, errors.New("a projected match needs two teams")
+		}
+		id := fmt.Sprintf("projected-%d", i)
+		m := leaderboard.Match{ID: id, Date: now, Projected: true}
+		for t, team := range in.teams {
+			if team == nil || team.members == nil {
+				return nil, errNullInMatch
+			}
+			teamID := fmt.Sprintf("%s-team-%d", id, t)
+			m.TeamIDs = append(m.TeamIDs, teamID)
+			for j, member := range team.members {
+				if member == nil || member.playerID == nil || member.moves == nil {
+					return nil, errNullInMatch
+				}
+				memberID := fmt.Sprintf("%s-%d", teamID, j)
+				m.Members = append(m.Members, leaderboard.Member{ID: memberID, TeamID: teamID, PlayerID: *member.playerID})
+				for _, mv := range member.moves {
+					if mv == nil || mv.moveID == nil || mv.count < 0 {
+						return nil, errNullInMatch
+					}
+					m.Moves = append(m.Moves, leaderboard.Move{TeamMemberID: memberID, MoveID: *mv.moveID, Value: mv.count})
+				}
+			}
+		}
+		out[i] = m
+	}
+	return out, nil
+}
+
+// leaderboardQuery reads and checks the scope and season of a leaderboard
+// request.
+func (s *Server) leaderboardQuery(r *request) (groupDTO, string, string, response) {
 	query := r.URL.Query()
 	scopes, hasScope := query["scope"]
 	if !hasScope {
-		return springError(400)
+		return groupDTO{}, "", "", springError(400)
 	}
 	scope := strings.Join(scopes, ",")
 	var seasonID *string
@@ -27,34 +113,29 @@ func (s *Server) leaderboard(r *request) response {
 	groupID := r.path("groupId")
 	group, err := s.q.GetGroup(ctx, groupID)
 	if notFound(err) {
-		return fail(errGroupNotFound)
+		return groupDTO{}, "", "", fail(errGroupNotFound)
 	}
 	if err != nil {
-		return internal(err)
+		return groupDTO{}, "", "", internal(err)
 	}
 	switch {
 	case scope != "season" && scope != "today" && scope != "all-time":
-		return fail(errLeaderboardScopeNotFound)
+		return groupDTO{}, "", "", fail(errLeaderboardScopeNotFound)
 	case scope == "season" && seasonID == nil:
-		return fail(errLeaderboardSeasonNotFound)
+		return groupDTO{}, "", "", fail(errLeaderboardSeasonNotFound)
 	case scope == "season":
 		exists, err := s.q.SeasonExists(ctx, *seasonID)
 		if err != nil {
-			return internal(err)
+			return groupDTO{}, "", "", internal(err)
 		}
 		if !exists {
-			return fail(errSeasonNotFound)
+			return groupDTO{}, "", "", fail(errSeasonNotFound)
 		}
 		if res := s.seasonOfGroup(r, *seasonID); res != nil {
-			return res
+			return groupDTO{}, "", "", res
 		}
 	}
-
-	board, res := s.leaderboardFor(ctx, s.q, toGroupDTO(group), scope, false, deref(seasonID), nil)
-	if res != nil {
-		return res
-	}
-	return ok(board.dto())
+	return toGroupDTO(group), scope, deref(seasonID), nil
 }
 
 type board struct {
@@ -90,7 +171,9 @@ func (b board) entries() []playerExtendedDTO {
 // leaderboardFor builds a board for the scope. keepStored starts from the
 // players' stored statistics (used when carrying stats into a new season).
 // playerIDs, when not nil, limits the board to those players.
-func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupDTO, scope string, keepStored bool, seasonID string, playerIDs []string) (board, response) {
+// leaderboardFor computes a board. playerIDs limits a season board to those
+// players (nil: all); projected live matches count after the stored ones.
+func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupDTO, scope string, keepStored bool, seasonID string, playerIDs []string, projected ...leaderboard.Match) (board, response) {
 	var (
 		matches   []db.Match
 		players   []playerRow
@@ -180,6 +263,15 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 		}
 		for _, mv := range m.moves {
 			moveIDs = append(moveIDs, deref(mv.MoveID))
+		}
+	}
+	for _, m := range projected {
+		in.Matches = append(in.Matches, m)
+		for _, tm := range m.Members {
+			memberPlayers = append(memberPlayers, tm.PlayerID)
+		}
+		for _, mv := range m.Moves {
+			moveIDs = append(moveIDs, mv.MoveID)
 		}
 	}
 	if len(moveIDs) > 0 {

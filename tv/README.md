@@ -1,9 +1,10 @@
 # Versus TV
 
-A web page for a TV (a laptop on HDMI, in practice): the group's live matches next to the leaderboard, controlled from phones. TanStack Start, served by its own Node server.
+A web page for a TV (a laptop on HDMI, in practice): the group's leaderboard next to a live match, controlled from phones. TanStack Start, served by its own Node server under `/tv` (staging: https://beerpong.lb.staging.laurinnotemann.dev/tv).
 
-- `/` is the TV. Until a group is on it, it shows a QR code. Scanning it opens the remote on a phone.
-- `/remote/<id>?k=<key>` is the remote. Enter the group code once; then choose what the TV shows (auto, leaderboard, live), the leaderboard's season or scope, and pin up to three live matches. Anyone who scans the code can control the TV.
+- `/tv/` is the TV. Until a group is on it, it shows a QR code. Scanning it opens the remote on a phone.
+- `/tv/remote/<id>?k=<key>` is the remote. Enter the group code once; then choose what the TV shows (auto: the leaderboard next to one live match; only the leaderboard; up to three live matches), the leaderboard's season or scope, which live match comes first, and put one live match on the whole screen. Anyone who scans the code can control the TV.
+- While matches are live, the leaderboard counts them as if they ended now (the API's `POST /groups/{id}/leaderboard/projection`): players move up and down and show the points and Elo the match gives them so far.
 
 ## How it works
 
@@ -16,8 +17,8 @@ A web page for a TV (a laptop on HDMI, in practice): the group's live matches ne
 
 ```sh
 npm install
-VERSUS_API_URL=http://localhost:8080 npm run dev      # http://localhost:3100
-VERSUS_API_URL=http://localhost:8080 npm run seed     # a made-up group with live matches; prints its code
+VERSUS_API_URL=http://localhost:8080 npm run dev      # http://localhost:3100/tv/
+VERSUS_API_URL=http://localhost:8080 npm run seed     # a made-up group with 2 live matches (LIVE=1..3); prints its code
 VERSUS_API_URL=http://localhost:8080 npm run seed -- play   # keeps hitting cups in those live matches
 npm run typecheck && npm test && npm run build
 ```
@@ -26,18 +27,6 @@ npm run typecheck && npm test && npm run build
 
 ## Staging
 
-Pushing to `staging` runs `TV Staging Deploy` (`.github/workflows/tv-staging-cd.yml`): checks, an image from `tv/Dockerfile` (built from the repo root, since it includes the shared `mobile-app/` code), and a redeploy of the compose service `tv` in `~/docker/versus-tv` on the server.
-
-The server needs that directory once, set up like `~/docker/beerpong-api-go` (same reverse proxy network, a hostname of its own):
-
-```yaml
-services:
-    tv:
-        image: replaced-by-the-deploy
-        restart: unless-stopped
-        environment:
-            VERSUS_API_URL: https://beerpong.lb.staging.laurinnotemann.dev
-            PORT: 3000
-```
+Pushing to `staging` runs `TV Staging Deploy` (`.github/workflows/tv-staging-cd.yml`): checks, an image from `tv/Dockerfile` (built from the repo root, since it includes the shared `mobile-app/` code), then on the server the compose service `tv` in `~/docker/versus-tv` and the Traefik route `~/traefik/dynamic/versus-tv-staging.yml` (the API's hostname, path `/tv`). The workflow writes both files, so change them there, not on the server.
 
 Run one instance only: the TVs live in that process's memory.

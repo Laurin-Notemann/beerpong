@@ -29,7 +29,9 @@ export function useDisplayEvents(
         let closed = false;
 
         const open = () => {
-            source = new EventSource(`/api/displays/${id}/events?key=${encodeURIComponent(key)}`);
+            source = new EventSource(
+                `${import.meta.env.BASE_URL}api/displays/${id}/events?key=${encodeURIComponent(key)}`
+            );
             source.onopen = () => setConnected(true);
             source.onmessage = (e) => handlers.current.onEvent(JSON.parse(e.data));
             source.onerror = () => {

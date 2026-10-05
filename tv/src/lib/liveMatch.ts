@@ -3,7 +3,7 @@
 // (no React Native imports in their import graph), or the TV stops building.
 import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { type CupPosition, type CupTeam, standingCups } from '@/lib/cupHits';
-import { teamScore } from '@/lib/liveMatch/log';
+import { teamScore, toTeamCreateDtos } from '@/lib/liveMatch/log';
 import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
 import { toLiveOps } from '@/lib/liveMatch/types';
 import type * as Dto from '@/openapi/openapi';
@@ -32,5 +32,7 @@ export function foldLiveMatch(dto: Dto.LiveMatchDto, ruleMoves: Dto.RuleMoveDto[
         score: teamScore(state, side, cups),
         standing: standingCups(state.cupHits, side),
     });
-    return { blue: team('blue'), red: team('red') };
+    // as a match would be entered right now, for the leaderboard projection
+    const teams = toTeamCreateDtos(state);
+    return { blue: team('blue'), red: team('red'), teams };
 }

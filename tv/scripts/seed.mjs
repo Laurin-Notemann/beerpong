@@ -114,10 +114,11 @@ async function seed() {
         await call(`${s}/matches`, { method: 'POST', token, body: { teams: [blue, red] } });
     }
 
-    // three live matches with different players, a few cups in
+    // live matches with different players (LIVE, default 2, at most 3), a few cups in
+    const liveCount = Math.min(3, Number(process.env.LIVE ?? 2));
     const free = pick(NAMES, 12);
     const live = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < liveCount; i++) {
         const [b1, b2, r1, r2] = free.slice(i * 4, i * 4 + 4).map(playerOf);
         const id = randomUUID();
         const ops = [
@@ -143,7 +144,7 @@ async function seed() {
         moves,
         live,
     };
-    for (let i = 0; i < 9; i++) await hit(state, token, state.live[i % 3]);
+    for (let i = 0; i < 3 * liveCount; i++) await hit(state, token, state.live[i % liveCount]);
 
     writeFileSync(STATE, JSON.stringify(state, null, 2));
     console.log(`Group "${group.name}" created. Group code: ${group.inviteCode}`);

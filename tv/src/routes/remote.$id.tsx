@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
 
-import { Avatar } from '~/components/Avatar';
 import {
     byStart,
     type DisplayConfig,
     type DisplayPatch,
+    layoutFor,
     MAX_MATCHES,
     pickMatches,
     type Scope,
@@ -64,9 +64,23 @@ function Remote() {
 
     // in the order they started, so rows don't move under your thumb while cups are hit
     const live = [...(board.data?.liveMatches ?? [])].sort(byStart);
-    const shown = pickMatches(board.data?.liveMatches ?? [], config.pinnedMatchIds).map(
+    const picked = pickMatches(board.data?.liveMatches ?? [], config.pinnedMatchIds).map(
         (i) => i.id
     );
+    const layout = layoutFor(
+        config,
+        live.map((i) => i.id)
+    );
+    // the live matches the TV shows right now
+    const shown =
+        layout === 'focus'
+            ? [config.focusMatchId]
+            : layout === 'split'
+              ? picked.slice(0, 1)
+              : layout === 'live'
+                ? picked
+                : [];
+    const focused = layout === 'focus' ? live.find((i) => i.id === config.focusMatchId) : undefined;
 
     const togglePin = (matchId: string) => {
         const pinned = config.pinnedMatchIds.filter((i) => live.some((m) => m.id === i));
@@ -79,6 +93,23 @@ function Remote() {
 
     return (
         <Page title={board.data?.group.name ?? config.groupName ?? ''} offline={!connected}>
+            {focused && (
+                <div className="flex items-center gap-3 rounded-2xl border border-live bg-live/10 p-3">
+                    <div className="min-w-0 flex-1 text-sm">
+                        <div className="font-semibold">Full screen on the TV</div>
+                        <div className="truncate text-text-2">
+                            {focused.blue.players.map((p) => p.name).join(' & ')} vs{' '}
+                            {focused.red.players.map((p) => p.name).join(' & ')}
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => send({ focusMatchId: null })}
+                        className="rounded-xl bg-text px-4 py-2 text-sm font-semibold text-black"
+                    >
+                        Exit
+                    </button>
+                </div>
+            )}
             <Section title="On the TV">
                 <Segmented<View>
                     value={config.view}
@@ -91,7 +122,7 @@ function Remote() {
                 />
                 <p className="text-sm text-text-3">
                     {config.view === 'auto'
-                        ? 'Live matches next to the leaderboard while a match is live, the full leaderboard otherwise.'
+                        ? 'The leaderboard next to a live match while one is live, the full leaderboard otherwise.'
                         : config.view === 'live'
                           ? 'Only live matches.'
                           : 'Only the leaderboard.'}
@@ -134,8 +165,9 @@ function Remote() {
                 ) : (
                     <>
                         <p className="text-sm text-text-3">
-                            The TV shows {Math.min(live.length, MAX_MATCHES)} of them. Tap to pin
-                            the ones it should show first; the rest fill up with the latest.
+                            Tap a match to show it first; the rest fill up with the latest. Next to
+                            the leaderboard the TV shows one, in Live up to {MAX_MATCHES}. ⤢ puts a
+                            match on the whole screen until it ends.
                         </p>
                         <ul className="flex flex-col gap-2">
                             {live.map((m) => (
@@ -144,7 +176,14 @@ function Remote() {
                                     match={m}
                                     pinIndex={config.pinnedMatchIds.indexOf(m.id)}
                                     onTv={shown.includes(m.id)}
+                                    focused={config.focusMatchId === m.id}
                                     onPress={() => togglePin(m.id)}
+                                    onFocus={() =>
+                                        send({
+                                            focusMatchId:
+                                                config.focusMatchId === m.id ? null : m.id,
+                                        })
+                                    }
                                 />
                             ))}
                         </ul>
@@ -172,34 +211,28 @@ function MatchRow({
     match,
     pinIndex,
     onTv,
+    focused,
     onPress,
+    onFocus,
 }: {
     match: LiveMatchView;
     pinIndex: number;
     onTv: boolean;
+    focused: boolean;
     onPress: () => void;
+    onFocus: () => void;
 }) {
     const now = useNow();
     const names = (team: LiveMatchView['blue']) =>
         team.players.map((p) => p.name).join(' & ') || '…';
 
     return (
-        <li>
+        <li className="flex items-stretch gap-2">
             <button
                 onClick={onPress}
                 aria-pressed={pinIndex >= 0}
-                className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.98] ${pinIndex >= 0 ? 'border-live bg-live/10' : 'border-line bg-panel'}`}
+                className={`flex min-w-0 flex-1 items-center gap-3 rounded-2xl border p-3 text-left transition active:scale-[0.98] ${pinIndex >= 0 ? 'border-live bg-live/10' : 'border-line bg-panel'}`}
             >
-                <div className="flex -space-x-2">
-                    {[...match.blue.players, ...match.red.players].slice(0, 4).map((p) => (
-                        <Avatar
-                            key={p.id}
-                            name={p.name}
-                            url={p.avatarUrl}
-                            className="size-8 text-xs ring-2 ring-panel"
-                        />
-                    ))}
-                </div>
                 <div className="min-w-0 flex-1">
                     <div className="truncate text-sm text-blue">{names(match.blue)}</div>
                     <div className="truncate text-sm text-red">{names(match.red)}</div>
@@ -218,6 +251,14 @@ function MatchRow({
                 >
                     {pinIndex >= 0 ? pinIndex + 1 : '+'}
                 </div>
+            </button>
+            <button
+                onClick={onFocus}
+                aria-pressed={focused}
+                aria-label={focused ? 'Exit full screen' : 'Full screen on the TV'}
+                className={`grid w-12 shrink-0 place-items-center rounded-2xl border text-xl transition active:scale-95 ${focused ? 'border-live bg-live text-black' : 'border-line bg-panel text-text-2'}`}
+            >
+                ⤢
             </button>
         </li>
     );

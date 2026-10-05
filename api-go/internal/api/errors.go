@@ -65,8 +65,9 @@ var (
 	errAssetNotFound         = errorCode{404, "assetNotFound", "The requested asset could not be found!"}
 	errAssetValidationFailed = errorCode{400, "assetValidationFailed", "The provided asset offsets or zoom have to be >= 0!"}
 
-	errLeaderboardScopeNotFound  = errorCode{404, "leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"}
-	errLeaderboardSeasonNotFound = errorCode{404, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!"}
+	errLeaderboardScopeNotFound     = errorCode{404, "leaderboardScopeNotFound", "The leaderboard scope has to be one of: all-time, today, season"}
+	errLeaderboardSeasonNotFound    = errorCode{404, "leaderboardScopeNotFound", "The scope 'season' requires a seasonId param!"}
+	errLeaderboardInvalidProjection = errorCode{400, "leaderboardInvalidProjection", "A projection needs matches: [{teams: [blue, red]}], every member with a playerId and moves, at most 20 matches."}
 
 	errAuthRegisterInvalidDto  = errorCode{400, "authRegisterInvalidDto", "The installationType or deviceId is invalid!"}
 	errAuthRefreshInvalidDto   = errorCode{400, "authRefreshInvalidDto", "The refreshToken has to be non-null and non-empty!"}

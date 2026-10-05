@@ -43,17 +43,22 @@ const (
 	topWeight = 0.5
 )
 
-// calculateElo updates the ratings of both teams after one match. points are the
-// app's points per player, own their points without the finish bonus, and
-// teamPoints what a team scores on its own in an average game this season.
-func calculateElo(blueWon bool, blue, red []*Stats, points, own map[string]int64, teamPoints float64) {
+// calculateElo updates the ratings of both teams after one match. resultBlue
+// is 1 when blue won and 0 when red won; a projected live match that is tied
+// counts as a draw (0.5, no margin). points are the app's points per player,
+// own their points without the finish bonus, and teamPoints what a team scores
+// on its own in an average game this season.
+func calculateElo(resultBlue float64, blue, red []*Stats, points, own map[string]int64, teamPoints float64) {
 	blueRating, redRating := teamElo(blue), teamElo(red)
 	expectedBlue := winChance(blueRating, redRating)
 
+	// the winner's points gap per player
 	gap := averagePoints(blue, points) - averagePoints(red, points)
-	resultBlue := 1.0
-	if !blueWon {
-		resultBlue, gap = 0, -gap
+	switch resultBlue {
+	case 0:
+		gap = -gap
+	case 0.5:
+		gap = 0
 	}
 	delta := eloK * marginScale(gap) * (resultBlue - expectedBlue)
 

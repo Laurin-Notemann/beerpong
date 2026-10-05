@@ -12,7 +12,7 @@ func TestEloCloseWinCountsOnce(t *testing.T) {
 	// expected to (9 of a team's 9), so hitting adds nothing.
 	blue := &Stats{Elo: 1500, PlayerID: "b"}
 	red := &Stats{Elo: 1500, PlayerID: "r"}
-	calculateElo(true, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 8, "r": 4}, map[string]int64{"b": 9, "r": 9}, 9)
+	calculateElo(1, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 8, "r": 4}, map[string]int64{"b": 9, "r": 9}, 9)
 	if blue.Elo != 1675 || red.Elo != 1325 {
 		t.Fatalf("got blue %v red %v, want 1675 / 1325", blue.Elo, red.Elo)
 	}
@@ -78,7 +78,7 @@ func TestEloHittingIsWorthAFixedAmountPerPoint(t *testing.T) {
 		d := &Stats{Elo: 1500, PlayerID: "d"}
 		points := map[string]int64{"a": 8, "b": 8, "c": 2, "d": 2}
 		own := map[string]int64{"a": 2, "b": mateOwn, "c": 2, "d": 2}
-		calculateElo(true, []*Stats{a, b}, []*Stats{c, d}, points, own, 9)
+		calculateElo(1, []*Stats{a, b}, []*Stats{c, d}, points, own, 9)
 		return a.Elo, b.Elo
 	}
 	me, mate := game(10)
@@ -87,5 +87,69 @@ func TestEloHittingIsWorthAFixedAmountPerPoint(t *testing.T) {
 	}
 	if again, _ := game(4); again != me {
 		t.Fatalf("a teammate's points changed my rating: %v vs %v", again, me)
+	}
+}
+
+func TestProjectedLiveMatch(t *testing.T) {
+	profile := func(s string) *string { return &s }
+	// one finished match, then a live one in progress: blue has taken bc cups, red rc
+	board := func(projected bool, bc, rc int32) (map[string]*Stats, error) {
+		in := Input{
+			Players: []Player{
+				{ID: "pa", ProfileID: profile("A"), SeasonID: "s", Active: true},
+				{ID: "pb", ProfileID: profile("B"), SeasonID: "s", Active: true},
+			},
+			Matches: []Match{
+				{
+					ID: "done", Date: time.Now().Add(-time.Hour), TeamIDs: []string{"t1", "t2"},
+					Members: []Member{{ID: "m1", TeamID: "t1", PlayerID: "pa"}, {ID: "m2", TeamID: "t2", PlayerID: "pb"}},
+					Moves: []Move{{TeamMemberID: "m1", MoveID: "cup", Value: 9}, {TeamMemberID: "m1", MoveID: "finish", Value: 1},
+						{TeamMemberID: "m2", MoveID: "cup", Value: 9}},
+				},
+				{
+					ID: "live", Date: time.Now(), TeamIDs: []string{"t3", "t4"}, Projected: projected,
+					Members: []Member{{ID: "m3", TeamID: "t3", PlayerID: "pa"}, {ID: "m4", TeamID: "t4", PlayerID: "pb"}},
+					Moves:   []Move{{TeamMemberID: "m3", MoveID: "cup", Value: bc}, {TeamMemberID: "m4", MoveID: "cup", Value: rc}},
+				},
+			},
+			RuleMoves: map[string]RuleMove{
+				"cup":    {PointsForScorer: 1, Cups: 1},
+				"finish": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true},
+			},
+			ProfileOf: map[string]string{"pa": "A", "pb": "B"},
+		}
+		res, err := Compute(in)
+		out := map[string]*Stats{}
+		for _, e := range res.Entries {
+			out[*e.Player.ProfileID] = e.Stats
+		}
+		return out, err
+	}
+
+	if _, err := board(false, 5, 3); err == nil {
+		t.Fatal("a stored match without a finish still has no winner")
+	}
+	before, _ := board(true, 0, 0)
+	leads, err := board(true, 3, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// B leads the live match: counted as B's win, with the points so far
+	if leads["B"].Wins != 1 || leads["B"].Matches != 2 || leads["B"].Points != 14 {
+		t.Fatalf("B: got %+v", *leads["B"])
+	}
+	if leads["B"].Elo <= before["B"].Elo || leads["A"].Elo >= before["A"].Elo {
+		t.Fatalf("the leader should gain: A %v -> %v, B %v -> %v", before["A"].Elo, leads["A"].Elo, before["B"].Elo, leads["B"].Elo)
+	}
+	// early in a game the leader gains: nobody is expected to have scored a full game's points yet
+	early, _ := board(true, 1, 0)
+	if early["A"].Elo <= before["A"].Elo || early["B"].Elo >= before["B"].Elo {
+		t.Fatalf("1:0 early: A %v -> %v, B %v -> %v", before["A"].Elo, early["A"].Elo, before["B"].Elo, early["B"].Elo)
+	}
+
+	// a tie is a draw: nobody wins
+	tied, _ := board(true, 4, 4)
+	if tied["A"].Wins != 1 || tied["B"].Wins != 0 {
+		t.Fatalf("a tie adds no win: A %d, B %d", tied["A"].Wins, tied["B"].Wins)
 	}
 }

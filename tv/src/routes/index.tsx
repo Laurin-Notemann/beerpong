@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 
+import { FocusView } from '~/components/FocusView';
 import { LeaderboardList, Podium } from '~/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/components/LiveMatchCard';
+import { LiveMatchPanel } from '~/components/LiveMatchPanel';
 import { Qr } from '~/components/Qr';
 import {
     type DisplayConfig,
@@ -12,7 +14,7 @@ import {
     pickMatches,
 } from '~/lib/display';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/lib/hooks';
-import type { Board } from '~/server/board';
+import type { Board, LeaderboardRow } from '~/server/board';
 import { registerDisplay } from '~/server/functions';
 
 /** The TV: what's on it comes from the phones that scan its QR code (see remote.$id.tsx). */
@@ -103,7 +105,7 @@ function Tv() {
     );
     const board = useBoard(identity.id, identity.secret, registered ? identity.config : undefined);
 
-    const remoteUrl = `${location.origin}/remote/${identity.id}?k=${identity.key}`;
+    const remoteUrl = `${location.origin}${import.meta.env.BASE_URL}remote/${identity.id}?k=${identity.key}`;
     const { config } = identity;
 
     if (!config.groupId) return <Pairing remoteUrl={remoteUrl} />;
@@ -152,8 +154,13 @@ function Screen({
     remoteUrl: string;
     offline: boolean;
 }) {
-    const matches = pickMatches(board?.liveMatches ?? [], config.pinnedMatchIds);
-    const layout = layoutFor(config.view, matches.length);
+    const live = board?.liveMatches ?? [];
+    const matches = pickMatches(live, config.pinnedMatchIds);
+    const layout = layoutFor(
+        config,
+        live.map((i) => i.id)
+    );
+    const focused = live.find((i) => i.id === config.focusMatchId);
     const rows = board?.leaderboard.rows ?? [];
 
     return (
@@ -163,12 +170,25 @@ function Screen({
                 <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
                     Loading…
                 </div>
+            ) : layout === 'focus' && focused ? (
+                <FocusView match={focused} />
             ) : layout === 'split' ? (
-                <div className="flex min-h-0 flex-1 gap-[2rem]">
-                    <Matches matches={matches} className="flex-[2.1]" stacked />
-                    <aside className="flex min-h-0 flex-1 flex-col gap-[1rem] overflow-hidden">
-                        <SectionTitle>Leaderboard · {board.ranking}</SectionTitle>
-                        <LeaderboardList rows={rows.slice(0, 10)} compact />
+                <div className="flex min-h-0 flex-1 gap-[2.5rem]">
+                    <section className="flex min-h-0 flex-[1.45] flex-col gap-[1rem] overflow-hidden">
+                        <SectionTitle>
+                            Leaderboard · {board.ranking} · as if it ended now
+                        </SectionTitle>
+                        <LeaderboardList
+                            rows={withLivePlayers(rows, 8)}
+                            fill
+                            className="min-h-0 flex-1"
+                        />
+                    </section>
+                    <aside className="flex min-h-0 flex-1 flex-col gap-[1.2rem]">
+                        <LiveMatchPanel match={matches[0]} className="min-h-0 flex-1" />
+                        {live.length > 1 && (
+                            <AlsoLive matches={live.filter((i) => i.id !== matches[0].id)} />
+                        )}
                     </aside>
                 </div>
             ) : layout === 'live' ? (
@@ -246,24 +266,62 @@ function Header({
     );
 }
 
+/** the Live view's matches: one large, two side by side, three stacked */
 function Matches({
     matches,
-    stacked,
     className = '',
 }: {
     matches: Board['liveMatches'];
-    stacked?: boolean;
     className?: string;
 }) {
-    // next to the leaderboard they stack; alone, two share a row and three stack
     const size: CardSize = matches.length === 1 ? 'lg' : matches.length === 2 ? 'md' : 'sm';
     return (
         <div
-            className={`flex min-h-0 gap-[1.5rem] ${stacked || matches.length > 2 ? 'flex-col' : ''} ${className}`}
+            className={`flex min-h-0 gap-[1.5rem] ${matches.length > 2 ? 'flex-col' : ''} ${className}`}
         >
             {matches.map((m) => (
                 <LiveMatchCard key={m.id} match={m} size={size} className="min-h-0 flex-1" />
             ))}
+        </div>
+    );
+}
+
+/**
+ * The first `max` rows, with the players of live matches always among them: if any rank lower,
+ * they take the last places, so the table shows what's happening at the tables.
+ */
+function withLivePlayers(rows: LeaderboardRow[], max: number) {
+    const below = rows.slice(max).filter((i) => i.change);
+    const top = rows.slice(0, Math.max(0, max - below.length));
+    return [...top, ...below.slice(0, max)];
+}
+
+/** the other live matches, one line each, under the one next to the leaderboard */
+function AlsoLive({ matches }: { matches: Board['liveMatches'] }) {
+    const names = (team: Board['liveMatches'][number]['blue']) =>
+        team.players.map((p) => p.name).join(' & ') || '…';
+    return (
+        <div className="flex flex-col gap-[0.6rem]">
+            <SectionTitle>Also live</SectionTitle>
+            {matches.slice(0, 2).map((m) => (
+                <div
+                    key={m.id}
+                    className="flex items-center gap-[1rem] rounded-[1.2rem] bg-panel px-[1.4rem] py-[0.8rem] text-[1.4rem]"
+                >
+                    <span className="min-w-0 flex-1 truncate text-blue">{names(m.blue)}</span>
+                    <span className="tabular shrink-0 text-[1.8rem] font-black">
+                        <span className="text-blue">{m.blue.score}</span>
+                        <span className="text-text-3"> – </span>
+                        <span className="text-red">{m.red.score}</span>
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-right text-red">
+                        {names(m.red)}
+                    </span>
+                </div>
+            ))}
+            {matches.length > 2 && (
+                <div className="text-[1.3rem] text-text-3">and {matches.length - 2} more</div>
+            )}
         </div>
     );
 }

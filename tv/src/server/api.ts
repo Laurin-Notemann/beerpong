@@ -99,6 +99,18 @@ export function apiFor(refreshToken: string) {
                 `/groups/${groupId}/leaderboard?scope=${scope}` +
                     (seasonId ? `&seasonId=${seasonId}` : '')
             ),
+        /** the board with these live matches counted as if they ended now (see the API) */
+        projection: (
+            groupId: string,
+            scope: string,
+            seasonId: string | null,
+            matches: { teams: Dto.TeamCreateDto[] }[]
+        ) =>
+            post<Dto.LeaderboardDto>(
+                `/groups/${groupId}/leaderboard/projection?scope=${scope}` +
+                    (seasonId ? `&seasonId=${seasonId}` : ''),
+                { matches }
+            ),
         liveMatches: (groupId: string) =>
             get<Dto.LiveMatchDto[]>(`/groups/${groupId}/live-matches`),
     };
