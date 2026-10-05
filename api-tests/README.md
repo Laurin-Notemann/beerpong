@@ -1,8 +1,7 @@
 # api-tests
 
 Black-box contract tests for the Versus API. They only talk HTTP and the
-websocket, so they run against any build of it (`api-go/`, and the retired
-Java `api/`).
+websocket, so they run against any build of it.
 
 ```sh
 cd api-tests
@@ -42,5 +41,5 @@ sharing one database and reports any difference. GET only, so it is safe to
 point at production data:
 
 ```sh
-go run ./cmd/shadowdiff -a http://java:8080 -b http://go:8080 -secret "$JWT_SECRET" -user <user id>
+go run ./cmd/shadowdiff -a http://reference:8080 -b http://candidate:8080 -secret "$JWT_SECRET" -user <user id>
 ```

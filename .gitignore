@@ -2,9 +2,15 @@ node_modules
 .idea/*
 .env
 socket-test/
-build*
+# EAS local build output (not every file named build*: that once dropped a script)
+build/
+build-*.ipa
+build-*.apk
+build-*.aab
+build-*.tar.gz
 
 .gen-builds/**
 .DS_Store
 
 .claude/worktrees/
+.turbo

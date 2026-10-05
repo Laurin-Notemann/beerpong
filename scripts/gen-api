@@ -1,9 +1,9 @@
 #!/bin/bash
-# Regenerates the app's API types from api-go/openapi/openapi.json. The copy
+# Regenerates the app's API types from apps/api/openapi/openapi.json. The copy
 # lives here, not in package.json: scripts are part of the app's runtime
 # fingerprint.
 set -e
-cp api-go/openapi/openapi.json mobile-app/api/generated/openapi.json
-cd mobile-app
+cp apps/api/openapi/openapi.json apps/mobile/api/generated/openapi.json
+cd apps/mobile
 npm run gen-types
 npx prettier --write api/generated/openapi.json openapi/openapi.d.ts

@@ -44,17 +44,17 @@ docker-backend-rebuild:
 
 .PHONY: app-build-development
 app-build-development: 
-	 cd mobile-app && npx eas-cli build -p ios --profile development --local --output=../.gen-builds/build.tar.gz
+	 cd apps/mobile && npx eas-cli build -p ios --profile development --local --output=../../.gen-builds/build.tar.gz
 
 .PHONY: app-build-preview
 app-build-preview: 
-	 cd mobile-app && npx eas-cli build -p ios --profile preview --local --output=../.gen-builds/build.tar.gz --non-interactive
+	 cd apps/mobile && npx eas-cli build -p ios --profile preview --local --output=../../.gen-builds/build.tar.gz --non-interactive
 
 .PHONY: app-build-staging
 app-build-staging: 
-	 cd mobile-app && npx eas-cli build -p ios --profile staging --local --output=../.gen-builds/build.ipa --non-interactive
+	 cd apps/mobile && npx eas-cli build -p ios --profile staging --local --output=../../.gen-builds/build.ipa --non-interactive
 
 .PHONY: app-submit-staging
 app-submit-staging: 
-	 cd mobile-app && npx eas-cli submit -p ios --path=../.gen-builds/build.ipa
+	 cd apps/mobile && npx eas-cli submit -p ios --path=../../.gen-builds/build.ipa
 

@@ -5,10 +5,10 @@ name: Generate OpenApi
 on:
   push:
     paths:
-      - "api-go/openapi/openapi.json"
+      - "apps/api/openapi/openapi.json"
   pull_request:
     paths:
-      - "api-go/openapi/openapi.json"
+      - "apps/api/openapi/openapi.json"
   workflow_dispatch:
 
 jobs:
@@ -28,15 +28,15 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: "mobile-app/package-lock.json"
+          cache-dependency-path: "package-lock.json"
 
       - name: Generate client types
         run: |
-          (cd mobile-app && npm ci)
+          (cd apps/mobile && npm ci)
           ./scripts/gen-api
 
       - name: Commit generated types
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update openapi types"
-          file_pattern: "mobile-app/api/generated/openapi.json mobile-app/openapi/openapi.d.ts"
+          file_pattern: "apps/mobile/api/generated/openapi.json apps/mobile/openapi/openapi.d.ts"

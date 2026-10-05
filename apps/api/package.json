@@ -1,0 +1,8 @@
+{
+    "name": "api",
+    "private": true,
+    "scripts": {
+        "lint": "go vet ./...",
+        "test": "go test ./..."
+    }
+}

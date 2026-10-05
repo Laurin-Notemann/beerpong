@@ -3,11 +3,12 @@ name: Mobile App CI
 on:
   push:
     paths:
-      - "mobile-app/**"
+      - "apps/mobile/**"
+      - "package-lock.json"
 
 defaults:
   run:
-    working-directory: mobile-app
+    working-directory: apps/mobile
 
 jobs:
   lint:

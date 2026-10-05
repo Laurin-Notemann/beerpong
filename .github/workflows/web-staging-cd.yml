@@ -1,0 +1,213 @@
+name: Web Staging Deploy
+
+# Tests, builds and deploys the web app (apps/web/: the Elo simulator and Versus TV) to the staging
+# server: the compose service `web` in ~/docker/versus-web on the `traefik_web` network, served by
+# Traefik at https://var.beerpong.laurinnotemann.dev (the TV under /tv). The deploy writes the
+# compose file and the Traefik routes itself, so the server needs no setup by hand. It also
+# redirects the TV's old address (/tv on the API's hostname) here, and retires the containers
+# the simulator and the TV ran in before (`beerpong-var`, `versus-tv-staging`).
+
+on:
+  push:
+    branches:
+      - "staging"
+    paths:
+      - "apps/web/**"
+      - "apps/mobile/lib/**"
+      - "apps/mobile/api/utils/**"
+      - "apps/mobile/components/CupGrid/**"
+      - "apps/mobile/utils/**"
+      - "apps/mobile/openapi/**"
+      - "package-lock.json"
+      - ".github/workflows/web-staging-cd.yml"
+      - ".github/workflows/web-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: web-staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/web-ci.yml
+
+  build:
+    needs: test
+    permissions:
+      id-token: write
+      contents: read
+    name: Build and push the staging image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: true
+          token_format: access_token
+          workload_identity_provider: 'projects/5685154754/locations/global/workloadIdentityPools/cd-beerpong/providers/github-actions'
+          service_account: 'cd-beerpong@beer-pong-441815.iam.gserviceaccount.com'
+      - name: Login to GAR
+        uses: docker/login-action@v3
+        with:
+          registry: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: apps/web/Dockerfile
+          platforms: linux/amd64
+          tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/web-staging:${{ github.sha }}
+
+  deploy:
+    needs: build
+    name: Deploy on the staging server
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      # The simulator needs the API it was written for: when the same push changes the API,
+      # deploy after it.
+      - name: Wait for this commit's API deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for id in $(gh run list -R "$GITHUB_REPOSITORY" --workflow api-staging-cd.yml --commit "$GITHUB_SHA" --json databaseId --jq '.[].databaseId'); do
+            gh run watch -R "$GITHUB_REPOSITORY" "$id" --exit-status > /dev/null || exit 1
+          done
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_SECRET }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Write the compose file and the Traefik routes
+        env:
+          DOCKER_IMAGE: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/web-staging:${{ github.sha }}
+        run: |
+          mkdir deploy
+          cat > deploy/docker-compose.yml << EOF
+          services:
+            web:
+              container_name: versus-web-staging
+              image: $DOCKER_IMAGE
+              restart: unless-stopped
+              networks:
+                - traefik_web
+              environment:
+                # the server reaches the API inside the network, browsers its websocket outside
+                VERSUS_API_URL: http://beerpong-api-go-staging:8080
+                VERSUS_API_PUBLIC_URL: https://beerpong.lb.staging.laurinnotemann.dev
+                PORT: "3000"
+          networks:
+            traefik_web:
+              external: true
+          EOF
+          # Traefik watches ~/traefik/dynamic. The hostname's route has always been in
+          # beerpong-var.yml; it's overwritten in place, so there's one router for the host.
+          cat > deploy/beerpong-var.yml << 'EOF'
+          # written by Web Staging Deploy (.github/workflows/web-staging-cd.yml)
+          http:
+            routers:
+              versus-web-staging:
+                entryPoints:
+                  - websecure
+                rule: "Host(`var.beerpong.laurinnotemann.dev`)"
+                tls:
+                  certResolver: le-acme
+                service: versus-web-staging
+                middlewares:
+                  - staging-ratelimit@file
+            services:
+              versus-web-staging:
+                loadBalancer:
+                  servers:
+                    - url: "http://versus-web-staging:3000/"
+          EOF
+          # The TV used to be /tv on the API's hostname: bookmarked TVs and scanned QR codes
+          # move to the same path here. This route beats the API's (a longer rule wins).
+          cat > deploy/versus-tv-staging.yml << 'EOF'
+          # written by Web Staging Deploy (.github/workflows/web-staging-cd.yml)
+          http:
+            routers:
+              versus-tv-staging:
+                entryPoints:
+                  - websecure
+                rule: "Host(`beerpong.lb.staging.laurinnotemann.dev`) && (Path(`/tv`) || PathPrefix(`/tv/`))"
+                tls:
+                  certResolver: le-acme
+                service: noop@internal
+                middlewares:
+                  - versus-tv-moved
+            middlewares:
+              versus-tv-moved:
+                redirectRegex:
+                  regex: "^https://beerpong\\.lb\\.staging\\.laurinnotemann\\.dev/(.*)"
+                  replacement: "https://var.beerpong.laurinnotemann.dev/${1}"
+                  permanent: true
+          EOF
+
+      - name: Deploy, switch the routes and retire the old containers
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          FILE_PATH: ${{ secrets.PATH_TO_SERVICE_ACC_JSON }}
+        run: |
+          ssh $SERVER_USER@$SERVER_IP 'mkdir -p ~/docker/versus-web' < /dev/null
+          scp deploy/docker-compose.yml $SERVER_USER@$SERVER_IP:docker/versus-web/docker-compose.yml
+          # Same shape as the API deploy (api-staging-cd.yml): stdin is the script, no `set -e`.
+          # Starts the new container and waits until it answers inside, before any traffic moves.
+          ssh $SERVER_USER@$SERVER_IP << EOF
+            cd ~/docker/versus-web || exit 1
+            gcloud auth activate-service-account --key-file=$FILE_PATH < /dev/null || exit 1
+            gcloud auth configure-docker europe-west10-docker.pkg.dev --quiet < /dev/null || exit 1
+            docker compose pull < /dev/null || exit 1
+            docker compose up -d < /dev/null || exit 1
+            for i in \$(seq 1 30); do
+              if docker exec versus-web-staging node -e "fetch('http://localhost:3000/tv/').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))" < /dev/null; then
+                exit 0
+              fi
+              sleep 2
+            done
+            docker compose logs --tail 50 < /dev/null
+            exit 1
+          EOF
+
+          scp deploy/beerpong-var.yml $SERVER_USER@$SERVER_IP:traefik/dynamic/beerpong-var.yml
+          scp deploy/versus-tv-staging.yml $SERVER_USER@$SERVER_IP:traefik/dynamic/versus-tv-staging.yml
+
+          # the simulator and the TV from the new container (the old simulator answered /tv/ too,
+          # as an invite code), and the TV's old address redirecting here
+          ok=
+          for i in $(seq 1 30); do
+            if curl -sf https://var.beerpong.laurinnotemann.dev/ | grep -q '<title>beerpong-var</title>' &&
+              curl -sf https://var.beerpong.laurinnotemann.dev/tv/ | grep -q '<title>Versus TV</title>' &&
+              [ "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' 'https://beerpong.lb.staging.laurinnotemann.dev/tv/remote/x?k=y')" = '301 https://var.beerpong.laurinnotemann.dev/tv/remote/x?k=y' ]; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          if [ -z "$ok" ]; then
+            ssh $SERVER_USER@$SERVER_IP 'cd ~/docker/versus-web && docker compose logs --tail 50' < /dev/null
+            exit 1
+          fi
+
+          # Nothing routes to the old containers any more. Their compose files stay, renamed,
+          # so a later run finds nothing to do. No volumes are touched.
+          ssh $SERVER_USER@$SERVER_IP << 'EOF'
+            for dir in ~/docker/versus-tv ~/docker/beerpong-var; do
+              if [ -f "$dir/docker-compose.yml" ]; then
+                (cd "$dir" && docker compose down < /dev/null && mv docker-compose.yml docker-compose.retired.yml) || exit 1
+              fi
+            done
+          EOF

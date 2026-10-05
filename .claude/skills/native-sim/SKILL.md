@@ -82,8 +82,8 @@ for running a prebuilt app from a repo that contains no source.
 
 ## This repo
 
-The Expo app lives in `mobile-app/`, so `native-sim up` does not work here: from the root
-there is no package.json, and from `mobile-app/` it would `git init` a nested repo and
+The Expo app lives in `apps/mobile/`, so `native-sim up` does not work here: the root
+package.json has no `expo` dependency, and from `apps/mobile/` it would `git init` a nested repo and
 commit whatever is dirty. Use the script instead. It dispatches the adapted workflow
 (`.github/workflows/native-sim.yml`, gate in `.github/native-sim/`) for a branch that is
 already pushed and prints the stream URL:

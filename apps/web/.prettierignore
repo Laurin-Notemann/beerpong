@@ -1,0 +1,5 @@
+routeTree.gen.ts
+.output
+public/tv/polyfills.js
+# its own one-rule-per-line style
+src/simulator/styles.css
