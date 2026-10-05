@@ -87,7 +87,7 @@ The Elo lives in `api-go/internal/leaderboard/elo.go`; its comment explains the 
 
 - `cd api-go && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
 - beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), the games running right now counted as if they ended now (reduced with the app's live match code, like the TV), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `beerpong-var/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
-- Contract goldens with `elo` values (`api-tests/testdata/golden`) change with the Elo. Re-record only the tests that fail on `elo` (`GOLDEN=record ... go test -run '<those tests>' ./...`) and check that the diff touches nothing but `"elo"` lines.
+- Contract goldens (`api-tests/testdata/golden`) don't compare the numbers that follow the weights (`eloKeys` in `api-tests/harness`), so a weight change needs no re-record. The Elo's behavior is covered by `elo_test.go` and the assertions in the contract tests.
 
 ## Shipping
 

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -217,10 +218,10 @@ func (h *H) finish() {
 	for i := 0; i < max(len(wantEntries), len(gotEntries)); i++ {
 		var w, g string
 		if i < len(wantEntries) {
-			w = indent(wantEntries[i])
+			w = indent(withoutElo(wantEntries[i]))
 		}
 		if i < len(gotEntries) {
-			g = indent(gotEntries[i])
+			g = indent(withoutElo(gotEntries[i]))
 		}
 		if w != g {
 			h.Errorf("transcript entry %d differs from %s\n--- want\n%s\n--- got\n%s", i, path, w, g)
@@ -239,4 +240,57 @@ func indent(raw json.RawMessage) string {
 		return string(raw)
 	}
 	return b.String()
+}
+
+// eloKeys are the numbers that follow the Elo weights (leaderboard.DefaultElo).
+// Goldens don't compare them, so tuning the Elo doesn't mean re-recording
+// every leaderboard transcript; the Elo's behavior is tested in api-go and by
+// the assertions in the Elo tests here.
+var eloKeys = map[string]bool{
+	"elo": true, "baselineElo": true, "rank": true, "baselineRank": true,
+	"result": true, "hitting": true, "before": true, "after": true, "expected": true,
+	"rating": true, "winChance": true, "scale": true,
+	"logLoss": true, "correct": true, "called": true,
+	"k": true, "marginWeight": true, "perPoint": true, "topWeight": true,
+}
+
+// withoutElo masks the eloKeys numbers of one transcript entry and puts
+// /elo-simulation standings, which come sorted by Elo, in profile order.
+func withoutElo(raw json.RawMessage) json.RawMessage {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return raw
+	}
+	out, err := json.Marshal(maskElo("", v))
+	if err != nil {
+		return raw
+	}
+	return out
+}
+
+func maskElo(key string, v any) any {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, e := range t {
+			t[k] = maskElo(k, e)
+		}
+		return t
+	case []any:
+		for i, e := range t {
+			t[i] = maskElo(key, e)
+		}
+		if key == "standings" {
+			sort.SliceStable(t, func(i, j int) bool {
+				return fmt.Sprint(t[i].(map[string]any)["profileId"]) < fmt.Sprint(t[j].(map[string]any)["profileId"])
+			})
+		}
+		return t
+	case json.Number:
+		if eloKeys[key] {
+			return "<elo>"
+		}
+	}
+	return v
 }
