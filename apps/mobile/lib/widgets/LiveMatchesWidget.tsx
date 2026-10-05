@@ -28,7 +28,8 @@ import type { LiveMatchesWidgetProps } from '@/lib/widgets/props';
 
 /**
  * The "Live matches" home screen widget: one of the selected group's matches running now, with a
- * button to move on to the next. Small shows the names and the score, medium every player with
+ * button to move on to the next. (No match timer: a timer Text left the widget black.) Small
+ * shows the names and the score, medium every player with
  * their live Elo change and the last move, large also the moves so far with the score after
  * each. Like the leaderboard widget it runs in the widget extension's own JS runtime; the app
  * gives it its props while it runs, and the API's silent pushes while it doesn't
@@ -97,24 +98,6 @@ const LiveMatchesWidget = (
                 >
                     {props.group || 'Versus'}
                 </Text>
-            )}
-            {!small && match && (
-                <Text modifiers={[font({ size: 12 }), secondary, fixedSize()]}>
-                    ·
-                </Text>
-            )}
-            {!small && match && (
-                <Text
-                    date={new Date(match.startedAt)}
-                    dateStyle="timer"
-                    modifiers={[
-                        font({ size: 12 }),
-                        monospacedDigit(),
-                        secondary,
-                        lineLimit(1),
-                        fixedSize(),
-                    ]}
-                />
             )}
             <Spacer />
             {matches.length > 1 && (
