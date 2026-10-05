@@ -10,8 +10,9 @@ const NumberInput = forwardRef<
     {
         defaultValue: number;
         onChange: (value: number) => void;
+        decimal?: boolean;
     }
->(({ defaultValue, onChange }, ref) => {
+>(({ defaultValue, onChange, decimal }, ref) => {
     function selectEverything() {
         setTimeout(() => {
             if (!ref || typeof ref === 'function') {
@@ -42,9 +43,12 @@ const NumberInput = forwardRef<
             selectionColor={theme.color.text.primary}
             placeholder={defaultValue.toString()}
             defaultValue={defaultValue.toString()}
-            keyboardType="numeric"
+            keyboardType={decimal ? 'decimal-pad' : 'numeric'}
             onChangeText={(text) => {
-                const value = parseInt(text);
+                // some keyboards type a decimal comma
+                const value = decimal
+                    ? parseFloat(text.replace(',', '.'))
+                    : parseInt(text);
                 if (!isNaN(value)) {
                     onChange(value);
                 }
@@ -62,8 +66,9 @@ export const MenuItemNumberInput: React.FC<
     > & {
         defaultValue?: number;
         onChange: (value: number) => void;
+        decimal?: boolean;
     }
-> = ({ defaultValue = 0, onChange, ...props }) => {
+> = ({ defaultValue = 0, onChange, decimal, ...props }) => {
     const ref = useRef<TextInputInstance>(null);
 
     return (
@@ -76,6 +81,7 @@ export const MenuItemNumberInput: React.FC<
                     ref={ref}
                     defaultValue={defaultValue}
                     onChange={onChange}
+                    decimal={decimal}
                 />
             }
         />

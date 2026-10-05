@@ -50,6 +50,7 @@ export default function MainLayout() {
             <Stack.Screen name="allowedMove" options={modalStyles} />
 
             <Stack.Screen name="editRankPlayersBy" options={modalStyles} />
+            <Stack.Screen name="eloSettings" options={modalStyles} />
             <Stack.Screen
                 name="dailyLeaderboardSettings"
                 options={modalStyles}

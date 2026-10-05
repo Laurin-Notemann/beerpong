@@ -56,23 +56,29 @@ export default function Page() {
 
                     <Text paragraph>
                         Every player starts each season with an Elo of{' '}
-                        <Text code>1500</Text>. After a match, two things move
-                        your Elo:{'\n'}
+                        <Text code>1500</Text>. Before a match, everyone's Elo
+                        splits it up: you're expected a <Text code>share</Text>{' '}
+                        of all the points the match will have. It's bigger the
+                        better you are than the others, and bigger in a smaller
+                        team, because you throw more often. After the match, two
+                        things move your Elo:
+                        {'\n'}
+                        {'\n'}
+                        <Text code>Your hitting</Text>: your own points against
+                        your share of the points the match actually had. Score
+                        more than your share and you gain, less and you lose,
+                        measured against what an average player scores in a full
+                        game, so a 1v1 counts like a 2v2.{'\n'}
                         {'\n'}
                         <Text code>The result</Text>: did your team win, and how
                         likely was that? Beating a stronger team earns more,
-                        losing to a weaker one costs more. A big win, like a
-                        ring of fire or a 10:0, counts more than a close one.
-                        Everyone on the team gets the same.{'\n'}
+                        losing to a weaker one costs more. A ring win counts
+                        more than a normal one. Everyone on the team gets the
+                        same.{'\n'}
                         {'\n'}
-                        <Text code>Your hitting</Text>: before the match, your
-                        Elo and your opponents' set how many points you should
-                        score. Every point above that earns Elo, every point
-                        below costs some. What your teammates score doesn't
-                        change yours.{'\n'}
-                        {'\n'}A win almost always gains Elo and a loss almost
-                        always costs some; only a very good or very bad game of
-                        your own can turn that around.
+                        If you keep scoring above your share, your Elo rises
+                        until your share is what you score. How much each part
+                        counts is a season setting (Elo Weights).
                     </Text>
 
                     {/* <Leaderboard

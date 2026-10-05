@@ -66,13 +66,18 @@ declare namespace Components {
              */
             liveMatchId: string | null;
             date: string; // date-time
-            gap: number; // double
-            scale: number; // double
-            teamPoints: number; // double
             /**
-             * How much of a full game this was: 1, less when a ring ended it early or it is still running. Each player's expected counts for this share.
+             * Own points both teams scored, what the shares are of.
              */
-            share: number; // double
+            points: number; // int64
+            /**
+             * Own points of an average full game before this one; an average player scores fullPoints / 2 / team size.
+             */
+            fullPoints: number; // double
+            /**
+             * What the result counted: more than 1 for a ring win.
+             */
+            ring: number; // double
             finisher: string;
             finishMove: string;
             teams: EloTeamDto[];
@@ -87,9 +92,9 @@ declare namespace Components {
         }
         export interface EloParamsDto {
             k: number; // double
-            marginWeight: number; // double
-            perPoint: number; // double
-            topWeight: number; // double
+            kr: number; // double
+            ringWeight: number; // double
+            swing: number; // double
         }
         export interface EloPlayerDto {
             profileId: string;
@@ -100,6 +105,13 @@ declare namespace Components {
             after: number; // double
             result: number; // double
             hitting: number; // double
+            /**
+             * The player's share of the game's own points, set before it.
+             */
+            share: number; // double
+            /**
+             * share × the game's points.
+             */
             expected: number; // double
             moves: EloMoveDto[];
         }
@@ -110,6 +122,19 @@ declare namespace Components {
         export interface EloProfileDto {
             id: string;
             name: string;
+        }
+        /**
+         * A stored match of the season and the teams after every step of its live log.
+         */
+        export interface EloReplayDto {
+            matchId: string;
+            /**
+             * At most 300.
+             */
+            steps: EloReplayStepDto[];
+        }
+        export interface EloReplayStepDto {
+            teams: [TeamCreateDto, TeamCreateDto];
         }
         export interface EloRuleMoveDto {
             id: string;
@@ -134,6 +159,7 @@ declare namespace Components {
             name: string | null;
             numMatches: number; // int32
             minMatchesToQualify: number; // int32
+            elo: EloParamsDto;
         }
         export interface EloSimulationDto {
             groupId: string;
@@ -143,7 +169,7 @@ declare namespace Components {
             seasons: EloSeasonDto[];
             seasonId: string | null;
             /**
-             * What the standings' baseline values compare with: the default weights, or with test or live games the same weights without them.
+             * What the standings' baseline values compare with: the season's weights, or with test or live games the same weights without them.
              */
             baseline: 'defaults' | 'storedGames';
             standings: EloStandingDto[];
@@ -151,10 +177,15 @@ declare namespace Components {
             prediction: EloPredictionDto;
             moves: EloRuleMoveDto[];
             profiles: EloProfileDto[];
+            /**
+             * The requested replay: the match after every step, last as stored; empty without one.
+             */
+            replay: EloGameDto[];
         }
         export interface EloSimulationRequestDto {
             testGames?: EloTestGameDto[];
             liveMatches?: EloLiveMatchDto[];
+            replay?: /* A stored match of the season and the teams after every step of its live log. */ EloReplayDto;
         }
         export interface EloStandingDto {
             profileId: string;
@@ -174,8 +205,11 @@ declare namespace Components {
         }
         export interface EloTeamDto {
             won: boolean;
-            rating: number; // double
             winChance: number; // double
+            /**
+             * The team's share of the game's own points, set before it.
+             */
+            share: number; // double
             points: number; // int64
             avgPoints: number; // double
             cups: number; // int64
@@ -683,6 +717,22 @@ declare namespace Components {
                 dailyLeaderboard?:
                     'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
                 wakeTime?: string;
+                /**
+                 * Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.
+                 */
+                eloK?: number | null; // double
+                /**
+                 * Elo: rating at stake on the result (at swing 1).
+                 */
+                eloKr?: number | null; // double
+                /**
+                 * Elo: a ring win counts (ring bonus / normal finish bonus) to this power: 0 like a normal win, 0.5 the square root, 1 the ratio.
+                 */
+                eloRingWeight?: number | null; // double
+                /**
+                 * Elo: how far ratings move and spread, without changing who's ahead.
+                 */
+                eloSwing?: number | null; // double
             } | null;
             createdById: string | null;
         }
@@ -700,6 +750,22 @@ declare namespace Components {
                 dailyLeaderboard?:
                     'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
                 wakeTime?: string;
+                /**
+                 * Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.
+                 */
+                eloK?: number | null; // double
+                /**
+                 * Elo: rating at stake on the result (at swing 1).
+                 */
+                eloKr?: number | null; // double
+                /**
+                 * Elo: a ring win counts (ring bonus / normal finish bonus) to this power: 0 like a normal win, 0.5 the square root, 1 the ratio.
+                 */
+                eloRingWeight?: number | null; // double
+                /**
+                 * Elo: how far ratings move and spread, without changing who's ahead.
+                 */
+                eloSwing?: number | null; // double
             } | null;
             createdById: string | null;
             numMatches: number; // int64
@@ -712,6 +778,22 @@ declare namespace Components {
             dailyLeaderboard?:
                 'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
             wakeTime?: string;
+            /**
+             * Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.
+             */
+            eloK?: number | null; // double
+            /**
+             * Elo: rating at stake on the result (at swing 1).
+             */
+            eloKr?: number | null; // double
+            /**
+             * Elo: a ring win counts (ring bonus / normal finish bonus) to this power: 0 like a normal win, 0.5 the square root, 1 the ratio.
+             */
+            eloRingWeight?: number | null; // double
+            /**
+             * Elo: how far ratings move and spread, without changing who's ahead.
+             */
+            eloSwing?: number | null; // double
         }
         export interface SeasonUpdateDto {
             seasonSettings: SeasonSettingsDto;
@@ -1060,22 +1142,36 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeListLiveMatchDto;
         }
     }
+    namespace GetEloReplays {
+        namespace Parameters {
+            export type InviteCode = string;
+            export type SeasonId = string;
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+            seasonId?: Parameters.SeasonId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListLiveMatchDto;
+        }
+    }
     namespace GetEloSimulation {
         namespace Parameters {
             export type InviteCode = string;
             export type K = number; // double
-            export type MarginWeight = number; // double
-            export type PerPoint = number; // double
+            export type Kr = number; // double
+            export type RingWeight = number; // double
             export type SeasonId = string;
-            export type TopWeight = number; // double
+            export type Swing = number; // double
         }
         export interface QueryParameters {
             inviteCode: Parameters.InviteCode;
             seasonId?: Parameters.SeasonId;
             k?: Parameters.K /* double */;
-            marginWeight?: Parameters.MarginWeight /* double */;
-            perPoint?: Parameters.PerPoint /* double */;
-            topWeight?: Parameters.TopWeight /* double */;
+            kr?: Parameters.Kr /* double */;
+            ringWeight?: Parameters.RingWeight /* double */;
+            swing?: Parameters.Swing /* double */;
         }
         namespace Responses {
             export type $200 =
@@ -1445,18 +1541,18 @@ declare namespace Paths {
         namespace Parameters {
             export type InviteCode = string;
             export type K = number; // double
-            export type MarginWeight = number; // double
-            export type PerPoint = number; // double
+            export type Kr = number; // double
+            export type RingWeight = number; // double
             export type SeasonId = string;
-            export type TopWeight = number; // double
+            export type Swing = number; // double
         }
         export interface QueryParameters {
             inviteCode: Parameters.InviteCode;
             seasonId?: Parameters.SeasonId;
             k?: Parameters.K /* double */;
-            marginWeight?: Parameters.MarginWeight /* double */;
-            perPoint?: Parameters.PerPoint /* double */;
-            topWeight?: Parameters.TopWeight /* double */;
+            kr?: Parameters.Kr /* double */;
+            ringWeight?: Parameters.RingWeight /* double */;
+            swing?: Parameters.Swing /* double */;
         }
         export type RequestBody = Components.Schemas.EloSimulationRequestDto;
         namespace Responses {
@@ -1574,7 +1670,7 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetEloLiveMatches.Responses.$200>;
     /**
-     * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.
+     * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the season's (its settings'); without seasonId the running season.
      */
     getEloSimulation(
         parameters?: Parameters<Paths.GetEloSimulation.QueryParameters> | null,
@@ -1582,13 +1678,21 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
     /**
-     * simulateEloWithTestGames - Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone.
+     * simulateEloWithTestGames - Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone. With a replay, the response's replay rates one stored match after every step of its live log, then as stored.
      */
     simulateEloWithTestGames(
         parameters?: Parameters<Paths.SimulateEloWithTestGames.QueryParameters> | null,
         data?: Paths.SimulateEloWithTestGames.RequestBody,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.SimulateEloWithTestGames.Responses.$200>;
+    /**
+     * getEloReplays - The season's live matches that became a match, with their ops, for the simulator to replay move by move. Without seasonId the running season.
+     */
+    getEloReplays(
+        parameters?: Parameters<Paths.GetEloReplays.QueryParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetEloReplays.Responses.$200>;
     /**
      * searchEloWeights - Tries a grid of Elo weights on all of a group's seasons and returns the one that predicts its games best.
      */
@@ -2087,7 +2191,7 @@ export interface PathsDictionary {
     };
     ['/elo-simulation']: {
         /**
-         * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.
+         * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the season's (its settings'); without seasonId the running season.
          */
         get(
             parameters?: Parameters<Paths.GetEloSimulation.QueryParameters> | null,
@@ -2095,13 +2199,23 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
         /**
-         * simulateEloWithTestGames - Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone.
+         * simulateEloWithTestGames - Like GET, with made-up test games counted where they say and the group's running live matches (teams as the app reduces them from their ops) counted as if they ended now. Nothing is stored. The standings then compare with the stored games alone. With a replay, the response's replay rates one stored match after every step of its live log, then as stored.
          */
         post(
             parameters?: Parameters<Paths.SimulateEloWithTestGames.QueryParameters> | null,
             data?: Paths.SimulateEloWithTestGames.RequestBody,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.SimulateEloWithTestGames.Responses.$200>;
+    };
+    ['/elo-simulation/replays']: {
+        /**
+         * getEloReplays - The season's live matches that became a match, with their ops, for the simulator to replay move by move. Without seasonId the running season.
+         */
+        get(
+            parameters?: Parameters<Paths.GetEloReplays.QueryParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetEloReplays.Responses.$200>;
     };
     ['/elo-simulation/search']: {
         /**
@@ -2689,6 +2803,8 @@ export type EloParamsDto = Components.Schemas.EloParamsDto;
 export type EloPlayerDto = Components.Schemas.EloPlayerDto;
 export type EloPredictionDto = Components.Schemas.EloPredictionDto;
 export type EloProfileDto = Components.Schemas.EloProfileDto;
+export type EloReplayDto = Components.Schemas.EloReplayDto;
+export type EloReplayStepDto = Components.Schemas.EloReplayStepDto;
 export type EloRuleMoveDto = Components.Schemas.EloRuleMoveDto;
 export type EloScoreDto = Components.Schemas.EloScoreDto;
 export type EloSearchDto = Components.Schemas.EloSearchDto;

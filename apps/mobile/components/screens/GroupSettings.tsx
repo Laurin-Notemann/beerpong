@@ -178,6 +178,17 @@ export default function GroupSettingsScreen({
                             onPress={() => nav.navigate('editRankPlayersBy')}
                         />
                         <MenuItem
+                            title="Elo Weights"
+                            headIcon="tune-variant"
+                            tailIconType="next"
+                            tailContent={
+                                activeSeason?.seasonSettings?.eloSwing != null
+                                    ? `Swing ${activeSeason.seasonSettings.eloSwing}`
+                                    : undefined
+                            }
+                            onPress={() => nav.navigate('eloSettings')}
+                        />
+                        <MenuItem
                             title="Min Matches to Qualify"
                             headIcon="account-lock-open"
                             tailIconType="next"
