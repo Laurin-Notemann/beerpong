@@ -2,4 +2,5 @@ import { defineConfig } from 'vitest/config';
 
 import { aliases } from './aliases';
 
-export default defineConfig({ resolve: { alias: aliases } });
+// one tsconfig for every file: see vite.config.ts
+export default defineConfig({ tsconfig: './tsconfig.json', resolve: { alias: aliases } });

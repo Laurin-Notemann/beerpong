@@ -8,6 +8,9 @@ import { aliases } from './aliases';
 
 export default defineConfig({
     server: { port: 3100 },
+    // one tsconfig for every file, also the shared ones in mobile-app/ (whose tsconfig extends
+    // Expo's, which isn't installed here)
+    tsconfig: './tsconfig.json',
     resolve: { alias: aliases },
     plugins: [tanstackStart(), nitro(), viteReact(), tailwindcss()],
 });
