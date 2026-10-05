@@ -228,7 +228,8 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 					}
 				}
 			}
-			if rm.Finishing {
+			// Old matches stored every move, finishes included, with value 0.
+			if rm.Finishing && mv.Value > 0 {
 				winner = team
 			}
 			playerPoints[e.Stats.PlayerID] += int64(own)

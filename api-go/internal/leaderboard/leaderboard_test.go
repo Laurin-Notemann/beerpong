@@ -97,3 +97,34 @@ func TestJavaHashMapOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestComputeIgnoresFinishWithValueZero(t *testing.T) {
+	// Old matches stored every move with value 0, finishes included; the
+	// second team's 0 finish must not make it the winner.
+	profile := func(s string) *string { return &s }
+	in := Input{
+		Players: []Player{
+			{ID: "pa", ProfileID: profile("A"), SeasonID: "s", Active: true},
+			{ID: "pb", ProfileID: profile("B"), SeasonID: "s", Active: true},
+		},
+		Matches: []Match{{
+			ID: "m", Date: time.Now(), TeamIDs: []string{"t1", "t2"},
+			Members: []Member{{ID: "ma", TeamID: "t1", PlayerID: "pa"}, {ID: "mb", TeamID: "t2", PlayerID: "pb"}},
+			Moves: []Move{{TeamMemberID: "ma", MoveID: "cup", Value: 1}, {TeamMemberID: "ma", MoveID: "finish", Value: 1},
+				{TeamMemberID: "mb", MoveID: "cup", Value: 0}, {TeamMemberID: "mb", MoveID: "finish", Value: 0}},
+		}},
+		RuleMoves: map[string]RuleMove{"cup": {PointsForScorer: 1, Cups: 1}, "finish": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true}},
+		ProfileOf: map[string]string{"pa": "A", "pb": "B"},
+	}
+	res, err := Compute(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wins := map[string]int64{}
+	for _, e := range res.Entries {
+		wins[*e.Player.ProfileID] = e.Stats.Wins
+	}
+	if wins["A"] != 1 || wins["B"] != 0 {
+		t.Fatalf("A finished and won: got wins %v", wins)
+	}
+}

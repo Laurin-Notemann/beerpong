@@ -242,8 +242,9 @@ export class MatchImpl {
     private get matchMoves(): MatchMoveImpl[] {
         return this.players.flatMap((i) => i.moves);
     }
+    // Old matches stored every move, finishes included, with count 0.
     private get finishMoves(): MatchMoveImpl[] {
-        return this.matchMoves.filter((i) => i.isFinish);
+        return this.matchMoves.filter((i) => i.isFinish && i.count > 0);
     }
 
     private get winnerPlayer(): TeamMemberImpl | null {
