@@ -27,6 +27,9 @@ const PRESS_ANIMATION_SCALE = 0.98;
 const PRESS_ANIMATION_SPEED = 200;
 const PRESS_ANIMATION_BOUNCINESS = 8;
 
+// how long a press has to be held to hide the small photo, BeReal-style
+const PEEK_DELAY = 200;
+
 type DualTeamPhotoMode = 'blueLarge' | 'redLarge' | 'equal';
 
 export interface DualTeamPhotoProps {
@@ -84,6 +87,9 @@ export function DualTeamPhoto({
         mode === 'equal' ? lastPrimary : mode === 'blueLarge' ? 'blue' : 'red';
 
     const areEqualSize = mode === 'equal';
+
+    // held down on a large photo: the small one hides until the finger lifts
+    const [peeking, setPeeking] = useState(false);
 
     const aspectRatio = 4 / 3;
 
@@ -181,6 +187,7 @@ export function DualTeamPhoto({
                         },
                 isPrimaryBlue ? animatedGrowStyle : animatedShrinkStyle,
                 !isPrimaryBlue && { zIndex: 999 },
+                peeking && !isPrimaryBlue && { opacity: 0 },
             ]}
         >
             <Team
@@ -220,6 +227,7 @@ export function DualTeamPhoto({
                             left: 14,
                         },
                 !isPrimaryBlue ? animatedGrowStyle : animatedShrinkStyle,
+                peeking && isPrimaryBlue && { opacity: 0 },
             ]}
         >
             <Team
@@ -287,6 +295,17 @@ export function DualTeamPhoto({
                 speed={PRESS_ANIMATION_SPEED}
                 bounciness={PRESS_ANIMATION_BOUNCINESS}
                 onPress={isEmpty ? _onTakePhoto : _onCycleMode}
+                // a long press replaces the tap, so peeking doesn't also cycle the mode
+                onLongPress={
+                    isEmpty || areEqualSize
+                        ? undefined
+                        : () => {
+                              triggerHapticBump('light');
+                              setPeeking(true);
+                          }
+                }
+                delayLongPress={PEEK_DELAY}
+                onPressOut={() => setPeeking(false)}
                 style={[
                     isEmpty && {
                         borderRadius: 18,
