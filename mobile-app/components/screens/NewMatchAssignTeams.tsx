@@ -222,7 +222,6 @@ export interface NewMatchAssignTeamsProps {
      * can't show text-only buttons, so the header's one is iOS only
      */
     onStart?: () => void;
-    canStart?: boolean;
 }
 export default function NewMatchAssignTeams({
     randomTeamsMode,
@@ -234,7 +233,6 @@ export default function NewMatchAssignTeams({
     setTeam,
     onClear,
     onStart,
-    canStart = false,
 }: NewMatchAssignTeamsProps) {
     const insets = useInsets(true, true);
 
@@ -382,7 +380,6 @@ export default function NewMatchAssignTeams({
                     <OverlayTextButton
                         fullWidth
                         title="Start match"
-                        disabled={!canStart}
                         onPress={onStart}
                     />
                 </View>

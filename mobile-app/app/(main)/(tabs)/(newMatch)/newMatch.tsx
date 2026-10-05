@@ -227,17 +227,8 @@ export default function NewMatchScreen() {
 
         // the draft as it is now, not as it was when this screen last rendered
         const { redTeam, blueTeam, actions } = useMatchDraftStore.getState();
-        const teamSizes = [
-            redTeam.teamMembers.length,
-            blueTeam.teamMembers.length,
-        ];
-        if (
-            teamSizes.some(
-                (i) => i < Math.max(1, minTeamSize) || i > maxTeamSize
-            )
-        ) {
-            return;
-        }
+        if (explainTeams()) return;
+
         isStarting.current = true;
         requestAnimationFrame(() => {
             isStarting.current = false;
@@ -254,10 +245,43 @@ export default function NewMatchScreen() {
         nav.navigate('liveMatch', { id });
     }
 
-    const onEnterAfterGame = () => carouselRef.current?.next();
+    function onEnterAfterGame() {
+        if (explainTeams()) return;
+        carouselRef.current?.next();
+    }
+
+    /**
+     * pro mode's Start match stays tappable while the teams can't play yet, and says why. True
+     * if it did.
+     */
+    function explainTeams() {
+        const { redTeam, blueTeam } = useMatchDraftStore.getState();
+        const min = Math.max(1, minTeamSize);
+
+        for (const [name, team] of [
+            ['Red', redTeam],
+            ['Blue', blueTeam],
+        ] as const) {
+            const size = team.teamMembers.length;
+            const problem =
+                size < min
+                    ? `Select ${min === 1 ? 'a player' : `at least ${min} players`} for the ${name.toLowerCase()} team.`
+                    : size > maxTeamSize
+                      ? `${name} team can have at most ${maxTeamSize} players.`
+                      : undefined;
+
+            if (problem) {
+                showErrorToast(problem);
+                return true;
+            }
+        }
+        return false;
+    }
 
     /** Android's in-page Start match button; iOS asks in the toolbar's menu */
     function chooseStart() {
+        if (explainTeams()) return;
+
         Alert.alert('Start match', undefined, [
             { text: 'Cancel', style: 'cancel' },
             { text: 'After the game', onPress: onEnterAfterGame },
@@ -408,7 +432,6 @@ export default function NewMatchScreen() {
                                         ? chooseStart
                                         : undefined
                                 }
-                                canStart={hasValidTeams}
                             />
                         );
                     }
