@@ -17,6 +17,7 @@ import {
     font,
     foregroundStyle,
     frame,
+    layoutPriority,
     lineLimit,
     monospacedDigit,
     padding,
@@ -148,7 +149,8 @@ const LiveMatchesWidget = (
     }
 
     const scoreLine = (size: number) => (
-        <HStack spacing={size / 5}>
+        // the score keeps its size; the team columns next to it give way
+        <HStack spacing={size / 5} modifiers={[fixedSize(), layoutPriority(1)]}>
             <Text
                 modifiers={[
                     font({ weight: 'heavy', size, design: 'rounded' }),
@@ -393,15 +395,30 @@ const LiveMatchesWidget = (
                         </Text>
                         <Spacer />
                         {m.score && (
-                            <Text
-                                modifiers={[
-                                    font({ size: 13 }),
-                                    monospacedDigit(),
-                                    secondary,
-                                ]}
-                            >
-                                {m.score}
-                            </Text>
+                            // the side that just scored in its color
+                            <HStack spacing={2}>
+                                {m.score.split('–').map((value, side) => (
+                                    <Text
+                                        key={String(side)}
+                                        modifiers={[
+                                            font({
+                                                weight: 'bold',
+                                                size: 13,
+                                            }),
+                                            monospacedDigit(),
+                                            foregroundStyle(
+                                                (side === 0
+                                                    ? 'blue'
+                                                    : 'red') === m.team
+                                                    ? colorOf(m.team)
+                                                    : GRAY
+                                            ),
+                                        ]}
+                                    >
+                                        {side === 0 ? `${value}–` : value}
+                                    </Text>
+                                ))}
+                            </HStack>
                         )}
                     </HStack>
                 ))

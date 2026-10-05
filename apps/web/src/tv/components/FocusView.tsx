@@ -4,45 +4,74 @@ import { LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import type { LiveMatchView, LiveTeam } from '~/tv/server/board';
 
 /**
- * One live match on the whole screen: the match as large as it gets with its moves next to it,
- * and under it every player with what the match does to them if it ended now: points, Elo and
- * place on the leaderboard.
+ * One live match on the whole screen: the match as large as it gets, under it every player with
+ * what the match does to them if it ended now (points, Elo and place on the leaderboard), and
+ * the moves down the whole right side.
  */
 export function FocusView({ match }: { match: LiveMatchView }) {
     return (
-        <div className="flex min-h-0 flex-1 flex-col gap-[2rem]">
-            <div className="flex min-h-0 flex-[1.3] gap-[2rem]">
-                <LiveMatchCard match={match} size="lg" className="min-h-0 min-w-0 flex-1" />
-                <Moves moves={match.moves} />
+        <div className="flex min-h-0 flex-1 gap-[2rem]">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-[2rem]">
+                <LiveMatchCard
+                    match={match}
+                    size="lg"
+                    players={false}
+                    className="min-h-0 flex-[1.3]"
+                />
+                <div className="grid min-h-0 flex-1 grid-cols-2 gap-[2rem]">
+                    <Players team={match.blue} side="blue" />
+                    <Players team={match.red} side="red" />
+                </div>
             </div>
-            <div className="grid min-h-0 flex-1 grid-cols-2 gap-[2rem]">
-                <Players team={match.blue} side="blue" />
-                <Players team={match.red} side="red" />
-            </div>
+            <Moves moves={match.moves} />
         </div>
     );
 }
 
-/** the cup hits so far, newest at the top */
+/**
+ * The cup hits so far, newest at the top, in one grid: who, with which move, and the score right
+ * after it with the side that just scored in its color.
+ */
 function Moves({ moves }: { moves: LiveMatchView['moves'] }) {
     return (
-        <section className="flex min-h-0 w-[34rem] shrink-0 flex-col gap-[1rem] overflow-hidden rounded-[2rem] border border-line bg-panel p-[2rem]">
-            <h2 className="text-[1.4rem] font-semibold tracking-[0.18em] text-text-2">MOVES</h2>
+        <section className="flex min-h-0 w-[40rem] shrink-0 flex-col gap-[1.2rem] overflow-hidden rounded-[2rem] border border-line bg-panel px-[2.2rem] py-[2rem]">
+            <h2 className="flex justify-between text-[1.4rem] font-semibold tracking-[0.18em] text-text-2">
+                <span>MOVES</span>
+                {moves.length > 0 && <span className="tabular">{moves.length}</span>}
+            </h2>
             {moves.length === 0 ? (
-                <p className="text-[1.6rem] text-text-3">No cups yet</p>
+                <p className="text-[1.8rem] text-text-3">No cups yet</p>
             ) : (
-                <ol className="flex min-h-0 flex-col gap-[0.8rem]">
+                <ol className="flex min-h-0 flex-col gap-[0.4rem]">
                     {moves.map((m, i) => (
                         <li
                             key={moves.length - i}
-                            className={`${i === 0 ? 'rise ' : ''}flex min-w-0 items-baseline gap-[1rem] text-[1.9rem]`}
+                            className={`grid grid-cols-[3.6rem_13rem_minmax(0,1fr)_auto] items-center gap-[1.2rem] rounded-[1.2rem] px-[1rem] py-[0.9rem] ${i === 0 ? 'rise bg-panel-2' : ''}`}
                         >
+                            <Avatar
+                                name={m.name}
+                                url={m.avatarUrl}
+                                className="size-[3.6rem] text-[1.4rem]"
+                            />
                             <span
-                                className={`truncate font-bold ${m.team === 'blue' ? 'text-blue' : 'text-red'}`}
+                                className={`truncate text-[2rem] font-bold ${m.team === 'blue' ? 'text-blue' : 'text-red'}`}
                             >
                                 {m.name}
                             </span>
-                            <span className="truncate text-text-2">{m.move}</span>
+                            <span
+                                className={`truncate text-[1.8rem] ${i === 0 ? 'text-text' : 'text-text-2'}`}
+                            >
+                                {m.move}
+                            </span>
+                            <span className="tabular flex shrink-0 items-center gap-[0.4rem] text-[2.2rem] font-extrabold">
+                                <span className={m.team === 'blue' ? 'text-blue' : 'text-text-3'}>
+                                    {m.blue}
+                                </span>
+                                <span className="font-semibold text-text-3">–</span>
+                                <span className={m.team === 'red' ? 'text-red' : 'text-text-3'}>
+                                    {m.red}
+                                </span>
+                            </span>
                         </li>
                     ))}
                 </ol>

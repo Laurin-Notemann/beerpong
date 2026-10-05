@@ -52,8 +52,15 @@ export interface LiveMatchView {
     lastActivityAt: string;
     blue: LiveTeam;
     red: LiveTeam;
-    /** the cup hits so far, newest first */
-    moves: { name: string; team: 'blue' | 'red'; move: string }[];
+    /** the cup hits so far, newest first, with the score right after each */
+    moves: {
+        name: string;
+        avatarUrl: string | null;
+        team: 'blue' | 'red';
+        move: string;
+        blue: number;
+        red: number;
+    }[];
 }
 
 /** everything a TV (and the phone controlling it) shows, in one request */
@@ -226,11 +233,19 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
                 lastActivityAt: dto.lastActivityAt ?? dto.startedAt ?? '',
                 blue: team(blue),
                 red: team(red),
-                moves: moves.map((m) => ({
-                    name: profile(players.find((p) => p.id === m.playerId)?.profileId).name,
-                    team: m.team,
-                    move: m.move,
-                })),
+                moves: moves.map((m) => {
+                    const { name, avatarUrl } = profile(
+                        players.find((p) => p.id === m.playerId)?.profileId
+                    );
+                    return {
+                        name,
+                        avatarUrl,
+                        team: m.team,
+                        move: m.move,
+                        blue: m.blue,
+                        red: m.red,
+                    };
+                }),
             };
         }),
     };
