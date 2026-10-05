@@ -56,7 +56,8 @@ type eloSimulationDTO struct {
 	Standings  []eloStandingDTO `json:"standings"`
 	Games      []eloGameDTO     `json:"games"`
 	Prediction eloPredictionDTO `json:"prediction"`
-	// what a test game can be made of: the season's moves, the group's profiles
+	// what a test game can be made of: the season's moves, and the group's
+	// players who weren't removed
 	Moves    []eloRuleMoveDTO `json:"moves"`
 	Profiles []eloProfileDTO  `json:"profiles"`
 }
@@ -157,6 +158,9 @@ type eloGroup struct {
 	seasons  []eloSeasonDTO
 	inputs   []leaderboardInput
 	profiles map[string]string // name by profile id
+	// playing are the profiles with a player that wasn't removed from its
+	// season; removing a player in the app keeps the profile
+	playing map[string]bool
 }
 
 func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, response) {
@@ -171,7 +175,7 @@ func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, respon
 	if err != nil {
 		return eloGroup{}, internal(err)
 	}
-	g := eloGroup{group: toGroupDTO(row), profiles: map[string]string{}}
+	g := eloGroup{group: toGroupDTO(row), profiles: map[string]string{}, playing: map[string]bool{}}
 	seasons, err := s.q.SeasonsByGroup(ctx, &row.ID)
 	if err != nil {
 		return eloGroup{}, internal(err)
@@ -190,6 +194,11 @@ func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, respon
 			ID: sn.ID, Name: sn.Name, NumMatches: len(li.matches), MinMatchesToQualify: deref(sn.MinMatchesToQualify),
 		})
 		g.inputs = append(g.inputs, li)
+		for _, p := range li.in.Players {
+			if p.Active && p.ProfileID != nil {
+				g.playing[*p.ProfileID] = true
+			}
+		}
 	}
 	profiles, err := s.q.ProfilesByGroup(ctx, &row.ID)
 	if err != nil {
@@ -237,7 +246,9 @@ func (s *Server) eloSimulation(r *request) response {
 		out.Seasons = []eloSeasonDTO{}
 	}
 	for id, name := range g.profiles {
-		out.Profiles = append(out.Profiles, eloProfileDTO{ID: id, Name: name})
+		if g.playing[id] {
+			out.Profiles = append(out.Profiles, eloProfileDTO{ID: id, Name: name})
+		}
 	}
 	sort.Slice(out.Profiles, func(i, j int) bool { return out.Profiles[i].Name < out.Profiles[j].Name })
 	all := g.allInputs()
@@ -461,7 +472,7 @@ func (g eloGroup) withTestGames(base leaderboard.Input, seasonID string, tests [
 			m.TeamIDs = append(m.TeamIDs, teamID)
 			finished := false
 			for j, p := range team {
-				if _, known := g.profiles[p.ProfileID]; !known || inGame[p.ProfileID] {
+				if !g.playing[p.ProfileID] || inGame[p.ProfileID] {
 					return in, nil, false
 				}
 				inGame[p.ProfileID] = true
