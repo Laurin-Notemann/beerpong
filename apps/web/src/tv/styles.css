@@ -85,20 +85,23 @@ html.tv.fullscreen {
     animation: rise 400ms ease-out both;
 }
 
-/* a score clip's column (ScoreClipPanel) opens and pushes the board aside, then closes again */
-@keyframes clip-open {
-    from {
-        width: 0;
-    }
+/*
+ * a score clip (ScoreClipPanel) waits behind the board, which shrinks into the rest of the screen
+ * to show it and grows back over it when it's done (--board-scale: Screen in routes/tv/index.tsx)
+ */
+.tv-board {
+    transition: transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-@keyframes clip-close {
-    to {
-        width: 0;
-    }
+.score-clip ~ .tv-board {
+    transform: scale(var(--board-scale));
 }
-.score-clip {
-    animation: clip-open 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.score-clip.from-left ~ .tv-board {
+    transform-origin: right center;
 }
-.score-clip.leaving {
-    animation: clip-close 350ms ease-in both;
+.score-clip.from-right ~ .tv-board {
+    transform-origin: left center;
+}
+.score-clip.leaving ~ .tv-board {
+    transform: none;
+    transition: transform 350ms ease-in;
 }

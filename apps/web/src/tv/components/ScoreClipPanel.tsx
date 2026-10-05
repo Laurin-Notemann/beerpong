@@ -1,28 +1,38 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { ScoreClip } from '~/tv/lib/scoreClips';
+import { posterOf, type ScoreClip } from '~/tv/lib/scoreClips';
 
 /** a clip plays at most this long, whatever was uploaded */
 const MAX_SECONDS = 5;
 /** a clip that hasn't started by then is skipped */
 const LOAD_TIMEOUT_MS = 8_000;
-/** how long the column takes to open and close (`.score-clip` in styles.css) */
-const OPEN_MS = 450;
+/** how long the board takes to grow back over the clip (`.tv-board` in styles.css) */
 const LEAVE_MS = 350;
 /** the full height of the screen, inside its padding */
 const CLIP_HEIGHT = 'calc(100vh - 5rem)';
 const CLIP_WIDTH = `calc((100vh - 5rem) * 9 / 16)`;
 
 /**
- * The scorer's clip in a 9:16 column that opens on the `from` side of the screen and pushes the
- * board aside, so nothing is covered. Plays with sound; calls `onDone` once the column closed
- * again.
+ * How far the board shrinks to fit next to the clip's column (the clip and the padding on the
+ * screen's edge). 1rem is 1/120 of the screen's width (styles.css).
+ */
+export function boardScale() {
+    const rem = innerWidth / 120;
+    const column = ((innerHeight - 5 * rem) * 9) / 16 + 2.5 * rem;
+    return 1 - column / innerWidth;
+}
+
+/**
+ * The scorer's clip in a 9:16 column on the `from` side of the screen, behind the board, which
+ * shrinks aside to show it (Screen in routes/tv/index.tsx). Plays with sound; calls `onDone` once
+ * the board covers it again.
  *
  * The TV plays video on a layer of its own behind the page, placed where the `<video>` is when it
- * starts. A video that starts while the column still moves stays black, so the column opens with
- * the scorer's name and the clip only loads once it stands still. The clip streams from this
- * server (server/clips.ts), which prepared it when the match showed the player; the TV's player
- * can't open a copy in the page's memory (a blob: URL; Sentry WEB-4).
+ * starts; a video that moves while it starts stays black. So the column never moves and the clip
+ * loads the moment it mounts, while the board is still moving aside. Until it plays, its first
+ * frame (preloaded with the board) stands in. The clip streams from this server (server/clips.ts);
+ * the TV's player fetches it itself, so it can't come from the page's memory or the browser's
+ * cache (a blob: URL; Sentry WEB-4).
  */
 export function ScoreClipPanel({
     clip,
@@ -34,25 +44,13 @@ export function ScoreClipPanel({
     onDone: () => void;
 }) {
     const video = useRef<HTMLVideoElement>(null);
-    const [open, setOpen] = useState(false);
     const [playing, setPlaying] = useState(false);
     const [leaving, setLeaving] = useState(false);
+    const [poster, setPoster] = useState(true);
     const done = useRef(onDone);
     done.current = onDone;
 
     useEffect(() => {
-        const timeout = setTimeout(() => setOpen(true), OPEN_MS);
-        // the TV has one video decoder; the next clip gets it back
-        const v = video.current!;
-        return () => {
-            clearTimeout(timeout);
-            v.removeAttribute('src');
-            v.load();
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!open) return;
         const v = video.current!;
         v.src = clip.url;
         // the TV's browser plays with sound; newer ones may only allow it muted
@@ -71,8 +69,13 @@ export function ScoreClipPanel({
                 setLeaving(true);
             }
         }, LOAD_TIMEOUT_MS);
-        return () => clearTimeout(timeout);
-    }, [open, clip.url]);
+        return () => {
+            clearTimeout(timeout);
+            // the TV has one video decoder; the next clip gets it back
+            v.removeAttribute('src');
+            v.load();
+        };
+    }, [clip.url]);
 
     useEffect(() => {
         if (!playing) return;
@@ -82,57 +85,49 @@ export function ScoreClipPanel({
 
     useEffect(() => {
         if (!leaving) return;
-        // stopped before the column moves, so the video's layer doesn't stay behind
         video.current!.pause();
         const timeout = setTimeout(() => done.current(), LEAVE_MS);
         return () => clearTimeout(timeout);
     }, [leaving]);
 
     return (
-        // the column's width opens and closes (styles.css); the clip keeps its size and stays on
-        // the board's side of it, so it slides in from the edge of the screen
         <div
-            className={`score-clip ${leaving ? 'leaving' : ''} relative z-10 flex shrink-0 overflow-hidden ${from === 'left' ? 'justify-end' : ''}`}
-            style={{ width: `calc(${CLIP_WIDTH} + 2.5rem)` }}
+            className={`score-clip from-${from} ${leaving ? 'leaving' : ''} absolute inset-y-0 py-[2.5rem] ${from === 'left' ? 'left-0 pl-[2.5rem]' : 'right-0 pr-[2.5rem]'}`}
         >
             <div
-                className={`shrink-0 py-[2.5rem] ${from === 'left' ? 'pl-[2.5rem]' : 'pr-[2.5rem]'}`}
+                className={`relative overflow-hidden rounded-[2rem] border-[0.4rem] ${clip.team === 'blue' ? 'border-blue bg-blue/20' : 'border-red bg-red/20'}`}
+                // 9:16 from the height; `aspect-ratio` is too new for the TV's browser
+                style={{ height: CLIP_HEIGHT, width: CLIP_WIDTH }}
             >
-                <div
-                    className={`relative overflow-hidden rounded-[2rem] border-[0.4rem] ${clip.team === 'blue' ? 'border-blue bg-blue/20' : 'border-red bg-red/20'}`}
-                    // 9:16 from the height; `aspect-ratio` is too new for the TV's browser
-                    style={{ height: CLIP_HEIGHT, width: CLIP_WIDTH }}
-                >
-                    {/* until the clip plays: the scorer's name */}
-                    {!playing && (
-                        <div className="absolute inset-0 grid place-items-center px-[2rem] text-center text-[4.4rem] leading-[1.1] font-black break-words">
-                            {clip.name}
-                        </div>
-                    )}
-                    <video
-                        ref={video}
-                        playsInline
-                        preload="auto"
-                        onPlaying={() => setPlaying(true)}
-                        onEnded={() => setLeaving(true)}
-                        onError={(e) => {
-                            // emptied on purpose when the clip is done
-                            if (!e.currentTarget.getAttribute('src')) return;
-                            report(e.currentTarget, `error ${e.currentTarget.error?.code}`);
-                            setLeaving(true);
-                        }}
-                        className={`relative block h-full w-full object-contain ${playing ? 'bg-black' : ''}`}
+                <video
+                    ref={video}
+                    playsInline
+                    preload="auto"
+                    onPlaying={() => setPlaying(true)}
+                    onEnded={() => setLeaving(true)}
+                    onError={(e) => {
+                        // emptied on purpose when the clip is done
+                        if (!e.currentTarget.getAttribute('src')) return;
+                        report(e.currentTarget, `error ${e.currentTarget.error?.code}`);
+                        setLeaving(true);
+                    }}
+                    className={`block h-full w-full object-contain ${playing ? 'bg-black' : ''}`}
+                />
+                {!playing && poster && (
+                    <img
+                        src={posterOf(clip.url)}
+                        alt=""
+                        onError={() => setPoster(false)}
+                        className="absolute inset-0 h-full w-full bg-black object-contain"
                     />
-                    {playing && (
-                        <div
-                            className="absolute right-0 bottom-0 left-0 truncate px-[1.6rem] pt-[4rem] pb-[1.4rem] text-[2.4rem] font-black"
-                            style={{
-                                background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-                            }}
-                        >
-                            {clip.name}
-                        </div>
-                    )}
+                )}
+                <div
+                    className="absolute right-0 bottom-0 left-0 truncate px-[1.6rem] pt-[4rem] pb-[1.4rem] text-[2.4rem] font-black"
+                    style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+                    }}
+                >
+                    {clip.name}
                 </div>
             </div>
         </div>

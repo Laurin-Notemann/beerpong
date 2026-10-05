@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 
 import { FocusView } from '~/tv/components/FocusView';
 import { FullscreenButton } from '~/tv/components/FullscreenButton';
@@ -7,7 +7,7 @@ import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { LiveMatchPanel } from '~/tv/components/LiveMatchPanel';
 import { Qr } from '~/tv/components/Qr';
-import { ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
+import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import {
     type DisplayConfig,
     emptyConfig,
@@ -16,7 +16,7 @@ import {
     pickMatches,
 } from '~/tv/lib/display';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
-import { type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
+import { preloadPosters, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -126,6 +126,7 @@ function Tv() {
         }
     );
     liveMatches.current = board.data?.liveMatches ?? [];
+    useEffect(() => preloadPosters(liveMatches.current), [board.data]);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const remoteUrl = identity.code ? `${location.origin}/tv/rem/${identity.code}` : undefined;
@@ -205,12 +206,14 @@ function Screen({
     );
 
     return (
-        // the clip comes before or after the board in the page, not just on screen: whatever
-        // comes later paints on top, and on the TV anything over the video hides it (black)
-        <div className="flex h-screen">
-            {clipFrom === 'left' && clipPanel}
-            {/* the board doesn't fit next to a clip; it's cut off rather than drawn over it */}
-            <main className="flex h-screen min-w-0 flex-1 flex-col gap-[2rem] overflow-hidden p-[2.5rem]">
+        // the clip waits behind the board, which shrinks aside to show it (`.tv-board` in
+        // styles.css); it has to come first for that
+        <div
+            className="relative h-screen overflow-hidden"
+            style={clip && ({ '--board-scale': boardScale() } as CSSProperties)}
+        >
+            {clipPanel}
+            <main className="tv-board relative z-10 flex h-screen flex-col gap-[2rem] bg-bg p-[2.5rem]">
                 <Header board={board} config={config} remoteUrl={remoteUrl} offline={offline} />
                 {!board ? (
                     <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
@@ -260,7 +263,6 @@ function Screen({
                     <Empty>No matches played {config.scope === 'today' ? 'today' : 'yet'}</Empty>
                 )}
             </main>
-            {clipFrom === 'right' && clipPanel}
         </div>
     );
 }
