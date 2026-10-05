@@ -393,15 +393,30 @@ const LiveMatchesWidget = (
                         </Text>
                         <Spacer />
                         {m.score && (
-                            <Text
-                                modifiers={[
-                                    font({ size: 13 }),
-                                    monospacedDigit(),
-                                    secondary,
-                                ]}
-                            >
-                                {m.score}
-                            </Text>
+                            // the side that just scored in its color
+                            <HStack spacing={2}>
+                                {m.score.split('–').map((value, side) => (
+                                    <Text
+                                        key={String(side)}
+                                        modifiers={[
+                                            font({
+                                                weight: 'bold',
+                                                size: 13,
+                                            }),
+                                            monospacedDigit(),
+                                            foregroundStyle(
+                                                (side === 0
+                                                    ? 'blue'
+                                                    : 'red') === m.team
+                                                    ? colorOf(m.team)
+                                                    : GRAY
+                                            ),
+                                        ]}
+                                    >
+                                        {side === 0 ? `${value}–` : value}
+                                    </Text>
+                                ))}
+                            </HStack>
                         )}
                     </HStack>
                 ))

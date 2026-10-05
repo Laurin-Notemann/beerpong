@@ -30,14 +30,19 @@ const sizes = {
     },
 } satisfies Record<CardSize, Record<string, string>>;
 
-/** one live match: both racks, the players and the score, blue on the left as in the app */
+/**
+ * one live match: both racks, the players and the score, blue on the left as in the app. Without
+ * `players` (the focus view lists them under it) the score gets their room.
+ */
 export function LiveMatchCard({
     match,
     size,
+    players = true,
     className = '',
 }: {
     match: LiveMatchView;
     size: CardSize;
+    players?: boolean;
     className?: string;
 }) {
     const now = useNow();
@@ -55,9 +60,13 @@ export function LiveMatchCard({
             </div>
             <div className="flex min-h-0 flex-1 items-center gap-[2rem]">
                 <CupRack cups={match.blue.cups} team="blue" className={`${s.rack} shrink-0`} />
-                <Players team={match.blue} side="blue" size={size} />
+                {players ? (
+                    <Players team={match.blue} side="blue" size={size} />
+                ) : (
+                    <div className="flex-1" />
+                )}
                 <div
-                    className={`tabular flex shrink-0 items-center gap-[1.5rem] font-black leading-none ${s.score}`}
+                    className={`tabular flex shrink-0 items-center gap-[1.5rem] font-black leading-none ${players ? s.score : 'text-[14rem]'}`}
                 >
                     <span key={`b${match.blue.score}`} className="pop inline-block text-blue">
                         {match.blue.score}
@@ -67,7 +76,11 @@ export function LiveMatchCard({
                         {match.red.score}
                     </span>
                 </div>
-                <Players team={match.red} side="red" size={size} />
+                {players ? (
+                    <Players team={match.red} side="red" size={size} />
+                ) : (
+                    <div className="flex-1" />
+                )}
                 <CupRack cups={match.red.cups} team="red" className={`${s.rack} shrink-0`} />
             </div>
         </section>
