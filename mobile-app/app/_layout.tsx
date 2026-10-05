@@ -8,7 +8,7 @@ import {
     ThemeProvider,
 } from 'expo-router/react-navigation';
 import { useEffect, useState } from 'react';
-import { StatusBar } from 'react-native';
+import { Appearance, StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,7 +19,6 @@ import { createQueryClient, persister } from '@/api/utils/query-client';
 import { useRefetchEverythingOnWifiReconnect } from '@/api/utils/useRefetchEverythingOnWifiReconnect';
 import { CrashFallback } from '@/components/CrashFallback';
 import { Sidebar } from '@/components/screens/Sidebar';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useOtaUpdates } from '@/hooks/useOtaUpdates';
 import { useTheme } from '@/theme';
 import { Sentry } from '@/utils/sentry';
@@ -39,7 +38,11 @@ SplashScreen.preventAutoHideAsync();
 function RootLayout() {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
-    const appTheme = useColorScheme() === 'dark' ? DarkTheme : DefaultTheme;
+    // The app picks light or dark itself (Settings → Appearance), not the system. Liquid Glass
+    // tabs and headers resolve against the navigation theme and the native interface style, so
+    // both follow the app's theme; otherwise a light-mode phone flashes white before going dark.
+    const isDark = theme.barStyle === 'light-content';
+    const appTheme = isDark ? DarkTheme : DefaultTheme;
 
     const [queryClient] = useState(() => createQueryClient());
 
@@ -49,6 +52,10 @@ function RootLayout() {
     useEffect(() => {
         SplashScreen.hideAsync();
     }, []);
+
+    useEffect(() => {
+        Appearance.setColorScheme(isDark ? 'dark' : 'light');
+    }, [isDark]);
 
     return (
         // Catches render errors and fatal global errors (timers, handlers, native calls) for the
@@ -82,11 +89,7 @@ function RootLayout() {
                                         <Drawer.Screen name="(main)" />
                                     </Drawer>
                                     <Toaster
-                                        theme={
-                                            theme.barStyle === 'light-content'
-                                                ? 'dark'
-                                                : 'light'
-                                        }
+                                        theme={isDark ? 'dark' : 'light'}
                                         offset={insets.top + 52}
                                         duration={3000}
                                     />
