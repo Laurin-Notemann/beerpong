@@ -847,6 +847,14 @@ func (s *Server) teamOfMatch(r *request) response {
 	if !exists {
 		return fail(errMatchNotFound)
 	}
+	// the season (and so the match) has to belong to the group the caller is a member of
+	sn, found, err := s.loadSeason(r.Context(), s.q, r.path("seasonId"))
+	if err != nil {
+		return internal(err)
+	}
+	if !found || deref(sn.GroupID) != r.path("groupId") {
+		return fail(errSeasonNotOfGroup)
+	}
 	inMatch, err := s.q.TeamExistsInMatch(r.Context(), db.TeamExistsInMatchParams{ID: r.path("teamId"), MatchID: &matchID})
 	if err != nil {
 		return internal(err)
@@ -863,7 +871,7 @@ func (s *Server) setTeamPhoto(r *request) response {
 	if res := s.teamOfMatch(r); res != nil {
 		return res
 	}
-	matchID, teamID := r.path("id"), r.path("teamId")
+	teamID := r.path("teamId")
 	ctx := r.Context()
 	res := s.tx(ctx, func(q *db.Queries) (response, error) {
 		team, err := q.GetTeam(ctx, teamID)
@@ -885,7 +893,7 @@ func (s *Server) setTeamPhoto(r *request) response {
 		return ok(upload), nil
 	})
 	if o, isOK := res.(okResponse); isOK {
-		s.hub.Publish(matchID, realtime.Assets, "matchTeamPhotoSet", o.data)
+		s.hub.Publish(r.path("groupId"), realtime.Assets, "matchTeamPhotoSet", o.data)
 	}
 	return res
 }
@@ -894,7 +902,7 @@ func (s *Server) deleteTeamPhoto(r *request) response {
 	if res := s.teamOfMatch(r); res != nil {
 		return res
 	}
-	matchID, teamID := r.path("id"), r.path("teamId")
+	teamID := r.path("teamId")
 	ctx := r.Context()
 	res := s.tx(ctx, func(q *db.Queries) (response, error) {
 		team, err := q.GetTeam(ctx, teamID)
@@ -914,7 +922,7 @@ func (s *Server) deleteTeamPhoto(r *request) response {
 		return ok(toTeamDTO(updated)), nil
 	})
 	if o, isOK := res.(okResponse); isOK {
-		s.hub.Publish(matchID, realtime.Assets, "matchTeamPhotoDelete", o.data)
+		s.hub.Publish(r.path("groupId"), realtime.Assets, "matchTeamPhotoDelete", o.data)
 	}
 	return res
 }

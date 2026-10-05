@@ -206,3 +206,34 @@ footer { color: var(--muted); font-size: 0.8125rem; padding: 2rem 0 3rem; }
 @media (prefers-reduced-motion: no-preference) {
   .bar, .share .act { transition: width 160ms ease; }
 }
+
+/* page */
+.sliders { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.btns { display: flex; flex-direction: column; gap: 0.4rem; }
+.seg.seasons { flex-wrap: wrap; }
+.seg.seasons button { padding: 0.35rem 0.6rem; }
+.pred { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pred .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem 1.1rem; }
+.pred .tile.me { border-color: var(--text); }
+.pred .lbl { font-size: 0.8125rem; color: var(--text-2); }
+.pred .big { font-size: 1.9rem; font-weight: 700; line-height: 1.15; margin: 0.15rem 0; }
+.pred .sub { font-size: 0.8125rem; color: var(--muted); }
+.scale { font-family: "IBM Plex Mono", monospace; font-size: 0.8125rem; white-space: nowrap; }
+.searchout { margin-top: 0.8rem; color: var(--text-2); font-size: 0.9375rem; }
+.when { display: block; color: var(--muted); font-size: 0.6875rem; white-space: nowrap; }
+.live { display: inline-flex; align-items: center; gap: 0.35rem; }
+.live i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.live.on i { background: var(--up); }
+.live.off i { background: var(--down); }
+.mismatch { color: var(--down); }
+tr.new { animation: flash 2.4s ease-out; }
+@keyframes flash { from { background: color-mix(in srgb, var(--scoring) 22%, transparent); } }
+
+/* invite code */
+.gate { padding-top: 4rem; max-width: 640px; }
+.codeform { display: flex; gap: 0.6rem; align-items: center; margin-top: 1.75rem; flex-wrap: wrap; }
+.codeform label { font-size: 0.875rem; color: var(--text-2); width: 100%; }
+.codeform input { font: inherit; font-family: "IBM Plex Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text); min-width: 14rem; }
+.codeform .btn { padding: 0.55rem 1rem; }
+.err { color: var(--down); }
+@media (max-width: 900px) { .sliders { grid-template-columns: 1fr 1fr; } .pred { grid-template-columns: 1fr; } }

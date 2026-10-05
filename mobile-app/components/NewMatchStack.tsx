@@ -94,12 +94,13 @@ export const NewMatchStack: React.FC<{
                         >
                             Generate
                         </Stack.Toolbar.Button>
+                    ) : onStart && !canStart ? (
+                        // tappable anyway: starting says what the teams are missing
+                        <Stack.Toolbar.Button variant="done" onPress={onStart}>
+                            Start match
+                        </Stack.Toolbar.Button>
                     ) : onStart ? (
-                        <Stack.Toolbar.Menu
-                            title="Start match"
-                            variant="done"
-                            disabled={!canStart}
-                        >
+                        <Stack.Toolbar.Menu title="Start match" variant="done">
                             <Stack.Toolbar.MenuAction
                                 icon="dot.radiowaves.left.and.right"
                                 onPress={onStart}

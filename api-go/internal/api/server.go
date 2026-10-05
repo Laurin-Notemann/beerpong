@@ -109,11 +109,13 @@ func springHeaders(next http.Handler) http.Handler {
 // exactly these (TestSpecMatchesRoutes).
 func (s *Server) routes() map[string]route {
 	return map[string]route{
-		"/healthcheck":   {"GET": s.healthcheck},
-		"/group-presets": {"GET": s.listPresets},
-		"/assets/{id}":   {"GET": s.getAsset},
-		"/auth/signup":   {"POST": s.signup},
-		"/auth/refresh":  {"POST": s.refresh},
+		"/healthcheck":           {"GET": s.healthcheck},
+		"/group-presets":         {"GET": s.listPresets},
+		"/assets/{id}":           {"GET": s.getAsset},
+		"/auth/signup":           {"POST": s.signup},
+		"/auth/refresh":          {"POST": s.refresh},
+		"/elo-simulation":        {"GET": s.eloSimulation},
+		"/elo-simulation/search": {"GET": s.eloSearch},
 
 		"/groups":                                                           {"GET": s.findGroupByInviteCode, "POST": s.createGroup},
 		"/groups/user":                                                      {"GET": s.userGroups},
@@ -133,6 +135,8 @@ func (s *Server) routes() map[string]route {
 		"/groups/{groupId}/live-matches/{id}":                               {"GET": s.getLiveMatch, "PUT": s.createLiveMatch, "DELETE": s.abandonLiveMatch},
 		"/groups/{groupId}/live-matches/{id}/ops":                           {"POST": s.appendOps},
 		"/groups/{groupId}/live-matches/{id}/finish":                        {"POST": s.finishLiveMatch},
+		"/groups/{groupId}/formations":                                      {"GET": s.listFormations},
+		"/groups/{groupId}/formations/{id}":                                 {"PUT": s.putFormation, "DELETE": s.deleteFormation},
 		"/groups/{groupId}/seasons/{seasonId}/rules":                        {"GET": s.listRules, "PUT": s.writeRules},
 		"/groups/{groupId}/seasons/{seasonId}/rule-moves":                   {"GET": s.listRuleMoves, "POST": s.createRuleMove},
 		"/groups/{groupId}/seasons/{seasonId}/rule-moves/{ruleMoveId}":      {"PUT": s.updateRuleMove},

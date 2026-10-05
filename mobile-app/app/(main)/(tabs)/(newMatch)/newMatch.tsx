@@ -19,7 +19,6 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchAssignTeams, {
     Player,
 } from '@/components/screens/NewMatchAssignTeams';
-import NewMatchCups from '@/components/screens/NewMatchCups';
 import {
     scrollControlledSwipers,
     Swiper,
@@ -121,10 +120,8 @@ export default function NewMatchScreen() {
     const [swiperPage, setSwiperPage] = useState(0);
 
     // pro mode: Start match either goes live (see liveMatch.tsx) or, for a game that's already
-    // over, on to its cups and points here
-    const pages = beerpongProMode
-        ? (['teams', 'cups', 'points'] as const)
-        : (['teams', 'points'] as const);
+    // over, on to its points here; nobody remembers which cups were hit afterwards
+    const pages = ['teams', 'points'] as const;
 
     const profiles = playersQuery.data?.data ?? [];
 
@@ -194,6 +191,12 @@ export default function NewMatchScreen() {
             router.replace('/');
             carouselRef.current?.prev();
 
+            const matchId = matchRes?.data?.id;
+            if (!savePhoto && matchId) {
+                // no photo was taken on the points page, so ask for one
+                nav.navigate('matchPhotoModal', { matchId, seasonId });
+            }
+
             if (blueTeamPhotoUri && redTeamPhotoUri) {
                 // the upload urls are returned in the same order as the teams
                 const [bluePhotoUpload, redPhotoUpload] =
@@ -230,17 +233,8 @@ export default function NewMatchScreen() {
 
         // the draft as it is now, not as it was when this screen last rendered
         const { redTeam, blueTeam, actions } = useMatchDraftStore.getState();
-        const teamSizes = [
-            redTeam.teamMembers.length,
-            blueTeam.teamMembers.length,
-        ];
-        if (
-            teamSizes.some(
-                (i) => i < Math.max(1, minTeamSize) || i > maxTeamSize
-            )
-        ) {
-            return;
-        }
+        if (explainTeams()) return;
+
         isStarting.current = true;
         requestAnimationFrame(() => {
             isStarting.current = false;
@@ -257,10 +251,43 @@ export default function NewMatchScreen() {
         nav.navigate('liveMatch', { id });
     }
 
-    const onEnterAfterGame = () => carouselRef.current?.next();
+    function onEnterAfterGame() {
+        if (explainTeams()) return;
+        carouselRef.current?.next();
+    }
+
+    /**
+     * pro mode's Start match stays tappable while the teams can't play yet, and says why. True
+     * if it did.
+     */
+    function explainTeams() {
+        const { redTeam, blueTeam } = useMatchDraftStore.getState();
+        const min = Math.max(1, minTeamSize);
+
+        for (const [name, team] of [
+            ['Red', redTeam],
+            ['Blue', blueTeam],
+        ] as const) {
+            const size = team.teamMembers.length;
+            const problem =
+                size < min
+                    ? `Select ${min === 1 ? 'a player' : `at least ${min} players`} for the ${name.toLowerCase()} team.`
+                    : size > maxTeamSize
+                      ? `${name} team can have at most ${maxTeamSize} players.`
+                      : undefined;
+
+            if (problem) {
+                showErrorToast(problem);
+                return true;
+            }
+        }
+        return false;
+    }
 
     /** Android's in-page Start match button; iOS asks in the toolbar's menu */
     function chooseStart() {
+        if (explainTeams()) return;
+
         Alert.alert('Start match', undefined, [
             { text: 'Cancel', style: 'cancel' },
             { text: 'After the game', onPress: onEnterAfterGame },
@@ -341,15 +368,12 @@ export default function NewMatchScreen() {
                 // this fixes a bug where the carousel would start at the second page when switching groups or seasons.
                 // i tried to manually go to the first page in a useEffect if teamMembers.length === 0,
                 // but that caused a different issue where the form would submit twice, and i honestly can't be fucked rn.
-                // pro mode adds a page, so toggling it re-mounts the carousel too
-                key={groupId + ':' + seasonId + ':' + beerpongProMode}
+                key={groupId + ':' + seasonId}
                 ref={carouselRef}
                 swiperProgress={animationProgress}
                 onPageChange={(pageIdx) => {
-                    // in pro mode the cups have filled in the points already
                     if (
                         pages[pageIdx] === 'points' &&
-                        !beerpongProMode &&
                         !matchDraft.hasBeenOnPageTwo
                     ) {
                         nav.navigate('assignPointsToPlayerModal', {
@@ -414,12 +438,8 @@ export default function NewMatchScreen() {
                                         ? chooseStart
                                         : undefined
                                 }
-                                canStart={hasValidTeams}
                             />
                         );
-                    }
-                    if (page === 'cups') {
-                        return <NewMatchCups key={page} />;
                     }
                     return (
                         <CreateMatchAssignPoints

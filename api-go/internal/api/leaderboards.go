@@ -170,10 +170,45 @@ func (b board) entries() []playerExtendedDTO {
 
 // leaderboardFor builds a board for the scope. keepStored starts from the
 // players' stored statistics (used when carrying stats into a new season).
-// playerIDs, when not nil, limits the board to those players.
-// leaderboardFor computes a board. playerIDs limits a season board to those
-// players (nil: all); projected live matches count after the stored ones.
+// playerIDs, when not nil, limits the board to those players. projected live
+// matches count after the stored ones.
 func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupDTO, scope string, keepStored bool, seasonID string, playerIDs []string, projected ...leaderboard.Match) (board, response) {
+	li, res := s.leaderboardInput(ctx, q, group, scope, keepStored, seasonID, playerIDs, projected...)
+	if res != nil {
+		return board{}, res
+	}
+	result, err := leaderboard.Compute(li.in)
+	if err != nil {
+		return board{}, internal(err)
+	}
+	b := board{numMatches: result.NumMatches, startedAt: li.startedAt, seasons: li.seasons}
+	for _, e := range result.Entries {
+		if scope == "all-time" || e.Player.Active {
+			b.active = append(b.active, e)
+		}
+	}
+	if scope == "all-time" {
+		past, err := q.CountMatchesInPastSeasons(ctx, &group.ID)
+		if err != nil {
+			return board{}, internal(err)
+		}
+		b.numMatches += past
+	}
+	return b, nil
+}
+
+// leaderboardInput is what a board is computed from.
+type leaderboardInput struct {
+	in        leaderboard.Input
+	startedAt *time.Time
+	seasons   map[string]seasonDTO // season of every player
+	matches   []fullMatch
+	ruleMoves map[string]db.RuleMove
+}
+
+// leaderboardInput loads the matches and players of the scope; see
+// leaderboardFor.
+func (s *Server) leaderboardInput(ctx context.Context, q *db.Queries, group groupDTO, scope string, keepStored bool, seasonID string, playerIDs []string, projected ...leaderboard.Match) (leaderboardInput, response) {
 	var (
 		matches   []db.Match
 		players   []playerRow
@@ -183,14 +218,14 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 	switch scope {
 	case "all-time":
 		if group.ActiveSeasonID == nil {
-			return board{}, fail(errGeneric)
+			return leaderboardInput{}, fail(errGeneric)
 		}
 		if matches, err = q.MatchesBySeason(ctx, group.ActiveSeasonID); err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		rows, err := q.PlayersWithStatsInGroup(ctx, &group.ID)
 		if err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		for _, row := range rows {
 			if playerIDs == nil || contains(playerIDs, row.ID) {
@@ -201,47 +236,47 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 	case "season", "today":
 		if scope == "today" {
 			if group.ActiveSeasonID == nil {
-				return board{}, fail(errGroupNoRunningSeason)
+				return leaderboardInput{}, fail(errGroupNoRunningSeason)
 			}
 			seasonID = *group.ActiveSeasonID
 		}
 		sn, found, err := s.loadSeason(ctx, q, seasonID)
 		if err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		if !found {
 			if scope == "today" {
-				return board{}, fail(errGroupNoRunningSeason)
+				return leaderboardInput{}, fail(errGroupNoRunningSeason)
 			}
-			return board{}, fail(errSeasonNotFound)
+			return leaderboardInput{}, fail(errSeasonNotFound)
 		}
 		if scope == "today" {
 			since, err := dayStart(s.now(), sn.Settings)
 			if err != nil {
-				return board{}, internal(err)
+				return leaderboardInput{}, internal(err)
 			}
 			matches, err = q.MatchesBySeasonSince(ctx, db.MatchesBySeasonSinceParams{SeasonID: &sn.ID, Date: &since})
 		} else {
 			matches, err = q.MatchesBySeason(ctx, &sn.ID)
 		}
 		if err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		rows, err := q.PlayersWithStatsInSeason(ctx, db.PlayersWithStatsInSeasonParams{SeasonID: &sn.ID, PlayerIds: playerIDs})
 		if err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		for _, row := range rows {
 			players = append(players, playerRow(row))
 		}
 		startedAt = sn.StartDate
 	default:
-		return board{}, fail(errLeaderboardScopeNotFound)
+		return leaderboardInput{}, fail(errLeaderboardScopeNotFound)
 	}
 
 	full, err := s.loadFullMatches(ctx, q, matches)
 	if err != nil {
-		return board{}, internal(err)
+		return leaderboardInput{}, internal(err)
 	}
 	in := leaderboard.Input{
 		KeepStoredStats: scope == "all-time" || keepStored,
@@ -255,6 +290,7 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 			seasons[p.SeasonID] = p.season()
 		}
 	}
+	ruleMoves := map[string]db.RuleMove{}
 	var memberPlayers, moveIDs []string
 	for _, m := range full {
 		in.Matches = append(in.Matches, m.input())
@@ -277,43 +313,27 @@ func (s *Server) leaderboardFor(ctx context.Context, q *db.Queries, group groupD
 	if len(moveIDs) > 0 {
 		moves, err := q.RuleMovesByIDs(ctx, moveIDs)
 		if err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		for _, m := range moves {
+			ruleMoves[m.ID] = m
 			in.RuleMoves[m.ID] = leaderboard.RuleMove{PointsForScorer: m.PointsForScorer, PointsForTeam: m.PointsForTeam, Finishing: m.FinishingMove, Cups: cupsPerHit(m)}
 		}
 	}
 	if len(memberPlayers) > 0 {
 		rows, err := q.ProfileIDsOfPlayers(ctx, memberPlayers)
 		if err != nil {
-			return board{}, internal(err)
+			return leaderboardInput{}, internal(err)
 		}
 		for _, row := range rows {
 			if row.ProfileID == nil {
-				return board{}, internalf("player %s has no profile", row.ID)
+				return leaderboardInput{}, internalf("player %s has no profile", row.ID)
 			}
 			in.ProfileOf[row.ID] = *row.ProfileID
 		}
 	}
 
-	result, err := leaderboard.Compute(in)
-	if err != nil {
-		return board{}, internal(err)
-	}
-	b := board{numMatches: result.NumMatches, startedAt: startedAt, seasons: seasons}
-	for _, e := range result.Entries {
-		if scope == "all-time" || e.Player.Active {
-			b.active = append(b.active, e)
-		}
-	}
-	if scope == "all-time" {
-		past, err := q.CountMatchesInPastSeasons(ctx, &group.ID)
-		if err != nil {
-			return board{}, internal(err)
-		}
-		b.numMatches += past
-	}
-	return b, nil
+	return leaderboardInput{in: in, startedAt: startedAt, seasons: seasons, matches: full, ruleMoves: ruleMoves}, nil
 }
 
 // dayStart is when "today" began for the daily leaderboard.

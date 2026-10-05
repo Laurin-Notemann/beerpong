@@ -444,3 +444,19 @@ func toLiveMatchDTO(lm db.LiveMatch, userID *string, ops []liveMatchOpDTO) liveM
 		Ops:             ops,
 	}
 }
+
+type formationDTO struct {
+	ID        string           `json:"id"`
+	GroupID   string           `json:"groupId"`
+	Name      string           `json:"name"`
+	Cups      []cupPositionDTO `json:"cups"`
+	UpdatedAt *time.Time       `json:"updatedAt"`
+}
+
+func toFormationDTO(f db.Formation) (formationDTO, error) {
+	var cups []cupPositionDTO
+	if err := json.Unmarshal([]byte(f.Cups), &cups); err != nil {
+		return formationDTO{}, err
+	}
+	return formationDTO{ID: f.ID, GroupID: f.GroupID, Name: f.Name, Cups: cups, UpdatedAt: &f.UpdatedAt}, nil
+}

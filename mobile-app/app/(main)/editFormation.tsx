@@ -1,36 +1,75 @@
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import {
+    newFormationId,
+    useDeleteFormation,
+    useFormations,
+    useSaveFormation,
+} from '@/api/calls/formationHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
 import CupGrid from '@/components/CupGrid';
-import { Formation } from '@/components/CupGrid/Formation';
+import { FormationType } from '@/components/CupGrid/Formation';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
+import TextInput from '@/components/TextInput';
+import { CUP_FORMATION } from '@/lib/cupHits';
 import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { showErrorToast } from '@/toast';
 
+/** Creates a formation, or edits the one with `id`. */
 export default function EditFormation() {
-    const [cups, setCups] = useState(Formation.Pyramid_10);
+    const { id } = useLocalSearchParams<{ id?: string }>();
 
     const nav = useNavigation();
-
     const theme = useTheme();
-
     const insets = useInsets(true);
+
+    const { groupId } = useGroup();
+    const saved = useFormations(groupId).data?.find((i) => i.id === id);
+    const save = useSaveFormation(groupId);
+    const remove = useDeleteFormation(groupId);
+
+    const [name, setName] = useState(saved?.name ?? '');
+    const [formation, setFormation] = useState<FormationType>({
+        ...CUP_FORMATION,
+        cups: saved?.cups ?? CUP_FORMATION.cups,
+    });
+
+    function onDone() {
+        if (!name.trim()) {
+            showErrorToast('Give the formation a name.');
+            return;
+        }
+        if (formation.cups.length === 0) {
+            showErrorToast('A formation needs at least one cup.');
+            return;
+        }
+        save.mutate({
+            id: saved?.id ?? newFormationId(),
+            name: name.trim(),
+            cups: formation.cups.map(({ x, y }) => ({ x, y })),
+        });
+        nav.goBack();
+    }
 
     return (
         <>
             <Stack.Screen
                 options={{
                     ...useNavStyles(),
-                    headerTitle: 'Edit Formation',
+                    headerTitle: saved ? 'Edit Formation' : 'New Formation',
                 }}
             />
             <Stack.Toolbar placement="right">
-                <Stack.Toolbar.Button variant="done">Done</Stack.Toolbar.Button>
+                <Stack.Toolbar.Button variant="done" onPress={onDone}>
+                    Done
+                </Stack.Toolbar.Button>
             </Stack.Toolbar>
             <ScrollView
                 style={{
@@ -49,6 +88,11 @@ export default function EditFormation() {
                         flex: 1,
                     }}
                 >
+                    <TextInput
+                        placeholder="Formation Name"
+                        value={name}
+                        onChangeText={setName}
+                    />
                     <View
                         style={{
                             alignItems: 'center',
@@ -64,41 +108,42 @@ export default function EditFormation() {
                                 marginBottom: 32,
                             }}
                         >
-                            Tap to add or remove cups, or move them by dragging
+                            Tap to add or remove cups, or move them by dragging.{' '}
+                            {formation.cups.length}{' '}
+                            {formation.cups.length === 1 ? 'cup' : 'cups'}.
                         </Text>
                         <CupGrid
                             width={300}
                             canEdit
-                            formation={cups}
-                            onChange={setCups}
+                            formation={formation}
+                            onChange={setFormation}
                         />
                     </View>
-                    <MenuSection
-                        style={{
-                            marginTop: 48,
+                    {saved && (
+                        <MenuSection
+                            style={{
+                                marginTop: 48,
 
-                            alignSelf: 'stretch',
-                        }}
-                    >
-                        <MenuItem
-                            border={false}
-                            title="Ring of Water"
-                            headIcon="pencil-outline"
-                            onPress={() => nav.navigate('editFormationName')}
-                            tailIconType="next"
-                        />
-                        <MenuItem
-                            title="Delete Formation"
-                            headIcon="delete-outline"
-                            onPress={() => alert('deleting')}
-                            type="danger"
-                            confirmationPrompt={{
-                                title: 'Delete Formation',
-                                description:
-                                    'Are you sure you want to delete this formation?',
+                                alignSelf: 'stretch',
                             }}
-                        />
-                    </MenuSection>
+                        >
+                            <MenuItem
+                                border={false}
+                                title="Delete Formation"
+                                headIcon="delete-outline"
+                                onPress={() => {
+                                    remove.mutate(saved.id);
+                                    nav.goBack();
+                                }}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Delete Formation',
+                                    description:
+                                        'Are you sure you want to delete this formation?',
+                                }}
+                            />
+                        </MenuSection>
+                    )}
                 </GestureHandlerRootView>
             </ScrollView>
         </>

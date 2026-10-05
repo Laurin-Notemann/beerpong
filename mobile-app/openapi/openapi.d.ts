@@ -45,9 +45,104 @@ declare namespace Components {
             x?: number; // int32
             y?: number; // int32
         }
+        export interface EloGameDto {
+            matchId: string;
+            date: string; // date-time
+            gap: number; // double
+            scale: number; // double
+            teamPoints: number; // double
+            finisher: string;
+            finishMove: string;
+            teams: EloTeamDto[];
+        }
+        export interface EloMoveDto {
+            name: string;
+            count: number; // int32
+        }
+        export interface EloParamsDto {
+            k: number; // double
+            marginWeight: number; // double
+            perPoint: number; // double
+            topWeight: number; // double
+        }
+        export interface EloPlayerDto {
+            profileId: string;
+            name: string;
+            points: number; // int64
+            own: number; // int64
+            before: number; // double
+            after: number; // double
+            result: number; // double
+            hitting: number; // double
+            expected: number; // double
+            moves: EloMoveDto[];
+        }
+        export interface EloPredictionDto {
+            params: EloScoreDto;
+            defaults: EloScoreDto;
+        }
+        export interface EloScoreDto {
+            logLoss: number; // double
+            correct: number; // double
+            called: number; // int32
+            games: number; // int32
+        }
+        export interface EloSearchDto {
+            params: EloParamsDto;
+            prediction: EloScoreDto;
+            tried: number; // int32
+        }
+        export interface EloSeasonDto {
+            id: string;
+            name?: string;
+            numMatches: number; // int32
+        }
+        export interface EloSimulationDto {
+            groupId: string;
+            groupName?: string;
+            defaults: EloParamsDto;
+            params: EloParamsDto;
+            seasons: EloSeasonDto[];
+            seasonId?: string;
+            standings: EloStandingDto[];
+            games: EloGameDto[];
+            prediction: EloPredictionDto;
+        }
+        export interface EloStandingDto {
+            profileId: string;
+            name: string;
+            elo: number; // double
+            defaultElo: number; // double
+            defaultRank: number; // int32
+            matches: number; // int64
+            wins: number; // int64
+            points: number; // int64
+            result: number; // double
+            hitting: number; // double
+        }
+        export interface EloTeamDto {
+            won: boolean;
+            rating: number; // double
+            winChance: number; // double
+            points: number; // int64
+            avgPoints: number; // double
+            cups: number; // int64
+            players: EloPlayerDto[];
+        }
         export interface ErrorDetails {
             code?: string;
             description?: string;
+        }
+        export interface FormationDto {
+            id?: string;
+            groupId?: string;
+            name?: string;
+            cups?: CupPositionDto[];
+            updatedAt?: string; // date-time
+        }
+        export interface FormationSaveDto {
+            name?: string;
+            cups?: CupPositionDto[];
         }
         export interface GroupCreateDto {
             name?: string;
@@ -238,6 +333,24 @@ declare namespace Components {
             data?: AuthTokenDto;
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeEloSearchDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: EloSearchDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeEloSimulationDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: EloSimulationDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeFormationDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: FormationDto;
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeGroupDto {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
@@ -248,6 +361,12 @@ declare namespace Components {
             status?: 'OK' | 'ERROR';
             httpCode?: number; // int32
             data?: LeaderboardDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeListFormationDto {
+            status?: 'OK' | 'ERROR';
+            httpCode?: number; // int32
+            data?: FormationDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListGroupDto {
@@ -568,6 +687,19 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
+    namespace DeleteFormation {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
     namespace DeleteMatchById {
         namespace Parameters {
             export type GroupId = string;
@@ -744,6 +876,40 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeAssetMetadataDto;
+        }
+    }
+    namespace GetEloSimulation {
+        namespace Parameters {
+            export type InviteCode = string;
+            export type K = number; // double
+            export type MarginWeight = number; // double
+            export type PerPoint = number; // double
+            export type SeasonId = string;
+            export type TopWeight = number; // double
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+            seasonId?: Parameters.SeasonId;
+            k?: Parameters.K /* double */;
+            marginWeight?: Parameters.MarginWeight /* double */;
+            perPoint?: Parameters.PerPoint /* double */;
+            topWeight?: Parameters.TopWeight /* double */;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeEloSimulationDto;
+        }
+    }
+    namespace GetFormations {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListFormationDto;
         }
     }
     namespace GetGroupById {
@@ -960,6 +1126,31 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeAuthTokenDto;
         }
     }
+    namespace SaveFormation {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.FormationSaveDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeFormationDto;
+        }
+    }
+    namespace SearchEloWeights {
+        namespace Parameters {
+            export type InviteCode = string;
+        }
+        export interface QueryParameters {
+            inviteCode: Parameters.InviteCode;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeEloSearchDto;
+        }
+    }
     namespace SetAvatar {
         namespace Parameters {
             export type GroupId = string;
@@ -1113,6 +1304,22 @@ declare namespace Paths {
 }
 
 export interface OperationMethods {
+    /**
+     * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.
+     */
+    getEloSimulation(
+        parameters?: Parameters<Paths.GetEloSimulation.QueryParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
+    /**
+     * searchEloWeights - Tries a grid of Elo weights on all of a group's seasons and returns the one that predicts its games best.
+     */
+    searchEloWeights(
+        parameters?: Parameters<Paths.SearchEloWeights.QueryParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SearchEloWeights.Responses.$200>;
     /**
      * getGroupById
      */
@@ -1514,6 +1721,30 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.AppendOps.Responses.$200>;
     /**
+     * getFormations
+     */
+    getFormations(
+        parameters?: Parameters<Paths.GetFormations.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetFormations.Responses.$200>;
+    /**
+     * saveFormation
+     */
+    saveFormation(
+        parameters?: Parameters<Paths.SaveFormation.PathParameters> | null,
+        data?: Paths.SaveFormation.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.SaveFormation.Responses.$200>;
+    /**
+     * deleteFormation
+     */
+    deleteFormation(
+        parameters?: Parameters<Paths.DeleteFormation.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteFormation.Responses.$200>;
+    /**
      * getActiveLiveMatches
      */
     getActiveLiveMatches(
@@ -1524,6 +1755,26 @@ export interface OperationMethods {
 }
 
 export interface PathsDictionary {
+    ['/elo-simulation']: {
+        /**
+         * getEloSimulation - A group's season computed by the leaderboard's Elo with other weights, every game's breakdown, and how well the ratings predict the next game over all seasons. Weights left out stay at the default; without seasonId the running season.
+         */
+        get(
+            parameters?: Parameters<Paths.GetEloSimulation.QueryParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetEloSimulation.Responses.$200>;
+    };
+    ['/elo-simulation/search']: {
+        /**
+         * searchEloWeights - Tries a grid of Elo weights on all of a group's seasons and returns the one that predicts its games best.
+         */
+        get(
+            parameters?: Parameters<Paths.SearchEloWeights.QueryParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SearchEloWeights.Responses.$200>;
+    };
     ['/groups/{id}']: {
         /**
          * getGroupById
@@ -1993,6 +2244,34 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.AppendOps.Responses.$200>;
     };
+    ['/groups/{groupId}/formations']: {
+        /**
+         * getFormations
+         */
+        get(
+            parameters?: Parameters<Paths.GetFormations.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetFormations.Responses.$200>;
+    };
+    ['/groups/{groupId}/formations/{id}']: {
+        /**
+         * saveFormation
+         */
+        put(
+            parameters?: Parameters<Paths.SaveFormation.PathParameters> | null,
+            data?: Paths.SaveFormation.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.SaveFormation.Responses.$200>;
+        /**
+         * deleteFormation
+         */
+        delete(
+            parameters?: Parameters<Paths.DeleteFormation.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteFormation.Responses.$200>;
+    };
     ['/groups/{groupId}/live-matches']: {
         /**
          * getActiveLiveMatches
@@ -2014,7 +2293,20 @@ export type AuthRefreshDto = Components.Schemas.AuthRefreshDto;
 export type AuthSignupDto = Components.Schemas.AuthSignupDto;
 export type AuthTokenDto = Components.Schemas.AuthTokenDto;
 export type CupPositionDto = Components.Schemas.CupPositionDto;
+export type EloGameDto = Components.Schemas.EloGameDto;
+export type EloMoveDto = Components.Schemas.EloMoveDto;
+export type EloParamsDto = Components.Schemas.EloParamsDto;
+export type EloPlayerDto = Components.Schemas.EloPlayerDto;
+export type EloPredictionDto = Components.Schemas.EloPredictionDto;
+export type EloScoreDto = Components.Schemas.EloScoreDto;
+export type EloSearchDto = Components.Schemas.EloSearchDto;
+export type EloSeasonDto = Components.Schemas.EloSeasonDto;
+export type EloSimulationDto = Components.Schemas.EloSimulationDto;
+export type EloStandingDto = Components.Schemas.EloStandingDto;
+export type EloTeamDto = Components.Schemas.EloTeamDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
+export type FormationDto = Components.Schemas.FormationDto;
+export type FormationSaveDto = Components.Schemas.FormationSaveDto;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
@@ -2046,10 +2338,18 @@ export type ResponseEnvelopeAssetUploadResponse =
     Components.Schemas.ResponseEnvelopeAssetUploadResponse;
 export type ResponseEnvelopeAuthTokenDto =
     Components.Schemas.ResponseEnvelopeAuthTokenDto;
+export type ResponseEnvelopeEloSearchDto =
+    Components.Schemas.ResponseEnvelopeEloSearchDto;
+export type ResponseEnvelopeEloSimulationDto =
+    Components.Schemas.ResponseEnvelopeEloSimulationDto;
+export type ResponseEnvelopeFormationDto =
+    Components.Schemas.ResponseEnvelopeFormationDto;
 export type ResponseEnvelopeGroupDto =
     Components.Schemas.ResponseEnvelopeGroupDto;
 export type ResponseEnvelopeLeaderboardDto =
     Components.Schemas.ResponseEnvelopeLeaderboardDto;
+export type ResponseEnvelopeListFormationDto =
+    Components.Schemas.ResponseEnvelopeListFormationDto;
 export type ResponseEnvelopeListGroupDto =
     Components.Schemas.ResponseEnvelopeListGroupDto;
 export type ResponseEnvelopeListGroupPreset =

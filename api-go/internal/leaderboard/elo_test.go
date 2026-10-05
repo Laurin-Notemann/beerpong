@@ -12,38 +12,42 @@ func TestEloCloseWinCountsOnce(t *testing.T) {
 	// expected to (9 of a team's 9), so hitting adds nothing.
 	blue := &Stats{Elo: 1500, PlayerID: "b"}
 	red := &Stats{Elo: 1500, PlayerID: "r"}
-	calculateElo(1, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 8, "r": 4}, map[string]int64{"b": 9, "r": 9}, 9)
+	calculateElo(DefaultElo, 1, []*Stats{blue}, []*Stats{red}, map[string]int64{"b": 8, "r": 4}, map[string]int64{"b": 9, "r": 9}, 9)
 	if blue.Elo != 1675 || red.Elo != 1325 {
 		t.Fatalf("got blue %v red %v, want 1675 / 1325", blue.Elo, red.Elo)
 	}
 }
 
-func TestEloRingFinishCountsMoreThanNormalFinish(t *testing.T) {
+// twoOnTwo is one 2v2 match: A and B (A finishing with finish) beat C and D.
+func twoOnTwo(finish string) Input {
 	profile := func(s string) *string { return &s }
+	return Input{
+		Players: []Player{
+			{ID: "pa", ProfileID: profile("A"), SeasonID: "s", Active: true},
+			{ID: "pb", ProfileID: profile("B"), SeasonID: "s", Active: true},
+			{ID: "pc", ProfileID: profile("C"), SeasonID: "s", Active: true},
+			{ID: "pd", ProfileID: profile("D"), SeasonID: "s", Active: true},
+		},
+		Matches: []Match{{
+			ID: "m", Date: time.Now(), TeamIDs: []string{"t1", "t2"},
+			Members: []Member{{ID: "ma", TeamID: "t1", PlayerID: "pa"}, {ID: "mb", TeamID: "t1", PlayerID: "pb"},
+				{ID: "mc", TeamID: "t2", PlayerID: "pc"}, {ID: "md", TeamID: "t2", PlayerID: "pd"}},
+			Moves: []Move{{TeamMemberID: "ma", MoveID: "cup", Value: 4}, {TeamMemberID: "mb", MoveID: "cup", Value: 3},
+				{TeamMemberID: "ma", MoveID: finish, Value: 1},
+				{TeamMemberID: "mc", MoveID: "cup", Value: 5}, {TeamMemberID: "md", MoveID: "cup", Value: 3}},
+		}},
+		RuleMoves: map[string]RuleMove{
+			"cup":    {PointsForScorer: 1, Cups: 1},
+			"normal": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true},
+			"ring":   {PointsForScorer: 1, PointsForTeam: 10, Finishing: true, Cups: 6},
+		},
+		ProfileOf: map[string]string{"pa": "A", "pb": "B", "pc": "C", "pd": "D"},
+	}
+}
+
+func TestEloRingFinishCountsMoreThanNormalFinish(t *testing.T) {
 	game := func(finish string) map[string]*Stats {
-		in := Input{
-			Players: []Player{
-				{ID: "pa", ProfileID: profile("A"), SeasonID: "s", Active: true},
-				{ID: "pb", ProfileID: profile("B"), SeasonID: "s", Active: true},
-				{ID: "pc", ProfileID: profile("C"), SeasonID: "s", Active: true},
-				{ID: "pd", ProfileID: profile("D"), SeasonID: "s", Active: true},
-			},
-			Matches: []Match{{
-				ID: "m", Date: time.Now(), TeamIDs: []string{"t1", "t2"},
-				Members: []Member{{ID: "ma", TeamID: "t1", PlayerID: "pa"}, {ID: "mb", TeamID: "t1", PlayerID: "pb"},
-					{ID: "mc", TeamID: "t2", PlayerID: "pc"}, {ID: "md", TeamID: "t2", PlayerID: "pd"}},
-				Moves: []Move{{TeamMemberID: "ma", MoveID: "cup", Value: 4}, {TeamMemberID: "mb", MoveID: "cup", Value: 3},
-					{TeamMemberID: "ma", MoveID: finish, Value: 1},
-					{TeamMemberID: "mc", MoveID: "cup", Value: 5}, {TeamMemberID: "md", MoveID: "cup", Value: 3}},
-			}},
-			RuleMoves: map[string]RuleMove{
-				"cup":    {PointsForScorer: 1, Cups: 1},
-				"normal": {PointsForScorer: 1, PointsForTeam: 3, Finishing: true},
-				"ring":   {PointsForScorer: 1, PointsForTeam: 10, Finishing: true, Cups: 6},
-			},
-			ProfileOf: map[string]string{"pa": "A", "pb": "B", "pc": "C", "pd": "D"},
-		}
-		res, err := Compute(in)
+		res, err := Compute(twoOnTwo(finish))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -69,7 +73,7 @@ func TestEloRingFinishCountsMoreThanNormalFinish(t *testing.T) {
 
 func TestEloHittingIsWorthAFixedAmountPerPoint(t *testing.T) {
 	// Equal ratings: each player is expected to score 4.5 of a team's 9.
-	// Every own point above or below that is worth eloPerPoint, whatever the
+	// Every own point above or below that is worth PerPoint, whatever the
 	// teammate scored.
 	game := func(mateOwn int64) (me, mate float64) {
 		a := &Stats{Elo: 1500, PlayerID: "a"}
@@ -78,18 +82,51 @@ func TestEloHittingIsWorthAFixedAmountPerPoint(t *testing.T) {
 		d := &Stats{Elo: 1500, PlayerID: "d"}
 		points := map[string]int64{"a": 8, "b": 8, "c": 2, "d": 2}
 		own := map[string]int64{"a": 2, "b": mateOwn, "c": 2, "d": 2}
-		calculateElo(1, []*Stats{a, b}, []*Stats{c, d}, points, own, 9)
+		calculateElo(DefaultElo, 1, []*Stats{a, b}, []*Stats{c, d}, points, own, 9)
 		return a.Elo, b.Elo
 	}
 	me, mate := game(10)
-	if d := mate - me; math.Abs(d-8*eloPerPoint) > 1e-9 {
-		t.Fatalf("8 more points should be worth %v, got %v", 8*eloPerPoint, d)
+	if d := mate - me; math.Abs(d-8*DefaultElo.PerPoint) > 1e-9 {
+		t.Fatalf("8 more points should be worth %v, got %v", 8*DefaultElo.PerPoint, d)
 	}
 	if again, _ := game(4); again != me {
 		t.Fatalf("a teammate's points changed my rating: %v vs %v", again, me)
 	}
 }
 
+func TestTraceExplainsEveryChange(t *testing.T) {
+	in := twoOnTwo("ring")
+	in.Matches = append(in.Matches, in.Matches[0])
+	in.Matches[1].ID, in.Matches[1].Date = "m2", in.Matches[0].Date.Add(time.Hour)
+	in.Trace = true
+	res, err := Compute(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	final := map[string]float64{}
+	for _, e := range res.Entries {
+		final[*e.Player.ProfileID] = e.Stats.Elo
+	}
+	last := map[string]float64{}
+	for _, g := range res.Games {
+		for _, team := range g.Teams {
+			for _, p := range team.Players {
+				if d := p.After - p.Before - p.Result - p.Hitting; math.Abs(d) > 1e-9 {
+					t.Fatalf("%s in %s: result and hitting miss %v of the change", p.ProfileID, g.MatchID, d)
+				}
+				last[p.ProfileID] = p.After
+			}
+		}
+	}
+	if len(res.Games) != 2 || len(last) != 4 {
+		t.Fatalf("traced %d games and %d players, want 2 and 4", len(res.Games), len(last))
+	}
+	for id, elo := range last {
+		if elo != final[id] {
+			t.Fatalf("%s: trace ends at %v, leaderboard says %v", id, elo, final[id])
+		}
+	}
+}
 func TestProjectedLiveMatch(t *testing.T) {
 	profile := func(s string) *string { return &s }
 	// one finished match, then a live one in progress: blue has taken bc cups, red rc

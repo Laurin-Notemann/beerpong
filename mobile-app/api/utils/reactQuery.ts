@@ -17,6 +17,8 @@ export const QK = {
     liveMatches: 'liveMatches',
     /** `[group, groupId, liveMatch, id]`: one live match, in any status */
     liveMatch: 'liveMatch',
+    /** `[group, groupId, formations]`: the formations the group re-racks cups into */
+    formations: 'formations',
 
     groupCode: 'groupCode',
 };

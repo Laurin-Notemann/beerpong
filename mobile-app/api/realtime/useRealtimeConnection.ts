@@ -7,6 +7,7 @@ import {
     useState,
 } from 'react';
 
+import { applyFormationEvent } from '@/api/calls/formationHooks';
 import { env } from '@/api/env';
 import {
     applyLiveMatchEvent,
@@ -201,11 +202,26 @@ export function useRealtimeConnection() {
                         QK.seasons,
                     ]),
                 });
+                // a team photo is found through its match
+                if (e.scope.startsWith('matchTeamPhoto')) {
+                    qc.invalidateQueries({
+                        predicate: replaceWildcards([
+                            QK.group,
+                            e.groupId,
+                            QK.season,
+                            '*',
+                            QK.matches,
+                        ]),
+                    });
+                }
                 break;
 
             case 'LIVE_MATCHES':
                 // applied directly: ops arrive often and carry everything needed
                 applyLiveMatchEvent(qc, e.groupId, e.scope, e.body);
+                break;
+            case 'FORMATIONS':
+                applyFormationEvent(qc, e.groupId, e.scope, e.body);
                 break;
         }
     });

@@ -87,6 +87,10 @@ type Input struct {
 	// KeepStoredStats starts from the stored statistics instead of zero
 	// (all-time boards, and season boards used to carry stats forward).
 	KeepStoredStats bool
+	// Elo replaces DefaultElo (the simulator).
+	Elo *EloParams
+	// Trace records how every match moved the ratings in Result.Games.
+	Trace bool
 }
 
 // Entry is one profile on the board with the player that represents it.
@@ -100,6 +104,37 @@ type Result struct {
 	// iteration order over profile ids). Callers filter inactive players.
 	Entries    []*Entry
 	NumMatches int64
+	Games      []Game // with Input.Trace, in the order they were rated
+}
+
+// Game is how one match moved the ratings.
+type Game struct {
+	MatchID    string
+	Date       time.Time
+	Gap        float64 // winners' app points per player minus losers'
+	Scale      float64 // how many close normal wins the result counted as
+	TeamPoints float64 // own points a team scored per game before this one
+	Teams      [2]GameTeam
+}
+
+type GameTeam struct {
+	TeamID    string
+	Won       bool
+	Rating    float64
+	WinChance float64
+	Players   []GamePlayer
+}
+
+type GamePlayer struct {
+	MemberID  string
+	ProfileID string
+	Points    int64 // app points
+	Own       int64 // without the finish bonus
+	Before    float64
+	After     float64
+	Result    float64 // the team's share of the change
+	Hitting   float64 // PerPoint × (Own − Expected)
+	Expected  float64
 }
 
 // draw stands for the winner of a tied projected match.
@@ -126,10 +161,12 @@ func Compute(in Input) (Result, error) {
 	sort.SliceStable(matches, func(i, j int) bool { return matches[i].Date.Before(matches[j].Date) })
 
 	var numMatches int64
-	// The Elo's expected points follow what teams scored so far this season.
-	var teamPoints teamPointsAverage
+	r := &rating{elo: DefaultElo, trace: in.Trace}
+	if in.Elo != nil {
+		r.elo = *in.Elo
+	}
 	for _, m := range matches {
-		processed, err := processMatch(m, entries, memberProfile, in.RuleMoves, &teamPoints)
+		processed, err := processMatch(m, entries, memberProfile, in.RuleMoves, r)
 		if err != nil {
 			return Result{}, err
 		}
@@ -144,7 +181,17 @@ func Compute(in Input) (Result, error) {
 		e.Stats.calculate()
 		out = append(out, e)
 	}
-	return Result{Entries: out, NumMatches: numMatches}, nil
+	return Result{Entries: out, NumMatches: numMatches, Games: r.games}, nil
+}
+
+// rating is the Elo state of one Compute.
+type rating struct {
+	elo EloParams
+	// teamPoints: the Elo's expected points follow what teams scored so far
+	// this season.
+	teamPoints teamPointsAverage
+	trace      bool
+	games      []Game
 }
 
 // buildEntries keeps one player per profile: the one from the most recent
@@ -184,7 +231,7 @@ func isNewer(candidate, existing Player) bool {
 	return candidate.SeasonEnd.After(*existing.SeasonEnd)
 }
 
-func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]string, ruleMoves map[string]RuleMove, teamPoints *teamPointsAverage) (bool, error) {
+func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]string, ruleMoves map[string]RuleMove, r *rating) (bool, error) {
 	if len(m.TeamIDs) < 2 {
 		return false, nil
 	}
@@ -278,8 +325,8 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 		return false, fmt.Errorf("%w: match %s", ErrNoWinner, m.ID)
 	}
 
-	blueStats := teamStats(m, blue, entryOf)
-	redStats := teamStats(m, red, entryOf)
+	blueStats, blueMembers := teamStats(m, blue, entryOf)
+	redStats, redMembers := teamStats(m, red, entryOf)
 	resultBlue := 0.5
 	switch winner {
 	case blue:
@@ -291,29 +338,65 @@ func processMatch(m Match, entries map[string]*Entry, memberProfile map[string]s
 	for _, s := range winners {
 		s.Wins++
 	}
-	expected := teamPoints.value(bluePoints, redPoints)
+	var before []float64
+	if r.trace {
+		for _, s := range append(append([]*Stats{}, blueStats...), redStats...) {
+			before = append(before, s.Elo)
+		}
+	}
+	teamPoints := r.teamPoints.value(bluePoints, redPoints)
 	if inProgress {
 		// part of a game: a full game's expected points would sink everyone's rating early
 		// on, so a team is expected to have scored no more than the teams' average so far
-		expected = math.Min(expected, float64(bluePoints+redPoints)/2)
+		teamPoints = math.Min(teamPoints, float64(bluePoints+redPoints)/2)
 	}
-	calculateElo(resultBlue, blueStats, redStats, appPoints, playerPoints, expected)
-	teamPoints.add(bluePoints)
-	teamPoints.add(redPoints)
+	g := calculateElo(r.elo, resultBlue, blueStats, redStats, appPoints, playerPoints, teamPoints)
+	r.teamPoints.add(bluePoints)
+	r.teamPoints.add(redPoints)
+	if !r.trace {
+		return true, nil
+	}
+
+	game := Game{MatchID: m.ID, Date: m.Date, Gap: g.gap, Scale: g.scale, TeamPoints: teamPoints}
+	sides := [2][]*Stats{blueStats, redStats}
+	members := [2][]string{blueMembers, redMembers}
+	for k, team := range [2]string{blue, red} {
+		delta, chance := g.delta, g.winChance
+		if k == 1 {
+			delta, chance = -delta, 1-chance
+		}
+		gt := GameTeam{TeamID: team, Won: winner == team, Rating: g.rating[k], WinChance: chance}
+		for i, s := range sides[k] {
+			b := before[0]
+			before = before[1:]
+			own := playerPoints[s.PlayerID]
+			gt.Players = append(gt.Players, GamePlayer{
+				MemberID: members[k][i], ProfileID: memberProfile[members[k][i]],
+				Points: appPoints[s.PlayerID], Own: own, Before: b, After: s.Elo,
+				Result: delta, Hitting: r.elo.PerPoint * (float64(own) - g.expected[k][i]), Expected: g.expected[k][i],
+			})
+		}
+		game.Teams[k] = gt
+	}
+	r.games = append(r.games, game)
 	return true, nil
 }
 
-func teamStats(m Match, team string, entryOf func(string) *Entry) []*Stats {
+// teamStats are the statistics of a team's players, with their team member
+// ids.
+func teamStats(m Match, team string, entryOf func(string) *Entry) ([]*Stats, []string) {
 	var out []*Stats
+	var ids []string
 	for _, tm := range m.Members {
 		if tm.TeamID != team {
 			continue
 		}
 		if e := entryOf(tm.ID); e != nil {
 			out = append(out, e.Stats)
+			ids = append(ids, tm.ID)
 		}
 	}
-	return out
+	return out, ids
 }
 
 // nullProfile stands in for players without a profile, which Java keyed
