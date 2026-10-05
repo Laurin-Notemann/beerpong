@@ -89,32 +89,40 @@ export function finishForHit(
 export const finishesOnTopOfLastCup = <T extends CupMove>(moves: T[]) =>
     moves.filter((move) => move.isFinish && move.cups === 0);
 
+/** whether the scorer picks the other cups a hit takes (a bouncer's second cup), see cupsTakenBy */
+export const picksOtherCups = (move: CupMove, standing: number) =>
+    move.cups > 1 && move.cups < standing;
+
 /**
- * The cups a hit on `cup` takes: the tapped one, then the closest ones still standing (a bouncer
- * takes two). Undefined if the cup is already gone or not enough cups are left.
+ * The cups a hit on `cup` takes: the tapped one, then the `others` the scorer picked (a bouncer
+ * takes a second cup of their choice). A move that takes every cup left (the rings, a bouncer on
+ * the last two) needs no picks. Undefined if a cup is already gone or the picks don't add up.
  */
 export function cupsTakenBy(
     hits: CupHit[],
     team: CupTeam,
     cup: CupPosition,
-    move: CupMove
+    move: CupMove,
+    others: CupPosition[] = []
 ): CupPosition[] | undefined {
     const standing = standingCups(hits, team);
     const tapped = standing.find((i) => samePosition(i, cup));
 
     if (!tapped || move.cups < 1 || move.cups > standing.length) return;
 
-    const distance = (i: CupPosition) =>
-        (i.x - cup.x) ** 2 + (i.y - cup.y) ** 2;
+    const rest =
+        move.cups === standing.length
+            ? standing.filter((i) => i !== tapped)
+            : others.map((i) => standing.find((j) => samePosition(i, j)));
 
-    const others = standing
-        .filter((i) => i !== tapped)
-        .sort((a, b) => distance(a) - distance(b) || a.y - b.y || a.x - b.x);
+    if (
+        rest.length !== move.cups - 1 ||
+        rest.some((i, idx) => !i || i === tapped || rest.indexOf(i) !== idx)
+    ) {
+        return;
+    }
 
-    return [tapped, ...others.slice(0, move.cups - 1)].map(({ x, y }) => ({
-        x,
-        y,
-    }));
+    return [tapped, ...(rest as CupPosition[])].map(({ x, y }) => ({ x, y }));
 }
 
 /**

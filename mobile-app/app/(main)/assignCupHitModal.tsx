@@ -8,17 +8,19 @@ import { useGroup } from '@/api/calls/seasonHooks';
 import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import Avatar from '@/components/Avatar';
 import CupGrid from '@/components/CupGrid';
-import { rotateFormation } from '@/components/CupGrid/Formation';
+import { rotateFormation, rotatePoint } from '@/components/CupGrid/Formation';
 import Select from '@/components/Select';
 import Text from '@/components/Text';
 import {
     CUP_FORMATION,
     CupMove,
+    CupPosition,
     cupsTakenBy,
     CupTeam,
     finishesOnTopOfLastCup,
     finishForHit,
     hittableMoves,
+    picksOtherCups,
     standingCups,
 } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
@@ -92,9 +94,19 @@ export default function Page() {
 
     // a hit on the last cup that still needs to know which finish it was
     const [lastCupMove, setLastCupMove] = useState<CupMove | null>(null);
+    // a hit that takes more cups than the tapped one (a bouncer), and the other cups picked so far
+    const [pickMove, setPickMove] = useState<CupMove | null>(null);
+    const [picked, setPicked] = useState<CupPosition[]>([]);
 
-    function record(move: CupMove, finishMoveId?: string) {
-        const cups = cupsTakenBy(entry.cupHits, team, cup, move);
+    const isSame = (a: CupPosition, b: CupPosition) =>
+        a.x === b.x && a.y === b.y;
+
+    function record(
+        move: CupMove,
+        finishMoveId?: string,
+        others: CupPosition[] = []
+    ) {
+        const cups = cupsTakenBy(entry.cupHits, team, cup, move, others);
 
         if (player && cups) {
             entry.actions.recordCupHit({
@@ -112,6 +124,15 @@ export default function Page() {
         const move = moveOptions.find((i) => i.id === moveId);
         if (!move) return;
 
+        setLastCupMove(null);
+        setPickMove(null);
+        setPicked([]);
+
+        if (picksOtherCups(move, standing.length)) {
+            setPickMove(move);
+            return;
+        }
+
         const finish = finishForHit(move, standing.length, hasFinish, moves);
 
         if (finish === 'ask') {
@@ -121,11 +142,38 @@ export default function Page() {
         }
     }
 
-    // the team's cups as they're drawn on the cups page, the tapped one stands out
+    function onCupTap(drawn: CupPosition) {
+        if (!pickMove) return;
+
+        const tapped =
+            params.rotated === 'true'
+                ? rotatePoint(CUP_FORMATION, drawn)
+                : drawn;
+        const position = { x: tapped.x, y: tapped.y };
+
+        if (
+            isSame(position, cup) ||
+            !standing.some((i) => isSame(i, position))
+        ) {
+            return;
+        }
+
+        const next = picked.some((i) => isSame(i, position))
+            ? picked.filter((i) => !isSame(i, position))
+            : [...picked, position];
+
+        if (next.length === pickMove.cups - 1) {
+            record(pickMove, undefined, next);
+        } else {
+            setPicked(next);
+        }
+    }
+
+    // the team's cups as they're drawn on the cups page, the tapped (and picked) ones stand out
     const formation = {
         ...CUP_FORMATION,
         cups: CUP_FORMATION.cups.map((i) => {
-            const isTapped = i.x === cup.x && i.y === cup.y;
+            const isTapped = isSame(i, cup) || picked.some((j) => isSame(i, j));
             const isStanding = standing.some((j) => j.x === i.x && j.y === i.y);
 
             return {
@@ -146,7 +194,9 @@ export default function Page() {
             <View style={{ alignItems: 'center', marginVertical: 16 }}>
                 <CupGrid
                     color={theme.color.team[team]}
-                    width={160}
+                    // big enough to tap while the scorer picks the other cups
+                    width={pickMove ? 240 : 160}
+                    onCupTap={onCupTap}
                     formation={
                         params.rotated === 'true'
                             ? rotateFormation(formation)
@@ -189,6 +239,8 @@ export default function Page() {
                         onChange={(id) => {
                             setPlayerId(id);
                             setLastCupMove(null);
+                            setPickMove(null);
+                            setPicked([]);
                         }}
                         value={playerId}
                     />
@@ -208,9 +260,16 @@ export default function Page() {
                                     : i.name,
                         }))}
                         onChange={onSelectMove}
-                        value={lastCupMove?.id}
+                        value={lastCupMove?.id ?? pickMove?.id}
                     />
                 </>
+            )}
+            {isStanding && player && pickMove && (
+                <Text color="primary" variant="h3">
+                    {pickMove.cups === 2
+                        ? 'Which other cup does it take? Tap it above.'
+                        : `Which ${pickMove.cups - 1} other cups does it take? Tap them above.`}
+                </Text>
             )}
             {isStanding && player && lastCupMove && (
                 <>

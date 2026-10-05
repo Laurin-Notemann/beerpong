@@ -36,9 +36,10 @@ function hit(
     team: CupTeam,
     cup: { x: number; y: number },
     playerId: string,
-    move: CupMove
+    move: CupMove,
+    others: { x: number; y: number }[] = []
 ) {
-    const cups = cupsTakenBy(draft().cupHits, team, cup, move);
+    const cups = cupsTakenBy(draft().cupHits, team, cup, move, others);
     if (!cups) throw new Error('cup is not hittable');
 
     const finish = finishForHit(move, standing(team), hasFinish(), moves);
@@ -88,8 +89,12 @@ describe('pro mode cups', () => {
         expect(standing('blue')).toBe(10);
     });
 
-    it('a bouncer takes the tapped cup and the closest one', () => {
-        hit('red', { x: 3, y: 6 }, 'carl', bouncer);
+    it('a bouncer takes the tapped cup and the one the scorer picked', () => {
+        expect(
+            cupsTakenBy(draft().cupHits, 'red', { x: 3, y: 6 }, bouncer)
+        ).toBeUndefined();
+
+        hit('red', { x: 3, y: 6 }, 'carl', bouncer, [{ x: 2, y: 4 }]);
 
         expect(count('carl', 'bouncer')).toBe(1);
         expect(draft().cupHits[0].cups).toEqual([
@@ -114,7 +119,7 @@ describe('pro mode cups', () => {
     });
 
     it('putting a cup back undoes its whole hit', () => {
-        hit('red', { x: 3, y: 6 }, 'carl', bouncer);
+        hit('red', { x: 3, y: 6 }, 'carl', bouncer, [{ x: 2, y: 4 }]);
         // the second cup the bouncer took
         actions().undoCupHit('red', { x: 2, y: 4 });
 
