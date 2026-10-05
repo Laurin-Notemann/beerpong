@@ -76,7 +76,7 @@ An empty database is a bad test. For realistic data, dump the staging database r
 - Smallest proof that the change works. Run the tests and checks for the scope you touched:
   - API: `cd apps/api && go test ./...`, then the contract suite against the running API: `cd api-tests && API_BASE_URL=http://localhost:8080 go test ./...` (see `api-tests/README.md`).
   - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:test` (vitest), `npm run ci:format`.
-  - TV: `cd apps/tv && npm run typecheck && npm test && npm run build`.
+  - Web (the simulator and the TV): `cd apps/web && npm run format:check && npm run typecheck && npm test && npm run build`.
 - Test meaningful logic or observable behavior (Elo, leaderboard scoring, match validation). Don't add tests that mirror the implementation.
 - Backend behavior changes ship with a contract test in `api-tests/` (observable behavior) or a unit test next to the Go code (Elo, leaderboard math).
 - Don't verify with simulators, devices or browsers unless the developer asks.
@@ -86,15 +86,14 @@ An empty database is a bad test. For realistic data, dump the staging database r
 The Elo lives in `apps/api/internal/leaderboard/elo.go`; its comment explains the model, and `DefaultElo` holds the weights. Ratings aren't stored per game: every leaderboard recomputes them from the season's matches (all time: every season's, in order), so changing a weight changes every rating at once. Check a change three ways:
 
 - `cd apps/api && go test ./internal/leaderboard` runs the behavior tests in `elo_test.go`.
-- beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `apps/var/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
+- beerpong-var (`https://var.beerpong.laurinnotemann.dev/<invite code>`) is the Elo simulator: every season of a group with sliders for the weights, each game's breakdown, made-up test games anywhere in a season (never stored), and a prediction score (how often the ratings before a game pick its winner), updated live. The API computes all of it in `GET /elo-simulation` with `leaderboard.Compute` itself (`Input.Elo`, `Input.Trace`), so there's no second copy of the Elo to keep in sync; the page in `apps/web/` only shows it. The weights and test games are in the URL, so a link shows the same thing to someone else. Try values there; then change `DefaultElo`.
 - Contract goldens with `elo` values (`api-tests/testdata/golden`) change with the Elo. Re-record only the tests that fail on `elo` (`GOLDEN=record ... go test -run '<those tests>' ./...`) and check that the diff touches nothing but `"elo"` lines.
 
 ## Shipping
 
 - **API:** push to `staging` → `Api Staging Deploy` runs the Go tests and contract suite, builds the `api-go` image and redeploys `beerpong-api-go-staging` on the server over SSH. Migrations (`apps/api/internal/database/migrations`, goose) run when it starts. There is no production API deploy; `main` doesn't deploy anything.
 - **App:** push to `staging` → `Mobile App Staging` (`.github/workflows/mobile-app-eas.yml`) ships iOS from GitHub's runners, not EAS cloud builds. Android only ships when you start the workflow by hand with `platform: android`. It fingerprints the app. If a build with that fingerprint is registered on EAS, it publishes an OTA update on the build's channel. A new runtime gets a native build on the runner (`eas build --local`), registered on EAS with `eas upload`: iOS goes to TestFlight, Android to an internal preview APK. Start it by hand with `native_build` to force a build. Build numbers are managed remotely by EAS. A build you make on your laptop is only found by later pushes after `eas upload --fingerprint <hash>`.
-- **TV:** push to `staging` → `TV Staging Deploy` builds `apps/tv/Dockerfile`, writes the `tv` service in `~/docker/versus-tv` and its Traefik route (`~/traefik/dynamic/versus-tv-staging.yml`) on the server and redeploys it at https://beerpong.lb.staging.laurinnotemann.dev/tv.
-- **beerpong-var:** push to `staging` with changes in `apps/var/` → `Beerpong-var Deploy` builds its image and redeploys `beerpong-var` on the server (`~/docker/beerpong-var`, routed by `~/traefik/dynamic/beerpong-var.yml`).
+- **Web (simulator and TV):** push to `staging` → `Web Staging Deploy` builds `apps/web/Dockerfile`, writes the `web` service in `~/docker/versus-web` and its Traefik route (`~/traefik/dynamic/beerpong-var.yml`) on the server and redeploys it at https://var.beerpong.laurinnotemann.dev (the TV at `/tv`). `~/traefik/dynamic/versus-tv-staging.yml` redirects the TV's old address, `/tv` on the API's hostname, there.
 - The app checks for updates on foreground and applies a downloaded update when it goes to the background (`apps/mobile/hooks/useOtaUpdates.ts`).
 
 ## Pull requests
@@ -128,9 +127,8 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 - `apps/api/` - the API (Go, pgx + sqlc, goose migrations). `internal/api` (handlers), `internal/database` (migrations, SQL queries, generated code), `internal/leaderboard` (stats and Elo), `internal/realtime` (websocket), `openapi/` (the API document). See `apps/api/README.md`.
 - `apps/mobile/` - Expo / React Native app with expo-router. `app/` holds only routes: the root layout (providers, group drawer, error boundaries), `app/(main)/` (the stack with every screen) and `app/(main)/(tabs)/` (native tabs, one stack per tab). Non-route modules live in `lib/`, `components/`, `api/` (client, hooks, realtime), `zustand/` (local state), `utils/` (logging, Sentry), `hooks/`.
 - `.github/workflows/` - API CI/CD, mobile CI, OpenAPI generation, and the workflow that builds and updates the app.
-- `apps/tv/` - Versus TV: a TanStack Start web app that puts live matches and the leaderboard on a TV, controlled from phones. It reduces live matches with `apps/mobile/lib/liveMatch` code, so keep what `apps/tv/src/lib/liveMatch.ts` imports free of React Native. See `apps/tv/README.md`.
+- `apps/web/` - one TanStack Start web app: the Elo simulator on the API's `/elo-simulation` (see [Testing the Elo](#testing-the-elo)), and under `/tv` Versus TV, which puts live matches and the leaderboard on a TV, controlled from phones. The TV reduces live matches with `apps/mobile/lib/liveMatch` code, so keep what `apps/web/src/tv/lib/liveMatch.ts` imports free of React Native. See `apps/web/README.md`.
 - `api-tests/` - black-box contract tests (HTTP and websocket, compared with recorded golden transcripts) and `shadowdiff`.
-- `apps/var/` - the Elo simulator, a TanStack Start app on the API's `/elo-simulation` (see [Testing the Elo](#testing-the-elo)).
 - `docker/` - local compose files for the database and backend.
 
 ## Taste

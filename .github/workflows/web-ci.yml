@@ -1,0 +1,40 @@
+name: Web CI
+
+# Format, typecheck, tests and the production build of the web app (apps/web/: the Elo simulator
+# and Versus TV). The TV reduces live matches with the app's code, so changes to those parts of
+# apps/mobile/ run it too. The staging deploy runs this first.
+
+on:
+  push:
+    paths:
+      - "apps/web/**"
+      - "apps/mobile/lib/**"
+      - "apps/mobile/api/utils/**"
+      - "apps/mobile/components/CupGrid/**"
+      - "apps/mobile/utils/**"
+      - "apps/mobile/openapi/**"
+      - "package-lock.json"
+      - ".github/workflows/web-ci.yml"
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: apps/web
+
+jobs:
+  check:
+    name: Typecheck, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
