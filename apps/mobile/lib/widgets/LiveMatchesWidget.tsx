@@ -440,8 +440,12 @@ export const liveMatchesWidget =
  */
 const SHOWN_MS = 45 * 60 * 1000;
 
-export function showLiveMatches(props: LiveMatchesWidgetProps) {
+export function showLiveMatches(next: LiveMatchesWidgetProps) {
     if (!liveMatchesWidget) return;
+    // the widget's storage (UserDefaults) can't hold undefined or null, so both are left out
+    const props = JSON.parse(
+        JSON.stringify(next, (_key, value: unknown) => value ?? undefined)
+    ) as LiveMatchesWidgetProps;
     const now = Date.now();
     liveMatchesWidget.updateTimeline([
         { date: new Date(now), props },

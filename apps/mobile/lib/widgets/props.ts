@@ -132,6 +132,11 @@ export interface WidgetLiveMatch extends LiveScore {
 export interface LiveMatchesWidgetProps {
     /** empty while no group is selected */
     group: string;
+    /**
+     * the selected group's id: a push for another group is ignored. Read from here, since the app's
+     * storage can't be read while the phone is locked (missing in props written by older versions)
+     */
+    groupId?: string;
     matches: WidgetLiveMatch[];
     /** the match it shows; its button moves on to the next one */
     selectedId?: string;

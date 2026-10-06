@@ -21,8 +21,11 @@ import { ScopedLogger } from '@/utils/logging';
 const TASK = 'versus-live-scores';
 const logger = new ScopedLogger('widgets');
 
-/** the selected group, read straight from storage: the stores may not be hydrated yet */
-async function selectedGroupId() {
+/**
+ * the selected group, read straight from storage: the stores may not be hydrated yet. Only for
+ * widget props from before they had `groupId`; the storage can't be read while the phone is locked.
+ */
+async function storedGroupId() {
     const raw = await AsyncStorage.getItem('selected-group');
     const parsed = raw ? JSON.parse(raw) : undefined;
     return parsed?.state?.selectedGroupId as string | undefined;
@@ -35,26 +38,37 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(
         if (!scores || !liveMatchesWidget) {
             return Notifications.BackgroundNotificationTaskResult.NoData;
         }
+        let step = 'reading the widget';
         try {
-            if (scores.groupId !== (await selectedGroupId())) {
-                return Notifications.BackgroundNotificationTaskResult.NoData;
-            }
-            // the group's name stays as the app left it
+            // the group's name and id stay as the app left them
             const timeline = await liveMatchesWidget.getTimeline();
             const props = timeline[0]?.props as
                 LiveMatchesWidgetProps | undefined;
             if (!props?.group) {
                 return Notifications.BackgroundNotificationTaskResult.NoData;
             }
+            step = 'reading the selected group';
+            const groupId = props.groupId ?? (await storedGroupId());
+            if (scores.groupId !== groupId) {
+                return Notifications.BackgroundNotificationTaskResult.NoData;
+            }
+            step = 'updating the widget';
             showLiveMatches(
                 mergeLiveMatches(
-                    { group: props.group, matches: scores.matches },
+                    {
+                        group: props.group,
+                        groupId: props.groupId,
+                        matches: scores.matches,
+                    },
                     props
                 )
             );
             return Notifications.BackgroundNotificationTaskResult.NewData;
         } catch (err) {
-            logger.error('failed to update the widget from a push', err);
+            logger.error(
+                `failed to update the widget from a push (${step})`,
+                err
+            );
             return Notifications.BackgroundNotificationTaskResult.Failed;
         }
     }

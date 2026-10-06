@@ -214,6 +214,7 @@ export function useHomeScreenWidgets() {
 
         return {
             group: group.data.name,
+            groupId,
             matches: scores.map((i) => ({
                 id: i.id,
                 startedAt: Date.parse(i.startedAt) || Date.now(),
