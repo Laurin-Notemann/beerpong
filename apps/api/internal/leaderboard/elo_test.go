@@ -60,7 +60,7 @@ func TestEloSharesFollowThrowsAndRatings(t *testing.T) {
 	}
 
 	// a player 10 times as strong takes 10 of the 13 parts of a 2v2
-	strong := []*Stats{{Elo: 1500 + eloDivider*DefaultElo.Swing, PlayerID: "s"}, {Elo: 1500, PlayerID: "w"}}
+	strong := []*Stats{{Elo: 1500 + DefaultElo.Spread*DefaultElo.Swing, PlayerID: "s"}, {Elo: 1500, PlayerID: "w"}}
 	others := []*Stats{{Elo: 1500, PlayerID: "x"}, {Elo: 1500, PlayerID: "y"}}
 	g = calculateElo(DefaultElo, 1, 1, [2][]*Stats{strong, others}, map[string]int64{"s": 1, "w": 1, "x": 1, "y": 1}, startingGamePoints)
 	if math.Abs(g.share[0][0]-10.0/13) > 1e-9 {

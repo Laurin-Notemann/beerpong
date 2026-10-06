@@ -251,8 +251,8 @@ var eloKeys = map[string]bool{
 	"result": true, "hitting": true, "before": true, "after": true, "expected": true,
 	"winChance": true, "share": true, "ring": true,
 	"logLoss": true, "correct": true, "called": true,
-	"k": true, "kr": true, "ringWeight": true, "swing": true,
-	"eloK": true, "eloKr": true, "eloRingWeight": true, "eloSwing": true,
+	"k": true, "kr": true, "ringWeight": true, "swing": true, "spread": true,
+	"eloK": true, "eloKr": true, "eloRingWeight": true, "eloSwing": true, "eloSpread": true,
 }
 
 // withoutElo masks the eloKeys numbers of one transcript entry. A list of

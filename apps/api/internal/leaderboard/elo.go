@@ -24,9 +24,6 @@ import "math"
 // replays every season from it once, each match with its season's weights.
 const (
 	StartingElo = 1500
-	// eloDivider: at Swing 1, the rating gap between a player and one who
-	// scores 10 times as often in the same throws.
-	eloDivider = 4000.0
 	// gameCups: cups a team takes to win.
 	gameCups = 10
 	// startingGamePoints: own points both teams score in a full game, before
@@ -48,11 +45,22 @@ type EloParams struct {
 	// Swing scales how far ratings move and spread without changing who's
 	// ahead: K, KR and the rating gap of a strength ratio all grow with it.
 	Swing float64
+	// Spread: at Swing 1, the rating gap between a player and one who scores
+	// 10 times as often in the same throws. Smaller makes the same gap a
+	// bigger difference in shares.
+	Spread float64
 }
 
 // DefaultElo is a new season's weights. On Sackverein's games a game moves a
 // player by about 85 and at most about 240.
-var DefaultElo = EloParams{K: 40, KR: 40, RingWeight: 0.5, Swing: 3}
+var DefaultElo = EloParams{K: 40, KR: 40, RingWeight: 0.5, Swing: 3, Spread: 4000}
+
+func (p EloParams) spread() float64 {
+	if p.Spread <= 0 {
+		return DefaultElo.Spread
+	}
+	return p.Spread
+}
 
 func (p EloParams) swing() float64 {
 	if p.Swing <= 0 {
@@ -80,7 +88,7 @@ func calculateElo(p EloParams, resultBlue, ring float64, teams [2][]*Stats, own 
 		return g
 	}
 	swing := p.swing()
-	strength := func(s *Stats) float64 { return math.Pow(10, (s.Elo-StartingElo)/(eloDivider*swing)) }
+	strength := func(s *Stats) float64 { return math.Pow(10, (s.Elo-StartingElo)/(p.spread()*swing)) }
 
 	// each player's weight: strength × share of the team's throws (2 / team
 	// size, so a 2v2 player is 1)

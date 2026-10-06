@@ -13,6 +13,8 @@ export type Params = {
     kr: number;
     ringWeight: number;
     swing: number;
+    // at swing 1, the rating gap of scoring 10 times as often: smaller spreads the shares
+    spread: number;
 };
 
 export type Score = { logLoss: number; correct: number; called: number; games: number };

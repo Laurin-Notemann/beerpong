@@ -95,6 +95,7 @@ declare namespace Components {
             kr: number; // double
             ringWeight: number; // double
             swing: number; // double
+            spread: number; // double
         }
         export interface EloPlayerDto {
             profileId: string;
@@ -793,6 +794,10 @@ declare namespace Components {
                  * Elo: how far ratings move and spread, without changing who's ahead.
                  */
                 eloSwing?: number | null; // double
+                /**
+                 * Elo: at swing 1, the rating gap between a player and one who scores 10 times as often. Smaller makes the same gap a bigger difference in the players' shares of a game.
+                 */
+                eloSpread?: number | null; // double
             } | null;
             createdById: string | null;
         }
@@ -826,6 +831,10 @@ declare namespace Components {
                  * Elo: how far ratings move and spread, without changing who's ahead.
                  */
                 eloSwing?: number | null; // double
+                /**
+                 * Elo: at swing 1, the rating gap between a player and one who scores 10 times as often. Smaller makes the same gap a bigger difference in the players' shares of a game.
+                 */
+                eloSpread?: number | null; // double
             } | null;
             createdById: string | null;
             numMatches: number; // int64
@@ -854,6 +863,10 @@ declare namespace Components {
              * Elo: how far ratings move and spread, without changing who's ahead.
              */
             eloSwing?: number | null; // double
+            /**
+             * Elo: at swing 1, the rating gap between a player and one who scores 10 times as often. Smaller makes the same gap a bigger difference in the players' shares of a game.
+             */
+            eloSpread?: number | null; // double
         }
         export interface SeasonUpdateDto {
             seasonSettings: SeasonSettingsDto;
@@ -1237,6 +1250,7 @@ declare namespace Paths {
             export type Kr = number; // double
             export type RingWeight = number; // double
             export type SeasonId = string;
+            export type Spread = number; // double
             export type Swing = number; // double
         }
         export interface QueryParameters {
@@ -1246,6 +1260,7 @@ declare namespace Paths {
             kr?: Parameters.Kr /* double */;
             ringWeight?: Parameters.RingWeight /* double */;
             swing?: Parameters.Swing /* double */;
+            spread?: Parameters.Spread /* double */;
         }
         namespace Responses {
             export type $200 =
@@ -1647,6 +1662,7 @@ declare namespace Paths {
             export type Kr = number; // double
             export type RingWeight = number; // double
             export type SeasonId = string;
+            export type Spread = number; // double
             export type Swing = number; // double
         }
         export interface QueryParameters {
@@ -1656,6 +1672,7 @@ declare namespace Paths {
             kr?: Parameters.Kr /* double */;
             ringWeight?: Parameters.RingWeight /* double */;
             swing?: Parameters.Swing /* double */;
+            spread?: Parameters.Spread /* double */;
         }
         export type RequestBody = Components.Schemas.EloSimulationRequestDto;
         namespace Responses {
