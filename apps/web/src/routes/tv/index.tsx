@@ -242,7 +242,14 @@ function Screen({
                     key={ready.key}
                     clip={ready}
                     playId={clip?.key === ready.key ? clip.id : undefined}
-                    from={layout === 'split' || ready.team === 'red' ? 'right' : 'left'}
+                    from={
+                        layout === 'split' ||
+                        (layout === 'camera' && config.cameraOverlayFlipped
+                            ? ready.team === 'blue'
+                            : ready.team === 'red')
+                            ? 'right'
+                            : 'left'
+                    }
                     singleDecoder={singleDecoder}
                     onDone={onClipDone}
                 />
@@ -255,6 +262,7 @@ function Screen({
                         match={focused ?? matches[0]}
                         groupName={board?.group.name ?? config.groupName ?? ''}
                         offline={offline}
+                        flipped={config.cameraOverlayFlipped}
                     />
                 </main>
             ) : (

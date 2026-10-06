@@ -43,6 +43,8 @@ export default function Page() {
     // what the TV shows, as its remote says it
     const showing = (tv: Tv) => {
         const screen = screenOf(tv.config, liveIds);
+        if (screen === 'camera' && !liveIds.length)
+            return `Camera Auto · Leaderboard · ${scopeLabel(tv.config.scope)}`;
         return screen === 'auto' || screen === 'leaderboard'
             ? `${screenLabel(screen)} · ${scopeLabel(tv.config.scope)}`
             : screenLabel(screen);

@@ -15,6 +15,8 @@ export type { CupPosition, CupTeam };
 
 export interface LiveTeamState {
     playerIds: string[];
+    /** per-player match points: own moves plus bonuses from all team moves */
+    points: Record<string, number>;
     /** cups this team took off the other side */
     score: number;
     /** this team's own cups as they're drawn (re-racked on a phone, or the pyramid) */
@@ -30,12 +32,37 @@ export interface RackCup {
 /** a live match's teams and score, from its op log and its season's rule moves */
 export function foldLiveMatch(
     dto: Pick<Dto.LiveMatchDto, 'ops'>,
-    ruleMoves: Pick<Dto.RuleMoveDto, 'id' | 'name' | 'finishingMove' | 'cups'>[]
+    ruleMoves: (Pick<Dto.RuleMoveDto, 'id' | 'name' | 'finishingMove' | 'cups'> &
+        Partial<Pick<Dto.RuleMoveDto, 'pointsForScorer' | 'pointsForTeam'>>)[]
 ) {
     const { state } = reduceLiveMatch(toLiveOps(dto.ops));
     const cups = ruleMoves.flatMap((i) => (i.id ? [{ id: i.id, cups: cupsPerHit(i) }] : []));
 
+    const pointsOf = (side: CupTeam) => {
+        const members = (side === 'red' ? state.redTeam : state.blueTeam).teamMembers;
+        const value = (
+            moves: (typeof members)[number]['moves'],
+            field: 'pointsForScorer' | 'pointsForTeam'
+        ) =>
+            moves.reduce(
+                (sum, move) =>
+                    sum +
+                    move.count * (ruleMoves.find((rule) => rule.id === move.moveId)?.[field] ?? 0),
+                0
+            );
+        const bonus = value(
+            members.flatMap((member) => member.moves),
+            'pointsForTeam'
+        );
+        return Object.fromEntries(
+            members.map((member) => [
+                member.playerId,
+                value(member.moves, 'pointsForScorer') + bonus,
+            ])
+        );
+    };
     const team = (side: CupTeam): LiveTeamState => ({
+        points: pointsOf(side),
         playerIds: (side === 'red' ? state.redTeam : state.blueTeam).teamMembers.map(
             (i) => i.playerId
         ),
