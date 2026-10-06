@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Avatar } from '~/tv/components/Avatar';
 import { CupRack } from '~/tv/components/CupRack';
@@ -31,14 +31,24 @@ export function CameraView({
     offline: boolean;
 }) {
     const video = useRef<HTMLVideoElement>(null);
+    const [playbackError, setPlaybackError] = useState(false);
 
     useEffect(() => {
         const v = video.current!;
+        let stopped = false;
         if (!suspended) {
+            setPlaybackError(false);
             v.srcObject = stream;
-            v.play().catch(() => {});
+            v.play().catch((err: unknown) => {
+                if (stopped) return;
+                setPlaybackError(true);
+                void import('@sentry/browser').then((Sentry) =>
+                    Sentry.captureException(err, { tags: { operation: 'camera-playback' } })
+                );
+            });
         }
         return () => {
+            stopped = true;
             v.pause();
             v.srcObject = null;
             v.load();
@@ -64,6 +74,11 @@ export function CameraView({
                     </div>
                     <h1 className="truncate text-[2.6rem] leading-tight font-black">{groupName}</h1>
                     {offline && <div className="text-[1.4rem] text-red">Reconnecting…</div>}
+                    {playbackError && (
+                        <div className="text-[1.4rem] text-red">
+                            Camera video could not play. Reload this page.
+                        </div>
+                    )}
                 </div>
                 {match?.moves[0] && <LatestMove key={match.moves.length} match={match} />}
             </header>

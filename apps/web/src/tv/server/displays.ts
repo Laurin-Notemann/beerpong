@@ -51,7 +51,14 @@ export type DisplayEvent =
 const g = globalThis as typeof globalThis & { __versusDisplays?: Map<string, Display> };
 const displays = (g.__versusDisplays ??= new Map());
 
-export class DisplayError extends Error {}
+export class DisplayError extends Error {
+    constructor(
+        message: string,
+        readonly status = 400
+    ) {
+        super(message);
+    }
+}
 
 const same = (a: string, b: string) =>
     a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -175,7 +182,7 @@ export function register(input: {
     if (known) {
         known.lastSeen = Date.now();
         if (!same(known.secret, secret) || known.kind !== input.kind) {
-            throw new DisplayError('display id taken');
+            throw new DisplayError('display id taken', 409);
         }
         known.code = codeFor(id, input.code);
         known.refreshToken ??= typeof input.refreshToken === 'string' ? input.refreshToken : null;
@@ -200,7 +207,7 @@ export function register(input: {
 export function authorize(id: unknown, secret: unknown) {
     const display = typeof id === 'string' ? displays.get(id) : undefined;
     if (!display || typeof secret !== 'string' || !same(display.secret, secret)) {
-        throw new DisplayError('unknown display');
+        throw new DisplayError('unknown display', 404);
     }
     display.lastSeen = Date.now();
     return display;

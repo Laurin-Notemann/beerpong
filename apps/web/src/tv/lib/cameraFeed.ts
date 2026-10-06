@@ -86,7 +86,10 @@ export function useCameraFeed(
     cameraId: string | null
 ) {
     const [stream, setStream] = useState<MediaStream | null>(null);
+    const [problem, setProblem] = useState<string | null>(null);
     const pc = useRef<{ conn: RTCPeerConnection; at: number } | null>(null);
+    const streamRef = useRef(stream);
+    streamRef.current = stream;
     const want = useRef(wanted);
     want.current = wanted;
 
@@ -98,14 +101,49 @@ export function useCameraFeed(
     }, []);
 
     useEffect(() => {
+        setProblem(null);
         if (!wanted || !webRtcSupported()) return;
-        const ask = () => {
+        let stopped = false;
+        let asking = false;
+        let waiting: { id: string; at: number; warned?: boolean } | undefined;
+        const ask = async () => {
             const current = pc.current;
-            // connected, or still connecting
-            if (current && (isConnected(current.conn) || Date.now() - current.at < RETRY_MS)) {
-                return;
+            if (asking || (current && isConnected(current.conn) && streamRef.current)) return;
+            if (current && Date.now() - current.at < RETRY_MS) return;
+            if (current) {
+                report('connection timed out', current.conn.iceConnectionState);
+                close();
+                setProblem("Can't connect to the camera. Check both devices' Wi-Fi.");
             }
-            watchCamera({ data: { id, key: secret } }).catch(() => {});
+            asking = true;
+            try {
+                const camera = await watchCamera({ data: { id, key: secret } });
+                if (stopped) return;
+                if (!camera) {
+                    waiting = undefined;
+                    close();
+                    setProblem('No camera is online. Open its page and add it in TV Remote.');
+                } else if (!waiting || waiting.id !== camera) {
+                    waiting = { id: camera, at: Date.now() };
+                    setProblem(null);
+                } else if (!pc.current && Date.now() - waiting.at >= RETRY_MS) {
+                    if (!waiting.warned) {
+                        waiting.warned = true;
+                        report('camera did not offer video');
+                    }
+                    setProblem(
+                        (previous) =>
+                            previous ??
+                            "Camera isn't sending video. Check its page and camera permission."
+                    );
+                }
+            } catch (err) {
+                if (stopped) return;
+                report('could not ask for the camera', err);
+                setProblem('Camera signaling failed. Reload this page if it keeps happening.');
+            } finally {
+                asking = false;
+            }
         };
         ask();
         const timer = setInterval(ask, RETRY_MS);
@@ -120,10 +158,15 @@ export function useCameraFeed(
             if (pc.current !== current) return;
             stalled = bytes !== undefined && bytes === last ? stalled + 1 : 0;
             last = bytes;
-            if (stalled >= 2) close();
+            if (stalled >= 2) {
+                report('video stopped arriving');
+                close();
+                setProblem('Camera video stopped. Reconnecting…');
+            }
         }, STALL_CHECK_MS);
 
         return () => {
+            stopped = true;
             clearInterval(timer);
             clearInterval(watchdog);
             close();
@@ -141,18 +184,38 @@ export function useCameraFeed(
 
             conn.ontrack = (e) => {
                 incoming = e.streams[0] ?? new MediaStream([e.track]);
+                if (mine() && isConnected(conn)) {
+                    setStream(incoming);
+                    setProblem(null);
+                }
             };
             // browsers before `ontrack`
             (conn as { onaddstream?: (e: { stream: MediaStream }) => void }).onaddstream = (e) => {
                 incoming ??= e.stream;
+                if (mine() && isConnected(conn)) {
+                    setStream(incoming);
+                    setProblem(null);
+                }
             };
             followIce(conn, (state) => {
                 if (!mine()) return;
-                if (state === 'up') setStream(incoming);
-                else close();
+                if (state === 'up') {
+                    setStream(incoming);
+                    setProblem(null);
+                } else {
+                    report('connection lost', conn.iceConnectionState);
+                    close();
+                    setProblem("Can't connect to the camera. Check both devices' Wi-Fi.");
+                }
             });
             try {
-                await conn.setRemoteDescription(new RTCSessionDescription(signal));
+                // Chromium before 71 cannot even parse this optional modern RTP extension
+                // (Sentry WEB-C). Without it, the answer negotiates ordinary RTP headers.
+                const sdp = signal.sdp
+                    .split('\n')
+                    .filter((line) => line.trim() !== 'a=extmap-allow-mixed')
+                    .join('\n');
+                await conn.setRemoteDescription(new RTCSessionDescription({ ...signal, sdp }));
                 await conn.setLocalDescription(await conn.createAnswer());
                 await gathered(conn);
                 if (!mine()) return;
@@ -165,16 +228,27 @@ export function useCameraFeed(
                         signal: { type: answer.type, sdp: answer.sdp },
                     },
                 });
-                if (!accepted && mine()) close();
+                if (!accepted && mine()) {
+                    close();
+                    setProblem('Camera selection changed. Reconnecting…');
+                }
             } catch (err) {
+                if (!mine()) return;
                 report('the TV could not answer', err);
-                if (mine()) close();
+                close();
+                setProblem('Camera connection failed. Reload the TV and camera pages.');
             }
         },
         [id, secret, close]
     );
 
-    return { stream, onSignal };
+    return {
+        stream,
+        onSignal,
+        status: !webRtcSupported()
+            ? "This browser can't show the camera"
+            : (problem ?? 'Connecting to the camera…'),
+    };
 }
 
 /**
@@ -222,7 +296,6 @@ export function useCameraSender(
             const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
             pcs.current.set(tvId, pc);
             for (const track of media.getVideoTracks()) pc.addTrack(track, media);
-            preferH264(pc);
             followIce(pc, (state) => {
                 if (state === 'gone') {
                     pc.close();
@@ -231,6 +304,7 @@ export function useCameraSender(
                 count();
             });
             try {
+                preferH264(pc);
                 await pc.setLocalDescription(await pc.createOffer());
                 await gathered(pc);
                 if (pcs.current.get(tvId) !== pc) return;

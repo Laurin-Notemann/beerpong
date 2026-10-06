@@ -38,17 +38,19 @@ export async function asMember(
 ) {
     const token = request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
     if (!token) return new Response(null, { status: 401 });
-    let groupIds;
     try {
-        groupIds = await groupIdsOf(token);
+        const groupIds = await groupIdsOf(token);
+        if (!groupIds.includes(groupId)) return fail(403, 'authUserNotInGroup');
+        return await handle(token);
     } catch (err) {
         if (err instanceof ApiError && err.httpCode === 401) {
             return new Response(null, { status: 401 });
         }
+        if (err instanceof ApiError && err.httpCode >= 400 && err.httpCode < 500) {
+            return fail(err.httpCode, err.code);
+        }
         throw err;
     }
-    if (!groupIds.includes(groupId)) return fail(403, 'authUserNotInGroup');
-    return handle(token);
 }
 
 /**
