@@ -17,7 +17,7 @@ import {
 } from '@/lib/tvDisplay';
 import { useCameraFeed, webRtcSupported } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
-import { preloadFrames, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
+import { preloadClips, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -136,7 +136,8 @@ function Tv() {
         }
     );
     liveMatches.current = board.data?.liveMatches ?? [];
-    useEffect(() => preloadFrames(liveMatches.current), [board.data]);
+    useEffect(() => preloadClips(liveMatches.current), [board.data]);
+    useEffect(() => () => preloadClips([]), []);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const { config } = identity;

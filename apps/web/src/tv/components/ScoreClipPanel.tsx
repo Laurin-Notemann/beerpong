@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
+import { frameOf, preloadedClipSource, type ScoreClip } from '~/tv/lib/scoreClips';
 
 /** a clip plays at most this long, whatever was uploaded */
 const MAX_SECONDS = 10;
@@ -42,9 +42,8 @@ export function boardScale() {
  * loads the moment it mounts; the board starts moving aside a frame later, once the TV painted it.
  * Images of its first and last frame (preloaded with the board, and both mounted from the start,
  * so neither decodes mid-animation) cover it while it starts and stops, when that layer is black
- * for a while. The clip streams from this server (server/clips.ts);
- * the TV's player fetches it itself, so it can't come from the page's memory or the browser's
- * cache (a blob: URL; Sentry WEB-4).
+ * for a while. Desktop browsers play the preloaded blob; Tizen streams from this server
+ * (server/clips.ts), because its separate player cannot read a blob: URL (Sentry WEB-4).
  */
 export function ScoreClipPanel({
     clip,
@@ -71,17 +70,8 @@ export function ScoreClipPanel({
 
     useEffect(() => {
         const v = video.current!;
-        v.src = clip.url;
-        // the TV's browser plays with sound; newer ones may only allow it muted
-        v.play()
-            .catch(() => {
-                v.muted = true;
-                return v.play();
-            })
-            .catch((err) => {
-                report(v, `play() failed: ${err}`);
-                setLeaving(true);
-            });
+        v.src = preloadedClipSource(clip.url);
+        playVideo(v, () => setLeaving(true));
         return () => {
             // the TV has one video decoder; the next clip gets it back
             v.removeAttribute('src');
@@ -141,6 +131,16 @@ export function ScoreClipPanel({
                     onError={(e) => {
                         // emptied on purpose when the clip is done
                         if (!e.currentTarget.getAttribute('src')) return;
+                        // A browser that rejects a blob still gets the ordinary streaming path.
+                        if (e.currentTarget.getAttribute('src')?.startsWith('blob:')) {
+                            report(
+                                e.currentTarget,
+                                'preloaded clip failed; retrying the server URL'
+                            );
+                            e.currentTarget.src = clip.url;
+                            playVideo(e.currentTarget, () => setLeaving(true));
+                            return;
+                        }
                         report(e.currentTarget, `error ${e.currentTarget.error?.code}`);
                         setLeaving(true);
                     }}
@@ -181,4 +181,21 @@ function report(v: HTMLVideoElement, problem: string) {
     void import('@sentry/browser').then((Sentry) =>
         Sentry.captureMessage(`score clip ${problem} (${state})`, 'warning')
     );
+}
+
+/** The TV allows sound; desktop browsers may require a muted retry. */
+function playVideo(v: HTMLVideoElement, onFailed: () => void) {
+    const source = v.getAttribute('src');
+    v.play()
+        .catch(() => {
+            // An error handler may already have switched from a blob to the server URL.
+            if (v.getAttribute('src') !== source) return;
+            v.muted = true;
+            return v.play();
+        })
+        .catch((err) => {
+            if (v.getAttribute('src') !== source) return;
+            report(v, `play() failed: ${err}`);
+            onFailed();
+        });
 }

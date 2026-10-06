@@ -1,11 +1,15 @@
 import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { toast } from 'sonner-native';
 
 import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
+import {
+    scoreClipSource,
+    useScoreClipPreload,
+} from '@/lib/useScoreClipPreload';
 import { useTheme } from '@/theme';
 
 const TOAST_ID = 'score-clip';
@@ -40,11 +44,20 @@ function ScoreClipToast({
     team: 'red' | 'blue';
 }) {
     const theme = useTheme();
-    const player = useVideoPlayer(url, (p) => p.play());
+    useScoreClipPreload([url]);
+    const [source] = useState(() => scoreClipSource(url));
+    const player = useVideoPlayer(source, (p) => p.play());
+    const triedStreaming = useRef(source === url);
 
     useEventListener(player, 'playToEnd', dismiss);
     useEventListener(player, 'statusChange', ({ status }) => {
-        if (status === 'error') dismiss();
+        if (status !== 'error') return;
+        if (triedStreaming.current) return dismiss();
+        triedStreaming.current = true;
+        void player
+            .replaceAsync(url)
+            .then(() => player.play())
+            .catch(dismiss);
     });
     useEffect(() => {
         const timeout = setTimeout(dismiss, MAX_MS);

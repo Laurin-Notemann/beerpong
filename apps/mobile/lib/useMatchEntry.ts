@@ -10,7 +10,8 @@ import { showScoreClipToast } from '@/components/ScoreClipToast';
 import { CupHit, CupTeam } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import type { Rerack } from '@/lib/rerack';
-import { randomScoreClip } from '@/lib/scoreClips';
+import { randomScoreClip, scoreClipsOf } from '@/lib/scoreClips';
+import { useScoreClipPreload } from '@/lib/useScoreClipPreload';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { useReracks, useRerackStore } from '@/zustand/rerackStore';
@@ -33,6 +34,22 @@ export function useMatchEntry(liveMatchId?: string) {
     const liveSeasonId = live.liveMatch?.seasonId || activeSeasonId;
     const players = usePlayersQuery(groupId, liveSeasonId).data?.data;
     const scoreClipToasts = useLocalSettingsStore((s) => s.scoreClipToasts);
+
+    const livePlayerIds = new Set(
+        [
+            ...live.state.blueTeam.teamMembers,
+            ...live.state.redTeam.teamMembers,
+        ].map((i) => i.playerId)
+    );
+    useScoreClipPreload(
+        liveMatchId &&
+            scoreClipToasts &&
+            live.liveMatch?.status === 'IN_PROGRESS'
+            ? (players ?? [])
+                  .filter((i) => livePlayerIds.has(i.id))
+                  .flatMap((i) => scoreClipsOf(i.profile))
+            : []
+    );
 
     if (liveMatchId) {
         const header = live.liveMatch;
