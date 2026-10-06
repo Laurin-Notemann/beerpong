@@ -41,21 +41,21 @@ export function boardScale() {
  *
  * Tizen places its separate video layer where the video starts, so the column never animates.
  * All sources are server URLs (server/clips.ts), which that player can read (Sentry WEB-4).
- * Samsung has one decoder: idle videos use preload="none", and release it after playback so
- * they cannot steal it from the next clip or the camera. Other browsers buffer with preload="auto".
+ * Idle native videos use preload="none" and release their resources after playback;
+ * this limits idle players without interrupting the live camera. Other browsers buffer with preload="auto".
  */
 export function ScoreClipPanel({
     clip,
     from,
     playId,
-    singleDecoder,
+    nativeVideoLayer,
     onDone,
 }: {
     clip: Omit<ScoreClip, 'id'>;
     from: 'left' | 'right';
     /** the score being played; changing it replays the same mounted video */
     playId: string | undefined;
-    singleDecoder: boolean;
+    nativeVideoLayer: boolean;
     onDone: () => void;
 }) {
     const video = useRef<HTMLVideoElement>(null);
@@ -123,7 +123,7 @@ export function ScoreClipPanel({
             play();
         };
         const tick = () => {
-            if (singleDecoder && v.currentTime >= TIZEN_SHOWN_AT) setShown(true);
+            if (nativeVideoLayer && v.currentTime >= TIZEN_SHOWN_AT) setShown(true);
             const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
             if (v.currentTime >= end) finish();
             else frame = requestAnimationFrame(tick);
@@ -132,7 +132,7 @@ export function ScoreClipPanel({
             if (started || stopped || finishing) return;
             started = true;
             setPlaying(true);
-            if (!singleDecoder) {
+            if (!nativeVideoLayer) {
                 const reveal = () => {
                     if (!stopped && !finishing) setShown(true);
                 };
@@ -156,11 +156,11 @@ export function ScoreClipPanel({
         v.addEventListener('playing', onPlaying);
         v.addEventListener('ended', finish);
         v.addEventListener('error', onError);
-        // A frame lets the TV paint the stationary column and release the camera's decoder.
+        // A frame lets the TV paint the stationary column before playback starts.
         const opening = requestAnimationFrame(() => {
             setOpen(true);
             v.muted = false;
-            if (singleDecoder) {
+            if (nativeVideoLayer) {
                 v.preload = 'auto';
                 v.load();
                 // Warm Tizen's native layer during the slide, under its safe startup cover.
@@ -194,15 +194,15 @@ export function ScoreClipPanel({
             clearTimeout(cap);
             clearTimeout(leave);
             v.pause();
-            if (singleDecoder) {
-                // A paused native player still holds the decoder. Reattach without loading it.
+            if (nativeVideoLayer) {
+                // Release the idle native player. Reattach without loading it.
                 v.preload = 'none';
                 v.removeAttribute('src');
                 v.load();
                 if (v.isConnected) v.src = clip.url;
             }
         };
-    }, [playId, clip.url, singleDecoder]);
+    }, [playId, clip.url, nativeVideoLayer]);
 
     return (
         <div
@@ -218,7 +218,7 @@ export function ScoreClipPanel({
                     ref={video}
                     playsInline
                     src={clip.url}
-                    preload={singleDecoder && playId === undefined ? 'none' : 'auto'}
+                    preload={nativeVideoLayer && playId === undefined ? 'none' : 'auto'}
                     className={`block h-full w-full object-contain ${playing ? 'bg-black' : ''}`}
                 />
                 {frames && (
@@ -227,7 +227,7 @@ export function ScoreClipPanel({
                             src={frameOf(clip.url, 'first')}
                             alt=""
                             onError={() => setFrames(false)}
-                            className={`clip-cover absolute inset-0 h-full w-full bg-black object-contain ${shown ? (singleDecoder ? 'clip-cover-fade' : 'clip-cover-hidden') : ''}`}
+                            className={`clip-cover absolute inset-0 h-full w-full bg-black object-contain ${shown ? (nativeVideoLayer ? 'clip-cover-fade' : 'clip-cover-hidden') : ''}`}
                         />
                         <img
                             src={frameOf(clip.url, 'last')}

@@ -75,5 +75,5 @@ export function liveScoreClips(matches: LiveMatchView[]): Omit<ScoreClip, 'id'>[
 const clipKey = (matchId: string, playerId: string, team: string, url: string) =>
     JSON.stringify([matchId, playerId, team, url]);
 
-/** Samsung's separate player has one decoder, shared with the camera (Sentry WEB-4). */
-export const hasSingleVideoDecoder = () => /Tizen|SmartTV|SMART-TV/i.test(navigator.userAgent);
+/** Tizen renders file videos in a separate native layer; this says nothing about decoder count. */
+export const usesNativeVideoLayer = () => /Tizen|SmartTV|SMART-TV/i.test(navigator.userAgent);
