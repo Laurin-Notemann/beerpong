@@ -8,9 +8,9 @@ import {
 } from '@/api/liveMatch/useLiveMatch';
 import { showScoreClipToast } from '@/components/ScoreClipToast';
 import { CupHit, CupTeam } from '@/lib/cupHits';
-import { randomScoreClip } from '@/lib/scoreClips';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import type { Rerack } from '@/lib/rerack';
+import { randomScoreClip } from '@/lib/scoreClips';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { useReracks, useRerackStore } from '@/zustand/rerackStore';
@@ -50,7 +50,7 @@ export function useMatchEntry(liveMatchId?: string) {
             if (!team || !url) return;
             showScoreClipToast({
                 url,
-                name: profile.name ?? '',
+                name: profile?.name ?? '',
                 team,
             });
         };

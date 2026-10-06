@@ -9,7 +9,6 @@ import { ScopedLogger } from '@/utils/logging';
 
 const logger = new ScopedLogger('widgets');
 
-
 /**
  * Where the Live Activity finds the players' avatars: in the app group, which the widget
  * extension can read but not download into. One small JPEG per avatar asset id.
@@ -41,7 +40,10 @@ export function useActivityAvatars(avatarUrls: (string | null | undefined)[]) {
             copying.add(id);
             copy(url, directory, file)
                 .catch((err) =>
-                    logger.warn('failed to copy an avatar for the Live Activity', err)
+                    logger.warn(
+                        'failed to copy an avatar for the Live Activity',
+                        err
+                    )
                 )
                 .finally(() => copying.delete(id));
         }

@@ -90,7 +90,11 @@ const LiveMatchActivity = (
             </HStack>
         );
     /** a team's cups: blue's apex points right, red's left, like the TV; hit cups stay faint */
-    const rack = (code: string | undefined, team: 'blue' | 'red', cell: number) => {
+    const rack = (
+        code: string | undefined,
+        team: 'blue' | 'red',
+        cell: number
+    ) => {
         const cups = (code ?? '').match(/.{3}/g) ?? [];
         if (!cups.length) return null;
         const color = team === 'blue' ? BLUE : RED;
@@ -107,7 +111,10 @@ const LiveMatchActivity = (
                                 foregroundStyle(
                                     cup[2] === '1' ? color : '#FFFFFF26'
                                 ),
-                                frame({ width: cell * 1.8, height: cell * 1.8 }),
+                                frame({
+                                    width: cell * 1.8,
+                                    height: cell * 1.8,
+                                }),
                                 offset({
                                     x: (column - 3) * cell,
                                     y: (x - 3) * cell,
