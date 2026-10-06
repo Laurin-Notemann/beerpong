@@ -6,7 +6,7 @@ SELECT
     s.id, s.name, s.start_date, s.end_date, s.group_id, s.created_by, s.season_settings_id,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
-    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing, ss.elo_spread,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM seasons s
@@ -18,7 +18,7 @@ SELECT
     s.id, s.name, s.start_date, s.end_date, s.group_id, s.created_by, s.season_settings_id,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
-    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing, ss.elo_spread,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM seasons s
@@ -37,9 +37,9 @@ SELECT id FROM seasons WHERE group_id = $1 AND end_date IS NULL LIMIT 1;
 
 -- name: InsertSeasonSettings :exec
 INSERT INTO season_settings (id, daily_leaderboard, max_team_size, min_matches_to_qualify, min_team_size, ranking_algorithm, wake_time,
-    elo_k, elo_kr, elo_ring_weight, elo_swing)
+    elo_k, elo_kr, elo_ring_weight, elo_swing, elo_spread)
 VALUES ($1, $2, $3, $4, $5, $6, sqlc.narg(wake_time)::text::time,
-    sqlc.narg(elo_k), sqlc.narg(elo_kr), sqlc.narg(elo_ring_weight), sqlc.narg(elo_swing));
+    sqlc.narg(elo_k), sqlc.narg(elo_kr), sqlc.narg(elo_ring_weight), sqlc.narg(elo_swing), sqlc.narg(elo_spread));
 
 -- name: UpdateSeasonSettings :exec
 UPDATE season_settings SET
@@ -52,7 +52,8 @@ UPDATE season_settings SET
     elo_k = sqlc.narg(elo_k),
     elo_kr = sqlc.narg(elo_kr),
     elo_ring_weight = sqlc.narg(elo_ring_weight),
-    elo_swing = sqlc.narg(elo_swing)
+    elo_swing = sqlc.narg(elo_swing),
+    elo_spread = sqlc.narg(elo_spread)
 WHERE id = $1;
 
 -- name: InsertSeason :exec

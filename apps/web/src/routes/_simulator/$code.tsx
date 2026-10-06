@@ -20,6 +20,7 @@ export const Route = createFileRoute('/_simulator/$code')({
         kr: number(search.kr),
         ringWeight: number(search.ringWeight),
         swing: number(search.swing),
+        spread: number(search.spread),
         // the API checks them; a broken one shows as an error, not a crash
         tests:
             Array.isArray(search.tests) && search.tests.length

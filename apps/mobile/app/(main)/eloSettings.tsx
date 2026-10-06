@@ -3,14 +3,52 @@ import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
 
 import { useGroup, useSeasonSettings } from '@/api/calls/seasonHooks';
+import { IconName } from '@/components/Icon';
 import InputModal from '@/components/InputModal';
 import MenuItem from '@/components/Menu/MenuItem';
-import { MenuItemNumberInput } from '@/components/Menu/MenuItemNumberInput';
 import MenuSection from '@/components/Menu/MenuSection';
 import Select from '@/components/Select';
+import { useNumberPrompt } from '@/hooks/useNumberPrompt';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { showErrorToast } from '@/toast';
 import { ConsoleLogger } from '@/utils/logging';
+
+type Weight = 'eloK' | 'eloKr' | 'eloSwing' | 'eloSpread';
+
+// the weights edited as numbers, each a row that asks for a new value
+const WEIGHTS: {
+    key: Weight;
+    title: string;
+    subtitle: string;
+    icon: IconName;
+}[] = [
+    {
+        key: 'eloK',
+        title: 'Hitting',
+        subtitle:
+            "Elo for scoring an average player's full game above your share.",
+        icon: 'bullseye-arrow',
+    },
+    {
+        key: 'eloKr',
+        title: 'Result',
+        subtitle: 'Elo at stake on winning or losing.',
+        icon: 'trophy-outline',
+    },
+    {
+        key: 'eloSwing',
+        title: 'Swing',
+        subtitle: "How far ratings move per match. Doesn't change who's ahead.",
+        icon: 'chart-bell-curve',
+    },
+    {
+        key: 'eloSpread',
+        title: 'Spread',
+        subtitle:
+            'At Swing 1, the rating gap of scoring 10 times as often. Smaller makes expected shares more different.',
+        icon: 'arrow-expand-horizontal',
+    },
+];
 
 // what a ring win's result counts: (ring bonus / normal finish bonus) to this power
 const RING_WEIGHTS = [
@@ -41,24 +79,22 @@ export default function Page() {
         seasonId!
     );
 
+    const { prompt, element: promptElement } = useNumberPrompt();
+
     // Unedited fields show the saved settings. A season cached before these
     // settings existed has none until it refetches.
-    const [edited, setEdited] = useState<{
-        eloK?: number;
-        eloKr?: number;
-        eloRingWeight?: number;
-        eloSwing?: number;
-    }>({});
-    const eloK = edited.eloK ?? seasonSettings?.eloK;
-    const eloKr = edited.eloKr ?? seasonSettings?.eloKr;
-    const eloRingWeight = edited.eloRingWeight ?? seasonSettings?.eloRingWeight;
-    const eloSwing = edited.eloSwing ?? seasonSettings?.eloSwing;
-
-    const isDirty =
-        eloK !== seasonSettings?.eloK ||
-        eloKr !== seasonSettings?.eloKr ||
-        eloRingWeight !== seasonSettings?.eloRingWeight ||
-        eloSwing !== seasonSettings?.eloSwing;
+    const [edited, setEdited] = useState<
+        Partial<Record<Weight | 'eloRingWeight', number>>
+    >({});
+    const weights = {
+        eloK: edited.eloK ?? seasonSettings?.eloK,
+        eloKr: edited.eloKr ?? seasonSettings?.eloKr,
+        eloSwing: edited.eloSwing ?? seasonSettings?.eloSwing,
+        eloSpread: edited.eloSpread ?? seasonSettings?.eloSpread ?? 4000,
+        eloRingWeight: edited.eloRingWeight ?? seasonSettings?.eloRingWeight,
+    };
+    const loaded = Object.values(weights).every((v) => v != null);
+    const isDirty = Object.keys(edited).length > 0;
 
     async function save(
         update: Parameters<typeof updateSeasonSettingsMutation.mutateAsync>[0]
@@ -84,103 +120,85 @@ export default function Page() {
                 <Stack.Toolbar.Button
                     variant="done"
                     disabled={updateSeasonSettingsMutation.isPending}
-                    onPress={() =>
-                        isDirty
-                            ? save({ eloK, eloKr, eloRingWeight, eloSwing })
-                            : nav.goBack()
-                    }
+                    onPress={() => (isDirty ? save(edited) : nav.goBack())}
                 >
                     Save
                 </Stack.Toolbar.Button>
             </Stack.Toolbar>
-            {eloK != null &&
-                eloKr != null &&
-                eloRingWeight != null &&
-                eloSwing != null && (
-                    <InputModal>
-                        {/* the sections are taller than the sheet: they scroll at their own height */}
-                        <ScrollView
-                            keyboardShouldPersistTaps="handled"
-                            contentContainerStyle={{
-                                gap: 32,
-                                paddingBottom: 32,
-                            }}
+            {loaded && (
+                <InputModal>
+                    {/* the sections are taller than the sheet: they scroll at their own height */}
+                    <ScrollView
+                        contentContainerStyle={{ gap: 32, paddingBottom: 32 }}
+                    >
+                        <MenuSection
+                            noFlex
+                            title="Weights"
+                            footer="Every leaderboard of this season is recomputed with these, all matches included. Hitting: own points against your share of the game's points, set by the ratings before it. Result: win or loss against the win chance."
                         >
-                            <MenuSection
-                                noFlex
-                                title="Weights"
-                                footer="Every leaderboard of this season is recomputed with these, all matches included. Hitting: own points against your share of the game's points, set by the ratings before it. Result: win or loss against the win chance."
-                            >
-                                <MenuItemNumberInput
-                                    border={false}
-                                    title="Hitting"
-                                    subtitle="Elo for scoring an average player's full game above your share."
-                                    headIcon="bullseye-arrow"
-                                    defaultValue={eloK}
-                                    onChange={(v) =>
-                                        setEdited((e) => ({ ...e, eloK: v }))
-                                    }
+                            {WEIGHTS.map((w, i) => (
+                                <MenuItem
+                                    key={w.key}
+                                    border={i !== 0}
+                                    title={w.title}
+                                    subtitle={w.subtitle}
+                                    headIcon={w.icon}
+                                    tailContent={weights[w.key] ?? undefined}
+                                    onPress={async () => {
+                                        const value = await prompt(
+                                            w.title,
+                                            w.subtitle,
+                                            weights[w.key]!
+                                        );
+                                        if (value != null) {
+                                            setEdited((e) => ({
+                                                ...e,
+                                                [w.key]: value,
+                                            }));
+                                        }
+                                    }}
                                 />
-                                <MenuItemNumberInput
-                                    title="Result"
-                                    subtitle="Elo at stake on winning or losing."
-                                    headIcon="trophy-outline"
-                                    defaultValue={eloKr}
-                                    onChange={(v) =>
-                                        setEdited((e) => ({ ...e, eloKr: v }))
-                                    }
-                                />
-                                <MenuItemNumberInput
-                                    title="Swing"
-                                    subtitle="How far ratings move per match. Doesn't change who's ahead."
-                                    headIcon="chart-bell-curve"
-                                    decimal
-                                    defaultValue={eloSwing}
-                                    onChange={(v) =>
-                                        setEdited((e) => ({
-                                            ...e,
-                                            eloSwing: v,
-                                        }))
-                                    }
-                                />
-                            </MenuSection>
-                            <Select
-                                noFlex
-                                title="A ring win counts"
-                                items={RING_WEIGHTS}
-                                value={String(eloRingWeight)}
-                                onChange={(v) =>
-                                    setEdited((e) => ({
-                                        ...e,
-                                        eloRingWeight: Number(v),
-                                    }))
+                            ))}
+                        </MenuSection>
+                        <Select
+                            noFlex
+                            title="A ring win counts"
+                            items={RING_WEIGHTS}
+                            value={String(weights.eloRingWeight)}
+                            onChange={(v) =>
+                                setEdited((e) => ({
+                                    ...e,
+                                    eloRingWeight: Number(v),
+                                }))
+                            }
+                        />
+                        <MenuSection noFlex>
+                            <MenuItem
+                                border={false}
+                                title="Reset to Defaults"
+                                headIcon="restore"
+                                confirmationPrompt={{
+                                    title: 'Reset Elo Weights',
+                                    description:
+                                        "This season's leaderboards go back to the default weights.",
+                                    buttonText: 'Reset',
+                                    type: 'confirmBlue',
+                                }}
+                                onPress={() =>
+                                    save({
+                                        eloK: null,
+                                        eloKr: null,
+                                        eloRingWeight: null,
+                                        eloSwing: null,
+                                        eloSpread: null,
+                                    })
                                 }
                             />
-                            <MenuSection noFlex>
-                                <MenuItem
-                                    border={false}
-                                    title="Reset to Defaults"
-                                    headIcon="restore"
-                                    confirmationPrompt={{
-                                        title: 'Reset Elo Weights',
-                                        description:
-                                            "This season's leaderboards go back to the default weights.",
-                                        buttonText: 'Reset',
-                                        type: 'confirmBlue',
-                                    }}
-                                    onPress={() =>
-                                        save({
-                                            eloK: null,
-                                            eloKr: null,
-                                            eloRingWeight: null,
-                                            eloSwing: null,
-                                        })
-                                    }
-                                />
-                            </MenuSection>
-                        </ScrollView>
-                    </InputModal>
-                )}
+                        </MenuSection>
+                    </ScrollView>
+                </InputModal>
+            )}
+            {promptElement}
         </>
     );
 }

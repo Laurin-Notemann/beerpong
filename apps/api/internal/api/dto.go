@@ -99,6 +99,7 @@ type seasonSettingsDTO struct {
 	EloKr         *float64 `json:"eloKr"`
 	EloRingWeight *float64 `json:"eloRingWeight"`
 	EloSwing      *float64 `json:"eloSwing"`
+	EloSpread     *float64 `json:"eloSpread"`
 }
 
 type seasonDTO struct {
@@ -135,7 +136,7 @@ type settings struct {
 
 // eloWeights are a season's Elo weights; nil is the default.
 type eloWeights struct {
-	K, KR, RingWeight, Swing *float64
+	K, KR, RingWeight, Swing, Spread *float64
 }
 
 func (w eloWeights) params() leaderboard.EloParams {
@@ -143,7 +144,7 @@ func (w eloWeights) params() leaderboard.EloParams {
 	for _, f := range []struct {
 		set *float64
 		to  *float64
-	}{{w.K, &p.K}, {w.KR, &p.KR}, {w.RingWeight, &p.RingWeight}, {w.Swing, &p.Swing}} {
+	}{{w.K, &p.K}, {w.KR, &p.KR}, {w.RingWeight, &p.RingWeight}, {w.Swing, &p.Swing}, {w.Spread, &p.Spread}} {
 		if f.set != nil {
 			*f.to = *f.set
 		}
@@ -167,6 +168,7 @@ func (s *settings) dto() *seasonSettingsDTO {
 		EloKr:               &elo.KR,
 		EloRingWeight:       &elo.RingWeight,
 		EloSwing:            &elo.Swing,
+		EloSpread:           &elo.Spread,
 	}
 }
 
@@ -193,7 +195,7 @@ func seasonFromRow(r db.GetSeasonRow) season {
 			RankingAlgorithm:    r.RankingAlgorithm,
 			DailyLeaderboard:    r.DailyLeaderboard,
 			WakeTime:            r.WakeTime,
-			Elo:                 eloWeights{K: r.EloK, KR: r.EloKr, RingWeight: r.EloRingWeight, Swing: r.EloSwing},
+			Elo:                 eloWeights{K: r.EloK, KR: r.EloKr, RingWeight: r.EloRingWeight, Swing: r.EloSwing, Spread: r.EloSpread},
 		}
 	}
 	return s

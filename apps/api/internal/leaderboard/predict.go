@@ -51,11 +51,12 @@ func Predict(seasons []Input, p *EloParams) (Score, error) {
 // predicts best, its score and how many it tried.
 func Search(seasons []Input) (EloParams, Score, int, error) {
 	best, bestScore, tried := DefaultElo, Score{LogLoss: math.Inf(1)}, 0
-	// Swing doesn't change who's favoured, so it keeps the default
+	// Swing doesn't change who's favoured. Keep it and Spread at their
+	// defaults while searching the hitting, result and ring weights.
 	for _, k := range []float64{0, 10, 20, 30, 40, 60, 80, 120} {
 		for _, kr := range []float64{0, 10, 20, 40, 60, 80, 120} {
 			for _, rw := range []float64{0, 0.5, 1} {
-				p := EloParams{K: k, KR: kr, RingWeight: rw, Swing: DefaultElo.Swing}
+				p := EloParams{K: k, KR: kr, RingWeight: rw, Swing: DefaultElo.Swing, Spread: DefaultElo.Spread}
 				s, err := Predict(seasons, &p)
 				if err != nil {
 					return EloParams{}, Score{}, tried, err
