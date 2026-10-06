@@ -5,12 +5,14 @@ import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
 /** a clip plays at most this long, whatever was uploaded */
 const MAX_SECONDS = 10;
 /**
- * The TV's video layer stays black for a while after the video says it plays (longer than 0.2 s)
- * and when it ends, so the first frame stays over it until it played this long, then fades into
- * it, and the last frame covers it this long before its end (seconds)
+ * Tizen's separate video layer stays black after `playing` (longer than 0.2 s), so it still
+ * needs the first-frame cover for 0.5 s of playback and a fade. Other browsers uncover a painted
+ * video frame instead. The last frame covers the video shortly before its end on every browser.
  */
-const SHOWN_AT = 0.5;
+const TIZEN_SHOWN_AT = 0.5;
 const COVER_BEFORE_END = 0.2;
+/** Preloaded clips start this far before the board finishes shrinking aside. */
+const PLAY_BEFORE_BOARD_END_MS = 100;
 /** a clip that hasn't started by then is skipped */
 const LOAD_TIMEOUT_MS = 8_000;
 /**
@@ -94,6 +96,9 @@ export function ScoreClipPanel({
         let retried = false;
         let attempt = 0;
         let frame = 0;
+        let revealFrame = 0;
+        let videoFrame: number | undefined;
+        let start: ReturnType<typeof setTimeout> | undefined;
         let cap: ReturnType<typeof setTimeout> | undefined;
         let leave: ReturnType<typeof setTimeout> | undefined;
         const finish = () => {
@@ -104,6 +109,7 @@ export function ScoreClipPanel({
             leave = setTimeout(() => done.current(), LEAVE_MS);
         };
         const play = () => {
+            if (stopped || finishing) return;
             const current = ++attempt;
             playVideo(v, () => stopped || finishing || current !== attempt, retry);
         };
@@ -117,7 +123,7 @@ export function ScoreClipPanel({
             play();
         };
         const tick = () => {
-            if (v.currentTime >= SHOWN_AT) setShown(true);
+            if (singleDecoder && v.currentTime >= TIZEN_SHOWN_AT) setShown(true);
             const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
             if (v.currentTime >= end) finish();
             else frame = requestAnimationFrame(tick);
@@ -126,6 +132,19 @@ export function ScoreClipPanel({
             if (started || stopped || finishing) return;
             started = true;
             setPlaying(true);
+            if (!singleDecoder) {
+                const reveal = () => {
+                    if (!stopped && !finishing) setShown(true);
+                };
+                if (typeof v.requestVideoFrameCallback === 'function') {
+                    videoFrame = v.requestVideoFrameCallback(reveal);
+                } else {
+                    // Older desktop browsers: give `playing` a paint before removing the cover.
+                    revealFrame = requestAnimationFrame(() => {
+                        revealFrame = requestAnimationFrame(reveal);
+                    });
+                }
+            }
             frame = requestAnimationFrame(tick);
             cap = setTimeout(finish, MAX_SECONDS * 1000);
         };
@@ -144,8 +163,16 @@ export function ScoreClipPanel({
             if (singleDecoder) {
                 v.preload = 'auto';
                 v.load();
-            } else if (v.readyState >= HTMLMediaElement.HAVE_METADATA) v.currentTime = 0;
-            play();
+                // Warm Tizen's native layer during the slide, under its safe startup cover.
+                play();
+            } else {
+                if (v.readyState >= HTMLMediaElement.HAVE_METADATA) v.currentTime = 0;
+                // CSS owns the slide duration (in ms); changing it moves playback with it.
+                const boardMs = parseFloat(
+                    getComputedStyle(v).getPropertyValue('--board-transition-duration')
+                );
+                start = setTimeout(play, Math.max(0, boardMs - PLAY_BEFORE_BOARD_END_MS));
+            }
         });
         const fresh = setTimeout(() => {
             if (!started) retry();
@@ -159,6 +186,9 @@ export function ScoreClipPanel({
             stopped = true;
             cancelAnimationFrame(opening);
             cancelAnimationFrame(frame);
+            cancelAnimationFrame(revealFrame);
+            if (videoFrame !== undefined) v.cancelVideoFrameCallback(videoFrame);
+            clearTimeout(start);
             clearTimeout(fresh);
             clearTimeout(timeout);
             clearTimeout(cap);
@@ -197,7 +227,7 @@ export function ScoreClipPanel({
                             src={frameOf(clip.url, 'first')}
                             alt=""
                             onError={() => setFrames(false)}
-                            className={`clip-cover absolute inset-0 h-full w-full bg-black object-contain ${shown ? 'clip-cover-fade' : ''}`}
+                            className={`clip-cover absolute inset-0 h-full w-full bg-black object-contain ${shown ? (singleDecoder ? 'clip-cover-fade' : 'clip-cover-hidden') : ''}`}
                         />
                         <img
                             src={frameOf(clip.url, 'last')}

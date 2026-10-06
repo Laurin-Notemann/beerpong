@@ -30,6 +30,8 @@ body {
 
 /* the TV scales with the screen: 1rem is 16px at 1920px wide */
 html.tv {
+    /* Shared with ScoreClipPanel's playback timer; keep this duration in milliseconds. */
+    --board-transition-duration: 600ms;
     font-size: calc(100vw / 120);
     overflow: hidden;
 }
@@ -94,7 +96,7 @@ html.tv.fullscreen {
  */
 .tv-board {
     will-change: transform;
-    transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform var(--board-transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
 }
 .score-clip.open ~ .tv-board {
     transform: scale(var(--board-scale));
@@ -109,7 +111,7 @@ html.tv.fullscreen {
     transform: none;
     transition: transform 500ms cubic-bezier(0.4, 0, 0.6, 1);
 }
-/* the clip's first and last frame over it (ScoreClipPanel): the first fades into the video */
+/* ScoreClipPanel's frame covers: only Tizen needs the first to fade into its native video layer. */
 .clip-cover {
     will-change: opacity;
 }
