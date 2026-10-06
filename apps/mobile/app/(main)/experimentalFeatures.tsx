@@ -21,6 +21,8 @@ export default function Page() {
         toggleNewDesign,
         trackMisses,
         toggleTrackMisses,
+        scoreClipToasts,
+        toggleScoreClipToasts,
     } = useLocalSettings();
 
     return (
@@ -93,6 +95,18 @@ export default function Page() {
                             <Switch
                                 value={trackMisses}
                                 onChange={toggleTrackMisses}
+                            />
+                        }
+                    />
+                </MenuSection>
+                <MenuSection footer="When you enter a point in a live match, your phone plays the scorer's score clip, like Versus TV does.">
+                    <MenuItem
+                        border={false}
+                        title="Score Clips"
+                        tailContent={
+                            <Switch
+                                value={scoreClipToasts}
+                                onChange={toggleScoreClipToasts}
                             />
                         }
                     />

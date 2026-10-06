@@ -16,6 +16,8 @@ interface LocalSettingsStore {
     trackMisses: boolean;
     /** iOS: the group's live matches start a Live Activity on this phone */
     liveActivities: boolean;
+    /** experimental: entering a point in a live match plays the scorer's clip in a toast */
+    scoreClipToasts: boolean;
 
     actions: {
         toggleLiveMatches: () => void;
@@ -29,6 +31,7 @@ interface LocalSettingsStore {
         toggleNewDesign: () => void;
         toggleTrackMisses: () => void;
         toggleLiveActivities: () => void;
+        toggleScoreClipToasts: () => void;
     };
 }
 
@@ -49,6 +52,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
             newDesign: false,
             trackMisses: false,
             liveActivities: true,
+            scoreClipToasts: false,
 
             actions: {
                 toggleLiveMatches: () => {
@@ -96,6 +100,9 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 toggleLiveActivities: () => {
                     set(() => ({ liveActivities: !get().liveActivities }));
                 },
+                toggleScoreClipToasts: () => {
+                    set(() => ({ scoreClipToasts: !get().scoreClipToasts }));
+                },
             },
         }),
         {
@@ -113,6 +120,7 @@ export const useLocalSettingsStore = create<LocalSettingsStore>()(
                 newDesign: state.newDesign,
                 trackMisses: state.trackMisses,
                 liveActivities: state.liveActivities,
+                scoreClipToasts: state.scoreClipToasts,
             }),
         }
     )

@@ -1,13 +1,16 @@
 import { useEffect, useRef } from 'react';
 
+import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import {
     useLiveMatch,
     useLiveMatchActions,
 } from '@/api/liveMatch/useLiveMatch';
-import { CupTeam } from '@/lib/cupHits';
+import { showScoreClipToast } from '@/components/ScoreClipToast';
+import { CupHit, CupTeam } from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import type { Rerack } from '@/lib/rerack';
+import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 import { useMatchDraftStore } from '@/zustand/matchDraftStore';
 import { useReracks, useRerackStore } from '@/zustand/rerackStore';
 
@@ -26,12 +29,32 @@ export function useMatchEntry(liveMatchId?: string) {
     const liveActions = useLiveMatchActions(groupId ?? '', liveMatchId ?? '');
     const draftReracks = useReracks();
     const { setRerack: setDraftRerack } = useRerackStore((s) => s.actions);
+    const liveSeasonId = live.liveMatch?.seasonId || activeSeasonId;
+    const players = usePlayersQuery(groupId, liveSeasonId).data?.data;
+    const scoreClipToasts = useLocalSettingsStore((s) => s.scoreClipToasts);
 
     if (liveMatchId) {
         const header = live.liveMatch;
+        const members = (team: 'red' | 'blue') =>
+            (team === 'red' ? live.state.redTeam : live.state.blueTeam)
+                .teamMembers;
+        // like Versus TV: a cup hit, or a point added, plays the scorer's clip
+        const playScoreClip = (playerId: string) => {
+            if (!scoreClipToasts) return;
+            const team = (['blue', 'red'] as const).find((i) =>
+                members(i).some((m) => m.playerId === playerId)
+            );
+            const profile = players?.find((i) => i.id === playerId)?.profile;
+            if (!team || !profile?.scoreClipUrl) return;
+            showScoreClipToast({
+                url: profile.scoreClipUrl,
+                name: profile.name ?? '',
+                team,
+            });
+        };
 
         return {
-            seasonId: header?.seasonId || activeSeasonId,
+            seasonId: liveSeasonId,
             /** finished or discarded, e.g. on another phone; edits are ignored then */
             isEnded: !!header && header.status !== 'IN_PROGRESS',
             redTeam: live.state.redTeam,
@@ -41,8 +64,23 @@ export function useMatchEntry(liveMatchId?: string) {
             misses: live.state.misses,
             actions: {
                 setPlayerTeam: liveActions.setPlayerTeam,
-                setMoveCount: liveActions.setMoveCount,
-                recordCupHit: liveActions.recordCupHit,
+                setMoveCount: (
+                    playerId: string,
+                    moveId: string,
+                    count: number
+                ) => {
+                    const current =
+                        [...members('red'), ...members('blue')]
+                            .find((i) => i.playerId === playerId)
+                            ?.moves.find((i) => i.moveId === moveId)?.count ??
+                        0;
+                    liveActions.setMoveCount(playerId, moveId, count);
+                    if (count > current) playScoreClip(playerId);
+                },
+                recordCupHit: (hit: CupHit) => {
+                    liveActions.recordCupHit(hit);
+                    playScoreClip(hit.playerId);
+                },
                 undoCupHit: liveActions.undoCupHit,
                 setRerack: liveActions.setRerack,
                 recordMiss: liveActions.recordMiss,
