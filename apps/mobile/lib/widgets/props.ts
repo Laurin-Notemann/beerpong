@@ -172,7 +172,7 @@ export function mergeLiveMatches(
 export interface LiveMatchActivityProps extends LiveScore {
     /** epoch ms; the timer counts up from it */
     startedAt: number;
-    /** the match was saved: the activity shows the final score until it's dismissed */
+    /** the match was saved; its end takes the activity off the Lock Screen right away */
     finished: boolean;
     /** each team's own cups as they're drawn (`rackCode`); missing from older pushes */
     blueCups?: string;

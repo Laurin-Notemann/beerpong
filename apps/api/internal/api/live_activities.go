@@ -32,9 +32,6 @@ const (
 	// attributes' type in expo-widgets
 	liveActivityName       = "LiveMatchActivity"
 	liveActivityAttributes = "LiveActivityAttributes"
-	// how long a finished match's score stays on the Lock Screen: short, so it's
-	// gone by the time the group's next match is on
-	finishedActivityDismissal = 3 * time.Minute
 	// how often an end that didn't go out (APNs throttles a channel with 429s) is
 	// tried again, and for how long: iOS ends a Live Activity 8 hours after it
 	// started anyway
@@ -470,24 +467,16 @@ func (s *Server) startActivities(ctx context.Context, lm db.LiveMatch, score liv
 	return errors.Join(errs...)
 }
 
-// endActivities ends the live match's Live Activities: a finished one shows its
-// final score until a while after the match ended, a discarded one goes away.
-// Then the channel is freed.
+// endActivities ends the live match's Live Activities and takes them off the
+// Lock Screen right away, finished or discarded. Then the channel is freed.
 func (s *Server) endActivities(ctx context.Context, lm db.LiveMatch, score *liveScoreDTO) error {
 	final := liveScoreDTO{}
 	if score != nil {
 		final = *score
 	}
 	payload := activityPayload("end", lm, final)
-	dismissal := s.now()
-	if lm.EndedAt != nil {
-		// a dismissal date in the past removes it right away
-		dismissal = *lm.EndedAt
-	}
-	if lm.Status == liveFinished {
-		dismissal = dismissal.Add(finishedActivityDismissal)
-	}
-	payload["aps"].(map[string]any)["dismissal-date"] = dismissal.Unix()
+	// a dismissal date that has passed removes it at once
+	payload["aps"].(map[string]any)["dismissal-date"] = s.now().Unix()
 	if err := s.apns.Broadcast(ctx, *lm.ActivityChannel, payload); err != nil {
 		return err
 	}
