@@ -99,8 +99,9 @@ func contentProps(t *testing.T, req apnsRequest) map[string]any {
 }
 
 // A live match's activity starts on the group's phones with its first score,
-// is updated on its channel, and ends with the final score; every change also
-// refreshes the widgets. A token APNs no longer knows is forgotten.
+// is updated on its channel at most every activityUpdateInterval, and ends
+// with the final score; every change also refreshes the widgets. A token APNs
+// no longer knows is forgotten.
 func TestLiveScorePushes(t *testing.T) {
 	s, _ := expiryTestServer(t)
 	f := newExpiryFixture(t, s)
@@ -134,7 +135,7 @@ func TestLiveScorePushes(t *testing.T) {
 	}
 
 	// no score yet: only the widgets hear of it
-	if err := s.pushLiveScore(ctx, f.groupID, id); err != nil {
+	if err := s.pushLiveScore(ctx, f.groupID, id, true); err != nil {
 		t.Fatal(err)
 	}
 	if got := byPath(fake.take()); len(got) != 1 || got["POST /3/device/aa11"].path == "" {
@@ -143,7 +144,7 @@ func TestLiveScorePushes(t *testing.T) {
 
 	// the first score starts the activity
 	setScore(2, 1)
-	if err := s.pushLiveScore(ctx, f.groupID, id); err != nil {
+	if err := s.pushLiveScore(ctx, f.groupID, id, true); err != nil {
 		t.Fatal(err)
 	}
 	got := byPath(fake.take())
@@ -172,12 +173,22 @@ func TestLiveScorePushes(t *testing.T) {
 
 	// later scores are broadcast on the channel
 	setScore(3, 1)
-	if err := s.pushLiveScore(ctx, f.groupID, id); err != nil {
+	if err := s.pushLiveScore(ctx, f.groupID, id, true); err != nil {
 		t.Fatal(err)
 	}
 	update := byPath(fake.take())["POST /4/broadcasts/apps/app.test"]
 	if update.header.Get("apns-channel-id") != "Y2hhbm5lbA==" || update.body["aps"].(map[string]any)["event"] != "update" {
 		t.Fatalf("update: %v %v", update.header, update.body)
+	}
+
+	// a score right after is held back: APNs throttles a channel with many
+	// updates. The widgets still get it, and the end sends it.
+	setScore(4, 1)
+	if err := s.pushLiveScore(ctx, f.groupID, id, true); err != nil {
+		t.Fatal(err)
+	}
+	if got := byPath(fake.take()); len(got) != 1 || got["POST /3/device/aa11"].path == "" {
+		t.Fatalf("a held back update: %v", got)
 	}
 
 	// the end: a finished match keeps its final score for a while, and the
@@ -186,7 +197,7 @@ func TestLiveScorePushes(t *testing.T) {
 	if _, err := s.pool.Exec(ctx, "UPDATE live_matches SET status = $2 WHERE id = $1", id, liveFinished); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.pushLiveScore(ctx, f.groupID, id); err != nil {
+	if err := s.pushLiveScore(ctx, f.groupID, id, true); err != nil {
 		t.Fatal(err)
 	}
 	end := byPath(fake.take())["POST /4/broadcasts/apps/app.test"]
@@ -195,7 +206,7 @@ func TestLiveScorePushes(t *testing.T) {
 	if endAps["event"] != "end" || time.Until(dismissal) < 10*time.Minute {
 		t.Fatalf("end: %v", endAps)
 	}
-	if props := contentProps(t, end); props["finished"] != true || props["blueScore"] != 3.0 {
+	if props := contentProps(t, end); props["finished"] != true || props["blueScore"] != 4.0 {
 		t.Fatalf("end props: %v", props)
 	}
 	if lm := f.get(t, id); !lm.ActivityEnded {
@@ -210,7 +221,7 @@ func TestLiveScorePushes(t *testing.T) {
 	}
 
 	// an ended activity isn't ended again
-	if err := s.pushLiveScore(ctx, f.groupID, id); err != nil {
+	if err := s.pushLiveScore(ctx, f.groupID, id, true); err != nil {
 		t.Fatal(err)
 	}
 	if got := fake.take(); len(got) != 0 {

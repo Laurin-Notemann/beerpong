@@ -24,8 +24,9 @@ import (
 // at the seq they computed it for. The API keeps the newest one and pushes it:
 // the first starts a Live Activity on every group member's iPhone (push-to-start
 // with a broadcast channel per live match), later ones are broadcast on that
-// channel, and the end ends them. Every change also sends the group's phones a
-// silent push with the scores of the matches running, for the home screen widget.
+// channel at most every activityUpdateInterval, and the end ends them. Every
+// change also sends the group's phones a silent push with the scores of the
+// matches running, for the home screen widget.
 
 const (
 	// what the app's Live Activity is called (createLiveActivity) and its
@@ -37,6 +38,11 @@ const (
 	// started anyway
 	activityEndRetryInterval = time.Minute
 	liveActivityLifetime     = 8 * time.Hour
+	// how often a channel takes an update: APNs answers 429 to a channel that
+	// gets more than about 4 a minute (developer.apple.com/forums/thread/827808),
+	// whatever their priority. After a 429 the channel rests for a minute.
+	activityUpdateInterval = 15 * time.Second
+	activityThrottledWait  = time.Minute
 	// the most matches a widget push carries, and moves per match; a silent
 	// push can be at most 4 KB
 	maxWidgetMatches = 4
@@ -299,13 +305,27 @@ func (s *Server) putLiveMatchDisplay(r *request) response {
 // queued twice before it's pushed is pushed once, with its newest state.
 type liveScorePushes struct {
 	mu     sync.Mutex
-	queued map[string]string // live match id -> group id
+	queued map[string]queuedPush // by live match id
 	order  []string
 	wake   chan struct{}
+	// by live match id: when its channel takes the next update, and whether
+	// the match is queued again for then (holdUpdate)
+	updateAt map[string]time.Time
+	waiting  map[string]bool
+}
+
+type queuedPush struct {
+	groupID string
+	// false if only the Live Activity is behind: an update that was held back
+	// doesn't refresh the widgets again
+	widgets bool
 }
 
 func newLiveScorePushes() *liveScorePushes {
-	return &liveScorePushes{queued: map[string]string{}, wake: make(chan struct{}, 1)}
+	return &liveScorePushes{
+		queued: map[string]queuedPush{}, wake: make(chan struct{}, 1),
+		updateAt: map[string]time.Time{}, waiting: map[string]bool{},
+	}
 }
 
 // queueLiveScore schedules the pushes for a live match whose score, or status,
@@ -314,12 +334,16 @@ func (s *Server) queueLiveScore(groupID, id string) {
 	if s.apns == nil {
 		return
 	}
-	p := s.pushes
+	s.pushes.add(id, groupID, true)
+}
+
+func (p *liveScorePushes) add(id, groupID string, widgets bool) {
 	p.mu.Lock()
-	if _, found := p.queued[id]; !found {
+	old, found := p.queued[id]
+	if !found {
 		p.order = append(p.order, id)
 	}
-	p.queued[id] = groupID
+	p.queued[id] = queuedPush{groupID: groupID, widgets: widgets || old.widgets}
 	p.mu.Unlock()
 	select {
 	case p.wake <- struct{}{}:
@@ -327,16 +351,51 @@ func (s *Server) queueLiveScore(groupID, id string) {
 	}
 }
 
-func (p *liveScorePushes) next() (id, groupID string, found bool) {
+func (p *liveScorePushes) next() (id string, q queuedPush, found bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if len(p.order) == 0 {
-		return "", "", false
+		return "", queuedPush{}, false
 	}
 	id, p.order = p.order[0], p.order[1:]
-	groupID = p.queued[id]
+	q = p.queued[id]
 	delete(p.queued, id)
-	return id, groupID, true
+	return id, q, true
+}
+
+// holdUpdate reports whether the live match's channel can't take an update
+// yet. The match is then queued again for when it can, and that update sends
+// the newest score.
+func (p *liveScorePushes) holdUpdate(id, groupID string) bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	wait := time.Until(p.updateAt[id])
+	if wait <= 0 {
+		return false
+	}
+	if !p.waiting[id] {
+		p.waiting[id] = true
+		time.AfterFunc(wait, func() {
+			p.mu.Lock()
+			delete(p.waiting, id)
+			p.mu.Unlock()
+			p.add(id, groupID, false)
+		})
+	}
+	return true
+}
+
+// restUpdates keeps updates off the live match's channel for d.
+func (p *liveScorePushes) restUpdates(id string, d time.Duration) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.updateAt[id] = time.Now().Add(d)
+}
+
+func (p *liveScorePushes) forget(id string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	delete(p.updateAt, id)
 }
 
 // RunLiveScorePushes sends the queued pushes, one live match at a time, until
@@ -359,11 +418,11 @@ func (s *Server) RunLiveScorePushes(ctx context.Context) {
 			s.retryActivityEnds(ctx)
 		}
 		for {
-			id, groupID, found := s.pushes.next()
+			id, q, found := s.pushes.next()
 			if !found {
 				break
 			}
-			if err := s.pushLiveScore(ctx, groupID, id); err != nil && ctx.Err() == nil {
+			if err := s.pushLiveScore(ctx, q.groupID, id, q.widgets); err != nil && ctx.Err() == nil {
 				s.log.ErrorContext(ctx, "live score push failed", "liveMatchId", id, "err", err)
 				observability.CaptureError(ctx, err)
 			}
@@ -371,7 +430,9 @@ func (s *Server) RunLiveScorePushes(ctx context.Context) {
 	}
 }
 
-func (s *Server) pushLiveScore(ctx context.Context, groupID, id string) (err error) {
+// pushLiveScore starts, updates or ends the live match's Live Activities, and
+// with widgets refreshes the group's widgets.
+func (s *Server) pushLiveScore(ctx context.Context, groupID, id string, widgets bool) (err error) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			err = fmt.Errorf("live score push panic: %v", rec)
@@ -396,12 +457,38 @@ func (s *Server) pushLiveScore(ctx context.Context, groupID, id string) (err err
 	case lm.Status == liveInProgress && score != nil && lm.ActivityChannel == nil:
 		errs = append(errs, s.startActivities(ctx, lm, *score, tokens))
 	case lm.Status == liveInProgress && score != nil:
-		errs = append(errs, s.apns.Broadcast(ctx, *lm.ActivityChannel, activityPayload("update", lm, *score)))
+		errs = append(errs, s.updateActivities(ctx, lm, *score))
 	case lm.Status != liveInProgress && lm.ActivityChannel != nil && !lm.ActivityEnded:
 		errs = append(errs, s.endActivities(ctx, lm, score))
 	}
-	errs = append(errs, s.pushWidgets(ctx, groupID, tokens))
+	if lm.Status != liveInProgress {
+		s.pushes.forget(id)
+	}
+	if widgets {
+		errs = append(errs, s.pushWidgets(ctx, groupID, tokens))
+	}
 	return errors.Join(errs...)
+}
+
+// updateActivities broadcasts the live match's newest score on its channel, at
+// most every activityUpdateInterval. A change in between is held back and goes
+// out once the channel takes updates again, with the score then; so does one
+// APNs throttled anyway. The end isn't held back: it goes out at once.
+func (s *Server) updateActivities(ctx context.Context, lm db.LiveMatch, score liveScoreDTO) error {
+	if s.pushes.holdUpdate(lm.ID, lm.GroupID) {
+		return nil
+	}
+	err := s.apns.Broadcast(ctx, *lm.ActivityChannel, activityPayload("update", lm, score))
+	switch {
+	case errors.Is(err, push.ErrTooManyRequests):
+		s.log.WarnContext(ctx, "live activity update throttled, sending it again later", "liveMatchId", lm.ID)
+		s.pushes.restUpdates(lm.ID, activityThrottledWait)
+		s.pushes.holdUpdate(lm.ID, lm.GroupID)
+		return nil
+	case err == nil:
+		s.pushes.restUpdates(lm.ID, activityUpdateInterval)
+	}
+	return err
 }
 
 // displayOf is the score phones reported last, nil before the first.
