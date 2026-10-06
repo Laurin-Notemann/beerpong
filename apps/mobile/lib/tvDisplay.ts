@@ -1,3 +1,6 @@
+// Versus TV's config (apps/web), shared with the app's TV remote. The web app imports this
+// module, so keep it plain TypeScript without React Native imports.
+
 /** What a TV shows. The TV keeps a copy, the server relays changes from the phones to it. */
 export interface DisplayConfig {
     groupId: string | null;
@@ -37,7 +40,10 @@ export const emptyConfig: DisplayConfig = {
 
 /** what a phone may change; the group goes through connectGroup, which joins it */
 export type DisplayPatch = Partial<
-    Pick<DisplayConfig, 'view' | 'scope' | 'seasonId' | 'pinnedMatchIds' | 'focusMatchId'>
+    Pick<
+        DisplayConfig,
+        'view' | 'scope' | 'seasonId' | 'pinnedMatchIds' | 'focusMatchId'
+    >
 >;
 
 const isString = (v: unknown): v is string => typeof v === 'string';
@@ -50,17 +56,25 @@ export function parsePatch(value: unknown): DisplayPatch {
 
     if (views.includes(v.view as View)) patch.view = v.view as View;
     if (scopes.includes(v.scope as Scope)) patch.scope = v.scope as Scope;
-    if (v.seasonId === null || isString(v.seasonId)) patch.seasonId = v.seasonId;
-    if (v.focusMatchId === null || isString(v.focusMatchId)) patch.focusMatchId = v.focusMatchId;
+    if (v.seasonId === null || isString(v.seasonId))
+        patch.seasonId = v.seasonId;
+    if (v.focusMatchId === null || isString(v.focusMatchId))
+        patch.focusMatchId = v.focusMatchId;
     if (Array.isArray(v.pinnedMatchIds) && v.pinnedMatchIds.every(isString)) {
-        patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(0, MAX_MATCHES);
+        patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(
+            0,
+            MAX_MATCHES
+        );
     }
     return patch;
 }
 
 /** a config read back from storage or a client, with defaults for anything missing or wrong */
 export function parseConfig(value: unknown): DisplayConfig {
-    const v = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
+    const v = (value && typeof value === 'object' ? value : {}) as Record<
+        string,
+        unknown
+    >;
     return {
         ...emptyConfig,
         ...parsePatch(v),
@@ -78,7 +92,9 @@ export function pickMatches<T extends { id: string; startedAt: string }>(
     live: T[],
     pinnedIds: string[]
 ): T[] {
-    const pinned = pinnedIds.flatMap((id) => live.find((i) => i.id === id) ?? []);
+    const pinned = pinnedIds.flatMap(
+        (id) => live.find((i) => i.id === id) ?? []
+    );
     const rest = live
         .filter((i) => !pinnedIds.includes(i.id))
         .slice(0, Math.max(0, MAX_MATCHES - pinned.length))
@@ -94,8 +110,12 @@ export const byStart = (a: { startedAt: string }, b: { startedAt: string }) =>
  * What the TV shows: a focused live match on the whole screen while it's live; in auto the
  * leaderboard next to one live match while any is live, else only the leaderboard.
  */
-export function layoutFor(config: Pick<DisplayConfig, 'view' | 'focusMatchId'>, liveIds: string[]) {
-    if (config.focusMatchId && liveIds.includes(config.focusMatchId)) return 'focus';
+export function layoutFor(
+    config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
+    liveIds: string[]
+) {
+    if (config.focusMatchId && liveIds.includes(config.focusMatchId))
+        return 'focus';
     if (config.view === 'leaderboard') return 'leaderboard';
     if (config.view === 'live') return 'live';
     return liveIds.length > 0 ? 'split' : 'leaderboard';

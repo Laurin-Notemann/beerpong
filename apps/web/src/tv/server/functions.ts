@@ -1,8 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
 
-import { emptyConfig, parsePatch } from '~/tv/lib/display';
+import { emptyConfig, parsePatch } from '@/lib/tvDisplay';
 import { socketUrl } from '~/apiUrl';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
+import { removeGroup } from '~/tv/server/appRemote';
 import { buildBoard } from '~/tv/server/board';
 import { authorize, register, reload, setSession, update } from '~/tv/server/displays';
 
@@ -62,7 +63,6 @@ export const connectGroup = createServerFn({ method: 'POST' })
         return { config: display.config };
     });
 
-/** takes the group off the TV; the TV leaves it, so it no longer counts as a member */
 /** a phone reloading the TV's page, e.g. to pick up a deploy */
 export const reloadDisplay = createServerFn({ method: 'POST' })
     .inputValidator(asObject)
@@ -70,17 +70,12 @@ export const reloadDisplay = createServerFn({ method: 'POST' })
         reload(authorize(data.id, data.key).display);
     });
 
+/** a phone taking the group off the TV */
 export const disconnectGroup = createServerFn({ method: 'POST' })
     .inputValidator(asObject)
     .handler(async ({ data }) => {
         const { display } = authorize(data.id, data.key);
-        const groupId = display.config.groupId;
-        if (groupId && display.refreshToken) {
-            await apiFor(display.refreshToken)
-                .leave(groupId)
-                .catch(() => {});
-        }
-        update(display, emptyConfig);
+        await removeGroup(display);
         return { config: display.config };
     });
 

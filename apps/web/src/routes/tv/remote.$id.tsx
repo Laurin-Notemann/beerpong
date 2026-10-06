@@ -10,7 +10,7 @@ import {
     pickMatches,
     type Scope,
     type View,
-} from '~/tv/lib/display';
+} from '@/lib/tvDisplay';
 import { type DisplayEvent, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import { formatElapsed } from '~/tv/lib/liveMatch';
 import type { LiveMatchView } from '~/tv/server/board';

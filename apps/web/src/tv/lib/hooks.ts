@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
-import type { DisplayConfig } from '~/tv/lib/display';
+import type { DisplayConfig } from '@/lib/tvDisplay';
 import { getBoard, getSocketUrl } from '~/tv/server/functions';
 
 export type DisplayEvent =

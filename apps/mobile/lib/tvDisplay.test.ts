@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { layoutFor, parsePatch, pickMatches } from '~/tv/lib/display';
+import { layoutFor, parsePatch, pickMatches } from '@/lib/tvDisplay';
 
 // most recently active first, as the board lists them
 const live = [
@@ -26,20 +26,31 @@ describe('pickMatches', () => {
 
     it('keeps the cards in place when another match gets a hit', () => {
         const afterHit = [live[2], live[0], live[1], live[3]];
-        expect(ids(pickMatches(afterHit, []))).toEqual(ids(pickMatches(live, [])));
+        expect(ids(pickMatches(afterHit, []))).toEqual(
+            ids(pickMatches(live, []))
+        );
     });
 });
 
 describe('parsePatch', () => {
     it('keeps valid fields and drops the rest', () => {
-        expect(parsePatch({ view: 'live', scope: 'nope', groupId: 'x', seasonId: null })).toEqual({
+        expect(
+            parsePatch({
+                view: 'live',
+                scope: 'nope',
+                groupId: 'x',
+                seasonId: null,
+            })
+        ).toEqual({
             view: 'live',
             seasonId: null,
         });
     });
 
     it('dedupes pins and caps them at what fits on the TV', () => {
-        expect(parsePatch({ pinnedMatchIds: ['a', 'a', 'b', 'c', 'd'] })).toEqual({
+        expect(
+            parsePatch({ pinnedMatchIds: ['a', 'a', 'b', 'c', 'd'] })
+        ).toEqual({
             pinnedMatchIds: ['a', 'b', 'c'],
         });
     });
@@ -47,12 +58,20 @@ describe('parsePatch', () => {
 
 describe('layoutFor', () => {
     it('puts a focused match on the whole screen only while it is live', () => {
-        expect(layoutFor({ view: 'leaderboard', focusMatchId: 'a' }, ['a', 'b'])).toBe('focus');
-        expect(layoutFor({ view: 'leaderboard', focusMatchId: 'gone' }, ['a'])).toBe('leaderboard');
+        expect(
+            layoutFor({ view: 'leaderboard', focusMatchId: 'a' }, ['a', 'b'])
+        ).toBe('focus');
+        expect(
+            layoutFor({ view: 'leaderboard', focusMatchId: 'gone' }, ['a'])
+        ).toBe('leaderboard');
     });
 
     it('shows the leaderboard next to a live match in auto, alone without one', () => {
-        expect(layoutFor({ view: 'auto', focusMatchId: null }, ['a'])).toBe('split');
-        expect(layoutFor({ view: 'auto', focusMatchId: null }, [])).toBe('leaderboard');
+        expect(layoutFor({ view: 'auto', focusMatchId: null }, ['a'])).toBe(
+            'split'
+        );
+        expect(layoutFor({ view: 'auto', focusMatchId: null }, [])).toBe(
+            'leaderboard'
+        );
     });
 });

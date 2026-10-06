@@ -101,6 +101,12 @@ export default function GroupSettingsScreen({
                                 nav.navigate('editGroupName', { id })
                             }
                         />
+                        <MenuItem
+                            title="TV Remote"
+                            headIcon="remote-tv"
+                            tailIconType="next"
+                            onPress={() => nav.navigate('tvRemote')}
+                        />
                         {experiments.premiumVersion && (
                             <MenuItem
                                 title="Premium Version"

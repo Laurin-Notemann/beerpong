@@ -30,7 +30,7 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                             );
                         };
                         send({ type: 'config', config: display.config });
-                        const unsubscribe = subscribe(display, send);
+                        const unsubscribe = subscribe(display, send, isTv);
                         // proxies close connections that stay quiet
                         const ping = setInterval(
                             () => controller.enqueue(encoder.encode(': ping\n\n')),
