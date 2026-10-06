@@ -19,10 +19,11 @@ import LoadingScreen from '@/components/LoadingScreen';
 import PlayerScreen from '@/components/screens/Player';
 import { triggerHapticBump } from '@/haptics';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { saveScoreClip } from '@/lib/saveScoreClip';
 import { putTemp } from '@/lib/tempRouteStore';
 import { usePlayerPageScope } from '@/lib/usePlayerPageScope';
 import { showErrorToast, showSuccessToast } from '@/toast';
-import { launchImageLibrary, readAsByteArray } from '@/utils/fileUpload';
+import { launchImageLibrary } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 
 /** how long the score clip Versus TV plays may be */
@@ -57,6 +58,7 @@ export default function Page() {
 
     const updateScoreClipMutation = useUpdateScoreClipMutation();
     const deleteScoreClipMutation = useDeleteScoreClipMutation();
+    const [isSavingScoreClip, setIsSavingScoreClip] = useState(false);
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -156,14 +158,18 @@ export default function Page() {
 
         try {
             await updateScoreClipMutation.mutateAsync({
-                byteArray: await readAsByteArray(result.uri),
+                uri: result.uri,
                 groupId,
                 profileId,
             });
             showSuccessToast('Score clip uploaded.');
         } catch (err) {
             ConsoleLogger.error('failed to upload score clip:', err);
-            showErrorToast('Failed to upload score clip.', err);
+            // a failed upload takes the new clip off again (useUpdateScoreClipMutation)
+            showErrorToast(
+                "The score clip didn't upload. Try again on a good connection, and keep Versus open until it's done.",
+                err
+            );
         }
     }
 
@@ -179,6 +185,21 @@ export default function Page() {
         }
     }
 
+    async function onSaveScoreClipPress() {
+        const url = player?.profile?.scoreClipUrl;
+        if (!url) return;
+
+        setIsSavingScoreClip(true);
+        try {
+            await saveScoreClip(url, playerName);
+        } catch (err) {
+            ConsoleLogger.error('failed to save score clip:', err);
+            showErrorToast("Couldn't save the score clip.", err);
+        } finally {
+            setIsSavingScoreClip(false);
+        }
+    }
+
     return (
         <>
             <PlayerScreen
@@ -188,7 +209,8 @@ export default function Page() {
                     isUploadingAvatar ||
                     deletePlayerMutation.isPending ||
                     updateScoreClipMutation.isPending ||
-                    deleteScoreClipMutation.isPending
+                    deleteScoreClipMutation.isPending ||
+                    isSavingScoreClip
                 }
                 id={id}
                 profileId={profileId!}
@@ -202,6 +224,7 @@ export default function Page() {
                 isUploadingScoreClip={updateScoreClipMutation.isPending}
                 onUploadScoreClipPress={onUploadScoreClipPress}
                 onDeleteScoreClipPress={onDeleteScoreClipPress}
+                onSaveScoreClipPress={onSaveScoreClipPress}
                 refresh={refresh}
             />
         </>

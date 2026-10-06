@@ -89,6 +89,7 @@ export interface PlayerScreenProps {
     isUploadingScoreClip: boolean;
     onUploadScoreClipPress: () => void;
     onDeleteScoreClipPress: () => void;
+    onSaveScoreClipPress: () => void;
     refresh: RefreshProps;
 
     scopes: Map<string, ScopeInfo>;
@@ -108,6 +109,7 @@ export default function PlayerScreen({
     isUploadingScoreClip,
     onUploadScoreClipPress,
     onDeleteScoreClipPress,
+    onSaveScoreClipPress,
     refresh,
 
     scopes,
@@ -453,7 +455,11 @@ export default function PlayerScreen({
                                           ? 'Replace Score Clip'
                                           : 'Add Score Clip'
                                 }
-                                subtitle="Plays on Versus TV when they score"
+                                subtitle={
+                                    isUploadingScoreClip
+                                        ? 'Keep Versus open until it is done'
+                                        : 'Plays on Versus TV when they score'
+                                }
                                 headIcon="movie-open-outline"
                                 onPress={
                                     isPending
@@ -461,6 +467,17 @@ export default function PlayerScreen({
                                         : onUploadScoreClipPress
                                 }
                             />
+                            {hasScoreClip && (
+                                <MenuItem
+                                    title="Save Score Clip"
+                                    headIcon="download"
+                                    onPress={
+                                        isPending
+                                            ? undefined
+                                            : onSaveScoreClipPress
+                                    }
+                                />
+                            )}
                             {hasScoreClip && (
                                 <MenuItem
                                     title="Remove Score Clip"

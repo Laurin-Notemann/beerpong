@@ -13,6 +13,25 @@ import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadAsset } from '@/api/utils/uploadAsset';
 import { Client, Paths, PlayerDto } from '@/openapi/openapi';
+import { readAsByteArray } from '@/utils/fileUpload';
+
+/**
+ * Uploads a profile's new avatar or score clip. The API points the profile at the new asset before
+ * the bytes arrive, so a failed upload takes it off again with `remove`: otherwise the profile
+ * keeps an asset with nothing behind it (Versus TV shows an empty clip). The upload's error is
+ * thrown either way, for the toast and Sentry.
+ */
+async function uploadOrRemove(
+    upload: () => Promise<void>,
+    remove: () => Promise<unknown>
+) {
+    try {
+        await upload();
+    } catch (err) {
+        await remove().catch(() => {});
+        throw err;
+    }
+}
 
 /** every player of the season, inactive (deleted) ones too: they still appear in matches */
 export const playersQueryOptions = (
@@ -125,11 +144,15 @@ export const useUpdatePlayerAvatarMutation = () => {
                 groupId,
                 id: profileId,
             });
-            await uploadAsset(
-                res.data.data?.singleUploadUrl ?? '',
-                byteArray,
-                'profilePicture',
-                mimeType
+            await uploadOrRemove(
+                () =>
+                    uploadAsset(
+                        res.data.data?.singleUploadUrl ?? '',
+                        byteArray,
+                        'profilePicture',
+                        mimeType
+                    ),
+                async () => (await api).deleteAvatar({ groupId, id: profileId })
             );
             return res.data;
         },
@@ -145,23 +168,31 @@ export const useUpdateScoreClipMutation = () => {
         Paths.SetScoreClip.Responses.$200 | null,
         Error,
         {
-            byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>;
+            /** the picked video's file */
+            uri: string;
             groupId: ApiId;
             profileId: ApiId;
         }
     >({
-        mutationFn: async ({ byteArray, groupId, profileId }) => {
+        mutationFn: async ({ uri, groupId, profileId }) => {
+            // read first: a file that can't be read leaves the current clip as it is
+            const byteArray = await readAsByteArray(uri);
             const res = await (
                 await api
             ).setScoreClip({
                 groupId,
                 id: profileId,
             });
-            await uploadAsset(
-                res.data.data?.singleUploadUrl ?? '',
-                byteArray,
-                'scoreClip',
-                'video/mp4'
+            await uploadOrRemove(
+                () =>
+                    uploadAsset(
+                        res.data.data?.singleUploadUrl ?? '',
+                        byteArray,
+                        'scoreClip',
+                        'video/mp4'
+                    ),
+                async () =>
+                    (await api).deleteScoreClip({ groupId, id: profileId })
             );
             return res.data;
         },
