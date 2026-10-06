@@ -31,8 +31,8 @@ jobs:
   test:
     uses: ./.github/workflows/web-ci.yml
 
+  # builds while the checks run; only deploy waits for both
   build:
-    needs: test
     permissions:
       id-token: write
       contents: read
@@ -72,7 +72,7 @@ jobs:
             VITE_GIT_COMMIT=${{ github.sha }}
 
   deploy:
-    needs: build
+    needs: [test, build]
     name: Deploy on the staging server
     runs-on: ubuntu-latest
     permissions:

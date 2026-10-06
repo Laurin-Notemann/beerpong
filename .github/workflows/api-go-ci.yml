@@ -1,7 +1,8 @@
 name: Api Go CI
 
-# Vets and builds the Go API. The staging deploy runs this first. The unit tests
-# and the contract suite (api-tests/) don't run in CI; run them locally.
+# Vets and builds the Go API. The staging deploy runs this next to the image build
+# and deploys only if both pass. The unit tests and the contract suite (api-tests/)
+# don't run in CI; run them locally.
 
 on:
   push:

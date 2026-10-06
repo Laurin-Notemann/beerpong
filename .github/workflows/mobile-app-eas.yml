@@ -70,7 +70,9 @@ jobs:
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          # pinned: the action caches eas-cli per version, and `latest` is a new, uncached version
+          # on most runs. Bump it by hand now and then.
+          eas-version: 24.11.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
@@ -91,12 +93,36 @@ jobs:
 
       # Runtime unchanged -> OTA update
 
+      # Metro's transforms from the last update, so the bundle isn't built from scratch. Expo reads
+      # them from EXPO_METRO_CACHE_RESTORE_DIR and writes only the ones this bundle used to
+      # EXPO_METRO_CACHE_OUTPUT_DIR, which is saved for the next run, so the cache doesn't grow.
+      - name: Restore Metro cache
+        if: steps.match.outputs.build_id
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/metro-cache
+          key: metro-${{ matrix.platform }}-${{ github.sha }}
+          restore-keys: metro-${{ matrix.platform }}-
+
       - name: Publish update
         if: steps.match.outputs.build_id
+        env:
+          EXPO_METRO_CACHE_RESTORE_DIR: ${{ runner.temp }}/metro-restored
+          EXPO_METRO_CACHE_OUTPUT_DIR: ${{ runner.temp }}/metro-cache
         run: |
+          mkdir -p "$EXPO_METRO_CACHE_OUTPUT_DIR"
+          mv "$EXPO_METRO_CACHE_OUTPUT_DIR" "$EXPO_METRO_CACHE_RESTORE_DIR"
+          mkdir "$EXPO_METRO_CACHE_OUTPUT_DIR"
           eas update --platform "$PLATFORM" --channel "$PROFILE" --environment "$PROFILE" \
             --message "staging $GITHUB_SHA" --non-interactive
           npx sentry-expo-upload-sourcemaps dist
+
+      - name: Save Metro cache
+        if: steps.match.outputs.build_id
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/metro-cache
+          key: metro-${{ matrix.platform }}-${{ github.sha }}
 
       # Runtime changed -> native build
 

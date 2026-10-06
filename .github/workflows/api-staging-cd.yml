@@ -23,8 +23,8 @@ jobs:
     uses: ./.github/workflows/api-go-ci.yml
     secrets: inherit
 
+  # builds while the checks run; only deploy waits for both
   build-api:
-    needs: test
     permissions:
       id-token: write
       contents: read
@@ -62,7 +62,7 @@ jobs:
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/api-go-staging:${{ github.sha }}
 
   deploy-api:
-    needs: build-api
+    needs: [test, build-api]
     name: Deploy staging api on a bare metal server
     runs-on: ubuntu-latest
     steps:

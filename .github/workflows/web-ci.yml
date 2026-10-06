@@ -2,7 +2,8 @@ name: Web CI
 
 # Format, typecheck and the production build of the web app (apps/web/: the Elo simulator
 # and Versus TV). The TV reduces live matches with the app's code, so changes to those parts of
-# apps/mobile/ run it too. The staging deploy runs this first.
+# apps/mobile/ run it too. The staging deploy runs this next to the image build and deploys
+# only if both pass.
 
 on:
   push:
