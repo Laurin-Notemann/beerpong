@@ -184,6 +184,7 @@ type SeasonSetting struct {
 	EloKr               *float64
 	EloRingWeight       *float64
 	EloSwing            *float64
+	EloSpread           *float64
 }
 
 type Statistic struct {

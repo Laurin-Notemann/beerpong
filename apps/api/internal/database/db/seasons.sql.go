@@ -42,7 +42,7 @@ SELECT
     s.id, s.name, s.start_date, s.end_date, s.group_id, s.created_by, s.season_settings_id,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
-    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing, ss.elo_spread,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM seasons s
@@ -67,6 +67,7 @@ type GetSeasonRow struct {
 	EloKr               *float64
 	EloRingWeight       *float64
 	EloSwing            *float64
+	EloSpread           *float64
 	WakeTime            string
 }
 
@@ -92,6 +93,7 @@ func (q *Queries) GetSeason(ctx context.Context, id string) (GetSeasonRow, error
 		&i.EloKr,
 		&i.EloRingWeight,
 		&i.EloSwing,
+		&i.EloSpread,
 		&i.WakeTime,
 	)
 	return i, err
@@ -123,9 +125,9 @@ func (q *Queries) InsertSeason(ctx context.Context, arg InsertSeasonParams) erro
 
 const insertSeasonSettings = `-- name: InsertSeasonSettings :exec
 INSERT INTO season_settings (id, daily_leaderboard, max_team_size, min_matches_to_qualify, min_team_size, ranking_algorithm, wake_time,
-    elo_k, elo_kr, elo_ring_weight, elo_swing)
+    elo_k, elo_kr, elo_ring_weight, elo_swing, elo_spread)
 VALUES ($1, $2, $3, $4, $5, $6, $7::text::time,
-    $8, $9, $10, $11)
+    $8, $9, $10, $11, $12)
 `
 
 type InsertSeasonSettingsParams struct {
@@ -140,6 +142,7 @@ type InsertSeasonSettingsParams struct {
 	EloKr               *float64
 	EloRingWeight       *float64
 	EloSwing            *float64
+	EloSpread           *float64
 }
 
 func (q *Queries) InsertSeasonSettings(ctx context.Context, arg InsertSeasonSettingsParams) error {
@@ -155,6 +158,7 @@ func (q *Queries) InsertSeasonSettings(ctx context.Context, arg InsertSeasonSett
 		arg.EloKr,
 		arg.EloRingWeight,
 		arg.EloSwing,
+		arg.EloSpread,
 	)
 	return err
 }
@@ -191,7 +195,7 @@ SELECT
     s.id, s.name, s.start_date, s.end_date, s.group_id, s.created_by, s.season_settings_id,
     ss.min_matches_to_qualify, ss.min_team_size, ss.max_team_size,
     ss.ranking_algorithm, ss.daily_leaderboard,
-    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing,
+    ss.elo_k, ss.elo_kr, ss.elo_ring_weight, ss.elo_swing, ss.elo_spread,
     -- Java's DTO renders a missing wake time as its default "00:00"
     COALESCE(to_char(ss.wake_time, 'HH24:MI:SS'), '00:00')::text AS wake_time
 FROM seasons s
@@ -217,6 +221,7 @@ type SeasonsByGroupRow struct {
 	EloKr               *float64
 	EloRingWeight       *float64
 	EloSwing            *float64
+	EloSpread           *float64
 	WakeTime            string
 }
 
@@ -246,6 +251,7 @@ func (q *Queries) SeasonsByGroup(ctx context.Context, groupID *string) ([]Season
 			&i.EloKr,
 			&i.EloRingWeight,
 			&i.EloSwing,
+			&i.EloSpread,
 			&i.WakeTime,
 		); err != nil {
 			return nil, err
@@ -269,7 +275,8 @@ UPDATE season_settings SET
     elo_k = $8,
     elo_kr = $9,
     elo_ring_weight = $10,
-    elo_swing = $11
+    elo_swing = $11,
+    elo_spread = $12
 WHERE id = $1
 `
 
@@ -285,6 +292,7 @@ type UpdateSeasonSettingsParams struct {
 	EloKr               *float64
 	EloRingWeight       *float64
 	EloSwing            *float64
+	EloSpread           *float64
 }
 
 func (q *Queries) UpdateSeasonSettings(ctx context.Context, arg UpdateSeasonSettingsParams) error {
@@ -300,6 +308,7 @@ func (q *Queries) UpdateSeasonSettings(ctx context.Context, arg UpdateSeasonSett
 		arg.EloKr,
 		arg.EloRingWeight,
 		arg.EloSwing,
+		arg.EloSpread,
 	)
 	return err
 }

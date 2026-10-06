@@ -70,7 +70,7 @@
         "dailyLeaderboard": "LAST_24_HOURS",
         "minMatchesToQualify": 3,
         "rankingAlgorithm": "ELO",
-        "wakeTime": "08:30"
+        "wakeTime": "08:30:00"
       }
     },
     "status": 200,
@@ -433,7 +433,7 @@
     "request": "PUT /groups/\u003cid3\u003e/seasons/\u003cid1\u003e",
     "body": {
       "seasonSettings": {
-        "wakeTime": "08:00:00"
+        "wakeTime": "08:00:60"
       }
     },
     "status": 400,

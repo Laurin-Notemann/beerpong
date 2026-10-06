@@ -22,7 +22,7 @@ import type { LiveStatus } from '~/simulator/live';
 import type { LiveMatchDto } from '~/simulator/liveMatch';
 
 const sliders: {
-    key: 'k' | 'kr' | 'swing';
+    key: 'k' | 'kr' | 'swing' | 'spread';
     label: string;
     min: number;
     max: number;
@@ -32,6 +32,13 @@ const sliders: {
     { key: 'k', label: 'Hitting (K)', min: 0, max: 400, step: 5, tone: 's' },
     { key: 'kr', label: 'Result (KR)', min: 0, max: 400, step: 5, tone: 'r' },
     { key: 'swing', label: 'Swing: how far ratings move', min: 0.5, max: 10, step: 0.5 },
+    {
+        key: 'spread',
+        label: 'Spread: gap for 10× scoring at Swing 1',
+        min: 250,
+        max: 8000,
+        step: 250,
+    },
 ];
 
 // what a ring win's result counts, against a normal win's
@@ -41,13 +48,14 @@ const ringChoices = [
     { value: 1, label: 'the bonus ratio' },
 ];
 
-const weights = ['k', 'kr', 'ringWeight', 'swing'] as const;
+const weights = ['k', 'kr', 'ringWeight', 'swing', 'spread'] as const;
 
 const noWeights = {
     k: undefined,
     kr: undefined,
     ringWeight: undefined,
     swing: undefined,
+    spread: undefined,
 };
 
 type Change = { season?: string; tests?: TestGame[] } & Partial<Params>;
@@ -240,8 +248,9 @@ export function Simulator({
                             <>
                                 Best of {best.tried} settings: hitting <b>{best.params.k}</b>,
                                 result <b>{best.params.kr}</b>, ring weight{' '}
-                                <b>{best.params.ringWeight}</b>, swing <b>{best.params.swing}</b> →
-                                favourite won <b>{pct(best.prediction.correct)}</b>, score{' '}
+                                <b>{best.params.ringWeight}</b>, swing <b>{best.params.swing}</b>,
+                                spread <b>{best.params.spread}</b> → favourite won{' '}
+                                <b>{pct(best.prediction.correct)}</b>, score{' '}
                                 {best.prediction.logLoss.toFixed(3)}. Applied. With a few hundred
                                 games, differences under ~0.005 are noise.
                             </>

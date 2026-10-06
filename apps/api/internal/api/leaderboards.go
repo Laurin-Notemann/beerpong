@@ -337,7 +337,7 @@ func (s *Server) groupInputs(ctx context.Context, q *db.Queries, group groupDTO,
 	bySeason := map[string]*seasonRows{}
 	for i, sn := range seasons {
 		parts[i].startedAt = sn.StartDate
-		parts[i].elo = eloWeights{K: sn.EloK, KR: sn.EloKr, RingWeight: sn.EloRingWeight, Swing: sn.EloSwing}.params()
+		parts[i].elo = eloWeights{K: sn.EloK, KR: sn.EloKr, RingWeight: sn.EloRingWeight, Swing: sn.EloSwing, Spread: sn.EloSpread}.params()
 		if group.ActiveSeasonID != nil && sn.ID == *group.ActiveSeasonID {
 			parts[i].projected = projected
 		}
@@ -513,7 +513,7 @@ func (p playerRow) season() seasonDTO {
 			RankingAlgorithm:    p.RankingAlgorithm,
 			DailyLeaderboard:    p.DailyLeaderboard,
 			WakeTime:            p.WakeTime,
-			Elo:                 eloWeights{K: p.EloK, KR: p.EloKr, RingWeight: p.EloRingWeight, Swing: p.EloSwing},
+			Elo:                 eloWeights{K: p.EloK, KR: p.EloKr, RingWeight: p.EloRingWeight, Swing: p.EloSwing, Spread: p.EloSpread},
 		}
 	}
 	return sn.dto()

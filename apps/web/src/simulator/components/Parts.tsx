@@ -91,7 +91,12 @@ export function Parts({
                         still under way counts alike. The finish bonus only counts in the result.
                     </p>
                     <div className="formula">
-                        share = team&nbsp;share × share&nbsp;in&nbsp;team
+                        strength = 10
+                        <sup>
+                            (rating − 1500) / (<span className="v">{p.spread}</span> × {p.swing})
+                        </sup>
+                        <br />
+                        share = team&nbsp;share × share&nbsp;in&nbsp;team (by strength)
                         <br />
                         expected = share × the&nbsp;game's&nbsp;points
                         <br />

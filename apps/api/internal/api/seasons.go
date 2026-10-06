@@ -180,7 +180,7 @@ func (s *Server) updateSeason(r *request) response {
 		for _, w := range []struct {
 			update optionalWeight
 			to     **float64
-		}{{update.eloK, &next.Elo.K}, {update.eloKr, &next.Elo.KR}, {update.eloRingWeight, &next.Elo.RingWeight}, {update.eloSwing, &next.Elo.Swing}} {
+		}{{update.eloK, &next.Elo.K}, {update.eloKr, &next.Elo.KR}, {update.eloRingWeight, &next.Elo.RingWeight}, {update.eloSwing, &next.Elo.Swing}, {update.eloSpread, &next.Elo.Spread}} {
 			if w.update.set {
 				*w.to = w.update.value
 			}
@@ -197,6 +197,7 @@ func (s *Server) updateSeason(r *request) response {
 			EloKr:               next.Elo.KR,
 			EloRingWeight:       next.Elo.RingWeight,
 			EloSwing:            next.Elo.Swing,
+			EloSpread:           next.Elo.Spread,
 		}); err != nil {
 			return nil, err
 		}
@@ -215,10 +216,10 @@ func (s *Server) updateSeason(r *request) response {
 // missing Elo weight keeps the old one (apps from before them send none);
 // null is back to the default.
 type settingsUpdate struct {
-	minMatchesToQualify, minTeamSize, maxTeamSize *int32
-	rankingAlgorithm, dailyLeaderboard            *int16
-	wakeTime                                      *string
-	eloK, eloKr, eloRingWeight, eloSwing          optionalWeight
+	minMatchesToQualify, minTeamSize, maxTeamSize   *int32
+	rankingAlgorithm, dailyLeaderboard              *int16
+	wakeTime                                        *string
+	eloK, eloKr, eloRingWeight, eloSwing, eloSpread optionalWeight
 }
 
 // optionalWeight is an Elo weight of an update: set when the key is there,
@@ -270,12 +271,19 @@ func parseSettingsUpdate(o object) (settingsUpdate, error) {
 	if u.eloSwing, err = weight("eloSwing", 0.1, 20); err != nil {
 		return u, err
 	}
+	if u.eloSpread, err = weight("eloSpread", 100, 100000); err != nil {
+		return u, err
+	}
 	return u, nil
 }
 
-// parseWakeTime accepts exactly "HH:mm" (24:00 means midnight, as with
-// java.time's default resolver) and returns it as HH:MM:SS.
+// parseWakeTime accepts "HH:mm" (24:00 means midnight, as with java.time's
+// default resolver) or "HH:mm:ss", which the API sends and the app sends back
+// with every settings update; seconds are dropped. It returns HH:MM:SS.
 func parseWakeTime(s string) (string, bool) {
+	if len(s) == 8 && s[5] == ':' && isDigits(s[6:]) && s[6:] < "60" {
+		s = s[:5]
+	}
 	if len(s) != 5 || s[2] != ':' {
 		return "", false
 	}
@@ -460,6 +468,7 @@ func insertSettings(ctx context.Context, q *db.Queries, s settings) error {
 		EloKr:               s.Elo.KR,
 		EloRingWeight:       s.Elo.RingWeight,
 		EloSwing:            s.Elo.Swing,
+		EloSpread:           s.Elo.Spread,
 	})
 }
 

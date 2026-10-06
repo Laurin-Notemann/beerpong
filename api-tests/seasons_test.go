@@ -30,7 +30,7 @@ func TestUpdateSeasonSettings(t *testing.T) {
 		return h.Do(Req{Method: "PUT", Path: g.Path("/seasons/" + g.SeasonID), Auth: owner.Bearer(), Body: body})
 	}
 
-	res := h.OK(put(map[string]any{"seasonSettings": map[string]any{"wakeTime": "08:30", "rankingAlgorithm": "ELO", "dailyLeaderboard": "LAST_24_HOURS", "minMatchesToQualify": 3}}))
+	res := h.OK(put(map[string]any{"seasonSettings": map[string]any{"wakeTime": "08:30:00", "rankingAlgorithm": "ELO", "dailyLeaderboard": "LAST_24_HOURS", "minMatchesToQualify": 3}}))
 	h.Equal(res.Str("seasonSettings", "wakeTime"), "08:30:00", "wake time")
 	h.Equal(res.Str("seasonSettings", "rankingAlgorithm"), "ELO", "ranking")
 	h.Equal(res.Str("seasonSettings", "dailyLeaderboard"), "LAST_24_HOURS", "daily")
@@ -64,7 +64,7 @@ func TestUpdateSeasonSettings(t *testing.T) {
 	h.Equal(res.Num("seasonSettings", "minTeamSize"), 10, "min team size clamped")
 	ws.Expect(1)
 
-	for _, wake := range []string{"25:00", "8:00", "08:00:00", "noon", "", "12:60"} {
+	for _, wake := range []string{"25:00", "8:00", "08:00:60", "noon", "", "12:60"} {
 		h.Fail(put(map[string]any{"seasonSettings": map[string]any{"wakeTime": wake}}), 400, "seasonWrongTimeFormat")
 	}
 	h.Fail(put(map[string]any{"seasonSettings": map[string]any{"minTeamSize": 5, "maxTeamSize": 3}}), 400, "seasonWrongTeamSizes")

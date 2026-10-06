@@ -199,6 +199,12 @@
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "spread",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
                     }
                 ],
                 "responses": {
@@ -252,6 +258,12 @@
                     },
                     {
                         "name": "swing",
+                        "in": "query",
+                        "required": false,
+                        "schema": { "type": "number", "format": "double" }
+                    },
+                    {
+                        "name": "spread",
                         "in": "query",
                         "required": false,
                         "schema": { "type": "number", "format": "double" }
@@ -2645,9 +2657,10 @@
                     "k": { "type": "number", "format": "double" },
                     "kr": { "type": "number", "format": "double" },
                     "ringWeight": { "type": "number", "format": "double" },
-                    "swing": { "type": "number", "format": "double" }
+                    "swing": { "type": "number", "format": "double" },
+                    "spread": { "type": "number", "format": "double" }
                 },
-                "required": ["k", "kr", "ringWeight", "swing"]
+                "required": ["k", "kr", "ringWeight", "swing", "spread"]
             },
             "EloScoreDto": {
                 "type": "object",
@@ -3299,6 +3312,12 @@
                         "type": "number",
                         "format": "double",
                         "description": "Elo: how far ratings move and spread, without changing who's ahead.",
+                        "nullable": true
+                    },
+                    "eloSpread": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Elo: at swing 1, the rating gap between a player and one who scores 10 times as often. Smaller makes the same gap a bigger difference in the players' shares of a game.",
                         "nullable": true
                     }
                 }

@@ -1,5 +1,5 @@
 /**
- * parses `SeasonSettingsDto.wakeTime`, which the backend sends as `"HH:mm"`
+ * parses `SeasonSettingsDto.wakeTime`, which the backend sends as `"HH:mm:ss"`
  */
 export function parseWakeTime(wakeTime: string | undefined): {
     hour: number;

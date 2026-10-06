@@ -46,7 +46,7 @@ export function Replay({
     const [playing, setPlaying] = useState(false);
 
     // rated again when the weights change
-    const { k, kr, ringWeight, swing } = sim.params;
+    const { k, kr, ringWeight, swing, spread } = sim.params;
     useEffect(() => {
         if (!matchId || !sim.seasonId || !steps.length) return;
         let stale = false;
@@ -55,7 +55,7 @@ export function Replay({
             data: {
                 code,
                 season: sim.seasonId,
-                params: { k, kr, ringWeight, swing },
+                params: { k, kr, ringWeight, swing, spread },
                 matchId,
                 steps: steps.map((s) => s.step),
             },
@@ -71,7 +71,7 @@ export function Replay({
         return () => {
             stale = true;
         };
-    }, [code, sim.seasonId, matchId, steps, k, kr, ringWeight, swing]);
+    }, [code, sim.seasonId, matchId, steps, k, kr, ringWeight, swing, spread]);
 
     const last = steps.length;
     const step = Math.min(at, last);

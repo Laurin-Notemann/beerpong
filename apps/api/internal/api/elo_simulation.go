@@ -28,10 +28,11 @@ type eloParamsDTO struct {
 	KR         float64 `json:"kr"`
 	RingWeight float64 `json:"ringWeight"`
 	Swing      float64 `json:"swing"`
+	Spread     float64 `json:"spread"`
 }
 
 func toEloParamsDTO(p leaderboard.EloParams) eloParamsDTO {
-	return eloParamsDTO{K: p.K, KR: p.KR, RingWeight: p.RingWeight, Swing: p.Swing}
+	return eloParamsDTO{K: p.K, KR: p.KR, RingWeight: p.RingWeight, Swing: p.Swing, Spread: p.Spread}
 }
 
 type eloScoreDTO struct {
@@ -220,7 +221,7 @@ func (s *Server) loadEloGroup(ctx context.Context, r *request) (eloGroup, respon
 	}
 	for i, sn := range seasons {
 		li := inputs[i]
-		weights := eloWeights{K: sn.EloK, KR: sn.EloKr, RingWeight: sn.EloRingWeight, Swing: sn.EloSwing}
+		weights := eloWeights{K: sn.EloK, KR: sn.EloKr, RingWeight: sn.EloRingWeight, Swing: sn.EloSwing, Spread: sn.EloSpread}
 		g.seasons = append(g.seasons, eloSeasonDTO{
 			ID: sn.ID, Name: sn.Name, NumMatches: len(li.matches), MinMatchesToQualify: deref(sn.MinMatchesToQualify),
 			Elo: toEloParamsDTO(weights.params()),
@@ -470,13 +471,17 @@ func (s *Server) eloSearch(r *request) response {
 
 // eloParamsFromQuery reads the weights; any left out stay at the season's.
 func eloParamsFromQuery(r *request, p leaderboard.EloParams) (leaderboard.EloParams, bool) {
-	for name, field := range map[string]*float64{"k": &p.K, "kr": &p.KR, "ringWeight": &p.RingWeight, "swing": &p.Swing} {
+	for name, field := range map[string]*float64{"k": &p.K, "kr": &p.KR, "ringWeight": &p.RingWeight, "swing": &p.Swing, "spread": &p.Spread} {
 		raw := r.URL.Query().Get(name)
 		if raw == "" {
 			continue
 		}
 		v, err := strconv.ParseFloat(raw, 64)
-		if err != nil || math.IsNaN(v) || math.IsInf(v, 0) || v < 0 || v > 10000 {
+		lo, hi := 0.0, 10000.0
+		if name == "spread" {
+			lo, hi = 100, 100000
+		}
+		if err != nil || math.IsNaN(v) || math.IsInf(v, 0) || v < lo || v > hi {
 			return p, false
 		}
 		*field = v
