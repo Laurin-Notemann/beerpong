@@ -22,7 +22,7 @@ export interface Display {
     /** what the TV shows to be added in the app; it keeps the one it got and asks for it again */
     code: string;
     config: DisplayConfig;
-    /** the TV's own API user (see api.ts `signup`); cameras have none */
+    /** the display's own API user (see api.ts `signup`) */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
     /** what the app's remote calls it, from its browser (`deviceName`) */

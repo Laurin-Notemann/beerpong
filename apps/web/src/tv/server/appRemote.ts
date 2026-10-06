@@ -1,5 +1,5 @@
 import { emptyConfig } from '@/lib/tvDisplay';
-import { apiFor, ApiError, signup, userGroupIds, userGroupName } from '~/tv/server/api';
+import { apiFor, ApiError, signup, userGroupIds } from '~/tv/server/api';
 import { type Display, setSession, update } from '~/tv/server/displays';
 
 /**
@@ -59,7 +59,7 @@ export async function asMember(
  */
 export async function putGroupOn(display: Display, groupId: string) {
     if (display.config.groupId === groupId) return;
-    if (!display.refreshToken) setSession(display, await signup(display.id));
+    if (!display.refreshToken) setSession(display, await signup(display.id, display.kind));
     const api = apiFor(display.refreshToken!);
     await api.join(groupId);
     const group = await api.group(groupId);
@@ -79,12 +79,7 @@ export async function removeGroup(display: Display) {
     update(display, emptyConfig);
 }
 
-/**
- * Puts the group on a camera (Add Camera): its video goes to the group's TVs. A camera never
- * reads the group, so it needs no API user; the name it shows comes from the phone that added it.
- */
-export async function putGroupOnCamera(camera: Display, groupId: string, accessToken: string) {
-    if (camera.config.groupId === groupId) return;
-    const groupName = await userGroupName(accessToken, groupId);
-    update(camera, { ...emptyConfig, groupId, groupName });
+/** A camera joins as a profile-less member to read live matches and upload footage. */
+export async function putGroupOnCamera(camera: Display, groupId: string) {
+    await putGroupOn(camera, groupId);
 }

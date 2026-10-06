@@ -91,7 +91,7 @@ export function useBoard(
  * a backoff and counts a reconnect as a change, since events may have been missed meanwhile.
  * `onEvent` gets every event itself, right away.
  */
-function useGroupSocket(
+export function useGroupSocket(
     groupId: string | null | undefined,
     onChange: () => void,
     onEvent?: (event: unknown) => void

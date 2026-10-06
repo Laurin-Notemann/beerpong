@@ -18,6 +18,29 @@ type Asset struct {
 	Zoom    float64
 }
 
+type CameraRecording struct {
+	ID           string
+	GroupID      string
+	CreatedBy    string
+	CameraID     string
+	CameraName   string
+	SessionID    string
+	SegmentIndex int32
+	StartedAt    time.Time
+	EndedAt      time.Time
+	ContentType  string
+	SizeBytes    int64
+	ObjectKey    string
+	CreatedAt    time.Time
+	UploadedAt   *time.Time
+}
+
+type CameraRecordingMatch struct {
+	RecordingID string
+	LiveMatchID string
+	SeasonID    string
+}
+
 type Device struct {
 	ID                    string
 	DeviceID              *string

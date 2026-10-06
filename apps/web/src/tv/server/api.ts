@@ -42,10 +42,10 @@ async function call<T>(
  * installations; `deviceId` marks it as a TV) that joins the group as a member. Members
  * without a profile don't show up anywhere in the group.
  */
-export async function signup(displayId: string) {
+export async function signup(displayId: string, kind: 'tv' | 'camera' = 'tv') {
     const dto = await call<Dto.AuthTokenDto>('/auth/signup', {
         method: 'POST',
-        body: { installationType: 'ANDROID', deviceId: `versus-tv:${displayId}` },
+        body: { installationType: 'ANDROID', deviceId: `versus-${kind}:${displayId}` },
     });
     return dto.token!;
 }
@@ -118,6 +118,16 @@ export function apiFor(refreshToken: string) {
                     (seasonId ? `&seasonId=${seasonId}` : ''),
                 { matches }
             ),
+        recordingUpload: (groupId: string, id: string, body: Dto.CameraRecordingCreateDto) =>
+            accessToken(refreshToken).then((token) =>
+                call<Dto.CameraRecordingUploadDto>(`/groups/${groupId}/recordings/${id}`, {
+                    method: 'PUT',
+                    token,
+                    body,
+                })
+            ),
+        completeRecording: (groupId: string, id: string) =>
+            post(`/groups/${groupId}/recordings/${id}/complete`),
         liveMatches: (groupId: string) =>
             get<Dto.LiveMatchDto[]>(`/groups/${groupId}/live-matches`),
     };

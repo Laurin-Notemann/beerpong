@@ -47,6 +47,9 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                             controller.close();
                             return;
                         }
+                        // A session may have been created before this stream connected.
+                        if (display.refreshToken)
+                            send({ type: 'session', refreshToken: display.refreshToken });
                         send({ type: 'config', config: display.config });
                         const unsubscribe = subscribe(display, send);
                         // proxies close connections that stay quiet

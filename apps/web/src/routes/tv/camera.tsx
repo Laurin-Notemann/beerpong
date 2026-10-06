@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type DisplayConfig, emptyConfig, parseConfig } from '@/lib/tvDisplay';
+import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
 import { registerDisplay } from '~/tv/server/functions';
@@ -22,6 +23,7 @@ interface Identity {
     secret: string;
     /** what it shows to be added in the app; the server hands it out on the first register */
     code: string | null;
+    refreshToken: string | null;
     /** only the group counts */
     config: DisplayConfig;
 }
@@ -34,12 +36,23 @@ function loadIdentity(): Identity {
     try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
         if (stored?.id && stored?.secret) {
-            return { ...stored, code: stored.code ?? null, config: parseConfig(stored.config) };
+            return {
+                ...stored,
+                refreshToken: stored.refreshToken ?? null,
+                code: stored.code ?? null,
+                config: parseConfig(stored.config),
+            };
         }
     } catch {
         // first start, or something unreadable: start over
     }
-    return { id: randomToken(), secret: randomToken(24), code: null, config: emptyConfig };
+    return {
+        id: randomToken(),
+        secret: randomToken(24),
+        code: null,
+        refreshToken: null,
+        config: emptyConfig,
+    };
 }
 
 function Camera() {
@@ -54,6 +67,19 @@ function Camera() {
         media.stream,
         identity.config.groupId
     );
+    const matches = useCameraMatches(
+        identity.id,
+        identity.secret,
+        identity.config.groupId,
+        registered
+    );
+    const recording = useCameraRecording(
+        identity.id,
+        identity.secret,
+        media.stream,
+        identity.config.groupId,
+        matches
+    );
     useWakeLock();
 
     useEffect(() => {
@@ -61,9 +87,16 @@ function Camera() {
     }, [identity]);
 
     const register = useCallback(async () => {
-        const { id, secret, code, config } = identity;
-        const res = await registerDisplay({ data: { kind: 'camera', id, secret, code, config } });
-        setIdentity((i) => ({ ...i, code: res.code, config: res.config }));
+        const { id, secret, code, config, refreshToken } = identity;
+        const res = await registerDisplay({
+            data: { kind: 'camera', id, secret, code, config, refreshToken },
+        });
+        setIdentity((i) => ({
+            ...i,
+            code: res.code,
+            config: res.config,
+            refreshToken: res.refreshToken,
+        }));
         setRegistered(true);
     }, [identity]);
 
@@ -84,6 +117,8 @@ function Camera() {
     handlers.current = sender;
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
+        if (event.type === 'session')
+            setIdentity((i) => ({ ...i, refreshToken: event.refreshToken }));
         if (event.type === 'config') setIdentity((i) => ({ ...i, config: event.config }));
         if (event.type === 'watch') void handlers.current.onWatch(event.tvId);
         if (event.type === 'signal') void handlers.current.onSignal(event.from, event.signal);
@@ -138,6 +173,15 @@ function Camera() {
                             </div>
                             <h1 className="truncate text-2xl font-black">{groupName}</h1>
                         </div>
+                        {recording.recording && (
+                            <div
+                                role="status"
+                                className="flex items-center gap-2 rounded-full bg-red px-4 py-2 text-sm font-bold text-white"
+                            >
+                                <span className="size-2.5 rounded-full bg-white" />
+                                REC
+                            </div>
+                        )}
                         <div className="flex items-center gap-2 rounded-full bg-panel/80 px-4 py-2 text-sm font-semibold">
                             {sender.watching > 0 ? (
                                 <>
@@ -159,6 +203,17 @@ function Camera() {
                     >
                         <div className="min-w-0 flex-1 text-sm text-text-2">
                             <Problems error={media.error} offline={!connected} />
+                            {recording.error && (
+                                <p className="font-semibold text-red">{recording.error}</p>
+                            )}
+                            <p>Live-match footage is saved to Versus storage while REC is shown.</p>
+                            {recording.pending > 0 && (
+                                <p>
+                                    {recording.pending} recording{' '}
+                                    {recording.pending === 1 ? 'segment' : 'segments'} waiting to
+                                    upload. Keep this page open.
+                                </p>
+                            )}
                             {media.error ? (
                                 <RetryButton onPress={media.retry} />
                             ) : (
