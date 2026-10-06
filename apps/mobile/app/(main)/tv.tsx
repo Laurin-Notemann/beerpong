@@ -111,6 +111,7 @@ function Remote({
     const picked = pickMatches(recent, config.pinnedMatchIds);
     const pinned = config.pinnedMatchIds.filter((i) => liveIds.includes(i));
     const screen = screenOf(config, liveIds);
+    const cameraIdle = config.view === 'camera' && !live.length;
 
     const choose = (next: Screen) => {
         if (next !== 'focus') send({ view: next, focusMatchId: null });
@@ -133,9 +134,11 @@ function Remote({
             : 'Leaderboard, no match running',
         leaderboard: scopeLabel(config.scope),
         live: running,
-        camera: camera
-            ? `Video from ${camera.name}, the score over it`
-            : 'No camera on',
+        camera: cameraIdle
+            ? 'Now leaderboard · camera when a match starts'
+            : camera
+              ? `Video from ${camera.name}, the score over it`
+              : 'No camera on · showing Auto',
         focus:
             screen === 'focus' && picked.length
                 ? versus(
@@ -198,6 +201,27 @@ function Remote({
                             : 'No camera is on. Until one is, the TV shows what Auto shows. Add one under TV Remote → Cameras.'
                     }
                 >
+                    <Card>
+                        <Row
+                            icon="swap-horizontal"
+                            title="Flip scoreboard sides"
+                            subtitle={
+                                config.cameraOverlayFlipped
+                                    ? 'Red left · Blue right'
+                                    : 'Blue left · Red right'
+                            }
+                            selected={config.cameraOverlayFlipped}
+                            onPress={() =>
+                                send({
+                                    cameraOverlayFlipped:
+                                        !config.cameraOverlayFlipped,
+                                })
+                            }
+                            trailing={
+                                <Radio on={config.cameraOverlayFlipped} />
+                            }
+                        />
+                    </Card>
                     {cameras.length > 0 && (
                         <Card>
                             {cameras.map((c) => (
@@ -228,7 +252,7 @@ function Remote({
                         live.length
                             ? undefined
                             : screen === 'camera'
-                              ? 'When someone starts a match, its score shows over the video.'
+                              ? 'The leaderboard shows while idle. The next match automatically brings back the camera and its score.'
                               : 'When someone starts a match, it shows next to the leaderboard.'
                     }
                 >
@@ -269,7 +293,7 @@ function Remote({
                 </Section>
             )}
 
-            {(screen === 'auto' || screen === 'leaderboard') && (
+            {(screen === 'auto' || screen === 'leaderboard' || cameraIdle) && (
                 <Section title="Leaderboard">
                     <Segmented
                         value={config.scope}

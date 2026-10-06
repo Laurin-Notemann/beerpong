@@ -22,6 +22,8 @@ export interface DisplayConfig {
      * the group's first one that's on
      */
     cameraId: string | null;
+    /** swap the scoreboard sides on the camera video, without changing the match */
+    cameraOverlayFlipped: boolean;
 }
 
 /** camera: a camera's video on the whole screen, the score over it */
@@ -43,6 +45,7 @@ export const emptyConfig: DisplayConfig = {
     pinnedMatchIds: [],
     focusMatchId: null,
     cameraId: null,
+    cameraOverlayFlipped: false,
 };
 
 /** what a phone may change; the group goes on with the app's Add TV, which joins it */
@@ -55,6 +58,7 @@ export type DisplayPatch = Partial<
         | 'pinnedMatchIds'
         | 'focusMatchId'
         | 'cameraId'
+        | 'cameraOverlayFlipped'
     >
 >;
 
@@ -74,6 +78,8 @@ export function parsePatch(value: unknown): DisplayPatch {
         patch.focusMatchId = v.focusMatchId;
     if (v.cameraId === null || isString(v.cameraId))
         patch.cameraId = v.cameraId;
+    if (typeof v.cameraOverlayFlipped === 'boolean')
+        patch.cameraOverlayFlipped = v.cameraOverlayFlipped;
     if (Array.isArray(v.pinnedMatchIds) && v.pinnedMatchIds.every(isString)) {
         patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(
             0,
@@ -123,7 +129,8 @@ export const byStart = (a: { startedAt: string }, b: { startedAt: string }) =>
 /**
  * What the TV shows: a focused live match on the whole screen while it's live; in auto the
  * leaderboard next to one live match while any is live, else only the leaderboard. Camera is
- * what the TV wants; until its video comes in, it shows what auto shows.
+ * a saved preference: while idle it shows the leaderboard, then resumes for the next match.
+ * Until its video comes in, it shows what auto shows.
  */
 export function layoutFor(
     config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
@@ -133,7 +140,8 @@ export function layoutFor(
         return 'focus';
     if (config.view === 'leaderboard') return 'leaderboard';
     if (config.view === 'live') return 'live';
-    if (config.view === 'camera') return 'camera';
+    if (config.view === 'camera')
+        return liveIds.length ? 'camera' : 'leaderboard';
     return liveIds.length > 0 ? 'split' : 'leaderboard';
 }
 

@@ -41,7 +41,12 @@ export interface LeaderboardRow extends BoardPlayer {
 }
 
 export interface LiveTeam {
-    players: (BoardPlayer & { change: PlayerChange | null })[];
+    players: (BoardPlayer & {
+        change: PlayerChange | null;
+        /** points earned in this match, independent of the leaderboard scope */
+        points: number;
+        standing: Pick<LeaderboardRow, 'rank' | 'tied' | 'unranked'> | null;
+    })[];
     score: number;
     cups: RackCup[];
 }
@@ -165,6 +170,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
         const entries = (board.entries ?? []).map((i) => ({
             ...profile(i.profileId),
             id: i.id ?? '',
+            profileId: i.profileId ?? '',
             elo: i.statistics?.elo ?? 0,
             points: i.statistics?.points ?? 0,
             matches: i.statistics?.matches ?? 0,
@@ -189,7 +195,8 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
 
     const before = new Map(rank(stored).map((i) => [i.id, i]));
     const playing = new Set(projected.flatMap((i) => [...i.blue.playerIds, ...i.red.playerIds]));
-    const rows: LeaderboardRow[] = rank(withLive ?? stored).map((row) => {
+    const ranked = rank(withLive ?? stored);
+    const rows: LeaderboardRow[] = ranked.map((row) => {
         const old = before.get(row.id);
         const change: PlayerChange | null =
             withLive && playing.has(row.id)
@@ -204,7 +211,10 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
                 : null;
         return { ...row, change };
     });
-    const changeOf = (playerId: string) => rows.find((i) => i.id === playerId)?.change ?? null;
+    const standingOf = (playerId: string, profileId: string | null | undefined) => {
+        const entry = ranked.find((i) => i.id === playerId || i.profileId === profileId);
+        return rows.find((i) => i.id === entry?.id) ?? null;
+    };
 
     return {
         group: { id: groupId, name: group.name ?? '' },
@@ -224,11 +234,23 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             const team = (t: typeof blue): LiveTeam => ({
                 score: t.score,
                 cups: t.cups,
-                players: t.playerIds.map((id) => ({
-                    ...profile(players.find((p) => p.id === id)?.profileId),
-                    id,
-                    change: changeOf(id),
-                })),
+                players: t.playerIds.map((id) => {
+                    const profileId = players.find((p) => p.id === id)?.profileId;
+                    const standing = standingOf(id, profileId);
+                    return {
+                        ...profile(profileId),
+                        id,
+                        points: t.points[id] ?? 0,
+                        change: standing?.change ?? null,
+                        standing: standing
+                            ? {
+                                  rank: standing.rank,
+                                  tied: standing.tied,
+                                  unranked: standing.unranked,
+                              }
+                            : null,
+                    };
+                }),
             });
             return {
                 id: dto.id!,
