@@ -9,9 +9,9 @@ import { promisify } from 'node:util';
  * new path and is never mixed up with the old one. The TV's player shows black for what phones
  * upload (QuickTime, the index at the end, turned by a rotation flag), so each clip is converted
  * once with ffmpeg (in the Docker image) into a plain MP4 the player can start right away: H.264
- * with AAC, upright, at most 1280 pixels, index first. Its first and last frame become images
- * (`?frame=first`, `?frame=last`) the TV covers the video with while its player starts and stops.
- * That starts when a board shows the player, so the clip is ready before they score.
+ * with AAC, upright, at most 1280 pixels and 30 fps, index first. Its first and last frame become
+ * images (`?frame=first`, `?frame=last`) the TV covers the video with while its player starts and
+ * stops. That starts when a board shows the player, so the clip is ready before they score.
  */
 const clipUrls = new Map<string, string>();
 const converted = new Map<string, Promise<string | null>>();
@@ -55,6 +55,8 @@ async function convertOnce(id: string, url: string) {
             '-vf',
             'scale=min(iw\\,1280):min(ih\\,1280):force_original_aspect_ratio=decrease:force_divisible_by=2',
         ],
+        // phones film at up to 120 fps, more than level 3.1 allows at this size
+        ...['-fpsmax', '30'],
         ...['-c:v', 'libx264', '-profile:v', 'main', '-level', '3.1', '-pix_fmt', 'yuv420p'],
         ...['-preset', 'veryfast', '-crf', '23', '-c:a', 'aac', '-b:a', '128k'],
         ...['-movflags', '+faststart', '-f', 'mp4', output],

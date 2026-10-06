@@ -87,12 +87,16 @@ html.tv.fullscreen {
 
 /*
  * a score clip (ScoreClipPanel) waits behind the board, which shrinks into the rest of the screen
- * to show it and grows back over it when it's done (--board-scale: Screen in routes/tv/index.tsx)
+ * to show it and grows back over it when it's done (--board-scale: Screen in routes/tv/index.tsx).
+ * The board stays a layer of its own, rasterized once, so the TV only has to scale it; otherwise
+ * it rasterizes the whole board again as the animation starts and when it ends, and the slide
+ * jumps. Both curves start slowly, so a frame the TV drops at the start doesn't skip the motion.
  */
 .tv-board {
-    transition: transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+    transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.score-clip ~ .tv-board {
+.score-clip.open ~ .tv-board {
     transform: scale(var(--board-scale));
 }
 .score-clip.from-left ~ .tv-board {
@@ -103,5 +107,16 @@ html.tv.fullscreen {
 }
 .score-clip.leaving ~ .tv-board {
     transform: none;
-    transition: transform 350ms ease-in;
+    transition: transform 500ms cubic-bezier(0.4, 0, 0.6, 1);
+}
+/* the clip's first and last frame over it (ScoreClipPanel): the first fades into the video */
+.clip-cover {
+    will-change: opacity;
+}
+.clip-cover-fade {
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+}
+.clip-cover-hidden {
+    opacity: 0;
 }
