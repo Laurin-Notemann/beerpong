@@ -72,14 +72,7 @@ export function ScoreClipPanel({
                 report(v, `play() failed: ${err}`);
                 setLeaving(true);
             });
-        const timeout = setTimeout(() => {
-            if (v.paused) {
-                report(v, `didn't start within ${LOAD_TIMEOUT_MS} ms`);
-                setLeaving(true);
-            }
-        }, LOAD_TIMEOUT_MS);
         return () => {
-            clearTimeout(timeout);
             // the TV has one video decoder; the next clip gets it back
             v.removeAttribute('src');
             v.load();
@@ -87,8 +80,15 @@ export function ScoreClipPanel({
     }, [clip.url]);
 
     useEffect(() => {
-        if (!playing) return;
         const v = video.current!;
+        // not `v.paused`: that's false from play() on, also for a clip that never starts
+        if (!playing) {
+            const timeout = setTimeout(() => {
+                report(v, `didn't start within ${LOAD_TIMEOUT_MS} ms`);
+                setLeaving(true);
+            }, LOAD_TIMEOUT_MS);
+            return () => clearTimeout(timeout);
+        }
         const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
         let frame = 0;
         const tick = () => {
@@ -162,7 +162,7 @@ export function ScoreClipPanel({
 
 /** a clip that doesn't play goes to Sentry (sentry.ts), with what the video got to */
 function report(v: HTMLVideoElement, problem: string) {
-    const state = `readyState ${v.readyState}, networkState ${v.networkState}`;
+    const state = `readyState ${v.readyState}, networkState ${v.networkState}, paused ${v.paused}`;
     void import('@sentry/browser').then((Sentry) =>
         Sentry.captureMessage(`score clip ${problem} (${state})`, 'warning')
     );

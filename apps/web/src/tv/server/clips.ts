@@ -32,6 +32,9 @@ function convert(id: string) {
     if (!file) {
         file = convertOnce(id, clipUrls.get(id)!).catch((err) => {
             console.warn(`score clip ${id}: converting failed, serving the original`, err);
+            // the board shows a new clip before the phone uploaded it (403 until then), so the
+            // next board tries again
+            converted.delete(id);
             return null;
         });
         converted.set(id, file);
