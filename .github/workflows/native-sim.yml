@@ -128,7 +128,7 @@ jobs:
           node-version: 22
 
       - name: Cache npm + CocoaPods
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.npm
@@ -172,7 +172,7 @@ jobs:
       - name: Restore cached app build
         id: appcache
         if: inputs.mode == 'build' && inputs.cache == 'true'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: apps/mobile/build/native-sim-app # apps/mobile
           key: native-sim-app-${{ runner.os }}-${{ steps.fp.outputs.hash }}
@@ -413,7 +413,7 @@ jobs:
 
       - name: Save app build to cache
         if: inputs.mode == 'build' && inputs.cache == 'true' && steps.appcache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: apps/mobile/build/native-sim-app # apps/mobile
           key: native-sim-app-${{ runner.os }}-${{ steps.fp.outputs.hash }}
@@ -569,7 +569,7 @@ jobs:
 
       - name: Cache agent-device XCTest runner
         if: inputs.agent_device == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.agent-device/apple-runner/derived
           # Exact key, no restore-keys: agent-device documents that broad

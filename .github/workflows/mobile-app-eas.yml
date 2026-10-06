@@ -98,7 +98,7 @@ jobs:
       # EXPO_METRO_CACHE_OUTPUT_DIR, which is saved for the next run, so the cache doesn't grow.
       - name: Restore Metro cache
         if: steps.match.outputs.build_id
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/metro-cache
           key: metro-${{ matrix.platform }}-${{ github.sha }}
@@ -119,7 +119,7 @@ jobs:
 
       - name: Save Metro cache
         if: steps.match.outputs.build_id
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/metro-cache
           key: metro-${{ matrix.platform }}-${{ github.sha }}
