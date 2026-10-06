@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { usePlayersQuery } from '@/api/calls/playerHooks';
+import { useMoves } from '@/api/calls/ruleHooks';
 import { env } from '@/api/env';
+import {
+    LiveMatchTeam,
+    liveMatchTeams,
+    useGroupLiveMatches,
+} from '@/api/liveMatch/useGroupLiveMatches';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
@@ -15,6 +22,8 @@ import { showErrorToast } from '@/toast';
 /** a Versus TV that's on and shows the group */
 export interface Tv {
     id: string;
+    /** from its browser, e.g. "Samsung TV"; numbered when several have the same */
+    name: string;
     config: DisplayConfig;
 }
 
@@ -31,14 +40,25 @@ export function useTvs(groupId: ApiId | null) {
         enabled: !!groupId,
         queryFn: async () => {
             if (!groupId) return [];
-            const res = await (await api).get<Tv[]>(tvsUrl(groupId));
-            return res.data.map((i) => ({
-                id: i.id,
-                config: parseConfig(i.config),
-            }));
+            const res = await (
+                await api
+            ).get<{ id: string; name?: string; config: unknown }[]>(
+                tvsUrl(groupId)
+            );
+            const seen = new Map<string, number>();
+            return res.data.map((i) => {
+                const name = i.name || 'TV';
+                const count = (seen.get(name) ?? 0) + 1;
+                seen.set(name, count);
+                return {
+                    id: i.id,
+                    name: count > 1 ? `${name} ${count}` : name,
+                    config: parseConfig(i.config),
+                };
+            });
         },
         // TVs aren't on the group's socket; while the remote is open, this brings what other
-        // phones changed
+        // phones changed and which TVs are on
         refetchInterval: 3_000,
     });
 }
@@ -87,4 +107,33 @@ export function useTvRemote(groupId: ApiId | null, tvId: string | undefined) {
     });
 
     return { update, reload, removeGroup };
+}
+
+export interface TvMatch {
+    id: string;
+    startedAt: string;
+    blue: LiveMatchTeam;
+    red: LiveMatchTeam;
+}
+
+/**
+ * The group's live matches as a TV knows them, most recently active first: those on the server
+ * (not one only this phone has yet), with their teams from the active season, where live
+ * matches are played.
+ */
+export function useTvMatches(
+    groupId: ApiId | null,
+    seasonId: ApiId | null
+): TvMatch[] {
+    const players = usePlayersQuery(groupId, seasonId).data?.data;
+    const moves = useMoves(groupId, seasonId).data?.data;
+    const { matches } = useGroupLiveMatches(groupId);
+
+    return matches
+        .filter((i) => !i.isPendingCreate)
+        .map((i) => ({
+            id: i.id,
+            startedAt: i.startedAt,
+            ...liveMatchTeams(i.state, players, moves),
+        }));
 }

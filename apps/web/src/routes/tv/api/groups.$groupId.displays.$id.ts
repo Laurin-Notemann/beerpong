@@ -16,7 +16,11 @@ export const Route = createFileRoute('/tv/api/groups/$groupId/displays/$id')({
                     const display = byGroup(params.groupId).find((d) => d.id === params.id);
                     if (!display) return fail(404, 'tvNotFound');
                     update(display, parsePatch(await request.json().catch(() => null)));
-                    return Response.json({ id: display.id, config: display.config });
+                    return Response.json({
+                        id: display.id,
+                        name: display.name,
+                        config: display.config,
+                    });
                 }),
             DELETE: ({ request, params }) =>
                 asMember(request, params.groupId, async () => {

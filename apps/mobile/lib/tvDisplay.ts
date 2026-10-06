@@ -120,3 +120,11 @@ export function layoutFor(
     if (config.view === 'live') return 'live';
     return liveIds.length > 0 ? 'split' : 'leaderboard';
 }
+
+/** what a remote shows as chosen: one of the views, or a live match on the whole screen */
+export type Screen = View | 'focus';
+
+export const screenOf = (
+    config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
+    liveIds: string[]
+): Screen => (layoutFor(config, liveIds) === 'focus' ? 'focus' : config.view);

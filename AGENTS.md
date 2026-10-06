@@ -2,6 +2,8 @@
 
 Versus (repo name `beerpong`) is a mobile app for tracking beer pong leagues with friends: groups, seasons, matches, rules, leaderboards and Elo. A Go API with a Postgres database serves an Expo / React Native app for iOS and Android.
 
+We are mainly debugging in with our prod group (code: SBRIL5OJ5). If you give examples e.g. for url's feel free to use this one
+
 ## What makes Versus special?
 
 A group of friends uses Versus at the table, mid-game, often on bad Wi-Fi. It's important we keep the things that make that work. Here's a brief list of the things we can never compromise on.

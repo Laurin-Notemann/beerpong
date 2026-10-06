@@ -10,7 +10,11 @@ export const Route = createFileRoute('/tv/api/groups/$groupId/displays')({
             GET: ({ request, params }) =>
                 asMember(request, params.groupId, () =>
                     Response.json(
-                        byGroup(params.groupId).map((d) => ({ id: d.id, config: d.config }))
+                        byGroup(params.groupId).map((d) => ({
+                            id: d.id,
+                            name: d.name,
+                            config: d.config,
+                        }))
                     )
                 ),
         },

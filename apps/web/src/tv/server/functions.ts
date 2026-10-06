@@ -5,7 +5,7 @@ import { socketUrl } from '~/apiUrl';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
 import { removeGroup } from '~/tv/server/appRemote';
 import { buildBoard } from '~/tv/server/board';
-import { authorize, register, reload, setSession, update } from '~/tv/server/displays';
+import { authorize, deviceName, register, reload, setSession, update } from '~/tv/server/displays';
 
 const asObject = (data: unknown) =>
     (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
@@ -23,6 +23,16 @@ export const registerDisplay = createServerFn({ method: 'POST' })
             refreshToken: data.refreshToken,
         });
         return { config: display.config, code: display.code };
+    });
+
+/** the TV saying it's on, every 30 s while its page is visible (see byGroup) */
+export const heartbeatDisplay = createServerFn({ method: 'POST' })
+    .inputValidator(asObject)
+    .handler(({ data }) => {
+        const { display, isTv } = authorize(data.id, data.secret);
+        if (!isTv) return;
+        display.visibleAt = Date.now();
+        display.name = deviceName(data.userAgent);
     });
 
 /** a phone changing what the TV shows */

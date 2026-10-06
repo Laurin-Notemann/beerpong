@@ -21,8 +21,10 @@ export interface Display {
     /** the TV's own API user (see api.ts `signup`) */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
-    /** the TV's own event streams; a TV with none is off */
-    tvListeners: number;
+    /** the TV's last heartbeat; it only sends them while its page is visible */
+    visibleAt: number;
+    /** what the app's remote calls it, from its browser (`deviceName`) */
+    name: string;
     lastSeen: number;
 }
 
@@ -61,9 +63,61 @@ function codeFor(id: string, wanted: unknown) {
     return code;
 }
 
+// a TV that's off, asleep or in a background tab misses its heartbeats (every 30 s)
+const VISIBLE_FOR = 75_000;
+
 /** the TVs that are on and show this group, for the app's remote */
 export function byGroup(groupId: string) {
-    return [...displays.values()].filter((d) => d.config.groupId === groupId && d.tvListeners > 0);
+    const cutoff = Date.now() - VISIBLE_FOR;
+    return [...displays.values()].filter(
+        (d) => d.config.groupId === groupId && d.visibleAt > cutoff
+    );
+}
+
+/**
+ * A name for the TV from its browser's user agent, e.g. "Samsung TV" or "Chrome on Mac".
+ * Browsers don't tell pages the device's own name.
+ */
+export function deviceName(userAgent: unknown) {
+    const ua = typeof userAgent === 'string' ? userAgent : '';
+    const tvs: [RegExp, string][] = [
+        [/Tizen/, 'Samsung TV'],
+        [/Web0S|webOS|NetCast/, 'LG TV'],
+        [/AFT\w|Fire TV/, 'Fire TV'],
+        [/CrKey/, 'Chromecast'],
+        [/Android TV|GoogleTV|BRAVIA/, 'Android TV'],
+        [/SMART-TV|SmartTV|HbbTV/, 'Smart TV'],
+    ];
+    const tv = tvs.find(([re]) => re.test(ua));
+    if (tv) return tv[1];
+
+    const browser = /Edg\//.test(ua)
+        ? 'Edge'
+        : /Firefox\//.test(ua)
+          ? 'Firefox'
+          : /OPR\//.test(ua)
+            ? 'Opera'
+            : /Chrome\//.test(ua)
+              ? 'Chrome'
+              : /Safari\//.test(ua)
+                ? 'Safari'
+                : 'Browser';
+    const os = /iPad/.test(ua)
+        ? 'iPad'
+        : /iPhone/.test(ua)
+          ? 'iPhone'
+          : /Android/.test(ua)
+            ? 'Android'
+            : /CrOS/.test(ua)
+              ? 'Chromebook'
+              : /Mac OS X/.test(ua)
+                ? 'Mac'
+                : /Windows/.test(ua)
+                  ? 'Windows'
+                  : /Linux/.test(ua)
+                    ? 'Linux'
+                    : null;
+    return os ? `${browser} on ${os}` : browser;
 }
 
 /** the display behind a QR code's short link */
@@ -112,7 +166,8 @@ export function register(input: {
         config: parseConfig(input.config),
         refreshToken: typeof input.refreshToken === 'string' ? input.refreshToken : null,
         listeners: new Set(),
-        tvListeners: 0,
+        visibleAt: 0,
+        name: 'TV',
         lastSeen: Date.now(),
     };
     displays.set(id, display);
@@ -152,14 +207,7 @@ function emit(display: Display, event: DisplayEvent) {
 }
 
 /** listens to a display's changes; returns the unsubscribe */
-export function subscribe(
-    display: Display,
-    listener: (event: DisplayEvent) => void,
-    isTv: boolean
-) {
+export function subscribe(display: Display, listener: (event: DisplayEvent) => void) {
     display.listeners.add(listener);
-    if (isTv) display.tvListeners++;
-    return () => {
-        if (display.listeners.delete(listener) && isTv) display.tvListeners--;
-    };
+    return () => display.listeners.delete(listener);
 }
