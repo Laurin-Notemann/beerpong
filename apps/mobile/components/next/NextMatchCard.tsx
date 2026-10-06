@@ -2,22 +2,27 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { eloChangeOf } from '@/api/calls/matchHooks';
 import { env } from '@/api/env';
 import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
+import { EloChange } from '@/components/EloChange';
 import { Icon } from '@/components/Icon';
 import { Team } from '@/components/MatchVsHeader';
 import { useNextTokens } from '@/components/next/tokens';
+import { MatchEloDto } from '@/openapi/openapi';
 
 function TeamSide({
     color,
     players,
     isWinner,
     highlightedId,
+    elo,
 }: {
     color: 'blue' | 'red';
     players: TeamMember[];
     isWinner: boolean;
     highlightedId?: string;
+    elo?: MatchEloDto;
 }) {
     const t = useNextTokens();
 
@@ -52,6 +57,7 @@ function TeamSide({
                     >
                         {idx > 0 ? ', ' : ''}
                         {p.name || 'Unknown'}
+                        <EloChange value={eloChangeOf(elo, p.id)} />
                     </Text>
                 ))}
             </Text>
@@ -60,17 +66,19 @@ function TeamSide({
 }
 
 /**
- * A match as a card: each team on its side with its players' names, the score in the
- * middle with the winner's cups in their team color. New Design only.
+ * A match as a card: each team on its side with its players' names and Elo changes, the score
+ * in the middle with the winner's cups in their team color. New Design only.
  */
 export function NextMatchCard({
     match,
     onPress,
     highlightedId,
+    elo,
 }: {
     match: Match;
     onPress: () => void;
     highlightedId?: string;
+    elo?: MatchEloDto;
 }) {
     const t = useNextTokens();
 
@@ -109,6 +117,7 @@ export function NextMatchCard({
                     players={match.blueTeam}
                     isWinner={winner === 'blue'}
                     highlightedId={highlightedId}
+                    elo={elo}
                 />
                 <View
                     style={{
@@ -159,6 +168,7 @@ export function NextMatchCard({
                     players={match.redTeam}
                     isWinner={winner === 'red'}
                     highlightedId={highlightedId}
+                    elo={elo}
                 />
             </View>
         </Pressable>

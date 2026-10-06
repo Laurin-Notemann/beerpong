@@ -411,6 +411,14 @@ declare namespace Components {
             teamMembers: TeamMemberDto[];
             matchMoves: MatchMoveDtoComplete[];
         }
+        export interface MatchEloDto {
+            matchId: string;
+            players: MatchEloPlayerDto[];
+        }
+        export interface MatchEloPlayerDto {
+            playerId: string;
+            change: number; // double
+        }
         export interface MatchMoveDto {
             moveId: string | null;
             count?: number; // int32
@@ -576,6 +584,12 @@ declare namespace Components {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
             data: MatchDtoExtended[];
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeListMatchEloDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: MatchEloDto[];
             error?: ErrorDetails;
         }
         export interface ResponseEnvelopeListMatchOverviewDto {
@@ -1311,6 +1325,20 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeMatchDtoExtended;
+        }
+    }
+    namespace GetMatchEloChanges {
+        namespace Parameters {
+            export type GroupId = string;
+            export type SeasonId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            seasonId: Parameters.SeasonId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListMatchEloDto;
         }
     }
     namespace GetMatchOverviewById {
@@ -2053,6 +2081,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.GetAllMatchOverviews.Responses.$200>;
     /**
+     * getMatchEloChanges - Every match of the season with each player's Elo change in it (the rating after it minus before), from the same replay as the season leaderboard.
+     */
+    getMatchEloChanges(
+        parameters?: Parameters<Paths.GetMatchEloChanges.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetMatchEloChanges.Responses.$200>;
+    /**
      * getAllMatchesExtended
      */
     getAllMatchesExtended(
@@ -2631,6 +2667,16 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.GetAllMatchOverviews.Responses.$200>;
     };
+    ['/groups/{groupId}/seasons/{seasonId}/matches/elo']: {
+        /**
+         * getMatchEloChanges - Every match of the season with each player's Elo change in it (the rating after it minus before), from the same replay as the season leaderboard.
+         */
+        get(
+            parameters?: Parameters<Paths.GetMatchEloChanges.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetMatchEloChanges.Responses.$200>;
+    };
     ['/groups/{groupId}/seasons/{seasonId}/matches/extended']: {
         /**
          * getAllMatchesExtended
@@ -2866,6 +2912,8 @@ export type LivePlayerDto = Components.Schemas.LivePlayerDto;
 export type MatchCreateDto = Components.Schemas.MatchCreateDto;
 export type MatchDto = Components.Schemas.MatchDto;
 export type MatchDtoExtended = Components.Schemas.MatchDtoExtended;
+export type MatchEloDto = Components.Schemas.MatchEloDto;
+export type MatchEloPlayerDto = Components.Schemas.MatchEloPlayerDto;
 export type MatchMoveDto = Components.Schemas.MatchMoveDto;
 export type MatchMoveDtoComplete = Components.Schemas.MatchMoveDtoComplete;
 export type MatchOverviewDto = Components.Schemas.MatchOverviewDto;
@@ -2907,6 +2955,8 @@ export type ResponseEnvelopeListMatchDto =
     Components.Schemas.ResponseEnvelopeListMatchDto;
 export type ResponseEnvelopeListMatchDtoExtended =
     Components.Schemas.ResponseEnvelopeListMatchDtoExtended;
+export type ResponseEnvelopeListMatchEloDto =
+    Components.Schemas.ResponseEnvelopeListMatchEloDto;
 export type ResponseEnvelopeListMatchOverviewDto =
     Components.Schemas.ResponseEnvelopeListMatchOverviewDto;
 export type ResponseEnvelopeListPlayerDto =
