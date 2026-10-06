@@ -36,6 +36,17 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                                 encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
                             );
                         };
+                        // Old pages can drop new config values or call server functions removed by
+                        // a deploy. Their next SSE reconnect upgrades the page, keeping localStorage.
+                        const version = import.meta.env.VITE_GIT_COMMIT;
+                        if (
+                            version &&
+                            new URL(request.url).searchParams.get('version') !== version
+                        ) {
+                            send({ type: 'reload' });
+                            controller.close();
+                            return;
+                        }
                         send({ type: 'config', config: display.config });
                         const unsubscribe = subscribe(display, send);
                         // proxies close connections that stay quiet

@@ -15,7 +15,7 @@ import {
     parseConfig,
     pickMatches,
 } from '@/lib/tvDisplay';
-import { useCameraFeed, webRtcSupported } from '~/tv/lib/cameraFeed';
+import { useCameraFeed } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import {
     hasSingleVideoDecoder,
@@ -162,6 +162,7 @@ function Tv() {
                     config={config}
                     offline={!connected || board.isError}
                     feed={feed.stream}
+                    cameraStatus={feed.status}
                     readyClips={readyClips}
                     clip={clips.find((clip) => readyClips.some((ready) => ready.key === clip.key))}
                     onClipDone={clipDone}
@@ -202,6 +203,7 @@ function Screen({
     config,
     offline,
     feed,
+    cameraStatus,
     readyClips,
     clip,
     onClipDone,
@@ -211,6 +213,7 @@ function Screen({
     offline: boolean;
     /** the camera's video, while it comes in */
     feed: MediaStream | null;
+    cameraStatus: string;
     readyClips: Omit<ScoreClip, 'id'>[];
     clip: ScoreClip | undefined;
     onClipDone: () => void;
@@ -260,7 +263,7 @@ function Screen({
                         board={board}
                         config={config}
                         offline={offline}
-                        waitingForCamera={wanted === 'camera'}
+                        cameraStatus={wanted === 'camera' ? cameraStatus : null}
                     />
                     {!board ? (
                         <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
@@ -323,13 +326,13 @@ function Header({
     board,
     config,
     offline,
-    waitingForCamera,
+    cameraStatus,
 }: {
     board: Board | null;
     config: DisplayConfig;
     offline: boolean;
     /** the Camera view, before the camera's video comes in */
-    waitingForCamera: boolean;
+    cameraStatus: string | null;
 }) {
     const now = useNow(10_000);
     const scope =
@@ -354,12 +357,8 @@ function Header({
                 <div className="tabular text-[1.4rem] text-text-3">
                     {offline ? (
                         <span className="text-red">Reconnecting…</span>
-                    ) : waitingForCamera ? (
-                        <span className="text-text-2">
-                            {webRtcSupported()
-                                ? 'Waiting for the camera…'
-                                : "This browser can't show the camera"}
-                        </span>
+                    ) : cameraStatus ? (
+                        <span className="text-text-2">{cameraStatus}</span>
                     ) : (
                         new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     )}

@@ -29,8 +29,9 @@ export function useDisplayEvents(
         let closed = false;
 
         const open = () => {
+            const version = import.meta.env.VITE_GIT_COMMIT ?? '';
             source = new EventSource(
-                `/tv/api/displays/${id}/events?key=${encodeURIComponent(secret)}`
+                `/tv/api/displays/${id}/events?key=${encodeURIComponent(secret)}&version=${encodeURIComponent(version)}`
             );
             source.onopen = () => setConnected(true);
             source.onmessage = (e) => handlers.current.onEvent(JSON.parse(e.data));
