@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { frameOf, preloadedClipSource, type ScoreClip } from '~/tv/lib/scoreClips';
+import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
 
 /** a clip plays at most this long, whatever was uploaded */
 const MAX_SECONDS = 10;
@@ -15,7 +15,7 @@ const COVER_BEFORE_END = 0.2;
 const LOAD_TIMEOUT_MS = 8_000;
 /**
  * how long the board takes to grow back over the clip (`.tv-board` in styles.css), and a little
- * more: the clip unmounts after it, which costs the TV a frame or two it would drop from the end
+ * more: releasing the TV's decoder costs a frame or two it would drop from the end
  */
 const LEAVE_MS = 600;
 /** the full height of the screen, inside its padding */
@@ -33,25 +33,27 @@ export function boardScale() {
 }
 
 /**
- * The scorer's clip in a 9:16 column on the `from` side of the screen, behind the board, which
- * shrinks aside to show it (Screen in routes/tv/index.tsx). Plays with sound; calls `onDone` once
- * the board covers it again.
+ * Every live player's clips stay mounted in their 9:16 column behind the board. A score plays
+ * the existing video; only that panel gets the classes that shrink the board aside. Idle panels
+ * are invisible but laid out, and their first and last frame covers are already decoded.
  *
- * The TV plays video on a layer of its own behind the page, placed where the `<video>` is when it
- * starts; a video that moves while it starts stays black. So the column never moves and the clip
- * loads the moment it mounts; the board starts moving aside a frame later, once the TV painted it.
- * Images of its first and last frame (preloaded with the board, and both mounted from the start,
- * so neither decodes mid-animation) cover it while it starts and stops, when that layer is black
- * for a while. Desktop browsers play the preloaded blob; Tizen streams from this server
- * (server/clips.ts), because its separate player cannot read a blob: URL (Sentry WEB-4).
+ * Tizen places its separate video layer where the video starts, so the column never animates.
+ * All sources are server URLs (server/clips.ts), which that player can read (Sentry WEB-4).
+ * Samsung has one decoder: idle videos use preload="none", and release it after playback so
+ * they cannot steal it from the next clip or the camera. Other browsers buffer with preload="auto".
  */
 export function ScoreClipPanel({
     clip,
     from,
+    playId,
+    singleDecoder,
     onDone,
 }: {
-    clip: ScoreClip;
+    clip: Omit<ScoreClip, 'id'>;
     from: 'left' | 'right';
+    /** the score being played; changing it replays the same mounted video */
+    playId: string | undefined;
+    singleDecoder: boolean;
     onDone: () => void;
 }) {
     const video = useRef<HTMLVideoElement>(null);
@@ -60,62 +62,122 @@ export function ScoreClipPanel({
     const [leaving, setLeaving] = useState(false);
     const [shown, setShown] = useState(false);
     const [frames, setFrames] = useState(true);
+    const [side, setSide] = useState(from);
     const done = useRef(onDone);
     done.current = onDone;
 
     useEffect(() => {
-        const frame = requestAnimationFrame(() => setOpen(true));
-        return () => cancelAnimationFrame(frame);
-    }, []);
+        // A camera connecting or a remote layout change must not move a playing native layer.
+        if (playId === undefined) setSide(from);
+    }, [from, playId]);
 
     useEffect(() => {
         const v = video.current!;
-        v.src = preloadedClipSource(clip.url);
-        playVideo(v, () => setLeaving(true));
+        if (v.getAttribute('src') !== clip.url) v.src = clip.url;
         return () => {
-            // the TV has one video decoder; the next clip gets it back
+            v.pause();
             v.removeAttribute('src');
             v.load();
         };
     }, [clip.url]);
 
     useEffect(() => {
+        setOpen(false);
+        setPlaying(false);
+        setLeaving(false);
+        setShown(false);
+        if (playId === undefined) return;
         const v = video.current!;
-        // not `v.paused`: that's false from play() on, also for a clip that never starts
-        if (!playing) {
-            const timeout = setTimeout(() => {
-                report(v, `didn't start within ${LOAD_TIMEOUT_MS} ms`);
-                setLeaving(true);
-            }, LOAD_TIMEOUT_MS);
-            return () => clearTimeout(timeout);
-        }
-        const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
+        let stopped = false;
+        let started = false;
+        let finishing = false;
+        let retried = false;
+        let attempt = 0;
         let frame = 0;
+        let cap: ReturnType<typeof setTimeout> | undefined;
+        let leave: ReturnType<typeof setTimeout> | undefined;
+        const finish = () => {
+            if (stopped || finishing) return;
+            finishing = true;
+            setLeaving(true);
+            // Keep playing under the last frame until the board covers the column again.
+            leave = setTimeout(() => done.current(), LEAVE_MS);
+        };
+        const play = () => {
+            const current = ++attempt;
+            playVideo(v, () => stopped || finishing || current !== attempt, retry);
+        };
+        const retry = () => {
+            if (stopped || finishing) return;
+            if (retried) return finish();
+            retried = true;
+            report(v, 'preloaded video did not play; loading the server URL again');
+            if (v.getAttribute('src') !== clip.url) v.src = clip.url;
+            v.load();
+            play();
+        };
         const tick = () => {
             if (v.currentTime >= SHOWN_AT) setShown(true);
-            if (v.currentTime >= end) setLeaving(true);
+            const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
+            if (v.currentTime >= end) finish();
             else frame = requestAnimationFrame(tick);
         };
-        frame = requestAnimationFrame(tick);
-        // in case it gets stuck
-        const cap = setTimeout(() => setLeaving(true), MAX_SECONDS * 1000);
-        return () => {
-            cancelAnimationFrame(frame);
-            clearTimeout(cap);
+        const onPlaying = () => {
+            if (started || stopped || finishing) return;
+            started = true;
+            setPlaying(true);
+            frame = requestAnimationFrame(tick);
+            cap = setTimeout(finish, MAX_SECONDS * 1000);
         };
-    }, [playing]);
-
-    useEffect(() => {
-        if (!leaving) return;
-        // under the last frame by now; it stops when it unmounts, pausing it now would cost the
-        // TV frames of the board growing back
-        const timeout = setTimeout(() => done.current(), LEAVE_MS);
-        return () => clearTimeout(timeout);
-    }, [leaving]);
+        const onError = () => {
+            if (!v.getAttribute('src') || stopped || finishing) return;
+            report(v, `error ${v.error?.code}`);
+            retry();
+        };
+        v.addEventListener('playing', onPlaying);
+        v.addEventListener('ended', finish);
+        v.addEventListener('error', onError);
+        // A frame lets the TV paint the stationary column and release the camera's decoder.
+        const opening = requestAnimationFrame(() => {
+            setOpen(true);
+            v.muted = false;
+            if (singleDecoder) {
+                v.preload = 'auto';
+                v.load();
+            } else if (v.readyState >= HTMLMediaElement.HAVE_METADATA) v.currentTime = 0;
+            play();
+        });
+        const fresh = setTimeout(() => {
+            if (!started) retry();
+        }, LOAD_TIMEOUT_MS / 2);
+        const timeout = setTimeout(() => {
+            if (started) return;
+            report(v, `didn't start within ${LOAD_TIMEOUT_MS} ms`);
+            finish();
+        }, LOAD_TIMEOUT_MS);
+        return () => {
+            stopped = true;
+            cancelAnimationFrame(opening);
+            cancelAnimationFrame(frame);
+            clearTimeout(fresh);
+            clearTimeout(timeout);
+            clearTimeout(cap);
+            clearTimeout(leave);
+            v.pause();
+            if (singleDecoder) {
+                // A paused native player still holds the decoder. Reattach without loading it.
+                v.preload = 'none';
+                v.removeAttribute('src');
+                v.load();
+                if (v.isConnected) v.src = clip.url;
+            }
+        };
+    }, [playId, clip.url, singleDecoder]);
 
     return (
         <div
-            className={`score-clip from-${from} ${open ? 'open' : ''} ${leaving ? 'leaving' : ''} absolute inset-y-0 py-[2.5rem] ${from === 'left' ? 'left-0 pl-[2.5rem]' : 'right-0 pr-[2.5rem]'}`}
+            className={`${playId !== undefined ? `score-clip from-${side}` : ''} ${open ? 'open' : ''} ${leaving ? 'leaving' : ''} absolute inset-y-0 py-[2.5rem] ${side === 'left' ? 'left-0 pl-[2.5rem]' : 'right-0 pr-[2.5rem]'}`}
+            style={{ visibility: playId === undefined ? 'hidden' : 'visible' }}
         >
             <div
                 className={`relative overflow-hidden rounded-[2rem] border-[0.4rem] ${clip.team === 'blue' ? 'border-blue bg-blue/20' : 'border-red bg-red/20'}`}
@@ -125,25 +187,8 @@ export function ScoreClipPanel({
                 <video
                     ref={video}
                     playsInline
-                    preload="auto"
-                    onPlaying={() => setPlaying(true)}
-                    onEnded={() => setLeaving(true)}
-                    onError={(e) => {
-                        // emptied on purpose when the clip is done
-                        if (!e.currentTarget.getAttribute('src')) return;
-                        // A browser that rejects a blob still gets the ordinary streaming path.
-                        if (e.currentTarget.getAttribute('src')?.startsWith('blob:')) {
-                            report(
-                                e.currentTarget,
-                                'preloaded clip failed; retrying the server URL'
-                            );
-                            e.currentTarget.src = clip.url;
-                            playVideo(e.currentTarget, () => setLeaving(true));
-                            return;
-                        }
-                        report(e.currentTarget, `error ${e.currentTarget.error?.code}`);
-                        setLeaving(true);
-                    }}
+                    src={clip.url}
+                    preload={singleDecoder && playId === undefined ? 'none' : 'auto'}
                     className={`block h-full w-full object-contain ${playing ? 'bg-black' : ''}`}
                 />
                 {frames && (
@@ -184,17 +229,15 @@ function report(v: HTMLVideoElement, problem: string) {
 }
 
 /** The TV allows sound; desktop browsers may require a muted retry. */
-function playVideo(v: HTMLVideoElement, onFailed: () => void) {
-    const source = v.getAttribute('src');
+function playVideo(v: HTMLVideoElement, cancelled: () => boolean, onFailed: () => void) {
     v.play()
         .catch(() => {
-            // An error handler may already have switched from a blob to the server URL.
-            if (v.getAttribute('src') !== source) return;
+            if (cancelled()) return;
             v.muted = true;
             return v.play();
         })
         .catch((err) => {
-            if (v.getAttribute('src') !== source) return;
+            if (cancelled()) return;
             report(v, `play() failed: ${err}`);
             onFailed();
         });

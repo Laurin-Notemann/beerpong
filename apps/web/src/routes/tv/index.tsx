@@ -17,7 +17,12 @@ import {
 } from '@/lib/tvDisplay';
 import { useCameraFeed, webRtcSupported } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
-import { preloadClips, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
+import {
+    hasSingleVideoDecoder,
+    liveScoreClips,
+    type ScoreClip,
+    scoreClipsOf,
+} from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -135,9 +140,16 @@ function Tv() {
             if (scored.length) setClips((queue) => [...queue, ...scored]);
         }
     );
-    liveMatches.current = board.data?.liveMatches ?? [];
-    useEffect(() => preloadClips(liveMatches.current), [board.data]);
-    useEffect(() => () => preloadClips([]), []);
+    liveMatches.current = pickMatches(board.data?.liveMatches ?? [], [
+        ...(identity.config.focusMatchId ? [identity.config.focusMatchId] : []),
+        ...identity.config.pinnedMatchIds.filter((id) => id !== identity.config.focusMatchId),
+    ]);
+    const readyClips = liveScoreClips(liveMatches.current);
+    const clipKeys = JSON.stringify(readyClips.map((clip) => clip.key));
+    useEffect(() => {
+        const keys = new Set<string>(JSON.parse(clipKeys));
+        setClips((queue) => queue.filter((clip) => keys.has(clip.key)));
+    }, [clipKeys]);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const { config } = identity;
@@ -150,7 +162,8 @@ function Tv() {
                     config={config}
                     offline={!connected || board.isError}
                     feed={feed.stream}
-                    clip={clips[0]}
+                    readyClips={readyClips}
+                    clip={clips.find((clip) => readyClips.some((ready) => ready.key === clip.key))}
                     onClipDone={clipDone}
                 />
             ) : (
@@ -189,6 +202,7 @@ function Screen({
     config,
     offline,
     feed,
+    readyClips,
     clip,
     onClipDone,
 }: {
@@ -197,6 +211,7 @@ function Screen({
     offline: boolean;
     /** the camera's video, while it comes in */
     feed: MediaStream | null;
+    readyClips: Omit<ScoreClip, 'id'>[];
     clip: ScoreClip | undefined;
     onClipDone: () => void;
 }) {
@@ -209,12 +224,8 @@ function Screen({
         wanted === 'camera' && !feed ? layoutFor({ ...config, view: 'auto' }, liveIds) : wanted;
     const focused = live.find((i) => i.id === config.focusMatchId);
     const rows = board?.leaderboard.rows ?? [];
-    // next to the leaderboard the live match is on the right; elsewhere the scorer's team side
-    // (blue plays on the left)
-    const clipFrom = layout === 'split' || clip?.team === 'red' ? 'right' : 'left';
-    const clipPanel = clip && (
-        <ScoreClipPanel key={clip.id} clip={clip} from={clipFrom} onDone={onClipDone} />
-    );
+    // Next to the leaderboard clips use the right column; other views use the team side.
+    const singleDecoder = hasSingleVideoDecoder();
 
     return (
         // the clip waits behind the board, which shrinks aside to show it (`.tv-board` in
@@ -223,11 +234,21 @@ function Screen({
             className="relative h-screen overflow-hidden"
             style={clip && ({ '--board-scale': boardScale() } as CSSProperties)}
         >
-            {clipPanel}
+            {readyClips.map((ready) => (
+                <ScoreClipPanel
+                    key={ready.key}
+                    clip={ready}
+                    playId={clip?.key === ready.key ? clip.id : undefined}
+                    from={layout === 'split' || ready.team === 'red' ? 'right' : 'left'}
+                    singleDecoder={singleDecoder}
+                    onDone={onClipDone}
+                />
+            ))}
             {layout === 'camera' && feed ? (
                 <main className="tv-board relative z-10 h-screen bg-bg">
                     <CameraView
                         stream={feed}
+                        suspended={singleDecoder && !!clip}
                         match={focused ?? matches[0]}
                         groupName={board?.group.name ?? config.groupName ?? ''}
                         offline={offline}
