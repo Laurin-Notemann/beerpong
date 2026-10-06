@@ -29,6 +29,10 @@ import (
 // deleted, or the token belongs to the other environment). Forget the token.
 var ErrBadToken = errors.New("apns: token is no longer valid")
 
+// ErrTooManyRequests means APNs throttled the device token or channel (429).
+// Send the newest state again later.
+var ErrTooManyRequests = errors.New("429 TooManyRequests")
+
 // Push types, as in the apns-push-type header.
 const (
 	LiveActivity = "liveactivity"
@@ -206,6 +210,9 @@ func (c *Client) do(ctx context.Context, method, url string, body any, headers m
 	_ = json.NewDecoder(io.LimitReader(res.Body, 4096)).Decode(&reason)
 	if res.StatusCode == http.StatusGone || reason.Reason == "BadDeviceToken" || reason.Reason == "DeviceTokenNotForTopic" {
 		return nil, ErrBadToken
+	}
+	if res.StatusCode == http.StatusTooManyRequests {
+		return nil, fmt.Errorf("apns %s %s: %w", method, req.URL.Path, ErrTooManyRequests)
 	}
 	return nil, fmt.Errorf("apns %s %s: %d %s", method, req.URL.Path, res.StatusCode, reason.Reason)
 }
