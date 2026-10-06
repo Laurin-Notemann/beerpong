@@ -18,7 +18,7 @@ import {
 import { useCameraFeed } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import {
-    hasSingleVideoDecoder,
+    usesNativeVideoLayer,
     liveScoreClips,
     type ScoreClip,
     scoreClipsOf,
@@ -228,7 +228,7 @@ function Screen({
     const focused = live.find((i) => i.id === config.focusMatchId);
     const rows = board?.leaderboard.rows ?? [];
     // Next to the leaderboard clips use the right column; other views use the team side.
-    const singleDecoder = hasSingleVideoDecoder();
+    const nativeVideoLayer = usesNativeVideoLayer();
 
     return (
         // the clip waits behind the board, which shrinks aside to show it (`.tv-board` in
@@ -250,7 +250,7 @@ function Screen({
                             ? 'right'
                             : 'left'
                     }
-                    singleDecoder={singleDecoder}
+                    nativeVideoLayer={nativeVideoLayer}
                     onDone={onClipDone}
                 />
             ))}
@@ -258,7 +258,6 @@ function Screen({
                 <main className="tv-board relative z-10 h-screen bg-bg">
                     <CameraView
                         stream={feed}
-                        suspended={singleDecoder && !!clip}
                         match={focused ?? matches[0]}
                         groupName={board?.group.name ?? config.groupName ?? ''}
                         offline={offline}

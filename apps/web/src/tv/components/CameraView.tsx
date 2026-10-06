@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-
 import { Avatar } from '~/tv/components/Avatar';
+import { CameraVideo } from '~/tv/components/CameraVideo';
 import { CupRack } from '~/tv/components/CupRack';
 import { Delta, RankMove } from '~/tv/components/Leaderboard';
 import { useNow } from '~/tv/lib/hooks';
@@ -18,54 +17,20 @@ const shade = (to: 'top' | 'bottom') => ({
  */
 export function CameraView({
     stream,
-    suspended = false,
     match,
     groupName,
     offline,
     flipped = false,
 }: {
     stream: MediaStream;
-    /** The Samsung decoder goes to the score clip until the board covers it again. */
-    suspended?: boolean;
     match: LiveMatchView | undefined;
     groupName: string;
     offline: boolean;
     flipped?: boolean;
 }) {
-    const video = useRef<HTMLVideoElement>(null);
-    const [playbackError, setPlaybackError] = useState(false);
-
-    useEffect(() => {
-        const v = video.current!;
-        let stopped = false;
-        if (!suspended) {
-            setPlaybackError(false);
-            v.srcObject = stream;
-            v.play().catch((err: unknown) => {
-                if (stopped) return;
-                setPlaybackError(true);
-                void import('@sentry/browser').then((Sentry) =>
-                    Sentry.captureException(err, { tags: { operation: 'camera-playback' } })
-                );
-            });
-        }
-        return () => {
-            stopped = true;
-            v.pause();
-            v.srcObject = null;
-            v.load();
-        };
-    }, [stream, suspended]);
-
     return (
         <div className="relative h-screen overflow-hidden bg-black">
-            <video
-                ref={video}
-                muted
-                autoPlay
-                playsInline
-                className="absolute inset-0 h-full w-full object-cover"
-            />
+            <CameraVideo stream={stream} />
             <header
                 className="absolute top-0 right-0 left-0 flex items-start gap-[2rem] px-[2.5rem] pt-[2rem] pb-[6rem]"
                 style={shade('bottom')}
@@ -76,11 +41,6 @@ export function CameraView({
                     </div>
                     <h1 className="truncate text-[2.6rem] leading-tight font-black">{groupName}</h1>
                     {offline && <div className="text-[1.4rem] text-red">Reconnecting…</div>}
-                    {playbackError && (
-                        <div className="text-[1.4rem] text-red">
-                            Camera video could not play. Reload this page.
-                        </div>
-                    )}
                 </div>
                 {match?.moves[0] && (
                     <LatestMove key={match.moves.length} match={match} flipped={flipped} />
