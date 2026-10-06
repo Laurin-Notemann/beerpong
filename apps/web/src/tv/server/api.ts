@@ -50,6 +50,12 @@ export async function signup(displayId: string) {
     return dto.token!;
 }
 
+/** the groups of the user an app's access token belongs to (see appRemote.ts) */
+export async function userGroupIds(accessToken: string) {
+    const groups = await call<Dto.GroupDto[]>('/groups/user', { token: accessToken });
+    return groups.flatMap((i) => (i.id ? [i.id] : []));
+}
+
 const accessTokens = new Map<string, { token: string; expiresAt: number }>();
 
 /** an access token for this refresh token; they live an hour, so they're reused for 50 minutes */

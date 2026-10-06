@@ -30,6 +30,10 @@ const getDayName = (date: Dayjs) => {
 export const env = {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL!, //assertEnvString('EXPO_PUBLIC_API_BASE_URL'),
     realtimeBaseUrl: process.env.EXPO_PUBLIC_API_WS_URL!, //assertEnvString('EXPO_PUBLIC_API_WS_URL')!,
+    /** Versus TV (apps/web), whose TVs the remote in the settings controls */
+    tvBaseUrl:
+        process.env.EXPO_PUBLIC_TV_URL ??
+        'https://var.beerpong.laurinnotemann.dev',
 
     groupCode: {
         format: groupCodeFormat,

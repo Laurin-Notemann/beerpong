@@ -14,7 +14,7 @@ import {
     layoutFor,
     parseConfig,
     pickMatches,
-} from '~/tv/lib/display';
+} from '@/lib/tvDisplay';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import { preloadFrames, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';

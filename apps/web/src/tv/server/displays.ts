@@ -1,6 +1,6 @@
 import { randomInt, timingSafeEqual } from 'node:crypto';
 
-import { type DisplayConfig, type DisplayPatch, parseConfig } from '~/tv/lib/display';
+import { type DisplayConfig, type DisplayPatch, parseConfig } from '@/lib/tvDisplay';
 
 /**
  * The TVs this server knows, in memory. A TV keeps its own copy of everything (config and the
@@ -21,6 +21,8 @@ export interface Display {
     /** the TV's own API user (see api.ts `signup`) */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
+    /** the TV's own event streams; a TV with none is off */
+    tvListeners: number;
     lastSeen: number;
 }
 
@@ -57,6 +59,11 @@ function codeFor(id: string, wanted: unknown) {
         code = Array.from({ length: 6 }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join('');
     } while (taken(code));
     return code;
+}
+
+/** the TVs that are on and show this group, for the app's remote */
+export function byGroup(groupId: string) {
+    return [...displays.values()].filter((d) => d.config.groupId === groupId && d.tvListeners > 0);
 }
 
 /** the display behind a QR code's short link */
@@ -105,6 +112,7 @@ export function register(input: {
         config: parseConfig(input.config),
         refreshToken: typeof input.refreshToken === 'string' ? input.refreshToken : null,
         listeners: new Set(),
+        tvListeners: 0,
         lastSeen: Date.now(),
     };
     displays.set(id, display);
@@ -144,7 +152,14 @@ function emit(display: Display, event: DisplayEvent) {
 }
 
 /** listens to a display's changes; returns the unsubscribe */
-export function subscribe(display: Display, listener: (event: DisplayEvent) => void) {
+export function subscribe(
+    display: Display,
+    listener: (event: DisplayEvent) => void,
+    isTv: boolean
+) {
     display.listeners.add(listener);
-    return () => display.listeners.delete(listener);
+    if (isTv) display.tvListeners++;
+    return () => {
+        if (display.listeners.delete(listener) && isTv) display.tvListeners--;
+    };
 }

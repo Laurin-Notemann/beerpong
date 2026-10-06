@@ -19,6 +19,7 @@ export type RootStackParamList = {
     dailyLeaderboardSettings: undefined;
     teamSizeSettings: undefined;
     minMatchesToQualifySettings: undefined;
+    tvRemote: undefined;
     saveSeason: undefined;
     player: { id: string };
     match: { id: string; seasonId: string };

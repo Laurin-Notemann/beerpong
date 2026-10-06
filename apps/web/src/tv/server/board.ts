@@ -1,4 +1,4 @@
-import type { DisplayConfig } from '~/tv/lib/display';
+import type { DisplayConfig } from '@/lib/tvDisplay';
 import { foldLiveMatch, type RackCup } from '~/tv/lib/liveMatch';
 import { type RankingAlgorithm, rankingNames, rankPlayers } from '~/tv/lib/ranking';
 import type * as Dto from '@/openapi/openapi';

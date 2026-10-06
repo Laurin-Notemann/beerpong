@@ -22,6 +22,8 @@ const EXPECTED_ERROR_CODES = new Set([
     // deleted by another group member while this phone still showed it
     'matchNotFound',
     'liveMatchNotFound',
+    // the TV went off while the TV remote showed it
+    'tvNotFound',
     // the app signs up again (useAuth)
     'authRefreshInvalidToken',
 ]);

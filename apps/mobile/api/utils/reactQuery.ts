@@ -19,6 +19,8 @@ export const QK = {
     liveMatch: 'liveMatch',
     /** `[group, groupId, formations]`: the formations the group re-racks cups into */
     formations: 'formations',
+    /** `[group, groupId, tvs]`: the Versus TVs that show the group (TV remote) */
+    tvs: 'tvs',
 
     groupCode: 'groupCode',
 };
