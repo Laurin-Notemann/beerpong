@@ -65,7 +65,7 @@
         "react-native": "0.88.0-rc.3",
         "react-native-confirmation-code-field": "^9.0.0",
         "react-native-draggable-flatlist": "^4.0.1",
-        "react-native-gesture-handler": "~3.2.1",
+        "react-native-gesture-handler": "~3.3.0",
         "react-native-pager-view": "9.0.6",
         "react-native-reanimated": "4.7.0",
         "react-native-safe-area-context": "~5.9.1",
