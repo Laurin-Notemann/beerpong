@@ -6,6 +6,7 @@ import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
 import {
     Tv,
     TvMatch,
+    useCameras,
     useTvMatches,
     useTvRemote,
     useTvs,
@@ -101,6 +102,9 @@ function Remote({
     );
     const { config } = tv;
     const send = update.mutate;
+    const cameras = useCameras(groupId).data ?? [];
+    // the one the TV shows: the one it's set to, else the first (as on the TV's server)
+    const camera = cameras.find((i) => i.id === config.cameraId) ?? cameras[0];
 
     // in the order they started, so cards don't move under your thumb while cups are hit
     const live = [...recent].sort(byStart);
@@ -131,6 +135,9 @@ function Remote({
             : 'Leaderboard, no match running',
         leaderboard: scopeLabel(config.scope),
         live: running,
+        camera: camera
+            ? `Video from ${camera.name}, the score over it`
+            : 'No camera on',
         focus:
             screen === 'focus' && picked.length
                 ? versus(
@@ -152,17 +159,60 @@ function Remote({
                         ...s,
                         caption: captions[s.value],
                         // one match on the whole screen needs a live match
-                        disabled: s.value === 'focus' && !live.length,
+                        disabled:
+                            (s.value === 'focus' && !live.length) ||
+                            (s.value === 'camera' &&
+                                !cameras.length &&
+                                screen !== 'camera'),
                     }))}
                 />
             </Section>
 
-            {screen === 'auto' && (
-                <Section title="Next to the leaderboard">
+            {screen === 'camera' && (
+                <Section title="Camera">
+                    {cameras.length === 0 ? (
+                        <Hint>
+                            No camera is on. Until one is, the TV shows what
+                            Auto shows. Add one under TV Remote → Cameras.
+                        </Hint>
+                    ) : (
+                        <View style={{ gap: 8 }}>
+                            {cameras.map((c) => (
+                                <Choice
+                                    key={c.id}
+                                    selected={camera?.id === c.id}
+                                    onPress={() => send({ cameraId: c.id })}
+                                    mark={<Radio on={camera?.id === c.id} />}
+                                >
+                                    <Text
+                                        style={{
+                                            color: t.text,
+                                            fontSize: 16,
+                                            fontWeight: '600',
+                                        }}
+                                    >
+                                        {c.name}
+                                    </Text>
+                                </Choice>
+                            ))}
+                        </View>
+                    )}
+                </Section>
+            )}
+
+            {(screen === 'auto' || screen === 'camera') && (
+                <Section
+                    title={
+                        screen === 'camera'
+                            ? 'Score on the video'
+                            : 'Next to the leaderboard'
+                    }
+                >
                     {live.length === 0 ? (
                         <Hint>
-                            When someone starts a match, it shows here and next
-                            to the leaderboard.
+                            {screen === 'camera'
+                                ? 'When someone starts a match, its score shows over the video.'
+                                : 'When someone starts a match, it shows here and next to the leaderboard.'}
                         </Hint>
                     ) : (
                         <View style={{ gap: 8 }}>

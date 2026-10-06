@@ -21,7 +21,8 @@ export type RootStackParamList = {
     minMatchesToQualifySettings: undefined;
     tvRemote: undefined;
     tv: { id: string };
-    addTv: undefined;
+    /** `kind: 'camera'` adds a camera instead */
+    addTv: { kind?: 'camera' } | undefined;
     saveSeason: undefined;
     player: { id: string };
     /** `id` is the player's, `index` the clip to start on */

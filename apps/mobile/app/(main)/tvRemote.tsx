@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import {
     ActivityIndicator,
+    Alert,
     Platform,
     ScrollView,
     Text,
@@ -9,17 +10,25 @@ import {
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { useGroup } from '@/api/calls/seasonHooks';
-import { Tv, useTvMatches, useTvs } from '@/api/calls/tvHooks';
+import {
+    Tv,
+    useCameras,
+    useRemoveCamera,
+    useTvMatches,
+    useTvs,
+} from '@/api/calls/tvHooks';
 import Button from '@/components/Button';
-import { Icon } from '@/components/Icon';
+import { Icon, IconName } from '@/components/Icon';
 import IconHead from '@/components/IconHead';
 import { LiveDot } from '@/components/liveMatch/LiveDot';
 import { pressFeedback } from '@/components/liveMatch/motion';
 import PressableScale from '@/components/PressableScale';
 import {
     Hint,
+    RemoteButton,
     scopeLabel,
     screenLabel,
+    Section,
     useRemoteTokens,
 } from '@/components/tvRemote/RemoteParts';
 import { useNavStyles } from '@/lib/navigation/navStyles';
@@ -30,7 +39,8 @@ import { useInsets } from '@/lib/useInsets';
 
 /**
  * The Versus TVs that are on and show the group; picking one opens its remote (`tv`), + adds
- * one with the code it shows (`addTv`).
+ * one with the code it shows (`addTv`). Under them the group's cameras, whose video a TV can
+ * show.
  */
 export default function Page() {
     const insets = useInsets(true);
@@ -110,8 +120,9 @@ export default function Page() {
                         {tvs.map((tv) => (
                             <TvRow
                                 key={tv.id}
+                                icon="television"
                                 name={tv.name}
-                                showing={showing(tv)}
+                                caption={showing(tv)}
                                 onPress={() =>
                                     nav.navigate('tv', { id: tv.id })
                                 }
@@ -119,18 +130,65 @@ export default function Page() {
                         ))}
                     </>
                 )}
+                {!tvsQuery.isLoading && <Cameras groupId={groupId} />}
             </ScrollView>
         </>
     );
 }
 
+/** the group's cameras that are on; tapping one takes the group off it */
+function Cameras({ groupId }: { groupId: string | null }) {
+    const nav = useNavigation();
+    const cameras = useCameras(groupId).data ?? [];
+    const remove = useRemoveCamera(groupId);
+
+    return (
+        <View style={{ marginTop: 16 }}>
+            <Section title="Cameras">
+                <Hint>
+                    A laptop or phone at the table films it, and a TV shows the
+                    video with the score over it: choose Camera on the TV.
+                </Hint>
+                {cameras.map((camera) => (
+                    <TvRow
+                        key={camera.id}
+                        icon="video-outline"
+                        name={camera.name}
+                        caption="On"
+                        onPress={() =>
+                            Alert.alert(
+                                'Remove Group from Camera',
+                                'The camera shows its code again, and TVs stop showing its video.',
+                                [
+                                    { text: 'Cancel', style: 'cancel' },
+                                    {
+                                        text: 'Remove',
+                                        style: 'destructive',
+                                        onPress: () => remove.mutate(camera.id),
+                                    },
+                                ]
+                            )
+                        }
+                    />
+                ))}
+                <RemoteButton
+                    title="Add Camera"
+                    onPress={() => nav.navigate('addTv', { kind: 'camera' })}
+                />
+            </Section>
+        </View>
+    );
+}
+
 function TvRow({
+    icon,
     name,
-    showing,
+    caption,
     onPress,
 }: {
+    icon: IconName;
     name: string;
-    showing: string;
+    caption: string;
     onPress: () => void;
 }) {
     const t = useRemoteTokens();
@@ -141,7 +199,7 @@ function TvRow({
             {...pressFeedback(reducedMotion)}
             onPress={onPress}
             accessibilityRole="button"
-            accessibilityLabel={`${name}, shows ${showing}`}
+            accessibilityLabel={`${name}, ${caption}`}
             pressableStyle={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -165,7 +223,7 @@ function TvRow({
                     backgroundColor: t.accentTint,
                 }}
             >
-                <Icon name="television" size={26} color={t.accent} />
+                <Icon name={icon} size={26} color={t.accent} />
             </View>
             <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 <Text
@@ -186,7 +244,7 @@ function TvRow({
                         numberOfLines={1}
                         style={{ color: t.textSecondary, fontSize: 13 }}
                     >
-                        {showing}
+                        {caption}
                     </Text>
                 </View>
             </View>

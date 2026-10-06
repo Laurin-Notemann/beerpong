@@ -56,6 +56,12 @@ export async function userGroupIds(accessToken: string) {
     return groups.flatMap((i) => (i.id ? [i.id] : []));
 }
 
+/** the name of one of the user's groups */
+export async function userGroupName(accessToken: string, groupId: string) {
+    const groups = await call<Dto.GroupDto[]>('/groups/user', { token: accessToken });
+    return groups.find((i) => i.id === groupId)?.name ?? '';
+}
+
 const accessTokens = new Map<string, { token: string; expiresAt: number }>();
 
 /** an access token for this refresh token; they live an hour, so they're reused for 50 minutes */

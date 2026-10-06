@@ -423,6 +423,7 @@ export const screens: { value: Screen; label: string; icon: IconName }[] = [
     { value: 'leaderboard', label: 'Leaderboard', icon: 'podium' },
     { value: 'live', label: 'Live Matches', icon: 'view-grid-outline' },
     { value: 'focus', label: 'One Match', icon: 'fullscreen' },
+    { value: 'camera', label: 'Camera', icon: 'video-outline' },
 ];
 
 export const scopes: { value: Scope; label: string }[] = [

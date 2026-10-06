@@ -127,6 +127,77 @@ export function useTvRemote(groupId: ApiId | null, tvId: string | undefined) {
     return { update, reload, removeGroup };
 }
 
+/** a camera (a laptop or phone with Versus TV's `/tv/camera` open) that's on and films for the group */
+export interface Camera {
+    id: string;
+    /** from its browser, e.g. "Chrome on Mac"; numbered when several have the same */
+    name: string;
+}
+
+const camerasKey = (groupId: ApiId) => [QK.group, groupId, QK.tvs, 'cameras'];
+
+const camerasUrl = (groupId: ApiId) =>
+    `${env.tvBaseUrl}/tv/api/groups/${groupId}/cameras`;
+
+/** the group's cameras that are on; polled like the TVs */
+export function useCameras(groupId: ApiId | null) {
+    const { api } = useApi();
+
+    return useQuery<Camera[]>({
+        queryKey: camerasKey(groupId ?? 'NULL'),
+        enabled: !!groupId,
+        queryFn: async () => {
+            if (!groupId) return [];
+            const res = await (
+                await api
+            ).get<{ id: string; name?: string }[]>(camerasUrl(groupId));
+            const seen = new Map<string, number>();
+            return res.data.map((i) => {
+                const name = i.name || 'Camera';
+                const count = (seen.get(name) ?? 0) + 1;
+                seen.set(name, count);
+                return {
+                    id: i.id,
+                    name: count > 1 ? `${name} ${count}` : name,
+                };
+            });
+        },
+        refetchInterval: 3_000,
+    });
+}
+
+/** puts the group on the camera that shows `code` (Add Camera) */
+export function useAddCamera(groupId: ApiId | null) {
+    const { api } = useApi();
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (code: string) => {
+            if (!groupId) throw new Error('no group');
+            await (await api).post(camerasUrl(groupId), { code });
+        },
+        onSettled: () =>
+            qc.invalidateQueries({ queryKey: camerasKey(groupId ?? 'NULL') }),
+    });
+}
+
+/** takes the group off a camera; it shows its code again */
+export function useRemoveCamera(groupId: ApiId | null) {
+    const { api } = useApi();
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (cameraId: string) => {
+            if (groupId)
+                await (await api).delete(`${camerasUrl(groupId)}/${cameraId}`);
+        },
+        onError: (err) =>
+            showErrorToast("Couldn't take the group off the camera.", err),
+        onSettled: () =>
+            qc.invalidateQueries({ queryKey: camerasKey(groupId ?? 'NULL') }),
+    });
+}
+
 export interface TvMatch {
     id: string;
     startedAt: string;

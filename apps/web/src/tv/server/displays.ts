@@ -3,20 +3,26 @@ import { randomInt, timingSafeEqual } from 'node:crypto';
 import { type DisplayConfig, type DisplayPatch, parseConfig } from '@/lib/tvDisplay';
 
 /**
- * The TVs this server knows, in memory. A TV keeps its own copy of everything (config and the
- * API session) in localStorage and registers it again when it reconnects, so a restart of this
- * server only costs a reconnect.
+ * The TVs this server knows, in memory, and the cameras that film a table for them. A TV keeps
+ * its own copy of everything (config and the API session) in localStorage and registers it again
+ * when it reconnects, so a restart of this server only costs a reconnect.
  *
  * A TV's `secret` never leaves it; it registers and reads with it. Phones control TVs through
  * the app (appRemote.ts): a TV without a group shows its `code`, which the app's Add TV takes.
+ *
+ * A camera (`/tv/camera`, a laptop or a phone's browser) is added the same way, with Add Camera.
+ * Of its config only the group counts. It sends its video to the group's TVs over WebRTC, peer to
+ * peer; this server only passes on what they say to connect (`signal`, routes/tv/camera.tsx and
+ * lib/cameraFeed.ts).
  */
 export interface Display {
     id: string;
+    kind: 'tv' | 'camera';
     secret: string;
     /** what the TV shows to be added in the app; it keeps the one it got and asks for it again */
     code: string;
     config: DisplayConfig;
-    /** the TV's own API user (see api.ts `signup`) */
+    /** the TV's own API user (see api.ts `signup`); cameras have none */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
     /** what the app's remote calls it, from its browser (`deviceName`) */
@@ -24,12 +30,22 @@ export interface Display {
     lastSeen: number;
 }
 
+/** an offer or answer of the WebRTC connection between a camera and a TV */
+export interface Signal {
+    type: 'offer' | 'answer';
+    sdp: string;
+}
+
 export type DisplayEvent =
     | { type: 'config'; config: DisplayConfig }
     /** so the TV can keep its session across server restarts */
     | { type: 'session'; refreshToken: string }
     /** reload the page, to pick up a deploy */
-    | { type: 'reload' };
+    | { type: 'reload' }
+    /** to a camera: this TV wants its video, send it an offer */
+    | { type: 'watch'; tvId: string }
+    /** from the TV or camera `from` */
+    | { type: 'signal'; from: string; signal: Signal };
 
 // kept on globalThis so dev reloads of this module don't forget the TVs
 const g = globalThis as typeof globalThis & { __versusDisplays?: Map<string, Display> };
@@ -47,7 +63,7 @@ const isToken = (v: unknown): v is string =>
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE = /^[A-HJ-NP-Z2-9]{6}$/;
 
-/** the code the TV asks for, unless it's malformed (an older kind) or another TV has it */
+/** the code the TV asks for, unless it's malformed (an older kind) or another TV or camera has it */
 function codeFor(id: string, wanted: unknown) {
     const taken = (code: string) =>
         [...displays.values()].some((d) => d.id !== id && d.code === code);
@@ -62,14 +78,21 @@ function codeFor(id: string, wanted: unknown) {
 }
 
 /**
- * The TVs that show this group with their page open, for the app's remote. That includes a
- * page in a background tab; one whose connection died without closing (a TV switched off)
+ * The TVs (or cameras) of this group with their page open, for the app's remote. That includes
+ * a page in a background tab; one whose connection died without closing (a TV switched off)
  * counts until a ping to it fails.
  */
-export function byGroup(groupId: string) {
+export function byGroup(groupId: string, kind: Display['kind'] = 'tv'): Display[] {
     return [...displays.values()].filter(
-        (d) => d.config.groupId === groupId && d.listeners.size > 0
+        (d) => d.kind === kind && d.config.groupId === groupId && d.listeners.size > 0
     );
+}
+
+/** the camera whose video the TV shows: the one it's set to, else the group's first */
+export function cameraFor(tv: Display) {
+    if (!tv.config.groupId) return undefined;
+    const cameras = byGroup(tv.config.groupId, 'camera');
+    return cameras.find((c) => c.id === tv.config.cameraId) ?? cameras[0];
 }
 
 /**
@@ -118,10 +141,10 @@ export function deviceName(userAgent: unknown) {
     return os ? `${browser} on ${os}` : browser;
 }
 
-/** the display showing this code, as someone typed it */
-export function byCode(code: string) {
+/** the TV (or camera) showing this code, as someone typed it */
+export function byCode(code: string, kind: Display['kind'] = 'tv') {
     const typed = code.replace(/\s+/g, '').toUpperCase();
-    return [...displays.values()].find((d) => d.code === typed);
+    return [...displays.values()].find((d) => d.kind === kind && d.code === typed);
 }
 
 // TVs nobody has watched for this long are forgotten; one that comes back registers again
@@ -136,6 +159,7 @@ function forgetIdle() {
 
 /** a TV (re)announcing itself; the server's config wins, it may be newer than the TV's copy */
 export function register(input: {
+    kind: Display['kind'];
     id: unknown;
     secret: unknown;
     code: unknown;
@@ -150,13 +174,16 @@ export function register(input: {
     const known = displays.get(id);
     if (known) {
         known.lastSeen = Date.now();
-        if (!same(known.secret, secret)) throw new DisplayError('display id taken');
+        if (!same(known.secret, secret) || known.kind !== input.kind) {
+            throw new DisplayError('display id taken');
+        }
         known.code = codeFor(id, input.code);
         known.refreshToken ??= typeof input.refreshToken === 'string' ? input.refreshToken : null;
         return known;
     }
     const display: Display = {
         id,
+        kind: input.kind,
         secret,
         code: codeFor(id, input.code),
         config: parseConfig(input.config),
@@ -191,6 +218,26 @@ export function setSession(display: Display, refreshToken: string) {
 
 export function reload(display: Display) {
     emit(display, { type: 'reload' });
+}
+
+/** asks the camera for its video, for this TV */
+export function watch(camera: Display, tv: Display) {
+    emit(camera, { type: 'watch', tvId: tv.id });
+}
+
+/**
+ * Passes a signal on between a TV and the camera it shows; false if they don't belong together
+ * (any longer).
+ */
+export function signal(from: Display, toId: unknown, value: Signal) {
+    const to = typeof toId === 'string' ? displays.get(toId) : undefined;
+    if (!to || to.kind === from.kind) return false;
+    const [tv, camera] = from.kind === 'tv' ? [from, to] : [to, from];
+    if (!camera.config.groupId || tv.config.groupId !== camera.config.groupId) return false;
+    if (tv.config.view !== 'camera' || cameraFor(tv) !== camera) return false;
+    if (value.type !== (from === camera ? 'offer' : 'answer')) return false;
+    emit(to, { type: 'signal', from: from.id, signal: value });
+    return true;
 }
 
 function emit(display: Display, event: DisplayEvent) {

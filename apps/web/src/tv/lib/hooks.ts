@@ -2,15 +2,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
 import type { DisplayConfig } from '@/lib/tvDisplay';
+import type { DisplayEvent } from '~/tv/server/displays';
 import { getBoard, getSocketUrl } from '~/tv/server/functions';
 
-export type DisplayEvent =
-    | { type: 'config'; config: DisplayConfig }
-    | { type: 'session'; refreshToken: string }
-    | { type: 'reload' };
+export type { DisplayEvent };
 
 /**
- * Follows the TV's server-sent events. When the stream fails for good (the server restarted
+ * Follows the TV's (or camera's) server-sent events. When the stream fails for good (the server restarted
  * and forgot the TV, or it's unreachable), `onLost` runs and the stream opens again after it:
  * the TV registers itself again there. `secret` goes as `key` (see the events route).
  */

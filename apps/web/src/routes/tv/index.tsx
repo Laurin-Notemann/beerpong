@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 
+import { CameraView } from '~/tv/components/CameraView';
 import { FocusView } from '~/tv/components/FocusView';
 import { FullscreenButton } from '~/tv/components/FullscreenButton';
 import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
@@ -14,6 +15,7 @@ import {
     parseConfig,
     pickMatches,
 } from '@/lib/tvDisplay';
+import { useCameraFeed, webRtcSupported } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import { preloadFrames, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
@@ -76,7 +78,7 @@ function Tv() {
     const register = useCallback(async () => {
         const { id, secret, code, config, refreshToken } = identity;
         const res = await registerDisplay({
-            data: { id, secret, code, config, refreshToken },
+            data: { kind: 'tv', id, secret, code, config, refreshToken },
         });
         setIdentity((i) => ({ ...i, code: res.code, config: res.config }));
         setRegistered(true);
@@ -95,13 +97,24 @@ function Tv() {
         };
     }, []);
 
+    // the Camera view's video, from the camera the app picked (lib/cameraFeed.ts)
+    const feed = useCameraFeed(
+        identity.id,
+        identity.secret,
+        registered && !!identity.config.groupId && identity.config.view === 'camera',
+        identity.config.groupId,
+        identity.config.cameraId
+    );
+    const onFeedSignal = useRef(feed.onSignal);
+    onFeedSignal.current = feed.onSignal;
+
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
-        setIdentity((i) =>
-            event.type === 'config'
-                ? { ...i, config: event.config }
-                : { ...i, refreshToken: event.refreshToken }
-        );
+        if (event.type === 'signal') return void onFeedSignal.current(event.from, event.signal);
+        if (event.type === 'config') setIdentity((i) => ({ ...i, config: event.config }));
+        if (event.type === 'session') {
+            setIdentity((i) => ({ ...i, refreshToken: event.refreshToken }));
+        }
     }, []);
 
     const connected = useDisplayEvents(
@@ -135,6 +148,7 @@ function Tv() {
                     board={board.data ?? null}
                     config={config}
                     offline={!connected || board.isError}
+                    feed={feed.stream}
                     clip={clips[0]}
                     onClipDone={clipDone}
                 />
@@ -173,21 +187,25 @@ function Screen({
     board,
     config,
     offline,
+    feed,
     clip,
     onClipDone,
 }: {
     board: Board | null;
     config: DisplayConfig;
     offline: boolean;
+    /** the camera's video, while it comes in */
+    feed: MediaStream | null;
     clip: ScoreClip | undefined;
     onClipDone: () => void;
 }) {
     const live = board?.liveMatches ?? [];
     const matches = pickMatches(live, config.pinnedMatchIds);
-    const layout = layoutFor(
-        config,
-        live.map((i) => i.id)
-    );
+    const liveIds = live.map((i) => i.id);
+    const wanted = layoutFor(config, liveIds);
+    // until the camera's video comes in, what auto shows
+    const layout =
+        wanted === 'camera' && !feed ? layoutFor({ ...config, view: 'auto' }, liveIds) : wanted;
     const focused = live.find((i) => i.id === config.focusMatchId);
     const rows = board?.leaderboard.rows ?? [];
     // next to the leaderboard the live match is on the right; elsewhere the scorer's team side
@@ -205,56 +223,76 @@ function Screen({
             style={clip && ({ '--board-scale': boardScale() } as CSSProperties)}
         >
             {clipPanel}
-            <main className="tv-board relative z-10 flex h-screen flex-col gap-[2rem] bg-bg p-[2.5rem]">
-                <Header board={board} config={config} offline={offline} />
-                {!board ? (
-                    <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
-                        Loading…
-                    </div>
-                ) : layout === 'focus' && focused ? (
-                    <FocusView match={focused} />
-                ) : layout === 'split' ? (
-                    <div className="flex min-h-0 flex-1 gap-[2.5rem]">
-                        <section className="flex min-h-0 flex-[1.45] flex-col gap-[1rem] overflow-hidden">
-                            <SectionTitle>
-                                Leaderboard · {board.ranking} · as if it ended now
-                            </SectionTitle>
+            {layout === 'camera' && feed ? (
+                <main className="tv-board relative z-10 h-screen bg-bg">
+                    <CameraView
+                        stream={feed}
+                        match={focused ?? matches[0]}
+                        groupName={board?.group.name ?? config.groupName ?? ''}
+                        offline={offline}
+                    />
+                </main>
+            ) : (
+                <main className="tv-board relative z-10 flex h-screen flex-col gap-[2rem] bg-bg p-[2.5rem]">
+                    <Header
+                        board={board}
+                        config={config}
+                        offline={offline}
+                        waitingForCamera={wanted === 'camera'}
+                    />
+                    {!board ? (
+                        <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
+                            Loading…
+                        </div>
+                    ) : layout === 'focus' && focused ? (
+                        <FocusView match={focused} />
+                    ) : layout === 'split' ? (
+                        <div className="flex min-h-0 flex-1 gap-[2.5rem]">
+                            <section className="flex min-h-0 flex-[1.45] flex-col gap-[1rem] overflow-hidden">
+                                <SectionTitle>
+                                    Leaderboard · {board.ranking} · as if it ended now
+                                </SectionTitle>
+                                <LeaderboardList
+                                    rows={withLivePlayers(rows, 8)}
+                                    fill
+                                    className="min-h-0 flex-1"
+                                />
+                            </section>
+                            <aside className="flex min-h-0 flex-1 flex-col gap-[1.2rem]">
+                                <LiveMatchPanel match={matches[0]} className="min-h-0 flex-1" />
+                                {live.length > 1 && (
+                                    <AlsoLive
+                                        matches={live.filter((i) => i.id !== matches[0].id)}
+                                    />
+                                )}
+                            </aside>
+                        </div>
+                    ) : layout === 'live' ? (
+                        matches.length ? (
+                            <Matches matches={matches} className="flex-1" />
+                        ) : (
+                            <Empty>No live matches right now</Empty>
+                        )
+                    ) : rows.length ? (
+                        <div className="flex min-h-0 flex-1 flex-col gap-[2rem]">
+                            <Podium rows={rows.slice(0, 3)} />
+                            {/* two columns, filled top to bottom: 4 to 8 left, 9 to 13 right */}
                             <LeaderboardList
-                                rows={withLivePlayers(rows, 8)}
-                                fill
-                                className="min-h-0 flex-1"
+                                rows={rows.slice(3, 13)}
+                                compact
+                                className="grid! min-h-0 flex-1 grid-flow-col grid-cols-2 gap-x-[2rem]"
+                                style={{
+                                    gridTemplateRows: `repeat(${Math.ceil(rows.slice(3, 13).length / 2)}, minmax(0, 4.6rem))`,
+                                }}
                             />
-                        </section>
-                        <aside className="flex min-h-0 flex-1 flex-col gap-[1.2rem]">
-                            <LiveMatchPanel match={matches[0]} className="min-h-0 flex-1" />
-                            {live.length > 1 && (
-                                <AlsoLive matches={live.filter((i) => i.id !== matches[0].id)} />
-                            )}
-                        </aside>
-                    </div>
-                ) : layout === 'live' ? (
-                    matches.length ? (
-                        <Matches matches={matches} className="flex-1" />
+                        </div>
                     ) : (
-                        <Empty>No live matches right now</Empty>
-                    )
-                ) : rows.length ? (
-                    <div className="flex min-h-0 flex-1 flex-col gap-[2rem]">
-                        <Podium rows={rows.slice(0, 3)} />
-                        {/* two columns, filled top to bottom: 4 to 8 left, 9 to 13 right */}
-                        <LeaderboardList
-                            rows={rows.slice(3, 13)}
-                            compact
-                            className="grid! min-h-0 flex-1 grid-flow-col grid-cols-2 gap-x-[2rem]"
-                            style={{
-                                gridTemplateRows: `repeat(${Math.ceil(rows.slice(3, 13).length / 2)}, minmax(0, 4.6rem))`,
-                            }}
-                        />
-                    </div>
-                ) : (
-                    <Empty>No matches played {config.scope === 'today' ? 'today' : 'yet'}</Empty>
-                )}
-            </main>
+                        <Empty>
+                            No matches played {config.scope === 'today' ? 'today' : 'yet'}
+                        </Empty>
+                    )}
+                </main>
+            )}
         </div>
     );
 }
@@ -263,10 +301,13 @@ function Header({
     board,
     config,
     offline,
+    waitingForCamera,
 }: {
     board: Board | null;
     config: DisplayConfig;
     offline: boolean;
+    /** the Camera view, before the camera's video comes in */
+    waitingForCamera: boolean;
 }) {
     const now = useNow(10_000);
     const scope =
@@ -291,6 +332,12 @@ function Header({
                 <div className="tabular text-[1.4rem] text-text-3">
                     {offline ? (
                         <span className="text-red">Reconnecting…</span>
+                    ) : waitingForCamera ? (
+                        <span className="text-text-2">
+                            {webRtcSupported()
+                                ? 'Waiting for the camera…'
+                                : "This browser can't show the camera"}
+                        </span>
                     ) : (
                         new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     )}

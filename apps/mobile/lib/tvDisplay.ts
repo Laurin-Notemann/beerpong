@@ -17,9 +17,15 @@ export interface DisplayConfig {
     pinnedMatchIds: string[];
     /** a live match on the whole screen, until it ends or a phone leaves it */
     focusMatchId: string | null;
+    /**
+     * the camera the Camera view shows (a laptop or phone with `/tv/camera` open); null takes
+     * the group's first one that's on
+     */
+    cameraId: string | null;
 }
 
-export const views = ['auto', 'leaderboard', 'live'] as const;
+/** camera: a camera's video on the whole screen, the score over it */
+export const views = ['auto', 'leaderboard', 'live', 'camera'] as const;
 export type View = (typeof views)[number];
 
 export const scopes = ['season', 'today', 'all-time'] as const;
@@ -36,13 +42,19 @@ export const emptyConfig: DisplayConfig = {
     seasonId: null,
     pinnedMatchIds: [],
     focusMatchId: null,
+    cameraId: null,
 };
 
 /** what a phone may change; the group goes on with the app's Add TV, which joins it */
 export type DisplayPatch = Partial<
     Pick<
         DisplayConfig,
-        'view' | 'scope' | 'seasonId' | 'pinnedMatchIds' | 'focusMatchId'
+        | 'view'
+        | 'scope'
+        | 'seasonId'
+        | 'pinnedMatchIds'
+        | 'focusMatchId'
+        | 'cameraId'
     >
 >;
 
@@ -60,6 +72,8 @@ export function parsePatch(value: unknown): DisplayPatch {
         patch.seasonId = v.seasonId;
     if (v.focusMatchId === null || isString(v.focusMatchId))
         patch.focusMatchId = v.focusMatchId;
+    if (v.cameraId === null || isString(v.cameraId))
+        patch.cameraId = v.cameraId;
     if (Array.isArray(v.pinnedMatchIds) && v.pinnedMatchIds.every(isString)) {
         patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(
             0,
@@ -108,7 +122,8 @@ export const byStart = (a: { startedAt: string }, b: { startedAt: string }) =>
 
 /**
  * What the TV shows: a focused live match on the whole screen while it's live; in auto the
- * leaderboard next to one live match while any is live, else only the leaderboard.
+ * leaderboard next to one live match while any is live, else only the leaderboard. Camera is
+ * what the TV wants; until its video comes in, it shows what auto shows.
  */
 export function layoutFor(
     config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
@@ -118,6 +133,7 @@ export function layoutFor(
         return 'focus';
     if (config.view === 'leaderboard') return 'leaderboard';
     if (config.view === 'live') return 'live';
+    if (config.view === 'camera') return 'camera';
     return liveIds.length > 0 ? 'split' : 'leaderboard';
 }
 

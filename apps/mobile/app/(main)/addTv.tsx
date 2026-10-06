@@ -1,10 +1,10 @@
 import { isAxiosError } from 'axios';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
-import { useAddTv } from '@/api/calls/tvHooks';
+import { useAddCamera, useAddTv } from '@/api/calls/tvHooks';
 import { env } from '@/api/env';
 import { apiErrorCode } from '@/api/utils/apiInterceptors';
 import InputModal from '@/components/InputModal';
@@ -13,24 +13,43 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
 
-/** Puts the group on a Versus TV with the code the TV shows. */
+/**
+ * Puts the group on a Versus TV with the code the TV shows; with `kind: 'camera'` on a camera
+ * (`/tv/camera`), whose video the TVs can show.
+ */
 export default function Page() {
     const nav = useNavigation();
     const theme = useTheme();
+    const { kind } = useLocalSearchParams<{ kind?: 'camera' }>();
+    const camera = kind === 'camera';
     const { groupId, group } = useGroup();
     const addTv = useAddTv(groupId);
+    const addCamera = useAddCamera(groupId);
+    const pending = addTv.isPending || addCamera.isPending;
     const [code, setCode] = useState('');
+    const groupName = group?.data?.name ?? 'your group';
+    const host = env.tvBaseUrl.replace(/^https?:\/\//, '');
 
     async function onSubmit() {
         try {
+            if (camera) {
+                await addCamera.mutateAsync(code);
+                nav.goBack();
+                return;
+            }
             const tv = await addTv.mutateAsync(code);
             nav.goBack();
             nav.navigate('tv', { id: tv.id });
         } catch (err) {
+            const notFound =
+                isAxiosError(err) &&
+                ['tvCodeNotFound', 'cameraCodeNotFound'].includes(
+                    apiErrorCode(err) ?? ''
+                );
             showErrorToast(
-                isAxiosError(err) && apiErrorCode(err) === 'tvCodeNotFound'
-                    ? 'No TV shows this code.'
-                    : "Couldn't add the TV.",
+                notFound
+                    ? `No ${camera ? 'camera' : 'TV'} shows this code.`
+                    : `Couldn't add the ${camera ? 'camera' : 'TV'}.`,
                 err
             );
         }
@@ -38,7 +57,9 @@ export default function Page() {
 
     return (
         <>
-            <Stack.Screen options={{ headerTitle: 'Add TV' }} />
+            <Stack.Screen
+                options={{ headerTitle: camera ? 'Add Camera' : 'Add TV' }}
+            />
             <Stack.Toolbar placement="left">
                 <Stack.Toolbar.Button onPress={() => nav.goBack()}>
                     Cancel
@@ -47,7 +68,7 @@ export default function Page() {
             <Stack.Toolbar placement="right">
                 <Stack.Toolbar.Button
                     variant="done"
-                    disabled={code.length < 6 || addTv.isPending}
+                    disabled={code.length < 6 || pending}
                     onPress={onSubmit}
                 >
                     Add
@@ -56,7 +77,9 @@ export default function Page() {
             <InputModal>
                 <TextInput
                     required
-                    placeholder="Code on the TV"
+                    placeholder={
+                        camera ? 'Code on the camera' : 'Code on the TV'
+                    }
                     value={code}
                     onChangeText={(text) =>
                         setCode(text.replace(/\s+/g, '').toUpperCase())
@@ -77,10 +100,9 @@ export default function Page() {
                         lineHeight: 18,
                     }}
                 >
-                    Open {env.tvBaseUrl.replace(/^https?:\/\//, '')}/tv in the
-                    TV&apos;s browser and type the code it shows. Then{' '}
-                    {group?.data?.name ?? 'your group'} is on it, and everyone
-                    in the group can control it here.
+                    {camera
+                        ? `Open ${host}/tv/camera in the browser of a laptop or phone at the table and type the code it shows. Then its video can go on ${groupName}'s TVs: choose Camera on a TV here.`
+                        : `Open ${host}/tv in the TV's browser and type the code it shows. Then ${groupName} is on it, and everyone in the group can control it here.`}
                 </Text>
             </InputModal>
         </>
