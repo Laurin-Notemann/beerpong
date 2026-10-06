@@ -76,7 +76,7 @@
         "zustand": "^5.0.15"
     },
     "devDependencies": {
-        "@babel/core": "^7.29.7",
+        "@babel/core": "^8.0.6",
         "@testing-library/dom": "^10.4.2",
         "@testing-library/react": "^16.3.3",
         "@trivago/prettier-plugin-sort-imports": "^6.0.2",
