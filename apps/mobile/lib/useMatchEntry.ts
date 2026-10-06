@@ -8,6 +8,7 @@ import {
 } from '@/api/liveMatch/useLiveMatch';
 import { showScoreClipToast } from '@/components/ScoreClipToast';
 import { CupHit, CupTeam } from '@/lib/cupHits';
+import { randomScoreClip } from '@/lib/scoreClips';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import type { Rerack } from '@/lib/rerack';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
@@ -38,16 +39,17 @@ export function useMatchEntry(liveMatchId?: string) {
         const members = (team: 'red' | 'blue') =>
             (team === 'red' ? live.state.redTeam : live.state.blueTeam)
                 .teamMembers;
-        // like Versus TV: a cup hit, or a point added, plays the scorer's clip
+        // like Versus TV: a cup hit, or a point added, plays one of the scorer's clips
         const playScoreClip = (playerId: string) => {
             if (!scoreClipToasts) return;
             const team = (['blue', 'red'] as const).find((i) =>
                 members(i).some((m) => m.playerId === playerId)
             );
             const profile = players?.find((i) => i.id === playerId)?.profile;
-            if (!team || !profile?.scoreClipUrl) return;
+            const url = randomScoreClip(profile);
+            if (!team || !url) return;
             showScoreClipToast({
-                url: profile.scoreClipUrl,
+                url,
                 name: profile.name ?? '',
                 team,
             });

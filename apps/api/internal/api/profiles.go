@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -208,33 +209,49 @@ func (s *Server) profileInGroup(r *request) response {
 }
 
 // profileAsset is a picture or video a profile carries: its avatar or its
-// score clip. Both are set and removed the same way.
+// score clips. Both are set and removed the same way.
 type profileAsset struct {
 	typ      int16
-	current  func(db.Profile) *string
-	set      func(ctx context.Context, q *db.Queries, profileID string, assetID *string) (db.Profile, error)
+	current  func(db.Profile) []string
+	set      func(ctx context.Context, q *db.Queries, profileID string, assetIDs []string) (db.Profile, error)
 	none     errorCode
 	setEvent string
 	delEvent string
 }
 
+// maxScoreClips is how many score clips a profile can have; one of them plays
+// at random when the player scores
+const maxScoreClips = 10
+
 var (
 	profileAvatar = profileAsset{
-		typ:     assetProfileAvatar,
-		current: func(p db.Profile) *string { return p.AssetIDAvatar },
-		set: func(ctx context.Context, q *db.Queries, id string, assetID *string) (db.Profile, error) {
+		typ: assetProfileAvatar,
+		current: func(p db.Profile) []string {
+			if p.AssetIDAvatar == nil {
+				return nil
+			}
+			return []string{*p.AssetIDAvatar}
+		},
+		set: func(ctx context.Context, q *db.Queries, id string, assetIDs []string) (db.Profile, error) {
+			var assetID *string
+			if len(assetIDs) > 0 {
+				assetID = &assetIDs[0]
+			}
 			return q.SetProfileAvatar(ctx, db.SetProfileAvatarParams{ID: id, AssetIDAvatar: assetID})
 		},
 		none:     errProfileHasNoAvatar,
 		setEvent: "profileAvatarSet",
 		delEvent: "profileAvatarDelete",
 	}
-	// the clip Versus TV plays when the player scores in a live match
+	// the clips Versus TV plays when the player scores in a live match
 	profileScoreClip = profileAsset{
 		typ:     assetProfileScoreClip,
-		current: func(p db.Profile) *string { return p.AssetIDScoreClip },
-		set: func(ctx context.Context, q *db.Queries, id string, assetID *string) (db.Profile, error) {
-			return q.SetProfileScoreClip(ctx, db.SetProfileScoreClipParams{ID: id, AssetIDScoreClip: assetID})
+		current: func(p db.Profile) []string { return p.AssetIdsScoreClips },
+		set: func(ctx context.Context, q *db.Queries, id string, assetIDs []string) (db.Profile, error) {
+			if assetIDs == nil {
+				assetIDs = []string{}
+			}
+			return q.SetProfileScoreClips(ctx, db.SetProfileScoreClipsParams{ID: id, AssetIds: assetIDs})
 		},
 		none:     errProfileHasNoScoreClip,
 		setEvent: "profileScoreClipSet",
@@ -254,13 +271,80 @@ func (s *Server) deleteAvatar(r *request) response {
 	return s.deleteProfileAsset(r, profileAvatar)
 }
 
-// setScoreClip takes no body: a video has no crop.
+// setScoreClip replaces all the profile's score clips with a new one (what app
+// versions before several clips do). It takes no body: a video has no crop.
 func (s *Server) setScoreClip(r *request) response {
 	return s.setProfileAsset(r, profileScoreClip, crop{})
 }
 
+// deleteScoreClip removes all the profile's score clips.
 func (s *Server) deleteScoreClip(r *request) response {
 	return s.deleteProfileAsset(r, profileScoreClip)
+}
+
+// addScoreClip adds a score clip next to the profile's others and answers
+// where to upload it.
+func (s *Server) addScoreClip(r *request) response {
+	if res := s.profileInGroup(r); res != nil {
+		return res
+	}
+	profileID := r.path("id")
+	ctx := r.Context()
+	res := s.tx(ctx, func(q *db.Queries) (response, error) {
+		profile, err := q.GetProfile(ctx, profileID)
+		if err != nil {
+			return nil, err
+		}
+		if len(profile.AssetIdsScoreClips) >= maxScoreClips {
+			return fail(errProfileScoreClipLimit), nil
+		}
+		asset, err := insertAsset(ctx, q, assetProfileScoreClip, crop{})
+		if err != nil {
+			return nil, err
+		}
+		if _, err := q.AddProfileScoreClip(ctx, db.AddProfileScoreClipParams{ID: profileID, AssetID: asset.ID}); err != nil {
+			return nil, err
+		}
+		upload, err := s.assetUpload(r, asset)
+		if err != nil {
+			return nil, err
+		}
+		return ok(upload), nil
+	})
+	if o, isOK := res.(okResponse); isOK {
+		s.hub.Publish(r.path("groupId"), realtime.Assets, profileScoreClip.setEvent, o.data)
+	}
+	return res
+}
+
+// removeScoreClip removes one of the profile's score clips.
+func (s *Server) removeScoreClip(r *request) response {
+	if res := s.profileInGroup(r); res != nil {
+		return res
+	}
+	profileID, assetID := r.path("id"), r.path("assetId")
+	ctx := r.Context()
+	res := s.tx(ctx, func(q *db.Queries) (response, error) {
+		profile, err := q.GetProfile(ctx, profileID)
+		if err != nil {
+			return nil, err
+		}
+		if !slices.Contains(profile.AssetIdsScoreClips, assetID) {
+			return fail(errProfileHasNoScoreClip), nil
+		}
+		updated, err := q.RemoveProfileScoreClip(ctx, db.RemoveProfileScoreClipParams{ID: profileID, AssetID: assetID})
+		if err != nil {
+			return nil, err
+		}
+		if err := s.deleteAsset(ctx, q, assetID); err != nil {
+			return nil, err
+		}
+		return ok(s.toProfileDTO(updated)), nil
+	})
+	if o, isOK := res.(okResponse); isOK {
+		s.hub.Publish(r.path("groupId"), realtime.Assets, profileScoreClip.delEvent, o.data)
+	}
+	return res
 }
 
 // setProfileAsset replaces the profile's asset with a new one and answers
@@ -283,11 +367,11 @@ func (s *Server) setProfileAsset(r *request, a profileAsset, c crop) response {
 		if err != nil {
 			return nil, err
 		}
-		if _, err := a.set(ctx, q, profileID, &asset.ID); err != nil {
+		if _, err := a.set(ctx, q, profileID, []string{asset.ID}); err != nil {
 			return nil, err
 		}
-		if old := a.current(profile); old != nil {
-			if err := s.deleteAsset(ctx, q, *old); err != nil {
+		for _, old := range a.current(profile) {
+			if err := s.deleteAsset(ctx, q, old); err != nil {
 				return nil, err
 			}
 		}
@@ -315,15 +399,17 @@ func (s *Server) deleteProfileAsset(r *request, a profileAsset) response {
 			return nil, err
 		}
 		old := a.current(profile)
-		if old == nil {
+		if len(old) == 0 {
 			return fail(a.none), nil
 		}
 		updated, err := a.set(ctx, q, profileID, nil)
 		if err != nil {
 			return nil, err
 		}
-		if err := s.deleteAsset(ctx, q, *old); err != nil {
-			return nil, err
+		for _, id := range old {
+			if err := s.deleteAsset(ctx, q, id); err != nil {
+				return nil, err
+			}
 		}
 		return ok(s.toProfileDTO(updated)), nil
 	})

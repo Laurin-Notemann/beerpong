@@ -15,14 +15,12 @@ import {
     useGroupLiveMatches,
 } from '@/api/liveMatch/useGroupLiveMatches';
 import { ApiId } from '@/api/types';
+import { assetIdOf } from '@/api/utils/assetId';
 import { useApi } from '@/api/utils/create-api';
 import { namedMoveLog } from '@/lib/liveMatch/labels';
 import { toTeamCreateDtos } from '@/lib/liveMatch/log';
 import { rackCode } from '@/lib/liveMatch/rackCode';
-import {
-    avatarAssetId,
-    useActivityAvatars,
-} from '@/lib/widgets/activityAvatars';
+import { useActivityAvatars } from '@/lib/widgets/activityAvatars';
 import { leaderboardWidget } from '@/lib/widgets/LeaderboardWidget';
 import {
     liveMatchesWidget,
@@ -104,7 +102,7 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
                         id,
                         name,
                         team,
-                        avatar: avatarAssetId(avatarUrl) || undefined,
+                        avatar: assetIdOf(avatarUrl) || undefined,
                     })),
                     blueCups: rackCode(i.state, 'blue'),
                     redCups: rackCode(i.state, 'red'),

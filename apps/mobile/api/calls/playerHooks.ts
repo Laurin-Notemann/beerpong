@@ -160,12 +160,15 @@ export const useUpdatePlayerAvatarMutation = () => {
     });
 };
 
-/** uploads the clip Versus TV plays when the player scores (an H.264 MP4) */
-export const useUpdateScoreClipMutation = () => {
+/**
+ * Adds a score clip (an H.264 MP4) next to the player's others; Versus TV and the app play one of
+ * them at random when the player scores
+ */
+export const useAddScoreClipMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.SetScoreClip.Responses.$200 | null,
+        Paths.AddScoreClip.Responses.$200 | null,
         Error,
         {
             /** the picked video's file */
@@ -175,14 +178,15 @@ export const useUpdateScoreClipMutation = () => {
         }
     >({
         mutationFn: async ({ uri, groupId, profileId }) => {
-            // read first: a file that can't be read leaves the current clip as it is
+            // read first: a file that can't be read doesn't add a clip
             const byteArray = await readAsByteArray(uri);
             const res = await (
                 await api
-            ).setScoreClip({
+            ).addScoreClip({
                 groupId,
                 id: profileId,
             });
+            const assetId = res.data.data?.id ?? '';
             await uploadOrRemove(
                 () =>
                     uploadAsset(
@@ -192,29 +196,34 @@ export const useUpdateScoreClipMutation = () => {
                         'video/mp4'
                     ),
                 async () =>
-                    (await api).deleteScoreClip({ groupId, id: profileId })
+                    (await api).removeScoreClip({
+                        groupId,
+                        id: profileId,
+                        assetId,
+                    })
             );
             return res.data;
         },
-        onError: captureMutationErr('updateScoreClip'),
+        onError: captureMutationErr('addScoreClip'),
     });
 };
 
-export const useDeleteScoreClipMutation = () => {
+/** removes one of the player's score clips */
+export const useRemoveScoreClipMutation = () => {
     const { api } = useApi();
 
     return useMutation<
-        Paths.DeleteScoreClip.Responses.$200 | null,
+        Paths.RemoveScoreClip.Responses.$200 | null,
         Error,
-        { groupId: ApiId; profileId: ApiId }
+        { groupId: ApiId; profileId: ApiId; assetId: string }
     >({
-        mutationFn: async ({ groupId, profileId }) => {
+        mutationFn: async ({ groupId, profileId, assetId }) => {
             const res = await (
                 await api
-            ).deleteScoreClip({ groupId, id: profileId });
+            ).removeScoreClip({ groupId, id: profileId, assetId });
             return res?.data;
         },
-        onError: captureMutationErr('deleteScoreClip'),
+        onError: captureMutationErr('removeScoreClip'),
     });
 };
 

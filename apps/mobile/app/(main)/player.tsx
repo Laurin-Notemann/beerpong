@@ -1,18 +1,20 @@
 import { VideoExportPreset } from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Alert } from 'react-native';
 
 import {
+    useAddScoreClipMutation,
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
-    useDeleteScoreClipMutation,
-    useUpdateScoreClipMutation,
+    useRemoveScoreClipMutation,
 } from '@/api/calls/playerHooks';
 import {
     getPastSeasons,
     useAllSeasonsQuery,
     useGroup,
 } from '@/api/calls/seasonHooks';
+import { assetIdOf } from '@/api/utils/assetId';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -20,6 +22,7 @@ import PlayerScreen from '@/components/screens/Player';
 import { triggerHapticBump } from '@/haptics';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { saveScoreClip } from '@/lib/saveScoreClip';
+import { scoreClipsOf } from '@/lib/scoreClips';
 import { putTemp } from '@/lib/tempRouteStore';
 import { usePlayerPageScope } from '@/lib/usePlayerPageScope';
 import { showErrorToast, showSuccessToast } from '@/toast';
@@ -56,8 +59,8 @@ export default function Page() {
 
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-    const updateScoreClipMutation = useUpdateScoreClipMutation();
-    const deleteScoreClipMutation = useDeleteScoreClipMutation();
+    const addScoreClipMutation = useAddScoreClipMutation();
+    const removeScoreClipMutation = useRemoveScoreClipMutation();
     const [isSavingScoreClip, setIsSavingScoreClip] = useState(false);
 
     const { invalidatePlayers } = useQueryInvalidation();
@@ -157,7 +160,7 @@ export default function Page() {
         triggerHapticBump('light');
 
         try {
-            await updateScoreClipMutation.mutateAsync({
+            await addScoreClipMutation.mutateAsync({
                 uri: result.uri,
                 groupId,
                 profileId,
@@ -165,7 +168,7 @@ export default function Page() {
             showSuccessToast('Score clip uploaded.');
         } catch (err) {
             ConsoleLogger.error('failed to upload score clip:', err);
-            // a failed upload takes the new clip off again (useUpdateScoreClipMutation)
+            // a failed upload takes the new clip off again (useAddScoreClipMutation)
             showErrorToast(
                 "The score clip didn't upload. Try again on a good connection, and keep Versus open until it's done.",
                 err
@@ -173,22 +176,23 @@ export default function Page() {
         }
     }
 
-    async function onDeleteScoreClipPress() {
+    async function removeScoreClip(url: string) {
         if (!groupId || !profileId) return;
 
         try {
-            await deleteScoreClipMutation.mutateAsync({ groupId, profileId });
+            await removeScoreClipMutation.mutateAsync({
+                groupId,
+                profileId,
+                assetId: assetIdOf(url),
+            });
             showSuccessToast('Score clip removed.');
         } catch (err) {
-            ConsoleLogger.error('failed to delete score clip:', err);
+            ConsoleLogger.error('failed to remove score clip:', err);
             showErrorToast('Failed to remove score clip.', err);
         }
     }
 
-    async function onSaveScoreClipPress() {
-        const url = player?.profile?.scoreClipUrl;
-        if (!url) return;
-
+    async function saveClip(url: string) {
         setIsSavingScoreClip(true);
         try {
             await saveScoreClip(url, playerName);
@@ -200,6 +204,30 @@ export default function Page() {
         }
     }
 
+    function onScoreClipPress(url: string, index: number) {
+        Alert.alert(`Score Clip ${index + 1}`, undefined, [
+            { text: 'Save', onPress: () => saveClip(url) },
+            {
+                text: 'Remove',
+                style: 'destructive',
+                onPress: () =>
+                    Alert.alert(
+                        'Remove Score Clip?',
+                        "It won't play when they score anymore.",
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                                text: 'Remove',
+                                style: 'destructive',
+                                onPress: () => removeScoreClip(url),
+                            },
+                        ]
+                    ),
+            },
+            { text: 'Cancel', style: 'cancel' },
+        ]);
+    }
+
     return (
         <>
             <PlayerScreen
@@ -208,8 +236,8 @@ export default function Page() {
                 isPending={
                     isUploadingAvatar ||
                     deletePlayerMutation.isPending ||
-                    updateScoreClipMutation.isPending ||
-                    deleteScoreClipMutation.isPending ||
+                    addScoreClipMutation.isPending ||
+                    removeScoreClipMutation.isPending ||
                     isSavingScoreClip
                 }
                 id={id}
@@ -220,11 +248,10 @@ export default function Page() {
                 avatarUrl={player?.profile?.avatarUrl}
                 onUploadAvatarPress={onUploadAvatarPress}
                 onDeleteAvatarPress={onDeleteAvatarPress}
-                hasScoreClip={!!player?.profile?.scoreClipUrl}
-                isUploadingScoreClip={updateScoreClipMutation.isPending}
+                scoreClips={scoreClipsOf(player?.profile)}
+                isUploadingScoreClip={addScoreClipMutation.isPending}
                 onUploadScoreClipPress={onUploadScoreClipPress}
-                onDeleteScoreClipPress={onDeleteScoreClipPress}
-                onSaveScoreClipPress={onSaveScoreClipPress}
+                onScoreClipPress={onScoreClipPress}
                 refresh={refresh}
             />
         </>

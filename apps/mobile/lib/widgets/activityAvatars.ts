@@ -3,14 +3,12 @@ import { widgetsDirectory } from 'expo-widgets';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+import { assetIdOf } from '@/api/utils/assetId';
 import { compressImage } from '@/api/utils/compressImage';
 import { ScopedLogger } from '@/utils/logging';
 
 const logger = new ScopedLogger('widgets');
 
-/** the asset id an avatar URL ends in: the API's file name for it */
-export const avatarAssetId = (url: string | null | undefined) =>
-    url ? (new URL(url).pathname.split('/').pop() ?? '') : '';
 
 /**
  * Where the Live Activity finds the players' avatars: in the app group, which the widget
@@ -37,7 +35,7 @@ export function useActivityAvatars(avatarUrls: (string | null | undefined)[]) {
         );
 
         for (const url of key.split(' ')) {
-            const id = avatarAssetId(url);
+            const id = assetIdOf(url);
             const file = new File(directory, `${id}.jpg`);
             if (!id || copying.has(id) || file.exists) continue;
             copying.add(id);

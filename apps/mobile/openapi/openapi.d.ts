@@ -494,6 +494,7 @@ declare namespace Components {
             avatarUrl: string | null;
             groupId: string | null;
             createdById: string | null;
+            scoreClipUrls: string[];
             scoreClipUrl: string | null;
             reactivated: boolean;
             lastActiveSeasonId: string | null;
@@ -505,6 +506,13 @@ declare namespace Components {
             avatarUrl: string | null;
             groupId: string | null;
             createdById: string | null;
+            /**
+             * the videos Versus TV and the app play one of at random when the player scores, oldest first
+             */
+            scoreClipUrls: string[];
+            /**
+             * the newest of scoreClipUrls
+             */
             scoreClipUrl: string | null;
         }
         /**
@@ -887,6 +895,20 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeLiveMatchDto;
+        }
+    }
+    namespace AddScoreClip {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeAssetUploadResponse;
         }
     }
     namespace AppendOps {
@@ -1489,6 +1511,21 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeAuthTokenDto;
         }
     }
+    namespace RemoveScoreClip {
+        namespace Parameters {
+            export type AssetId = string;
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+            assetId: Parameters.AssetId;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
+        }
+    }
     namespace SaveFormation {
         namespace Parameters {
             export type GroupId = string;
@@ -1912,7 +1949,7 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteAvatar.Responses.$200>;
     /**
-     * setScoreClip - Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.
+     * setScoreClip - Replaces all the profile's score clips (the videos Versus TV and the app play one of when the player scores) with a new one, and answers where to upload it.
      */
     setScoreClip(
         parameters?: Parameters<Paths.SetScoreClip.PathParameters> | null,
@@ -1927,6 +1964,22 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.DeleteScoreClip.Responses.$200>;
+    /**
+     * addScoreClip - Adds a score clip next to the profile's others (at most 10; one plays at random when the player scores), and answers where to upload it.
+     */
+    addScoreClip(
+        parameters?: Parameters<Paths.AddScoreClip.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.AddScoreClip.Responses.$200>;
+    /**
+     * removeScoreClip - Removes one of the profile's score clips.
+     */
+    removeScoreClip(
+        parameters?: Parameters<Paths.RemoveScoreClip.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.RemoveScoreClip.Responses.$200>;
     /**
      * startNewSeason
      */
@@ -2465,7 +2518,7 @@ export interface PathsDictionary {
     };
     ['/groups/{groupId}/profiles/{id}/score-clip']: {
         /**
-         * setScoreClip - Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.
+         * setScoreClip - Replaces all the profile's score clips (the videos Versus TV and the app play one of when the player scores) with a new one, and answers where to upload it.
          */
         put(
             parameters?: Parameters<Paths.SetScoreClip.PathParameters> | null,
@@ -2480,6 +2533,26 @@ export interface PathsDictionary {
             data?: any,
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.DeleteScoreClip.Responses.$200>;
+    };
+    ['/groups/{groupId}/profiles/{id}/score-clips']: {
+        /**
+         * addScoreClip - Adds a score clip next to the profile's others (at most 10; one plays at random when the player scores), and answers where to upload it.
+         */
+        post(
+            parameters?: Parameters<Paths.AddScoreClip.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.AddScoreClip.Responses.$200>;
+    };
+    ['/groups/{groupId}/profiles/{id}/score-clips/{assetId}']: {
+        /**
+         * removeScoreClip - Removes one of the profile's score clips.
+         */
+        delete(
+            parameters?: Parameters<Paths.RemoveScoreClip.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.RemoveScoreClip.Responses.$200>;
     };
     ['/groups/{groupId}/active-season']: {
         /**

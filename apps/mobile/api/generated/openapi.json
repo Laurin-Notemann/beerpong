@@ -888,7 +888,7 @@
             "put": {
                 "tags": ["profile-controller"],
                 "operationId": "setScoreClip",
-                "description": "Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.",
+                "description": "Replaces all the profile's score clips (the videos Versus TV and the app play one of when the player scores) with a new one, and answers where to upload it.",
                 "parameters": [
                     {
                         "name": "groupId",
@@ -928,6 +928,78 @@
                     },
                     {
                         "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{id}/score-clips": {
+            "post": {
+                "tags": ["profile-controller"],
+                "operationId": "addScoreClip",
+                "description": "Adds a score clip next to the profile's others (at most 10; one plays at random when the player scores), and answers where to upload it.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetUploadResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{id}/score-clips/{assetId}": {
+            "delete": {
+                "tags": ["profile-controller"],
+                "operationId": "removeScoreClip",
+                "description": "Removes one of the profile's score clips.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "assetId",
                         "in": "path",
                         "required": true,
                         "schema": { "type": "string" }
@@ -3070,7 +3142,16 @@
                     "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true },
-                    "scoreClipUrl": { "type": "string", "nullable": true }
+                    "scoreClipUrls": {
+                        "type": "array",
+                        "description": "the videos Versus TV and the app play one of at random when the player scores, oldest first",
+                        "items": { "type": "string" }
+                    },
+                    "scoreClipUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "the newest of scoreClipUrls"
+                    }
                 },
                 "required": [
                     "id",
@@ -3079,6 +3160,7 @@
                     "avatarUrl",
                     "groupId",
                     "createdById",
+                    "scoreClipUrls",
                     "scoreClipUrl"
                 ]
             },
@@ -3123,6 +3205,10 @@
                     "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true },
+                    "scoreClipUrls": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                    },
                     "scoreClipUrl": { "type": "string", "nullable": true },
                     "reactivated": { "type": "boolean" },
                     "lastActiveSeasonId": { "type": "string", "nullable": true }
@@ -3134,6 +3220,7 @@
                     "avatarUrl",
                     "groupId",
                     "createdById",
+                    "scoreClipUrls",
                     "scoreClipUrl",
                     "reactivated",
                     "lastActiveSeasonId"

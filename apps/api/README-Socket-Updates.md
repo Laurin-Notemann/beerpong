@@ -126,8 +126,8 @@ Every asset event goes to the group the wallpaper, profile or match belongs to.
 * **groupWallpaperDelete:** When a groups wallpaper is deleted, result is the group
 * **profileAvatarSet:** When a profiles avatar is updated, result is the newly created asset
 * **profileAvatarDelete:** When a profiles avatar is deleted, result is the profile
-* **profileScoreClipSet:** When a profiles score clip (the video Versus TV plays when they score) is updated, result is the newly created asset
-* **profileScoreClipDelete:** When a profiles score clip is deleted, result is the profile
+* **profileScoreClipSet:** When a score clip (one of the videos Versus TV and the app play when they score) is added to a profile, or replaces all of them, result is the newly created asset
+* **profileScoreClipDelete:** When one or all of a profile's score clips are deleted, result is the profile
 * **matchTeamPhotoSet:** When a match team photo is updated, result is the newly created asset
 * **matchTeamPhotoDelete:** When a match team photo is deleted, result is the team
 
