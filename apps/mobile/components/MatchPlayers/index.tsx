@@ -14,12 +14,15 @@ export interface MatchPlayersProps {
     players: TeamMember[];
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
     onPlayerPress: (player: TeamMember) => void;
+    /** each player's Elo change with this match, by season player id */
+    eloChanges?: Map<string, number>;
 }
 export default function MatchPlayers({
     editable,
     players,
     setMoveCount,
     onPlayerPress,
+    eloChanges,
 }: MatchPlayersProps) {
     const newDesign = useNewDesign();
     const t = useNextTokens();
@@ -62,6 +65,7 @@ export default function MatchPlayers({
                         onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
+                        eloChange={eloChanges?.get(i.id)}
                     />
                 ))}
             </MenuSection>
@@ -93,6 +97,7 @@ export default function MatchPlayers({
                         onPress={() => onPlayerPress(i)}
                         editable={editable}
                         setMoveCount={setMoveCount}
+                        eloChange={eloChanges?.get(i.id)}
                     />
                 ))}
             </MenuSection>

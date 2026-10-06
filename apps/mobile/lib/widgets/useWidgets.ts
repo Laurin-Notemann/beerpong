@@ -16,7 +16,7 @@ import {
 } from '@/api/liveMatch/useGroupLiveMatches';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
-import { moveLog } from '@/lib/liveMatch/labels';
+import { namedMoveLog } from '@/lib/liveMatch/labels';
 import { toTeamCreateDtos } from '@/lib/liveMatch/log';
 import { leaderboardWidget } from '@/lib/widgets/LeaderboardWidget';
 import {
@@ -80,8 +80,6 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
                         team: 'red' as const,
                     })),
                 ];
-                const nameOf = (id: string) =>
-                    people.find((p) => p.id === id)?.name ?? '';
                 return {
                     id: i.id,
                     startedAt: i.startedAt,
@@ -93,10 +91,10 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
                         name,
                         team,
                     })),
-                    moves: moveLog(i.state.cupHits, moves)
+                    moves: namedMoveLog(i.state.cupHits, moves, people)
                         .slice(0, REPORTED_MOVES)
                         .map((m) => ({
-                            name: nameOf(m.playerId),
+                            name: m.name,
                             team: m.team,
                             move: m.move,
                             score: `${m.blue}–${m.red}`,

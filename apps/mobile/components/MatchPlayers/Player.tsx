@@ -10,6 +10,7 @@ import {
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { EloChange } from '@/components/EloChange';
 import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
@@ -72,6 +73,8 @@ export interface PlayerProps {
     onPress?: () => void;
 
     border?: boolean;
+    /** how much their Elo changes with this match (a live one: if it ended now) */
+    eloChange?: number;
 }
 export default function Player({
     player: { id, avatarUrl, team, name, points, change, moves },
@@ -84,6 +87,7 @@ export default function Player({
 
     setMoveCount,
     onPress,
+    eloChange,
 }: PlayerProps) {
     const [animation] = useState(() => new Animated.Value(0)); // start with height 0
 
@@ -222,6 +226,10 @@ export default function Player({
                             )}
                         </View>
                     </View>
+                    <EloChange
+                        value={eloChange}
+                        style={{ marginHorizontal: 8 }}
+                    />
                     {editable ? (
                         <Icon
                             color={theme.icon.primary}

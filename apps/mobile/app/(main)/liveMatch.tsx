@@ -9,6 +9,7 @@ import { FinishBar } from '@/components/liveMatch/FinishBar';
 import { InsetFree } from '@/components/liveMatch/InsetFree';
 import { LiveMatchEnded } from '@/components/liveMatch/LiveMatchEnded';
 import { LiveMatchHeader } from '@/components/liveMatch/LiveMatchHeader';
+import { MovesLog } from '@/components/liveMatch/MovesLog';
 import { PageTabs } from '@/components/liveMatch/PageTabs';
 import { Scoreboard } from '@/components/liveMatch/Scoreboard';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -22,7 +23,7 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 /**
  * Entering a live match: the score on top, the cups and points pages (as in the pro mode
- * draft) in the middle, and Finish at the bottom. Every phone in the group can have it open.
+ * draft) and the moves so far in the middle, and Finish at the bottom. Every phone in the group can have it open.
  */
 export default function LiveMatchPage() {
     const { id, groupId } = useLocalSearchParams<{
@@ -72,7 +73,7 @@ export default function LiveMatchPage() {
                 <View style={{ paddingHorizontal: 16, gap: 12 }}>
                     <Scoreboard red={screen.red} blue={screen.blue} />
                     <PageTabs
-                        titles={['Cups', 'Points']}
+                        titles={['Cups', 'Points', 'Moves']}
                         progress={pagerProgress}
                         onSelect={(index) =>
                             pagerRef.current?.scrollTo({ index })
@@ -91,7 +92,9 @@ export default function LiveMatchPage() {
                                 liveMatchId={id}
                                 players={screen.teamMembers}
                                 onPlayerPress={screen.openPlayer}
+                                eloChanges={screen.eloChanges}
                             />
+                            <MovesLog entries={screen.moveLog} />
                         </Swiper>
                     </InsetFree>
                 </View>

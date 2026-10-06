@@ -8,6 +8,7 @@ import { attachTeamPhotos, useMatchesQuery } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useSeasonQuery } from '@/api/calls/seasonHooks';
+import { useLiveEloChanges } from '@/api/liveMatch/useLiveEloChanges';
 import {
     useLiveMatch,
     useLiveMatchActions,
@@ -20,7 +21,7 @@ import {
     LiveMatchOfflineError,
     LiveMatchScoreChangedError,
 } from '@/lib/liveMatch/finish';
-import { finishHint } from '@/lib/liveMatch/labels';
+import { finishHint, namedMoveLog } from '@/lib/liveMatch/labels';
 import { errorCode } from '@/lib/liveMatch/sync';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { showErrorToast, showSuccessToast } from '@/toast';
@@ -72,6 +73,7 @@ export function useLiveMatchScreen(id: string) {
     );
     // the order the points modal pages through the players
     const teamMembers = match.blueTeam.concat(match.redTeam);
+    const eloChanges = useLiveEloChanges(groupId, seasonId);
     const finishes = teamMembers
         .flatMap((i) => i.moves)
         .filter((i) => i.isFinish)
@@ -253,6 +255,10 @@ export function useLiveMatchScreen(id: string) {
             score: match.blueCups,
         },
         teamMembers,
+        /** each player's Elo change if the season's live matches ended now */
+        eloChanges,
+        /** the cups so far, newest first */
+        moveLog: namedMoveLog(live.state.cupHits, moves, teamMembers),
         hint,
         isFinishing,
         finish,
