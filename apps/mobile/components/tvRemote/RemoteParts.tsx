@@ -1,205 +1,210 @@
-import type React from 'react';
+import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
 
 import { TvMatch } from '@/api/calls/tvHooks';
 import { Icon, IconName } from '@/components/Icon';
 import { LiveTimer } from '@/components/liveMatch/LiveTimer';
-import { pressFeedback } from '@/components/liveMatch/motion';
 import { useNextTokens, withAlpha } from '@/components/next/tokens';
-import PressableScale from '@/components/PressableScale';
 import { triggerHapticBump } from '@/haptics';
 import { Scope, Screen } from '@/lib/tvDisplay';
 
-// The TV remote's controls: a list of what the TV can show, cards to pick matches with, the
-// TV's green for what's chosen.
+// The TV remote's building blocks. Every section is the same: a heading, one card of rows, and
+// small print under it; the TV's green marks what's chosen.
 
 export function useRemoteTokens() {
     const t = useNextTokens();
     const accent = t.theme.color.positive;
-    return { ...t, accent, accentTint: withAlpha(accent, 0.12) };
+    return { ...t, accent, accentTint: withAlpha(accent, 0.14) };
 }
 
-/** a press that changes the TV: a selection bump, then `onPress` */
-const select = (onPress: () => void) => () => {
-    triggerHapticBump('selection');
-    onPress();
-};
-
+/** a heading, its rows and the small print under them */
 export function Section({
     title,
+    footer,
     children,
 }: {
-    title: string;
-    children: React.ReactNode;
+    title?: string;
+    footer?: React.ReactNode;
+    children?: React.ReactNode;
 }) {
     const t = useRemoteTokens();
     return (
-        <View style={{ gap: 12 }}>
-            <Text
-                style={{
-                    color: t.textSecondary,
-                    fontSize: 12,
-                    fontWeight: '600',
-                    letterSpacing: 2,
-                    textTransform: 'uppercase',
-                }}
-            >
-                {title}
-            </Text>
+        <View style={{ gap: 8 }}>
+            {title && (
+                <Text
+                    style={{
+                        color: t.textSecondary,
+                        fontSize: 13,
+                        fontWeight: '600',
+                        letterSpacing: 0.5,
+                        textTransform: 'uppercase',
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    {title}
+                </Text>
+            )}
             {children}
+            {footer && <Hint>{footer}</Hint>}
         </View>
     );
 }
 
-/** small print under a control */
+/** small print, in line with the rows' text */
 export function Hint({ children }: { children: React.ReactNode }) {
     const t = useRemoteTokens();
     return (
-        <Text style={{ color: t.textSecondary, fontSize: 13, lineHeight: 18 }}>
+        <Text
+            style={{
+                color: t.textSecondary,
+                fontSize: 13,
+                lineHeight: 18,
+                paddingHorizontal: 16,
+            }}
+        >
             {children}
         </Text>
     );
 }
 
-export interface Option<T extends string> {
-    value: T;
-    label: string;
-    caption: string;
-    icon: IconName;
-    disabled?: boolean;
-}
-
-/** a list of options in one card, one chosen: what the TV shows */
-export function OptionList<T extends string>({
-    value,
-    onChange,
-    options,
-}: {
-    value: T;
-    onChange: (value: T) => void;
-    options: Option<T>[];
-}) {
+/** rows in one card, with hairlines between them */
+export function Card({ children }: { children: React.ReactNode }) {
     const t = useRemoteTokens();
-
+    const rows = React.Children.toArray(children);
     return (
         <View
             style={{
-                borderRadius: 20,
+                borderRadius: 16,
                 borderCurve: 'continuous',
-                borderWidth: 1,
-                borderColor: t.hairline,
                 backgroundColor: t.surface,
                 overflow: 'hidden',
             }}
         >
-            {options.map((o, idx) => {
-                const on = o.value === value;
-                return (
-                    <Pressable
-                        key={o.value}
-                        disabled={o.disabled}
-                        onPress={select(() => onChange(o.value))}
-                        accessibilityRole="radio"
-                        accessibilityState={{
-                            checked: on,
-                            disabled: o.disabled,
-                        }}
-                        accessibilityLabel={`${o.label}, ${o.caption}`}
-                        style={({ pressed }) => ({
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 14,
-                            paddingVertical: 12,
-                            paddingHorizontal: 14,
-                            borderTopWidth: idx ? 1 : 0,
-                            borderTopColor: t.hairline,
-                            backgroundColor: pressed
-                                ? t.surfacePressed
-                                : undefined,
-                            opacity: o.disabled ? 0.4 : 1,
-                        })}
-                    >
+            {rows.map((row, idx) => (
+                <View key={idx}>
+                    {idx > 0 && (
                         <View
                             style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 10,
-                                borderCurve: 'continuous',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: on
-                                    ? t.accentTint
-                                    : withAlpha(t.textSecondary, 0.12),
+                                height: 1,
+                                marginLeft: 16,
+                                backgroundColor: t.hairline,
                             }}
-                        >
-                            <Icon
-                                name={o.icon}
-                                size={20}
-                                color={on ? t.accent : t.textSecondary}
-                            />
-                        </View>
-                        <View style={{ flex: 1, minWidth: 0 }}>
-                            <Text
-                                style={{
-                                    color: t.text,
-                                    fontSize: 16,
-                                    fontWeight: on ? '700' : '500',
-                                }}
-                            >
-                                {o.label}
-                            </Text>
-                            <Text
-                                numberOfLines={1}
-                                style={{ color: t.textSecondary, fontSize: 13 }}
-                            >
-                                {o.caption}
-                            </Text>
-                        </View>
-                        <Radio on={on} />
-                    </Pressable>
-                );
-            })}
+                        />
+                    )}
+                    {row}
+                </View>
+            ))}
         </View>
     );
 }
 
-/** a card of a single or multiple choice, with its mark on the right */
-export function Choice({
-    selected,
-    onPress,
-    mark,
+/**
+ * One row of a card: an optional icon, a title and subtitle (or `children` in their place) and
+ * `trailing` on the right. A press that changes the TV bumps (`haptic`).
+ */
+export function Row({
+    icon,
+    title,
+    subtitle,
     children,
+    trailing,
+    onPress,
+    selected,
+    danger,
+    disabled,
+    haptic = true,
 }: {
-    selected: boolean;
-    onPress: () => void;
-    mark: React.ReactNode;
-    children: React.ReactNode;
+    icon?: IconName;
+    title?: string;
+    subtitle?: string;
+    children?: React.ReactNode;
+    trailing?: React.ReactNode;
+    onPress?: () => void;
+    selected?: boolean;
+    danger?: boolean;
+    disabled?: boolean;
+    haptic?: boolean;
 }) {
     const t = useRemoteTokens();
-    const reducedMotion = useReducedMotion();
+    const color = danger ? t.theme.color.delete : t.text;
 
     return (
-        <PressableScale
-            {...pressFeedback(reducedMotion)}
-            onPress={select(onPress)}
+        <Pressable
+            disabled={disabled || !onPress}
+            onPress={() => {
+                if (haptic) triggerHapticBump('selection');
+                onPress?.();
+            }}
             accessibilityRole="button"
-            accessibilityState={{ selected }}
-            pressableStyle={{
+            accessibilityState={{ selected, disabled }}
+            style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 12,
-                padding: 14,
-                borderRadius: 18,
-                borderCurve: 'continuous',
-                borderWidth: 1.5,
-                borderColor: selected ? t.accent : t.hairline,
-                backgroundColor: selected ? t.accentTint : t.surface,
-            }}
+                minHeight: 52,
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                backgroundColor: pressed ? t.surfacePressed : undefined,
+                opacity: disabled ? 0.4 : 1,
+            })}
         >
-            <View style={{ flex: 1, minWidth: 0 }}>{children}</View>
-            {mark}
-        </PressableScale>
+            {icon && (
+                <View
+                    style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        borderCurve: 'continuous',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: selected
+                            ? t.accentTint
+                            : withAlpha(danger ? color : t.textSecondary, 0.14),
+                    }}
+                >
+                    <Icon
+                        name={icon}
+                        size={19}
+                        color={
+                            selected
+                                ? t.accent
+                                : danger
+                                  ? color
+                                  : t.textSecondary
+                        }
+                    />
+                </View>
+            )}
+            <View style={{ flex: 1, minWidth: 0 }}>
+                {children ?? (
+                    <>
+                        <Text
+                            numberOfLines={1}
+                            style={{
+                                color,
+                                fontSize: 17,
+                                fontWeight: selected ? '600' : '400',
+                            }}
+                        >
+                            {title}
+                        </Text>
+                        {subtitle && (
+                            <Text
+                                numberOfLines={1}
+                                style={{
+                                    color: t.textSecondary,
+                                    fontSize: 13,
+                                    marginTop: 1,
+                                }}
+                            >
+                                {subtitle}
+                            </Text>
+                        )}
+                    </>
+                )}
+            </View>
+            {trailing}
+        </Pressable>
     );
 }
 
@@ -208,11 +213,11 @@ export function Radio({ on }: { on: boolean }) {
     return (
         <View
             style={{
-                width: 24,
-                height: 24,
-                borderRadius: 12,
+                width: 22,
+                height: 22,
+                borderRadius: 11,
                 borderWidth: 2,
-                borderColor: on ? t.accent : t.hairline,
+                borderColor: on ? t.accent : withAlpha(t.textSecondary, 0.5),
                 alignItems: 'center',
                 justifyContent: 'center',
             }}
@@ -238,13 +243,13 @@ export function PinMark({ index }: { index: number }) {
     return (
         <View
             style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
+                width: 26,
+                height: 26,
+                borderRadius: 13,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderWidth: picked ? 0 : 1,
-                borderColor: t.hairline,
+                borderWidth: picked ? 0 : 1.5,
+                borderColor: withAlpha(t.textSecondary, 0.5),
                 backgroundColor: picked ? t.accent : undefined,
             }}
         >
@@ -258,6 +263,18 @@ export function PinMark({ index }: { index: number }) {
                 {picked ? index + 1 : '+'}
             </Text>
         </View>
+    );
+}
+
+/** a chevron, for rows that open something */
+export function Chevron() {
+    const t = useRemoteTokens();
+    return (
+        <Icon
+            name="chevron-right"
+            size={22}
+            color={withAlpha(t.textSecondary, 0.7)}
+        />
     );
 }
 
@@ -284,7 +301,7 @@ export function MatchSummary({
                 <Text numberOfLines={1} style={{ color: t.red, fontSize: 15 }}>
                     {teamNames(match.red)}
                 </Text>
-                <View style={{ flexDirection: 'row' }}>
+                <View style={{ flexDirection: 'row', marginTop: 1 }}>
                     <LiveTimer
                         startedAt={match.startedAt}
                         style={{ fontSize: 12 }}
@@ -298,13 +315,13 @@ export function MatchSummary({
             </View>
             <Text
                 style={{
-                    fontSize: 22,
-                    fontWeight: '900',
+                    fontSize: 20,
+                    fontWeight: '800',
                     fontVariant: ['tabular-nums'],
                 }}
             >
                 <Text style={{ color: t.blue }}>{match.blue.score}</Text>
-                <Text style={{ color: t.textSecondary }}>–</Text>
+                <Text style={{ color: t.textSecondary }}> – </Text>
                 <Text style={{ color: t.red }}>{match.red.score}</Text>
             </Text>
         </View>
@@ -327,12 +344,10 @@ export function Segmented<T extends string>({
             accessibilityRole="tablist"
             style={{
                 flexDirection: 'row',
-                padding: 4,
-                borderRadius: 14,
+                padding: 3,
+                borderRadius: 12,
                 borderCurve: 'continuous',
                 backgroundColor: t.surface,
-                borderWidth: 1,
-                borderColor: t.hairline,
             }}
         >
             {options.map((o) => {
@@ -342,27 +357,30 @@ export function Segmented<T extends string>({
                         key={o.value}
                         accessibilityRole="tab"
                         accessibilityState={{ selected: on }}
-                        onPress={select(() => {
-                            if (!on) onChange(o.value);
-                        })}
+                        onPress={() => {
+                            if (on) return;
+                            triggerHapticBump('selection');
+                            onChange(o.value);
+                        }}
                         style={{
                             flex: 1,
-                            paddingVertical: 9,
-                            borderRadius: 10,
+                            paddingVertical: 8,
+                            borderRadius: 9,
                             borderCurve: 'continuous',
                             alignItems: 'center',
-                            backgroundColor: on ? t.text : undefined,
+                            backgroundColor: on
+                                ? withAlpha(
+                                      t.isLight ? '#000000' : '#FFFFFF',
+                                      0.16
+                                  )
+                                : undefined,
                         }}
                     >
                         <Text
                             style={{
-                                fontSize: 14,
-                                fontWeight: '600',
-                                color: on
-                                    ? t.isLight
-                                        ? '#FFFFFF'
-                                        : '#000000'
-                                    : t.textSecondary,
+                                fontSize: 15,
+                                fontWeight: on ? '600' : '500',
+                                color: on ? t.text : t.textSecondary,
                             }}
                         >
                             {o.label}
@@ -371,50 +389,6 @@ export function Segmented<T extends string>({
                 );
             })}
         </View>
-    );
-}
-
-/** a full-width button at the bottom of the remote */
-export function RemoteButton({
-    title,
-    onPress,
-    danger,
-    busy,
-}: {
-    title: string;
-    onPress: () => void;
-    danger?: boolean;
-    busy?: boolean;
-}) {
-    const t = useRemoteTokens();
-    const reducedMotion = useReducedMotion();
-    return (
-        <PressableScale
-            {...pressFeedback(reducedMotion)}
-            onPress={onPress}
-            disabled={busy}
-            accessibilityRole="button"
-            pressableStyle={{
-                alignItems: 'center',
-                paddingVertical: 14,
-                borderRadius: 14,
-                borderCurve: 'continuous',
-                borderWidth: danger ? 0 : 1,
-                borderColor: t.hairline,
-                backgroundColor: danger ? undefined : t.surface,
-                opacity: busy ? 0.5 : 1,
-            }}
-        >
-            <Text
-                style={{
-                    fontSize: 16,
-                    fontWeight: '600',
-                    color: danger ? t.theme.color.delete : t.text,
-                }}
-            >
-                {title}
-            </Text>
-        </PressableScale>
     );
 }
 

@@ -14,13 +14,11 @@ import {
 import { Icon } from '@/components/Icon';
 import IconHead from '@/components/IconHead';
 import {
-    Choice,
-    Hint,
+    Card,
     MatchSummary,
-    OptionList,
     PinMark,
     Radio,
-    RemoteButton,
+    Row,
     scopeLabel,
     scopes,
     screenLabel,
@@ -59,10 +57,10 @@ export default function Page() {
             <ScrollView
                 style={{ flex: 1, backgroundColor: t.theme.color.bg }}
                 contentContainerStyle={{
-                    paddingTop: insets.top + 16,
-                    paddingBottom: insets.bottom + 24,
+                    paddingTop: insets.top + 20,
+                    paddingBottom: insets.bottom + 32,
                     paddingHorizontal: 16,
-                    gap: 28,
+                    gap: 32,
                 }}
             >
                 {tv ? (
@@ -106,7 +104,7 @@ function Remote({
     // the one the TV shows: the one it's set to, else the first (as on the TV's server)
     const camera = cameras.find((i) => i.id === config.cameraId) ?? cameras[0];
 
-    // in the order they started, so cards don't move under your thumb while cups are hit
+    // in the order they started, so rows don't move under your thumb while cups are hit
     const live = [...recent].sort(byStart);
     const liveIds = live.map((i) => i.id);
     // the live matches the TV shows (the first one next to the leaderboard)
@@ -149,53 +147,72 @@ function Remote({
 
     const season = seasons.find((i) => i.id === config.seasonId);
 
+    const confirmRemove = () =>
+        Alert.alert(
+            'Remove Group from TV',
+            'The TV shows its code again. Add it here to put the group back on.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: () =>
+                        removeGroup.mutate(undefined, {
+                            onSuccess: () => nav.goBack(),
+                        }),
+                },
+            ]
+        );
+
     return (
         <>
             <Section title="On the TV">
-                <OptionList
-                    value={screen}
-                    onChange={choose}
-                    options={screens.map((s) => ({
-                        ...s,
-                        caption: captions[s.value],
-                        // one match on the whole screen needs a live match
-                        disabled:
-                            (s.value === 'focus' && !live.length) ||
-                            (s.value === 'camera' &&
-                                !cameras.length &&
-                                screen !== 'camera'),
-                    }))}
-                />
+                <Card>
+                    {screens.map((s) => (
+                        <Row
+                            key={s.value}
+                            icon={s.icon}
+                            title={s.label}
+                            subtitle={captions[s.value]}
+                            selected={screen === s.value}
+                            // one match on the whole screen needs a live match
+                            disabled={
+                                (s.value === 'focus' && !live.length) ||
+                                (s.value === 'camera' &&
+                                    !cameras.length &&
+                                    screen !== 'camera')
+                            }
+                            onPress={() => choose(s.value)}
+                            trailing={<Radio on={screen === s.value} />}
+                        />
+                    ))}
+                </Card>
             </Section>
 
             {screen === 'camera' && (
-                <Section title="Camera">
-                    {cameras.length === 0 ? (
-                        <Hint>
-                            No camera is on. Until one is, the TV shows what
-                            Auto shows. Add one under TV Remote → Cameras.
-                        </Hint>
-                    ) : (
-                        <View style={{ gap: 8 }}>
+                <Section
+                    title="Camera"
+                    footer={
+                        cameras.length
+                            ? undefined
+                            : 'No camera is on. Until one is, the TV shows what Auto shows. Add one under TV Remote → Cameras.'
+                    }
+                >
+                    {cameras.length > 0 && (
+                        <Card>
                             {cameras.map((c) => (
-                                <Choice
+                                <Row
                                     key={c.id}
+                                    icon="video-outline"
+                                    title={c.name}
                                     selected={camera?.id === c.id}
                                     onPress={() => send({ cameraId: c.id })}
-                                    mark={<Radio on={camera?.id === c.id} />}
-                                >
-                                    <Text
-                                        style={{
-                                            color: t.text,
-                                            fontSize: 16,
-                                            fontWeight: '600',
-                                        }}
-                                    >
-                                        {c.name}
-                                    </Text>
-                                </Choice>
+                                    trailing={
+                                        <Radio on={camera?.id === c.id} />
+                                    }
+                                />
                             ))}
-                        </View>
+                        </Card>
                     )}
                 </Section>
             )}
@@ -207,43 +224,29 @@ function Remote({
                             ? 'Score on the video'
                             : 'Next to the leaderboard'
                     }
+                    footer={
+                        live.length
+                            ? undefined
+                            : screen === 'camera'
+                              ? 'When someone starts a match, its score shows over the video.'
+                              : 'When someone starts a match, it shows next to the leaderboard.'
+                    }
                 >
-                    {live.length === 0 ? (
-                        <Hint>
-                            {screen === 'camera'
-                                ? 'When someone starts a match, its score shows over the video.'
-                                : 'When someone starts a match, it shows here and next to the leaderboard.'}
-                        </Hint>
-                    ) : (
-                        <View style={{ gap: 8 }}>
-                            <Choice
+                    {live.length > 0 && (
+                        <Card>
+                            <Row
+                                title="Automatic"
+                                subtitle={
+                                    pinned.length || !picked[0]
+                                        ? 'One of the latest'
+                                        : `Now ${versus(picked[0])}`
+                                }
                                 selected={!pinned.length}
                                 onPress={() => send({ pinnedMatchIds: [] })}
-                                mark={<Radio on={!pinned.length} />}
-                            >
-                                <Text
-                                    style={{
-                                        color: t.text,
-                                        fontSize: 16,
-                                        fontWeight: '600',
-                                    }}
-                                >
-                                    Automatic
-                                </Text>
-                                <Text
-                                    numberOfLines={1}
-                                    style={{
-                                        color: t.textSecondary,
-                                        fontSize: 13,
-                                    }}
-                                >
-                                    {pinned.length || !picked[0]
-                                        ? 'One of the latest'
-                                        : `Now ${versus(picked[0])}`}
-                                </Text>
-                            </Choice>
+                                trailing={<Radio on={!pinned.length} />}
+                            />
                             {live.map((m) => (
-                                <Choice
+                                <Row
                                     key={m.id}
                                     selected={pinned[0] === m.id}
                                     onPress={() =>
@@ -256,12 +259,12 @@ function Remote({
                                             ],
                                         })
                                     }
-                                    mark={<Radio on={pinned[0] === m.id} />}
+                                    trailing={<Radio on={pinned[0] === m.id} />}
                                 >
                                     <MatchSummary match={m} />
-                                </Choice>
+                                </Row>
                             ))}
-                        </View>
+                        </Card>
                     )}
                 </Section>
             )}
@@ -276,6 +279,7 @@ function Remote({
                     {config.scope !== 'all-time' && pastSeasons.length > 0 && (
                         <MenuView
                             title="Season"
+                            style={{ alignSelf: 'stretch' }}
                             actions={[
                                 {
                                     id: '',
@@ -295,34 +299,37 @@ function Remote({
                                 send({ seasonId: nativeEvent.event || null })
                             }
                         >
-                            <View
-                                pointerEvents="none"
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    paddingVertical: 13,
-                                    paddingHorizontal: 16,
-                                    borderRadius: 14,
-                                    borderCurve: 'continuous',
-                                    borderWidth: 1,
-                                    borderColor: t.hairline,
-                                    backgroundColor: t.surface,
-                                }}
-                            >
-                                <Text
-                                    style={{
-                                        flex: 1,
-                                        color: t.text,
-                                        fontSize: 16,
-                                    }}
-                                >
-                                    {season?.name ?? 'Current Season'}
-                                </Text>
-                                <Icon
-                                    name="unfold-more-horizontal"
-                                    size={20}
-                                    color={t.textSecondary}
-                                />
+                            <View pointerEvents="none">
+                                <Card>
+                                    <Row
+                                        title="Season"
+                                        haptic={false}
+                                        trailing={
+                                            <View
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    gap: 2,
+                                                }}
+                                            >
+                                                <Text
+                                                    numberOfLines={1}
+                                                    style={{
+                                                        color: t.textSecondary,
+                                                        fontSize: 17,
+                                                    }}
+                                                >
+                                                    {season?.name ?? 'Current'}
+                                                </Text>
+                                                <Icon
+                                                    name="unfold-more-horizontal"
+                                                    size={18}
+                                                    color={t.textSecondary}
+                                                />
+                                            </View>
+                                        }
+                                    />
+                                </Card>
                             </View>
                         </MenuView>
                     )}
@@ -330,98 +337,85 @@ function Remote({
             )}
 
             {screen === 'live' && (
-                <Section title="Matches on the TV">
-                    {live.length === 0 ? (
-                        <Hint>
-                            No live matches. They show up here when someone
-                            starts one.
-                        </Hint>
-                    ) : (
-                        <>
-                            <Hint>
-                                Pick up to {MAX_MATCHES}, in the order they
-                                show. Open spots fill up with the latest.
-                            </Hint>
-                            <View style={{ gap: 8 }}>
-                                {live.map((m) => {
-                                    const index = pinned.indexOf(m.id);
-                                    return (
-                                        <Choice
-                                            key={m.id}
-                                            selected={index >= 0}
-                                            onPress={() => togglePin(m.id)}
-                                            mark={<PinMark index={index} />}
-                                        >
-                                            <MatchSummary
-                                                match={m}
-                                                onTv={picked.some(
-                                                    (i) => i.id === m.id
-                                                )}
-                                            />
-                                        </Choice>
-                                    );
-                                })}
-                            </View>
-                        </>
+                <Section
+                    title="Matches on the TV"
+                    footer={
+                        live.length
+                            ? `Pick up to ${MAX_MATCHES}, in the order they show. Open spots fill up with the latest.`
+                            : 'No live matches. They show up here when someone starts one.'
+                    }
+                >
+                    {live.length > 0 && (
+                        <Card>
+                            {live.map((m) => {
+                                const index = pinned.indexOf(m.id);
+                                return (
+                                    <Row
+                                        key={m.id}
+                                        selected={index >= 0}
+                                        onPress={() => togglePin(m.id)}
+                                        trailing={<PinMark index={index} />}
+                                    >
+                                        <MatchSummary
+                                            match={m}
+                                            onTv={picked.some(
+                                                (i) => i.id === m.id
+                                            )}
+                                        />
+                                    </Row>
+                                );
+                            })}
+                        </Card>
                     )}
                 </Section>
             )}
 
             {screen === 'focus' && (
-                <Section title="On the whole screen">
-                    <View style={{ gap: 8 }}>
+                <Section
+                    title="On the whole screen"
+                    footer={`When it ends, the TV goes back to ${screenLabel(config.view)}.`}
+                >
+                    <Card>
                         {live.map((m) => (
-                            <Choice
+                            <Row
                                 key={m.id}
                                 selected={config.focusMatchId === m.id}
                                 onPress={() => send({ focusMatchId: m.id })}
-                                mark={
+                                trailing={
                                     <Radio on={config.focusMatchId === m.id} />
                                 }
                             >
                                 <MatchSummary match={m} />
-                            </Choice>
+                            </Row>
                         ))}
-                    </View>
-                    <Hint>
-                        When it ends, the TV goes back to{' '}
-                        {screenLabel(config.view)}.
-                    </Hint>
+                    </Card>
                 </Section>
             )}
 
-            <Section title="TV">
-                <RemoteButton
-                    title={reload.isPending ? 'Reloading…' : 'Reload TV'}
-                    busy={reload.isPending}
-                    onPress={() => reload.mutate()}
-                />
-                <Hint>
-                    Reloads the page on the TV, so it gets the newest version
-                    after an update.
-                </Hint>
-                <RemoteButton
-                    danger
-                    title="Remove Group from TV"
-                    busy={removeGroup.isPending}
-                    onPress={() =>
-                        Alert.alert(
-                            'Remove Group from TV',
-                            'The TV shows its code again. Add it here to put the group back on.',
-                            [
-                                { text: 'Cancel', style: 'cancel' },
-                                {
-                                    text: 'Remove',
-                                    style: 'destructive',
-                                    onPress: () =>
-                                        removeGroup.mutate(undefined, {
-                                            onSuccess: () => nav.goBack(),
-                                        }),
-                                },
-                            ]
-                        )
-                    }
-                />
+            <Section
+                title="TV"
+                footer="Reloading gets the TV the newest version after an update."
+            >
+                <Card>
+                    <Row
+                        icon="refresh"
+                        title="Reload TV"
+                        haptic={false}
+                        disabled={reload.isPending}
+                        onPress={() => reload.mutate()}
+                        trailing={
+                            reload.isPending ? <ActivityIndicator /> : undefined
+                        }
+                    />
+                    <Row
+                        icon="television-off"
+                        title="Remove Group from TV"
+                        danger
+                        haptic={false}
+                        disabled={removeGroup.isPending}
+                        onPress={confirmRemove}
+                    />
+                </Card>
             </Section>
         </>
     );
