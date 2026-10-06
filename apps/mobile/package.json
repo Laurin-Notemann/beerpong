@@ -57,7 +57,7 @@
         "expo-system-ui": "~58.0.5",
         "expo-task-manager": "~58.0.11",
         "expo-updates": "~58.0.13",
-        "expo-video": "~58.0.8",
+        "expo-video": "58.0.6",
         "expo-web-browser": "~58.0.4",
         "expo-widgets": "~58.0.11",
         "openapi-client-axios": "^7.9.1",
@@ -97,7 +97,8 @@
         "install": {
             "exclude": [
                 "@sentry/react-native",
-                "react-native-pager-view"
+                "react-native-pager-view",
+                "expo-video"
             ]
         }
     }
