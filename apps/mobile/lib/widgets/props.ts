@@ -174,6 +174,17 @@ export interface LiveMatchActivityProps extends LiveScore {
     startedAt: number;
     /** the match was saved: the activity shows the final score until it's dismissed */
     finished: boolean;
+    /** each team's own cups as they're drawn (`rackCode`); missing from older pushes */
+    blueCups?: string;
+    redCups?: string;
+    /** each team's players, at most 6; `avatar` is the asset id of their avatar's local copy */
+    bluePlayers?: ActivityPlayer[];
+    redPlayers?: ActivityPlayer[];
+}
+
+export interface ActivityPlayer {
+    name: string;
+    avatar?: string;
 }
 
 /** the `liveScores` of the API's silent widget push (`pushWidgets` in apps/api), if it is one */

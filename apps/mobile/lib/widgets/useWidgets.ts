@@ -18,6 +18,11 @@ import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { namedMoveLog } from '@/lib/liveMatch/labels';
 import { toTeamCreateDtos } from '@/lib/liveMatch/log';
+import { rackCode } from '@/lib/liveMatch/rackCode';
+import {
+    avatarAssetId,
+    useActivityAvatars,
+} from '@/lib/widgets/activityAvatars';
 import { leaderboardWidget } from '@/lib/widgets/LeaderboardWidget';
 import {
     liveMatchesWidget,
@@ -48,8 +53,17 @@ interface LiveScoreOf {
     score: LiveScore;
     /** for the "Live matches" widget: the API computes the players' live Elo from the teams */
     teams: Components.Schemas.TeamCreateDto[];
-    players: { id: string; name: string; team: 'red' | 'blue' }[];
+    players: {
+        id: string;
+        name: string;
+        team: 'red' | 'blue';
+        /** the avatar's asset id, for the Live Activity's copy of it */
+        avatar?: string;
+    }[];
     moves: WidgetMove[];
+    /** each team's cups as they're drawn, for the Live Activity (rackCode) */
+    blueCups: string;
+    redCups: string;
 }
 
 /** the most moves a report carries (the API takes 10, the widget shows fewer) */
@@ -86,11 +100,14 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
                     seq: i.syncedSeq,
                     score: toLiveScore(teams),
                     teams: toTeamCreateDtos(i.state),
-                    players: people.map(({ id, name, team }) => ({
+                    players: people.map(({ id, name, team, avatarUrl }) => ({
                         id,
                         name,
                         team,
+                        avatar: avatarAssetId(avatarUrl) || undefined,
                     })),
+                    blueCups: rackCode(i.state, 'blue'),
+                    redCups: rackCode(i.state, 'red'),
                     moves: namedMoveLog(i.state.cupHits, moves, people)
                         .slice(0, REPORTED_MOVES)
                         .map((m) => ({
@@ -116,9 +133,26 @@ function useLiveScoreReports(groupId: ApiId | null, scores: LiveScoreOf[]) {
 
     useEffect(() => {
         if (!groupId) return;
-        for (const { id, seq, score, teams, players, moves } of scores) {
+        for (const {
+            id,
+            seq,
+            score,
+            teams,
+            players,
+            moves,
+            blueCups,
+            redCups,
+        } of scores) {
             if (seq === undefined) continue;
-            const body = { seq, ...score, teams, players, moves };
+            const body = {
+                seq,
+                ...score,
+                teams,
+                players,
+                moves,
+                blueCups,
+                redCups,
+            };
             const key = JSON.stringify(body);
             if (reported.get(id) === key) continue;
             reported.set(id, key);
@@ -192,6 +226,12 @@ export function useHomeScreenWidgets() {
     const entries = query.data?.data?.entries;
     const scores = useLiveScores(groupId, seasonId ?? null);
     useLiveScoreReports(groupId, scores);
+    // every player of the season, so their avatar is there when a match starts
+    useActivityAvatars(
+        usePlayersQuery(groupId, seasonId).data?.data?.map(
+            (i) => i.profile?.avatarUrl
+        ) ?? []
+    );
 
     const props = useMemo<LeaderboardWidgetProps | undefined>(() => {
         if (!groupId) return emptyLeaderboardWidget;

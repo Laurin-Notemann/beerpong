@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -31,8 +32,9 @@ const (
 	// attributes' type in expo-widgets
 	liveActivityName       = "LiveMatchActivity"
 	liveActivityAttributes = "LiveActivityAttributes"
-	// how long a finished match's score stays on the Lock Screen
-	finishedActivityDismissal = 15 * time.Minute
+	// how long a finished match's score stays on the Lock Screen: short, so it's
+	// gone by the time the group's next match is on
+	finishedActivityDismissal = 3 * time.Minute
 	// how often an end that didn't go out (APNs throttles a channel with 429s) is
 	// tried again, and for how long: iOS ends a Live Activity 8 hours after it
 	// started anyway
@@ -60,13 +62,22 @@ type liveScoreDTO struct {
 	Players []livePlayerDTO `json:"players,omitempty"`
 	// the cup hits so far, newest first
 	Moves []liveMoveDTO `json:"moves,omitempty"`
+	// each team's own cups as they're drawn: three digits per cup, its x and y
+	// on the 7x7 grid and 1 if it's still standing (see cupRack)
+	BlueCups string `json:"blueCups,omitempty"`
+	RedCups  string `json:"redCups,omitempty"`
 }
 
 type livePlayerDTO struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Team string `json:"team"`
+	// the avatar's asset id: the app keeps a small copy for the Live Activity
+	Avatar string `json:"avatar,omitempty"`
 }
+
+// cupRack is a team's cups as a display reports them, at most a 15-cup rack
+var cupRack = regexp.MustCompile(`^([0-6][0-6][01]){0,15}$`)
 
 type liveMoveDTO struct {
 	Name string `json:"name"`
@@ -91,43 +102,52 @@ func decodeJSONNumbers(raw []byte) (any, error) {
 	return v, dec.Decode(&v)
 }
 
-// liveDetails reads a display's optional teams, players and moves. ok is false
-// if one is there but malformed.
-func liveDetails(o object, now time.Time) (teams json.RawMessage, players []livePlayerDTO, moves []liveMoveDTO, valid bool) {
+// liveDetails reads a display's optional teams, players, moves and cups into d.
+// valid is false if one is there but malformed.
+func liveDetails(o object, now time.Time, d *liveScoreDTO) (valid bool) {
 	if raw := o["teams"]; raw != nil {
 		if _, err := parseProjectedMatch(map[string]any{"teams": raw}, "display", now); err != nil {
-			return nil, nil, nil, false
+			return false
 		}
 		var err error
-		if teams, err = json.Marshal(raw); err != nil {
-			return nil, nil, nil, false
+		if d.Teams, err = json.Marshal(raw); err != nil {
+			return false
 		}
 	}
 	text := func(s string) bool { return len(s) <= maxLiveText }
 	team := func(s string) bool { return s == "red" || s == "blue" }
 	if raw := o["players"]; raw != nil {
 		b, _ := json.Marshal(raw)
-		if json.Unmarshal(b, &players) != nil || len(players) > maxLivePlayers {
-			return nil, nil, nil, false
+		if json.Unmarshal(b, &d.Players) != nil || len(d.Players) > maxLivePlayers {
+			return false
 		}
-		for _, p := range players {
-			if !isUUID(p.ID) || !text(p.Name) || !team(p.Team) {
-				return nil, nil, nil, false
+		for _, p := range d.Players {
+			if !isUUID(p.ID) || !text(p.Name) || !team(p.Team) || (p.Avatar != "" && !isUUID(p.Avatar)) {
+				return false
 			}
 		}
 	}
 	if raw := o["moves"]; raw != nil {
 		b, _ := json.Marshal(raw)
-		if json.Unmarshal(b, &moves) != nil || len(moves) > maxLiveMoves {
-			return nil, nil, nil, false
+		if json.Unmarshal(b, &d.Moves) != nil || len(d.Moves) > maxLiveMoves {
+			return false
 		}
-		for _, m := range moves {
+		for _, m := range d.Moves {
 			if !text(m.Name) || !text(m.Move) || !team(m.Team) || !text(m.Score) {
-				return nil, nil, nil, false
+				return false
 			}
 		}
 	}
-	return teams, players, moves, true
+	for key, cups := range map[string]*string{"blueCups": &d.BlueCups, "redCups": &d.RedCups} {
+		if raw := o[key]; raw != nil {
+			v, ok := raw.(string)
+			if !ok || !cupRack.MatchString(v) {
+				return false
+			}
+			*cups = v
+		}
+	}
+	return true
 }
 
 type liveScoreResultDTO struct {
@@ -213,13 +233,11 @@ func (s *Server) putLiveMatchDisplay(r *request) response {
 		*blueScore < 0 || *blueScore > maxScore || *redScore < 0 || *redScore > maxScore {
 		return fail(errLiveMatchInvalidDisplay)
 	}
-	teams, players, moves, valid := liveDetails(o, s.now())
-	if !valid {
-		return fail(errLiveMatchInvalidDisplay)
-	}
 	display := liveScoreDTO{
 		BlueNames: *blueNames, BlueScore: *blueScore, RedNames: *redNames, RedScore: *redScore,
-		Teams: teams, Players: players, Moves: moves,
+	}
+	if !liveDetails(o, s.now(), &display) {
+		return fail(errLiveMatchInvalidDisplay)
 	}
 
 	groupID, id := r.path("groupId"), r.path("id")
@@ -238,12 +256,25 @@ func (s *Server) putLiveMatchDisplay(r *request) response {
 		if !current {
 			return ok(liveScoreResultDTO{Accepted: false}), nil
 		}
-		// a phone on an older app version reports no details; at the same seq the ones another
-		// phone reported still hold
-		if display.Players == nil && m.Display != nil && m.DisplaySeq != nil && *m.DisplaySeq == *seq {
-			var stored liveScoreDTO
-			if json.Unmarshal([]byte(*m.Display), &stored) == nil {
+		// a phone on an older app version reports fewer details; at the same seq the ones
+		// another phone reported still hold
+		var stored liveScoreDTO
+		if m.Display != nil && m.DisplaySeq != nil && *m.DisplaySeq == *seq &&
+			json.Unmarshal([]byte(*m.Display), &stored) == nil {
+			if display.Players == nil {
 				display.Teams, display.Players, display.Moves = stored.Teams, stored.Players, stored.Moves
+			}
+			if display.BlueCups == "" && display.RedCups == "" {
+				display.BlueCups, display.RedCups = stored.BlueCups, stored.RedCups
+			}
+			avatars := map[string]string{}
+			for _, p := range stored.Players {
+				avatars[p.ID] = p.Avatar
+			}
+			for i, p := range display.Players {
+				if p.Avatar == "" {
+					display.Players[i].Avatar = avatars[p.ID]
+				}
 			}
 		}
 		score, err := json.Marshal(display)
@@ -478,13 +509,25 @@ func (s *Server) endActivities(ctx context.Context, lm db.LiveMatch, score *live
 // activityPayload is an ActivityKit push whose content state is what
 // expo-widgets renders: the activity's name and its props as JSON.
 func activityPayload(event string, lm db.LiveMatch, score liveScoreDTO) map[string]any {
+	// each team's players for their avatars, at most 6 a side to keep the
+	// push under ActivityKit's 4 KB
+	players := map[string][]map[string]string{"blue": {}, "red": {}}
+	for _, p := range score.Players {
+		if len(players[p.Team]) < 6 {
+			players[p.Team] = append(players[p.Team], map[string]string{"name": p.Name, "avatar": p.Avatar})
+		}
+	}
 	props, _ := json.Marshal(map[string]any{
-		"blueNames": score.BlueNames,
-		"blueScore": score.BlueScore,
-		"redNames":  score.RedNames,
-		"redScore":  score.RedScore,
-		"startedAt": lm.StartedAt.UnixMilli(),
-		"finished":  lm.Status == liveFinished,
+		"blueNames":   score.BlueNames,
+		"blueScore":   score.BlueScore,
+		"redNames":    score.RedNames,
+		"redScore":    score.RedScore,
+		"startedAt":   lm.StartedAt.UnixMilli(),
+		"finished":    lm.Status == liveFinished,
+		"blueCups":    score.BlueCups,
+		"redCups":     score.RedCups,
+		"bluePlayers": players["blue"],
+		"redPlayers":  players["red"],
 	})
 	return map[string]any{"aps": map[string]any{
 		"event":         event,

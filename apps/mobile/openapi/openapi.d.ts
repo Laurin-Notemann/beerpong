@@ -305,6 +305,14 @@ declare namespace Components {
              * the cup hits so far, newest first (at most 10)
              */
             moves?: /* a cup hit: who, on which team, with which move */ LiveMoveDto[];
+            /**
+             * the blue team's own cups as they're drawn, for the Live Activity: three digits per cup, its x and y on the 7x7 grid and 1 if it's still standing
+             */
+            blueCups?: string;
+            /**
+             * the red team's own cups, like blueCups
+             */
+            redCups?: string;
         }
         export interface LiveMatchDisplayResultDto {
             /**
@@ -386,6 +394,10 @@ declare namespace Components {
             id: string;
             name: string;
             team: 'red' | 'blue';
+            /**
+             * the avatar's asset id; the Live Activity shows the app's small copy of it
+             */
+            avatar?: string;
         }
         export interface MatchCreateDto {
             /**

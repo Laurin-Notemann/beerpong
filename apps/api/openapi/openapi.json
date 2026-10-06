@@ -3883,6 +3883,14 @@
                         "type": "array",
                         "description": "the cup hits so far, newest first (at most 10)",
                         "items": { "$ref": "#/components/schemas/LiveMoveDto" }
+                    },
+                    "blueCups": {
+                        "type": "string",
+                        "description": "the blue team's own cups as they're drawn, for the Live Activity: three digits per cup, its x and y on the 7x7 grid and 1 if it's still standing"
+                    },
+                    "redCups": {
+                        "type": "string",
+                        "description": "the red team's own cups, like blueCups"
                     }
                 },
                 "required": ["seq", "blueNames", "blueScore", "redNames", "redScore"]
@@ -3892,7 +3900,11 @@
                 "properties": {
                     "id": { "type": "string" },
                     "name": { "type": "string" },
-                    "team": { "type": "string", "enum": ["red", "blue"] }
+                    "team": { "type": "string", "enum": ["red", "blue"] },
+                    "avatar": {
+                        "type": "string",
+                        "description": "the avatar's asset id; the Live Activity shows the app's small copy of it"
+                    }
                 },
                 "required": ["id", "name", "team"]
             },
