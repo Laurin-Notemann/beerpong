@@ -26,7 +26,7 @@ import { launchImageLibrary, readAsByteArray } from '@/utils/fileUpload';
 import { ConsoleLogger } from '@/utils/logging';
 
 /** how long the score clip Versus TV plays may be */
-const SCORE_CLIP_SECONDS = 5;
+const SCORE_CLIP_SECONDS = 10;
 
 export default function Page() {
     const router = useRouter();

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
 
 /** a clip plays at most this long, whatever was uploaded */
-const MAX_SECONDS = 5;
+const MAX_SECONDS = 10;
 /**
  * The TV's video layer is black for a moment after the video says it plays and when it ends, so
  * the first frame stays over it until it played this long, and the last frame covers it this long

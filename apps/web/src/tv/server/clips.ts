@@ -47,7 +47,7 @@ async function convertOnce(id: string, url: string) {
     const output = join(dir, `${id}.mp4`);
     await writeFile(input, Buffer.from(await res.arrayBuffer()));
     await promisify(execFile)('ffmpeg', [
-        ...['-v', 'error', '-y', '-i', input, '-t', '5', '-map', '0:v:0', '-map', '0:a:0?'],
+        ...['-v', 'error', '-y', '-i', input, '-t', '10', '-map', '0:v:0', '-map', '0:a:0?'],
         ...[
             '-vf',
             'scale=min(iw\\,1280):min(ih\\,1280):force_original_aspect_ratio=decrease:force_divisible_by=2',
