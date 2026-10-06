@@ -16,6 +16,7 @@ import {
     Choice,
     Hint,
     MatchSummary,
+    OptionList,
     PinMark,
     Radio,
     RemoteButton,
@@ -23,7 +24,6 @@ import {
     scopes,
     screenLabel,
     screens,
-    ScreenTile,
     Section,
     Segmented,
     useRemoteTokens,
@@ -40,7 +40,7 @@ import {
 } from '@/lib/tvDisplay';
 import { useInsets } from '@/lib/useInsets';
 
-/** The remote for one Versus TV, opened from the TV Remote list; what the web remote can do. */
+/** The remote for one Versus TV, opened from the TV Remote list. */
 export default function Page() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const insets = useInsets(true);
@@ -126,7 +126,9 @@ function Remote({
 
     const running = live.length ? `${live.length} running` : 'None running';
     const captions: Record<Screen, string> = {
-        auto: live.length ? 'Board + a live match' : 'Board, no match running',
+        auto: live.length
+            ? 'Leaderboard + a live match'
+            : 'Leaderboard, no match running',
         leaderboard: scopeLabel(config.scope),
         live: running,
         focus:
@@ -142,23 +144,18 @@ function Remote({
 
     return (
         <>
-            <View style={{ gap: 12 }}>
-                {[screens.slice(0, 2), screens.slice(2)].map((row, idx) => (
-                    <View key={idx} style={{ flexDirection: 'row', gap: 12 }}>
-                        {row.map((s) => (
-                            <ScreenTile
-                                key={s.value}
-                                screen={s.value}
-                                label={s.label}
-                                caption={captions[s.value]}
-                                selected={screen === s.value}
-                                disabled={s.value === 'focus' && !live.length}
-                                onPress={() => choose(s.value)}
-                            />
-                        ))}
-                    </View>
-                ))}
-            </View>
+            <Section title="On the TV">
+                <OptionList
+                    value={screen}
+                    onChange={choose}
+                    options={screens.map((s) => ({
+                        ...s,
+                        caption: captions[s.value],
+                        // one match on the whole screen needs a live match
+                        disabled: s.value === 'focus' && !live.length,
+                    }))}
+                />
+            </Section>
 
             {screen === 'auto' && (
                 <Section title="Next to the leaderboard">
@@ -360,7 +357,7 @@ function Remote({
                     onPress={() =>
                         Alert.alert(
                             'Remove Group from TV',
-                            'The TV goes back to its QR code. Scan it to put the group on again.',
+                            'The TV shows its code again. Add it here to put the group back on.',
                             [
                                 { text: 'Cancel', style: 'cancel' },
                                 {

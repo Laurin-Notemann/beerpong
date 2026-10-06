@@ -1,10 +1,16 @@
 import { Stack } from 'expo-router';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Platform,
+    ScrollView,
+    Text,
+    View,
+} from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { useGroup } from '@/api/calls/seasonHooks';
 import { Tv, useTvMatches, useTvs } from '@/api/calls/tvHooks';
-import { env } from '@/api/env';
+import Button from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import IconHead from '@/components/IconHead';
 import { LiveDot } from '@/components/liveMatch/LiveDot';
@@ -19,9 +25,13 @@ import {
 import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { screenOf } from '@/lib/tvDisplay';
+import { useAndroidIcon } from '@/lib/useAndroidIcon';
 import { useInsets } from '@/lib/useInsets';
 
-/** The Versus TVs that are on and show the group; picking one opens its remote (`tv`). */
+/**
+ * The Versus TVs that are on and show the group; picking one opens its remote (`tv`), + adds
+ * one with the code it shows (`addTv`).
+ */
 export default function Page() {
     const insets = useInsets(true);
     const t = useRemoteTokens();
@@ -31,6 +41,8 @@ export default function Page() {
     const tvs = tvsQuery.data ?? [];
     const liveIds = useTvMatches(groupId, seasonId ?? null).map((i) => i.id);
     const groupName = group?.data?.name ?? 'your group';
+    const androidPlus = useAndroidIcon('plus', t.text);
+    const plusIcon = Platform.OS === 'ios' ? 'plus' : androidPlus;
 
     // what the TV shows, as the remote's tiles say it
     const showing = (tv: Tv) => {
@@ -45,6 +57,15 @@ export default function Page() {
             <Stack.Screen
                 options={{ ...useNavStyles(), headerTitle: 'TV Remote' }}
             />
+            {plusIcon && (
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        icon={plusIcon}
+                        accessibilityLabel="Add TV"
+                        onPress={() => nav.navigate('addTv')}
+                    />
+                </Stack.Toolbar>
+            )}
             <ScrollView
                 style={{ flex: 1, backgroundColor: t.theme.color.bg }}
                 contentContainerStyle={{
@@ -65,7 +86,19 @@ export default function Page() {
                                 ? 'Couldn’t reach Versus TV'
                                 : `No TV shows ${groupName}`
                         }
-                        description={`Open ${env.tvBaseUrl.replace(/^https?:\/\//, '')}/tv on a TV, scan its code and enter your group code. It shows up here while it's on.`}
+                        description={
+                            <View style={{ alignItems: 'center', gap: 20 }}>
+                                <Hint>
+                                    A TV shows up here while it&apos;s on. Add
+                                    one with the code it shows.
+                                </Hint>
+                                <Button
+                                    title="Add TV"
+                                    variant="primary"
+                                    onPress={() => nav.navigate('addTv')}
+                                />
+                            </View>
+                        }
                     />
                 ) : (
                     <>

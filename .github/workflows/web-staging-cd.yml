@@ -198,7 +198,7 @@ jobs:
           for i in $(seq 1 30); do
             if curl -sf https://var.beerpong.laurinnotemann.dev/ | grep -q '<title>beerpong-var</title>' &&
               curl -sf https://var.beerpong.laurinnotemann.dev/tv/ | grep -q '<title>Versus TV</title>' &&
-              [ "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' 'https://beerpong.lb.staging.laurinnotemann.dev/tv/remote/x?k=y')" = '301 https://var.beerpong.laurinnotemann.dev/tv/remote/x?k=y' ]; then
+              [ "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' 'https://beerpong.lb.staging.laurinnotemann.dev/tv/')" = '301 https://var.beerpong.laurinnotemann.dev/tv/' ]; then
               ok=1
               break
             fi

@@ -6,7 +6,6 @@ import { FullscreenButton } from '~/tv/components/FullscreenButton';
 import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { LiveMatchPanel } from '~/tv/components/LiveMatchPanel';
-import { Qr } from '~/tv/components/Qr';
 import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import {
     type DisplayConfig,
@@ -20,7 +19,7 @@ import { preloadFrames, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips
 import type { Board, LeaderboardRow } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
-/** The TV: what's on it comes from the phones that scan its QR code (see remote.$id.tsx). */
+/** The TV: what's on it comes from the app's TV remote, which adds it with the code it shows. */
 export const Route = createFileRoute('/tv/')({
     // everything here depends on this browser's identity in localStorage
     ssr: false,
@@ -29,9 +28,8 @@ export const Route = createFileRoute('/tv/')({
 
 interface Identity {
     id: string;
-    key: string;
     secret: string;
-    /** the QR code's short link; the server hands it out on the first register */
+    /** what it shows to be added in the app; the server hands it out on the first register */
     code: string | null;
     config: DisplayConfig;
     refreshToken: string | null;
@@ -42,7 +40,7 @@ const STORAGE_KEY = 'versus-tv';
 function loadIdentity(): Identity {
     try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
-        if (stored?.id && stored?.key && stored?.secret) {
+        if (stored?.id && stored?.secret) {
             return {
                 ...stored,
                 code: stored.code ?? null,
@@ -55,7 +53,6 @@ function loadIdentity(): Identity {
     }
     return {
         id: randomToken(),
-        key: randomToken(),
         secret: randomToken(24),
         code: null,
         config: emptyConfig,
@@ -77,9 +74,9 @@ function Tv() {
     }, [identity]);
 
     const register = useCallback(async () => {
-        const { id, key, secret, code, config, refreshToken } = identity;
+        const { id, secret, code, config, refreshToken } = identity;
         const res = await registerDisplay({
-            data: { id, key, secret, code, config, refreshToken },
+            data: { id, secret, code, config, refreshToken },
         });
         setIdentity((i) => ({ ...i, code: res.code, config: res.config }));
         setRegistered(true);
@@ -129,7 +126,6 @@ function Tv() {
     useEffect(() => preloadFrames(liveMatches.current), [board.data]);
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
-    const remoteUrl = identity.code ? `${location.origin}/tv/rem/${identity.code}` : undefined;
     const { config } = identity;
 
     return (
@@ -138,13 +134,12 @@ function Tv() {
                 <Screen
                     board={board.data ?? null}
                     config={config}
-                    remoteUrl={remoteUrl}
                     offline={!connected || board.isError}
                     clip={clips[0]}
                     onClipDone={clipDone}
                 />
             ) : (
-                <Pairing remoteUrl={remoteUrl} />
+                <Pairing code={identity.code} />
             )}
             {/* it sits in the corner a clip from the right plays in */}
             {!clips.length && <FullscreenButton />}
@@ -152,24 +147,23 @@ function Tv() {
     );
 }
 
-/** before a phone put a group on it: one big QR code */
-function Pairing({ remoteUrl }: { remoteUrl: string | undefined }) {
+/** before the app put a group on it: the code to add it with */
+function Pairing({ code }: { code: string | null }) {
     return (
         <main className="grid h-screen place-items-center">
-            <div className="rise flex items-center gap-[6rem]">
-                <Qr value={remoteUrl} className="size-[30rem]" />
-                <div className="flex max-w-[44rem] flex-col gap-[2rem]">
-                    <div className="text-[2rem] font-semibold tracking-[0.3em] text-text-3">
-                        VERSUS TV
-                    </div>
-                    <h1 className="text-[5.4rem] leading-[1.05] font-black">
-                        Scan to put your group on this screen
-                    </h1>
-                    <p className="text-[2rem] text-text-2">
-                        Open your camera, scan the code and enter your group code. Anyone who scans
-                        it can change what's shown.
-                    </p>
+            <div className="rise flex max-w-[80rem] flex-col items-center gap-[3rem] text-center">
+                <div className="text-[2rem] font-semibold tracking-[0.3em] text-text-3">
+                    VERSUS TV
                 </div>
+                <h1 className="text-[5.4rem] leading-[1.05] font-black">
+                    Put your group on this screen
+                </h1>
+                <div className="tabular rounded-[2rem] bg-panel px-[4rem] py-[2rem] text-[12rem] leading-none font-black tracking-[0.2em]">
+                    {code ?? '······'}
+                </div>
+                <p className="text-[2.2rem] text-text-2">
+                    In the Versus app, open Settings → TV Remote → Add TV and enter this code.
+                </p>
             </div>
         </main>
     );
@@ -178,14 +172,12 @@ function Pairing({ remoteUrl }: { remoteUrl: string | undefined }) {
 function Screen({
     board,
     config,
-    remoteUrl,
     offline,
     clip,
     onClipDone,
 }: {
     board: Board | null;
     config: DisplayConfig;
-    remoteUrl: string | undefined;
     offline: boolean;
     clip: ScoreClip | undefined;
     onClipDone: () => void;
@@ -214,7 +206,7 @@ function Screen({
         >
             {clipPanel}
             <main className="tv-board relative z-10 flex h-screen flex-col gap-[2rem] bg-bg p-[2.5rem]">
-                <Header board={board} config={config} remoteUrl={remoteUrl} offline={offline} />
+                <Header board={board} config={config} offline={offline} />
                 {!board ? (
                     <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
                         Loading…
@@ -270,12 +262,10 @@ function Screen({
 function Header({
     board,
     config,
-    remoteUrl,
     offline,
 }: {
     board: Board | null;
     config: DisplayConfig;
-    remoteUrl: string | undefined;
     offline: boolean;
 }) {
     const now = useNow(10_000);
@@ -304,12 +294,6 @@ function Header({
                     ) : (
                         new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     )}
-                </div>
-            </div>
-            <div className="flex items-center gap-[1rem]">
-                <Qr value={remoteUrl} className="size-[6.5rem]" />
-                <div className="w-[7rem] text-[1.1rem] leading-snug text-text-3">
-                    Scan to control this screen
                 </div>
             </div>
         </header>

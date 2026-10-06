@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { TvMatch } from '@/api/calls/tvHooks';
+import { Icon, IconName } from '@/components/Icon';
 import { LiveTimer } from '@/components/liveMatch/LiveTimer';
 import { pressFeedback } from '@/components/liveMatch/motion';
 import { useNextTokens, withAlpha } from '@/components/next/tokens';
@@ -10,8 +11,8 @@ import PressableScale from '@/components/PressableScale';
 import { triggerHapticBump } from '@/haptics';
 import { Scope, Screen } from '@/lib/tvDisplay';
 
-// The TV remote's controls, after the web remote (apps/web, routes/tv/remote.$id.tsx): tiles
-// for what the TV shows, cards to pick matches with, the TV's green for what's chosen.
+// The TV remote's controls: a list of what the TV can show, cards to pick matches with, the
+// TV's green for what's chosen.
 
 export function useRemoteTokens() {
     const t = useNextTokens();
@@ -61,170 +62,104 @@ export function Hint({ children }: { children: React.ReactNode }) {
     );
 }
 
-/** one of the things the TV can show, with a drawing of it */
-export function ScreenTile({
-    screen,
-    label,
-    caption,
-    selected,
-    disabled,
-    onPress,
-}: {
-    screen: Screen;
+export interface Option<T extends string> {
+    value: T;
     label: string;
     caption: string;
-    selected: boolean;
+    icon: IconName;
     disabled?: boolean;
-    onPress: () => void;
-}) {
-    const t = useRemoteTokens();
-    const reducedMotion = useReducedMotion();
-
-    return (
-        <PressableScale
-            {...pressFeedback(reducedMotion)}
-            onPress={select(onPress)}
-            disabled={disabled}
-            accessibilityRole="button"
-            accessibilityState={{ selected, disabled }}
-            accessibilityLabel={`${label}, ${caption}`}
-            style={{ flex: 1, opacity: disabled ? 0.4 : 1 }}
-            pressableStyle={{
-                gap: 10,
-                padding: 10,
-                borderRadius: 18,
-                borderCurve: 'continuous',
-                borderWidth: 1.5,
-                borderColor: selected ? t.accent : t.hairline,
-                backgroundColor: selected ? t.accentTint : t.surface,
-            }}
-        >
-            <Sketch screen={screen} active={selected} />
-            <View style={{ paddingHorizontal: 2 }}>
-                <Text
-                    style={{ color: t.text, fontSize: 16, fontWeight: '700' }}
-                >
-                    {label}
-                </Text>
-                <Text
-                    numberOfLines={1}
-                    style={{ color: t.textSecondary, fontSize: 12 }}
-                >
-                    {caption}
-                </Text>
-            </View>
-        </PressableScale>
-    );
 }
 
-/** a small drawing of a screen's layout on the TV */
-function Sketch({ screen, active }: { screen: Screen; active: boolean }) {
+/** a list of options in one card, one chosen: what the TV shows */
+export function OptionList<T extends string>({
+    value,
+    onChange,
+    options,
+}: {
+    value: T;
+    onChange: (value: T) => void;
+    options: Option<T>[];
+}) {
     const t = useRemoteTokens();
-    const ink = withAlpha(t.isLight ? '#000000' : '#FFFFFF', 0.35);
-    const lines = (n: number) =>
-        Array.from({ length: n }, (_, i) => (
-            <View
-                key={i}
-                style={{ height: 3, borderRadius: 2, backgroundColor: ink }}
-            />
-        ));
-    const match = (
+
+    return (
         <View
             style={{
-                flex: 1,
-                flexDirection: 'row',
-                gap: 1,
-                borderRadius: 3,
+                borderRadius: 20,
+                borderCurve: 'continuous',
+                borderWidth: 1,
+                borderColor: t.hairline,
+                backgroundColor: t.surface,
                 overflow: 'hidden',
             }}
         >
-            <View
-                style={{ flex: 1, backgroundColor: withAlpha(t.blue, 0.7) }}
-            />
-            <View style={{ flex: 1, backgroundColor: withAlpha(t.red, 0.7) }} />
-        </View>
-    );
-
-    return (
-        <View
-            style={{
-                aspectRatio: 16 / 9,
-                flexDirection: 'row',
-                gap: 6,
-                padding: 7,
-                borderRadius: 10,
-                borderCurve: 'continuous',
-                borderWidth: 1,
-                borderColor: active ? withAlpha(t.accent, 0.5) : t.hairline,
-                backgroundColor: active
-                    ? '#000000'
-                    : t.isLight
-                      ? '#F2F2F5'
-                      : '#0E0E10',
-            }}
-        >
-            {screen === 'auto' && (
-                <>
-                    <View
-                        style={{ flex: 1.45, justifyContent: 'space-around' }}
-                    >
-                        {lines(5)}
-                    </View>
-                    {match}
-                </>
-            )}
-            {screen === 'leaderboard' && (
-                <View style={{ flex: 1, gap: 4 }}>
-                    <View
-                        style={{
-                            height: '50%',
-                            flexDirection: 'row',
-                            alignItems: 'flex-end',
-                            justifyContent: 'center',
-                            gap: 4,
+            {options.map((o, idx) => {
+                const on = o.value === value;
+                return (
+                    <Pressable
+                        key={o.value}
+                        disabled={o.disabled}
+                        onPress={select(() => onChange(o.value))}
+                        accessibilityRole="radio"
+                        accessibilityState={{
+                            checked: on,
+                            disabled: o.disabled,
                         }}
+                        accessibilityLabel={`${o.label}, ${o.caption}`}
+                        style={({ pressed }) => ({
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 14,
+                            paddingVertical: 12,
+                            paddingHorizontal: 14,
+                            borderTopWidth: idx ? 1 : 0,
+                            borderTopColor: t.hairline,
+                            backgroundColor: pressed
+                                ? t.surfacePressed
+                                : undefined,
+                            opacity: o.disabled ? 0.4 : 1,
+                        })}
                     >
-                        {[0.66, 1, 0.5].map((h, i) => (
-                            <View
-                                key={i}
-                                style={{
-                                    width: 12,
-                                    height: `${h * 100}%`,
-                                    borderTopLeftRadius: 2,
-                                    borderTopRightRadius: 2,
-                                    backgroundColor: i === 1 ? '#F2C14E' : ink,
-                                }}
+                        <View
+                            style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 10,
+                                borderCurve: 'continuous',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: on
+                                    ? t.accentTint
+                                    : withAlpha(t.textSecondary, 0.12),
+                            }}
+                        >
+                            <Icon
+                                name={o.icon}
+                                size={20}
+                                color={on ? t.accent : t.textSecondary}
                             />
-                        ))}
-                    </View>
-                    <View
-                        style={{
-                            flex: 1,
-                            flexDirection: 'row',
-                            gap: 6,
-                        }}
-                    >
-                        {[0, 1].map((col) => (
-                            <View
-                                key={col}
+                        </View>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                            <Text
                                 style={{
-                                    flex: 1,
-                                    justifyContent: 'space-around',
+                                    color: t.text,
+                                    fontSize: 16,
+                                    fontWeight: on ? '700' : '500',
                                 }}
                             >
-                                {lines(2)}
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            )}
-            {screen === 'live' && (
-                <>
-                    {match}
-                    {match}
-                </>
-            )}
-            {screen === 'focus' && match}
+                                {o.label}
+                            </Text>
+                            <Text
+                                numberOfLines={1}
+                                style={{ color: t.textSecondary, fontSize: 13 }}
+                            >
+                                {o.caption}
+                            </Text>
+                        </View>
+                        <Radio on={on} />
+                    </Pressable>
+                );
+            })}
         </View>
     );
 }
@@ -376,7 +311,7 @@ export function MatchSummary({
     );
 }
 
-/** a row of options, one chosen, like the web remote's scope switch */
+/** a row of options, one chosen: the leaderboard's scope */
 export function Segmented<T extends string>({
     value,
     onChange,
@@ -483,11 +418,11 @@ export function RemoteButton({
     );
 }
 
-export const screens: { value: Screen; label: string }[] = [
-    { value: 'auto', label: 'Auto' },
-    { value: 'leaderboard', label: 'Leaderboard' },
-    { value: 'live', label: 'Live' },
-    { value: 'focus', label: 'One Match' },
+export const screens: { value: Screen; label: string; icon: IconName }[] = [
+    { value: 'auto', label: 'Auto', icon: 'view-split-vertical' },
+    { value: 'leaderboard', label: 'Leaderboard', icon: 'podium' },
+    { value: 'live', label: 'Live Matches', icon: 'view-grid-outline' },
+    { value: 'focus', label: 'One Match', icon: 'fullscreen' },
 ];
 
 export const scopes: { value: Scope; label: string }[] = [

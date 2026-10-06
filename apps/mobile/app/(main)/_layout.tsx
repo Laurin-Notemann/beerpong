@@ -61,6 +61,7 @@ export default function MainLayout() {
                 name="minMatchesToQualifySettings"
                 options={modalStyles}
             />
+            <Stack.Screen name="addTv" options={modalStyles} />
 
             <Stack.Screen
                 name="createGroupCustomGameModal"

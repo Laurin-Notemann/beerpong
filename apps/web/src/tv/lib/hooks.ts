@@ -10,13 +10,13 @@ export type DisplayEvent =
     | { type: 'reload' };
 
 /**
- * Follows a display's server-sent events. When the stream fails for good (the server restarted
- * and forgot the display, or it's unreachable), `onLost` runs and the stream opens again after
- * it: the TV registers itself again there, a phone just waits for the TV to do that.
+ * Follows the TV's server-sent events. When the stream fails for good (the server restarted
+ * and forgot the TV, or it's unreachable), `onLost` runs and the stream opens again after it:
+ * the TV registers itself again there. `secret` goes as `key` (see the events route).
  */
 export function useDisplayEvents(
     id: string | undefined,
-    key: string | undefined,
+    secret: string | undefined,
     onEvent: (event: DisplayEvent) => void,
     onLost: () => Promise<unknown> | void
 ) {
@@ -25,14 +25,14 @@ export function useDisplayEvents(
     handlers.current = { onEvent, onLost };
 
     useEffect(() => {
-        if (!id || !key) return;
+        if (!id || !secret) return;
         let source: EventSource | undefined;
         let retry: ReturnType<typeof setTimeout> | undefined;
         let closed = false;
 
         const open = () => {
             source = new EventSource(
-                `/tv/api/displays/${id}/events?key=${encodeURIComponent(key)}`
+                `/tv/api/displays/${id}/events?key=${encodeURIComponent(secret)}`
             );
             source.onopen = () => setConnected(true);
             source.onmessage = (e) => handlers.current.onEvent(JSON.parse(e.data));
@@ -52,18 +52,18 @@ export function useDisplayEvents(
             clearTimeout(retry);
             source?.close();
         };
-    }, [id, key]);
+    }, [id, secret]);
 
     return connected;
 }
 
 /**
- * what the display shows, refetched when its config changes and when the group changes;
+ * what the TV shows, refetched when its config changes and when the group changes;
  * `onSocketEvent` gets each of the group's socket events as it arrives
  */
 export function useBoard(
     id: string | undefined,
-    key: string | undefined,
+    secret: string | undefined,
     config: DisplayConfig | undefined,
     onSocketEvent?: (event: unknown) => void
 ) {
@@ -78,8 +78,8 @@ export function useBoard(
 
     return useQuery({
         queryKey: ['board', id, config?.groupId, config?.scope, config?.seasonId],
-        queryFn: () => getBoard({ data: { id, key } }),
-        enabled: !!id && !!key && !!groupId,
+        queryFn: () => getBoard({ data: { id, key: secret } }),
+        enabled: !!id && !!secret && !!groupId,
         // the socket brings changes; this is the safety net if it misses some
         refetchInterval: 60_000,
         placeholderData: (previous) => previous,
@@ -162,7 +162,7 @@ export function useNow(ms = 1_000) {
     return now;
 }
 
-/** a random URL-safe token, for display ids and keys */
+/** a random URL-safe token, for display ids and secrets */
 export function randomToken(bytes = 18) {
     const data = crypto.getRandomValues(new Uint8Array(bytes));
     return btoa(String.fromCharCode(...data))

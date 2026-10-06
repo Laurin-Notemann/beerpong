@@ -7,22 +7,18 @@ import { type DisplayConfig, type DisplayPatch, parseConfig } from '@/lib/tvDisp
  * API session) in localStorage and registers it again when it reconnects, so a restart of this
  * server only costs a reconnect.
  *
- * Each TV has two secrets: `key` lets a phone control it, `secret` never leaves the TV and is
- * what it registers and reads the API session with. The QR code only carries `code`, a short
- * link to the remote with the key (see routes/tv/rem.$code.ts), so the code has fewer modules.
+ * A TV's `secret` never leaves it; it registers and reads with it. Phones control TVs through
+ * the app (appRemote.ts): a TV without a group shows its `code`, which the app's Add TV takes.
  */
 export interface Display {
     id: string;
-    key: string;
     secret: string;
-    /** the short link's code; the TV keeps the one it got and asks for it again on register */
+    /** what the TV shows to be added in the app; it keeps the one it got and asks for it again */
     code: string;
     config: DisplayConfig;
     /** the TV's own API user (see api.ts `signup`) */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
-    /** the TV's own event streams; the app's remote lists TVs with one open */
-    tvListeners: number;
     /** what the app's remote calls it, from its browser (`deviceName`) */
     name: string;
     lastSeen: number;
@@ -30,9 +26,9 @@ export interface Display {
 
 export type DisplayEvent =
     | { type: 'config'; config: DisplayConfig }
-    /** only sent to the TV itself, so it can keep its session across server restarts */
+    /** so the TV can keep its session across server restarts */
     | { type: 'session'; refreshToken: string }
-    /** only sent to the TV itself: reload the page, to pick up a deploy */
+    /** reload the page, to pick up a deploy */
     | { type: 'reload' };
 
 // kept on globalThis so dev reloads of this module don't forget the TVs
@@ -47,13 +43,15 @@ const same = (a: string, b: string) =>
 const isToken = (v: unknown): v is string =>
     typeof v === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(v);
 
-const CODE_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+// typed into the app from across the room: capitals only, none that look alike (0 O 1 I)
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const CODE = /^[A-HJ-NP-Z2-9]{6}$/;
 
-/** the code the TV asks for, unless it's malformed or another TV has it */
+/** the code the TV asks for, unless it's malformed (an older kind) or another TV has it */
 function codeFor(id: string, wanted: unknown) {
     const taken = (code: string) =>
         [...displays.values()].some((d) => d.id !== id && d.code === code);
-    if (typeof wanted === 'string' && /^[A-Za-z0-9]{6}$/.test(wanted) && !taken(wanted)) {
+    if (typeof wanted === 'string' && CODE.test(wanted) && !taken(wanted)) {
         return wanted;
     }
     let code;
@@ -69,7 +67,9 @@ function codeFor(id: string, wanted: unknown) {
  * counts until a ping to it fails.
  */
 export function byGroup(groupId: string) {
-    return [...displays.values()].filter((d) => d.config.groupId === groupId && d.tvListeners > 0);
+    return [...displays.values()].filter(
+        (d) => d.config.groupId === groupId && d.listeners.size > 0
+    );
 }
 
 /**
@@ -118,9 +118,10 @@ export function deviceName(userAgent: unknown) {
     return os ? `${browser} on ${os}` : browser;
 }
 
-/** the display behind a QR code's short link */
+/** the display showing this code, as someone typed it */
 export function byCode(code: string) {
-    return [...displays.values()].find((d) => d.code === code);
+    const typed = code.replace(/\s+/g, '').toUpperCase();
+    return [...displays.values()].find((d) => d.code === typed);
 }
 
 // TVs nobody has watched for this long are forgotten; one that comes back registers again
@@ -136,14 +137,13 @@ function forgetIdle() {
 /** a TV (re)announcing itself; the server's config wins, it may be newer than the TV's copy */
 export function register(input: {
     id: unknown;
-    key: unknown;
     secret: unknown;
     code: unknown;
     config: unknown;
     refreshToken: unknown;
 }): Display {
-    const { id, key, secret } = input;
-    if (!isToken(id) || !isToken(key) || !isToken(secret)) {
+    const { id, secret } = input;
+    if (!isToken(id) || !isToken(secret)) {
         throw new DisplayError('invalid display');
     }
     forgetIdle();
@@ -151,20 +151,17 @@ export function register(input: {
     if (known) {
         known.lastSeen = Date.now();
         if (!same(known.secret, secret)) throw new DisplayError('display id taken');
-        known.key = key;
         known.code = codeFor(id, input.code);
         known.refreshToken ??= typeof input.refreshToken === 'string' ? input.refreshToken : null;
         return known;
     }
     const display: Display = {
         id,
-        key,
         secret,
         code: codeFor(id, input.code),
         config: parseConfig(input.config),
         refreshToken: typeof input.refreshToken === 'string' ? input.refreshToken : null,
         listeners: new Set(),
-        tvListeners: 0,
         name: 'TV',
         lastSeen: Date.now(),
     };
@@ -172,18 +169,14 @@ export function register(input: {
     return display;
 }
 
-/** the display, if `key` is its key (a phone) or its secret (the TV) */
-export function authorize(id: unknown, keyOrSecret: unknown) {
+/** the display, if `secret` is its secret: the TV itself */
+export function authorize(id: unknown, secret: unknown) {
     const display = typeof id === 'string' ? displays.get(id) : undefined;
-    if (
-        !display ||
-        typeof keyOrSecret !== 'string' ||
-        !(same(display.key, keyOrSecret) || same(display.secret, keyOrSecret))
-    ) {
+    if (!display || typeof secret !== 'string' || !same(display.secret, secret)) {
         throw new DisplayError('unknown display');
     }
     display.lastSeen = Date.now();
-    return { display, isTv: same(display.secret, keyOrSecret) };
+    return display;
 }
 
 export function update(display: Display, patch: DisplayPatch & Partial<DisplayConfig>) {
@@ -205,14 +198,7 @@ function emit(display: Display, event: DisplayEvent) {
 }
 
 /** listens to a display's changes; returns the unsubscribe */
-export function subscribe(
-    display: Display,
-    listener: (event: DisplayEvent) => void,
-    isTv: boolean
-) {
+export function subscribe(display: Display, listener: (event: DisplayEvent) => void) {
     display.listeners.add(listener);
-    if (isTv) display.tvListeners++;
-    return () => {
-        if (display.listeners.delete(listener) && isTv) display.tvListeners--;
-    };
+    return () => display.listeners.delete(listener);
 }

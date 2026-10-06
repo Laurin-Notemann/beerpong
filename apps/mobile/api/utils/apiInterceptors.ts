@@ -24,6 +24,8 @@ const EXPECTED_ERROR_CODES = new Set([
     'liveMatchNotFound',
     // the TV went off while the TV remote showed it
     'tvNotFound',
+    // a mistyped TV code (Add TV)
+    'tvCodeNotFound',
     // the app signs up again (useAuth)
     'authRefreshInvalidToken',
 ]);

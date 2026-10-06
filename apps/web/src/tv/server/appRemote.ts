@@ -1,11 +1,11 @@
 import { emptyConfig } from '@/lib/tvDisplay';
-import { apiFor, ApiError, userGroupIds } from '~/tv/server/api';
-import { type Display, update } from '~/tv/server/displays';
+import { apiFor, ApiError, signup, userGroupIds } from '~/tv/server/api';
+import { type Display, setSession, update } from '~/tv/server/displays';
 
 /**
- * The app's TV remote (Settings → TV Remote, routes/tv/api/groups.*) controls the TVs that show
- * the user's group. Instead of a TV's key, the phone sends its own API access token: anyone in
- * the group may control its TVs, like anyone who scans a TV's QR code.
+ * The app's TV remote (Settings → TV Remote, routes/tv/api/groups.*) puts the user's group on a
+ * TV with the code the TV shows, and controls the TVs that show the group. The phone sends its
+ * own API access token: anyone in the group may control its TVs.
  */
 
 // a phone's token -> its user's groups, so a remote's polling doesn't ask the API every time
@@ -48,6 +48,21 @@ export async function asMember(
     }
     if (!groupIds.includes(groupId)) return fail(403, 'authUserNotInGroup');
     return handle();
+}
+
+/**
+ * Puts the group on the TV: the TV's own API user joins it (a member without a profile, so it
+ * doesn't show up in the group) and leaves the group it showed before.
+ */
+export async function putGroupOn(display: Display, groupId: string) {
+    if (display.config.groupId === groupId) return;
+    if (!display.refreshToken) setSession(display, await signup(display.id));
+    const api = apiFor(display.refreshToken!);
+    await api.join(groupId);
+    const group = await api.group(groupId);
+    const previous = display.config.groupId;
+    if (previous && previous !== groupId) await api.leave(previous).catch(() => {});
+    update(display, { ...emptyConfig, groupId, groupName: group.name ?? '' });
 }
 
 /** takes the group off the TV; the TV leaves it, so it no longer counts as a member */

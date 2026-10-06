@@ -38,7 +38,7 @@ export const emptyConfig: DisplayConfig = {
     focusMatchId: null,
 };
 
-/** what a phone may change; the group goes through connectGroup, which joins it */
+/** what a phone may change; the group goes on with the app's Add TV, which joins it */
 export type DisplayPatch = Partial<
     Pick<
         DisplayConfig,

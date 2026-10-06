@@ -20,7 +20,6 @@
         "@tanstack/react-router": "^1.170.41",
         "@tanstack/react-start": "^1.168.60",
         "nitro": "^3.0.260903-beta",
-        "qrcode": "^1.5.4",
         "react": "^19.3.0",
         "react-dom": "^19.3.0"
     },
@@ -28,7 +27,6 @@
         "@csstools/postcss-cascade-layers": "^6.0.1",
         "@tailwindcss/vite": "^4.3.3",
         "@types/node": "^26.6.4",
-        "@types/qrcode": "^1.5.6",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.1.1",

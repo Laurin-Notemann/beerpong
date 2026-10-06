@@ -63,6 +63,24 @@ export function useTvs(groupId: ApiId | null) {
     });
 }
 
+/** puts the group on the TV that shows `code` (Add TV); resolves to that TV */
+export function useAddTv(groupId: ApiId | null) {
+    const { api } = useApi();
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (code: string) => {
+            if (!groupId) throw new Error('no group');
+            const res = await (
+                await api
+            ).post<{ id: string }>(tvsUrl(groupId), { code });
+            return res.data;
+        },
+        onSettled: () =>
+            qc.invalidateQueries({ queryKey: tvsKey(groupId ?? 'NULL') }),
+    });
+}
+
 /** what the remote does to one TV; a change shows right away */
 export function useTvRemote(groupId: ApiId | null, tvId: string | undefined) {
     const { api } = useApi();

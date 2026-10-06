@@ -14,8 +14,6 @@ import { Route as TvRouteImport } from './routes/tv'
 import { Route as SimulatorIndexRouteImport } from './routes/_simulator/index'
 import { Route as SimulatorCodeRouteImport } from './routes/_simulator/$code'
 import { Route as TvIndexRouteImport } from './routes/tv/index'
-import { Route as TvRemCodeRouteImport } from './routes/tv/rem.$code'
-import { Route as TvRemoteIdRouteImport } from './routes/tv/remote.$id'
 import { Route as TvApiClipsIdRouteImport } from './routes/tv/api/clips.$id'
 import { Route as TvApiDisplaysIdEventsRouteImport } from './routes/tv/api/displays.$id.events'
 import { Route as TvApiGroupsGroupIdDisplaysRouteImport } from './routes/tv/api/groups.$groupId.displays'
@@ -44,16 +42,6 @@ const SimulatorCodeRoute = SimulatorCodeRouteImport.update({
 const TvIndexRoute = TvIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => TvRoute,
-} as any)
-const TvRemCodeRoute = TvRemCodeRouteImport.update({
-  id: '/rem/$code',
-  path: '/rem/$code',
-  getParentRoute: () => TvRoute,
-} as any)
-const TvRemoteIdRoute = TvRemoteIdRouteImport.update({
-  id: '/remote/$id',
-  path: '/remote/$id',
   getParentRoute: () => TvRoute,
 } as any)
 const TvApiClipsIdRoute = TvApiClipsIdRouteImport.update({
@@ -90,8 +78,6 @@ export interface FileRoutesByFullPath {
   '/tv': typeof TvRouteWithChildren
   '/$code': typeof SimulatorCodeRoute
   '/tv/': typeof TvIndexRoute
-  '/tv/rem/$code': typeof TvRemCodeRoute
-  '/tv/remote/$id': typeof TvRemoteIdRoute
   '/tv/api/clips/$id': typeof TvApiClipsIdRoute
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/displays': typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
@@ -102,8 +88,6 @@ export interface FileRoutesByTo {
   '/$code': typeof SimulatorCodeRoute
   '/': typeof SimulatorIndexRoute
   '/tv': typeof TvIndexRoute
-  '/tv/rem/$code': typeof TvRemCodeRoute
-  '/tv/remote/$id': typeof TvRemoteIdRoute
   '/tv/api/clips/$id': typeof TvApiClipsIdRoute
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/displays': typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
@@ -117,8 +101,6 @@ export interface FileRoutesById {
   '/_simulator/$code': typeof SimulatorCodeRoute
   '/_simulator/': typeof SimulatorIndexRoute
   '/tv/': typeof TvIndexRoute
-  '/tv/rem/$code': typeof TvRemCodeRoute
-  '/tv/remote/$id': typeof TvRemoteIdRoute
   '/tv/api/clips/$id': typeof TvApiClipsIdRoute
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/displays': typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
@@ -132,8 +114,6 @@ export interface FileRouteTypes {
     | '/tv'
     | '/$code'
     | '/tv/'
-    | '/tv/rem/$code'
-    | '/tv/remote/$id'
     | '/tv/api/clips/$id'
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/displays'
@@ -144,8 +124,6 @@ export interface FileRouteTypes {
     | '/$code'
     | '/'
     | '/tv'
-    | '/tv/rem/$code'
-    | '/tv/remote/$id'
     | '/tv/api/clips/$id'
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/displays'
@@ -158,8 +136,6 @@ export interface FileRouteTypes {
     | '/_simulator/$code'
     | '/_simulator/'
     | '/tv/'
-    | '/tv/rem/$code'
-    | '/tv/remote/$id'
     | '/tv/api/clips/$id'
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/displays'
@@ -207,20 +183,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/tv/'
       preLoaderRoute: typeof TvIndexRouteImport
-      parentRoute: typeof TvRoute
-    }
-    '/tv/rem/$code': {
-      id: '/tv/rem/$code'
-      path: '/rem/$code'
-      fullPath: '/tv/rem/$code'
-      preLoaderRoute: typeof TvRemCodeRouteImport
-      parentRoute: typeof TvRoute
-    }
-    '/tv/remote/$id': {
-      id: '/tv/remote/$id'
-      path: '/remote/$id'
-      fullPath: '/tv/remote/$id'
-      preLoaderRoute: typeof TvRemoteIdRouteImport
       parentRoute: typeof TvRoute
     }
     '/tv/api/clips/$id': {
@@ -307,8 +269,6 @@ const TvApiGroupsGroupIdDisplaysRouteWithChildren =
 
 interface TvRouteChildren {
   TvIndexRoute: typeof TvIndexRoute
-  TvRemCodeRoute: typeof TvRemCodeRoute
-  TvRemoteIdRoute: typeof TvRemoteIdRoute
   TvApiClipsIdRoute: typeof TvApiClipsIdRoute
   TvApiDisplaysIdEventsRoute: typeof TvApiDisplaysIdEventsRoute
   TvApiGroupsGroupIdDisplaysRoute: typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
@@ -316,8 +276,6 @@ interface TvRouteChildren {
 
 const TvRouteChildren: TvRouteChildren = {
   TvIndexRoute: TvIndexRoute,
-  TvRemCodeRoute: TvRemCodeRoute,
-  TvRemoteIdRoute: TvRemoteIdRoute,
   TvApiClipsIdRoute: TvApiClipsIdRoute,
   TvApiDisplaysIdEventsRoute: TvApiDisplaysIdEventsRoute,
   TvApiGroupsGroupIdDisplaysRoute: TvApiGroupsGroupIdDisplaysRouteWithChildren,

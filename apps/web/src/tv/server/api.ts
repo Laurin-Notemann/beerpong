@@ -79,13 +79,11 @@ export function apiFor(refreshToken: string) {
         call<T>(path, { method: 'POST', token: await accessToken(refreshToken), body });
 
     return {
-        groupByInviteCode: (code: string) =>
-            get<Dto.GroupDto>(`/groups?inviteCode=${encodeURIComponent(code)}`),
         async join(groupId: string) {
             try {
                 await post(`/groups/${groupId}/join`);
             } catch (err) {
-                // joined before, e.g. when a phone connects the TV to the same group again
+                // joined before, e.g. when the TV is added to the same group again
                 if (!(err instanceof ApiError && err.code === 'groupAlreadyInGroup')) throw err;
             }
         },

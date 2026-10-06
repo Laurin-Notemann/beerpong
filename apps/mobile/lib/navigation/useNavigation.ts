@@ -21,6 +21,7 @@ export type RootStackParamList = {
     minMatchesToQualifySettings: undefined;
     tvRemote: undefined;
     tv: { id: string };
+    addTv: undefined;
     saveSeason: undefined;
     player: { id: string };
     match: { id: string; seasonId: string };
