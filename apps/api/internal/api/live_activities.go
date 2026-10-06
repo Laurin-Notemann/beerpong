@@ -33,6 +33,11 @@ const (
 	liveActivityAttributes = "LiveActivityAttributes"
 	// how long a finished match's score stays on the Lock Screen
 	finishedActivityDismissal = 15 * time.Minute
+	// how often an end that didn't go out (APNs throttles a channel with 429s) is
+	// tried again, and for how long: iOS ends a Live Activity 8 hours after it
+	// started anyway
+	activityEndRetryInterval = time.Minute
+	liveActivityLifetime     = 8 * time.Hour
 	// the most matches a widget push carries, and moves per match; a silent
 	// push can be at most 4 KB
 	maxWidgetMatches = 4
@@ -308,15 +313,22 @@ func (p *liveScorePushes) next() (id, groupID string, found bool) {
 
 // RunLiveScorePushes sends the queued pushes, one live match at a time, until
 // ctx is done. A failure is logged and reported; the next change tries again.
+// A live match's end has no next change, so the ends that didn't go out are
+// sent again every minute (and once at start, for the ones a restart lost).
 func (s *Server) RunLiveScorePushes(ctx context.Context) {
 	if s.apns == nil {
 		return
 	}
+	retry := time.NewTicker(activityEndRetryInterval)
+	defer retry.Stop()
+	s.retryActivityEnds(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-s.pushes.wake:
+		case <-retry.C:
+			s.retryActivityEnds(ctx)
 		}
 		for {
 			id, groupID, found := s.pushes.next()
@@ -346,12 +358,9 @@ func (s *Server) pushLiveScore(ctx context.Context, groupID, id string) (err err
 	if err != nil {
 		return err
 	}
-	var score *liveScoreDTO
-	if lm.Display != nil {
-		score = new(liveScoreDTO)
-		if err := json.Unmarshal([]byte(*lm.Display), score); err != nil {
-			return err
-		}
+	score, err := displayOf(lm)
+	if err != nil {
+		return err
 	}
 
 	var errs []error
@@ -365,6 +374,38 @@ func (s *Server) pushLiveScore(ctx context.Context, groupID, id string) (err err
 	}
 	errs = append(errs, s.pushWidgets(ctx, groupID, tokens))
 	return errors.Join(errs...)
+}
+
+// displayOf is the score phones reported last, nil before the first.
+func displayOf(lm db.LiveMatch) (*liveScoreDTO, error) {
+	if lm.Display == nil {
+		return nil, nil
+	}
+	score := new(liveScoreDTO)
+	if err := json.Unmarshal([]byte(*lm.Display), score); err != nil {
+		return nil, err
+	}
+	return score, nil
+}
+
+// retryActivityEnds sends the ends of the Live Activities that are still on
+// phones although their live match ended. Like a push, a failure is logged and
+// reported, and the next round tries again.
+func (s *Server) retryActivityEnds(ctx context.Context) {
+	unsent, err := s.q.UnsentActivityEnds(ctx, s.now().Add(-liveActivityLifetime))
+	for _, lm := range unsent {
+		score, endErr := displayOf(lm)
+		if endErr == nil {
+			endErr = s.endActivities(ctx, lm, score)
+		}
+		if endErr != nil {
+			err = errors.Join(err, fmt.Errorf("live match %s: %w", lm.ID, endErr))
+		}
+	}
+	if err != nil && ctx.Err() == nil {
+		s.log.ErrorContext(ctx, "retrying live activity ends failed", "err", err)
+		observability.CaptureError(ctx, err)
+	}
 }
 
 // startActivities opens the live match's channel and starts its Live Activity
@@ -399,7 +440,8 @@ func (s *Server) startActivities(ctx context.Context, lm db.LiveMatch, score liv
 }
 
 // endActivities ends the live match's Live Activities: a finished one shows its
-// final score for a while, a discarded one goes away. Then the channel is freed.
+// final score until a while after the match ended, a discarded one goes away.
+// Then the channel is freed.
 func (s *Server) endActivities(ctx context.Context, lm db.LiveMatch, score *liveScoreDTO) error {
 	final := liveScoreDTO{}
 	if score != nil {
@@ -407,6 +449,10 @@ func (s *Server) endActivities(ctx context.Context, lm db.LiveMatch, score *live
 	}
 	payload := activityPayload("end", lm, final)
 	dismissal := s.now()
+	if lm.EndedAt != nil {
+		// a dismissal date in the past removes it right away
+		dismissal = *lm.EndedAt
+	}
 	if lm.Status == liveFinished {
 		dismissal = dismissal.Add(finishedActivityDismissal)
 	}

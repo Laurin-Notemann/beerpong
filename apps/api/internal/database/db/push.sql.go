@@ -114,6 +114,48 @@ func (q *Queries) SetLiveMatchDisplay(ctx context.Context, arg SetLiveMatchDispl
 	return err
 }
 
+const unsentActivityEnds = `-- name: UnsentActivityEnds :many
+SELECT id, group_id, season_id, created_by, status, started_at, last_activity_at, ended_at, last_seq, result_match_id, display, display_seq, activity_channel, activity_ended FROM live_matches
+WHERE status <> 'IN_PROGRESS' AND activity_channel IS NOT NULL AND NOT activity_ended AND started_at > $1
+`
+
+// Ended live matches whose Live Activities never got their end (a push failed, or the API
+// restarted before it went out), of those started after $1.
+func (q *Queries) UnsentActivityEnds(ctx context.Context, startedAt time.Time) ([]LiveMatch, error) {
+	rows, err := q.db.Query(ctx, unsentActivityEnds, startedAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []LiveMatch
+	for rows.Next() {
+		var i LiveMatch
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.SeasonID,
+			&i.CreatedBy,
+			&i.Status,
+			&i.StartedAt,
+			&i.LastActivityAt,
+			&i.EndedAt,
+			&i.LastSeq,
+			&i.ResultMatchID,
+			&i.Display,
+			&i.DisplaySeq,
+			&i.ActivityChannel,
+			&i.ActivityEnded,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertPushTokens = `-- name: UpsertPushTokens :exec
 INSERT INTO push_tokens (user_id, device_token, activity_start_token, updated_at)
 VALUES ($1, $2, $3, $4)

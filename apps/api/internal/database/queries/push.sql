@@ -28,3 +28,9 @@ UPDATE live_matches SET activity_channel = $2 WHERE id = $1 AND activity_channel
 
 -- name: SetLiveMatchActivityEnded :exec
 UPDATE live_matches SET activity_ended = true WHERE id = $1;
+
+-- name: UnsentActivityEnds :many
+-- Ended live matches whose Live Activities never got their end (a push failed, or the API
+-- restarted before it went out), of those started after $1.
+SELECT * FROM live_matches
+WHERE status <> 'IN_PROGRESS' AND activity_channel IS NOT NULL AND NOT activity_ended AND started_at > $1;
