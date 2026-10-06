@@ -18,11 +18,14 @@ const shade = (to: 'top' | 'bottom') => ({
  */
 export function CameraView({
     stream,
+    suspended = false,
     match,
     groupName,
     offline,
 }: {
     stream: MediaStream;
+    /** The Samsung decoder goes to the score clip until the board covers it again. */
+    suspended?: boolean;
     match: LiveMatchView | undefined;
     groupName: string;
     offline: boolean;
@@ -31,12 +34,16 @@ export function CameraView({
 
     useEffect(() => {
         const v = video.current!;
-        v.srcObject = stream;
-        v.play().catch(() => {});
+        if (!suspended) {
+            v.srcObject = stream;
+            v.play().catch(() => {});
+        }
         return () => {
+            v.pause();
             v.srcObject = null;
+            v.load();
         };
-    }, [stream]);
+    }, [stream, suspended]);
 
     return (
         <div className="relative h-screen overflow-hidden bg-black">
