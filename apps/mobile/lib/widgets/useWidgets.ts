@@ -242,6 +242,9 @@ export function useHomeScreenWidgets() {
 const supportsLiveActivities =
     Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 18;
 
+/** how long to wait for the push-to-start token; iOS has none while Live Activities are off in its Settings */
+const START_TOKEN_WAIT_MS = 10_000;
+
 let sentTokens: string | undefined;
 
 /**
@@ -253,7 +256,9 @@ export function usePushTokens() {
     const { api } = useApi();
     const liveActivities = useLocalSettingsStore((s) => s.liveActivities);
     const [deviceToken, setDeviceToken] = useState<string | null>();
-    const [startToken, setStartToken] = useState<string | null>(null);
+    // undefined until iOS gives it: sending null makes the API forget it, and a phone launched
+    // (also in the background, by a widget push) as a match starts would miss its Live Activity
+    const [startToken, setStartToken] = useState<string | null>();
     // a failed send is retried the next time the app comes to the foreground
     const [attempt, setAttempt] = useState(0);
 
@@ -282,13 +287,23 @@ export function usePushTokens() {
         const sub = addPushToStartTokenListener((event) =>
             setStartToken(event.activityPushToStartToken)
         );
-        return () => sub.remove();
+        const timeout = setTimeout(
+            () => setStartToken((token) => token ?? null),
+            START_TOKEN_WAIT_MS
+        );
+        return () => {
+            sub.remove();
+            clearTimeout(timeout);
+        };
     }, [liveActivities]);
 
-    const activityStartToken = liveActivities ? startToken : null;
+    const activityStartToken =
+        supportsLiveActivities && liveActivities ? startToken : null;
     useEffect(() => {
-        // wait for the device token, or for knowing there is none
-        if (deviceToken === undefined) return;
+        // wait for both tokens, or for knowing there is none
+        if (deviceToken === undefined || activityStartToken === undefined) {
+            return;
+        }
         const body = { deviceToken, activityStartToken };
         const json = JSON.stringify(body);
         if (json === sentTokens) return;

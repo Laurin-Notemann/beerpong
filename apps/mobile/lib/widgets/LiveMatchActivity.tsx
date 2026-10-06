@@ -15,8 +15,8 @@ import type { LiveMatchActivityProps } from '@/lib/widgets/props';
 /**
  * A live match on the Lock Screen and in the Dynamic Island: blue's score and red's, as the
  * dock shows them, with the time since the start. Like the widget, it runs in the widget
- * extension's own JS runtime and only knows its props; `useLiveMatchActivity` keeps it up
- * to date.
+ * extension's own JS runtime and only knows its props; the API's pushes start it and keep it
+ * up to date (live_activities.go).
  */
 const LiveMatchActivity = (
     props: LiveMatchActivityProps,
