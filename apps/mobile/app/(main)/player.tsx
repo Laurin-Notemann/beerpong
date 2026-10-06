@@ -1,27 +1,23 @@
 import { VideoExportPreset } from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert } from 'react-native';
 
 import {
     useAddScoreClipMutation,
     useDeletePlayerAvatarMutation,
     useDeletePlayerMutation,
-    useRemoveScoreClipMutation,
 } from '@/api/calls/playerHooks';
 import {
     getPastSeasons,
     useAllSeasonsQuery,
     useGroup,
 } from '@/api/calls/seasonHooks';
-import { assetIdOf } from '@/api/utils/assetId';
 import { usePullToRefresh, useQueryInvalidation } from '@/api/utils/reactQuery';
 import ErrorScreen from '@/components/ErrorScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import PlayerScreen from '@/components/screens/Player';
 import { triggerHapticBump } from '@/haptics';
 import { useNavigation } from '@/lib/navigation/useNavigation';
-import { saveScoreClip } from '@/lib/saveScoreClip';
 import { scoreClipsOf } from '@/lib/scoreClips';
 import { putTemp } from '@/lib/tempRouteStore';
 import { usePlayerPageScope } from '@/lib/usePlayerPageScope';
@@ -60,8 +56,6 @@ export default function Page() {
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     const addScoreClipMutation = useAddScoreClipMutation();
-    const removeScoreClipMutation = useRemoveScoreClipMutation();
-    const [isSavingScoreClip, setIsSavingScoreClip] = useState(false);
 
     const { invalidatePlayers } = useQueryInvalidation();
 
@@ -176,58 +170,6 @@ export default function Page() {
         }
     }
 
-    async function removeScoreClip(url: string) {
-        if (!groupId || !profileId) return;
-
-        try {
-            await removeScoreClipMutation.mutateAsync({
-                groupId,
-                profileId,
-                assetId: assetIdOf(url),
-            });
-            showSuccessToast('Score clip removed.');
-        } catch (err) {
-            ConsoleLogger.error('failed to remove score clip:', err);
-            showErrorToast('Failed to remove score clip.', err);
-        }
-    }
-
-    async function saveClip(url: string) {
-        setIsSavingScoreClip(true);
-        try {
-            await saveScoreClip(url, playerName);
-        } catch (err) {
-            ConsoleLogger.error('failed to save score clip:', err);
-            showErrorToast("Couldn't save the score clip.", err);
-        } finally {
-            setIsSavingScoreClip(false);
-        }
-    }
-
-    function onScoreClipPress(url: string, index: number) {
-        Alert.alert(`Score Clip ${index + 1}`, undefined, [
-            { text: 'Save', onPress: () => saveClip(url) },
-            {
-                text: 'Remove',
-                style: 'destructive',
-                onPress: () =>
-                    Alert.alert(
-                        'Remove Score Clip?',
-                        "It won't play when they score anymore.",
-                        [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                                text: 'Remove',
-                                style: 'destructive',
-                                onPress: () => removeScoreClip(url),
-                            },
-                        ]
-                    ),
-            },
-            { text: 'Cancel', style: 'cancel' },
-        ]);
-    }
-
     return (
         <>
             <PlayerScreen
@@ -236,9 +178,7 @@ export default function Page() {
                 isPending={
                     isUploadingAvatar ||
                     deletePlayerMutation.isPending ||
-                    addScoreClipMutation.isPending ||
-                    removeScoreClipMutation.isPending ||
-                    isSavingScoreClip
+                    addScoreClipMutation.isPending
                 }
                 id={id}
                 profileId={profileId!}
@@ -251,7 +191,6 @@ export default function Page() {
                 scoreClips={scoreClipsOf(player?.profile)}
                 isUploadingScoreClip={addScoreClipMutation.isPending}
                 onUploadScoreClipPress={onUploadScoreClipPress}
-                onScoreClipPress={onScoreClipPress}
                 refresh={refresh}
             />
         </>

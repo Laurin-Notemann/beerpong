@@ -24,6 +24,8 @@ export type RootStackParamList = {
     addTv: undefined;
     saveSeason: undefined;
     player: { id: string };
+    /** `id` is the player's, `index` the clip to start on */
+    scoreClips: { id: string; index: number };
     match: { id: string; seasonId: string };
     liveMatch: { id: string };
     liveMatches: undefined;

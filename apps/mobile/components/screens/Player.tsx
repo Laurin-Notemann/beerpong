@@ -27,8 +27,10 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { PlayerPageHeadSection } from '@/components/PlayerPageHeadSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { ScoreClipTiles } from '@/components/ScoreClipTiles';
 import { PastSeasonsEmptyScreen } from '@/components/screens/PastSeasonsEmptyScreen';
 import { Swiper, useControlledSwiper } from '@/components/Swiper';
+import Text from '@/components/Text';
 import type { Placement } from '@/constants/rankingAlgorithms';
 import { AppBackground } from '@/lib/Background';
 import { useNavStyles } from '@/lib/navigation/navStyles';
@@ -87,13 +89,10 @@ export interface PlayerScreenProps {
     onDelete?: () => void;
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
-    /** the player has a clip Versus TV plays when they score */
-    /** the player's score clips, oldest first */
+    /** the player's score clips, oldest first; Versus TV plays one when they score */
     scoreClips: string[];
     isUploadingScoreClip: boolean;
     onUploadScoreClipPress: () => void;
-    /** a clip's row: save or remove it */
-    onScoreClipPress: (url: string, index: number) => void;
     refresh: RefreshProps;
 
     scopes: Map<string, ScopeInfo>;
@@ -112,7 +111,6 @@ export default function PlayerScreen({
     scoreClips,
     isUploadingScoreClip,
     onUploadScoreClipPress,
-    onScoreClipPress,
     refresh,
 
     scopes,
@@ -394,14 +392,11 @@ export default function PlayerScreen({
                 ))}
             {editable && (
                 <ScrollView
-                    style={{
-                        flex: 1,
-                    }}
+                    style={{ flex: 1 }}
                     contentContainerStyle={{
-                        top: insets.top,
-                        alignItems: 'center',
-
-                        paddingBottom: 32,
+                        paddingTop: insets.top,
+                        paddingBottom: insets.bottom + 32,
+                        paddingHorizontal: 16,
                     }}
                     refreshControl={<RefreshControl {...refresh} />}
                 >
@@ -420,83 +415,78 @@ export default function PlayerScreen({
                         matches={[]} // doesn't get shown because this is only ever editable
                         rankingAlgorithm={rankingAlgorithm!}
                     />
-                    <View
-                        style={{
-                            width: '100%',
-                            alignItems: 'stretch',
-                            paddingHorizontal: 16,
-                        }}
+                    <MenuSection noFlex>
+                        <MenuItem
+                            border={false}
+                            title={name}
+                            headIcon="pencil-outline"
+                            onPress={() =>
+                                nav.navigate('editPlayerName', { id })
+                            }
+                            tailIconType="next"
+                        />
+                        {avatarUrl && (
+                            <MenuItem
+                                title="Remove Profile Picture"
+                                headIcon="delete-outline"
+                                onPress={onDeleteAvatarPress}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Remove Profile Picture',
+                                    description:
+                                        "Are you sure you want to remove this player's profile picture?",
+                                }}
+                            />
+                        )}
+                    </MenuSection>
+                    <MenuSection
+                        noFlex
+                        title="Score Clips"
+                        titleTailIcon={
+                            scoreClips.length ? (
+                                <Text color="secondary">
+                                    {`${scoreClips.length} of ${MAX_SCORE_CLIPS}`}
+                                </Text>
+                            ) : undefined
+                        }
+                        footer={
+                            isUploadingScoreClip
+                                ? "Uploading… keep Versus open until it's done."
+                                : scoreClips.length < MAX_SCORE_CLIPS
+                                  ? 'Versus TV plays one at random when they score. Up to 10 seconds each.'
+                                  : 'Versus TV plays one at random when they score. Remove one to add another.'
+                        }
                     >
-                        <MenuSection>
+                        <ScoreClipTiles
+                            clips={scoreClips}
+                            isUploading={isUploadingScoreClip}
+                            disabled={isPending}
+                            onClipPress={(index) =>
+                                nav.navigate('scoreClips', { id, index })
+                            }
+                            onAddPress={
+                                scoreClips.length < MAX_SCORE_CLIPS
+                                    ? onUploadScoreClipPress
+                                    : undefined
+                            }
+                        />
+                    </MenuSection>
+                    {onDelete && (
+                        <MenuSection noFlex containerStyle={{ marginTop: 24 }}>
                             <MenuItem
                                 border={false}
-                                title={name}
-                                headIcon="pencil-outline"
-                                onPress={() =>
-                                    nav.navigate('editPlayerName', { id })
-                                }
-                                tailIconType="next"
+                                title="Delete Player"
+                                headIcon="delete-outline"
+                                onPress={onDelete}
+                                type="danger"
+                                confirmationPrompt={{
+                                    title: 'Delete Player',
+                                    description:
+                                        'Are you sure you want to delete this player?',
+                                }}
                             />
-                            {avatarUrl && (
-                                <MenuItem
-                                    title="Remove Profile Picture"
-                                    headIcon="delete-outline"
-                                    onPress={onDeleteAvatarPress}
-                                    type="danger"
-                                    confirmationPrompt={{
-                                        title: 'Remove Profile Picture',
-                                        description:
-                                            "Are you sure you want to remove this player's profile picture?",
-                                    }}
-                                />
-                            )}
-                            {scoreClips.map((url, index) => (
-                                <MenuItem
-                                    key={url}
-                                    title={`Score Clip ${index + 1}`}
-                                    headIcon="movie-open-outline"
-                                    onPress={
-                                        isPending
-                                            ? undefined
-                                            : () => onScoreClipPress(url, index)
-                                    }
-                                />
-                            ))}
-                            {scoreClips.length < MAX_SCORE_CLIPS && (
-                                <MenuItem
-                                    title={
-                                        isUploadingScoreClip
-                                            ? 'Uploading Score Clip…'
-                                            : 'Add Score Clip'
-                                    }
-                                    subtitle={
-                                        isUploadingScoreClip
-                                            ? 'Keep Versus open until it is done'
-                                            : 'Versus TV plays one at random when they score'
-                                    }
-                                    headIcon="plus"
-                                    onPress={
-                                        isPending
-                                            ? undefined
-                                            : onUploadScoreClipPress
-                                    }
-                                />
-                            )}
-                            {onDelete && (
-                                <MenuItem
-                                    title="Delete Player"
-                                    headIcon="delete-outline"
-                                    onPress={onDelete}
-                                    type="danger"
-                                    confirmationPrompt={{
-                                        title: 'Delete Player',
-                                        description:
-                                            'Are you sure you want to delete this player?',
-                                    }}
-                                />
-                            )}
                         </MenuSection>
-                    </View>
+                    )}
                 </ScrollView>
             )}
             <Modal
