@@ -2,6 +2,8 @@ import { LegendList, LegendListProps } from '@legendapp/list/react-native';
 import React, { useMemo } from 'react';
 
 import { useExplainQueuedMatch } from '@/api/calls/matchHooks';
+import { useGroup } from '@/api/calls/seasonHooks';
+import { useMatchElo } from '@/api/calls/seasonMatchesHooks';
 import { groupMatchesByDay } from '@/api/utils/groupMatchesByDay';
 import { Match } from '@/api/utils/matchDtoToMatch';
 import { RefreshProps } from '@/api/utils/reactQuery';
@@ -9,6 +11,7 @@ import { NoMatchesPlayedYet } from '@/components/emptyStates/NoMatchesPlayedYet'
 import { MatchesListItem } from '@/components/MatchesListItem';
 import { Heading, HEADING_HEIGHT } from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
+import { MatchEloDto } from '@/openapi/openapi';
 
 export interface MatchesListProps extends Pick<
     LegendListProps<MatchesListRow>,
@@ -41,6 +44,7 @@ type MatchesListRow =
           type: 'match';
           match: Match;
           isFirstOfDay: boolean;
+          elo: MatchEloDto | undefined;
       };
 
 export default function MatchesList({
@@ -56,17 +60,30 @@ export default function MatchesList({
 }: MatchesListProps) {
     const explainQueuedMatch = useExplainQueuedMatch();
 
+    // the Elo changes of every season listed (the all-time list has several)
+    const { groupId } = useGroup();
+    const seasonIds = useMemo(
+        () => [...new Set(matches.map((m) => m.seasonId))],
+        [matches]
+    );
+    const eloByMatch = useMatchElo(groupId, seasonIds);
+
     // flat rows with a header row per day, so the day separators scroll with the matches
     const rows = useMemo(() => {
         const out: MatchesListRow[] = [];
         for (const day of groupMatchesByDay(matches)) {
             out.push({ type: 'header', title: day.title, date: day.date });
             day.matches.forEach((m, idx) => {
-                out.push({ type: 'match', match: m, isFirstOfDay: idx === 0 });
+                out.push({
+                    type: 'match',
+                    match: m,
+                    isFirstOfDay: idx === 0,
+                    elo: eloByMatch.get(m.id),
+                });
             });
         }
         return out;
-    }, [matches]);
+    }, [matches, eloByMatch]);
 
     return (
         <LegendList
@@ -108,6 +125,7 @@ export default function MatchesList({
                                 : onMatchPress(item.match)
                         }
                         highlightedId={forPlayer?.profileId}
+                        elo={item.elo}
                     />
                 );
             }}

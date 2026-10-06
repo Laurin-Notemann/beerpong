@@ -10,7 +10,7 @@ import {
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
-import { EloChange } from '@/components/EloChange';
+import { EloChangePill } from '@/components/EloChange';
 import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
@@ -24,7 +24,7 @@ function Change({
     style?: StyleProp<ViewStyle>;
 }) {
     const theme = useTheme();
-    // the rating change isn't computed yet (always 0), so there's nothing to show
+    // unknown changes are 0; a change that rounds to 0 isn't worth showing either
     if (Math.round(value) === 0) return null;
     return (
         <View
@@ -54,7 +54,6 @@ function Change({
                 }}
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
-                {/* rounded to two decimal places with trailing zeros removed */}
                 {formatRatingChange(value)}
             </Text>
         </View>
@@ -226,7 +225,7 @@ export default function Player({
                             )}
                         </View>
                     </View>
-                    <EloChange
+                    <EloChangePill
                         value={eloChange}
                         style={{ marginHorizontal: 8 }}
                     />

@@ -8,8 +8,10 @@ import {
     uploadTeamPhoto,
     useDeleteMatchMutation,
     useDeleteMatchPhotoMutation,
+    useMatchEloQuery,
     useMatchesQuery,
     useUpdateMatchMutation,
+    withEloChanges,
 } from '@/api/calls/matchHooks';
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -66,6 +68,8 @@ export default function Page() {
 
     const matchesQuery = useMatchesQuery(groupId, seasonId);
 
+    const eloQuery = useMatchEloQuery(groupId, seasonId);
+
     const matchDraft = useMatchEditDraftStore();
 
     const matches =
@@ -88,8 +92,12 @@ export default function Page() {
         matchWithoutPhotos?.redTeamPhotoAssetId
     );
 
+    // the players' Elo changes show once they've loaded
     const match = matchWithoutPhotos && {
-        ...matchWithoutPhotos,
+        ...withEloChanges(
+            matchWithoutPhotos,
+            eloQuery.data?.data?.find((i) => i.matchId === id)
+        ),
         blueTeamPhotoUrl: bluePhotoQuery.data?.data?.url ?? null,
         redTeamPhotoUrl: redPhotoQuery.data?.data?.url ?? null,
     };

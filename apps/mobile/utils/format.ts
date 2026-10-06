@@ -4,11 +4,8 @@ import type { Placement } from '@/constants/rankingAlgorithms';
 export const formatPlacement = ({ rank, tied }: Placement) =>
     (tied ? 'T' : '#') + rank;
 
-export const formatRatingChange = (value: number) =>
-    Math.abs(value)
-        .toFixed(0)
-        .replace(/\.00$/, '.0')
-        .replace(/([1-9])0+$/, '$1');
+/** the size of a rating change in whole points, without its sign: −8.4 → "8" */
+export const formatRatingChange = (value: number) => Math.abs(value).toFixed(0);
 
 /** `plural(1, 'match', 'matches')` → "1 match", `plural(3, …)` → "3 matches" */
 export const plural = (count: number, one: string, many: string) =>
