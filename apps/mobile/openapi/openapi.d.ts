@@ -51,6 +51,43 @@ declare namespace Components {
             token: string;
             type: 'ACCESS' | 'REFRESH';
         }
+        export interface CameraRecordingCreateDto {
+            cameraId: string;
+            cameraName: string;
+            sessionId: string;
+            segmentIndex: number; // int32
+            startedAt: string; // date-time
+            endedAt: string; // date-time
+            contentType: 'video/mp4' | 'video/webm';
+            sizeBytes: number; // int64
+            liveMatchIds: [
+                string,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+                string?,
+            ];
+        }
+        export interface CameraRecordingUploadDto {
+            id: string;
+            objectKey: string;
+            singleUploadUrl: string;
+        }
         export interface CupPositionDto {
             x: number; // int32
             y: number; // int32
@@ -541,6 +578,12 @@ declare namespace Components {
             data: AuthTokenDto;
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeCameraRecordingUploadDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: CameraRecordingUploadDto;
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeEloSearchDto {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
@@ -939,6 +982,19 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeLiveMatchOpsResultDto;
         }
     }
+    namespace CompleteCameraRecording {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
     namespace CreateGroup {
         export type RequestBody = Components.Schemas.GroupCreateDto;
         namespace Responses {
@@ -1011,6 +1067,19 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
+        }
+    }
+    namespace DeleteCameraRecording {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
     namespace DeleteFormation {
@@ -1520,6 +1589,21 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeListProfileDto;
         }
     }
+    namespace PutCameraRecording {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.CameraRecordingCreateDto;
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeCameraRecordingUploadDto;
+        }
+    }
     namespace RefreshAuth {
         export type RequestBody = Components.Schemas.AuthRefreshDto;
         namespace Responses {
@@ -1781,6 +1865,30 @@ declare namespace Paths {
 }
 
 export interface OperationMethods {
+    /**
+     * putCameraRecording
+     */
+    putCameraRecording(
+        parameters?: Parameters<Paths.PutCameraRecording.PathParameters> | null,
+        data?: Paths.PutCameraRecording.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.PutCameraRecording.Responses.$200>;
+    /**
+     * deleteCameraRecording
+     */
+    deleteCameraRecording(
+        parameters?: Parameters<Paths.DeleteCameraRecording.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteCameraRecording.Responses.$200>;
+    /**
+     * completeCameraRecording
+     */
+    completeCameraRecording(
+        parameters?: Parameters<Paths.CompleteCameraRecording.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CompleteCameraRecording.Responses.$200>;
     /**
      * getEloLiveMatches - The group's running live matches with their ops, for the simulator to reduce.
      */
@@ -2323,6 +2431,34 @@ export interface OperationMethods {
 }
 
 export interface PathsDictionary {
+    ['/groups/{groupId}/recordings/{id}']: {
+        /**
+         * putCameraRecording
+         */
+        put(
+            parameters?: Parameters<Paths.PutCameraRecording.PathParameters> | null,
+            data?: Paths.PutCameraRecording.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.PutCameraRecording.Responses.$200>;
+        /**
+         * deleteCameraRecording
+         */
+        delete(
+            parameters?: Parameters<Paths.DeleteCameraRecording.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteCameraRecording.Responses.$200>;
+    };
+    ['/groups/{groupId}/recordings/{id}/complete']: {
+        /**
+         * completeCameraRecording
+         */
+        post(
+            parameters?: Parameters<Paths.CompleteCameraRecording.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CompleteCameraRecording.Responses.$200>;
+    };
     ['/elo-simulation/live-matches']: {
         /**
          * getEloLiveMatches - The group's running live matches with their ops, for the simulator to reduce.
@@ -2969,6 +3105,10 @@ export type AssetUploadResponse = Components.Schemas.AssetUploadResponse;
 export type AuthRefreshDto = Components.Schemas.AuthRefreshDto;
 export type AuthSignupDto = Components.Schemas.AuthSignupDto;
 export type AuthTokenDto = Components.Schemas.AuthTokenDto;
+export type CameraRecordingCreateDto =
+    Components.Schemas.CameraRecordingCreateDto;
+export type CameraRecordingUploadDto =
+    Components.Schemas.CameraRecordingUploadDto;
 export type CupPositionDto = Components.Schemas.CupPositionDto;
 export type EloGameDto = Components.Schemas.EloGameDto;
 export type EloLiveMatchDto = Components.Schemas.EloLiveMatchDto;
@@ -3035,6 +3175,8 @@ export type ResponseEnvelopeAssetUploadResponse =
     Components.Schemas.ResponseEnvelopeAssetUploadResponse;
 export type ResponseEnvelopeAuthTokenDto =
     Components.Schemas.ResponseEnvelopeAuthTokenDto;
+export type ResponseEnvelopeCameraRecordingUploadDto =
+    Components.Schemas.ResponseEnvelopeCameraRecordingUploadDto;
 export type ResponseEnvelopeEloSearchDto =
     Components.Schemas.ResponseEnvelopeEloSearchDto;
 export type ResponseEnvelopeEloSimulationDto =

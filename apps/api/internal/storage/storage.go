@@ -1,6 +1,7 @@
 // Package storage talks to the S3-compatible bucket that holds avatars,
-// wallpapers and match photos. The app uploads directly through presigned
-// URLs; the API only signs uploads and deletes objects.
+// wallpapers, match photos and camera recordings. The app uploads through presigned
+// URLs (camera footage streams through the web server to avoid browser CORS);
+// the API only signs uploads and deletes objects.
 package storage
 
 import (

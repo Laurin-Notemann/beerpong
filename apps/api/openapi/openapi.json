@@ -8,6 +8,128 @@
         }
     ],
     "paths": {
+        "/groups/{groupId}/recordings/{id}": {
+            "put": {
+                "tags": [
+                    "camera-recording-controller"
+                ],
+                "operationId": "putCameraRecording",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeCameraRecordingUploadDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CameraRecordingCreateDto"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "camera-recording-controller"
+                ],
+                "operationId": "deleteCameraRecording",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/recordings/{id}/complete": {
+            "post": {
+                "tags": [
+                    "camera-recording-controller"
+                ],
+                "operationId": "completeCameraRecording",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/elo-simulation/live-matches": {
             "get": {
                 "tags": ["elo-simulation-controller"],
@@ -2294,6 +2416,111 @@
     },
     "components": {
         "schemas": {
+            "CameraRecordingCreateDto": {
+                "type": "object",
+                "properties": {
+                    "cameraId": {
+                        "type": "string"
+                    },
+                    "cameraName": {
+                        "type": "string"
+                    },
+                    "sessionId": {
+                        "type": "string"
+                    },
+                    "segmentIndex": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0
+                    },
+                    "startedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "endedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "contentType": {
+                        "type": "string",
+                        "enum": [
+                            "video/mp4",
+                            "video/webm"
+                        ]
+                    },
+                    "sizeBytes": {
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 1,
+                        "maximum": 33554432
+                    },
+                    "liveMatchIds": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 20,
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "cameraId",
+                    "cameraName",
+                    "sessionId",
+                    "segmentIndex",
+                    "startedAt",
+                    "endedAt",
+                    "contentType",
+                    "sizeBytes",
+                    "liveMatchIds"
+                ]
+            },
+            "CameraRecordingUploadDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "objectKey": {
+                        "type": "string"
+                    },
+                    "singleUploadUrl": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "objectKey",
+                    "singleUploadUrl"
+                ]
+            },
+            "ResponseEnvelopeCameraRecordingUploadDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "OK",
+                            "ERROR"
+                        ]
+                    },
+                    "httpCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/CameraRecordingUploadDto"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetails"
+                    }
+                },
+                "required": [
+                    "status",
+                    "httpCode",
+                    "data"
+                ]
+            },
             "EloLiveMatchDto": {
                 "type": "object",
                 "properties": {

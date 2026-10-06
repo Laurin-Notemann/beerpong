@@ -1,8 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { socketUrl } from '~/apiUrl';
+import { apiFor, ApiError, signup } from '~/tv/server/api';
 import { buildBoard } from '~/tv/server/board';
-import { authorize, cameraFor, register, signal, watch } from '~/tv/server/displays';
+import { authorize, cameraFor, register, setSession, signal, watch } from '~/tv/server/displays';
 
 // What the TV's and the camera's pages call. Phones change them through the app (appRemote.ts).
 
@@ -22,7 +23,7 @@ export const registerDisplay = createServerFn({ method: 'POST' })
             config: data.config,
             refreshToken: data.refreshToken,
         });
-        return { config: display.config, code: display.code };
+        return { config: display.config, code: display.code, refreshToken: display.refreshToken };
     });
 
 /**
@@ -65,4 +66,33 @@ export const sendSignal = createServerFn({ method: 'POST' })
         if ((type !== 'offer' && type !== 'answer') || typeof sdp !== 'string') return false;
         if (sdp.length > 100_000) return false;
         return signal(from, data.to, { type, sdp });
+    });
+
+/** Camera-secret authorized snapshot; upgrades cameras paired before they had API users. */
+export const getCameraMatches = createServerFn({ method: 'POST' })
+    .inputValidator(asObject)
+    .handler(async ({ data }) => {
+        const camera = authorize(data.id, data.key);
+        if (camera.kind !== 'camera' || !camera.config.groupId) return null;
+        const groupId = camera.config.groupId;
+        if (!camera.refreshToken) setSession(camera, await signup(camera.id, 'camera'));
+        const api = apiFor(camera.refreshToken!);
+        const matches = await api.liveMatches(groupId).catch(async (error: unknown) => {
+            // Previously paired cameras have no membership yet. Retry a failed join on the next snapshot.
+            if (
+                !(error instanceof ApiError) ||
+                error.httpCode !== 401 ||
+                camera.config.groupId !== groupId
+            )
+                throw error;
+            await api.join(groupId);
+            if (camera.config.groupId !== groupId) {
+                await api.leave(groupId);
+                return [];
+            }
+            return api.liveMatches(groupId);
+        });
+        // A removal or re-pairing while the API request ran wins.
+        if (camera.config.groupId !== groupId) return null;
+        return { groupId, name: camera.name, liveMatchIds: matches.map((m) => m.id) };
     });

@@ -19,6 +19,7 @@ import { Route as TvApiClipsIdRouteImport } from './routes/tv/api/clips.$id'
 import { Route as TvApiDisplaysIdEventsRouteImport } from './routes/tv/api/displays.$id.events'
 import { Route as TvApiGroupsGroupIdCamerasRouteImport } from './routes/tv/api/groups.$groupId.cameras'
 import { Route as TvApiGroupsGroupIdDisplaysRouteImport } from './routes/tv/api/groups.$groupId.displays'
+import { Route as TvApiCamerasIdRecordingsRecordingIdRouteImport } from './routes/tv/api/cameras.$id.recordings.$recordingId'
 import { Route as TvApiGroupsGroupIdCamerasIdRouteImport } from './routes/tv/api/groups.$groupId.cameras.$id'
 import { Route as TvApiGroupsGroupIdDisplaysIdRouteImport } from './routes/tv/api/groups.$groupId.displays.$id'
 import { Route as TvApiGroupsGroupIdDisplaysIdReloadRouteImport } from './routes/tv/api/groups.$groupId.displays.$id.reload'
@@ -74,6 +75,12 @@ const TvApiGroupsGroupIdDisplaysRoute =
     path: '/api/groups/$groupId/displays',
     getParentRoute: () => TvRoute,
   } as any)
+const TvApiCamerasIdRecordingsRecordingIdRoute =
+  TvApiCamerasIdRecordingsRecordingIdRouteImport.update({
+    id: '/api/cameras/$id/recordings/$recordingId',
+    path: '/api/cameras/$id/recordings/$recordingId',
+    getParentRoute: () => TvRoute,
+  } as any)
 const TvApiGroupsGroupIdCamerasIdRoute =
   TvApiGroupsGroupIdCamerasIdRouteImport.update({
     id: '/$id',
@@ -103,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/cameras': typeof TvApiGroupsGroupIdCamerasRouteWithChildren
   '/tv/api/groups/$groupId/displays': typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
+  '/tv/api/cameras/$id/recordings/$recordingId': typeof TvApiCamerasIdRecordingsRecordingIdRoute
   '/tv/api/groups/$groupId/cameras/$id': typeof TvApiGroupsGroupIdCamerasIdRoute
   '/tv/api/groups/$groupId/displays/$id': typeof TvApiGroupsGroupIdDisplaysIdRouteWithChildren
   '/tv/api/groups/$groupId/displays/$id/reload': typeof TvApiGroupsGroupIdDisplaysIdReloadRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/cameras': typeof TvApiGroupsGroupIdCamerasRouteWithChildren
   '/tv/api/groups/$groupId/displays': typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
+  '/tv/api/cameras/$id/recordings/$recordingId': typeof TvApiCamerasIdRecordingsRecordingIdRoute
   '/tv/api/groups/$groupId/cameras/$id': typeof TvApiGroupsGroupIdCamerasIdRoute
   '/tv/api/groups/$groupId/displays/$id': typeof TvApiGroupsGroupIdDisplaysIdRouteWithChildren
   '/tv/api/groups/$groupId/displays/$id/reload': typeof TvApiGroupsGroupIdDisplaysIdReloadRoute
@@ -132,6 +141,7 @@ export interface FileRoutesById {
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/cameras': typeof TvApiGroupsGroupIdCamerasRouteWithChildren
   '/tv/api/groups/$groupId/displays': typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
+  '/tv/api/cameras/$id/recordings/$recordingId': typeof TvApiCamerasIdRecordingsRecordingIdRoute
   '/tv/api/groups/$groupId/cameras/$id': typeof TvApiGroupsGroupIdCamerasIdRoute
   '/tv/api/groups/$groupId/displays/$id': typeof TvApiGroupsGroupIdDisplaysIdRouteWithChildren
   '/tv/api/groups/$groupId/displays/$id/reload': typeof TvApiGroupsGroupIdDisplaysIdReloadRoute
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/cameras'
     | '/tv/api/groups/$groupId/displays'
+    | '/tv/api/cameras/$id/recordings/$recordingId'
     | '/tv/api/groups/$groupId/cameras/$id'
     | '/tv/api/groups/$groupId/displays/$id'
     | '/tv/api/groups/$groupId/displays/$id/reload'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/cameras'
     | '/tv/api/groups/$groupId/displays'
+    | '/tv/api/cameras/$id/recordings/$recordingId'
     | '/tv/api/groups/$groupId/cameras/$id'
     | '/tv/api/groups/$groupId/displays/$id'
     | '/tv/api/groups/$groupId/displays/$id/reload'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/cameras'
     | '/tv/api/groups/$groupId/displays'
+    | '/tv/api/cameras/$id/recordings/$recordingId'
     | '/tv/api/groups/$groupId/cameras/$id'
     | '/tv/api/groups/$groupId/displays/$id'
     | '/tv/api/groups/$groupId/displays/$id/reload'
@@ -256,6 +269,13 @@ declare module '@tanstack/react-router' {
       path: '/api/groups/$groupId/displays'
       fullPath: '/tv/api/groups/$groupId/displays'
       preLoaderRoute: typeof TvApiGroupsGroupIdDisplaysRouteImport
+      parentRoute: typeof TvRoute
+    }
+    '/tv/api/cameras/$id/recordings/$recordingId': {
+      id: '/tv/api/cameras/$id/recordings/$recordingId'
+      path: '/api/cameras/$id/recordings/$recordingId'
+      fullPath: '/tv/api/cameras/$id/recordings/$recordingId'
+      preLoaderRoute: typeof TvApiCamerasIdRecordingsRecordingIdRouteImport
       parentRoute: typeof TvRoute
     }
     '/tv/api/groups/$groupId/cameras/$id': {
@@ -347,6 +367,7 @@ interface TvRouteChildren {
   TvApiDisplaysIdEventsRoute: typeof TvApiDisplaysIdEventsRoute
   TvApiGroupsGroupIdCamerasRoute: typeof TvApiGroupsGroupIdCamerasRouteWithChildren
   TvApiGroupsGroupIdDisplaysRoute: typeof TvApiGroupsGroupIdDisplaysRouteWithChildren
+  TvApiCamerasIdRecordingsRecordingIdRoute: typeof TvApiCamerasIdRecordingsRecordingIdRoute
 }
 
 const TvRouteChildren: TvRouteChildren = {
@@ -356,6 +377,8 @@ const TvRouteChildren: TvRouteChildren = {
   TvApiDisplaysIdEventsRoute: TvApiDisplaysIdEventsRoute,
   TvApiGroupsGroupIdCamerasRoute: TvApiGroupsGroupIdCamerasRouteWithChildren,
   TvApiGroupsGroupIdDisplaysRoute: TvApiGroupsGroupIdDisplaysRouteWithChildren,
+  TvApiCamerasIdRecordingsRecordingIdRoute:
+    TvApiCamerasIdRecordingsRecordingIdRoute,
 }
 
 const TvRouteWithChildren = TvRoute._addFileChildren(TvRouteChildren)

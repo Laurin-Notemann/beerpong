@@ -143,6 +143,8 @@ func (s *Server) routes() map[string]route {
 		"/groups/{groupId}/profiles/{id}/score-clip":                        {"PUT": s.setScoreClip, "DELETE": s.deleteScoreClip},
 		"/groups/{groupId}/profiles/{id}/score-clips":                       {"POST": s.addScoreClip},
 		"/groups/{groupId}/profiles/{id}/score-clips/{assetId}":             {"DELETE": s.removeScoreClip},
+		"/groups/{groupId}/recordings/{id}":                                 {"PUT": s.putCameraRecording, "DELETE": s.deleteCameraRecording},
+		"/groups/{groupId}/recordings/{id}/complete":                        {"POST": s.completeCameraRecording},
 		"/groups/{groupId}/live-matches":                                    {"GET": s.listLiveMatches},
 		"/groups/{groupId}/live-matches/{id}":                               {"GET": s.getLiveMatch, "PUT": s.createLiveMatch, "DELETE": s.abandonLiveMatch},
 		"/groups/{groupId}/live-matches/{id}/ops":                           {"POST": s.appendOps},

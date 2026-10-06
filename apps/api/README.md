@@ -51,3 +51,10 @@ The Java backend never sent `ORDER BY`, so clients got rows in physical order
 (the first team of a match is "blue"). List queries order by `ctid` to keep
 that exact order regardless of query plan. Rules have a `position` instead,
 because a rewrite of the rule set reuses freed space and shuffled them.
+
+Camera footage uses the same bucket under `recordings/<group>/<session>/`.
+Group members reserve immutable segment metadata with `PUT /groups/{groupId}/recordings/{id}`,
+acknowledge the successful bucket PUT with `POST .../{id}/complete`, and can remove footage with
+`DELETE .../{id}`. ML exports should select `camera_recordings.uploaded_at IS NOT NULL` and join
+`camera_recording_matches` to `live_matches.result_match_id` for the eventual finished match.
+The segment's UTC times come from the camera clock; synchronize devices when aligning cup hits.
