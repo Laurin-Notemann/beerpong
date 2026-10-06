@@ -29,6 +29,16 @@ RETURNING *;
 -- name: InsertProfiles :copyfrom
 INSERT INTO profiles (id, name, group_id, created_by) VALUES ($1, $2, $3, $4);
 
--- name: SetProfileScoreClip :one
-UPDATE profiles SET asset_id_score_clip = $2 WHERE id = $1
+-- name: SetProfileScoreClips :one
+UPDATE profiles SET asset_ids_score_clips = sqlc.arg(asset_ids)::varchar[] WHERE id = $1
+RETURNING *;
+
+-- name: AddProfileScoreClip :one
+UPDATE profiles SET asset_ids_score_clips = array_append(asset_ids_score_clips, sqlc.arg(asset_id)::varchar)
+WHERE id = $1
+RETURNING *;
+
+-- name: RemoveProfileScoreClip :one
+UPDATE profiles SET asset_ids_score_clips = array_remove(asset_ids_score_clips, sqlc.arg(asset_id)::varchar)
+WHERE id = $1
 RETURNING *;

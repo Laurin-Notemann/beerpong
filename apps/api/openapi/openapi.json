@@ -888,7 +888,7 @@
             "put": {
                 "tags": ["profile-controller"],
                 "operationId": "setScoreClip",
-                "description": "Replaces the profile's score clip, the video Versus TV plays when the player scores, and answers where to upload it.",
+                "description": "Replaces all the profile's score clips (the videos Versus TV and the app play one of when the player scores) with a new one, and answers where to upload it.",
                 "parameters": [
                     {
                         "name": "groupId",
@@ -928,6 +928,78 @@
                     },
                     {
                         "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeProfileDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{id}/score-clips": {
+            "post": {
+                "tags": ["profile-controller"],
+                "operationId": "addScoreClip",
+                "description": "Adds a score clip next to the profile's others (at most 10; one plays at random when the player scores), and answers where to upload it.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeAssetUploadResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/profiles/{id}/score-clips/{assetId}": {
+            "delete": {
+                "tags": ["profile-controller"],
+                "operationId": "removeScoreClip",
+                "description": "Removes one of the profile's score clips.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "assetId",
                         "in": "path",
                         "required": true,
                         "schema": { "type": "string" }
@@ -1568,6 +1640,39 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ResponseEnvelopeListMatchOverviewDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/seasons/{seasonId}/matches/elo": {
+            "get": {
+                "tags": ["match-controller"],
+                "operationId": "getMatchEloChanges",
+                "description": "Every match of the season with each player's Elo change in it (the rating after it minus before), from the same replay as the season leaderboard.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    },
+                    {
+                        "name": "seasonId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListMatchEloDto"
                                 }
                             }
                         }
@@ -3037,7 +3142,16 @@
                     "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true },
-                    "scoreClipUrl": { "type": "string", "nullable": true }
+                    "scoreClipUrls": {
+                        "type": "array",
+                        "description": "the videos Versus TV and the app play one of at random when the player scores, oldest first",
+                        "items": { "type": "string" }
+                    },
+                    "scoreClipUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "the newest of scoreClipUrls"
+                    }
                 },
                 "required": [
                     "id",
@@ -3046,6 +3160,7 @@
                     "avatarUrl",
                     "groupId",
                     "createdById",
+                    "scoreClipUrls",
                     "scoreClipUrl"
                 ]
             },
@@ -3090,6 +3205,10 @@
                     "avatarUrl": { "type": "string", "nullable": true },
                     "groupId": { "type": "string", "nullable": true },
                     "createdById": { "type": "string", "nullable": true },
+                    "scoreClipUrls": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                    },
                     "scoreClipUrl": { "type": "string", "nullable": true },
                     "reactivated": { "type": "boolean" },
                     "lastActiveSeasonId": { "type": "string", "nullable": true }
@@ -3101,6 +3220,7 @@
                     "avatarUrl",
                     "groupId",
                     "createdById",
+                    "scoreClipUrls",
                     "scoreClipUrl",
                     "reactivated",
                     "lastActiveSeasonId"
@@ -3298,6 +3418,27 @@
                 },
                 "required": ["status", "httpCode", "data"]
             },
+            "MatchEloDto": {
+                "type": "object",
+                "properties": {
+                    "matchId": { "type": "string" },
+                    "players": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MatchEloPlayerDto"
+                        }
+                    }
+                },
+                "required": ["matchId", "players"]
+            },
+            "MatchEloPlayerDto": {
+                "type": "object",
+                "properties": {
+                    "playerId": { "type": "string" },
+                    "change": { "type": "number", "format": "double" }
+                },
+                "required": ["playerId", "change"]
+            },
             "MatchOverviewDto": {
                 "type": "object",
                 "properties": {
@@ -3447,6 +3588,21 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/MatchOverviewDto"
+                        }
+                    },
+                    "error": { "$ref": "#/components/schemas/ErrorDetails" }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
+            "ResponseEnvelopeListMatchEloDto": {
+                "type": "object",
+                "properties": {
+                    "status": { "type": "string", "enum": ["OK", "ERROR"] },
+                    "httpCode": { "type": "integer", "format": "int32" },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MatchEloDto"
                         }
                     },
                     "error": { "$ref": "#/components/schemas/ErrorDetails" }
@@ -3814,6 +3970,14 @@
                         "type": "array",
                         "description": "the cup hits so far, newest first (at most 10)",
                         "items": { "$ref": "#/components/schemas/LiveMoveDto" }
+                    },
+                    "blueCups": {
+                        "type": "string",
+                        "description": "the blue team's own cups as they're drawn, for the Live Activity: three digits per cup, its x and y on the 7x7 grid and 1 if it's still standing"
+                    },
+                    "redCups": {
+                        "type": "string",
+                        "description": "the red team's own cups, like blueCups"
                     }
                 },
                 "required": ["seq", "blueNames", "blueScore", "redNames", "redScore"]
@@ -3823,7 +3987,11 @@
                 "properties": {
                     "id": { "type": "string" },
                     "name": { "type": "string" },
-                    "team": { "type": "string", "enum": ["red", "blue"] }
+                    "team": { "type": "string", "enum": ["red", "blue"] },
+                    "avatar": {
+                        "type": "string",
+                        "description": "the avatar's asset id; the Live Activity shows the app's small copy of it"
+                    }
                 },
                 "required": ["id", "name", "team"]
             },

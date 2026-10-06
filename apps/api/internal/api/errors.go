@@ -71,6 +71,7 @@ var (
 	errProfileAlreadyExists  = errorCode{400, "profileAlreadyExists", "There already exists a profile with the provided name and an active player in the current season!"}
 	errProfileHasNoAvatar    = errorCode{404, "profileHasNoAvatar", "The provided profiles does not have an avatar saved!"}
 	errProfileHasNoScoreClip = errorCode{404, "profileHasNoScoreClip", "The provided profile does not have a score clip saved!"}
+	errProfileScoreClipLimit = errorCode{400, "profileScoreClipLimit", "A profile can have at most 10 score clips!"}
 
 	errAssetNotFound         = errorCode{404, "assetNotFound", "The requested asset could not be found!"}
 	errAssetValidationFailed = errorCode{400, "assetValidationFailed", "The provided asset offsets or zoom have to be >= 0!"}

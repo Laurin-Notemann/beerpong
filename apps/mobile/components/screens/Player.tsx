@@ -40,6 +40,9 @@ import { useScopePicker } from '@/zustand/useScopePicker';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+/** how many score clips a player can have (the API's maxScoreClips) */
+const MAX_SCORE_CLIPS = 10;
+
 export interface ScopeInfo {
     minMatchesRequiredToBeRanked: number;
     placement: Placement;
@@ -85,10 +88,12 @@ export interface PlayerScreenProps {
     onUploadAvatarPress: () => void;
     onDeleteAvatarPress: () => void;
     /** the player has a clip Versus TV plays when they score */
-    hasScoreClip: boolean;
+    /** the player's score clips, oldest first */
+    scoreClips: string[];
     isUploadingScoreClip: boolean;
     onUploadScoreClipPress: () => void;
-    onDeleteScoreClipPress: () => void;
+    /** a clip's row: save or remove it */
+    onScoreClipPress: (url: string, index: number) => void;
     refresh: RefreshProps;
 
     scopes: Map<string, ScopeInfo>;
@@ -104,10 +109,10 @@ export default function PlayerScreen({
     onDelete,
     onUploadAvatarPress,
     onDeleteAvatarPress,
-    hasScoreClip,
+    scoreClips,
     isUploadingScoreClip,
     onUploadScoreClipPress,
-    onDeleteScoreClipPress,
+    onScoreClipPress,
     refresh,
 
     scopes,
@@ -445,33 +450,36 @@ export default function PlayerScreen({
                                     }}
                                 />
                             )}
-                            <MenuItem
-                                title={
-                                    isUploadingScoreClip
-                                        ? 'Uploading Score Clip…'
-                                        : hasScoreClip
-                                          ? 'Replace Score Clip'
-                                          : 'Add Score Clip'
-                                }
-                                subtitle="Plays on Versus TV when they score"
-                                headIcon="movie-open-outline"
-                                onPress={
-                                    isPending
-                                        ? undefined
-                                        : onUploadScoreClipPress
-                                }
-                            />
-                            {hasScoreClip && (
+                            {scoreClips.map((url, index) => (
                                 <MenuItem
-                                    title="Remove Score Clip"
-                                    headIcon="delete-outline"
-                                    onPress={onDeleteScoreClipPress}
-                                    type="danger"
-                                    confirmationPrompt={{
-                                        title: 'Remove Score Clip',
-                                        description:
-                                            "Are you sure you want to remove this player's score clip?",
-                                    }}
+                                    key={url}
+                                    title={`Score Clip ${index + 1}`}
+                                    headIcon="movie-open-outline"
+                                    onPress={
+                                        isPending
+                                            ? undefined
+                                            : () => onScoreClipPress(url, index)
+                                    }
+                                />
+                            ))}
+                            {scoreClips.length < MAX_SCORE_CLIPS && (
+                                <MenuItem
+                                    title={
+                                        isUploadingScoreClip
+                                            ? 'Uploading Score Clip…'
+                                            : 'Add Score Clip'
+                                    }
+                                    subtitle={
+                                        isUploadingScoreClip
+                                            ? 'Keep Versus open until it is done'
+                                            : 'Versus TV plays one at random when they score'
+                                    }
+                                    headIcon="plus"
+                                    onPress={
+                                        isPending
+                                            ? undefined
+                                            : onUploadScoreClipPress
+                                    }
                                 />
                             )}
                             {onDelete && (

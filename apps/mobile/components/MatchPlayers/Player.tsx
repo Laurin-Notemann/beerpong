@@ -10,6 +10,7 @@ import {
 
 import { TeamMember } from '@/api/utils/matchDtoToMatch';
 import Avatar from '@/components/Avatar';
+import { EloChangePill } from '@/components/EloChange';
 import { Icon } from '@/components/Icon';
 import Text from '@/components/Text';
 import { useTheme } from '@/theme';
@@ -23,7 +24,7 @@ function Change({
     style?: StyleProp<ViewStyle>;
 }) {
     const theme = useTheme();
-    // the rating change isn't computed yet (always 0), so there's nothing to show
+    // unknown changes are 0; a change that rounds to 0 isn't worth showing either
     if (Math.round(value) === 0) return null;
     return (
         <View
@@ -53,7 +54,6 @@ function Change({
                 }}
             />
             <Text variant="body2" color={value >= 0 ? 'positive' : 'negative'}>
-                {/* rounded to two decimal places with trailing zeros removed */}
                 {formatRatingChange(value)}
             </Text>
         </View>
@@ -72,6 +72,8 @@ export interface PlayerProps {
     onPress?: () => void;
 
     border?: boolean;
+    /** how much their Elo changes with this match (a live one: if it ended now) */
+    eloChange?: number;
 }
 export default function Player({
     player: { id, avatarUrl, team, name, points, change, moves },
@@ -84,6 +86,7 @@ export default function Player({
 
     setMoveCount,
     onPress,
+    eloChange,
 }: PlayerProps) {
     const [animation] = useState(() => new Animated.Value(0)); // start with height 0
 
@@ -222,6 +225,10 @@ export default function Player({
                             )}
                         </View>
                     </View>
+                    <EloChangePill
+                        value={eloChange}
+                        style={{ marginHorizontal: 8 }}
+                    />
                     {editable ? (
                         <Icon
                             color={theme.icon.primary}

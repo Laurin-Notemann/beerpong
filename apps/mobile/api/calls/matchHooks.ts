@@ -20,9 +20,10 @@ import { ApiId } from '@/api/types';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { compressImage, IMAGE_SIZES } from '@/api/utils/compressImage';
 import { useApi } from '@/api/utils/create-api';
+import { Match, TeamMember } from '@/api/utils/matchDtoToMatch';
 import { QK } from '@/api/utils/reactQuery';
 import { uploadAsset } from '@/api/utils/uploadAsset';
-import { Client, Paths, TeamPhotoDto } from '@/openapi/openapi';
+import { Client, MatchEloDto, Paths, TeamPhotoDto } from '@/openapi/openapi';
 import { describeError, showErrorToast, showSuccessToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
 
@@ -53,6 +54,60 @@ export const useMatchesQuery = (
     const { api } = useApi();
 
     return useQuery(matchesQueryOptions(api, groupId, seasonId));
+};
+
+/**
+ * Each player's Elo change in every match of the season. Under the matches' key, so whatever
+ * refetches the matches refetches this too: a changed match changes every later match's Elo.
+ */
+export const matchEloQueryOptions = (
+    api: Promise<Client>,
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined
+) =>
+    queryOptions<Paths.GetMatchEloChanges.Responses.$200 | null>({
+        queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches, 'elo'],
+        enabled: !!groupId && !!seasonId,
+        queryFn: async () => {
+            if (!groupId || !seasonId) {
+                return null;
+            }
+            const res = await (
+                await api
+            ).getMatchEloChanges({ groupId, seasonId });
+
+            return res?.data;
+        },
+    });
+
+export const useMatchEloQuery = (
+    groupId: ApiId | null | undefined,
+    seasonId: ApiId | null | undefined
+) => {
+    const { api } = useApi();
+
+    return useQuery(matchEloQueryOptions(api, groupId, seasonId));
+};
+
+/** A player's Elo change in a match; undefined while it isn't known (e.g. a queued match). */
+export const eloChangeOf = (elo: MatchEloDto | undefined, playerId: string) =>
+    elo?.players?.find((i) => i.playerId === playerId)?.change;
+
+/** The match with its players' Elo changes as their `change`. */
+export const withEloChanges = (
+    match: Match,
+    elo: MatchEloDto | undefined
+): Match => {
+    if (!elo) return match;
+    const withChange = (member: TeamMember) => ({
+        ...member,
+        change: eloChangeOf(elo, member.id) ?? member.change,
+    });
+    return {
+        ...match,
+        blueTeam: match.blueTeam.map(withChange),
+        redTeam: match.redTeam.map(withChange),
+    };
 };
 
 export const useMatchesByPlayerQuery = (

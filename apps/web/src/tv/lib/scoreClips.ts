@@ -13,7 +13,8 @@ export interface ScoreClip {
 
 /**
  * The clips a socket event (apps/api/README-Socket-Updates.md) has the TV play: one for every
- * cup hit and every move that adds points in a live match on the board, by a player with a clip.
+ * cup hit and every move that adds points in a live match on the board, by a player with a clip
+ * (one of theirs at random).
  */
 export function scoreClipsOf(event: unknown, matches: LiveMatchView[]): ScoreClip[] {
     const e = event as {
@@ -31,8 +32,11 @@ export function scoreClipsOf(event: unknown, matches: LiveMatchView[]): ScoreCli
         if (!scored) return [];
         for (const team of ['blue', 'red'] as const) {
             const player = match[team].players.find((p) => p.id === op.playerId);
-            if (player?.scoreClipUrl) {
-                return [{ id: op.id ?? '', url: player.scoreClipUrl, name: player.name, team }];
+            const clips = player?.scoreClipUrls ?? [];
+            if (player && clips.length) {
+                // one of their clips at random, a new one every score
+                const url = clips[Math.floor(Math.random() * clips.length)];
+                return [{ id: op.id ?? '', url, name: player.name, team }];
             }
         }
         return [];
@@ -52,10 +56,12 @@ const preloaded = new Set<string>();
 export function preloadFrames(matches: LiveMatchView[]) {
     for (const m of matches) {
         for (const p of [...m.blue.players, ...m.red.players]) {
-            if (!p.scoreClipUrl || preloaded.has(p.scoreClipUrl)) continue;
-            preloaded.add(p.scoreClipUrl);
-            new Image().src = frameOf(p.scoreClipUrl, 'first');
-            new Image().src = frameOf(p.scoreClipUrl, 'last');
+            for (const url of p.scoreClipUrls) {
+                if (preloaded.has(url)) continue;
+                preloaded.add(url);
+                new Image().src = frameOf(url, 'first');
+                new Image().src = frameOf(url, 'last');
+            }
         }
     }
 }

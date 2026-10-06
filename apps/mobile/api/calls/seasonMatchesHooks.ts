@@ -9,7 +9,10 @@ import {
     leaderboardQueryOptions,
     LeaderboardScope,
 } from '@/api/calls/leaderboardHooks';
-import { matchesQueryOptions } from '@/api/calls/matchHooks';
+import {
+    matchEloQueryOptions,
+    matchesQueryOptions,
+} from '@/api/calls/matchHooks';
 import { useQueuedMatches, withQueuedMatches } from '@/api/calls/matchQueue';
 import { playersQueryOptions } from '@/api/calls/playerHooks';
 import { movesQueryOptions } from '@/api/calls/ruleHooks';
@@ -17,7 +20,7 @@ import { Player, toPlayer } from '@/api/calls/seasonHooks';
 import { ApiId, WithProfile } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { Match, matchDtoToMatch } from '@/api/utils/matchDtoToMatch';
-import { PlayerDto } from '@/openapi/openapi';
+import { MatchEloDto, PlayerDto } from '@/openapi/openapi';
 
 // Module-level, so useQueries only recombines when a result changes; its output is
 // structurally shared, so `data` keeps its identity while nothing changed.
@@ -86,6 +89,29 @@ export function useSeasonMatches(groupId: ApiId | null, seasonIds: ApiId[]) {
         isLoading: matches.isLoading || players.isLoading || moves.isLoading,
         error: matches.error ?? players.error ?? moves.error,
     };
+}
+
+/**
+ * Each player's Elo change per match of the given seasons, by match id. A match's entry keeps
+ * its identity while it doesn't change, so memoized rows can compare it.
+ */
+export function useMatchElo(groupId: ApiId | null, seasonIds: ApiId[]) {
+    const { api } = useApi();
+
+    const elo = useQueries({
+        queries: seasonIds.map((id) => matchEloQueryOptions(api, groupId, id)),
+        combine,
+    });
+
+    return useMemo(() => {
+        const out = new Map<ApiId, MatchEloDto>();
+        for (const season of elo.data) {
+            for (const match of season?.data ?? []) {
+                out.set(match.matchId, match);
+            }
+        }
+        return out;
+    }, [elo.data]);
 }
 
 /** The season leaderboards (ranked players) of the given seasons, by season id. */

@@ -132,6 +132,11 @@ export interface WidgetLiveMatch extends LiveScore {
 export interface LiveMatchesWidgetProps {
     /** empty while no group is selected */
     group: string;
+    /**
+     * the selected group's id: a push for another group is ignored. Read from here, since the app's
+     * storage can't be read while the phone is locked (missing in props written by older versions)
+     */
+    groupId?: string;
     matches: WidgetLiveMatch[];
     /** the match it shows; its button moves on to the next one */
     selectedId?: string;
@@ -169,6 +174,17 @@ export interface LiveMatchActivityProps extends LiveScore {
     startedAt: number;
     /** the match was saved: the activity shows the final score until it's dismissed */
     finished: boolean;
+    /** each team's own cups as they're drawn (`rackCode`); missing from older pushes */
+    blueCups?: string;
+    redCups?: string;
+    /** each team's players, at most 6; `avatar` is the asset id of their avatar's local copy */
+    bluePlayers?: ActivityPlayer[];
+    redPlayers?: ActivityPlayer[];
+}
+
+export interface ActivityPlayer {
+    name: string;
+    avatar?: string;
 }
 
 /** the `liveScores` of the API's silent widget push (`pushWidgets` in apps/api), if it is one */

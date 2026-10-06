@@ -10,8 +10,8 @@ export interface BoardPlayer {
     id: string;
     name: string;
     avatarUrl: string | null;
-    /** the clip the TV plays when they score in a live match, on this server (clips.ts) */
-    scoreClipUrl: string | null;
+    /** the clips the TV plays one of when they score in a live match, on this server (clips.ts) */
+    scoreClipUrls: string[];
 }
 
 /** what a player's live match does to their standing, if it ended now */
@@ -104,7 +104,10 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             id: profileId ?? '',
             name: p?.name ?? 'Unknown',
             avatarUrl: avatars.get(profileId ?? '') ?? null,
-            scoreClipUrl: clipPath(p?.scoreClipUrl),
+            // an API from before several clips only has the one
+            scoreClipUrls: (p?.scoreClipUrls ?? [p?.scoreClipUrl])
+                .map(clipPath)
+                .filter((i) => i !== null),
         };
     };
 

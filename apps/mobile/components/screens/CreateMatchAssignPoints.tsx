@@ -25,6 +25,8 @@ export interface CreateMatchAssignPointsProps {
     onCancel?: () => void;
 
     onPlayerPress: (player: TeamMember) => void;
+    /** a live match's players' Elo change if it ended now, by season player id */
+    eloChanges?: Map<string, number>;
 }
 export default function CreateMatchAssignPoints({
     isPending,
@@ -33,6 +35,7 @@ export default function CreateMatchAssignPoints({
     onSubmit,
     onCancel,
     onPlayerPress,
+    eloChanges,
 }: CreateMatchAssignPointsProps) {
     const insets = useInsets(true, true);
 
@@ -95,6 +98,7 @@ export default function CreateMatchAssignPoints({
                     players={players}
                     setMoveCount={entry.actions.setMoveCount}
                     onPlayerPress={onPlayerPress}
+                    eloChanges={eloChanges}
                 />
             </ScrollView>
             {!isLive && (

@@ -213,7 +213,11 @@ type profileDTO struct {
 	AvatarURL   *string `json:"avatarUrl"`
 	GroupID     *string `json:"groupId"`
 	CreatedByID *string `json:"createdById"`
-	// ScoreClipURL is the video Versus TV plays when the player scores.
+	// ScoreClipURLs are the videos Versus TV and the app play one of at random
+	// when the player scores, oldest first.
+	ScoreClipURLs []string `json:"scoreClipUrls"`
+	// ScoreClipURL is the newest of them, for app versions from before there
+	// could be several.
 	ScoreClipURL *string `json:"scoreClipUrl"`
 }
 
@@ -224,7 +228,15 @@ func (s *Server) toProfileDTO(p db.Profile) profileDTO {
 		}
 		return ptr(s.bucket.PublicURL(*assetID))
 	}
-	return profileDTO{ID: p.ID, Name: p.Name, AssetIDAvatar: p.AssetIDAvatar, AvatarURL: url(p.AssetIDAvatar), GroupID: p.GroupID, CreatedByID: p.CreatedBy, ScoreClipURL: url(p.AssetIDScoreClip)}
+	clips := []string{}
+	for _, id := range p.AssetIdsScoreClips {
+		clips = append(clips, s.bucket.PublicURL(id))
+	}
+	var newest *string
+	if len(clips) > 0 {
+		newest = &clips[len(clips)-1]
+	}
+	return profileDTO{ID: p.ID, Name: p.Name, AssetIDAvatar: p.AssetIDAvatar, AvatarURL: url(p.AssetIDAvatar), GroupID: p.GroupID, CreatedByID: p.CreatedBy, ScoreClipURLs: clips, ScoreClipURL: newest}
 }
 
 type profileCreatedDTO struct {

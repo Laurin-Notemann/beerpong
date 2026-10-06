@@ -58,3 +58,22 @@ export function moveLog(
         })
         .reverse();
 }
+
+/**
+ * `moveLog` with each scorer's name and avatar: the moves list of the live match screen and of the
+ * "Live matches" widget (whose list the API pushes on as the phone reported it)
+ */
+export function namedMoveLog(
+    cupHits: Parameters<typeof moveLog>[0],
+    moves: Parameters<typeof moveLog>[1],
+    players: { id: string; name: string; avatarUrl?: string | null }[]
+) {
+    return moveLog(cupHits, moves).map((entry) => {
+        const player = players.find((i) => i.id === entry.playerId);
+        return {
+            ...entry,
+            name: player?.name ?? '',
+            avatarUrl: player?.avatarUrl ?? null,
+        };
+    });
+}
