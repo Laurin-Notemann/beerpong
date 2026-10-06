@@ -21,8 +21,8 @@ export interface Display {
     /** the TV's own API user (see api.ts `signup`) */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
-    /** the TV's last heartbeat; it only sends them while its page is visible */
-    visibleAt: number;
+    /** the TV's own event streams; the app's remote lists TVs with one open */
+    tvListeners: number;
     /** what the app's remote calls it, from its browser (`deviceName`) */
     name: string;
     lastSeen: number;
@@ -63,15 +63,13 @@ function codeFor(id: string, wanted: unknown) {
     return code;
 }
 
-// a TV that's off, asleep or in a background tab misses its heartbeats (every 30 s)
-const VISIBLE_FOR = 75_000;
-
-/** the TVs that are on and show this group, for the app's remote */
+/**
+ * The TVs that show this group with their page open, for the app's remote. That includes a
+ * page in a background tab; one whose connection died without closing (a TV switched off)
+ * counts until a ping to it fails.
+ */
 export function byGroup(groupId: string) {
-    const cutoff = Date.now() - VISIBLE_FOR;
-    return [...displays.values()].filter(
-        (d) => d.config.groupId === groupId && d.visibleAt > cutoff
-    );
+    return [...displays.values()].filter((d) => d.config.groupId === groupId && d.tvListeners > 0);
 }
 
 /**
@@ -166,7 +164,7 @@ export function register(input: {
         config: parseConfig(input.config),
         refreshToken: typeof input.refreshToken === 'string' ? input.refreshToken : null,
         listeners: new Set(),
-        visibleAt: 0,
+        tvListeners: 0,
         name: 'TV',
         lastSeen: Date.now(),
     };
@@ -207,7 +205,14 @@ function emit(display: Display, event: DisplayEvent) {
 }
 
 /** listens to a display's changes; returns the unsubscribe */
-export function subscribe(display: Display, listener: (event: DisplayEvent) => void) {
+export function subscribe(
+    display: Display,
+    listener: (event: DisplayEvent) => void,
+    isTv: boolean
+) {
     display.listeners.add(listener);
-    return () => display.listeners.delete(listener);
+    if (isTv) display.tvListeners++;
+    return () => {
+        if (display.listeners.delete(listener) && isTv) display.tvListeners--;
+    };
 }

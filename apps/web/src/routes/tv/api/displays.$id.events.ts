@@ -1,6 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { authorize, type DisplayEvent, DisplayError, subscribe } from '~/tv/server/displays';
+import {
+    authorize,
+    deviceName,
+    type DisplayEvent,
+    DisplayError,
+    subscribe,
+} from '~/tv/server/displays';
 
 /**
  * A display's changes as server-sent events, for the TV and the phones controlling it. The
@@ -18,6 +24,8 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                     throw err;
                 }
                 const { display, isTv } = auth;
+                // what the app's remote calls it
+                if (isTv) display.name = deviceName(request.headers.get('user-agent'));
 
                 const encoder = new TextEncoder();
                 let cleanup = () => {};
@@ -30,7 +38,7 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                             );
                         };
                         send({ type: 'config', config: display.config });
-                        const unsubscribe = subscribe(display, send);
+                        const unsubscribe = subscribe(display, send, isTv);
                         // proxies close connections that stay quiet
                         const ping = setInterval(
                             () => controller.enqueue(encoder.encode(': ping\n\n')),

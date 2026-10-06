@@ -18,7 +18,7 @@ import {
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import { preloadFrames, type ScoreClip, scoreClipsOf } from '~/tv/lib/scoreClips';
 import type { Board, LeaderboardRow } from '~/tv/server/board';
-import { heartbeatDisplay, registerDisplay } from '~/tv/server/functions';
+import { registerDisplay } from '~/tv/server/functions';
 
 /** The TV: what's on it comes from the phones that scan its QR code (see remote.$id.tsx). */
 export const Route = createFileRoute('/tv/')({
@@ -97,24 +97,6 @@ function Tv() {
             stopped = true;
         };
     }, []);
-
-    // the app's remote lists only TVs someone can see, not tabs in the background
-    useEffect(() => {
-        if (!registered) return;
-        const beat = () => {
-            if (document.visibilityState !== 'visible') return;
-            heartbeatDisplay({
-                data: { id: identity.id, secret: identity.secret, userAgent: navigator.userAgent },
-            }).catch(() => {});
-        };
-        beat();
-        const timer = setInterval(beat, 30_000);
-        document.addEventListener('visibilitychange', beat);
-        return () => {
-            clearInterval(timer);
-            document.removeEventListener('visibilitychange', beat);
-        };
-    }, [registered, identity.id, identity.secret]);
 
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
