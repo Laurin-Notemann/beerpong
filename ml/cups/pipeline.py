@@ -10,6 +10,7 @@ from pathlib import Path
 import random
 import shutil
 import subprocess
+import tempfile
 import time
 
 
@@ -381,6 +382,136 @@ def evaluate(args):
     print(json.dumps(report, indent=2))
 
 
+def evaluate_runtime(args):
+    """Score actual worker outlines AND production playing membership against reviewed masks."""
+    import cv2
+    import numpy as np
+    from datetime import datetime
+    root = Path(args.dataset).resolve()
+    artifact = json.loads(Path(args.results).read_text())
+    repo = Path(__file__).resolve().parents[2]
+    worker_sha = digest(repo / 'apps/web/src/tv/lib/cupWorker.ts')
+    if artifact.get('workerSha256') != worker_sha or artifact.get('errors'):
+        raise ValueError('Need an error-free capture bound to the exact cup worker source')
+    frames = json.loads((root / 'frames.json').read_text())
+    gt_path = root / 'coco' / args.split / '_annotations.coco.json'
+    gt = json.loads(gt_path.read_text())
+    by_file = {frame['image']: frame for frame in frames}
+    selected = []
+    for image in gt['images']:
+        matches = [f for name, f in by_file.items() if Path(name).name == image['file_name']]
+        if len(matches) != 1:
+            raise ValueError('Ambiguous reviewed source frame: ' + image['file_name'])
+        frame = matches[0]
+        if digest(root / frame['image']) != frame['sha256']:
+            raise ValueError('Reviewed montage pixels changed: ' + frame['id'])
+        label = json.loads((root / 'annotations' / (frame['id'] + '.json')).read_text())
+        if not label.get('reviewed') or label.get('imageSha256') != frame['sha256'] or not label.get('reviewer') or not label.get('reviewedAt'):
+            raise ValueError('Missing source review provenance: ' + frame['id'])
+        selected.append((frame, image))
+    predictions = {row['id']: row for row in artifact['results']}
+    if len(predictions) != len(artifact['results']) or set(predictions) != {f['id'] for f, _ in selected}:
+        raise ValueError('Worker capture must cover each reviewed frame exactly once')
+    adapter_frames = []
+    for frame, image in selected:
+        raw = frame.get('sourceImage', frame['image'])
+        if digest(root / raw) != frame.get('sourceSha256', frame['sha256']):
+            raise ValueError('Source pixels changed: ' + frame['id'])
+        core = frame.get('calibrationCoreAreas')
+        if not core:
+            raise ValueError('Need independently reviewed core playing areas: ' + frame['id'])
+        source = cv2.imread(str(root / raw))
+        if source is None:
+            raise ValueError('Cannot decode source pixels: ' + frame['id'])
+        offset = frame.get('sourcePresentationOffset', frame['offset'])
+        at = datetime.fromisoformat(frame['startedAt'].replace('Z', '+00:00')).timestamp() * 1000 + offset * 1000
+        adapter_frames.append(dict(id=frame['id'], session=frame['session'], recording=frame['recording'],
+                                   coreAreas=core, atMs=at, aspect=source.shape[1] / source.shape[0],
+                                   matchContext=frame.get('matchContext'), cups=predictions[frame['id']]['cups']))
+    adapter_frames.sort(key=lambda row: (row['session'], row['atMs'], row['id']))
+    events = json.loads(Path(args.events).read_text()) if args.events else []
+    with tempfile.TemporaryDirectory(prefix='cup-membership-') as temporary:
+        input_path, output_path = Path(temporary) / 'input.json', Path(temporary) / 'output.json'
+        write_json(input_path, dict(model=artifact['model'], frames=adapter_frames, events=events))
+        subprocess.run(['node', str(repo / 'ml/cups/membership.mjs'), str(input_path), str(output_path)], check=True, cwd=repo)
+        membership = json.loads(output_path.read_text())
+    observed = {row['id']: row for row in membership['results']}
+    names = ('rawAllCups', 'playingSelected', 'playingDisplayed', 'playingFresh')
+    def empty_score():
+        return dict(tp=0, fp=0, fn=0, unknownTargets=0, excludedUnknownOutputs=0, removedOutputs=0)
+    totals = {name: empty_score() for name in names}
+    cohorts, cohort_metrics, details = {}, {}, []
+    for frame, image in selected:
+        annotations = [a for a in gt['annotations'] if a['image_id'] == image['id']]
+        targets = []
+        for annotation in annotations:
+            mask = np.zeros((image['height'], image['width']), np.uint8)
+            cv2.fillPoly(mask, [np.array(p).reshape(-1, 2).astype(np.int32) for p in annotation['segmentation']], 1)
+            if annotation.get('cup_role') not in ('playing', 'removed', 'unknown'):
+                raise ValueError('Explicit playing/removed/unknown role required')
+            targets.append(mask.astype(bool))
+        row = observed[frame['id']]
+        cohort = row['context']
+        cohorts[cohort] = cohorts.get(cohort, 0) + 1
+        cohort_metrics.setdefault(cohort, {name: empty_score() for name in names})
+        item = dict(id=frame['id'], context=cohort, expected=row['expected'], ambiguous=row['ambiguous'], held=row['held'], ignoredOpIds=row['ignoredOpIds'])
+        for name, cups in (('rawAllCups', predictions[frame['id']]['cups']), ('playingSelected', row['cups']), ('playingDisplayed', row['displayed']), ('playingFresh', row['fresh'])):
+            masks = []
+            for cup in cups:
+                p = np.array(cup['outline'], dtype=float)
+                # Non-overlapping search rectangles assign source polygons to montage halves.
+                candidates = [i for i, area in enumerate(frame['areas'])
+                              if area['x']-1e-4 <= p[:, 0].mean() <= area['x']+area['width']+1e-4
+                              and area['y']-1e-4 <= p[:, 1].mean() <= area['y']+area['height']+1e-4]
+                if len(candidates) != 1:
+                    raise ValueError('Worker outline outside its search montage')
+                side = candidates[0]; area = frame['areas'][side]
+                q = np.column_stack([side*.5+(p[:, 0]-area['x'])/area['width']*.5, (p[:, 1]-area['y'])/area['height']])
+                mask = np.zeros((image['height'], image['width']), np.uint8)
+                cv2.fillPoly(mask, [(q * [image['width'], image['height']]).astype(np.int32)], 1)
+                masks.append(mask.astype(bool))
+            pairs = sorted([(float((p & t).sum()/max((p | t).sum(), 1)), i, j)
+                            for i, p in enumerate(masks) for j, t in enumerate(targets)], reverse=True)
+            used_predictions, used_targets = set(), set()
+            score = empty_score()
+            for iou, i, j in pairs:
+                if iou < .5 or i in used_predictions or j in used_targets:
+                    continue
+                used_predictions.add(i); used_targets.add(j)
+                role = annotations[j]['cup_role']
+                if role == 'unknown':
+                    score['excludedUnknownOutputs'] += 1
+                elif name == 'rawAllCups' or role == 'playing':
+                    score['tp'] += 1
+                else:
+                    score['fp'] += 1; score['removedOutputs'] += 1
+            score['fp'] += len(masks) - len(used_predictions)
+            for j, annotation in enumerate(annotations):
+                role = annotation['cup_role']
+                if role == 'unknown':
+                    score['unknownTargets'] += 1
+                elif j not in used_targets and (name == 'rawAllCups' or role == 'playing'):
+                    score['fn'] += 1
+            for key, value in score.items():
+                totals[name][key] += value
+                cohort_metrics[cohort][name][key] += value
+            item[name] = score
+        details.append(item)
+    for score in list(totals.values()) + [score for metrics in cohort_metrics.values() for score in metrics.values()]:
+        score.update(precisionIoU50=score['tp']/max(score['tp']+score['fp'], 1), recallIoU50=score['tp']/max(score['tp']+score['fn'], 1))
+    report = dict(scope='worker-outline-and-playing-membership', split=args.split, model=artifact['model'],
+                  workerSha256=worker_sha, membershipSourceSha256=membership['membershipSourceSha256'],
+                  browserArtifactSha256=digest(args.results), annotationSha256=digest(gt_path),
+                  datasetSha256=digest(root / 'coco/provenance.json'), eventsSha256=digest(args.events) if args.events else None,
+                  cohorts=cohorts, cohortMetrics=cohort_metrics, metrics=totals, frames=details,
+                  limitations=['Source frame sampling is not live peer/hardware validation.',
+                               'Unknown match orientation uses production null-count fallback; visible GT never sets the count cap.',
+                               'Displayed outlines include production persistence; selected and fresh evidence remain separately measured.',
+                               'Inference-age rejection, live transport latency and curved canvas stroke geometry are outside this mask IoU measurement.'])
+    write_json(args.output, report)
+    print(json.dumps(dict(metrics=totals, cohorts=cohorts, output=args.output)))
+
+
 def export(args):
     import torch
     import onnx
@@ -456,6 +587,7 @@ def main():
     p = sub.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=42); p.add_argument('--session-splits'); p.set_defaults(fn=split)
     p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.add_argument('--augmentation-hue', type=float, default=.5); p.add_argument('--learning-rate', type=float); p.add_argument('--encoder-learning-rate', type=float); p.set_defaults(fn=train)
     p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.add_argument('--details'); p.set_defaults(fn=evaluate)
+    p = sub.add_parser('evaluate-runtime'); p.add_argument('--dataset', required=True); p.add_argument('--results', required=True); p.add_argument('--events'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--output', required=True); p.set_defaults(fn=evaluate_runtime)
     p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.set_defaults(fn=publish)
     p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.85); p.add_argument('--min-recall', type=float, default=.8); p.set_defaults(fn=export)
     args = parser.parse_args(); args.fn(args)
