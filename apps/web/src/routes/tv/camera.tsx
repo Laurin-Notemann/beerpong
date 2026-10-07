@@ -86,21 +86,48 @@ function Camera() {
           media.stream.getVideoTracks()[0]?.label ||
           'default-camera'
         : '';
-    const [calibration, setCalibration] = useState<{ device: string; areas: PlayingArea[] } | null>(
-        () => {
-            try {
-                const value = JSON.parse(
-                    localStorage.getItem('versus-playing-areas') ?? 'null'
-                ) as { device?: unknown; areas?: unknown } | null;
-                return value && typeof value.device === 'string' && validAreas(value.areas)
-                    ? { device: value.device, areas: value.areas }
-                    : null;
-            } catch {
-                return null;
-            }
+    const cameraLabel = media.stream?.getVideoTracks()[0]?.label ?? '';
+    const [calibration, setCalibration] = useState<{
+        device: string;
+        label?: string;
+        areas: PlayingArea[];
+    } | null>(() => {
+        try {
+            const value = JSON.parse(localStorage.getItem('versus-playing-areas') ?? 'null') as {
+                device?: unknown;
+                label?: unknown;
+                areas?: unknown;
+            } | null;
+            return value && typeof value.device === 'string' && validAreas(value.areas)
+                ? {
+                      device: value.device,
+                      label: typeof value.label === 'string' ? value.label : undefined,
+                      areas: value.areas,
+                  }
+                : null;
+        } catch {
+            return null;
         }
-    );
-    const areas = cameraDevice && calibration?.device === cameraDevice ? calibration.areas : null;
+    });
+    // Browsers can rotate device IDs after a reload; keep the rack areas for the same named camera.
+    const areas =
+        cameraDevice &&
+        calibration &&
+        (calibration.device === cameraDevice ||
+            (!!cameraLabel && calibration.label === cameraLabel))
+            ? calibration.areas
+            : null;
+    useEffect(() => {
+        if (
+            !calibration ||
+            calibration.device !== cameraDevice ||
+            !cameraLabel ||
+            calibration.label
+        )
+            return;
+        const value = { ...calibration, label: cameraLabel };
+        localStorage.setItem('versus-playing-areas', JSON.stringify(value));
+    }, [calibration, cameraDevice, cameraLabel]);
     const groupName = identity.config.groupId ? identity.config.groupName : null;
     const sender = useCameraSender(
         identity.id,
@@ -153,7 +180,9 @@ function Camera() {
                 !matches?.formations?.some((m) => m.id === settings.syncMatchId)
             )
                 return false;
-            const value = settings.areas ? { device: cameraDevice, areas: settings.areas } : null;
+            const value = settings.areas
+                ? { device: cameraDevice, label: cameraLabel, areas: settings.areas }
+                : null;
             if (value) localStorage.setItem('versus-playing-areas', JSON.stringify(value));
             else localStorage.removeItem('versus-playing-areas');
             localStorage.setItem('versus-cup-outlines', settings.enabled ? 'on' : 'off');
@@ -167,7 +196,7 @@ function Camera() {
             localStorage.setItem('versus-formation-tv', settings.syncTvId ?? '');
             return true;
         },
-        [cameraDevice, matches]
+        [cameraDevice, cameraLabel, matches]
     );
     useCameraVisionRemote(
         identity.id,
@@ -326,7 +355,7 @@ function Camera() {
                         setSelectingAreas(false);
                     }}
                     save={(selected) => {
-                        const value = { device: cameraDevice, areas: selected };
+                        const value = { device: cameraDevice, label: cameraLabel, areas: selected };
                         localStorage.setItem('versus-playing-areas', JSON.stringify(value));
                         setCalibration((previous) =>
                             JSON.stringify(previous) === JSON.stringify(value) ? previous : value
