@@ -1,6 +1,6 @@
 import { cupVertices, type Cup, type PlayingArea } from '~/tv/lib/cupVision';
 
-type Point = { x: number; y: number; diameter: number; cup: Cup };
+type Point = { x: number; y: number; bodyY: number; diameter: number; cup: Cup };
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 function point(cup: Cup, aspect: number): Point {
     const vertices = cupVertices(cup);
@@ -9,7 +9,13 @@ function point(cup: Cup, aspect: number): Point {
     const rim = vertices.filter((p) => p[1] <= top + height * 0.25);
     const left = Math.min(...rim.map((p) => p[0])) * aspect;
     const right = Math.max(...rim.map((p) => p[0])) * aspect;
-    return { x: (left + right) / 2, y: top, diameter: right - left, cup };
+    return {
+        x: (left + right) / 2,
+        y: top,
+        bodyY: top + height / 2,
+        diameter: right - left,
+        cup,
+    };
 }
 
 /** Search beyond the rack boundary to capture whole cups, while keeping the two sides separate. */
@@ -66,36 +72,22 @@ export class CupMembership {
                 .sort((a, b) => a - b);
             const spacing = widths[Math.floor(widths.length / 2)] ?? 0;
             const nearby = (a: Point, b: Point) => distance(a, b) <= spacing * 1.9;
-            const core = available.filter((p) => inside(p, area));
-            const groups: Point[][] = [];
-            const remaining = new Set(core);
-            while (remaining.size) {
-                const group = [remaining.values().next().value!];
-                remaining.delete(group[0]);
-                for (let i = 0; i < group.length; i++)
-                    for (const candidate of remaining)
-                        if (nearby(group[i], candidate)) {
-                            group.push(candidate);
-                            remaining.delete(candidate);
-                        }
-                groups.push(group);
-            }
+            // A cup's rim can rise above the selected playing area while its body
+            // is inside it. Every core cup is a seed, including loose reracks.
+            const core = available.filter((p) => inside({ ...p, y: p.bodyY }, area));
             const centre = {
                 x: (area.x + area.width / 2) * aspect,
                 y: area.y + area.height / 2,
+                bodyY: area.y + area.height / 2,
                 diameter: 0,
                 cup: cups[0],
             };
-            groups.sort(
-                (a, b) => b.length - a.length || distance(a[0], centre) - distance(b[0], centre)
-            );
-            const rack = groups[0] ?? [];
             const continuity = (p: Point) =>
                 old.length ? Math.min(...old.map((o) => distance(p, o.point))) : Infinity;
             const candidates = available.filter(
                 (p) =>
-                    rack.includes(p) ||
-                    rack.some((r) => nearby(r, p)) ||
+                    core.includes(p) ||
+                    core.some((r) => nearby(r, p)) ||
                     continuity(p) < spacing * 1.8
             );
             const priority = (p: Point) =>
