@@ -156,7 +156,7 @@ jobs:
       - name: Keep the build
         # Retain a completed binary even if submission or EAS registration fails.
         if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.platform }}-${{ github.sha }}
           path: ${{ runner.temp }}/${{ env.ARTIFACT }}
