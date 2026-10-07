@@ -10,7 +10,7 @@ import { ScopedLogger } from '@/utils/logging';
 const logger = new ScopedLogger('widgets');
 
 /**
- * Where the Live Activity finds the players' avatars: in the app group, which the widget
+ * Where the Live Activity and the "Live matches" widget find the players' avatars: in the app group, which the widget
  * extension can read but not download into. One small JPEG per avatar asset id.
  */
 export function activityAvatarsDirectory(base: string) {
@@ -20,9 +20,9 @@ export function activityAvatarsDirectory(base: string) {
 const copying = new Set<string>();
 
 /**
- * Keeps a small copy of each of these avatars where the Live Activity can show it (see
- * LiveMatchActivity.tsx); a new avatar is a new asset, so a copy never goes stale. The activity
- * shows initials for players this phone has no copy of yet.
+ * Keeps a small copy of each of these avatars where the Live Activity and the widget can show it
+ * (see LiveMatchActivity.tsx); a new avatar is a new asset, so a copy never goes stale. They
+ * show initials for players this phone has no copy of yet.
  */
 export function useActivityAvatars(avatarUrls: (string | null | undefined)[]) {
     const key = [

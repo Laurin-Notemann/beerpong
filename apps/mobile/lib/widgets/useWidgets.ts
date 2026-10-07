@@ -55,11 +55,11 @@ interface LiveScoreOf {
         id: string;
         name: string;
         team: 'red' | 'blue';
-        /** the avatar's asset id, for the Live Activity's copy of it */
+        /** the avatar's asset id, for the Live Activity's and the widget's copy of it */
         avatar?: string;
     }[];
     moves: WidgetMove[];
-    /** each team's cups as they're drawn, for the Live Activity (rackCode) */
+    /** each team's cups as they're drawn, for the Live Activity and the widget (rackCode) */
     blueCups: string;
     redCups: string;
 }
@@ -262,8 +262,14 @@ export function useHomeScreenWidgets() {
                 id: i.id,
                 startedAt: Date.parse(i.startedAt) || 0,
                 ...i.score,
-                players: i.players.map(({ name, team }) => ({ name, team })),
+                players: i.players.map(({ name, team, avatar }) => ({
+                    name,
+                    team,
+                    avatar,
+                })),
                 moves: i.moves,
+                blueCups: i.blueCups,
+                redCups: i.redCups,
             })),
         };
     }, [groupId, group, scores]);

@@ -109,6 +109,8 @@ export interface WidgetPlayer {
     team: 'red' | 'blue';
     /** how much their season Elo changes if the match ends now; only the API's pushes have it */
     elo?: number;
+    /** the asset id of their avatar's local copy (activityAvatars.ts) */
+    avatar?: string;
 }
 
 export interface WidgetMove {
@@ -127,6 +129,9 @@ export interface WidgetLiveMatch extends LiveScore {
     players?: WidgetPlayer[];
     /** newest first */
     moves?: WidgetMove[];
+    /** each team's own cups as they're drawn (`rackCode`) */
+    blueCups?: string;
+    redCups?: string;
 }
 
 export interface LiveMatchesWidgetProps {
@@ -213,13 +218,17 @@ export function liveScoresOf(
         )
         .map((i) => ({
             ...i,
+            blueCups: typeof i.blueCups === 'string' ? i.blueCups : undefined,
+            redCups: typeof i.redCups === 'string' ? i.redCups : undefined,
             players: Array.isArray(i.players)
                 ? i.players.filter(
                       (p: unknown): p is WidgetPlayer =>
                           isRecord(p) &&
                           typeof p.name === 'string' &&
                           isTeam(p.team) &&
-                          (p.elo === undefined || typeof p.elo === 'number')
+                          (p.elo === undefined || typeof p.elo === 'number') &&
+                          (p.avatar === undefined ||
+                              typeof p.avatar === 'string')
                   )
                 : undefined,
             moves: Array.isArray(i.moves)
