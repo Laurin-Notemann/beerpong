@@ -163,10 +163,8 @@ export function useCupDetector(
                 });
                 heldCupCount = Math.max(0, displayed.length - selected.cups.length);
                 send({ ...frame, cups: displayed });
-                rawObserverRef.current?.(
-                    { ...frame, cups: data.cups },
-                    surface.width / surface.height
-                );
+                // Fresh selected geometry only: spare cups and held outlines cannot become hit evidence.
+                rawObserverRef.current?.(frame, surface.width / surface.height);
                 observe(frame, surface.width / surface.height);
             } else dropped++;
             nextAt = performance.now() + 150;

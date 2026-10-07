@@ -397,6 +397,10 @@ function Camera() {
     );
 
     const pickDevice = (id: string) => {
+        if (id !== cameraDevice) {
+            localStorage.removeItem('versus-playing-areas');
+            setCalibration(null);
+        }
         localStorage.setItem(DEVICE_KEY, id);
         setDeviceId(id);
     };
