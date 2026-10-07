@@ -7,6 +7,7 @@ export interface BallCandidate {
     radius: number;
     color: 'orange' | 'white';
     score: number;
+    source?: 'color-motion' | 'track-color-recovery';
 }
 export interface HitEntry {
     id: string;
@@ -43,7 +44,8 @@ export function ballCandidates(
     previous: Uint8ClampedArray | null,
     width: number,
     height: number,
-    areas?: PlayingArea[]
+    areas?: PlayingArea[],
+    hints: BallCandidate[] = []
 ) {
     const mask = new Uint8Array(width * height);
     const scale = width / 640;
@@ -76,9 +78,52 @@ export function ballCandidates(
                 Math.floor(i / width) > bounds.bottom * height)
         )
             continue;
-        const orange = r > 110 && g > 55 && r > g * 1.13 && g > b * 1.3 && r - b > 45;
-        const white = Math.min(r, g, b) > 155 && Math.max(r, g, b) - Math.min(r, g, b) < 45;
-        if (orange || white) mask[i] = orange ? 1 : 2;
+        const x = i % width,
+            y = Math.floor(i / width);
+        const strictOrange = r > 110 && g > 55 && r > g * 1.13 && g > b * 1.3 && r - b > 45;
+        // Compression can turn a flying orange ball pink over a red rack. Relax color only
+        // around an established moving track's prediction, never across the whole scene.
+        const recoveredOrange =
+            r > 110 &&
+            g > 55 &&
+            r > g * 1.13 &&
+            r > b * 1.14 &&
+            r - b > 30 &&
+            hints.some(
+                (h) =>
+                    h.color === 'orange' &&
+                    Math.hypot(x - h.x * width, y - h.y * height) < 24 * scale
+            );
+        const orange = strictOrange || recoveredOrange;
+        let white = Math.min(r, g, b) > 155 && Math.max(r, g, b) - Math.min(r, g, b) < 45;
+        if (white && previous) {
+            const pr = previous[p],
+                pg = previous[p + 1],
+                pb = previous[p + 2];
+            // A table reveal lacks contrast; a real white ball crossing red/orange still has it.
+            {
+                let background = 0,
+                    count = 0;
+                const offset = Math.max(3, Math.round(6 * scale));
+                for (const [dx, dy] of [
+                    [-offset, 0],
+                    [offset, 0],
+                    [0, -offset],
+                    [0, offset],
+                ]) {
+                    const sx = x + dx,
+                        sy = y + dy;
+                    if (sx < 0 || sx >= width || sy < 0 || sy >= height) continue;
+                    const q = (sy * width + sx) * 4;
+                    background += (pixels[q] + pixels[q + 1] + pixels[q + 2]) / 3;
+                    count++;
+                }
+                const contrast = count ? (r + g + b) / 3 - background / count : 0;
+                const revealedOrange = pr > pg * 1.13 && pr - pb > 35;
+                if (contrast < (revealedOrange ? 24 : 8)) white = false;
+            }
+        }
+        if (orange || white) mask[i] = orange ? (strictOrange ? 1 : 3) : 2;
     }
     const balls: BallCandidate[] = [];
     const stack = new Int32Array(mask.length);
@@ -88,7 +133,8 @@ export function ballCandidates(
             size = 0,
             sumX = 0,
             sumY = 0,
-            orange = 0;
+            orange = 0,
+            recovered = 0;
         let minX = width,
             maxX = 0,
             minY = height,
@@ -100,7 +146,8 @@ export function ballCandidates(
                 mask[p] = 0;
             }
         };
-        orange += mask[i] === 1 ? 1 : 0;
+        orange += mask[i] !== 2 ? 1 : 0;
+        recovered += mask[i] === 3 ? 1 : 0;
         mask[i] = 0;
         while (tail) {
             const p = stack[--tail],
@@ -118,9 +165,14 @@ export function ballCandidates(
                 x + 1 < width ? p + 1 : -1,
                 y > 0 ? p - width : -1,
                 y + 1 < height ? p + width : -1,
+                x > 0 && y > 0 ? p - width - 1 : -1,
+                x + 1 < width && y > 0 ? p - width + 1 : -1,
+                x > 0 && y + 1 < height ? p + width - 1 : -1,
+                x + 1 < width && y + 1 < height ? p + width + 1 : -1,
             ]) {
                 if (q >= 0 && mask[q]) {
-                    orange += mask[q] === 1 ? 1 : 0;
+                    orange += mask[q] !== 2 ? 1 : 0;
+                    recovered += mask[q] === 3 ? 1 : 0;
                     visit(q);
                 }
             }
@@ -153,10 +205,74 @@ export function ballCandidates(
             radius: Math.max(w, h) / width / 2,
             color,
             score,
+            source:
+                color === 'orange' && orange - recovered < 4 * scale * scale
+                    ? 'track-color-recovery'
+                    : 'color-motion',
         });
         if (balls.length >= 24) break;
     }
     return { balls, obscured: moving / mask.length > 0.12 };
+}
+
+/** Conservative temporal color recovery. Predicted positions never become detections without pixels. */
+export class BallTracker {
+    private tracks: { points: (BallCandidate & { at: number })[] }[] = [];
+    detect(
+        pixels: Uint8ClampedArray,
+        previous: Uint8ClampedArray | null,
+        width: number,
+        height: number,
+        areas: PlayingArea[] | undefined,
+        at: number
+    ) {
+        if (!previous) this.tracks = [];
+        this.tracks = this.tracks.filter((t) => at - t.points.at(-1)!.at <= 180);
+        const hints = this.tracks.flatMap((t) => {
+            if (t.points.length < 2 || t.points.every((p) => p.source === 'track-color-recovery'))
+                return [];
+            const a = t.points.at(-2)!,
+                b = t.points.at(-1)!;
+            const distance = Math.hypot((b.x - a.x) * width, (b.y - a.y) * height);
+            if (b.color !== 'orange' || distance < (18 * width) / 640 || b.at <= a.at) return [];
+            const ratio = (at - b.at) / (b.at - a.at);
+            return [{ ...b, x: b.x + (b.x - a.x) * ratio, y: b.y + (b.y - a.y) * ratio }];
+        });
+        const result = ballCandidates(pixels, previous, width, height, areas, hints);
+        if (result.obscured) {
+            this.tracks = [];
+            return result;
+        }
+        const used = new Set<number>();
+        for (const ball of result.balls) {
+            const possible = this.tracks
+                .map((t, index) => ({
+                    t,
+                    index,
+                    d: Math.hypot(
+                        (t.points.at(-1)!.x - ball.x) * width,
+                        (t.points.at(-1)!.y - ball.y) * height
+                    ),
+                }))
+                .filter(
+                    (t) =>
+                        !used.has(t.index) &&
+                        t.t.points.at(-1)!.at < at &&
+                        t.t.points.at(-1)!.color === ball.color &&
+                        t.d < width * 0.15
+                )
+                .sort((a, b) => a.d - b.d);
+            if (possible.length > 1 && possible[1].d - possible[0].d < width * 0.015) continue;
+            const found = possible[0];
+            if (found) {
+                found.t.points.push({ ...ball, at });
+                found.t.points = found.t.points.slice(-2);
+                used.add(found.index);
+            } else this.tracks.push({ points: [{ ...ball, at }] });
+        }
+        this.tracks = this.tracks.slice(-24);
+        return result;
+    }
 }
 
 function rim(cup: Cup) {

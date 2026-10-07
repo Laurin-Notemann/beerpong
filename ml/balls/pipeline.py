@@ -132,10 +132,10 @@ def proposals(args):
                 top = max(0, min(a['y'] for a in areas)-.1)
                 bottom = min(1, max(a['y']+a['height'] for a in areas)+.1)
                 search[round(top*frame.shape[0]):round(bottom*frame.shape[0]), round(left*640):round(right*640)] = True
+                previous = rgb
                 if motion.mean() > .12:
                     continue
                 count, labels, stats, centers = cv2.connectedComponentsWithStats((motion & (orange | white) & search).astype(np.uint8), connectivity=4)
-                previous = rgb
                 for index in sorted(range(1, count), key=lambda i: -stats[i][4])[:24]:
                     x, y, bw, bh, size = stats[index]
                     if not 4 <= size <= 180 or max(bw, bh) > 25 or max(bw, bh) / min(bw, bh) > 3 or size / (bw * bh) < .25:
