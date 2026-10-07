@@ -107,6 +107,25 @@ def extract(args):
     print(json.dumps({'frames': len(frames), 'sessions': len({f['session'] for f in frames})}))
 
 
+def search_areas(areas):
+    """Match the camera's padded search without overlapping the two source regions."""
+    result = []
+    for side, a in enumerate(areas):
+        b = areas[1-side]
+        left, right = max(0, a['x']-.4*a['width']), min(1, a['x']+1.4*a['width'])
+        top, bottom = max(0, a['y']-.4*a['height']), min(1, a['y']+1.4*a['height'])
+        if a['x']+a['width'] <= b['x']:
+            right = min(right, (a['x']+a['width']+b['x'])/2)
+        elif b['x']+b['width'] <= a['x']:
+            left = max(left, (b['x']+b['width']+a['x'])/2)
+        elif a['y']+a['height'] <= b['y']:
+            bottom = min(bottom, (a['y']+a['height']+b['y'])/2)
+        else:
+            top = max(top, (b['y']+b['height']+a['y'])/2)
+        result.append(dict(x=left, y=top, width=right-left, height=bottom-top))
+    return result
+
+
 def prepare(args):
     """Make the same two-area montage as the browser; boxes are selected from source footage."""
     import cv2
@@ -123,6 +142,15 @@ def prepare(args):
             continue
         if len(areas) != 2:
             raise ValueError('Select two playing areas for ' + frame['id'])
+        for a in areas:
+            x, y, w, h = [a[k] for k in ('x','y','width','height')]
+            if not all(np.isfinite([x,y,w,h])) or min(x,y) < 0 or min(w,h) < .02 or x+w > 1 or y+h > 1:
+                raise ValueError('Invalid playing area')
+        a,b=areas
+        if not (a['x']+a['width'] <= b['x'] or b['x']+b['width'] <= a['x'] or a['y']+a['height'] <= b['y'] or b['y']+b['height'] <= a['y']):
+            raise ValueError('Playing areas overlap')
+        if args.search_padding:
+            areas = search_areas(areas)
         image = cv2.imread(str(root / frame['image']))
         parts = []
         for a in areas:
@@ -392,7 +420,7 @@ def main():
     sub = parser.add_subparsers(dest='command', required=True)
     p = sub.add_parser('collect'); p.add_argument('--output', required=True); p.add_argument('--group', default='SBRIL5OJ5'); p.add_argument('--host', default='privaten'); p.add_argument('--limit', type=int, default=200); p.add_argument('--per-session', type=int, default=2); p.add_argument('--seed', type=int, default=42); p.set_defaults(fn=collect)
     p = sub.add_parser('extract'); p.add_argument('--dataset', required=True); p.add_argument('--every', type=int, default=10); p.add_argument('--min-change', type=int, default=3); p.set_defaults(fn=extract)
-    p = sub.add_parser('prepare'); p.add_argument('--dataset', required=True); p.add_argument('--areas', required=True); p.set_defaults(fn=prepare)
+    p = sub.add_parser('prepare'); p.add_argument('--dataset', required=True); p.add_argument('--areas', required=True); p.add_argument('--search-padding', action='store_true'); p.set_defaults(fn=prepare)
     p = sub.add_parser('prelabel'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--threshold', type=float, default=.2); p.set_defaults(fn=prelabel)
     p = sub.add_parser('review'); p.add_argument('--dataset', required=True); p.add_argument('--port', type=int, default=3198); p.set_defaults(fn=lambda args: __import__('review').serve(args))
     p = sub.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=42); p.add_argument('--session-splits'); p.set_defaults(fn=split)
