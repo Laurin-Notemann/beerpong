@@ -66,6 +66,7 @@ function loadIdentity(): Identity {
 }
 
 function Camera() {
+    const [inApp] = useState(() => new URLSearchParams(location.search).get('inApp') === '1');
     const [identity, setIdentity] = useState(loadIdentity);
     const [pairingToken, setPairingToken] = useState(() =>
         new URLSearchParams(location.hash.slice(1)).get('pair')
@@ -227,6 +228,54 @@ function Camera() {
         applyVision
     );
     useWakeLock();
+
+    useEffect(() => {
+        if (!inApp) return;
+        let stopping = false;
+        const notify = (message: string) => {
+            const host = window as Window & {
+                ReactNativeWebView?: { postMessage: (message: string) => void };
+            };
+            host.ReactNativeWebView?.postMessage(`versus-camera:${message}`);
+            if (window.parent !== window)
+                window.parent.postMessage(`versus-camera:${message}`, '*');
+        };
+        const command = (action: unknown) => {
+            if (action === 'pause') setCapturing(false);
+            if (action === 'resume' && !stopping) setCapturing(true);
+            if (action !== 'stop' || stopping) return;
+            stopping = true;
+            setCapturing(false);
+            // Release hardware immediately, then acknowledge the server removal before the
+            // native screen unmounts.
+            if (previewVideo.current?.srcObject instanceof MediaStream)
+                previewVideo.current.srcObject.getTracks().forEach((track) => track.stop());
+            void stopCamera({ data: { id: identity.id, key: identity.secret } })
+                .catch((error: unknown) => {
+                    setPairingError('Could not remove the camera. Remove it in TV Remote.');
+                    void import('@sentry/browser').then((Sentry) =>
+                        Sentry.captureException(error, { tags: { feature: 'in-app-camera-stop' } })
+                    );
+                })
+                .finally(() => notify('stopped'));
+        };
+        const nativeCommand = (event: Event) => {
+            if (event instanceof CustomEvent) command((event as CustomEvent<unknown>).detail);
+        };
+        const browserCommand = (event: MessageEvent<unknown>) => {
+            if (window.parent === window || event.source !== window.parent) return;
+            if (event.data === 'versus-camera:pause') command('pause');
+            if (event.data === 'versus-camera:resume') command('resume');
+            if (event.data === 'versus-camera:stop') command('stop');
+        };
+        window.addEventListener('versus-camera-command', nativeCommand);
+        window.addEventListener('message', browserCommand);
+        notify('ready');
+        return () => {
+            window.removeEventListener('versus-camera-command', nativeCommand);
+            window.removeEventListener('message', browserCommand);
+        };
+    }, [identity.id, identity.secret, inApp]);
 
     useEffect(() => {
         const receive = () => {
@@ -550,13 +599,15 @@ function Camera() {
                         >
                             Rotate 90°
                         </button>
-                        <button
-                            type="button"
-                            onClick={stop}
-                            className="min-h-11 rounded-xl bg-panel px-4 py-2 text-sm font-semibold"
-                        >
-                            Stop camera
-                        </button>
+                        {!inApp && (
+                            <button
+                                type="button"
+                                onClick={stop}
+                                className="min-h-11 rounded-xl bg-panel px-4 py-2 text-sm font-semibold"
+                            >
+                                Stop camera
+                            </button>
+                        )}
                         {media.devices.length > 1 && (
                             <select
                                 value={

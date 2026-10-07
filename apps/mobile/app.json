@@ -47,7 +47,7 @@
                 "expo-image-picker",
                 {
                     "photosPermission": "Versus uses your photos for player pictures and team photos.",
-                    "cameraPermission": "Versus uses the camera to take player pictures and team photos."
+                    "cameraPermission": "Versus uses the camera for player and team photos and live video on your group's TVs."
                 }
             ],
             "expo-font",

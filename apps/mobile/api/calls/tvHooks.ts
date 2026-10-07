@@ -224,20 +224,20 @@ export function useAddCamera(groupId: ApiId | null) {
     });
 }
 
-/** One tap from the app, then the phone's browser owns capture and WebRTC. */
+/** A short-lived pairing URL; the caller chooses where capture runs. */
 export function usePhoneCamera(groupId: ApiId | null) {
     const { api } = useApi();
     return useMutation({
-        mutationFn: async () => {
+        mutationFn: async (destination: 'app' | 'browser') => {
             if (!groupId) throw new Error('no group');
             const res = await (
                 await api
             ).post<{ pairingToken: string }>(camerasUrl(groupId), {
                 phone: true,
             });
-            await Linking.openURL(
-                `${env.tvBaseUrl}/tv/camera#pair=${encodeURIComponent(res.data.pairingToken)}`
-            );
+            const url = `${env.tvBaseUrl}/tv/camera${destination === 'app' ? '?inApp=1' : ''}#pair=${encodeURIComponent(res.data.pairingToken)}`;
+            if (destination === 'browser') await Linking.openURL(url);
+            return url;
         },
         onError: (err) =>
             showErrorToast("Couldn't start this phone's camera.", err),
