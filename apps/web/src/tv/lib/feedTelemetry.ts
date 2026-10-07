@@ -103,8 +103,12 @@ function differ(start: number) {
             const value = totals[key];
             if (value !== undefined) last[key] = value;
         }
-        const delta = (key: string) =>
-            last[key] === undefined ? undefined : last[key] - (before[key] ?? 0);
+        const delta = (key: string) => {
+            const total = last[key];
+            if (total === undefined) return undefined;
+            // a total that went back started over (the TV restarted its decoder or player)
+            return total < (before[key] ?? 0) ? total : total - (before[key] ?? 0);
+        };
         const rate = (key: string, scale = 1) => {
             const change = delta(key);
             return change === undefined || seconds <= 0 ? undefined : (change * scale) / seconds;
