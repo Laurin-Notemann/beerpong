@@ -1,14 +1,15 @@
-import { MAX_CUPS, type Cup } from '~/tv/lib/cupVision';
+import { cupVertices, MAX_CUPS, type Cup } from '~/tv/lib/cupVision';
 
 type Box = { x: number; y: number; width: number; height: number };
 function bounds(cup: Cup): Box {
-    const x = Math.min(...cup.outline.map((p) => p[0]));
-    const y = Math.min(...cup.outline.map((p) => p[1]));
+    const vertices = cupVertices(cup);
+    const x = Math.min(...vertices.map((p) => p[0]));
+    const y = Math.min(...vertices.map((p) => p[1]));
     return {
         x,
         y,
-        width: Math.max(...cup.outline.map((p) => p[0])) - x,
-        height: Math.max(...cup.outline.map((p) => p[1])) - y,
+        width: Math.max(...vertices.map((p) => p[0])) - x,
+        height: Math.max(...vertices.map((p) => p[1])) - y,
     };
 }
 const overlap = (a: Box, b: Box) => {

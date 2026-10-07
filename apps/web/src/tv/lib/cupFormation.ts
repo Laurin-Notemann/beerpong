@@ -1,5 +1,5 @@
 import { Formation } from '@/components/CupGrid/Formation';
-import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
+import { cupVertices, type Cup, type PlayingArea } from '~/tv/lib/cupVision';
 
 export interface GridCup {
     x: number;
@@ -52,9 +52,10 @@ export function cupPoints(cups: Cup[], area: PlayingArea, aspect: number): Point
     const upper = Math.max(0, area.y - area.height * 0.4);
     const lower = Math.min(1, area.y + area.height * 1.4);
     return cups.flatMap((cup) => {
-        const top = Math.min(...cup.outline.map((p) => p[1]));
-        const bottom = Math.max(...cup.outline.map((p) => p[1]));
-        const rim = cup.outline.filter((p) => p[1] <= top + (bottom - top) * 0.25);
+        const vertices = cupVertices(cup);
+        const top = Math.min(...vertices.map((p) => p[1]));
+        const bottom = Math.max(...vertices.map((p) => p[1]));
+        const rim = vertices.filter((p) => p[1] <= top + (bottom - top) * 0.25);
         const x = (Math.min(...rim.map((p) => p[0])) + Math.max(...rim.map((p) => p[0]))) / 2;
         return x >= left && x <= right && top >= upper && top <= lower
             ? [{ x: x * aspect, y: top }]

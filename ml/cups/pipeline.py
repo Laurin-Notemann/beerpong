@@ -461,7 +461,8 @@ def evaluate_runtime(args):
         for name, cups in (('rawAllCups', predictions[frame['id']]['cups']), ('playingSelected', row['cups']), ('playingDisplayed', row['displayed']), ('playingFresh', row['fresh'])):
             masks = []
             for cup in cups:
-                p = np.array(cup['outline'], dtype=float)
+                outlines = [cup['outline']] + cup.get('parts', [])
+                p = np.array([point for outline in outlines for point in outline], dtype=float)
                 # Non-overlapping search rectangles assign source polygons to montage halves.
                 candidates = [i for i, area in enumerate(frame['areas'])
                               if area['x']-1e-4 <= p[:, 0].mean() <= area['x']+area['width']+1e-4
@@ -469,9 +470,11 @@ def evaluate_runtime(args):
                 if len(candidates) != 1:
                     raise ValueError('Worker outline outside its search montage')
                 side = candidates[0]; area = frame['areas'][side]
-                q = np.column_stack([side*.5+(p[:, 0]-area['x'])/area['width']*.5, (p[:, 1]-area['y'])/area['height']])
                 mask = np.zeros((image['height'], image['width']), np.uint8)
-                cv2.fillPoly(mask, [(q * [image['width'], image['height']]).astype(np.int32)], 1)
+                for outline in outlines:
+                    p = np.array(outline, dtype=float)
+                    q = np.column_stack([side*.5+(p[:, 0]-area['x'])/area['width']*.5, (p[:, 1]-area['y'])/area['height']])
+                    cv2.fillPoly(mask, [(q * [image['width'], image['height']]).astype(np.int32)], 1)
                 masks.append(mask.astype(bool))
             pairs = sorted([(float((p & t).sum()/max((p | t).sum(), 1)), i, j)
                             for i, p in enumerate(masks) for j, t in enumerate(targets)], reverse=True)

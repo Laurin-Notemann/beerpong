@@ -4,7 +4,7 @@ import {
     formationInput,
     formationCup,
     validAreas,
-    maskOutline,
+    maskOutlines,
     MAX_CUPS,
     type Cup,
     type CupModel,
@@ -137,14 +137,14 @@ async function process({ data }: MessageEvent<CupRequest>) {
                 if (!duplicate) kept.push(candidate);
             }
             const proposals = kept
-                .map(({ query, score }) => ({
-                    score,
-                    outline: maskOutline(
+                .map(({ query, score }) => {
+                    const [outline = [], ...parts] = maskOutlines(
                         maskData.subarray(query * width * height, (query + 1) * width * height),
                         width,
                         height
-                    ),
-                }))
+                    );
+                    return { score, outline, ...(parts.length ? { parts } : {}) };
+                })
                 .filter((cup) => cup.outline.length >= 3);
             const cups = proposals
                 .map((cup) => formationCup(cup, data.areas))

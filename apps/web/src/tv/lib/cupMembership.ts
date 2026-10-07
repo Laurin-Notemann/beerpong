@@ -1,11 +1,12 @@
-import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
+import { cupVertices, type Cup, type PlayingArea } from '~/tv/lib/cupVision';
 
 type Point = { x: number; y: number; diameter: number; cup: Cup };
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 function point(cup: Cup, aspect: number): Point {
-    const top = Math.min(...cup.outline.map((p) => p[1]));
-    const height = Math.max(...cup.outline.map((p) => p[1])) - top;
-    const rim = cup.outline.filter((p) => p[1] <= top + height * 0.25);
+    const vertices = cupVertices(cup);
+    const top = Math.min(...vertices.map((p) => p[1]));
+    const height = Math.max(...vertices.map((p) => p[1])) - top;
+    const rim = vertices.filter((p) => p[1] <= top + height * 0.25);
     const left = Math.min(...rim.map((p) => p[0])) * aspect;
     const right = Math.max(...rim.map((p) => p[0])) * aspect;
     return { x: (left + right) / 2, y: top, diameter: right - left, cup };

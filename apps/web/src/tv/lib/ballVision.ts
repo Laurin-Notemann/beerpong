@@ -1,5 +1,5 @@
 import { appearanceScore, ballAppearance, ballModel } from '~/tv/lib/ballClassifier';
-import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
+import { cupVertices, type Cup, type PlayingArea } from '~/tv/lib/cupVision';
 
 export interface BallCandidate {
     x: number;
@@ -395,9 +395,10 @@ export class BallTracker {
 }
 
 function rim(cup: Cup) {
-    const low = Math.min(...cup.outline.map((p) => p[1])),
-        high = Math.max(...cup.outline.map((p) => p[1]));
-    const top = cup.outline.filter((p) => p[1] < low + (high - low) * 0.3);
+    const vertices = cupVertices(cup);
+    const low = Math.min(...vertices.map((p) => p[1])),
+        high = Math.max(...vertices.map((p) => p[1]));
+    const top = vertices.filter((p) => p[1] < low + (high - low) * 0.3);
     if (!top.length) return null;
     const left = Math.min(...top.map((p) => p[0])),
         right = Math.max(...top.map((p) => p[0]));

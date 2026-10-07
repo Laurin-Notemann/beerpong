@@ -2,7 +2,12 @@
 export interface Cup {
     score: number;
     outline: [number, number][];
+    /** Additional visible pieces of the same cup, separated by a hand or another occluder. */
+    parts?: [number, number][][];
 }
+
+export const cupOutlines = (cup: Cup) => [cup.outline, ...(cup.parts ?? [])];
+export const cupVertices = (cup: Cup) => cupOutlines(cup).flat();
 
 export interface CupFrame {
     version: 1;
@@ -15,6 +20,7 @@ export interface CupFrame {
 export const CUP_CHANNEL = 'versus-cups-v1';
 export const MAX_CUPS = 32;
 export const MAX_POINTS = 64;
+export const MAX_PARTS = 3;
 export const MAX_AGE_MS = 3000;
 
 /** Untrusted peer data is bounded before it can reach a canvas or telemetry. */
@@ -35,20 +41,27 @@ export function parseCupFrame(raw: unknown): CupFrame | null {
             value.cups.length > MAX_CUPS
         )
             return null;
+        const validOutline = (outline: Cup['outline']) =>
+            Array.isArray(outline) &&
+            outline.length >= 3 &&
+            outline.length <= MAX_POINTS &&
+            outline.every(
+                (point) =>
+                    Array.isArray(point) &&
+                    point.length === 2 &&
+                    point.every((n) => Number.isFinite(n) && n >= 0 && n <= 1)
+            );
         for (const cup of value.cups) {
             if (
                 !Number.isFinite(cup.score) ||
                 cup.score < 0 ||
                 cup.score > 1 ||
-                !Array.isArray(cup.outline) ||
-                cup.outline.length < 3 ||
-                cup.outline.length > MAX_POINTS ||
-                cup.outline.some(
-                    (point) =>
-                        !Array.isArray(point) ||
-                        point.length !== 2 ||
-                        point.some((n) => !Number.isFinite(n) || n < 0 || n > 1)
-                )
+                !validOutline(cup.outline) ||
+                (cup.parts !== undefined &&
+                    (!Array.isArray(cup.parts) ||
+                        cup.parts.length >= MAX_PARTS ||
+                        !cup.parts.every(validOutline) ||
+                        cupVertices(cup).length > MAX_POINTS))
             )
                 return null;
         }
@@ -81,32 +94,29 @@ export function drawCups(
     context.lineWidth = Math.max(1, width / 720);
     context.lineJoin = 'round';
     for (const cup of frame.value.cups) {
-        context.beginPath();
-        const points = cup.outline;
-        const last = points[points.length - 1],
-            first = points[0];
-        context.moveTo(((last[0] + first[0]) * width) / 2, ((last[1] + first[1]) * height) / 2);
-        points.forEach(([x, y], i) => {
-            const next = points[(i + 1) % points.length];
-            context.quadraticCurveTo(
-                x * width,
-                y * height,
-                ((x + next[0]) * width) / 2,
-                ((y + next[1]) * height) / 2
-            );
-        });
-        context.closePath();
-        context.stroke();
+        for (const points of cupOutlines(cup)) {
+            context.beginPath();
+            const last = points[points.length - 1],
+                first = points[0];
+            context.moveTo(((last[0] + first[0]) * width) / 2, ((last[1] + first[1]) * height) / 2);
+            points.forEach(([x, y], i) => {
+                const next = points[(i + 1) % points.length];
+                context.quadraticCurveTo(
+                    x * width,
+                    y * height,
+                    ((x + next[0]) * width) / 2,
+                    ((y + next[1]) * height) / 2
+                );
+            });
+            context.closePath();
+            context.stroke();
+        }
     }
     context.restore();
 }
 
-/** Largest exterior boundary of one instance mask, in source-image coordinates. */
-export function maskOutline(
-    mask: ArrayLike<number>,
-    width: number,
-    height: number
-): [number, number][] {
+/** Exterior components of one instance mask, in source-image coordinates. */
+function maskBoundaries(mask: ArrayLike<number>, width: number, height: number) {
     const edges = new Map<number, number[]>();
     const stride = width + 1;
     const add = (a: number, b: number) => edges.set(a, [...(edges.get(a) ?? []), b]);
@@ -122,8 +132,7 @@ export function maskOutline(
             if (!on(x - 1, y)) add(a + stride, a);
         }
     }
-    let largest: [number, number][] = [];
-    let largestArea = 0;
+    const boundaries: { loop: [number, number][]; area: number }[] = [];
     while (edges.size) {
         const start = edges.keys().next().value!;
         let at = start;
@@ -136,22 +145,41 @@ export function maskOutline(
             if (!next.length) edges.delete(at);
             at = to;
         } while (at !== start && loop.length <= (width + 1) * (height + 1) * 4);
-        const area = Math.abs(
-            loop.reduce((sum, [x, y], i) => {
-                const next = loop[(i + 1) % loop.length];
-                return sum + x * next[1] - next[0] * y;
-            }, 0)
-        );
-        if (area > largestArea) {
-            largestArea = area;
-            largest = loop;
-        }
+        const area = loop.reduce((sum, [x, y], i) => {
+            const next = loop[(i + 1) % loop.length];
+            return sum + x * next[1] - next[0] * y;
+        }, 0);
+        // Inner holes have the opposite winding; they are not disconnected cup pieces.
+        if (area > 0) boundaries.push({ loop, area });
     }
+    return boundaries.sort((a, b) => b.area - a.area);
+}
+
+function boundedOutline(loop: Cup['outline'], budget: number): Cup['outline'] {
     // Downsample the closed perimeter to a bounded, small peer message.
-    const step = Math.max(1, Math.ceil(largest.length / MAX_POINTS));
-    return largest
+    const step = Math.max(1, Math.ceil(loop.length / budget));
+    return loop
         .filter((_, i) => i % step === 0)
         .map(([x, y]) => [Math.round(x * 10000) / 10000, Math.round(y * 10000) / 10000]);
+}
+
+/** Legacy single-boundary callers retain the dominant visible silhouette. */
+export function maskOutline(mask: ArrayLike<number>, width: number, height: number) {
+    return boundedOutline(maskBoundaries(mask, width, height)[0]?.loop ?? [], MAX_POINTS);
+}
+
+/** One instance can have separated visible pieces; never bridge through an occluding hand. */
+export function maskOutlines(mask: ArrayLike<number>, width: number, height: number) {
+    const boundaries = maskBoundaries(mask, width, height);
+    const largest = boundaries[0]?.area ?? 0;
+    const kept = boundaries
+        .filter((b, i) => i === 0 || b.area >= Math.max(4 / (width * height), largest * 0.01))
+        .slice(0, MAX_PARTS);
+    const perimeter = kept.reduce((n, b) => n + b.loop.length, 0);
+    const spare = MAX_POINTS - kept.length * 3;
+    return kept.map((b) =>
+        boundedOutline(b.loop, 3 + Math.floor((spare * b.loop.length) / Math.max(perimeter, 1)))
+    );
 }
 
 export interface CupModel {
@@ -269,8 +297,16 @@ export function formationCup(cup: Cup, areas: PlayingArea[]): Cup | null {
           : -1;
     if (side < 0) return null;
     const a = areas[side];
+    // The stitched input joins two distant source areas. A stray component in the
+    // other half cannot belong to this cup; retain its dominant valid observation.
+    const parts = cup.parts?.filter((part) =>
+        part.every(([x]) => (side === 0 ? x <= 0.5 : x >= 0.5))
+    );
+    const map = (outline: Cup['outline']): Cup['outline'] =>
+        outline.map(([x, y]) => [a.x + (x * 2 - side) * a.width, a.y + y * a.height]);
     return {
         score: cup.score,
-        outline: cup.outline.map(([x, y]) => [a.x + (x * 2 - side) * a.width, a.y + y * a.height]),
+        outline: map(cup.outline),
+        ...(parts?.length ? { parts: parts.map(map) } : {}),
     };
 }
