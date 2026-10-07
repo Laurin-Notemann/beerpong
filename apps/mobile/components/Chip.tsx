@@ -54,7 +54,7 @@ export function PremiumChip() {
 
     return (
         <Chip
-            title="HIGHEST"
+            title="PREMIUM"
             backgroundColor={theme.color.premium}
             color="#fff"
         />

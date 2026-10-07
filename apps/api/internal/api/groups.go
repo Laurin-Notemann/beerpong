@@ -96,6 +96,16 @@ func (s *Server) createGroup(r *request) response {
 		if err != nil {
 			return nil, err
 		}
+		if err := q.UnlockNewGroup(ctx, db.UnlockNewGroupParams{GroupID: groupID, UserID: r.userID}); err != nil {
+			return nil, err
+		}
+		unlocked, err := q.RefreshPremium(ctx, []string{groupID})
+		if err != nil {
+			return nil, err
+		}
+		if len(unlocked) == 1 {
+			group = unlocked[0]
+		}
 
 		profiles := make([]db.InsertProfilesParams, len(profileNames))
 		players := make([]newPlayer, len(profileNames))

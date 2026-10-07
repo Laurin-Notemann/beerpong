@@ -18,6 +18,7 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/config"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
+	"github.com/laurin-notemann/beerpong/api-go/internal/purchases"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 )
 
@@ -50,7 +51,7 @@ func expiryTestServer(t *testing.T) (*Server, *httptest.Server) {
 	hub := realtime.NewHub(log)
 	srv := httptest.NewServer(hub)
 	t.Cleanup(srv.Close)
-	return NewServer(pool, nil, nil, hub, log), srv
+	return NewServer(pool, nil, nil, purchases.Stores{}, hub, log), srv
 }
 
 type expiryFixture struct {
@@ -248,7 +249,7 @@ func TestAbandonExpiredLiveMatches(t *testing.T) {
 // round still runs.
 func TestExpiryRoundRecoversFromPanic(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	s := NewServer(nil, nil, nil, realtime.NewHub(log), log) // no pool: the scan panics
+	s := NewServer(nil, nil, nil, purchases.Stores{}, realtime.NewHub(log), log) // no pool: the scan panics
 	s.expiryRound(context.Background())
 	s.expiryRound(context.Background())
 }

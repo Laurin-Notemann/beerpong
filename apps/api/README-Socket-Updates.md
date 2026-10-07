@@ -91,7 +91,7 @@ A list of all event types with their corresponding dto and all available scopes:
 
 #### Group (body: GroupDtp)
 
-* **groupUpdate:** When a group is update
+* **groupUpdate:** When a group is updated, or gains or loses premium (a purchase or a refund)
 
 #### Matches (body: MatchDto, MatchId)
 

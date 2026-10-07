@@ -127,7 +127,7 @@ func (q *Queries) LockTournament(ctx context.Context, arg LockTournamentParams) 
 }
 
 const lockTournamentGroup = `-- name: LockTournamentGroup :one
-SELECT id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by FROM groups WHERE id = $1 FOR UPDATE
+SELECT id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by, premium FROM groups WHERE id = $1 FOR UPDATE
 `
 
 func (q *Queries) LockTournamentGroup(ctx context.Context, id string) (Group, error) {
@@ -143,6 +143,7 @@ func (q *Queries) LockTournamentGroup(ctx context.Context, id string) (Group, er
 		&i.ActiveSeasonID,
 		&i.AssetIDWallpaper,
 		&i.CreatedBy,
+		&i.Premium,
 	)
 	return i, err
 }

@@ -10,6 +10,7 @@ import {
     TOURNAMENT_BANNER_INSET,
 } from '@/components/tournament/TournamentBanner';
 import { useModalStyles } from '@/lib/navigation/modalStyles';
+import { usePremiumSync } from '@/lib/premium/usePremium';
 import { FloatingDockInsetContext, useInsets } from '@/lib/useInsets';
 import { useHomeScreenWidgets, usePushTokens } from '@/lib/widgets/useWidgets';
 import {
@@ -42,6 +43,8 @@ export default function MainLayout() {
     // Live Activities and widget updates to (iOS)
     useHomeScreenWidgets();
     usePushTokens();
+    // sends store purchases of premium to the API
+    usePremiumSync();
 
     const modalStyles = useModalStyles();
 

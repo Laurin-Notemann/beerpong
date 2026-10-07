@@ -71,6 +71,8 @@ type groupDTO struct {
 	NumberOfPlayers  int64        `json:"numberOfPlayers"`
 	NumberOfMatches  int64        `json:"numberOfMatches"`
 	NumberOfSeasons  int64        `json:"numberOfSeasons"`
+	// Premium is unlocked by a store purchase (see premium.go).
+	Premium bool `json:"premium"`
 }
 
 func toGroupDTO(g db.Group) groupDTO {
@@ -84,6 +86,7 @@ func toGroupDTO(g db.Group) groupDTO {
 		CreatedAt:        utc(g.CreatedAt),
 		SportPreset:      presetByID(g.SportPreset),
 		CustomSportName:  g.CustomSportName,
+		Premium:          g.Premium,
 	}
 }
 

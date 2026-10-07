@@ -1418,6 +1418,109 @@
                 }
             }
         },
+        "/groups/{groupId}/premium": {
+            "post": {
+                "tags": ["premium-controller"],
+                "operationId": "redeemPurchase",
+                "description": "Links the caller's install to a store purchase of Versus Premium, which unlocks every group a linked install created, and this group with unlockGroup. Safe to repeat (after buying, restoring, or when the store reports a purchase on a new install). Answers 400 purchaseInvalid for a purchase the store didn't sign, another product or a refunded one.",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PurchaseDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeGroupDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks/apple": {
+            "post": {
+                "tags": ["premium-controller"],
+                "operationId": "appleNotification",
+                "description": "App Store Server Notifications V2. Refunds and revocations take premium away from the groups the purchase unlocked; a reversed refund gives it back.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppleNotificationDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks/google": {
+            "post": {
+                "tags": ["premium-controller"],
+                "operationId": "googleNotification",
+                "description": "Google Play Real-time Developer Notifications, pushed by Pub/Sub with ?token=<GOOGLE_PLAY_RTDN_TOKEN>. A voided one-time purchase (refund, chargeback) takes premium away from the groups it unlocked.",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GoogleNotificationDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups/{id}/join": {
             "post": {
                 "tags": ["group-controller"],
@@ -3471,7 +3574,11 @@
                     "customSportName": { "type": "string", "nullable": true },
                     "numberOfPlayers": { "type": "integer", "format": "int64" },
                     "numberOfMatches": { "type": "integer", "format": "int64" },
-                    "numberOfSeasons": { "type": "integer", "format": "int64" }
+                    "numberOfSeasons": { "type": "integer", "format": "int64" },
+                    "premium": {
+                        "type": "boolean",
+                        "description": "A store purchase covers this group. Premium enforcement is deferred while store setup is in progress."
+                    }
                 },
                 "required": [
                     "id",
@@ -3485,7 +3592,8 @@
                     "customSportName",
                     "numberOfPlayers",
                     "numberOfMatches",
-                    "numberOfSeasons"
+                    "numberOfSeasons",
+                    "premium"
                 ]
             },
             "GroupPreset": {
@@ -3496,6 +3604,42 @@
                     "imageUrl": { "type": "string" }
                 },
                 "required": ["id", "title", "imageUrl"]
+            },
+            "PurchaseDto": {
+                "type": "object",
+                "properties": {
+                    "store": { "type": "string", "enum": ["apple", "google"] },
+                    "token": {
+                        "type": "string",
+                        "description": "Apple: the transaction's jwsRepresentation from StoreKit 2. Google: the purchase token."
+                    },
+                    "unlockGroup": {
+                        "type": "boolean",
+                        "description": "Set right after buying in this group: it is unlocked too. Without it (a restore, a new install) only the groups the linked installs created are."
+                    }
+                },
+                "required": ["store", "token"]
+            },
+            "AppleNotificationDto": {
+                "type": "object",
+                "properties": { "signedPayload": { "type": "string" } },
+                "required": ["signedPayload"]
+            },
+            "GoogleNotificationDto": {
+                "type": "object",
+                "description": "A Pub/Sub push: message.data is the base64 of the developer notification.",
+                "properties": {
+                    "message": {
+                        "type": "object",
+                        "properties": {
+                            "data": { "type": "string" },
+                            "messageId": { "type": "string" }
+                        },
+                        "required": ["data"]
+                    },
+                    "subscription": { "type": "string" }
+                },
+                "required": ["message"]
             },
             "ResponseEnvelopeGroupDto": {
                 "type": "object",

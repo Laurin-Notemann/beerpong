@@ -53,6 +53,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
+        "premium": false,
         "sportPreset": {
           "id": "kicker",
           "imageUrl": "https://media.istockphoto.com/id/696594232/photo/foosball-at-modern-office-close-up-view.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=skF0hp5i_9ctZ2MmkqLdaOklvwSGbqEqcAu0JLF8M5c=",
@@ -95,6 +96,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
+        "premium": false,
         "sportPreset": null
       },
       "httpCode": 200,
@@ -125,6 +127,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
+        "premium": false,
         "sportPreset": {
           "id": "chess",
           "imageUrl": "https://media.istockphoto.com/id/1128789429/photo/plan-leading-strategy-of-successful-business-competition-leader-concept-hand-of-player-chess.jpg?s=612x612\u0026w=0\u0026k=20\u0026c=srlCT0xWXduYvZsQgGVYl6B4QAaBjoPjpsceTQrP5XQ=",
@@ -215,6 +218,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
+        "premium": false,
         "sportPreset": null
       },
       "httpCode": 200,

@@ -53,6 +53,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
+        "premium": false,
         "sportPreset": {
           "id": "beerpong",
           "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
@@ -114,6 +115,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 1,
         "numberOfSeasons": 1,
+        "premium": false,
         "sportPreset": {
           "id": "beerpong",
           "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
@@ -256,6 +258,7 @@
         "numberOfMatches": 0,
         "numberOfPlayers": 0,
         "numberOfSeasons": 0,
+        "premium": false,
         "sportPreset": {
           "id": "beerpong",
           "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",
@@ -281,6 +284,7 @@
           "numberOfMatches": 0,
           "numberOfPlayers": 0,
           "numberOfSeasons": 0,
+          "premium": false,
           "sportPreset": {
             "id": "beerpong",
             "imageUrl": "https://www.shutterstock.com/image-photo/cups-plastic-ball-beer-pong-600nw-1107685832.jpg",

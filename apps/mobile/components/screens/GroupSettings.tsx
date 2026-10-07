@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { PremiumChip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
@@ -44,6 +45,7 @@ export interface GroupSettingsProps {
 }
 export default function GroupSettingsScreen({
     id,
+    hasPremium,
     groupName,
     groupCode,
     onLeaveGroup,
@@ -107,16 +109,15 @@ export default function GroupSettingsScreen({
                             tailIconType="next"
                             onPress={() => nav.navigate('tvRemote')}
                         />
-                        {experiments.premiumVersion && (
-                            <MenuItem
-                                title="Premium Version"
-                                headIcon="check-decagram"
-                                tailIconType="next"
-                                onPress={() =>
-                                    nav.navigate('static/aboutPremium')
-                                }
-                            />
-                        )}
+                        <MenuItem
+                            title="Versus Premium"
+                            headIcon="check-decagram"
+                            tailIconType="next"
+                            tailContent={
+                                hasPremium ? 'Unlocked' : <PremiumChip />
+                            }
+                            onPress={() => nav.navigate('static/aboutPremium')}
+                        />
                         {experiments.showWallpaper &&
                             (wallpaperAsset?.url ? (
                                 <MenuItem

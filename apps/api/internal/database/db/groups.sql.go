@@ -12,7 +12,7 @@ import (
 
 const finishGroupCreation = `-- name: FinishGroupCreation :one
 UPDATE groups SET active_season_id = $2, created_by = $3 WHERE id = $1
-RETURNING id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by
+RETURNING id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by, premium
 `
 
 type FinishGroupCreationParams struct {
@@ -34,12 +34,13 @@ func (q *Queries) FinishGroupCreation(ctx context.Context, arg FinishGroupCreati
 		&i.ActiveSeasonID,
 		&i.AssetIDWallpaper,
 		&i.CreatedBy,
+		&i.Premium,
 	)
 	return i, err
 }
 
 const getGroup = `-- name: GetGroup :one
-SELECT id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by FROM groups WHERE id = $1
+SELECT id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by, premium FROM groups WHERE id = $1
 `
 
 func (q *Queries) GetGroup(ctx context.Context, id string) (Group, error) {
@@ -55,12 +56,13 @@ func (q *Queries) GetGroup(ctx context.Context, id string) (Group, error) {
 		&i.ActiveSeasonID,
 		&i.AssetIDWallpaper,
 		&i.CreatedBy,
+		&i.Premium,
 	)
 	return i, err
 }
 
 const getGroupByInviteCode = `-- name: GetGroupByInviteCode :one
-SELECT id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by FROM groups WHERE invite_code = $1 LIMIT 1
+SELECT id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by, premium FROM groups WHERE invite_code = $1 LIMIT 1
 `
 
 func (q *Queries) GetGroupByInviteCode(ctx context.Context, inviteCode *string) (Group, error) {
@@ -76,6 +78,7 @@ func (q *Queries) GetGroupByInviteCode(ctx context.Context, inviteCode *string) 
 		&i.ActiveSeasonID,
 		&i.AssetIDWallpaper,
 		&i.CreatedBy,
+		&i.Premium,
 	)
 	return i, err
 }
@@ -93,7 +96,7 @@ func (q *Queries) GroupExists(ctx context.Context, id string) (bool, error) {
 
 const groupWithStats = `-- name: GroupWithStats :one
 SELECT
-    g.id, g.created_at, g.custom_sport_name, g.invite_code, g.name, g.sport_preset, g.active_season_id, g.asset_id_wallpaper, g.created_by,
+    g.id, g.created_at, g.custom_sport_name, g.invite_code, g.name, g.sport_preset, g.active_season_id, g.asset_id_wallpaper, g.created_by, g.premium,
     (SELECT count(*) FROM matches m WHERE m.season_id = g.active_season_id) AS matches,
     (SELECT count(*) FROM players p WHERE p.season_id = g.active_season_id) AS players,
     (SELECT count(*) FROM seasons s WHERE s.group_id = g.id) AS seasons
@@ -121,6 +124,7 @@ func (q *Queries) GroupWithStats(ctx context.Context, id string) (GroupWithStats
 		&i.Group.ActiveSeasonID,
 		&i.Group.AssetIDWallpaper,
 		&i.Group.CreatedBy,
+		&i.Group.Premium,
 		&i.Matches,
 		&i.Players,
 		&i.Seasons,
@@ -170,7 +174,7 @@ func (q *Queries) SetGroupActiveSeason(ctx context.Context, arg SetGroupActiveSe
 
 const setGroupWallpaper = `-- name: SetGroupWallpaper :one
 UPDATE groups SET asset_id_wallpaper = $2 WHERE id = $1
-RETURNING id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by
+RETURNING id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by, premium
 `
 
 type SetGroupWallpaperParams struct {
@@ -191,13 +195,14 @@ func (q *Queries) SetGroupWallpaper(ctx context.Context, arg SetGroupWallpaperPa
 		&i.ActiveSeasonID,
 		&i.AssetIDWallpaper,
 		&i.CreatedBy,
+		&i.Premium,
 	)
 	return i, err
 }
 
 const updateGroupName = `-- name: UpdateGroupName :one
 UPDATE groups SET name = $2 WHERE id = $1
-RETURNING id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by
+RETURNING id, created_at, custom_sport_name, invite_code, name, sport_preset, active_season_id, asset_id_wallpaper, created_by, premium
 `
 
 type UpdateGroupNameParams struct {
@@ -218,13 +223,14 @@ func (q *Queries) UpdateGroupName(ctx context.Context, arg UpdateGroupNameParams
 		&i.ActiveSeasonID,
 		&i.AssetIDWallpaper,
 		&i.CreatedBy,
+		&i.Premium,
 	)
 	return i, err
 }
 
 const userGroupsWithStats = `-- name: UserGroupsWithStats :many
 SELECT
-    g.id, g.created_at, g.custom_sport_name, g.invite_code, g.name, g.sport_preset, g.active_season_id, g.asset_id_wallpaper, g.created_by,
+    g.id, g.created_at, g.custom_sport_name, g.invite_code, g.name, g.sport_preset, g.active_season_id, g.asset_id_wallpaper, g.created_by, g.premium,
     (SELECT count(*) FROM matches m WHERE m.season_id = g.active_season_id) AS matches,
     (SELECT count(*) FROM players p WHERE p.season_id = g.active_season_id) AS players,
     (SELECT count(*) FROM seasons s WHERE s.group_id = g.id) AS seasons
@@ -261,6 +267,7 @@ func (q *Queries) UserGroupsWithStats(ctx context.Context, userID *string) ([]Us
 			&i.Group.ActiveSeasonID,
 			&i.Group.AssetIDWallpaper,
 			&i.Group.CreatedBy,
+			&i.Group.Premium,
 			&i.Matches,
 			&i.Players,
 			&i.Seasons,

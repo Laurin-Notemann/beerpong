@@ -8,6 +8,9 @@ import type {
 
 declare namespace Components {
     namespace Schemas {
+        export interface AppleNotificationDto {
+            signedPayload: string;
+        }
         export interface AssetCropDto {
             offsetX?: number; // double
             offsetY?: number; // double
@@ -283,6 +286,16 @@ declare namespace Components {
             name?: string;
             cups?: CupPositionDto[];
         }
+        /**
+         * A Pub/Sub push: message.data is the base64 of the developer notification.
+         */
+        export interface GoogleNotificationDto {
+            message: {
+                data: string;
+                messageId?: string;
+            };
+            subscription?: string;
+        }
         export interface GroupCreateDto {
             name?: string;
             profileNames?: string[];
@@ -306,6 +319,10 @@ declare namespace Components {
             numberOfPlayers: number; // int64
             numberOfMatches: number; // int64
             numberOfSeasons: number; // int64
+            /**
+             * A store purchase covers this group. Premium enforcement is deferred while store setup is in progress.
+             */
+            premium: boolean;
         }
         export interface GroupPreset {
             id: string;
@@ -565,6 +582,17 @@ declare namespace Components {
              * the newest of scoreClipUrls
              */
             scoreClipUrl: string | null;
+        }
+        export interface PurchaseDto {
+            store: 'apple' | 'google';
+            /**
+             * Apple: the transaction's jwsRepresentation from StoreKit 2. Google: the purchase token.
+             */
+            token: string;
+            /**
+             * Set right after buying in this group: it is unlocked too. Without it (a restore, a new install) only the groups the linked installs created are.
+             */
+            unlockGroup?: boolean;
         }
         /**
          * The calling phone's APNs tokens. A null token is forgotten; no activityStartToken means no Live Activities.
@@ -1070,6 +1098,12 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeLiveMatchOpsResultDto;
+        }
+    }
+    namespace AppleNotification {
+        export type RequestBody = Components.Schemas.AppleNotificationDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
         }
     }
     namespace CancelTournament {
@@ -1697,6 +1731,19 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeListTournamentDto;
         }
     }
+    namespace GoogleNotification {
+        namespace Parameters {
+            export type Token = string;
+        }
+        export interface QueryParameters {
+            token: Parameters.Token;
+        }
+        export type RequestBody =
+            /* A Pub/Sub push: message.data is the base64 of the developer notification. */ Components.Schemas.GoogleNotificationDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+        }
+    }
     namespace JoinGroup {
         namespace Parameters {
             export type Id = string;
@@ -1744,6 +1791,18 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeCameraRecordingUploadDto;
+        }
+    }
+    namespace RedeemPurchase {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        export type RequestBody = Components.Schemas.PurchaseDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
         }
     }
     namespace RefreshAuth {
@@ -2311,6 +2370,30 @@ export interface OperationMethods {
         data?: any,
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.LeaveGroup.Responses.$200>;
+    /**
+     * redeemPurchase - Links the caller's install to a store purchase of Versus Premium, which unlocks every group a linked install created, and this group with unlockGroup. Safe to repeat (after buying, restoring, or when the store reports a purchase on a new install). Answers 400 purchaseInvalid for a purchase the store didn't sign, another product or a refunded one.
+     */
+    redeemPurchase(
+        parameters?: Parameters<Paths.RedeemPurchase.PathParameters> | null,
+        data?: Paths.RedeemPurchase.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.RedeemPurchase.Responses.$200>;
+    /**
+     * appleNotification - App Store Server Notifications V2. Refunds and revocations take premium away from the groups the purchase unlocked; a reversed refund gives it back.
+     */
+    appleNotification(
+        parameters?: Parameters<UnknownParamsObject> | null,
+        data?: Paths.AppleNotification.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.AppleNotification.Responses.$200>;
+    /**
+     * googleNotification - Google Play Real-time Developer Notifications, pushed by Pub/Sub with ?token=<GOOGLE_PLAY_RTDN_TOKEN>. A voided one-time purchase (refund, chargeback) takes premium away from the groups it unlocked.
+     */
+    googleNotification(
+        parameters?: Parameters<Paths.GoogleNotification.QueryParameters> | null,
+        data?: Paths.GoogleNotification.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GoogleNotification.Responses.$200>;
     /**
      * joinGroup
      */
@@ -2955,6 +3038,36 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.LeaveGroup.Responses.$200>;
     };
+    ['/groups/{groupId}/premium']: {
+        /**
+         * redeemPurchase - Links the caller's install to a store purchase of Versus Premium, which unlocks every group a linked install created, and this group with unlockGroup. Safe to repeat (after buying, restoring, or when the store reports a purchase on a new install). Answers 400 purchaseInvalid for a purchase the store didn't sign, another product or a refunded one.
+         */
+        post(
+            parameters?: Parameters<Paths.RedeemPurchase.PathParameters> | null,
+            data?: Paths.RedeemPurchase.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.RedeemPurchase.Responses.$200>;
+    };
+    ['/webhooks/apple']: {
+        /**
+         * appleNotification - App Store Server Notifications V2. Refunds and revocations take premium away from the groups the purchase unlocked; a reversed refund gives it back.
+         */
+        post(
+            parameters?: Parameters<UnknownParamsObject> | null,
+            data?: Paths.AppleNotification.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.AppleNotification.Responses.$200>;
+    };
+    ['/webhooks/google']: {
+        /**
+         * googleNotification - Google Play Real-time Developer Notifications, pushed by Pub/Sub with ?token=<GOOGLE_PLAY_RTDN_TOKEN>. A voided one-time purchase (refund, chargeback) takes premium away from the groups it unlocked.
+         */
+        post(
+            parameters?: Parameters<Paths.GoogleNotification.QueryParameters> | null,
+            data?: Paths.GoogleNotification.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GoogleNotification.Responses.$200>;
+    };
     ['/groups/{id}/join']: {
         /**
          * joinGroup
@@ -3309,6 +3422,7 @@ export interface PathsDictionary {
 
 export type Client = OpenAPIClient<OperationMethods, PathsDictionary>;
 
+export type AppleNotificationDto = Components.Schemas.AppleNotificationDto;
 export type AssetCropDto = Components.Schemas.AssetCropDto;
 export type AssetMetadataDto = Components.Schemas.AssetMetadataDto;
 export type AssetUploadResponse = Components.Schemas.AssetUploadResponse;
@@ -3344,6 +3458,7 @@ export type EloTestPlayerDto = Components.Schemas.EloTestPlayerDto;
 export type ErrorDetails = Components.Schemas.ErrorDetails;
 export type FormationDto = Components.Schemas.FormationDto;
 export type FormationSaveDto = Components.Schemas.FormationSaveDto;
+export type GoogleNotificationDto = Components.Schemas.GoogleNotificationDto;
 export type GroupCreateDto = Components.Schemas.GroupCreateDto;
 export type GroupDto = Components.Schemas.GroupDto;
 export type GroupPreset = Components.Schemas.GroupPreset;
@@ -3378,6 +3493,7 @@ export type PlayerStatisticsDto = Components.Schemas.PlayerStatisticsDto;
 export type ProfileCreateDto = Components.Schemas.ProfileCreateDto;
 export type ProfileCreatedDto = Components.Schemas.ProfileCreatedDto;
 export type ProfileDto = Components.Schemas.ProfileDto;
+export type PurchaseDto = Components.Schemas.PurchaseDto;
 export type PushTokensDto = Components.Schemas.PushTokensDto;
 export type ResponseEnvelopeAssetMetadataDto =
     Components.Schemas.ResponseEnvelopeAssetMetadataDto;
