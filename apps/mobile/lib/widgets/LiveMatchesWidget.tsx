@@ -208,6 +208,24 @@ const LiveMatchesWidget = (
         return (
             <VStack spacing={0} modifiers={[fill, background_]}>
                 {header}
+                {match?.tournamentStage && (
+                    <HStack spacing={4}>
+                        <Image
+                            systemName="point.3.connected.trianglepath.dotted"
+                            size={12}
+                            color="#A855F7"
+                        />
+                        <Text
+                            modifiers={[
+                                font({ size: 11, weight: 'semibold' }),
+                                foregroundStyle('#A855F7'),
+                                lineLimit(1),
+                            ]}
+                        >
+                            {match.tournamentStage}
+                        </Text>
+                    </HStack>
+                )}
                 <VStack
                     spacing={2}
                     modifiers={[
@@ -359,6 +377,24 @@ const LiveMatchesWidget = (
         return (
             <VStack spacing={0} modifiers={[fill, background_]}>
                 {header}
+                {match?.tournamentStage && (
+                    <HStack spacing={4}>
+                        <Image
+                            systemName="point.3.connected.trianglepath.dotted"
+                            size={12}
+                            color="#A855F7"
+                        />
+                        <Text
+                            modifiers={[
+                                font({ size: 11, weight: 'semibold' }),
+                                foregroundStyle('#A855F7'),
+                                lineLimit(1),
+                            ]}
+                        >
+                            {match.tournamentStage}
+                        </Text>
+                    </HStack>
+                )}
                 <HStack
                     spacing={8}
                     modifiers={[
@@ -457,6 +493,24 @@ const LiveMatchesWidget = (
     return (
         <VStack alignment="leading" spacing={0} modifiers={[fill, background_]}>
             {header}
+            {match?.tournamentStage && (
+                <HStack spacing={4}>
+                    <Image
+                        systemName="point.3.connected.trianglepath.dotted"
+                        size={12}
+                        color="#A855F7"
+                    />
+                    <Text
+                        modifiers={[
+                            font({ size: 11, weight: 'semibold' }),
+                            foregroundStyle('#A855F7'),
+                            lineLimit(1),
+                        ]}
+                    >
+                        {match.tournamentStage}
+                    </Text>
+                </HStack>
+            )}
             <HStack
                 spacing={8}
                 modifiers={[padding({ top: 8 }), frame({ maxWidth: Infinity })]}

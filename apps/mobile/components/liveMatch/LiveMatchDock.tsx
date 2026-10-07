@@ -148,7 +148,21 @@ function DockRow({ snapshot, teams, onMore }: RowProps) {
                         }}
                     >
                         <LiveDot />
-                        <LiveTimer startedAt={primary.startedAt} />
+                        <View>
+                            <LiveTimer startedAt={primary.startedAt} />
+                            {primary.tournamentStage && (
+                                <Text
+                                    numberOfLines={1}
+                                    style={{
+                                        fontSize: 9,
+                                        color: '#A855F7',
+                                        maxWidth: 100,
+                                    }}
+                                >
+                                    {primary.tournamentStage}
+                                </Text>
+                            )}
+                        </View>
                     </View>
                     <View
                         style={{
@@ -347,8 +361,10 @@ export function FloatingLiveMatchDock({
     snapshot,
     onPress,
     onMore,
+    bottomOffset = 0,
 }: Omit<DockProps, 'snapshot'> & {
     snapshot: LiveMatchDockSnapshot | undefined;
+    bottomOffset?: number;
 }) {
     const reducedMotion = useReducedMotion();
     // the bottom of the tab's content, i.e. the top of the tab bar
@@ -365,7 +381,7 @@ export function FloatingLiveMatchDock({
                         position: 'absolute',
                         left: 12,
                         right: 12,
-                        bottom: tabBarTop + FLOATING_GAP,
+                        bottom: tabBarTop + FLOATING_GAP + bottomOffset,
                     }}
                 >
                     <FloatingDockCard

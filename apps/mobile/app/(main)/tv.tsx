@@ -3,6 +3,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 
 import { useAllSeasonsQuery, useGroup } from '@/api/calls/seasonHooks';
+import { useTournaments } from '@/api/calls/tournamentHooks';
 import {
     Tv,
     TvMatch,
@@ -98,6 +99,10 @@ function Remote({
     const t = useRemoteTokens();
     const { update, reload, removeGroup } = useTvRemote(groupId, tv.id);
     const { group } = useGroup();
+    const tournaments = useTournaments(groupId).data;
+    const activeTournament = tournaments?.find((i) => i.status === 'ACTIVE');
+    const tournament =
+        activeTournament ?? tournaments?.find((i) => i.status === 'FINISHED');
     const seasons = useAllSeasonsQuery(groupId).data?.data ?? [];
     const pastSeasons = seasons.filter(
         (i) => i.id !== group?.data?.activeSeasonId
@@ -144,9 +149,15 @@ function Remote({
             ? camera
                 ? 'Camera feed · live score'
                 : 'One live match on the whole screen'
-            : 'Leaderboard, no match running',
+            : activeTournament
+              ? `${activeTournament.name} · bracket`
+              : 'Leaderboard, no match running',
         leaderboard: scopeLabel(config.scope),
         live: running,
+        tournament: tournament?.name ?? 'Start a tournament in Settings',
+        'tournament-standings': tournament
+            ? `${tournament.name} · team standings`
+            : 'Start a tournament in Settings',
         camera: camera
             ? `Video from ${camera.name}, even while idle`
             : 'No camera on · waiting for a camera',

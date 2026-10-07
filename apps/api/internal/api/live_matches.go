@@ -8,6 +8,7 @@ import (
 
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
+	"github.com/laurin-notemann/beerpong/api-go/internal/tournament"
 )
 
 // A live match is an append-only, server-sequenced log of ops. The server
@@ -429,6 +430,10 @@ func (s *Server) createLiveMatch(r *request) response {
 	if err != nil {
 		return springError(400)
 	}
+	requestedTournamentID, err := o.str("tournamentId")
+	if err != nil {
+		return springError(400)
+	}
 	seasonID, err := o.str("seasonId")
 	if err != nil {
 		return springError(400)
@@ -445,6 +450,7 @@ func (s *Server) createLiveMatch(r *request) response {
 	ctx := r.Context()
 	var created liveMatchDTO
 	var isNew bool
+	var changedTournament *tournament.Tournament
 	res = s.tx(ctx, func(q *db.Queries) (response, error) {
 		// a retry of a create that went through (its response got lost) returns what exists
 		returnExisting := func(lm liveMatchDTO) (response, error) {
@@ -476,6 +482,26 @@ func (s *Server) createLiveMatch(r *request) response {
 			return fail(errLiveMatchInvalidOps), nil
 		}
 
+		t, stage, fixture, err := lockFixture(ctx, q, groupID, id)
+		if notFound(err) {
+			return fail(errTournamentFixture), nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		if requestedTournamentID != nil && (t == nil || t.ID != *requestedTournamentID) {
+			return fail(errTournamentFixture), nil
+		}
+		if t != nil && fixture != nil && fixture.Status == "IN_PROGRESS" {
+			lm, err := loadLiveMatchDTO(ctx, q, id)
+			if err != nil {
+				return nil, err
+			}
+			return returnExisting(lm)
+		}
+		if t != nil && (fixture == nil || t.Status != "ACTIVE" || t.SeasonID != sn.ID || fixture.Status != "READY" || len(ops) == 0 || deref(ops[0].Type) != "SET_TEAMS" || !validFixtureOps(t, fixture, ops)) {
+			return fail(errTournamentFixture), nil
+		}
 		now := s.now().Truncate(time.Microsecond)
 		inserted, err := q.InsertLiveMatch(ctx, db.InsertLiveMatchParams{ID: id, GroupID: groupID, SeasonID: sn.ID, CreatedBy: memberID, StartedAt: now})
 		if err != nil {
@@ -496,6 +522,16 @@ func (s *Server) createLiveMatch(r *request) response {
 		if failure != nil {
 			return failure, nil
 		}
+		if t != nil {
+			if err := q.LinkLiveTournament(ctx, db.LinkLiveTournamentParams{ID: id, TournamentID: &t.ID, TournamentStage: &stage.Name}); err != nil {
+				return nil, err
+			}
+			fixture.Status = "IN_PROGRESS"
+			if err := saveTournament(ctx, q, *t); err != nil {
+				return nil, err
+			}
+			changedTournament = t
+		}
 		if created, err = loadLiveMatchDTO(ctx, q, id); err != nil {
 			return nil, err
 		}
@@ -504,6 +540,9 @@ func (s *Server) createLiveMatch(r *request) response {
 	})
 	if _, isOK := res.(okResponse); isOK && isNew {
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchStart", created)
+		if changedTournament != nil {
+			s.publishTournament(groupID, ok(*changedTournament))
+		}
 	}
 	return res
 }
@@ -555,6 +594,15 @@ func (s *Server) appendOps(r *request) response {
 		ops, valid := normalizeLiveOps(rawOps, present)
 		if !valid {
 			return fail(errLiveMatchInvalidOps), nil
+		}
+		if lm.LiveMatch.TournamentID != nil {
+			t, _, fixture, err := lockFixture(ctx, q, groupID, id)
+			if err != nil {
+				return nil, err
+			}
+			if t == nil || t.Status != "ACTIVE" || !validFixtureOps(t, fixture, ops) {
+				return fail(errTournamentFixture), nil
+			}
 		}
 		var failure response
 		if result, failure, err = s.appendLiveMatchOps(ctx, q, id, lm.LiveMatch.LastSeq, memberID, ops); err != nil || failure != nil {

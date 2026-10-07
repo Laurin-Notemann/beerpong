@@ -11,6 +11,8 @@ import type { LiveOp } from '@/lib/liveMatch/types';
  */
 
 export interface OutboxEntry {
+    tournamentId?: string;
+    tournamentStage?: string;
     groupId: string;
     seasonId: string;
     /** when this phone first queued something for the match; the start time while pending create */
@@ -65,7 +67,13 @@ export const outbox = {
     start(
         state: OutboxState,
         id: string,
-        match: { groupId: string; seasonId: string; createdAt: string },
+        match: {
+            groupId: string;
+            seasonId: string;
+            createdAt: string;
+            tournamentId?: string;
+            tournamentStage?: string;
+        },
         ops: LiveOp[]
     ): Partial<OutboxState> {
         return {
@@ -81,7 +89,13 @@ export const outbox = {
     enqueue(
         state: OutboxState,
         id: string,
-        match: { groupId: string; seasonId: string; createdAt: string },
+        match: {
+            groupId: string;
+            seasonId: string;
+            createdAt: string;
+            tournamentId?: string;
+            tournamentStage?: string;
+        },
         ops: LiveOp[]
     ): Partial<OutboxState> {
         // a discarded match takes no more edits
@@ -111,7 +125,13 @@ export const outbox = {
     abandon(
         state: OutboxState,
         id: string,
-        match: { groupId: string; seasonId: string; createdAt: string }
+        match: {
+            groupId: string;
+            seasonId: string;
+            createdAt: string;
+            tournamentId?: string;
+            tournamentStage?: string;
+        }
     ): Partial<OutboxState> {
         const entry = state.entries[id];
         if (entry?.pendingCreate && !entry.createSent) {

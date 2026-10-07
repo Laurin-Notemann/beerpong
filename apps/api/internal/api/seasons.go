@@ -357,7 +357,7 @@ func (s *Server) startSeason(r *request) response {
 		if memberID == "" {
 			return fail(errAuthUserNotInGroup), nil
 		}
-		group, err := q.GetGroup(ctx, groupID)
+		group, err := q.LockTournamentGroup(ctx, groupID)
 		if notFound(err) {
 			return fail(errGroupNotFound), nil
 		}
@@ -365,6 +365,13 @@ func (s *Server) startSeason(r *request) response {
 			return nil, err
 		}
 
+		activeTournament, err := q.ActiveTournamentExists(ctx, groupID)
+		if err != nil {
+			return nil, err
+		}
+		if activeTournament {
+			return fail(errTournamentPlaying), nil
+		}
 		var old *season
 		if group.ActiveSeasonID != nil {
 			sn, found, err := s.loadSeason(ctx, q, *group.ActiveSeasonID)

@@ -3,10 +3,12 @@ import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
+import { Icon } from '@/components/Icon';
 import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { AppBackground } from '@/lib/Background';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { TOURNAMENT_COLOR, TOURNAMENT_ICON } from '@/lib/tournament';
 import { useGroupInvite } from '@/lib/useGroupInvite';
 import { useInsets } from '@/lib/useInsets';
 import { SeasonSettingsDto } from '@/openapi/openapi';
@@ -140,6 +142,22 @@ export default function GroupSettingsScreen({
                                     }
                                 />
                             ))}
+                    </MenuSection>
+                    <MenuSection title="Tournaments">
+                        <MenuItem
+                            border={false}
+                            title="Tournaments"
+                            subtitle="Start a tournament or revisit past brackets"
+                            headIcon={
+                                <Icon
+                                    name={TOURNAMENT_ICON}
+                                    size={24}
+                                    color={TOURNAMENT_COLOR}
+                                />
+                            }
+                            tailIconType="next"
+                            onPress={() => nav.navigate('tournaments')}
+                        />
                     </MenuSection>
                     <MenuSection title="Gameplay">
                         <MenuItem

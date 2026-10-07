@@ -11,6 +11,7 @@ import { pressFeedback } from '@/components/liveMatch/motion';
 import { Scoreboard } from '@/components/liveMatch/Scoreboard';
 import { useNextTokens } from '@/components/next/tokens';
 import PressableScale from '@/components/PressableScale';
+import { TournamentLabel } from '@/components/tournament/TournamentLabel';
 import { dockLabel } from '@/lib/liveMatch/dock';
 
 /**
@@ -77,6 +78,10 @@ export function LiveMatchRow({
                     </Text>
                 )}
             </View>
+            <TournamentLabel
+                id={match.tournamentId}
+                stage={match.tournamentStage}
+            />
             <Scoreboard red={red} blue={blue} />
         </PressableScale>
     );

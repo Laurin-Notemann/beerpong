@@ -12,6 +12,7 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/database/db"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
+	"github.com/laurin-notemann/beerpong/api-go/internal/tournament"
 )
 
 // The ways a live match ends: finished into a match, abandoned by a phone, or
@@ -29,6 +30,19 @@ const (
 // endLiveMatch writes the end state of a live match whose row the caller has
 // locked and returns it as the end event's body (no ops).
 func (s *Server) endLiveMatch(ctx context.Context, q *db.Queries, lm db.LockLiveMatchRow, status string, resultMatchID *string) (liveMatchDTO, error) {
+	if status == liveAbandoned && lm.LiveMatch.TournamentID != nil {
+		t, _, fixture, err := lockFixture(ctx, q, lm.LiveMatch.GroupID, lm.LiveMatch.ID)
+		if err != nil {
+			return liveMatchDTO{}, err
+		}
+		if t != nil && fixture != nil {
+			fixture.Status = "READY"
+			fixture.ID = uuid.NewString()
+			if err := saveTournament(ctx, q, *t); err != nil {
+				return liveMatchDTO{}, err
+			}
+		}
+	}
 	endedAt := s.now().Truncate(time.Microsecond)
 	if err := q.EndLiveMatch(ctx, db.EndLiveMatchParams{ID: lm.LiveMatch.ID, Status: status, EndedAt: &endedAt, ResultMatchID: resultMatchID}); err != nil {
 		return liveMatchDTO{}, err
@@ -80,6 +94,7 @@ func (s *Server) finishLiveMatch(r *request) response {
 	var match matchDTO
 	var ended liveMatchDTO
 	var finished bool
+	var changedTournament *tournament.Tournament
 	res = s.tx(ctx, func(q *db.Queries) (response, error) {
 		lm, err := q.LockLiveMatch(ctx, db.LockLiveMatchParams{ID: id, GroupID: groupID})
 		if notFound(err) {
@@ -106,8 +121,35 @@ func (s *Server) finishLiveMatch(r *request) response {
 		if res != nil {
 			return res, nil
 		}
+		var t *tournament.Tournament
+		var stage *tournament.Stage
+		var fixture *tournament.Fixture
+		if lm.LiveMatch.TournamentID != nil {
+			t, stage, fixture, err = lockFixture(ctx, q, groupID, id)
+			if err != nil {
+				return nil, err
+			}
+			if t == nil || t.Status != "ACTIVE" || !validFixtureInput(t, fixture, in) {
+				return fail(errTournamentFixture), nil
+			}
+		}
+		if t != nil && sn.Settings != nil {
+			settings := *sn.Settings
+			settings.MinTeamSize, settings.MaxTeamSize = int32(t.TeamSize), int32(t.TeamSize)
+			sn.Settings = &settings
+		}
 		if match, res, err = s.insertValidMatch(r, q, groupID, sn, uuid.NewString(), in); err != nil || res != nil {
 			return res, err
+		}
+		if t != nil {
+			if err := q.LinkMatchTournament(ctx, db.LinkMatchTournamentParams{ID: match.ID, TournamentID: &t.ID, TournamentStage: &stage.Name}); err != nil {
+				return nil, err
+			}
+			match.TournamentID, match.TournamentStage = &t.ID, &stage.Name
+			if err := s.recordTournamentResult(ctx, q, t, fixture, match.ID); err != nil {
+				return nil, err
+			}
+			changedTournament = t
 		}
 		if ended, err = s.endLiveMatch(ctx, q, lm, liveFinished, &match.ID); err != nil {
 			return nil, err
@@ -118,7 +160,13 @@ func (s *Server) finishLiveMatch(r *request) response {
 	})
 	if _, isOK := res.(okResponse); isOK && finished {
 		s.hub.Publish(groupID, realtime.Matches, "matchCreate", match)
+		if changedTournament != nil {
+			s.publishTournament(groupID, ok(*changedTournament))
+		}
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)
+		if ended.TournamentID != nil {
+			s.hub.Publish(groupID, realtime.Tournaments, "tournamentRefetch", nil)
+		}
 		s.queueLiveScore(groupID, id)
 	}
 	return res
@@ -152,6 +200,9 @@ func (s *Server) abandonLiveMatch(r *request) response {
 	})
 	if _, isOK := res.(okResponse); isOK && changed {
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)
+		if ended.TournamentID != nil {
+			s.hub.Publish(groupID, realtime.Tournaments, "tournamentRefetch", nil)
+		}
 		s.queueLiveScore(groupID, id)
 	}
 	return res
@@ -251,6 +302,9 @@ func (s *Server) abandonIfExpired(ctx context.Context, id, groupID string, cutof
 	}
 	if changed {
 		s.hub.Publish(groupID, realtime.LiveMatches, "liveMatchEnd", ended)
+		if ended.TournamentID != nil {
+			s.hub.Publish(groupID, realtime.Tournaments, "tournamentRefetch", nil)
+		}
 		s.queueLiveScore(groupID, id)
 	}
 	return changed, nil

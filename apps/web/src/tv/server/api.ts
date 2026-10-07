@@ -128,6 +128,11 @@ export function apiFor(refreshToken: string) {
             ),
         completeRecording: (groupId: string, id: string) =>
             post(`/groups/${groupId}/recordings/${id}/complete`),
+        tournaments: (groupId: string) =>
+            get<Dto.TournamentDto[]>(`/groups/${groupId}/tournaments`).catch((err) => {
+                if (err instanceof ApiError && err.httpCode === 404) return [];
+                throw err;
+            }),
         liveMatches: (groupId: string) =>
             get<Dto.LiveMatchDto[]>(`/groups/${groupId}/live-matches`),
         formations: (groupId: string) => get<Dto.FormationDto[]>(`/groups/${groupId}/formations`),

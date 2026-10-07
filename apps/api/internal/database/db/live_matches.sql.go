@@ -32,7 +32,7 @@ func (q *Queries) EndLiveMatch(ctx context.Context, arg EndLiveMatchParams) erro
 }
 
 const finishedLiveMatchesBySeason = `-- name: FinishedLiveMatchesBySeason :many
-SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, gm.user_id AS created_by_user_id
+SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, lm.tournament_id, lm.tournament_stage, gm.user_id AS created_by_user_id
 FROM live_matches lm
 JOIN group_members gm ON gm.id = lm.created_by
 JOIN matches m ON m.id = lm.result_match_id
@@ -76,6 +76,8 @@ func (q *Queries) FinishedLiveMatchesBySeason(ctx context.Context, arg FinishedL
 			&i.LiveMatch.DisplaySeq,
 			&i.LiveMatch.ActivityChannel,
 			&i.LiveMatch.ActivityEnded,
+			&i.LiveMatch.TournamentID,
+			&i.LiveMatch.TournamentStage,
 			&i.CreatedByUserID,
 		); err != nil {
 			return nil, err
@@ -89,7 +91,7 @@ func (q *Queries) FinishedLiveMatchesBySeason(ctx context.Context, arg FinishedL
 }
 
 const getLiveMatch = `-- name: GetLiveMatch :one
-SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, gm.user_id AS created_by_user_id
+SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, lm.tournament_id, lm.tournament_stage, gm.user_id AS created_by_user_id
 FROM live_matches lm
 JOIN group_members gm ON gm.id = lm.created_by
 WHERE lm.id = $1
@@ -118,13 +120,15 @@ func (q *Queries) GetLiveMatch(ctx context.Context, id string) (GetLiveMatchRow,
 		&i.LiveMatch.DisplaySeq,
 		&i.LiveMatch.ActivityChannel,
 		&i.LiveMatch.ActivityEnded,
+		&i.LiveMatch.TournamentID,
+		&i.LiveMatch.TournamentStage,
 		&i.CreatedByUserID,
 	)
 	return i, err
 }
 
 const inProgressLiveMatchesByGroup = `-- name: InProgressLiveMatchesByGroup :many
-SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, gm.user_id AS created_by_user_id
+SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, lm.tournament_id, lm.tournament_stage, gm.user_id AS created_by_user_id
 FROM live_matches lm
 JOIN group_members gm ON gm.id = lm.created_by
 WHERE lm.group_id = $1 AND lm.status = 'IN_PROGRESS'
@@ -160,6 +164,8 @@ func (q *Queries) InProgressLiveMatchesByGroup(ctx context.Context, groupID stri
 			&i.LiveMatch.DisplaySeq,
 			&i.LiveMatch.ActivityChannel,
 			&i.LiveMatch.ActivityEnded,
+			&i.LiveMatch.TournamentID,
+			&i.LiveMatch.TournamentStage,
 			&i.CreatedByUserID,
 		); err != nil {
 			return nil, err
@@ -297,7 +303,7 @@ func (q *Queries) LiveMatchOpsByLiveMatchIDs(ctx context.Context, liveMatchIds [
 }
 
 const lockLiveMatch = `-- name: LockLiveMatch :one
-SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, gm.user_id AS created_by_user_id
+SELECT lm.id, lm.group_id, lm.season_id, lm.created_by, lm.status, lm.started_at, lm.last_activity_at, lm.ended_at, lm.last_seq, lm.result_match_id, lm.display, lm.display_seq, lm.activity_channel, lm.activity_ended, lm.tournament_id, lm.tournament_stage, gm.user_id AS created_by_user_id
 FROM live_matches lm
 JOIN group_members gm ON gm.id = lm.created_by
 WHERE lm.id = $1 AND lm.group_id = $2
@@ -334,6 +340,8 @@ func (q *Queries) LockLiveMatch(ctx context.Context, arg LockLiveMatchParams) (L
 		&i.LiveMatch.DisplaySeq,
 		&i.LiveMatch.ActivityChannel,
 		&i.LiveMatch.ActivityEnded,
+		&i.LiveMatch.TournamentID,
+		&i.LiveMatch.TournamentStage,
 		&i.CreatedByUserID,
 	)
 	return i, err

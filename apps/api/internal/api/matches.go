@@ -153,7 +153,8 @@ func (m fullMatch) overview(ruleMoves map[string]db.RuleMove) (matchOverviewDTO,
 		return out
 	}
 	return matchOverviewDTO{
-		ID:       m.match.ID,
+		ID:           m.match.ID,
+		TournamentID: m.match.TournamentID, TournamentStage: m.match.TournamentStage,
 		Date:     utc(m.match.Date),
 		SeasonID: m.match.SeasonID,
 		BlueTeam: team(m.teams[0]),
@@ -725,13 +726,6 @@ func (s *Server) updateMatch(r *request) response {
 		if res != nil {
 			return res, nil
 		}
-		wrong, err := wrongTeamSizes(in, sn.Settings)
-		if err != nil {
-			return nil, err
-		}
-		if wrong {
-			return fail(errMatchDtoValidationFailed), nil
-		}
 		if len(in.teams) != 2 {
 			return fail(errMatchWrongAmountOfTeams), nil
 		}
@@ -771,6 +765,22 @@ func (s *Server) updateMatch(r *request) response {
 		if err != nil {
 			return nil, err
 		}
+		t, fixture, failure, err := s.tournamentResultEdit(ctx, q, groupID, match)
+		if err != nil || failure != nil {
+			return failure, err
+		}
+		if t != nil && !validFixtureInput(t, fixture, in) {
+			return fail(errTournamentFixture), nil
+		}
+		if t == nil {
+			wrong, err := wrongTeamSizes(in, sn.Settings)
+			if err != nil {
+				return nil, err
+			}
+			if wrong {
+				return fail(errMatchDtoValidationFailed), nil
+			}
+		}
 		oldTeams, err := q.TeamsByMatchIDs(ctx, []string{matchID})
 		if err != nil {
 			return nil, err
@@ -788,12 +798,20 @@ func (s *Server) updateMatch(r *request) response {
 		if err != nil {
 			return nil, err
 		}
+		if t != nil {
+			if err := s.recordTournamentResult(ctx, q, t, fixture, matchID); err != nil {
+				return nil, err
+			}
+		}
 		updated = toMatchDTO(match)
 		updated.PhotoUploads = &photos
 		return ok(updated), nil
 	})
 	if _, isOK := res.(okResponse); isOK {
 		s.hub.Publish(groupID, realtime.Matches, "matchUpdate", updated)
+		if updated.TournamentID != nil {
+			s.hub.Publish(groupID, realtime.Tournaments, "tournamentRefetch", nil)
+		}
 	}
 	return res
 }
@@ -839,6 +857,17 @@ func (s *Server) deleteMatch(r *request) response {
 		if deref(match.SeasonID) != seasonID {
 			return fail(errMatchSeasonMismatch), nil
 		}
+		t, fixture, failure, err := s.tournamentResultEdit(ctx, q, groupID, match)
+		if err != nil || failure != nil {
+			return failure, err
+		}
+		if t != nil {
+			fixture.Status, fixture.ResultMatchID, fixture.WinnerTeamID, fixture.BlueScore, fixture.RedScore = "READY", nil, nil, 0, 0
+			fixture.ID = uuid.NewString()
+			if err := saveTournament(ctx, q, *t); err != nil {
+				return nil, err
+			}
+		}
 		photos, err := q.PhotoAssetIDsOfMatch(ctx, &matchID)
 		if err != nil {
 			return nil, err
@@ -858,6 +887,7 @@ func (s *Server) deleteMatch(r *request) response {
 	})
 	if _, isOK := res.(okResponse); isOK {
 		s.hub.Publish(groupID, realtime.Matches, "matchDelete", matchID)
+		s.hub.Publish(groupID, realtime.Tournaments, "tournamentRefetch", nil)
 	}
 	return res
 }

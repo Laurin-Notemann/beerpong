@@ -9,6 +9,7 @@ import { EloChange } from '@/components/EloChange';
 import { Icon } from '@/components/Icon';
 import { Team } from '@/components/MatchVsHeader';
 import { useNextTokens } from '@/components/next/tokens';
+import { TournamentLabel } from '@/components/tournament/TournamentLabel';
 import { MatchEloDto } from '@/openapi/openapi';
 
 function TeamSide({
@@ -111,6 +112,10 @@ export function NextMatchCard({
                 backgroundColor: pressed ? t.surfacePressed : t.surface,
             })}
         >
+            <TournamentLabel
+                id={match.tournamentId}
+                stage={match.tournamentStage}
+            />
             <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                 <TeamSide
                     color="blue"

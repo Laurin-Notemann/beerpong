@@ -6,6 +6,7 @@ import { Icon, IconName } from '@/components/Icon';
 import { LiveTimer } from '@/components/liveMatch/LiveTimer';
 import { useNextTokens, withAlpha } from '@/components/next/tokens';
 import { triggerHapticBump } from '@/haptics';
+import { TOURNAMENT_COLOR } from '@/lib/tournament';
 import { Scope, Screen } from '@/lib/tvDisplay';
 
 // The TV remote's building blocks. Every section is the same: a heading, one card of rows, and
@@ -166,11 +167,13 @@ export function Row({
                         name={icon}
                         size={19}
                         color={
-                            selected
-                                ? t.accent
-                                : danger
-                                  ? color
-                                  : t.textSecondary
+                            icon === 'tournament'
+                                ? TOURNAMENT_COLOR
+                                : selected
+                                  ? t.accent
+                                  : danger
+                                    ? color
+                                    : t.textSecondary
                         }
                     />
                 </View>
@@ -398,6 +401,12 @@ export const screens: { value: Screen; label: string; icon: IconName }[] = [
     { value: 'live', label: 'Live Matches', icon: 'view-grid-outline' },
     { value: 'focus', label: 'One Match', icon: 'fullscreen' },
     { value: 'camera', label: 'Camera', icon: 'video-outline' },
+    { value: 'tournament', label: 'Tournament Bracket', icon: 'tournament' },
+    {
+        value: 'tournament-standings',
+        label: 'Tournament Standings',
+        icon: 'tournament',
+    },
 ];
 
 export const scopes: { value: Scope; label: string }[] = [

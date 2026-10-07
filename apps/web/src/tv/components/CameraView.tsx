@@ -1,3 +1,4 @@
+import { TOURNAMENT_COLOR } from '@/lib/tournament';
 import {
     type CameraCorner,
     type CameraRotation,
@@ -9,6 +10,7 @@ import { Avatar } from '~/tv/components/Avatar';
 import { CameraVideo } from '~/tv/components/CameraVideo';
 import { CupRack } from '~/tv/components/CupRack';
 import { Delta, RankMove } from '~/tv/components/Leaderboard';
+import { TournamentIcon } from '~/tv/components/TournamentIcon';
 import { useNow } from '~/tv/lib/hooks';
 import { formatElapsed } from '~/tv/lib/liveMatch';
 import type { LiveMatchView, LiveTeam } from '~/tv/server/board';
@@ -99,6 +101,15 @@ export function CameraView({
                         VERSUS
                     </div>
                     <h1 className="truncate text-[2.6rem] leading-tight font-black">{groupName}</h1>
+                    {match?.tournamentStage && (
+                        <div
+                            className="flex items-center gap-2 text-[1.4rem]"
+                            style={{ color: TOURNAMENT_COLOR }}
+                        >
+                            <TournamentIcon size={20} />
+                            {match.tournamentStage}
+                        </div>
+                    )}
                     {offline && <div className="text-[1.4rem] text-red">Reconnecting…</div>}
                 </div>
                 {match?.moves[0] && (

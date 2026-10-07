@@ -44,6 +44,7 @@ import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 const logger = new ScopedLogger('widgets');
 
 interface LiveScoreOf {
+    tournamentStage?: string;
     id: string;
     startedAt: string;
     /** the seq the score is at; undefined while this phone isn't in sync with the server */
@@ -95,6 +96,7 @@ function useLiveScores(groupId: ApiId | null, seasonId: ApiId | null) {
                 return {
                     id: i.id,
                     startedAt: i.startedAt,
+                    tournamentStage: i.tournamentStage,
                     seq: i.syncedSeq,
                     score: toLiveScore(teams),
                     teams: toTeamCreateDtos(i.state),
@@ -261,6 +263,7 @@ export function useHomeScreenWidgets() {
             matches: scores.map((i) => ({
                 id: i.id,
                 startedAt: Date.parse(i.startedAt) || 0,
+                tournamentStage: i.tournamentStage,
                 ...i.score,
                 players: i.players.map(({ name, team, avatar }) => ({
                     name,

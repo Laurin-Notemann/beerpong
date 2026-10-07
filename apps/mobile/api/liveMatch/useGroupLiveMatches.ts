@@ -16,6 +16,8 @@ import type { RuleMoveDto } from '@/openapi/openapi';
 import { useLiveMatchOutboxStore } from '@/zustand/liveMatchOutboxStore';
 
 export interface GroupLiveMatch {
+    tournamentId?: string;
+    tournamentStage?: string;
     id: string;
     seasonId: string;
     /** the server's start, or when this phone started it while the server doesn't have it */
@@ -55,6 +57,8 @@ export function useGroupLiveMatches(groupId: ApiId | null | undefined) {
                 return {
                     id: i.id,
                     seasonId: header?.seasonId ?? '',
+                    tournamentId: header?.tournamentId,
+                    tournamentStage: header?.tournamentStage,
                     startedAt: header?.startedAt ?? '',
                     isPendingCreate: i.isPendingCreate,
                     state,

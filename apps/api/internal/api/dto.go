@@ -333,15 +333,17 @@ type teamPhotoDTO struct {
 }
 
 type matchDTO struct {
-	ID           string          `json:"id"`
-	Date         *time.Time      `json:"date"`
-	SeasonID     *string         `json:"seasonId"`
-	CreatedByID  *string         `json:"createdById"`
-	PhotoUploads *[]teamPhotoDTO `json:"photoUploads"`
+	TournamentID    *string         `json:"tournamentId,omitempty"`
+	TournamentStage *string         `json:"tournamentStage,omitempty"`
+	ID              string          `json:"id"`
+	Date            *time.Time      `json:"date"`
+	SeasonID        *string         `json:"seasonId"`
+	CreatedByID     *string         `json:"createdById"`
+	PhotoUploads    *[]teamPhotoDTO `json:"photoUploads"`
 }
 
 func toMatchDTO(m db.Match) matchDTO {
-	return matchDTO{ID: m.ID, Date: utc(m.Date), SeasonID: m.SeasonID, CreatedByID: m.CreatedBy}
+	return matchDTO{ID: m.ID, Date: utc(m.Date), SeasonID: m.SeasonID, CreatedByID: m.CreatedBy, TournamentID: m.TournamentID, TournamentStage: m.TournamentStage}
 }
 
 type teamDTO struct {
@@ -393,11 +395,13 @@ type overviewTeamDTO struct {
 }
 
 type matchOverviewDTO struct {
-	ID       string          `json:"id"`
-	Date     *time.Time      `json:"date"`
-	SeasonID *string         `json:"seasonId"`
-	BlueTeam overviewTeamDTO `json:"blueTeam"`
-	RedTeam  overviewTeamDTO `json:"redTeam"`
+	TournamentID    *string         `json:"tournamentId,omitempty"`
+	TournamentStage *string         `json:"tournamentStage,omitempty"`
+	ID              string          `json:"id"`
+	Date            *time.Time      `json:"date"`
+	SeasonID        *string         `json:"seasonId"`
+	BlueTeam        overviewTeamDTO `json:"blueTeam"`
+	RedTeam         overviewTeamDTO `json:"redTeam"`
 }
 
 type authTokenDTO struct {
@@ -453,6 +457,8 @@ type liveMatchOpDTO struct {
 }
 
 type liveMatchDTO struct {
+	TournamentID    *string          `json:"tournamentId,omitempty"`
+	TournamentStage *string          `json:"tournamentStage,omitempty"`
 	ID              string           `json:"id"`
 	GroupID         string           `json:"groupId"`
 	SeasonID        string           `json:"seasonId"`
@@ -492,6 +498,8 @@ func toLiveMatchDTO(lm db.LiveMatch, userID *string, ops []liveMatchOpDTO) liveM
 	}
 	return liveMatchDTO{
 		ID:              lm.ID,
+		TournamentID:    lm.TournamentID,
+		TournamentStage: lm.TournamentStage,
 		GroupID:         lm.GroupID,
 		SeasonID:        lm.SeasonID,
 		Status:          lm.Status,

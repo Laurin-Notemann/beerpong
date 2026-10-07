@@ -5,7 +5,7 @@
 export interface DisplayConfig {
     groupId: string | null;
     groupName: string | null;
-    /** auto: leaderboard while idle, camera or one full-screen match while live */
+    /** auto: active tournament or leaderboard while idle, camera or one full-screen match while live */
     view: View;
     scope: Scope;
     /** the season of the leaderboard; null follows the group's active season */
@@ -72,7 +72,14 @@ export type CameraPatch = Partial<
 >;
 
 /** camera: a camera's video on the whole screen, the score over it */
-export const views = ['auto', 'leaderboard', 'live', 'camera'] as const;
+export const views = [
+    'auto',
+    'leaderboard',
+    'live',
+    'camera',
+    'tournament',
+    'tournament-standings',
+] as const;
 export type View = (typeof views)[number];
 
 export const scopes = ['season', 'today', 'all-time'] as const;
@@ -221,24 +228,29 @@ export const byStart = (a: { startedAt: string }, b: { startedAt: string }) =>
     a.startedAt.localeCompare(b.startedAt);
 
 /**
- * Auto shows the leaderboard while idle, then the camera if video is available, otherwise
+ * Auto shows the active tournament (or leaderboard) while idle, then the camera if video is available, otherwise
  * one full-screen live match. Explicit Camera stays on the feed even without a live match.
  */
 export function layoutFor(
     config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
     liveIds: string[],
-    cameraAvailable = false
+    cameraAvailable = false,
+    tournamentAvailable = false
 ) {
     if (config.focusMatchId && liveIds.includes(config.focusMatchId))
         return 'focus';
     if (config.view === 'leaderboard') return 'leaderboard';
     if (config.view === 'live') return 'live';
     if (config.view === 'camera') return 'camera';
+    if (config.view === 'tournament' || config.view === 'tournament-standings')
+        return config.view;
     return liveIds.length > 0
         ? cameraAvailable
             ? 'camera'
             : 'focus'
-        : 'leaderboard';
+        : tournamentAvailable
+          ? 'tournament'
+          : 'leaderboard';
 }
 
 /** what a remote shows as chosen: one of the views, or a live match on the whole screen */

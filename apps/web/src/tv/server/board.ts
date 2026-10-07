@@ -51,6 +51,7 @@ export interface LiveTeam {
 }
 
 export interface LiveMatchView {
+    tournamentStage?: string;
     id: string;
     startedAt: string;
     lastActivityAt: string;
@@ -69,6 +70,7 @@ export interface LiveMatchView {
 
 /** everything a TV (and the phone controlling it) shows, in one request */
 export interface Board {
+    tournament: Dto.TournamentDto | null;
     group: { id: string; name: string };
     seasons: { id: string; name: string; active: boolean }[];
     season: { id: string; name: string } | null;
@@ -86,11 +88,12 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
     const groupId = config.groupId!;
     const api = apiFor(refreshToken);
 
-    const [group, seasons, profiles, live] = await Promise.all([
+    const [group, seasons, profiles, live, tournaments] = await Promise.all([
         api.group(groupId),
         api.seasons(groupId),
         api.profiles(groupId),
         api.liveMatches(groupId),
+        api.tournaments(groupId),
     ]);
     const season =
         seasons.find((i) => i.id === config.seasonId) ??
@@ -217,6 +220,10 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
 
     return {
         group: { id: groupId, name: group.name ?? '' },
+        tournament:
+            tournaments.find((t) => t.status === 'ACTIVE') ??
+            tournaments.find((t) => t.status === 'FINISHED') ??
+            null,
         seasons: seasons.map((i) => ({
             id: i.id,
             name: i.name || 'Current season',
@@ -254,6 +261,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
             return {
                 id: dto.id,
                 startedAt: dto.startedAt ?? '',
+                tournamentStage: dto.tournamentStage,
                 lastActivityAt: dto.lastActivityAt ?? dto.startedAt ?? '',
                 blue: team(blue),
                 red: team(red),

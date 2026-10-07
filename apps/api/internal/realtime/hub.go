@@ -39,6 +39,7 @@ const (
 	Profiles    = "PROFILES"
 	LiveMatches = "LIVE_MATCHES"
 	Formations  = "FORMATIONS"
+	Tournaments = "TOURNAMENTS"
 )
 
 type event struct {

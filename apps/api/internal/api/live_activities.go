@@ -594,16 +594,17 @@ func activityPayload(event string, lm db.LiveMatch, score liveScoreDTO) map[stri
 		}
 	}
 	props, _ := json.Marshal(map[string]any{
-		"blueNames":   score.BlueNames,
-		"blueScore":   score.BlueScore,
-		"redNames":    score.RedNames,
-		"redScore":    score.RedScore,
-		"startedAt":   lm.StartedAt.UnixMilli(),
-		"finished":    lm.Status == liveFinished,
-		"blueCups":    score.BlueCups,
-		"redCups":     score.RedCups,
-		"bluePlayers": players["blue"],
-		"redPlayers":  players["red"],
+		"blueNames":       score.BlueNames,
+		"blueScore":       score.BlueScore,
+		"redNames":        score.RedNames,
+		"redScore":        score.RedScore,
+		"startedAt":       lm.StartedAt.UnixMilli(),
+		"tournamentStage": lm.TournamentStage,
+		"finished":        lm.Status == liveFinished,
+		"blueCups":        score.BlueCups,
+		"redCups":         score.RedCups,
+		"bluePlayers":     players["blue"],
+		"redPlayers":      players["red"],
 	})
 	return map[string]any{"aps": map[string]any{
 		"event":         event,
@@ -672,16 +673,17 @@ func (s *Server) pushWidgets(ctx context.Context, groupID string, tokens []db.Gr
 			moves = moves[:maxWidgetMoves]
 		}
 		matches = append(matches, map[string]any{
-			"id":        m.lm.ID,
-			"blueNames": m.score.BlueNames,
-			"blueScore": m.score.BlueScore,
-			"redNames":  m.score.RedNames,
-			"redScore":  m.score.RedScore,
-			"startedAt": m.lm.StartedAt.UnixMilli(),
-			"players":   players,
-			"moves":     moves,
-			"blueCups":  m.score.BlueCups,
-			"redCups":   m.score.RedCups,
+			"id":              m.lm.ID,
+			"blueNames":       m.score.BlueNames,
+			"blueScore":       m.score.BlueScore,
+			"redNames":        m.score.RedNames,
+			"redScore":        m.score.RedScore,
+			"startedAt":       m.lm.StartedAt.UnixMilli(),
+			"players":         players,
+			"moves":           moves,
+			"blueCups":        m.score.BlueCups,
+			"redCups":         m.score.RedCups,
+			"tournamentStage": m.lm.TournamentStage,
 		})
 	}
 	payload := map[string]any{

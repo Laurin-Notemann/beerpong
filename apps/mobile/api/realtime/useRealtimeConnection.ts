@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { applyFormationEvent } from '@/api/calls/formationHooks';
+import { applyTournamentEvent } from '@/api/calls/tournamentHooks';
 import { env } from '@/api/env';
 import {
     applyLiveMatchEvent,
@@ -243,6 +244,9 @@ export function useRealtimeConnection() {
                 // applied directly: ops arrive often and carry everything needed
                 applyLiveMatchEvent(qc, e.groupId, e.scope, e.body);
                 break;
+            case 'TOURNAMENTS':
+                applyTournamentEvent(qc, e.groupId, e.body);
+                break;
             case 'FORMATIONS':
                 applyFormationEvent(qc, e.groupId, e.scope, e.body);
                 break;
@@ -255,9 +259,12 @@ export function useRealtimeConnection() {
         const log = (...data: Logs) => writeLogs(...data);
         realtime.logger.addEventListener('*', log);
         realtime.on.event((e) => onRealtimeEvent(e));
-        const offReconnect = realtime.on.reconnect(
-            () => void invalidateLiveMatches(qc)
-        );
+        const offReconnect = realtime.on.reconnect(() => {
+            void invalidateLiveMatches(qc);
+            void qc.invalidateQueries({
+                predicate: (query) => query.queryKey.includes(QK.tournaments),
+            });
+        });
 
         return () => {
             realtime.logger.removeEventListener('*', log);

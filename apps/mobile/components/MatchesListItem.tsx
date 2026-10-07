@@ -9,6 +9,7 @@ import { Match } from '@/api/utils/matchDtoToMatch';
 import { EloChange } from '@/components/EloChange';
 import MatchVsHeader from '@/components/MatchVsHeader';
 import { NextMatchCard } from '@/components/next/NextMatchCard';
+import { TournamentLabel } from '@/components/tournament/TournamentLabel';
 import { MatchEloDto } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { useNewDesign } from '@/zustand/localSettingsStore';
@@ -72,6 +73,10 @@ const MatchesListItemInner: React.FC<{
                     gap: 4,
                 }}
             >
+                <TournamentLabel
+                    id={match.tournamentId}
+                    stage={match.tournamentStage}
+                />
                 <MatchVsHeader match={match} highlightedId={highlightedId} />
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>

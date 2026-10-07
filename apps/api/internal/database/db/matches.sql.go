@@ -62,7 +62,7 @@ func (q *Queries) DeleteTeamsOfMatch(ctx context.Context, matchID *string) error
 }
 
 const getMatch = `-- name: GetMatch :one
-SELECT id, date, season_id, created_by FROM matches WHERE id = $1
+SELECT id, date, season_id, created_by, tournament_id, tournament_stage FROM matches WHERE id = $1
 `
 
 func (q *Queries) GetMatch(ctx context.Context, id string) (Match, error) {
@@ -73,6 +73,8 @@ func (q *Queries) GetMatch(ctx context.Context, id string) (Match, error) {
 		&i.Date,
 		&i.SeasonID,
 		&i.CreatedBy,
+		&i.TournamentID,
+		&i.TournamentStage,
 	)
 	return i, err
 }
@@ -210,7 +212,7 @@ func (q *Queries) MatchMovesByTeamMemberIDs(ctx context.Context, teamMemberIds [
 }
 
 const matchesByGroup = `-- name: MatchesByGroup :many
-SELECT id, date, season_id, created_by FROM matches WHERE season_id IN (SELECT id FROM seasons WHERE group_id = $1) ORDER BY ctid
+SELECT id, date, season_id, created_by, tournament_id, tournament_stage FROM matches WHERE season_id IN (SELECT id FROM seasons WHERE group_id = $1) ORDER BY ctid
 `
 
 // Every season's matches of a group, for boards that replay all seasons.
@@ -228,6 +230,8 @@ func (q *Queries) MatchesByGroup(ctx context.Context, groupID *string) ([]Match,
 			&i.Date,
 			&i.SeasonID,
 			&i.CreatedBy,
+			&i.TournamentID,
+			&i.TournamentStage,
 		); err != nil {
 			return nil, err
 		}
@@ -240,7 +244,7 @@ func (q *Queries) MatchesByGroup(ctx context.Context, groupID *string) ([]Match,
 }
 
 const matchesBySeason = `-- name: MatchesBySeason :many
-SELECT id, date, season_id, created_by FROM matches WHERE season_id = $1 ORDER BY ctid
+SELECT id, date, season_id, created_by, tournament_id, tournament_stage FROM matches WHERE season_id = $1 ORDER BY ctid
 `
 
 func (q *Queries) MatchesBySeason(ctx context.Context, seasonID *string) ([]Match, error) {
@@ -257,6 +261,8 @@ func (q *Queries) MatchesBySeason(ctx context.Context, seasonID *string) ([]Matc
 			&i.Date,
 			&i.SeasonID,
 			&i.CreatedBy,
+			&i.TournamentID,
+			&i.TournamentStage,
 		); err != nil {
 			return nil, err
 		}
@@ -269,7 +275,7 @@ func (q *Queries) MatchesBySeason(ctx context.Context, seasonID *string) ([]Matc
 }
 
 const matchesBySeasonSince = `-- name: MatchesBySeasonSince :many
-SELECT id, date, season_id, created_by FROM matches WHERE season_id = $1 AND date >= $2 ORDER BY ctid
+SELECT id, date, season_id, created_by, tournament_id, tournament_stage FROM matches WHERE season_id = $1 AND date >= $2 ORDER BY ctid
 `
 
 type MatchesBySeasonSinceParams struct {
@@ -291,6 +297,8 @@ func (q *Queries) MatchesBySeasonSince(ctx context.Context, arg MatchesBySeasonS
 			&i.Date,
 			&i.SeasonID,
 			&i.CreatedBy,
+			&i.TournamentID,
+			&i.TournamentStage,
 		); err != nil {
 			return nil, err
 		}

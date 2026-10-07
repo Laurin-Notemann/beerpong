@@ -9,10 +9,18 @@ import { useAndroidIcon } from '@/lib/useAndroidIcon';
 import { useTheme } from '@/theme';
 
 /** "Live match" with the pulsing dot and the running time under it */
-function Title({ startedAt, isLive }: { startedAt?: string; isLive: boolean }) {
+function Title({
+    startedAt,
+    isLive,
+    tournamentStage,
+}: {
+    startedAt?: string;
+    isLive: boolean;
+    tournamentStage?: string;
+}) {
     return (
         <View style={{ alignItems: 'center' }}>
-            <HeaderTitle title="Live match" />
+            <HeaderTitle title={tournamentStage ?? 'Live match'} />
             {isLive && (
                 <View
                     style={{
@@ -38,10 +46,12 @@ export function LiveMatchHeader({
     isLive,
     isFinishing,
     onEditTeams,
+    tournamentStage,
     onFinish,
     onDiscard,
 }: {
     startedAt?: string;
+    tournamentStage?: string;
     isLive: boolean;
     isFinishing: boolean;
     onEditTeams: () => void;
@@ -69,19 +79,25 @@ export function LiveMatchHeader({
             <Stack.Screen
                 options={{
                     ...navStyles,
-                    title: 'Live match',
+                    title: tournamentStage ?? 'Live match',
                     headerTitle: () => (
-                        <Title startedAt={startedAt} isLive={isLive} />
+                        <Title
+                            startedAt={startedAt}
+                            isLive={isLive}
+                            tournamentStage={tournamentStage}
+                        />
                     ),
                 }}
             />
             {isLive && menuIcon && finishIcon && teamsIcon && (
                 <Stack.Toolbar placement="right">
-                    <Stack.Toolbar.Button
-                        icon={teamsIcon}
-                        accessibilityLabel="Add players"
-                        onPress={onEditTeams}
-                    />
+                    {!tournamentStage && (
+                        <Stack.Toolbar.Button
+                            icon={teamsIcon}
+                            accessibilityLabel="Add players"
+                            onPress={onEditTeams}
+                        />
+                    )}
                     <Stack.Toolbar.Button
                         icon={finishIcon}
                         variant="done"

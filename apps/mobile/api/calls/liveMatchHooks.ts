@@ -50,12 +50,13 @@ export const createLiveMatch = async (
     groupId: ApiId,
     id: ApiId,
     seasonId: ApiId,
-    ops: LiveOp[]
+    ops: LiveOp[],
+    tournamentId?: string
 ) =>
     unwrap(
         await api.createLiveMatch(
             { groupId, id },
-            { seasonId, ops: ops.map(toLiveOpDto) },
+            { seasonId, tournamentId, ops: ops.map(toLiveOpDto) },
             syncRequest
         ),
         'createLiveMatch'

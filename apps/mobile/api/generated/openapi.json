@@ -8,6 +8,149 @@
         }
     ],
     "paths": {
+        "/groups/{groupId}/tournaments": {
+            "get": {
+                "tags": ["tournament-controller"],
+                "operationId": "getTournaments",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListTournamentDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/groups/{groupId}/tournaments/{id}": {
+            "get": {
+                "tags": ["tournament-controller"],
+                "operationId": "getTournament",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTournamentDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": ["tournament-controller"],
+                "operationId": "createTournament",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTournamentDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TournamentCreateDto"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["tournament-controller"],
+                "operationId": "cancelTournament",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeTournamentDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
         "/groups/{groupId}/recordings/{id}": {
             "put": {
                 "tags": ["camera-recording-controller"],
@@ -2410,6 +2553,278 @@
     },
     "components": {
         "schemas": {
+            "TournamentTeamDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "playerIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["id", "name", "playerIds"]
+            },
+            "TournamentFixtureDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "blueTeamId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "redTeamId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "BLOCKED",
+                            "READY",
+                            "IN_PROGRESS",
+                            "FINISHED",
+                            "BYE"
+                        ]
+                    },
+                    "resultMatchId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "winnerTeamId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "blueScore": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "redScore": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "id",
+                    "blueTeamId",
+                    "redTeamId",
+                    "status",
+                    "resultMatchId",
+                    "winnerTeamId",
+                    "blueScore",
+                    "redScore"
+                ]
+            },
+            "TournamentStageDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "strategy": {
+                        "type": "string",
+                        "enum": ["ROUND_ROBIN", "KNOCKOUT"]
+                    },
+                    "advanceCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "teamIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "matches": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TournamentFixtureDto"
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "strategy",
+                    "advanceCount",
+                    "teamIds",
+                    "matches"
+                ]
+            },
+            "TournamentDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "seasonId": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "teamSize": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["ACTIVE", "FINISHED", "CANCELLED"]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "endedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "winnerTeamId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "teams": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TournamentTeamDto"
+                        }
+                    },
+                    "stages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TournamentStageDto"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "groupId",
+                    "seasonId",
+                    "name",
+                    "teamSize",
+                    "status",
+                    "createdAt",
+                    "endedAt",
+                    "winnerTeamId",
+                    "teams",
+                    "stages"
+                ]
+            },
+            "TournamentTeamCreateDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "playerIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["name", "playerIds"]
+            },
+            "TournamentStageCreateDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "strategy": {
+                        "type": "string",
+                        "enum": ["ROUND_ROBIN", "KNOCKOUT"]
+                    },
+                    "advanceCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": ["name", "strategy", "advanceCount"]
+            },
+            "TournamentCreateDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "seasonId": {
+                        "type": "string"
+                    },
+                    "teamSize": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "teams": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TournamentTeamCreateDto"
+                        }
+                    },
+                    "stages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TournamentStageCreateDto"
+                        }
+                    }
+                },
+                "required": ["name", "seasonId", "teamSize", "teams", "stages"]
+            },
+            "ResponseEnvelopeTournamentDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["OK", "ERROR"]
+                    },
+                    "httpCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/TournamentDto"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetails"
+                    }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
+            "ResponseEnvelopeListTournamentDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["OK", "ERROR"]
+                    },
+                    "httpCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TournamentDto"
+                        }
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetails"
+                    }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
+
             "CameraRecordingCreateDto": {
                 "type": "object",
                 "properties": {
@@ -3207,6 +3622,13 @@
             "MatchDto": {
                 "type": "object",
                 "properties": {
+                    "tournamentId": {
+                        "type": "string"
+                    },
+                    "tournamentStage": {
+                        "type": "string"
+                    },
+
                     "id": { "type": "string" },
                     "date": {
                         "type": "string",
@@ -3674,6 +4096,13 @@
             "MatchOverviewDto": {
                 "type": "object",
                 "properties": {
+                    "tournamentId": {
+                        "type": "string"
+                    },
+                    "tournamentStage": {
+                        "type": "string"
+                    },
+
                     "id": { "type": "string" },
                     "date": {
                         "type": "string",
@@ -3730,6 +4159,13 @@
             "MatchDtoExtended": {
                 "type": "object",
                 "properties": {
+                    "tournamentId": {
+                        "type": "string"
+                    },
+                    "tournamentStage": {
+                        "type": "string"
+                    },
+
                     "id": { "type": "string" },
                     "date": {
                         "type": "string",
@@ -4039,6 +4475,7 @@
             "LiveMatchCreateDto": {
                 "type": "object",
                 "properties": {
+                    "tournamentId": { "type": "string" },
                     "seasonId": { "type": "string" },
                     "ops": {
                         "type": "array",
@@ -4116,6 +4553,13 @@
             "LiveMatchDto": {
                 "type": "object",
                 "properties": {
+                    "tournamentId": {
+                        "type": "string"
+                    },
+                    "tournamentStage": {
+                        "type": "string"
+                    },
+
                     "id": { "type": "string" },
                     "groupId": { "type": "string" },
                     "seasonId": { "type": "string" },
