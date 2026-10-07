@@ -5,7 +5,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
 import ErrorScreen from '@/components/ErrorScreen';
-import { FinishBar } from '@/components/liveMatch/FinishBar';
 import { InsetFree } from '@/components/liveMatch/InsetFree';
 import { LiveMatchEnded } from '@/components/liveMatch/LiveMatchEnded';
 import { LiveMatchHeader } from '@/components/liveMatch/LiveMatchHeader';
@@ -23,7 +22,7 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 /**
  * Entering a live match: the score on top, the cups and points pages (as in the pro mode
- * draft) and the moves so far in the middle, and Finish at the bottom. Every phone in the group can have it open.
+ * draft) and the moves so far in the middle, with finishing in the header. Every phone in the group can have it open.
  */
 export default function LiveMatchPage() {
     const { id, groupId } = useLocalSearchParams<{
@@ -47,8 +46,8 @@ export default function LiveMatchPage() {
 
     const pagerRef = useRef<SwiperRef>(null);
     const pagerProgress = useSharedValue(0);
-    // a held cup's drag picks a player; the pages stay put meanwhile
-    const [isHoldingCup, setIsHoldingCup] = useState(false);
+    // a cup's drag picks a player; the pages stay put meanwhile
+    const [isDraggingCup, setIsDraggingCup] = useState(false);
 
     const isLive = !!screen.header && !screen.ended;
 
@@ -91,11 +90,11 @@ export default function LiveMatchPage() {
                         <Swiper
                             ref={pagerRef}
                             swiperProgress={pagerProgress}
-                            enabled={!isHoldingCup}
+                            enabled={!isDraggingCup}
                         >
                             <NewMatchCups
                                 liveMatchId={id}
-                                onHoldingChange={setIsHoldingCup}
+                                onDraggingChange={setIsDraggingCup}
                             />
                             <CreateMatchAssignPoints
                                 liveMatchId={id}
@@ -107,13 +106,6 @@ export default function LiveMatchPage() {
                         </Swiper>
                     </InsetFree>
                 </View>
-                <FinishBar
-                    hint={screen.hint}
-                    isFinishing={screen.isFinishing}
-                    onFinish={screen.finish}
-                    onRematch={screen.rematch}
-                    onHintPress={screen.openFinish}
-                />
             </View>
         );
     })();

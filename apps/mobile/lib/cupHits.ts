@@ -28,6 +28,7 @@ export interface CupHit {
 
 export interface CupMove {
     id: string;
+    name?: string;
     /** cups one hit of this move takes off the table (see cupsPerHit) */
     cups: number;
     isFinish: boolean;
@@ -234,9 +235,9 @@ export const hasFinish = (
     );
 
 /**
- * A pro mode quick hit (holding a cup and dragging to the scorer): `move`, the season's default
- * move, on `cup`, as long as it goes in without questions. Undefined when the cup hit modal has to
- * ask: the move doesn't fit, it takes cups the scorer picks, or the last cup needs its finish.
+ * Dragging to a scorer records the default move without questions. Extra cups are taken in
+ * formation order; on the last cup, prefer the normal finish. Taps still offer every choice.
+ * Undefined only when the cup is gone or the move cannot fit the remaining cups.
  */
 export function quickHit(
     hits: CupHit[],
@@ -247,18 +248,28 @@ export function quickHit(
     moves: CupMove[]
 ): Pick<CupHit, 'cups' | 'finishMoveId'> | undefined {
     const standing = standingCups(hits, team);
-
     if (
-        !hittableMoves([move], standing, cup, hasFinish).length ||
-        picksOtherCups(move, standing.length)
-    ) {
+        move.isFinish ||
+        !hittableMoves([move], standing, cup, hasFinish).length
+    )
         return;
-    }
-    const finish = finishForHit(move, standing.length, hasFinish, moves);
-    const cups = cupsTakenBy(hits, team, cup, move);
-    if (finish === 'ask' || !cups) return;
 
-    return { cups, finishMoveId: finish.finishMoveId };
+    const others = standing
+        .filter((i) => !samePosition(i, cup))
+        .slice(0, move.cups - 1);
+    const cups = cupsTakenBy(hits, team, cup, move, others);
+    if (!cups) return;
+
+    const finishes = finishesOnTopOfLastCup(moves);
+    const finish =
+        finishes.find((i) => i.name === 'Finish - Normal') ?? finishes[0];
+    return {
+        cups,
+        finishMoveId:
+            !hasFinish && cups.length === standing.length
+                ? finish?.id
+                : undefined,
+    };
 }
 
 /**

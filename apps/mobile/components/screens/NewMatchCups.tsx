@@ -6,9 +6,9 @@ import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
 import { cupsPerHit } from '@/api/utils/ruleMoveCups';
-import CupGrid, { CupHoldEvent } from '@/components/CupGrid';
+import { CupDragMenu, pickedPlayer } from '@/components/CupDragMenu';
+import CupGrid, { CupDragEvent } from '@/components/CupGrid';
 import { rotateFormation, rotatePoint } from '@/components/CupGrid/Formation';
-import { CupHoldMenu, pickedPlayer } from '@/components/CupHoldMenu';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import { triggerHapticBump } from '@/haptics';
 import {
@@ -24,7 +24,7 @@ import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
 import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
-import { showSuccessToast } from '@/toast';
+import { showErrorToast, showSuccessToast } from '@/toast';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
 import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
@@ -36,9 +36,9 @@ const SIDE_BUTTONS_WIDTH = 72;
 
 /**
  * The live match screen's cups page: both teams' cups, as on the table. Tapping a cup records
- * who hit it; tapping a hit cup puts it back. Holding a cup is the quick way: the players who can
+ * who hit it; tapping a hit cup puts it back. Dragging from a cup is the quick way: the players who can
  * hit it show up around it, and dragging to one records the season's default move for them
- * (or opens the cup hit modal with them picked, if there's no default or it has questions).
+ * (Normal when no default is set), without opening the cup hit modal.
  * The team at the bottom is drawn turned around, facing the other team, and the swap button
  * switches which team that is. The button below it re-racks a team's cups into a saved
  * formation. With Track Misses on, a live match also gets a Miss button: a menu of the players,
@@ -46,12 +46,12 @@ const SIDE_BUTTONS_WIDTH = 72;
  */
 export default function NewMatchCups({
     liveMatchId,
-    onHoldingChange,
+    onDraggingChange,
 }: {
     /** the live match to enter into; without it, the local draft */
     liveMatchId?: string;
-    /** while a cup is held, so the pages don't swipe under the drag */
-    onHoldingChange?: (isHolding: boolean) => void;
+    /** while a cup is touched or dragged, so the pages don't swipe under the drag */
+    onDraggingChange?: (isDragging: boolean) => void;
 }) {
     const theme = useTheme();
     const nav = useNavigation();
@@ -102,12 +102,21 @@ export default function NewMatchCups({
     const moves = movesQuery.data?.data ?? [];
     const cupMoves = moves.map((i) => ({
         id: i.id!,
+        name: i.name ?? undefined,
         cups: cupsPerHit(i),
         isFinish: !!i.finishingMove,
     }));
-    const defaultMove = cupMoves.find(
-        (i) => !i.isFinish && moves.find((j) => j.id === i.id)?.defaultMove
-    );
+    const normalMove =
+        cupMoves.find(
+            (i) => !i.isFinish && i.cups === 1 && i.name === 'Normal'
+        ) ?? cupMoves.find((i) => !i.isFinish && i.cups === 1);
+    const defaultMove =
+        cupMoves.find(
+            (i) =>
+                !i.isFinish &&
+                i.cups > 0 &&
+                moves.find((j) => j.id === i.id)?.defaultMove
+        ) ?? normalMove;
 
     /** the players who can hit the team's cups: the other team */
     const scorersOf = (team: CupTeam) =>
@@ -119,29 +128,43 @@ export default function NewMatchCups({
             })
         );
 
-    const [hold, setHold] = useState<{
+    const [drag, setDrag] = useState<{
         team: CupTeam;
         cup: CupPosition;
         center: { x: number; y: number };
         picked?: number;
     } | null>(null);
-    // the hold's events come faster than renders
-    const holdRef = useRef(hold);
-    function updateHold(next: typeof hold) {
-        holdRef.current = next;
-        setHold(next);
+    // the drag's events come faster than renders
+    const dragRef = useRef(drag);
+    function updateDrag(next: typeof drag) {
+        dragRef.current = next;
+        setDrag(next);
     }
 
-    function onCupHold(team: CupTeam, e: CupHoldEvent) {
-        const current = holdRef.current;
+    function onCupDrag(team: CupTeam, e: CupDragEvent) {
+        const current = dragRef.current;
 
+        if (e.phase === 'touch') {
+            onDraggingChange?.(true);
+            return;
+        }
+        if (e.phase === 'cancel') {
+            updateDrag(null);
+            onDraggingChange?.(false);
+            return;
+        }
         if (e.phase === 'start') {
             const cup = cupOf(team, e.cup);
             if (!cup || findHit(entry.cupHits, team, cup)) return;
             if (!scorersOf(team).length) return;
 
-            updateHold({ team, cup, center: e.center });
-            onHoldingChange?.(true);
+            updateDrag({
+                team,
+                cup,
+                center: e.center,
+                picked: pickedPlayer(scorersOf(team).length, e.dx, e.dy),
+            });
+            onDraggingChange?.(true);
             triggerHapticBump('light');
             return;
         }
@@ -150,13 +173,13 @@ export default function NewMatchCups({
         const picked = pickedPlayer(scorersOf(team).length, e.dx, e.dy);
         if (e.phase === 'move') {
             if (picked === current.picked) return;
-            updateHold({ ...current, picked });
+            updateDrag({ ...current, picked });
             if (picked !== undefined) triggerHapticBump('selection');
             return;
         }
 
-        updateHold(null);
-        onHoldingChange?.(false);
+        updateDrag(null);
+        onDraggingChange?.(false);
         const scorer =
             picked === undefined ? undefined : scorersOf(team)[picked];
         if (e.phase === 'end' && scorer) {
@@ -165,35 +188,21 @@ export default function NewMatchCups({
     }
 
     function recordQuickHit(team: CupTeam, cup: CupPosition, playerId: string) {
-        const hit =
-            defaultMove &&
-            quickHit(
-                entry.cupHits,
-                team,
-                cup,
-                defaultMove,
-                hasFinish(draftPlayers(entry), cupMoves),
-                cupMoves
+        const finished = hasFinish(draftPlayers(entry), cupMoves);
+        const hitFor = (move: typeof defaultMove) =>
+            move &&
+            quickHit(entry.cupHits, team, cup, move, finished, cupMoves);
+        // A default that takes more cups than remain falls back to a normal hit.
+        const move = hitFor(defaultMove) ? defaultMove : normalMove;
+        const hit = hitFor(move);
+        if (!move || !hit) {
+            showErrorToast(
+                'No normal cup move is available. Set one in the group rules.'
             );
-        if (defaultMove && hit) {
-            entry.actions.recordCupHit({
-                team,
-                playerId,
-                moveId: defaultMove.id,
-                ...hit,
-            });
-            triggerHapticBump('toast:success');
             return;
         }
-        triggerHapticBump('selection');
-        nav.navigate('assignCupHitModal', {
-            team,
-            ...cup,
-            rotated: team === bottomTeam,
-            liveMatchId,
-            playerId,
-            moveId: defaultMove?.id,
-        });
+        entry.actions.recordCupHit({ team, playerId, moveId: move.id, ...hit });
+        triggerHapticBump('toast:success');
     }
 
     const lastHit = entry.cupHits.at(-1);
@@ -328,7 +337,7 @@ export default function NewMatchCups({
                             fontSize: 13,
                         }}
                     >
-                        Tap a cup when it&apos;s hit, or hold it and drag to the
+                        Tap a cup when it&apos;s hit, or drag from it to the
                         scorer. Tap a hit cup to put it back.
                     </Text>
                 </View>
@@ -381,23 +390,23 @@ export default function NewMatchCups({
                 {gridWidth > 0 && (
                     <View style={{ gap: GRID_GAP }}>
                         {[topTeam, bottomTeam].map((team) => (
-                            // the held grid's menu goes over the other grid
+                            // the dragged grid's menu goes over the other grid
                             <View
                                 key={team}
-                                style={{ zIndex: hold?.team === team ? 1 : 0 }}
+                                style={{ zIndex: drag?.team === team ? 1 : 0 }}
                             >
                                 <CupGrid
                                     color={theme.color.team[team]}
                                     width={gridWidth}
                                     formation={formationOf(team)}
                                     onCupTap={(cup) => onCupTap(team, cup)}
-                                    onCupHold={(e) => onCupHold(team, e)}
+                                    onCupDrag={(e) => onCupDrag(team, e)}
                                 >
-                                    {hold?.team === team && (
-                                        <CupHoldMenu
-                                            center={hold.center}
+                                    {drag?.team === team && (
+                                        <CupDragMenu
+                                            center={drag.center}
                                             players={scorersOf(team)}
-                                            picked={hold.picked}
+                                            picked={drag.picked}
                                             color={
                                                 theme.color.team[
                                                     team === 'red'

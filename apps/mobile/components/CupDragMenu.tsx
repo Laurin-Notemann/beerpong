@@ -7,7 +7,7 @@ import { useTheme } from '@/theme';
 const RADIUS = 72;
 const AVATAR_SIZE = 44;
 const LABEL_WIDTH = 84;
-/** how far the finger has to drag from the held cup before it points at a player */
+/** distance from the touch origin needed to select a scorer */
 const PICK_DISTANCE = 32;
 
 /** player `i` of `n` sits around the cup, evenly spaced and symmetric around straight up */
@@ -31,17 +31,17 @@ export function pickedPlayer(n: number, dx: number, dy: number) {
 }
 
 /**
- * Pro mode's quick hit: holding a cup shows the players who can hit it around it. Dragging
+ * Pro mode's quick hit: dragging from a cup shows the players who can hit it around it. Dragging
  * towards one picks them (see pickedPlayer); the cups page records the hit when the finger lets
- * go. Only drawn, it never takes touches: the hold gesture keeps them.
+ * go. Only drawn, it never takes touches: the drag gesture keeps them.
  */
-export function CupHoldMenu({
+export function CupDragMenu({
     center,
     players,
     picked,
     color,
 }: {
-    /** the held cup's middle, within its grid */
+    /** the cup's middle, within its grid */
     center: { x: number; y: number };
     players: { id: string; name: string; avatarUrl?: string | null }[];
     picked: number | undefined;
