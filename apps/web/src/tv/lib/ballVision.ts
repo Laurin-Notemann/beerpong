@@ -191,6 +191,7 @@ export function ballCandidates(
         )
             continue;
         const color = orange > size / 2 ? 'orange' : 'white';
+        let temporalRecovery = color === 'orange' && orange - recovered < 4 * scale * scale;
         let score = Math.min(0.75, fill);
         if (ballModel?.supportedColors.includes(color)) {
             score = appearanceScore(
@@ -205,7 +206,25 @@ export function ballCandidates(
                 ),
                 ballModel
             );
-            if (score < ballModel.threshold) continue;
+            if (score < ballModel.threshold) {
+                // A blurred ball over a red rack can lose its appearance score. Keep only
+                // current moving orange pixels near an accepted track, for at most two
+                // weak frames. Preserve the model's score so this is observable recovery.
+                if (
+                    color !== 'orange' ||
+                    !hints.some(
+                        (hint) =>
+                            hint.color === 'orange' &&
+                            Math.hypot(
+                                sumX / size - hint.x * width,
+                                sumY / size - hint.y * height
+                            ) <
+                                24 * scale
+                    )
+                )
+                    continue;
+                temporalRecovery = true;
+            }
         }
         balls.push({
             x: sumX / size / width,
@@ -213,14 +232,35 @@ export function ballCandidates(
             radius: Math.max(w, h) / width / 2,
             color,
             score,
-            source:
-                color === 'orange' && orange - recovered < 4 * scale * scale
-                    ? 'track-color-recovery'
-                    : 'color-motion',
+            source: temporalRecovery ? 'track-color-recovery' : 'color-motion',
         });
         if (balls.length >= 24) break;
     }
-    return { balls, obscured: moving / mask.length > 0.12 };
+    // A compression fringe can split into several orange components. One prediction
+    // supports one observation; otherwise those fragments create competing tracks.
+    const recoveredObservations = new Set<number>();
+    for (const hint of hints) {
+        const nearby = balls
+            .map((ball, index) => ({
+                ball,
+                index,
+                distance: Math.hypot((ball.x - hint.x) * width, (ball.y - hint.y) * height),
+            }))
+            .filter((entry) => entry.ball.color === hint.color && entry.distance < 24 * scale)
+            .sort(
+                (a, b) =>
+                    Number(a.ball.source === 'track-color-recovery') -
+                        Number(b.ball.source === 'track-color-recovery') || a.distance - b.distance
+            );
+        if (nearby[0]) recoveredObservations.add(nearby[0].index);
+    }
+    return {
+        balls: balls.filter(
+            (ball, index) =>
+                ball.source !== 'track-color-recovery' || recoveredObservations.has(index)
+        ),
+        obscured: moving / mask.length > 0.12,
+    };
 }
 
 /** Conservative temporal color recovery. Predicted positions never become detections without pixels. */
