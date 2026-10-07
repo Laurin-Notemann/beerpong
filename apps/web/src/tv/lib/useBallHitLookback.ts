@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
+import { ballModel } from '~/tv/lib/ballClassifier';
 import { LOOKBACK_MS, type HitEntry, type HitObservation } from '~/tv/lib/ballVision';
 import { cupSearchAreas } from '~/tv/lib/cupMembership';
 import type { CupFrame, PlayingArea } from '~/tv/lib/cupVision';
@@ -265,7 +266,10 @@ export function useBallHitLookback(
                 skipped,
                 proposals,
                 obscuredFrames,
-                model: 'motion-proposals',
+                model: ballModel?.id ?? 'motion-proposals',
+                trainedColors: ballModel?.supportedColors.join(',') ?? '',
+                featureVersion: ballModel ? (ballModel.features ?? 'radial-rgb-color-v1') : 'none',
+                featureCount: ballModel ? (ballModel.featureCount ?? 18) : 0,
                 state: ready ? 'running' : 'starting',
                 capture,
                 processingMeanMs: samples ? Math.round(totalMs / samples) : 0,
