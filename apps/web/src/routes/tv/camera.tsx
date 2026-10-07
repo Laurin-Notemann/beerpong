@@ -116,13 +116,17 @@ function Camera() {
     );
     const [syncMatchId, setSyncMatchId] = useState('');
     const [firstTeam, setFirstTeam] = useState<'blue' | 'red'>('blue');
+    const [syncTvId, setSyncTvId] = useState(
+        () => localStorage.getItem('versus-formation-tv') ?? ''
+    );
     const syncingMatch = matches?.formations?.find((m) => m.id === syncMatchId);
     const formationSync = useCupFormationSync(
         identity.id,
         identity.secret,
         cupOutlines && !selectingAreas ? syncingMatch : undefined,
         areas,
-        firstTeam
+        firstTeam,
+        syncTvId
     );
     const cupStatus = useCupDetector(
         previewVideo,
@@ -153,10 +157,14 @@ function Camera() {
             if (value) localStorage.setItem('versus-playing-areas', JSON.stringify(value));
             else localStorage.removeItem('versus-playing-areas');
             localStorage.setItem('versus-cup-outlines', settings.enabled ? 'on' : 'off');
-            setCalibration(value);
+            setCalibration((previous) =>
+                JSON.stringify(previous) === JSON.stringify(value) ? previous : value
+            );
             setCupOutlines(settings.enabled);
             setSyncMatchId(settings.syncMatchId);
             setFirstTeam(settings.firstTeam);
+            setSyncTvId(settings.syncTvId ?? '');
+            localStorage.setItem('versus-formation-tv', settings.syncTvId ?? '');
             return true;
         },
         [cameraDevice, matches]
@@ -170,6 +178,7 @@ function Camera() {
             areas,
             syncMatchId,
             firstTeam,
+            syncTvId,
             device: cameraDevice,
             width: media.stream?.getVideoTracks()[0]?.getSettings().width ?? 0,
             height: media.stream?.getVideoTracks()[0]?.getSettings().height ?? 0,
@@ -319,7 +328,9 @@ function Camera() {
                     save={(selected) => {
                         const value = { device: cameraDevice, areas: selected };
                         localStorage.setItem('versus-playing-areas', JSON.stringify(value));
-                        setCalibration(value);
+                        setCalibration((previous) =>
+                            JSON.stringify(previous) === JSON.stringify(value) ? previous : value
+                        );
                         setSelectingAreas(false);
                     }}
                 />
@@ -455,13 +466,24 @@ function Camera() {
                                         Area 1 belongs to
                                         <select
                                             className="ml-2 min-h-11 rounded-xl bg-panel px-3 text-text"
-                                            value={firstTeam}
-                                            onChange={(event) =>
-                                                setFirstTeam(event.target.value as 'blue' | 'red')
-                                            }
+                                            value={syncTvId ? `tv:${syncTvId}` : firstTeam}
+                                            onChange={(event) => {
+                                                const value = event.target.value;
+                                                const tvId = value.startsWith('tv:')
+                                                    ? value.slice(3)
+                                                    : '';
+                                                setSyncTvId(tvId);
+                                                localStorage.setItem('versus-formation-tv', tvId);
+                                                if (!tvId) setFirstTeam(value as 'blue' | 'red');
+                                            }}
                                         >
                                             <option value="blue">Blue team</option>
                                             <option value="red">Red team</option>
+                                            {(matches?.tvs ?? []).map((tv) => (
+                                                <option key={tv.id} value={`tv:${tv.id}`}>
+                                                    Follow {tv.name} sides
+                                                </option>
+                                            ))}
                                         </select>
                                     </label>
                                     <p role="status">{formationSync.status}</p>

@@ -9,6 +9,7 @@ import { buildBoard } from '~/tv/server/board';
 import { formationMatch } from '~/tv/server/cupFormation';
 import {
     authorize,
+    byGroup,
     cameraFor,
     register,
     setSession,
@@ -132,6 +133,7 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
             name: camera.name,
             liveMatchIds: matches.map((m) => m.id),
             formations: matches.map((match) => formationMatch(match, templates)),
+            tvs: byGroup(groupId).map((tv) => ({ id: tv.id, name: tv.name })),
         };
     });
 

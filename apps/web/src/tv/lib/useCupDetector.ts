@@ -1,5 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 
+import { CupPersistence } from '~/tv/lib/cupPersistence';
 import { MAX_AGE_MS, type CupFrame, type PlayingArea } from '~/tv/lib/cupVision';
 import type { CupResult } from '~/tv/lib/cupWorker';
 
@@ -68,6 +69,8 @@ export function useCupDetector(
         let dropped = 0;
         let latencies: number[] = [];
         let lastCupCount = 0;
+        let heldCupCount = 0;
+        const persistence = new CupPersistence();
         const attributes = () => ({ cameraId, groupId, model, backend: 'wasm-worker' });
         const log = (message: string, extra: Record<string, string | number> = {}) => {
             void import('@sentry/browser').then((Sentry) =>
@@ -124,7 +127,9 @@ export function useCupDetector(
                     ageMs,
                     cups: data.cups,
                 };
-                send(frame);
+                const shown = persistence.observe(data.cups, performance.now());
+                heldCupCount = shown.held;
+                send({ ...frame, cups: shown.cups });
                 observe(frame, surface.width / surface.height);
             } else dropped++;
             nextAt = performance.now() + 150;
@@ -133,7 +138,7 @@ export function useCupDetector(
             latencies.push(data.inferenceMs);
             setStatus(
                 ageMs < MAX_AGE_MS * 0.9
-                    ? `Cup outlines: ${lastCupCount} detected`
+                    ? `Cup outlines: ${lastCupCount} detected${heldCupCount ? ` · ${heldCupCount} briefly tracked` : ''}`
                     : 'Recognition is too slow on this device; outlines paused'
             );
         };
@@ -176,6 +181,7 @@ export function useCupDetector(
                 published: count - dropped,
                 dropped,
                 cupCount: lastCupCount,
+                heldCupCount,
                 inferenceP50Ms: Math.round(latencies[Math.floor(latencies.length * 0.5)] ?? 0),
                 inferenceP95Ms: Math.round(latencies[Math.floor(latencies.length * 0.95)] ?? 0),
                 hidden: document.hidden ? 1 : 0,

@@ -29,6 +29,7 @@ export function useCameraVisionRemote(
             snapshot.areas,
             snapshot.syncMatchId,
             snapshot.firstTeam,
+            snapshot.syncTvId,
         ]);
         if (version.current.signature !== signature) {
             version.current.signature = signature;

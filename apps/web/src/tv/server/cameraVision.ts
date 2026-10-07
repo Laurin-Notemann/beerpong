@@ -6,7 +6,7 @@ import {
     type VisionState,
     type VisionCommand,
 } from '~/tv/lib/cameraVisionRemote';
-import { authorize, DisplayError, type Display } from '~/tv/server/displays';
+import { authorize, byGroup, cameraFor, DisplayError, type Display } from '~/tv/server/displays';
 
 export interface CameraVision {
     state: VisionState;
@@ -24,6 +24,13 @@ export function requestVision(camera: Display, input: unknown) {
     if (!value || typeof value !== 'object' || !validVisionSettings(value.settings))
         throw new DisplayError('invalidVisionSettings');
     const settings = value.settings;
+    if (
+        settings.syncTvId &&
+        !byGroup(camera.config.groupId ?? '').some(
+            (tv) => tv.id === settings.syncTvId && cameraFor(tv) === camera
+        )
+    )
+        throw new DisplayError('cameraMappingTvNotFound', 409);
     const state = report.state;
     if (
         value.session !== state.session ||
@@ -48,6 +55,22 @@ export function requestVision(camera: Display, input: unknown) {
     return command;
 }
 
+/** Apply exactly the rotation and mirroring used by CameraVideo, then read the TV's team sides. */
+export function mappedFirstTeam(camera: Display, state: VisionState) {
+    if (!state.syncTvId) return state.firstTeam;
+    const tv = byGroup(camera.config.groupId ?? '').find((d) => d.id === state.syncTvId);
+    if (!tv || cameraFor(tv) !== camera || !state.areas) return null;
+    const [a, b] = state.areas;
+    const dx = ((a.x + a.width / 2 - b.x - b.width / 2) * state.width) / Math.max(state.height, 1);
+    const dy = a.y + a.height / 2 - b.y - b.height / 2;
+    const angle = (camera.config.cameraRotation * Math.PI) / 180;
+    const screenX =
+        (dx * Math.cos(angle) - dy * Math.sin(angle)) * (camera.config.cameraVideoFlipped ? -1 : 1);
+    if (Math.abs(screenX) < Math.hypot(dx, dy) * 0.2) return null;
+    const areaOnLeft = screenX < 0;
+    return areaOnLeft !== tv.config.cameraOverlayFlipped ? 'blue' : 'red';
+}
+
 export const reportCameraVision = createServerFn({ method: 'POST' })
     .inputValidator((data: unknown) => {
         const value = data as Record<string, unknown> | null;
@@ -67,6 +90,22 @@ export const reportCameraVision = createServerFn({ method: 'POST' })
                 command.expiresAt < Date.now())
         )
             command = null;
+        const team = mappedFirstTeam(camera, data.state);
+        if (!command && data.state.syncTvId && team && team !== data.state.firstTeam) {
+            command = {
+                session: data.state.session,
+                revision: data.state.revision + 1,
+                device: data.state.device,
+                settings: {
+                    enabled: data.state.enabled,
+                    areas: data.state.areas,
+                    syncMatchId: data.state.syncMatchId,
+                    firstTeam: team,
+                    syncTvId: data.state.syncTvId,
+                },
+                expiresAt: Date.now() + 15_000,
+            };
+        }
         camera.vision = { state: data.state, reportedAt: Date.now(), command };
         return command;
     });

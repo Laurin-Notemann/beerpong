@@ -15,18 +15,19 @@ export function useCupFormationSync(
     key: string,
     match: FormationMatch | undefined,
     areas: PlayingArea[] | null,
-    firstTeam: 'blue' | 'red'
+    firstTeam: 'blue' | 'red',
+    syncTvId = ''
 ) {
-    const source = `${match?.id ?? ''}:${match?.seq ?? 0}:${firstTeam}`;
+    const source = `${match?.id ?? ''}:${match?.seq ?? 0}:${firstTeam}:${syncTvId}`;
     const [message, setMessage] = useState<{
         source: string;
         areas: PlayingArea[];
         text: string;
     } | null>(null);
-    const state = useRef({ match, areas, firstTeam });
+    const state = useRef({ match, areas, firstTeam, syncTvId });
     useEffect(() => {
-        state.current = { match, areas, firstTeam };
-    }, [match, areas, firstTeam]);
+        state.current = { match, areas, firstTeam, syncTvId };
+    }, [match, areas, firstTeam, syncTvId]);
     const trackers = useRef({ blue: new StableFormation(), red: new StableFormation() });
     const fitters = useRef({ blue: new FormationFitter(), red: new FormationFitter() });
     const busy = useRef(false);
@@ -36,18 +37,22 @@ export function useCupFormationSync(
         trackers.current = { blue: new StableFormation(), red: new StableFormation() };
         resetAt.current = performance.now();
         generation.current++;
-    }, [match?.id, match?.seq, areas, firstTeam]);
+    }, [match?.id, match?.seq, areas, firstTeam, syncTvId]);
     useEffect(() => {
         fitters.current = { blue: new FormationFitter(), red: new FormationFitter() };
     }, [match?.id, areas, firstTeam]);
     const observe = useCallback(
         (frame: CupFrame, aspect: number) => {
-            const { match, areas, firstTeam } = state.current;
+            const { match, areas, firstTeam, syncTvId } = state.current;
             if (!match || !areas || busy.current || performance.now() - resetAt.current < 5000)
                 return;
             const token = generation.current;
             const setStatus = (text: string) =>
-                setMessage({ source: `${match.id}:${match.seq}:${firstTeam}`, areas, text });
+                setMessage({
+                    source: `${match.id}:${match.seq}:${firstTeam}:${syncTvId}`,
+                    areas,
+                    text,
+                });
             for (const [i, team] of [firstTeam, firstTeam === 'blue' ? 'red' : 'blue'].entries()) {
                 const side = team as 'blue' | 'red';
                 const seen = cupPoints(frame.cups, areas[i], aspect).length;
@@ -75,7 +80,16 @@ export function useCupFormationSync(
                 if (!stable) continue;
                 busy.current = true;
                 void syncCameraFormation({
-                    data: { id, key, matchId: match.id, seq: match.seq, team: side, drawn: stable },
+                    data: {
+                        id,
+                        key,
+                        matchId: match.id,
+                        seq: match.seq,
+                        team: side,
+                        drawn: stable,
+                        firstTeam,
+                        syncTvId,
+                    },
                 })
                     .then((result) => {
                         if (token !== generation.current) return;

@@ -14,6 +14,7 @@ import {
     type GridCup,
 } from '~/tv/lib/cupFormation';
 import { apiFor, ApiError } from '~/tv/server/api';
+import { mappedFirstTeam } from '~/tv/server/cameraVision';
 import { authorize } from '~/tv/server/displays';
 
 export function formationMatch(dto: LiveMatchDto, templates: GridCup[][] = []): FormationMatch {
@@ -44,6 +45,17 @@ export const syncCameraFormation = createServerFn({ method: 'POST' })
             !validGrid(data.drawn)
         )
             return 'invalid';
+        const mappingCurrent = () => {
+            if (!data.syncTvId) return true;
+            const calibration = camera.vision;
+            return (
+                !!calibration &&
+                Date.now() - calibration.reportedAt <= 15_000 &&
+                calibration.state.syncTvId === data.syncTvId &&
+                mappedFirstTeam(camera, calibration.state) === data.firstTeam
+            );
+        };
+        if (!mappingCurrent()) return 'stale';
         const api = apiFor(camera.refreshToken);
         const dto = (await api.liveMatches(groupId)).find((m) => m.id === data.matchId);
         if (!dto || camera.config.groupId !== groupId) return 'ended';
@@ -53,6 +65,8 @@ export const syncCameraFormation = createServerFn({ method: 'POST' })
         if (slots.length !== data.drawn.length) return 'count-mismatch';
         if (gridKey(slots.map((s) => s.drawn)) === gridKey(data.drawn)) return 'unchanged';
         try {
+            // The phone can swap sides while the API snapshot is in flight.
+            if (!mappingCurrent()) return 'stale';
             await api.appendFormation(groupId, match.id, {
                 expectedSeq: match.seq,
                 ops: [

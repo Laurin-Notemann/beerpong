@@ -5,6 +5,7 @@ export interface VisionSettings {
     areas: PlayingArea[] | null;
     syncMatchId: string;
     firstTeam: 'blue' | 'red';
+    syncTvId?: string;
 }
 export interface VisionState extends VisionSettings {
     session: string;
@@ -39,7 +40,10 @@ export function validVisionSettings(v: unknown): v is VisionSettings {
         (v.areas === null || validAreas(v.areas)) &&
         text(v.syncMatchId, 36) &&
         (v.syncMatchId === '' || /^[0-9a-f-]{36}$/.test(v.syncMatchId)) &&
-        (v.firstTeam === 'blue' || v.firstTeam === 'red')
+        (v.firstTeam === 'blue' || v.firstTeam === 'red') &&
+        (v.syncTvId === undefined ||
+            (text(v.syncTvId, 64) &&
+                (v.syncTvId === '' || /^[A-Za-z0-9_-]{16,64}$/.test(v.syncTvId))))
     );
 }
 export function validVisionState(v: unknown): v is VisionState {
