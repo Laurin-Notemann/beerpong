@@ -90,6 +90,14 @@ def split_for(session):
     return 'test' if bucket == 0 else 'valid' if bucket == 1 else 'train'
 
 
+def supervision_digest(data):
+    # Excluded cases and reserved FINAL footage cannot cause another fit or
+    # threshold selection when the reviewed TRAIN/VALID evidence is unchanged.
+    rows = sorted((r for r in data['rows'] if r['split'] in ('train', 'valid')),
+                  key=lambda r: r['hit']['id'])
+    return hashlib.sha256(json.dumps(rows, sort_keys=True, allow_nan=False).encode()).hexdigest()
+
+
 def supervised(hit, include_ai=False):
     if hit.get('label') not in ('accepted', 'declined'):
         return False
@@ -284,7 +292,7 @@ def train(args):
     qualified = retained and validation['precision'] >= 0.98 and validation['recall'] >= 0.98 and validation['positive'] >= 50 and validation['negative'] >= 50 and validation['sessions'] >= 2
     if Path(args.output).exists():
         raise ValueError('Candidate already exists; use a new version output')
-    write(args.output, {'version': 1, 'id': args.id, 'features': VERSION, 'featureNames': list(FEATURES), 'scales': list(SCALES), 'clip': CLIP, 'weights': weights, 'threshold': threshold, 'parentSha256': parent_sha, 'parentValidation': parent_validation, 'retentionGatePassed': retained, 'datasetSha256': freeze['datasetSha256'], 'heldOutSessions': sorted(heldout_sessions), 'trainingRows': len(train_rows), 'trainingSessions': sorted(training_sessions), 'history': history, 'validation': validation, 'validationGatePassed': qualified, 'privateCandidate': True, 'scope': 'proposed-hit-classification-not-unproposed-hit-recall'})
+    write(args.output, {'version': 1, 'id': args.id, 'features': VERSION, 'featureNames': list(FEATURES), 'scales': list(SCALES), 'clip': CLIP, 'weights': weights, 'threshold': threshold, 'parentSha256': parent_sha, 'parentValidation': parent_validation, 'retentionGatePassed': retained, 'datasetSha256': freeze['datasetSha256'], 'supervisionSha256': supervision_digest(data), 'evaluationState': data['evaluationState'], 'heldOutSessions': sorted(heldout_sessions), 'trainingRows': len(train_rows), 'trainingSessions': sorted(training_sessions), 'history': history, 'validation': validation, 'validationGatePassed': qualified, 'privateCandidate': True, 'scope': 'proposed-hit-classification-not-unproposed-hit-recall'})
     print(json.dumps({'model': args.id, 'validation': validation, 'candidateOnly': True, 'validationGatePassed': qualified}))
 
 
@@ -321,6 +329,8 @@ def export_model(args):
             or set(continuous.get('freshSessions', [])) & (set(model['trainingSessions']) | set(model['heldOutSessions']))
             or continuous.get('uncertainEvents') != 0):
         raise ValueError('Need independent complete continuous-video hit/runtime qualification')
+    consume_final(model['evaluationState'], set(continuous['freshSessions']),
+                  {'modelSha256': identity, 'datasetSha256': model['datasetSha256'], 'purpose': 'continuous'})
     tp, fp, fn = (continuous.get(k) for k in ('tp', 'fp', 'fn'))
     if not all(isinstance(v, int) and not isinstance(v, bool) and v >= 0 for v in (tp, fp, fn)):
         raise ValueError('Invalid complete hit counts')
@@ -344,7 +354,7 @@ def cycle(args):
     collect(collect_args)
     if previous.exists():
         old = json.loads(previous.read_text())
-        if old['datasetSha256'] == digest(exported / 'dataset.json'):
+        if old.get('supervisionSha256') == supervision_digest(json.loads((exported / 'dataset.json').read_text())):
             write(exported / 'cycle.json', {'state': 'no-new-reviewed-feedback', 'promoted': False})
             print('No new reviewed evidence; retained candidate unchanged')
             return
