@@ -14,6 +14,7 @@ import { FullscreenButton } from '~/tv/components/FullscreenButton';
 import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
+import { TournamentView } from '~/tv/components/TournamentView';
 import { type CameraFeeds, useCameraFeeds } from '~/tv/lib/cameraFeeds';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import {
@@ -256,11 +257,16 @@ function Screen({
           ? feeds[config.cameraCorners[0].position].status
           : 'No cameras selected. Choose one in TV Remote.';
     const available = Object.values(feeds).some((f) => !!f.stream);
-    const wanted = layoutFor(config, liveIds, available);
+    const wanted = layoutFor(config, liveIds, available, board?.tournament?.status === 'ACTIVE');
     // While connecting, keep a live match or leaderboard visible.
     const layout =
         wanted === 'camera' && !available
-            ? layoutFor({ ...config, view: 'auto' }, liveIds, false)
+            ? layoutFor(
+                  { ...config, view: 'auto' },
+                  liveIds,
+                  false,
+                  board?.tournament?.status === 'ACTIVE'
+              )
             : wanted;
     const focused = live.find((i) => i.id === config.focusMatchId) ?? matches[0];
     const rows = board?.leaderboard.rows ?? [];
@@ -333,6 +339,12 @@ function Screen({
                         <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
                             Loading…
                         </div>
+                    ) : layout === 'tournament' || layout === 'tournament-standings' ? (
+                        <TournamentView
+                            tournament={board.tournament}
+                            live={live}
+                            table={layout === 'tournament-standings'}
+                        />
                     ) : layout === 'focus' && focused ? (
                         <FocusView match={focused} />
                     ) : layout === 'live' ? (

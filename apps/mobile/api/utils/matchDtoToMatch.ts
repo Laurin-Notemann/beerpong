@@ -31,6 +31,8 @@ export interface TeamMember {
 export type Match = {
     id: string;
     seasonId: string;
+    tournamentId?: string;
+    tournamentStage?: string;
     date: Date;
     redCups: number;
     blueCups: number;
@@ -75,7 +77,11 @@ export const matchDtoToMatch =
         if (hit && hit.players === players && hit.moves === allowedMoves) {
             return hit.match;
         }
-        const match = new MatchImpl(dto, players, allowedMoves).toJSON();
+        const match = {
+            ...new MatchImpl(dto, players, allowedMoves).toJSON(),
+            tournamentId: dto.tournamentId,
+            tournamentStage: dto.tournamentStage,
+        };
         converted.set(dto, { players, moves: allowedMoves, match });
         return match;
     };

@@ -15,7 +15,9 @@ import {
 } from '@/api/liveMatch/liveMatchCache';
 import { captureMutationErr } from '@/api/utils/captureException';
 import { useApi } from '@/api/utils/create-api';
+import { QK } from '@/api/utils/reactQuery';
 import { createSyncEngine } from '@/lib/liveMatch/sync';
+import { showErrorToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
 import { useLiveMatchOutboxStore } from '@/zustand/liveMatchOutboxStore';
 
@@ -66,7 +68,8 @@ export function useLiveMatchSync() {
                                 entry.groupId,
                                 id,
                                 entry.seasonId,
-                                request.ops
+                                request.ops,
+                                entry.tournamentId
                             )
                         );
                         return;
@@ -110,6 +113,15 @@ export function useLiveMatchSync() {
             onPoison: (id, entry, request, error) => {
                 // reported once here, the api client doesn't report sync responses
                 captureMutationErr('liveMatchSync')(error);
+                if (entry.tournamentId && request.kind === 'create') {
+                    showErrorToast(
+                        'This tournament game is no longer ready. Reopen the bracket.',
+                        error
+                    );
+                    void qc.invalidateQueries({
+                        queryKey: [QK.group, entry.groupId, QK.tournaments],
+                    });
+                }
                 logger.error(
                     'server rejected live match ops for good, dropping them',
                     id,

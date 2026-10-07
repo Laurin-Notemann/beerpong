@@ -178,14 +178,15 @@ export function useLiveMatchScreen(id: string) {
                 pathname: '/match',
                 params: { id: result.matchId, seasonId: result.seasonId },
             });
-            const rematch: RematchParams | undefined = groupId
-                ? {
-                      groupId,
-                      seasonId: result.seasonId,
-                      ...teams,
-                      rematch: 'live',
-                  }
-                : undefined;
+            const rematch: RematchParams | undefined =
+                groupId && !header?.tournamentId
+                    ? {
+                          groupId,
+                          seasonId: result.seasonId,
+                          ...teams,
+                          rematch: 'live',
+                      }
+                    : undefined;
             if (!attachPhoto(result.matchId, result.seasonId)) {
                 // no team photo was taken during the match, so ask for one
                 nav.navigate('matchPhotoModal', {

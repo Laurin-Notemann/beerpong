@@ -15,6 +15,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoints';
 import NewMatchCups from '@/components/screens/NewMatchCups';
 import { Swiper, SwiperRef } from '@/components/Swiper';
+import { TournamentLabel } from '@/components/tournament/TournamentLabel';
 import { AppBackground } from '@/lib/Background';
 import { useLiveMatchScreen } from '@/lib/liveMatch/useLiveMatchScreen';
 import { useInsets } from '@/lib/useInsets';
@@ -72,6 +73,10 @@ export default function LiveMatchPage() {
                 }}
             >
                 <View style={{ paddingHorizontal: 16, gap: 12 }}>
+                    <TournamentLabel
+                        id={screen.header?.tournamentId}
+                        stage={screen.header?.tournamentStage}
+                    />
                     <Scoreboard red={screen.red} blue={screen.blue} />
                     <PageTabs
                         titles={['Cups', 'Points', 'Moves']}
@@ -114,6 +119,7 @@ export default function LiveMatchPage() {
         <GestureHandlerRootView>
             <LiveMatchHeader
                 startedAt={screen.header?.startedAt}
+                tournamentStage={screen.header?.tournamentStage}
                 isLive={isLive}
                 isFinishing={screen.isFinishing}
                 onEditTeams={screen.openTeams}

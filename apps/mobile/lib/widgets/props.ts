@@ -123,6 +123,7 @@ export interface WidgetMove {
 
 /** a match running now, on the widget */
 export interface WidgetLiveMatch extends LiveScore {
+    tournamentStage?: string;
     id: string;
     /** epoch ms */
     startedAt: number;
@@ -175,6 +176,7 @@ export function mergeLiveMatches(
 
 /** what the API pushes to a Live Activity (`activityPayload` in apps/api) */
 export interface LiveMatchActivityProps extends LiveScore {
+    tournamentStage?: string;
     /** epoch ms; the timer counts up from it */
     startedAt: number;
     /** the match was saved; its end takes the activity off the Lock Screen right away */

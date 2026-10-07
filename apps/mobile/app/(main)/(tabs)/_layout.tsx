@@ -5,6 +5,8 @@ import React, { type ComponentProps } from 'react';
 import { Platform } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
+import { useGroup } from '@/api/calls/seasonHooks';
+import { useTournaments } from '@/api/calls/tournamentHooks';
 import {
     DOCK_IN_TAB_BAR,
     LiveMatchAccessory,
@@ -50,9 +52,13 @@ export default function TabLayout() {
     // it). Unmounting the accessory would also work, but its content would be gone before
     // UIKit's slide-out. So `bottomAccessoryHidden` hides it (animated by UIKit) while it keeps
     // showing the last match, and it's unmounted once it's out of sight.
-    const dock = useLiveMatchDock({ enabled: DOCK_IN_TAB_BAR });
+    const activeTournament = useTournaments(useGroup().groupId).data?.some(
+        (t) => t.status === 'ACTIVE'
+    );
+    const useAccessory = DOCK_IN_TAB_BAR && !activeTournament;
+    const dock = useLiveMatchDock({ enabled: useAccessory });
     const accessory = useLingering(
-        DOCK_IN_TAB_BAR ? dock.snapshot : undefined,
+        useAccessory ? dock.snapshot : undefined,
         ACCESSORY_HIDE_MS
     );
 
@@ -60,7 +66,12 @@ export default function TabLayout() {
         <NativeTabs
             unstable_nativeProps={
                 DOCK_IN_TAB_BAR
-                    ? { ios: { bottomAccessoryHidden: !dock.snapshot } }
+                    ? {
+                          ios: {
+                              bottomAccessoryHidden:
+                                  !dock.snapshot || !useAccessory,
+                          },
+                      }
                     : undefined
             }
             // Liquid Glass floats its own bar; older iOS keeps a solid bar on short lists.

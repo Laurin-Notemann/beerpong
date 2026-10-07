@@ -23,6 +23,7 @@ export const QK = {
     tvs: 'tvs',
 
     groupCode: 'groupCode',
+    tournaments: 'tournaments',
 };
 
 /**

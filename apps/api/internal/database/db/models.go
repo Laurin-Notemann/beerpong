@@ -93,6 +93,8 @@ type LiveMatch struct {
 	DisplaySeq      *int64
 	ActivityChannel *string
 	ActivityEnded   bool
+	TournamentID    *string
+	TournamentStage *string
 }
 
 type LiveMatchOp struct {
@@ -106,10 +108,12 @@ type LiveMatchOp struct {
 }
 
 type Match struct {
-	ID        string
-	Date      *time.Time
-	SeasonID  *string
-	CreatedBy *string
+	ID              string
+	Date            *time.Time
+	SeasonID        *string
+	CreatedBy       *string
+	TournamentID    *string
+	TournamentStage *string
 }
 
 type MatchMove struct {
@@ -210,6 +214,15 @@ type TeamMember struct {
 	ID       string
 	PlayerID *string
 	TeamID   *string
+}
+
+type Tournament struct {
+	ID        string
+	GroupID   string
+	SeasonID  string
+	Status    string
+	CreatedAt time.Time
+	Data      []byte
 }
 
 type User struct {

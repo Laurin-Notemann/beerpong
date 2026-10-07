@@ -10,7 +10,8 @@ export type RealtimeAffectedEntity =
     | 'RULE_MOVES'
     | 'PROFILES'
     | 'LIVE_MATCHES'
-    | 'FORMATIONS';
+    | 'FORMATIONS'
+    | 'TOURNAMENTS';
 
 export interface RealtimeEvent<T = RealtimeAffectedEntity> {
     groupId: string;

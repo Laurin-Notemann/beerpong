@@ -29,6 +29,7 @@ import MenuItem from '@/components/Menu/MenuItem';
 import MenuSection from '@/components/Menu/MenuSection';
 import { RefreshControl } from '@/components/RefreshControl';
 import Text from '@/components/Text';
+import { TournamentLabel } from '@/components/tournament/TournamentLabel';
 import { useSingleFlight } from '@/hooks/useSingleFlight';
 import { AppBackground } from '@/lib/Background';
 import { getDisplayMatch } from '@/lib/getDisplayMatch';
@@ -334,7 +335,7 @@ export default function Page() {
                 contentContainerStyle={{
                     paddingHorizontal: 16,
                     paddingTop: insets.top + 16,
-                    paddingBottom: 32,
+                    paddingBottom: insets.bottom + 32,
                 }}
                 refreshControl={<RefreshControl {...refresh} />}
             >
@@ -414,6 +415,10 @@ export default function Page() {
                         />
                     </MenuSection>
                 )}
+                <TournamentLabel
+                    id={match?.tournamentId}
+                    stage={match?.tournamentStage}
+                />
                 <MatchPlayers
                     onPlayerPress={(player) => {
                         if (isEditing) {

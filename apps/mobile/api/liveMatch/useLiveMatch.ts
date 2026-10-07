@@ -57,6 +57,8 @@ export interface LiveMatchHeader {
     resultMatchId?: string | null;
     /** not on the server yet: started offline, or the create is still on its way */
     isPendingCreate: boolean;
+    tournamentId?: string;
+    tournamentStage?: string;
 }
 
 /** what this phone shows: the server's log with my unconfirmed edits on top */
@@ -92,6 +94,9 @@ export function toView(
                   createdByUserId: server?.createdByUserId,
                   resultMatchId: server?.resultMatchId,
                   isPendingCreate: !!entry?.pendingCreate,
+                  tournamentId: server?.tournamentId ?? entry?.tournamentId,
+                  tournamentStage:
+                      server?.tournamentStage ?? entry?.tournamentStage,
               }
             : undefined;
 
@@ -164,12 +169,16 @@ const newOpId = () => uuid.v4();
  * Nothing goes into the server caches until the server has it (see `useLiveMatchSync`).
  */
 export function startLiveMatch(match: {
+    id?: ApiId;
+    tournamentId?: string;
+    tournamentStage?: string;
     groupId: ApiId;
     seasonId: ApiId;
     redPlayerIds: string[];
     bluePlayerIds: string[];
 }) {
-    const id = newOpId();
+    const id = match.id ?? newOpId();
+    if (liveMatchOutbox().entries[id]) return id;
 
     liveMatchOutbox().actions.start(
         id,
@@ -177,6 +186,8 @@ export function startLiveMatch(match: {
             groupId: match.groupId,
             seasonId: match.seasonId,
             createdAt: new Date().toISOString(),
+            tournamentId: match.tournamentId,
+            tournamentStage: match.tournamentStage,
         },
         [
             {
@@ -258,6 +269,8 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
                 groupId,
                 seasonId: header.seasonId,
                 createdAt: new Date().toISOString(),
+                tournamentId: header.tournamentId,
+                tournamentStage: header.tournamentStage,
             },
             ops
         );
@@ -399,6 +412,8 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
             groupId,
             seasonId: header.seasonId,
             createdAt: new Date().toISOString(),
+            tournamentId: header.tournamentId,
+            tournamentStage: header.tournamentStage,
         });
     }
 

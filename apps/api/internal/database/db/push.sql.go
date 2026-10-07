@@ -115,7 +115,7 @@ func (q *Queries) SetLiveMatchDisplay(ctx context.Context, arg SetLiveMatchDispl
 }
 
 const unsentActivityEnds = `-- name: UnsentActivityEnds :many
-SELECT id, group_id, season_id, created_by, status, started_at, last_activity_at, ended_at, last_seq, result_match_id, display, display_seq, activity_channel, activity_ended FROM live_matches
+SELECT id, group_id, season_id, created_by, status, started_at, last_activity_at, ended_at, last_seq, result_match_id, display, display_seq, activity_channel, activity_ended, tournament_id, tournament_stage FROM live_matches
 WHERE status <> 'IN_PROGRESS' AND activity_channel IS NOT NULL AND NOT activity_ended AND started_at > $1
 `
 
@@ -145,6 +145,8 @@ func (q *Queries) UnsentActivityEnds(ctx context.Context, startedAt time.Time) (
 			&i.DisplaySeq,
 			&i.ActivityChannel,
 			&i.ActivityEnded,
+			&i.TournamentID,
+			&i.TournamentStage,
 		); err != nil {
 			return nil, err
 		}

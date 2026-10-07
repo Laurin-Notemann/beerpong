@@ -192,9 +192,28 @@ const LiveMatchActivity = (
                 <HStack>
                     {status(13)}
                     <Spacer />
-                    <Text modifiers={[font({ size: 13 }), secondary]}>
-                        Versus
-                    </Text>
+                    <HStack spacing={4}>
+                        {props.tournamentStage && (
+                            <Image
+                                systemName="point.3.connected.trianglepath.dotted"
+                                size={12}
+                                color="#A855F7"
+                            />
+                        )}
+                        <Text
+                            modifiers={[
+                                font({ size: 13 }),
+                                foregroundStyle(
+                                    props.tournamentStage
+                                        ? '#A855F7'
+                                        : '#8E8E93'
+                                ),
+                                lineLimit(1),
+                            ]}
+                        >
+                            {props.tournamentStage ?? 'Versus'}
+                        </Text>
+                    </HStack>
                 </HStack>
                 <HStack spacing={10}>
                     {rack(props.blueCups, 'blue', 5)}
@@ -264,7 +283,7 @@ const LiveMatchActivity = (
 
 /** null where there are no Live Activities (Android) */
 export const liveMatchActivity =
-    Platform.OS === 'ios'
+    Platform.OS === 'ios' && widgetsDirectory
         ? createLiveActivity(
               'LiveMatchActivity',
               // the babel plugin turned the layout into its source; this phone's avatar copies

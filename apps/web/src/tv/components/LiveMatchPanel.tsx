@@ -1,6 +1,8 @@
+import { TOURNAMENT_COLOR } from '@/lib/tournament';
 import { Avatar } from '~/tv/components/Avatar';
 import { CupRack } from '~/tv/components/CupRack';
 import { Delta } from '~/tv/components/Leaderboard';
+import { TournamentIcon } from '~/tv/components/TournamentIcon';
 import { useNow } from '~/tv/lib/hooks';
 import { formatElapsed } from '~/tv/lib/liveMatch';
 import type { LiveMatchView, LiveTeam } from '~/tv/server/board';
@@ -22,6 +24,12 @@ export function LiveMatchPanel({
             className={`rise flex flex-col gap-[1.6rem] rounded-[2rem] border border-line bg-panel p-[2rem] ${className}`}
         >
             <div className="flex items-center gap-3 text-[1.4rem] font-semibold">
+                {match.tournamentStage && (
+                    <span style={{ color: TOURNAMENT_COLOR }} className="flex items-center gap-2">
+                        <TournamentIcon size={20} />
+                        {match.tournamentStage}
+                    </span>
+                )}
                 <span className="live-dot size-[0.9rem] rounded-full bg-live" />
                 <span className="tracking-[0.18em] text-live">LIVE</span>
                 <span className="tabular text-text-2">

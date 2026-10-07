@@ -7,6 +7,9 @@ export type RootStackParamList = {
     cropAvatar: { imageKey: string; profileId: string };
     index: undefined;
     formations: undefined;
+    tournaments: undefined;
+    createTournament: undefined;
+    tournament: { id: string };
     createGroupSetName: undefined;
     createGroupSetGame: undefined;
     editFormation: { id?: string };

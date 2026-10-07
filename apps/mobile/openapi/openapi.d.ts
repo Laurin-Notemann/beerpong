@@ -322,6 +322,7 @@ declare namespace Components {
             matches?: MatchCreateDto[];
         }
         export interface LiveMatchCreateDto {
+            tournamentId?: string;
             seasonId?: string;
             ops?: LiveMatchOpDto[];
         }
@@ -359,6 +360,8 @@ declare namespace Components {
             accepted: boolean;
         }
         export interface LiveMatchDto {
+            tournamentId?: string;
+            tournamentStage?: string;
             id: string;
             groupId: string;
             seasonId: string;
@@ -449,6 +452,8 @@ declare namespace Components {
             teams?: TeamCreateDto[];
         }
         export interface MatchDto {
+            tournamentId?: string;
+            tournamentStage?: string;
             id: string;
             date: string | null; // date-time
             seasonId: string | null;
@@ -456,6 +461,8 @@ declare namespace Components {
             photoUploads: TeamPhotoDto[] | null;
         }
         export interface MatchDtoExtended {
+            tournamentId?: string;
+            tournamentStage?: string;
             id: string;
             date: string | null; // date-time
             seasonId: string | null;
@@ -484,6 +491,8 @@ declare namespace Components {
             moveId: string | null;
         }
         export interface MatchOverviewDto {
+            tournamentId?: string;
+            tournamentStage?: string;
             id: string;
             date: string | null; // date-time
             seasonId: string | null;
@@ -702,6 +711,12 @@ declare namespace Components {
             data: SeasonListDto[];
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeListTournamentDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: TournamentDto[];
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeLiveMatchDisplayResultDto {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
@@ -778,6 +793,12 @@ declare namespace Components {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
             data: TeamDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeTournamentDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: TournamentDto;
             error?: ErrorDetails;
         }
         export interface RuleCreateDto {
@@ -955,6 +976,57 @@ declare namespace Components {
             teamId: string | null;
             teamPhoto: AssetUploadResponse;
         }
+        export interface TournamentCreateDto {
+            name: string;
+            seasonId: string;
+            teamSize: number; // int32
+            teams: TournamentTeamCreateDto[];
+            stages: TournamentStageCreateDto[];
+        }
+        export interface TournamentDto {
+            id: string;
+            groupId: string;
+            seasonId: string;
+            name: string;
+            teamSize: number; // int32
+            status: 'ACTIVE' | 'FINISHED' | 'CANCELLED';
+            createdAt: string; // date-time
+            endedAt: string | null; // date-time
+            winnerTeamId: string | null;
+            teams: TournamentTeamDto[];
+            stages: TournamentStageDto[];
+        }
+        export interface TournamentFixtureDto {
+            id: string;
+            blueTeamId: string | null;
+            redTeamId: string | null;
+            status: 'BLOCKED' | 'READY' | 'IN_PROGRESS' | 'FINISHED' | 'BYE';
+            resultMatchId: string | null;
+            winnerTeamId: string | null;
+            blueScore: number; // int32
+            redScore: number; // int32
+        }
+        export interface TournamentStageCreateDto {
+            name: string;
+            strategy: 'ROUND_ROBIN' | 'KNOCKOUT';
+            advanceCount: number; // int32
+        }
+        export interface TournamentStageDto {
+            name: string;
+            strategy: 'ROUND_ROBIN' | 'KNOCKOUT';
+            advanceCount: number; // int32
+            teamIds: string[];
+            matches: TournamentFixtureDto[];
+        }
+        export interface TournamentTeamCreateDto {
+            name: string;
+            playerIds: string[];
+        }
+        export interface TournamentTeamDto {
+            id: string;
+            name: string;
+            playerIds: string[];
+        }
     }
 }
 declare namespace Paths {
@@ -998,6 +1070,19 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeLiveMatchOpsResultDto;
+        }
+    }
+    namespace CancelTournament {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeTournamentDto;
         }
     }
     namespace CompleteCameraRecording {
@@ -1072,6 +1157,20 @@ declare namespace Paths {
         export type RequestBody = Components.Schemas.RuleMoveCreateDto;
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeRuleMoveDto;
+        }
+    }
+    namespace CreateTournament {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        export type RequestBody = Components.Schemas.TournamentCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeTournamentDto;
         }
     }
     namespace DeleteAvatar {
@@ -1573,6 +1672,31 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeSeasonDto;
         }
     }
+    namespace GetTournament {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeTournamentDto;
+        }
+    }
+    namespace GetTournaments {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListTournamentDto;
+        }
+    }
     namespace JoinGroup {
         namespace Parameters {
             export type Id = string;
@@ -1883,6 +2007,38 @@ declare namespace Paths {
 }
 
 export interface OperationMethods {
+    /**
+     * getTournaments
+     */
+    getTournaments(
+        parameters?: Parameters<Paths.GetTournaments.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetTournaments.Responses.$200>;
+    /**
+     * getTournament
+     */
+    getTournament(
+        parameters?: Parameters<Paths.GetTournament.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetTournament.Responses.$200>;
+    /**
+     * createTournament
+     */
+    createTournament(
+        parameters?: Parameters<Paths.CreateTournament.PathParameters> | null,
+        data?: Paths.CreateTournament.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CreateTournament.Responses.$200>;
+    /**
+     * cancelTournament
+     */
+    cancelTournament(
+        parameters?: Parameters<Paths.CancelTournament.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.CancelTournament.Responses.$200>;
     /**
      * putCameraRecording
      */
@@ -2449,6 +2605,42 @@ export interface OperationMethods {
 }
 
 export interface PathsDictionary {
+    ['/groups/{groupId}/tournaments']: {
+        /**
+         * getTournaments
+         */
+        get(
+            parameters?: Parameters<Paths.GetTournaments.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetTournaments.Responses.$200>;
+    };
+    ['/groups/{groupId}/tournaments/{id}']: {
+        /**
+         * getTournament
+         */
+        get(
+            parameters?: Parameters<Paths.GetTournament.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetTournament.Responses.$200>;
+        /**
+         * createTournament
+         */
+        put(
+            parameters?: Parameters<Paths.CreateTournament.PathParameters> | null,
+            data?: Paths.CreateTournament.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CreateTournament.Responses.$200>;
+        /**
+         * cancelTournament
+         */
+        delete(
+            parameters?: Parameters<Paths.CancelTournament.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.CancelTournament.Responses.$200>;
+    };
     ['/groups/{groupId}/recordings/{id}']: {
         /**
          * putCameraRecording
@@ -3233,6 +3425,8 @@ export type ResponseEnvelopeListRuleMoveDto =
     Components.Schemas.ResponseEnvelopeListRuleMoveDto;
 export type ResponseEnvelopeListSeasonDto =
     Components.Schemas.ResponseEnvelopeListSeasonDto;
+export type ResponseEnvelopeListTournamentDto =
+    Components.Schemas.ResponseEnvelopeListTournamentDto;
 export type ResponseEnvelopeLiveMatchDisplayResultDto =
     Components.Schemas.ResponseEnvelopeLiveMatchDisplayResultDto;
 export type ResponseEnvelopeLiveMatchDto =
@@ -3258,6 +3452,8 @@ export type ResponseEnvelopeSeasonDto =
 export type ResponseEnvelopeString = Components.Schemas.ResponseEnvelopeString;
 export type ResponseEnvelopeTeamDto =
     Components.Schemas.ResponseEnvelopeTeamDto;
+export type ResponseEnvelopeTournamentDto =
+    Components.Schemas.ResponseEnvelopeTournamentDto;
 export type RuleCreateDto = Components.Schemas.RuleCreateDto;
 export type RuleDto = Components.Schemas.RuleDto;
 export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
@@ -3272,3 +3468,12 @@ export type TeamDto = Components.Schemas.TeamDto;
 export type TeamMemberCreateDto = Components.Schemas.TeamMemberCreateDto;
 export type TeamMemberDto = Components.Schemas.TeamMemberDto;
 export type TeamPhotoDto = Components.Schemas.TeamPhotoDto;
+export type TournamentCreateDto = Components.Schemas.TournamentCreateDto;
+export type TournamentDto = Components.Schemas.TournamentDto;
+export type TournamentFixtureDto = Components.Schemas.TournamentFixtureDto;
+export type TournamentStageCreateDto =
+    Components.Schemas.TournamentStageCreateDto;
+export type TournamentStageDto = Components.Schemas.TournamentStageDto;
+export type TournamentTeamCreateDto =
+    Components.Schemas.TournamentTeamCreateDto;
+export type TournamentTeamDto = Components.Schemas.TournamentTeamDto;
