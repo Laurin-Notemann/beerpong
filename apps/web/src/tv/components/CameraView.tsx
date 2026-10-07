@@ -114,7 +114,7 @@ function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }
 
     return (
         <div
-            className="absolute right-0 bottom-0 left-0 flex flex-col items-center gap-[0.8rem] px-[2.5rem] pt-[8rem] pb-[2.5rem]"
+            className="absolute right-0 bottom-0 left-0 flex flex-col items-center gap-[0.8rem] px-[2.5rem] pt-[8rem] pb-[6rem]"
             style={shade('top')}
         >
             <div className="flex items-center gap-[0.8rem] text-[1.3rem] font-semibold">
