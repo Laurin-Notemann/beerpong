@@ -2,6 +2,7 @@ import { isAxiosError } from 'axios';
 import { toast } from 'sonner-native';
 
 import { triggerHapticBump } from '@/haptics';
+import type { Components } from '@/openapi/openapi';
 
 /**
  * Why a request failed, in words a player at the table understands. Network problems
@@ -9,7 +10,7 @@ import { triggerHapticBump } from '@/haptics';
  * description (`ResponseEnvelope.error.description`) when it sent one.
  */
 export function describeError(error: unknown): string | undefined {
-    if (isAxiosError(error)) {
+    if (isAxiosError<{ error?: Components.Schemas.ErrorDetails }>(error)) {
         if (!error.response) {
             return "Can't reach the server. Check your connection and try again.";
         }

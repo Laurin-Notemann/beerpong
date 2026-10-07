@@ -28,11 +28,11 @@ const getDayName = (date: Dayjs) => {
 };
 
 export const env = {
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL!, //assertEnvString('EXPO_PUBLIC_API_BASE_URL'),
-    realtimeBaseUrl: process.env.EXPO_PUBLIC_API_WS_URL!, //assertEnvString('EXPO_PUBLIC_API_WS_URL')!,
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL as string,
+    realtimeBaseUrl: process.env.EXPO_PUBLIC_API_WS_URL as string,
     /** Versus TV (apps/web), whose TVs the remote in the settings controls */
     tvBaseUrl:
-        process.env.EXPO_PUBLIC_TV_URL ??
+        (process.env.EXPO_PUBLIC_TV_URL as string | undefined) ??
         'https://var.beerpong.laurinnotemann.dev',
 
     groupCode: {
@@ -53,7 +53,7 @@ export const env = {
     },
     isDev: __DEV__,
     sentry: {
-        dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+        dsn: process.env.EXPO_PUBLIC_SENTRY_DSN as string | undefined,
 
         enabled: !__DEV__ && !!process.env.EXPO_PUBLIC_SENTRY_DSN,
     },

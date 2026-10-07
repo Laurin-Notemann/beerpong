@@ -11,7 +11,6 @@ export function Heading({
     title,
     titleHeadIcon,
     titleTailIcon,
-    headingSubtitle,
     paragraph = false,
     border = true,
 }: Pick<MenuSectionProps, 'title' | 'titleHeadIcon' | 'titleTailIcon'> & {
@@ -117,9 +116,7 @@ export default function MenuSection({
     const theme = useTheme();
 
     return (
-        <View
-            style={{ flex: noFlex ? undefined : 1, ...(containerStyle ?? {}) }}
-        >
+        <View style={[{ flex: noFlex ? undefined : 1 }, containerStyle]}>
             {title && (
                 <Heading
                     title={title}
@@ -130,18 +127,19 @@ export default function MenuSection({
             <BlurView
                 intensity={theme.blur?.intensity ?? 0}
                 tint={theme.blur?.tint}
-                style={{
-                    alignItems: 'stretch',
-                    overflow: 'hidden',
-                    borderRadius: theme.borderRadius.card,
+                style={[
+                    {
+                        alignItems: 'stretch',
+                        overflow: 'hidden',
+                        borderRadius: theme.borderRadius.card,
 
-                    backgroundColor:
-                        background === false || !!theme.blur?.intensity
-                            ? undefined
-                            : theme.panel[color].bg,
-
-                    ...style,
-                }}
+                        backgroundColor:
+                            background === false || !!theme.blur?.intensity
+                                ? undefined
+                                : theme.panel[color].bg,
+                    },
+                    style,
+                ]}
             >
                 {children}
             </BlurView>

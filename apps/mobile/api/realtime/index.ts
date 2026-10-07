@@ -111,8 +111,7 @@ export class RealtimeClient {
     }
 
     private fireHandlers(event: RealtimeEvent) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        for (const [_, handlers] of Object.entries(this.handlers).filter(
+        for (const [, handlers] of Object.entries(this.handlers).filter(
             ([handlerScope]) =>
                 handlerScope === event.eventType || handlerScope === '*'
         )) {
@@ -132,15 +131,18 @@ export class RealtimeClient {
         }
     }
 
-    private onMessage(e: MessageEvent<any>) {
+    private onMessage(e: MessageEvent<unknown>) {
+        if (typeof e.data !== 'string') {
+            this.logger.error('unexpected socket message:', e.data);
+            return;
+        }
         try {
-            const data: RealtimeEvent = JSON.parse(e.data);
+            const data = JSON.parse(e.data) as RealtimeEvent;
 
             this.logger.info('message:', data);
 
             this.fireHandlers(data);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (_) {
+        } catch {
             this.logger.error('error json parsing message:', e.data);
         }
     }

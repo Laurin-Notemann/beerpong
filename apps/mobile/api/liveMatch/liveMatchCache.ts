@@ -54,8 +54,14 @@ export function invalidateLiveMatch(
     groupId: ApiId,
     id: ApiId
 ) {
-    qc.invalidateQueries({ queryKey: liveMatchKey(groupId, id), exact: true });
-    qc.invalidateQueries({ queryKey: liveMatchesKey(groupId), exact: true });
+    void qc.invalidateQueries({
+        queryKey: liveMatchKey(groupId, id),
+        exact: true,
+    });
+    void qc.invalidateQueries({
+        queryKey: liveMatchesKey(groupId),
+        exact: true,
+    });
 }
 
 /** a started match, or the full match a create or fetch returned */

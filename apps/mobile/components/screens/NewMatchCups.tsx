@@ -101,7 +101,7 @@ export default function NewMatchCups({
 
     const moves = movesQuery.data?.data ?? [];
     const cupMoves = moves.map((i) => ({
-        id: i.id!,
+        id: i.id,
         name: i.name ?? undefined,
         cups: cupsPerHit(i),
         isFinish: !!i.finishingMove,

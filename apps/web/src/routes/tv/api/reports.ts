@@ -25,7 +25,11 @@ export const Route = createFileRoute('/tv/api/reports')({
                 );
                 const project = new URL(dsn);
                 try {
-                    const target = new URL(JSON.parse(header).dsn);
+                    const value: unknown = JSON.parse(header);
+                    if (!value || typeof value !== 'object' || !('dsn' in value)) {
+                        return new Response(null, { status: 400 });
+                    }
+                    const target = new URL(String(value.dsn));
                     if (target.host !== project.host || target.pathname !== project.pathname) {
                         return new Response(null, { status: 400 });
                     }

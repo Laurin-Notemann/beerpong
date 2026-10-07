@@ -6,13 +6,13 @@
  * rendering"), and the list's drag state was never reset. This puts back the one call it uses.
  */
 // the real exports object: `import * as` may hand out a copy
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const ReactNative: Record<string, unknown> = require('react-native');
+const ReactNative = require('react-native') as Record<string, unknown>;
 
 function hasInteractionManager() {
     try {
         const manager = ReactNative.InteractionManager as
-            { runAfterInteractions?: unknown } | undefined;
+            | { runAfterInteractions?: unknown }
+            | undefined;
         return typeof manager?.runAfterInteractions === 'function';
     } catch {
         // development builds throw when it's read

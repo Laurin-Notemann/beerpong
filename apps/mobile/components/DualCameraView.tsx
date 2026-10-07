@@ -14,6 +14,9 @@ import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
 import { useTheme } from '@/theme';
+import { ScopedLogger } from '@/utils/logging';
+
+const logger = new ScopedLogger('dual-camera');
 
 const IN_PROGRESS_FADE_ANIMATION_SPEED = 200;
 
@@ -133,7 +136,9 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 throw e;
             }
         }
-        throw lastErr ?? new Error('Camera not ready');
+        throw lastErr instanceof Error
+            ? lastErr
+            : new Error('Camera not ready', { cause: lastErr });
     }, []);
 
     const [err, setErr] = useState<Error | null>(null);
@@ -171,7 +176,12 @@ export function DualCameraView({ onResult }: DualCameraViewProps) {
                 redTeamPhotoUri: frontUri,
             });
         } catch (error) {
-            setErr(error as Error);
+            const captureError =
+                error instanceof Error
+                    ? error
+                    : new Error('Failed to take team photos', { cause: error });
+            logger.error('failed to take team photos', captureError);
+            setErr(captureError);
         } finally {
             // Optional: choose your post-flow lens policy.
             // Either stay on the *last used* lens:

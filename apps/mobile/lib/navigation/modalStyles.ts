@@ -1,9 +1,9 @@
 import { useTheme } from '@/theme';
 
-export function useModalStyles(): any {
+export function useModalStyles() {
     const theme = useTheme();
     return {
-        presentation: 'modal',
+        presentation: 'modal' as const,
 
         headerStyle: {
             backgroundColor: theme.panel.dark.bg,

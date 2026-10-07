@@ -157,7 +157,8 @@ async function call<T>(
         body: body === undefined ? undefined : JSON.stringify(body),
     });
     const json = (await res.json().catch(() => undefined)) as
-        { data?: T; error?: { code?: string; description?: string } } | undefined;
+        | { data?: T; error?: { code?: string; description?: string } }
+        | undefined;
     if (res.status === 404 && json?.error?.code === 'groupInviteNotFound') return null;
     if (!res.ok || !json?.data) {
         throw new ApiError(

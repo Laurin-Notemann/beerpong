@@ -1,4 +1,4 @@
-import NetInfo from '@react-native-community/netinfo';
+import { addEventListener } from '@react-native-community/netinfo';
 import { QueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
@@ -16,9 +16,9 @@ export const useRefetchEverythingOnWifiReconnect = (
         // NetInfo reports the current state right away and on every change (e.g. wifi to
         // cellular); only coming back from offline means we may have missed updates.
         let wasConnected: boolean | null = null;
-        const unsubscribe = NetInfo.addEventListener((state) => {
+        const unsubscribe = addEventListener((state) => {
             if (wasConnected === false && state.isConnected) {
-                queryClient.invalidateQueries();
+                void queryClient.invalidateQueries();
             }
             wasConnected = state.isConnected;
         });

@@ -20,7 +20,9 @@ export function useDisplayEvents(
 ) {
     const [connected, setConnected] = useState(false);
     const handlers = useRef({ onEvent, onLost });
-    handlers.current = { onEvent, onLost };
+    useEffect(() => {
+        handlers.current = { onEvent, onLost };
+    }, [onEvent, onLost]);
 
     useEffect(() => {
         if (!id || !secret) return;
@@ -34,14 +36,19 @@ export function useDisplayEvents(
                 `/tv/api/displays/${id}/events?key=${encodeURIComponent(secret)}&version=${encodeURIComponent(version)}`
             );
             source.onopen = () => setConnected(true);
-            source.onmessage = (e) => handlers.current.onEvent(JSON.parse(e.data));
+            source.onmessage = (e: MessageEvent<string>) =>
+                handlers.current.onEvent(JSON.parse(e.data) as DisplayEvent);
             source.onerror = () => {
                 setConnected(false);
                 // EventSource retries by itself unless the server answered with an error
                 if (source?.readyState !== EventSource.CLOSED) return;
-                retry = setTimeout(async () => {
-                    await Promise.resolve(handlers.current.onLost()).catch(() => {});
-                    if (!closed) open();
+                retry = setTimeout(() => {
+                    void Promise.resolve()
+                        .then(() => handlers.current.onLost())
+                        .catch(() => {})
+                        .then(() => {
+                            if (!closed) open();
+                        });
                 }, 2_000);
             };
         };
@@ -71,7 +78,9 @@ export function useBoard(
 
     useGroupSocket(
         groupId,
-        () => queryClient.invalidateQueries({ queryKey: ['board'] }),
+        () => {
+            void queryClient.invalidateQueries({ queryKey: ['board'] });
+        },
         onSocketEvent
     );
 
@@ -97,9 +106,11 @@ export function useGroupSocket(
     onEvent?: (event: unknown) => void
 ) {
     const callback = useRef(onChange);
-    callback.current = onChange;
     const eventCallback = useRef(onEvent);
-    eventCallback.current = onEvent;
+    useEffect(() => {
+        callback.current = onChange;
+        eventCallback.current = onEvent;
+    }, [onChange, onEvent]);
 
     useEffect(() => {
         if (!groupId) return;
@@ -123,10 +134,10 @@ export function useGroupSocket(
                 if (attempt > 0) changed();
                 attempt = 0;
             };
-            socket.onmessage = (e) => {
+            socket.onmessage = (e: MessageEvent<string>) => {
                 changed();
                 try {
-                    eventCallback.current?.(JSON.parse(e.data));
+                    eventCallback.current?.(JSON.parse(e.data) as unknown);
                 } catch {
                     // not JSON: only a change
                 }
@@ -134,13 +145,17 @@ export function useGroupSocket(
             socket.onclose = () => {
                 if (closed) return;
                 attempt++;
-                retry = setTimeout(connect, Math.min(30_000, 1_000 * 2 ** attempt));
+                retry = setTimeout(reconnect, Math.min(30_000, 1_000 * 2 ** attempt));
             };
         };
-        connect().catch(() => {
-            attempt++;
-            retry = setTimeout(connect, 5_000);
-        });
+        const reconnect = () => {
+            void connect().catch(() => {
+                if (closed) return;
+                attempt++;
+                retry = setTimeout(reconnect, 5_000);
+            });
+        };
+        reconnect();
 
         return () => {
             closed = true;

@@ -181,7 +181,7 @@ export default function Page() {
                     addScoreClipMutation.isPending
                 }
                 id={id}
-                profileId={profileId!}
+                profileId={profileId}
                 hasPremium={false}
                 pastSeasons={activeSeasons.length}
                 onDelete={canDelete ? onDelete : undefined}

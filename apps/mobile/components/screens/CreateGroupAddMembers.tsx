@@ -99,7 +99,7 @@ export default function CreateGroupAddMembers({
                 <TextInput
                     errorMessage={
                         existingPlayerName
-                            ? `There\'s already a player named "${existingPlayerName}" in this group.`
+                            ? `There's already a player named "${existingPlayerName}" in this group.`
                             : undefined
                     }
                     autoCorrect={false}

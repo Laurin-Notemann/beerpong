@@ -25,9 +25,9 @@ export function groupLiveMatches(
     const fromServer = serverList
         .filter((i) => i.id && !entries[i.id]?.pendingAbandon)
         .map((i) => ({
-            id: i.id!,
+            id: i.id,
             server: i,
-            entry: entries[i.id!],
+            entry: entries[i.id],
             isPendingCreate: false,
             activityAt: i.lastActivityAt || i.startedAt || '',
         }));

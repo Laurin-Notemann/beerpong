@@ -30,7 +30,7 @@ export const useSeasonQuery = (
                 await api
             ).getSeasonById({
                 groupId: groupId!,
-                id: seasonId!,
+                id: seasonId,
             });
 
             return res?.data;
@@ -131,7 +131,8 @@ export function useSeasonSettings(groupId: ApiId, seasonId: ApiId) {
     const seasonQuery = useSeasonQuery(groupId, seasonId);
 
     const seasonSettings = seasonQuery.data?.data?.seasonSettings as
-        Required<SeasonSettingsDto> | undefined;
+        | Required<SeasonSettingsDto>
+        | undefined;
 
     const updateSeasonSettingsMutation = useMutation({
         mutationFn: async (partialUpdate: SeasonSettingsDto) => {
@@ -191,12 +192,12 @@ export interface Player {
 
 export const toPlayer = (i: WithProfile<PlayerDtoExtended>): Player => {
     return {
-        id: i!.id!,
+        id: i.id,
         elo: i.statistics?.elo ?? 0, // actually nullable from the backend
-        matches: i.statistics?.matches!,
-        points: i.statistics?.points!,
-        matchesWon: i.statistics?.wins!,
-        name: i.profile?.name!,
+        matches: i.statistics?.matches,
+        points: i.statistics?.points,
+        matchesWon: i.statistics?.wins,
+        name: i.profile?.name ?? 'Unknown',
         avatarUrl: i.profile?.avatarUrl,
         profileId: i.profileId!,
         cups: i.statistics?.moves ?? 0,

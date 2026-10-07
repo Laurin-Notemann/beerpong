@@ -66,7 +66,7 @@ export default function CreateNewRule({
                     <TextInput
                         errorMessage={
                             existingValue
-                                ? `There\'s already a rule named "${existingValue}" in this group.`
+                                ? `There's already a rule named "${existingValue.title}" in this group.`
                                 : undefined
                         }
                         required

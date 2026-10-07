@@ -63,7 +63,7 @@ export default function Page() {
     const profiles = playersQuery.data?.data ?? [];
     const moves = (movesQuery.data?.data ?? []).map<CupMove & { name: string }>(
         (i) => ({
-            id: i.id!,
+            id: i.id,
             name: i.name || 'Unknown',
             cups: cupsPerHit(i),
             isFinish: !!i.finishingMove,

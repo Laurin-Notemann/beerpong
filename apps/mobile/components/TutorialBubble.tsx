@@ -31,7 +31,7 @@ export function TutorialBubble({
     const progress = useSharedValue(0);
 
     useEffect(() => {
-        progress.value = withTiming(1, { duration: 300 });
+        progress.set(withTiming(1, { duration: 300 }));
     }, [progress]);
 
     const style = useAnimatedStyle(() => ({

@@ -13,6 +13,7 @@ import {
     applyLiveMatchEvent,
     invalidateLiveMatches,
 } from '@/api/liveMatch/liveMatchCache';
+import { RealtimeClient, RealtimeEventHandler } from '@/api/realtime';
 import {
     QK,
     queryKeyStartsWith,
@@ -21,8 +22,6 @@ import {
 } from '@/api/utils/reactQuery';
 import { Logs } from '@/utils/logging';
 import { useLogging } from '@/utils/useLogging';
-
-import { RealtimeClient, RealtimeEventHandler } from '.';
 
 export function useRealtimeConnection() {
     const qc = useQueryClient();
@@ -40,14 +39,14 @@ export function useRealtimeConnection() {
     const { invalidateLeaderboard } = useQueryInvalidation();
 
     function invalidateProfiles(groupId: string) {
-        qc.invalidateQueries({
+        void qc.invalidateQueries({
             queryKey: [QK.group, groupId, QK.profiles],
             exact: true,
         });
     }
 
     function refetchGroup(groupId: string) {
-        qc.invalidateQueries({
+        void qc.invalidateQueries({
             queryKey: [QK.group, groupId],
             exact: true,
         });
@@ -62,13 +61,13 @@ export function useRealtimeConnection() {
                 refetchGroup(e.groupId);
                 break;
             case 'MATCHES':
-                invalidateLeaderboard(e.groupId);
+                void invalidateLeaderboard(e.groupId);
 
                 // refetch because of GroupDto.numberOfMatches
                 refetchGroup(e.groupId);
 
                 // refetch because of PlayerDto.statistics.matches
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -80,7 +79,7 @@ export function useRealtimeConnection() {
 
                 client.current.logger.info('refetching matches');
 
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards(
                         [QK.group, e.groupId, QK.season, '*', QK.matches],
                         { startsWith: true }
@@ -88,12 +87,12 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'SEASONS':
-                invalidateLeaderboard(e.groupId);
+                void invalidateLeaderboard(e.groupId);
                 // refetch because of GroupDto.numberOfSeasons
                 refetchGroup(e.groupId);
 
                 // refetch because a newly created season will have new players
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -104,7 +103,7 @@ export function useRealtimeConnection() {
                 });
 
                 // refetch because a newly created season will have no matches
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards(
                         [QK.group, e.groupId, QK.season, '*', QK.matches],
                         { startsWith: true }
@@ -113,7 +112,7 @@ export function useRealtimeConnection() {
 
                 client.current.logger.info('refetching seasons');
 
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: queryKeyStartsWith([
                         QK.group,
                         e.groupId,
@@ -122,12 +121,12 @@ export function useRealtimeConnection() {
                 });
                 break;
             case 'PLAYERS':
-                invalidateLeaderboard(e.groupId);
+                void invalidateLeaderboard(e.groupId);
                 // refetch because of GroupDto.numberOfPlayers
                 refetchGroup(e.groupId);
 
                 // TODO: only refetch matches on player delete
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards(
                         [QK.group, e.groupId, QK.season, '*', QK.matches],
                         { startsWith: true }
@@ -136,7 +135,7 @@ export function useRealtimeConnection() {
 
                 client.current.logger.info('refetching players');
 
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -149,12 +148,12 @@ export function useRealtimeConnection() {
             case 'PROFILES':
                 // first: the queries below read the profiles through fetchProfiles
                 invalidateProfiles(e.groupId);
-                invalidateLeaderboard(e.groupId);
+                void invalidateLeaderboard(e.groupId);
                 // refetch because the create player event is for profile
                 refetchGroup(e.groupId);
 
                 client.current.logger.info('refetching profiles');
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -166,7 +165,7 @@ export function useRealtimeConnection() {
                 break;
             case 'RULES':
                 client.current.logger.info('refetching rules');
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -179,7 +178,7 @@ export function useRealtimeConnection() {
             case 'RULE_MOVES':
                 // TODO: refetch matches, players (because this updates the scoring system)
                 client.current.logger.info('refetching ruleMoves');
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -188,7 +187,7 @@ export function useRealtimeConnection() {
                         QK.ruleMoves,
                     ]),
                 });
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -204,9 +203,9 @@ export function useRealtimeConnection() {
 
                 // an avatar changed: profiles carry its url
                 invalidateProfiles(e.groupId);
-                invalidateLeaderboard(e.groupId);
+                void invalidateLeaderboard(e.groupId);
 
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: replaceWildcards([
                         QK.group,
                         e.groupId,
@@ -215,7 +214,7 @@ export function useRealtimeConnection() {
                         QK.players,
                     ]),
                 });
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     predicate: queryKeyStartsWith([
                         QK.group,
                         e.groupId,
@@ -228,7 +227,7 @@ export function useRealtimeConnection() {
                 }
                 // a team photo is found through its match
                 if (e.scope.startsWith('matchTeamPhoto')) {
-                    qc.invalidateQueries({
+                    void qc.invalidateQueries({
                         predicate: replaceWildcards([
                             QK.group,
                             e.groupId,
@@ -256,8 +255,8 @@ export function useRealtimeConnection() {
         const log = (...data: Logs) => writeLogs(...data);
         realtime.logger.addEventListener('*', log);
         realtime.on.event((e) => onRealtimeEvent(e));
-        const offReconnect = realtime.on.reconnect(() =>
-            invalidateLiveMatches(qc)
+        const offReconnect = realtime.on.reconnect(
+            () => void invalidateLiveMatches(qc)
         );
 
         return () => {

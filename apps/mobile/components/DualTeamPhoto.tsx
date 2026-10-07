@@ -16,6 +16,10 @@ import Text from '@/components/Text';
 import { triggerHapticBump } from '@/haptics';
 import { useInsets } from '@/lib/useInsets';
 import { useTheme } from '@/theme';
+import { showErrorToast } from '@/toast';
+import { ScopedLogger } from '@/utils/logging';
+
+const logger = new ScopedLogger('team-photo');
 
 const FADE_CAMERA_IN_OUT_ANIMATION_SPEED = 200;
 
@@ -353,7 +357,7 @@ export function DualTeamPhoto({
                             iconName="camera-retake-outline"
                             onPress={() => {
                                 triggerHapticBump('light');
-                                _onTakePhoto();
+                                void _onTakePhoto();
                             }}
                             onPressIn={() => {
                                 animatePrimary(1 / SWAP_TEAMS_ANIMATION_SCALE);
@@ -445,8 +449,13 @@ function useRequestCameraPermission(onceWeHavePermission: () => void) {
     async function wrappedCallback() {
         if (camPerm?.granted) return onceWeHavePermission();
 
-        const response = await requestCamPerm();
-        if (response.granted) onceWeHavePermission();
+        try {
+            const response = await requestCamPerm();
+            if (response.granted) onceWeHavePermission();
+        } catch (err) {
+            logger.error('failed to request camera permission', err);
+            showErrorToast("Couldn't request camera permission.", err);
+        }
     }
     return wrappedCallback;
 }

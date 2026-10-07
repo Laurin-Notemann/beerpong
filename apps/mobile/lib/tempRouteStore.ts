@@ -4,7 +4,7 @@ let counter = 0;
 
 export function putTemp<T>(value: T): string {
     const key = `${Date.now()}_${counter++}`;
-    tempStore.set(key, value as unknown);
+    tempStore.set(key, value);
     return key;
 }
 

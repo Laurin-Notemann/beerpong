@@ -42,11 +42,11 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
         newSeasonDraft.actions.clear();
         newSeasonDraft.actions.setNewSeasonAllowedMoves(
             oldSeasonMoves.map((i) => ({
-                id: i.id!,
+                id: i.id,
                 name: i.name!,
-                finishingMove: i.finishingMove!,
-                pointsForScorer: i.pointsForScorer!,
-                pointsForTeam: i.pointsForTeam!,
+                finishingMove: i.finishingMove,
+                pointsForScorer: i.pointsForScorer,
+                pointsForTeam: i.pointsForTeam,
                 cups: cupsPerHit(i),
                 defaultMove: !!i.defaultMove,
             }))

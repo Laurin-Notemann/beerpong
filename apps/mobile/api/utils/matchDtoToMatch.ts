@@ -22,6 +22,8 @@ export interface TeamMember {
     name: string;
     points: number;
     change: number;
+    /** used by the local Elo preview */
+    elo?: number;
 
     moves: PerformedMove[];
 }
@@ -144,11 +146,9 @@ export const getInfluenceOfMatchOnAveragePoints = (
 
         for (const match of sortedMatches) {
             for (const player of match.blueTeam.concat(match.redTeam)) {
-                // @ts-expect-error TODO: type elo field
                 player.elo =
                     ratings[player.id] ?? eloAlgorithm.params.startingElo;
                 if (!ratings[player.id]) {
-                    // @ts-expect-error TODO: type elo field
                     ratings[player.id] = player.elo;
                 }
             }
@@ -156,7 +156,6 @@ export const getInfluenceOfMatchOnAveragePoints = (
             const previousElo =
                 match.blueTeam
                     .concat(match.redTeam)
-                    // @ts-expect-error TODO: type elo field
                     .find((p) => p.id === playerId)?.elo ??
                 eloAlgorithm.params.startingElo;
 
@@ -164,7 +163,6 @@ export const getInfluenceOfMatchOnAveragePoints = (
 
             // Persist updated Elo back into running ratings for subsequent matches
             for (const player of match.blueTeam.concat(match.redTeam)) {
-                // @ts-expect-error TODO: type elo field
                 ratings[player.id] = player.elo ?? ratings[player.id];
             }
 
@@ -172,7 +170,6 @@ export const getInfluenceOfMatchOnAveragePoints = (
                 const newElo =
                     match.blueTeam
                         .concat(match.redTeam)
-                        // @ts-expect-error TODO: type elo field
                         .find((p) => p.id === playerId)?.elo ?? 0;
 
                 return newElo - previousElo;

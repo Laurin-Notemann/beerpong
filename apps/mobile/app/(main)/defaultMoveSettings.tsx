@@ -68,7 +68,7 @@ export default function Page() {
                             subtitle: 'A quick hit asks how the cup was hit.',
                         },
                         ...moves.map((i) => ({
-                            value: i.id!,
+                            value: i.id,
                             title: i.name || 'Unknown',
                         })),
                     ]}

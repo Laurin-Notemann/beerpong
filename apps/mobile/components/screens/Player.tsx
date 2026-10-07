@@ -103,7 +103,6 @@ export default function PlayerScreen({
     profileId,
     name,
     avatarUrl,
-    hasPremium = false,
     pastSeasons,
     onDelete,
     onUploadAvatarPress,
@@ -236,7 +235,7 @@ export default function PlayerScreen({
                                                 }
                                             >
                                                 <PlayerPageHeadSection
-                                                    {...scopes.get(obj.id!)!}
+                                                    {...scopes.get(obj.id)!}
                                                     avatarUrl={avatarUrl}
                                                     name={name}
                                                     editable={editable}
@@ -245,14 +244,14 @@ export default function PlayerScreen({
                                                     }
                                                     rankingAlgorithm={
                                                         rankingAlgorithm ??
-                                                        scopes.get(obj.id!)!
+                                                        scopes.get(obj.id)!
                                                             .rankingAlgorithm
                                                     }
                                                 />
                                             </TouchableOpacity>
                                         </>
                                     }
-                                    matches={scopes.get(obj.id!)!.matches}
+                                    matches={scopes.get(obj.id)!.matches}
                                     refresh={refresh}
                                     forPlayer={{ profileId }}
                                 />

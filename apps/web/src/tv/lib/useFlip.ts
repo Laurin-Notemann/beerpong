@@ -2,9 +2,9 @@ import { useLayoutEffect, useRef } from 'react';
 
 /**
  * Slides the children of `ref` with a `data-flip` id from where they were to where they are
- * now whenever `deps` change, so leaderboard rows move to their new rank instead of jumping.
+ * now whenever `order` changes, so leaderboard rows move to their new rank instead of jumping.
  */
-export function useFlip<T extends HTMLElement>(deps: unknown[]) {
+export function useFlip<T extends HTMLElement>(order: string) {
     const ref = useRef<T>(null);
     const last = useRef(new Map<string, number>());
 
@@ -22,7 +22,7 @@ export function useFlip<T extends HTMLElement>(deps: unknown[]) {
             });
         }
         last.current = now;
-    }, deps);
+    }, [order]);
 
     return ref;
 }

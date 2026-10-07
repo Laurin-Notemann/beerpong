@@ -18,8 +18,14 @@ export const Route = createFileRoute('/tv/api/groups/$groupId/cameras')({
                 ),
             POST: ({ request, params }) =>
                 asMember(request, params.groupId, async () => {
-                    const body = await request.json().catch(() => null);
-                    const code = typeof body?.code === 'string' ? body.code : '';
+                    const body: unknown = await request.json().catch(() => null);
+                    const code =
+                        body &&
+                        typeof body === 'object' &&
+                        'code' in body &&
+                        typeof body.code === 'string'
+                            ? body.code
+                            : '';
                     const camera = byCode(code, 'camera');
                     if (!camera) return fail(404, 'cameraCodeNotFound');
                     await putGroupOnCamera(camera, params.groupId);

@@ -20,6 +20,9 @@ import Button from '@/components/Button';
 import { useAutoFocus } from '@/components/screens/useAutoFocus';
 import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
+import { ScopedLogger } from '@/utils/logging';
+
+const logger = new ScopedLogger('join-group');
 
 const nonAlphaNumericChars = /[^a-zA-Z0-9]/g;
 
@@ -115,9 +118,14 @@ export default function JoinGroup({
     // below doesn't. Android reads without asking, so it fills the code in right away.
     useEffect(() => {
         if (Clipboard.isPasteButtonAvailable) return;
-        Clipboard.getStringAsync().then((contents) =>
-            fillFromClipboardOnOpen(contents)
-        );
+        void Clipboard.getStringAsync()
+            .then((contents) => fillFromClipboardOnOpen(contents))
+            .catch((err: unknown) =>
+                logger.error(
+                    'failed to read the group code from clipboard',
+                    err
+                )
+            );
     }, []);
 
     const theme = useTheme();

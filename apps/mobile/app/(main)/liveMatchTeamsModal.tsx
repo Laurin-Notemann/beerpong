@@ -31,7 +31,7 @@ export default function Page() {
     const players = (playersQuery.data?.data ?? [])
         .filter((i) => i.activeThisSeason)
         .map<Player>((i) => ({
-            id: i.id!,
+            id: i.id,
             name: i.profile?.name || 'Unknown',
             team: inMatch.find((j) => j.playerId === i.id)?.team ?? null,
             avatarUrl: i.profile?.avatarUrl,

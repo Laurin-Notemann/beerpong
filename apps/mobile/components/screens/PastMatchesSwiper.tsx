@@ -38,7 +38,7 @@ export function PastMatchesSwiper() {
                 <PastSeasonMatches
                     key={season.id}
                     {...props!}
-                    seasonId={season.id!}
+                    seasonId={season.id}
                 />
             ))}
         </Swiper>

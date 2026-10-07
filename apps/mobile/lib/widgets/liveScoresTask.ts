@@ -1,6 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import {
@@ -27,8 +27,11 @@ const logger = new ScopedLogger('widgets');
  */
 async function storedGroupId() {
     const raw = await AsyncStorage.getItem('selected-group');
-    const parsed = raw ? JSON.parse(raw) : undefined;
-    return parsed?.state?.selectedGroupId as string | undefined;
+    const parsed = raw
+        ? (JSON.parse(raw) as { state?: { selectedGroupId?: unknown } } | null)
+        : undefined;
+    const id = parsed?.state?.selectedGroupId;
+    return typeof id === 'string' ? id : undefined;
 }
 
 TaskManager.defineTask<Notifications.NotificationTaskPayload>(
@@ -43,7 +46,8 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(
             // the group's name and id stay as the app left them
             const timeline = await liveMatchesWidget.getTimeline();
             const props = timeline[0]?.props as
-                LiveMatchesWidgetProps | undefined;
+                | LiveMatchesWidgetProps
+                | undefined;
             if (!props?.group) {
                 return Notifications.BackgroundNotificationTaskResult.NoData;
             }

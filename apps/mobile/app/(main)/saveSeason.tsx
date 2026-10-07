@@ -38,7 +38,7 @@ export default function Page() {
                     ruleMoves,
                 });
 
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     queryKey: ['groups', groupId],
                     exact: false,
                 });

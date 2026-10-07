@@ -159,7 +159,11 @@ async function readAll() {
             const tx = db.transaction(['segments', 'chunks'], 'readonly');
             const segments = tx.objectStore('segments').getAll();
             const chunks = tx.objectStore('chunks').getAll();
-            tx.oncomplete = () => resolve({ segments: segments.result, chunks: chunks.result });
+            tx.oncomplete = () =>
+                resolve({
+                    segments: segments.result as StoredSegment[],
+                    chunks: chunks.result as StoredChunk[],
+                });
             tx.onabort = () => {
                 report(tx.error);
                 resolve(null);

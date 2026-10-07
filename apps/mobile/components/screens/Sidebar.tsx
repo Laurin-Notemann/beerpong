@@ -236,7 +236,7 @@ export function Sidebar(props: DrawerContentComponentProps) {
                                 { id: '/joinGroup', title: 'Join Group' },
                             ]}
                             onPressAction={({ nativeEvent }) =>
-                                openScreen(nativeEvent.event as Href)
+                                openScreen(nativeEvent.event)
                             }
                             style={{ marginLeft: 'auto', alignSelf: 'center' }}
                         >

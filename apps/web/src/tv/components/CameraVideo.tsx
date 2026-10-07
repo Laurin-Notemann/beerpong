@@ -41,7 +41,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
             noteFeed(`playback warning: ${message}`);
             // Capture before recovery resets the player, including when Sentry loads lazily.
             const extra = {
-                error: error === undefined ? undefined : String(error),
+                error: error instanceof Error ? error.message : error,
                 readyState: video.readyState,
                 paused: video.paused,
                 width: video.videoWidth,
@@ -125,6 +125,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                 warn('Camera frames could not be displayed on this browser.', error);
             }
         };
+        // oxlint-disable-next-line react/set-state-in-effect -- Reset status when attaching a new decoder stream.
         setProblem('Waiting for camera video…');
         if (!context || !sample) warn('This browser cannot display camera frames.');
         else frame = requestAnimationFrame(paint);

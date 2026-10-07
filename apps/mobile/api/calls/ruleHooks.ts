@@ -115,7 +115,7 @@ export function useRules() {
     const rules = useMemo(
         () =>
             (data?.data ?? []).map((i) => ({
-                id: i.id!,
+                id: i.id,
                 title: i.title!,
                 description: i.description!,
             })),

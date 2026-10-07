@@ -1,8 +1,8 @@
-import * as ImageManipulator from 'expo-image-manipulator';
 import {
     ReactNativeZoomableView,
     ZoomableViewEvent,
 } from '@openspacelabs/react-native-zoomable-view';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -91,8 +91,8 @@ export default function Page() {
             const offsetY = transformRef.current?.offsetY ?? 0;
 
             // displayed size
-            const dispW = imgWidth! * z;
-            const dispH = imgHeight! * z;
+            const dispW = imgWidth * z;
+            const dispH = imgHeight * z;
 
             // ✅ scale offsets by zoom to convert content-space pan -> screen-space pan
             const imgLeft = (width - dispW) / 2 + offsetX * z;
@@ -103,8 +103,8 @@ export default function Page() {
             const circleScreenY = (height - circleDiameter) / 2;
 
             // display -> raw
-            const factorX = imgRawWidth! / imgWidth!;
-            const factorY = imgRawHeight! / imgHeight!;
+            const factorX = imgRawWidth / imgWidth;
+            const factorY = imgRawHeight / imgHeight;
 
             const originX_px = ((circleScreenX - imgLeft) / z) * factorX;
             const originY_px = ((circleScreenY - imgTop) / z) * factorY;

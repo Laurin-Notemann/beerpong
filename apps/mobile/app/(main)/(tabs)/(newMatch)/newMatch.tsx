@@ -132,7 +132,7 @@ export default function NewMatchScreen() {
     const selectablePlayers = profiles
         .filter((i) => i.activeThisSeason)
         .map<Player>((i) => ({
-            id: i.id!,
+            id: i.id,
             name: i.profile?.name || 'Unknown',
             team:
                 draftPlayers(matchDraft).find((j) => i.id === j.playerId)
@@ -161,7 +161,8 @@ export default function NewMatchScreen() {
 
     const isValidGame = numFinishes === 1;
 
-    const [onCreateMatch, isCreating] = useSingleFlight(async () => {
+    // queues the match and moves on: offline, it is sent once the phone is back online
+    function createMatch() {
         if (!groupId || !seasonId) {
             ConsoleLogger.warn('no groupId or seasonId');
             return;
@@ -228,7 +229,10 @@ export default function NewMatchScreen() {
         } else {
             offerRematch(rematch);
         }
-    });
+    }
+    const [onCreateMatch, isCreating] = useSingleFlight(() =>
+        Promise.resolve(createMatch())
+    );
 
     // a second tap in the same frame is ignored; after that the cleared draft has no teams
     const isStarting = useRef(false);

@@ -57,7 +57,7 @@ export function useGroupStore() {
     const joinGroupMutation = useJoinGroupMutation();
 
     const groupIds = useMemo(
-        () => myGroupsQuery.data?.data?.map((g) => g.id!) ?? [],
+        () => myGroupsQuery.data?.data?.map((g) => g.id) ?? [],
         [myGroupsQuery.data]
     );
     const isLoadingGroups = myGroupsQuery.isLoading;

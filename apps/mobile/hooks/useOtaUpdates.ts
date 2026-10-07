@@ -63,7 +63,7 @@ export function useOtaUpdates() {
         if (__DEV__ || !Updates.isEnabled) return;
 
         const subscription = AppState.addEventListener('change', (next) => {
-            if (next === 'active') checkForUpdate();
+            if (next === 'active') void checkForUpdate();
             if (next === 'background') applyPending();
         });
         return () => subscription.remove();

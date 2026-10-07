@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
+import { addEventListener } from '@react-native-community/netinfo';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import {
     DefaultOptions,
@@ -37,7 +37,7 @@ const defaultQueryOptions: DefaultOptions = {
 // React Query only knows the browser's online events; on a phone NetInfo says. Unknown
 // reachability (null) counts as online, like the API client's offline check.
 onlineManager.setEventListener((setOnline) =>
-    NetInfo.addEventListener((state) =>
+    addEventListener((state) =>
         setOnline(
             state.isConnected !== false && state.isInternetReachable !== false
         )
@@ -50,7 +50,10 @@ onlineManager.setEventListener((setOnline) =>
 export const createQueryClient = () => {
     const queryCache = new QueryCache({
         onError: (error, query) => {
-            ConsoleLogger.error(`Query key ${query.queryKey} failed:`, error);
+            ConsoleLogger.error(
+                `Query key ${String(query.queryKey)} failed:`,
+                error
+            );
             // Without data the screen shows its own error state; with data it keeps showing
             // the cached copy, so say that the refresh failed.
             if (query.state.data !== undefined) {

@@ -63,7 +63,9 @@ export async function uploadAsset(
             body: byteArray as Uint8Array<ArrayBuffer>,
         });
     } catch (err) {
-        throw new Error(`uploadAsset(${debugLabel}): fetch error: ${err}`);
+        throw new Error(
+            `uploadAsset(${debugLabel}): fetch error: ${String(err)}`
+        );
     }
     if (!res.ok) {
         // S3 says why in the body (e.g. <Code>SignatureDoesNotMatch</Code>)

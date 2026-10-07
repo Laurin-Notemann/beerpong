@@ -41,13 +41,13 @@ export default function Page() {
                 >
                     <AllowedMoves
                         moves={allowedMoves.map((i) => ({
-                            id: i.id!,
+                            id: i.id,
                             name: i.name!,
-                            finishingMove: i.finishingMove!,
+                            finishingMove: i.finishingMove,
                             cups: cupsPerHit(i),
                             defaultMove: !!i.defaultMove,
-                            pointsForScorer: i.pointsForScorer!,
-                            pointsForTeam: i.pointsForTeam!,
+                            pointsForScorer: i.pointsForScorer,
+                            pointsForTeam: i.pointsForTeam,
                         }))}
                         onNewPress={() => {}}
                         editable={false}

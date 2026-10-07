@@ -69,7 +69,7 @@ export function useQueryInvalidation() {
         ConsoleLogger.info('useQueryInvalidation.invalidatePlayers');
 
         // players and leaderboards read names and avatars from the cached profiles
-        qc.invalidateQueries({
+        void qc.invalidateQueries({
             queryKey: [QK.group, groupId, QK.profiles],
             exact: true,
         });
@@ -131,13 +131,12 @@ export function usePullToRefresh(
 ): RefreshProps {
     const [refreshing, setRefreshing] = useState(false);
 
-    const onRefresh = async () => {
+    const refresh = async () => {
         setRefreshing(true);
         try {
             await func();
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (err) {}
+        } catch {}
         setRefreshing(false);
     };
-    return { refreshing, onRefresh };
+    return { refreshing, onRefresh: () => void refresh() };
 }

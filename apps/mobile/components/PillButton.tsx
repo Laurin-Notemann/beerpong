@@ -57,7 +57,7 @@ const PillButton: React.FC<{
                           : backgroundColor,
 
                     borderRadius: 16,
-                } as ViewStyle,
+                },
             }),
         [removable, iconName, hasBlur, backgroundColor, theme]
     );
@@ -75,7 +75,7 @@ const PillButton: React.FC<{
             onPressIn={() => animate(0.94)} // shrink a bit
             onPressOut={() => animate(1)} // unshrink
             onPress={onPress}
-            {...(style ?? {})}
+            style={style}
         >
             <Animated.View
                 style={[styles.container, { transform: [{ scale }] }]}

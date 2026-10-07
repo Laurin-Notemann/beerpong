@@ -95,7 +95,7 @@ class EloAlgorithm {
     ): void {
         // Wrapper to keep existing callers working
         if (typeof a !== 'string') {
-            const match = a as InputMatch;
+            const match = a;
 
             const blue = match.blueTeam;
             const red = match.redTeam;
@@ -112,26 +112,22 @@ class EloAlgorithm {
                 players: InputMatch['redTeam']
             ): PlayerStatisticsLike[] => {
                 return players.map((p) => ({
-                    getPlayerId: () => p.id as string,
+                    getPlayerId: () => p.id,
                     getElo: () => {
-                        // @ts-expect-error dynamic field
                         const val = p.elo;
                         return typeof val === 'number'
                             ? val
                             : EloAlgorithm.STARTING_ELO;
                     },
                     setElo: (v: number) => {
-                        // @ts-expect-error dynamic field
                         p.elo = v;
                     },
                 }));
             };
 
             const playerPoints = new Map<string, number>();
-            for (const p of blue)
-                playerPoints.set(p.id as string, p.points ?? 0);
-            for (const p of red)
-                playerPoints.set(p.id as string, p.points ?? 0);
+            for (const p of blue) playerPoints.set(p.id, p.points ?? 0);
+            for (const p of red) playerPoints.set(p.id, p.points ?? 0);
 
             // Delegate to Java-style API using real blue team id
             return EloAlgorithm.calculateElo(
@@ -145,7 +141,7 @@ class EloAlgorithm {
             );
         }
 
-        const winningTeamId = a as string;
+        const winningTeamId = a;
         const blueTeamId = b as string;
         const teamBluePoints = c as number;
         const teamRedPoints = d as number;
@@ -269,7 +265,7 @@ class EloAlgorithm {
         const n = players.length;
 
         // Softmax(Elo)
-        const logits: number[] = new Array(n);
+        const logits: number[] = [];
         let sumExp = 0.0;
 
         for (let i = 0; i < n; i++) {
@@ -281,7 +277,7 @@ class EloAlgorithm {
         }
 
         // Blend + Clamp, damit von niemandem 0%/100% erwartet wird
-        const shares: number[] = new Array(n);
+        const shares: number[] = [];
         let sum = 0.0;
 
         for (let i = 0; i < n; i++) {

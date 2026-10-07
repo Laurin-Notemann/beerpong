@@ -2,10 +2,14 @@ import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Platform, View } from 'react-native';
-import PagerView, {
-    PagerViewOnPageSelectedEvent,
-} from 'react-native-pager-view';
+import {
+    ActivityIndicator,
+    Alert,
+    NativeSyntheticEvent,
+    Platform,
+    View,
+} from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 import { useRemoveScoreClipMutation } from '@/api/calls/playerHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
@@ -149,9 +153,11 @@ export default function Page() {
                 key={clips.length}
                 style={{ flex: 1 }}
                 initialPage={current}
-                onPageSelected={(e: PagerViewOnPageSelectedEvent) =>
-                    setPage(e.nativeEvent.position)
-                }
+                onPageSelected={(
+                    e: NativeSyntheticEvent<{
+                        position: number;
+                    }>
+                ) => setPage(e.nativeEvent.position)}
             >
                 {clips.map((clip, i) => (
                     <View key={clip} style={{ flex: 1 }}>

@@ -2,6 +2,7 @@ import { isAxiosError } from 'axios';
 
 import { BackOff, FIBONACCI_TIMEOUTS } from '@/api/utils/BackOff';
 import type { LiveOp } from '@/lib/liveMatch/types';
+import type { Components } from '@/openapi/openapi';
 import type { OutboxEntry } from '@/zustand/liveMatchOutboxStore';
 
 /**
@@ -36,7 +37,9 @@ export function nextRequest(entry: OutboxEntry): SyncRequest | undefined {
 
 /** `ResponseEnvelope.error.code` of a failed request */
 export function errorCode(error: unknown): string | undefined {
-    if (!isAxiosError(error)) return;
+    if (!isAxiosError<{ error?: Components.Schemas.ErrorDetails }>(error)) {
+        return;
+    }
 
     const code = error.response?.data?.error?.code;
     return typeof code === 'string' ? code : undefined;
@@ -62,7 +65,7 @@ export function classifySyncError(error: unknown): SyncErrorKind {
         case 'liveMatchNotFound':
             return 'ended';
     }
-    if (!isAxiosError(error)) return 'other';
+    if (!isAxiosError<unknown>(error)) return 'other';
 
     const status = error.response?.status;
     if (!status || status >= 500) return 'retry';

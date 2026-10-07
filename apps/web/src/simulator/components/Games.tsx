@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useState } from 'react';
 
 import type { Game, GameTeam } from '~/simulator/api';
 import { isRing, pct, sgn, shortMove, when } from '~/simulator/format';
@@ -32,10 +32,18 @@ export function Games({
               : `T${g.testIndex + 1}`
     );
     // games that arrived live since the season was opened flash once
-    const seen = useRef(new Set(games.map((g) => g.matchId)));
-    useEffect(() => {
-        for (const g of games) seen.current.add(g.matchId);
-    }, [games]);
+    const [arrival, setArrival] = useState(() => ({
+        games,
+        seen: new Set(games.map((g) => g.matchId)),
+        fresh: new Set<string>(),
+    }));
+    if (arrival.games !== games) {
+        setArrival({
+            games,
+            seen: new Set([...arrival.seen, ...games.map((g) => g.matchId)]),
+            fresh: new Set(games.filter((g) => !arrival.seen.has(g.matchId)).map((g) => g.matchId)),
+        });
+    }
 
     return (
         <div className="card tbl-wrap">
@@ -81,7 +89,7 @@ export function Games({
                                     tabIndex={0}
                                     className={[
                                         open ? 'sel' : '',
-                                        seen.current.has(g.matchId) ? '' : 'new',
+                                        arrival.fresh.has(g.matchId) ? 'new' : '',
                                         g.testIndex == null ? '' : 'test',
                                         g.liveMatchId == null ? '' : 'live',
                                     ].join(' ')}
@@ -284,8 +292,8 @@ function Inspector({ game }: { game: Game }) {
                             {t.players.map((p) => {
                                 const moves = [...p.moves].sort(
                                     (a, b) =>
-                                        Number(/^Finish/.test(a.name)) -
-                                        Number(/^Finish/.test(b.name))
+                                        Number(a.name.startsWith('Finish')) -
+                                        Number(b.name.startsWith('Finish'))
                                 );
                                 return (
                                     <div className="prow" key={p.profileId}>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import type { TextInputInstance } from 'react-native';
 
@@ -27,6 +28,7 @@ export const OldSeasonNameInput: React.FC<{
     rankingAlgorithm,
 }) => {
     const insets = useInsets(true);
+    const [endDate] = useState(() => new Date().toString());
 
     return (
         <KeyboardAvoidingView
@@ -48,7 +50,7 @@ export const OldSeasonNameInput: React.FC<{
                 numMatches={numMatches}
                 numPlayers={numPlayers}
                 startDate={startDate}
-                endDate={new Date().toString()}
+                endDate={endDate}
             />
             <Podium
                 detailed={false}

@@ -72,166 +72,160 @@ export function draftPlayers(draft: {
 const isEqual = (a: TeamDraft, b: TeamDraft): boolean =>
     JSON.stringify(a) === JSON.stringify(b);
 
-export const useMatchEditDraftStore = create<MatchEditDraftStore>()(
-    (set, get) => ({
-        isDirty: false,
-        _baseline: null,
-        redTeam: {
-            teamMembers: [],
+export const useMatchEditDraftStore = create<MatchEditDraftStore>()((set) => ({
+    isDirty: false,
+    _baseline: null,
+    redTeam: {
+        teamMembers: [],
+    },
+    blueTeam: {
+        teamMembers: [],
+    },
+
+    actions: {
+        clear: () => {
+            set(() => ({
+                redTeam: {
+                    teamMembers: [],
+                },
+                blueTeam: {
+                    teamMembers: [],
+                },
+                isDirty: true,
+                blueTeamPhotoUri: undefined,
+                redTeamPhotoUri: undefined,
+            }));
         },
-        blueTeam: {
-            teamMembers: [],
+        setPlayerTeam: (playerId, team) => {
+            set((state) => {
+                const { redTeam, blueTeam, _baseline: baseline } = state;
+
+                // Remove the player from both teams
+                const updatedRedTeam = redTeam.teamMembers.filter(
+                    (i) => i.playerId !== playerId
+                );
+                const updatedBlueTeam = blueTeam.teamMembers.filter(
+                    (i) => i.playerId !== playerId
+                );
+
+                // Add the player to the new team, if specified
+                if (team === 'red') {
+                    updatedRedTeam.push({ playerId, moves: [] });
+                } else if (team === 'blue') {
+                    updatedBlueTeam.push({ playerId, moves: [] });
+                }
+
+                const newRed = { teamMembers: updatedRedTeam };
+                const newBlue = { teamMembers: updatedBlueTeam };
+
+                return {
+                    redTeam: newRed,
+                    blueTeam: newBlue,
+                    isDirty:
+                        !baseline ||
+                        !isEqual(baseline.redTeam, newRed) ||
+                        !isEqual(baseline.blueTeam, newBlue),
+                };
+            });
         },
+        setMoveCount: (userId, moveId, count) => {
+            set((state) => {
+                const updateTeam = (team: TeamDraft) => ({
+                    teamMembers: team.teamMembers.map((player) => {
+                        if (player.playerId !== userId) return player;
 
-        actions: {
-            clear: () => {
-                set(() => ({
-                    redTeam: {
-                        teamMembers: [],
-                    },
-                    blueTeam: {
-                        teamMembers: [],
-                    },
-                    isDirty: true,
-                    blueTeamPhotoUri: undefined,
-                    redTeamPhotoUri: undefined,
-                }));
-            },
-            setPlayerTeam: (playerId, team) => {
-                set((state) => {
-                    const { redTeam, blueTeam, _baseline: baseline } = state;
+                        const existing = player.moves.find(
+                            (m) => m.moveId === moveId
+                        );
+                        if (!existing) {
+                            return {
+                                ...player,
+                                moves: [...player.moves, { moveId, count }],
+                            };
+                        }
 
-                    // Remove the player from both teams
-                    const updatedRedTeam = redTeam.teamMembers.filter(
-                        (i) => i.playerId !== playerId
-                    );
-                    const updatedBlueTeam = blueTeam.teamMembers.filter(
-                        (i) => i.playerId !== playerId
-                    );
-
-                    // Add the player to the new team, if specified
-                    if (team === 'red') {
-                        updatedRedTeam.push({ playerId, moves: [] });
-                    } else if (team === 'blue') {
-                        updatedBlueTeam.push({ playerId, moves: [] });
-                    }
-
-                    const newRed = { teamMembers: updatedRedTeam };
-                    const newBlue = { teamMembers: updatedBlueTeam };
-
-                    return {
-                        redTeam: newRed,
-                        blueTeam: newBlue,
-                        isDirty:
-                            !baseline ||
-                            !isEqual(baseline.redTeam, newRed) ||
-                            !isEqual(baseline.blueTeam, newBlue),
-                    };
+                        const updatedMoves = player.moves.map((move) =>
+                            move.moveId === moveId ? { ...move, count } : move
+                        );
+                        return { ...player, moves: updatedMoves };
+                    }),
                 });
-            },
-            setMoveCount: (userId, moveId, count) => {
-                set((state) => {
-                    const updateTeam = (team: TeamDraft) => ({
-                        teamMembers: team.teamMembers.map((player) => {
-                            if (player.playerId !== userId) return player;
 
-                            const existing = player.moves.find(
-                                (m) => m.moveId === moveId
-                            );
-                            if (!existing) {
-                                return {
-                                    ...player,
-                                    moves: [...player.moves, { moveId, count }],
-                                };
-                            }
+                const newRed = updateTeam(state.redTeam);
+                const newBlue = updateTeam(state.blueTeam);
+                const { _baseline: baseline } = state;
 
-                            const updatedMoves = player.moves.map((move) =>
-                                move.moveId === moveId
-                                    ? { ...move, count }
-                                    : move
-                            );
-                            return { ...player, moves: updatedMoves };
-                        }),
-                    });
-
-                    const newRed = updateTeam(state.redTeam);
-                    const newBlue = updateTeam(state.blueTeam);
-                    const { _baseline: baseline } = state;
-
-                    return {
-                        redTeam: newRed,
-                        blueTeam: newBlue,
-                        isDirty:
-                            !baseline ||
-                            !isEqual(baseline.redTeam, newRed) ||
-                            !isEqual(baseline.blueTeam, newBlue),
-                    };
-                });
-            },
-            setMatch: (match) => {
-                const redTeam = {
-                    teamMembers: match.redTeam.map((i) => ({
-                        playerId: i.id,
-                        moves: i.moves.map((m) => ({
-                            moveId: m.id,
-                            count: m.count,
-                        })),
-                    })),
+                return {
+                    redTeam: newRed,
+                    blueTeam: newBlue,
+                    isDirty:
+                        !baseline ||
+                        !isEqual(baseline.redTeam, newRed) ||
+                        !isEqual(baseline.blueTeam, newBlue),
                 };
-                const blueTeam = {
-                    teamMembers: match.blueTeam.map((i) => ({
-                        playerId: i.id,
-                        moves: i.moves.map((m) => ({
-                            moveId: m.id,
-                            count: m.count,
-                        })),
+            });
+        },
+        setMatch: (match) => {
+            const redTeam = {
+                teamMembers: match.redTeam.map((i) => ({
+                    playerId: i.id,
+                    moves: i.moves.map((m) => ({
+                        moveId: m.id,
+                        count: m.count,
                     })),
-                };
+                })),
+            };
+            const blueTeam = {
+                teamMembers: match.blueTeam.map((i) => ({
+                    playerId: i.id,
+                    moves: i.moves.map((m) => ({
+                        moveId: m.id,
+                        count: m.count,
+                    })),
+                })),
+            };
 
-                set(() => ({
+            set(() => ({
+                redTeam,
+                blueTeam,
+                _baseline: {
                     redTeam,
                     blueTeam,
-                    _baseline: {
-                        redTeam,
-                        blueTeam,
-                        blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
-                        redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
-                    },
-                    isDirty: false,
                     blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
                     redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
-                }));
-            },
-            setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
-                set((state) => ({
-                    blueTeamPhotoUri: blueTeamPhotoUri,
-                    redTeamPhotoUri: redTeamPhotoUri,
-                    isDirty:
-                        state._baseline?.blueTeamPhotoUri !==
-                            blueTeamPhotoUri ||
-                        state._baseline?.redTeamPhotoUri !== redTeamPhotoUri,
-                }));
-            },
-            removeTeamPhotos: () => {
-                set((state) => ({
-                    blueTeamPhotoUri: undefined,
-                    redTeamPhotoUri: undefined,
-                    isDirty:
-                        state._baseline?.blueTeamPhotoUri != null ||
-                        state._baseline?.redTeamPhotoUri != null,
-                }));
-            },
-            swapTeamPhotos: () => {
-                set((state) => ({
-                    blueTeamPhotoUri: state.redTeamPhotoUri,
-                    redTeamPhotoUri: state.blueTeamPhotoUri,
-                    isDirty:
-                        state._baseline?.blueTeamPhotoUri !==
-                            state.redTeamPhotoUri ||
-                        state._baseline?.redTeamPhotoUri !==
-                            state.blueTeamPhotoUri,
-                }));
-            },
+                },
+                isDirty: false,
+                blueTeamPhotoUri: match.blueTeamPhotoUrl ?? undefined,
+                redTeamPhotoUri: match.redTeamPhotoUrl ?? undefined,
+            }));
         },
-    })
-);
+        setTeamPhotos: ({ blueTeamPhotoUri, redTeamPhotoUri }) => {
+            set((state) => ({
+                blueTeamPhotoUri: blueTeamPhotoUri,
+                redTeamPhotoUri: redTeamPhotoUri,
+                isDirty:
+                    state._baseline?.blueTeamPhotoUri !== blueTeamPhotoUri ||
+                    state._baseline?.redTeamPhotoUri !== redTeamPhotoUri,
+            }));
+        },
+        removeTeamPhotos: () => {
+            set((state) => ({
+                blueTeamPhotoUri: undefined,
+                redTeamPhotoUri: undefined,
+                isDirty:
+                    state._baseline?.blueTeamPhotoUri != null ||
+                    state._baseline?.redTeamPhotoUri != null,
+            }));
+        },
+        swapTeamPhotos: () => {
+            set((state) => ({
+                blueTeamPhotoUri: state.redTeamPhotoUri,
+                redTeamPhotoUri: state.blueTeamPhotoUri,
+                isDirty:
+                    state._baseline?.blueTeamPhotoUri !==
+                        state.redTeamPhotoUri ||
+                    state._baseline?.redTeamPhotoUri !== state.blueTeamPhotoUri,
+            }));
+        },
+    },
+}));

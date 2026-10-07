@@ -120,7 +120,7 @@ export const useMatchesByPlayerQuery = (
     if (!matchesQuery.data?.data) return matchesQuery;
 
     const matchesForPlayer = matchesQuery.data.data.filter((i) =>
-        i.teamMembers!.find((j) => j.playerId === playerId)
+        i.teamMembers.find((j) => j.playerId === playerId)
     );
 
     return {
@@ -157,7 +157,7 @@ export function MatchQueue() {
             onCreated: (match, created) => {
                 if (match.photos) {
                     // not awaited: the next queued match is sent while the photos upload
-                    uploadTeamPhotos(
+                    void uploadTeamPhotos(
                         api,
                         { ...match, matchId: match.id },
                         created?.data?.photoUploads ?? [],

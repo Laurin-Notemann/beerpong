@@ -139,14 +139,14 @@ export function installApiInterceptors(
     });
 
     client.interceptors.response.use(undefined, async (err: unknown) => {
-        if (!isAxiosError(err)) {
+        if (!isAxiosError<unknown>(err)) {
             // getting a token failed outside of a request (e.g. decoding it)
             deps.log('[api] request setup failed:', err);
             deps.reporter.captureException(err, {
                 fingerprint: ['{{ default }}'],
                 extra: {},
             });
-            return Promise.reject(err);
+            throw err instanceof Error ? err : new Error(String(err));
         }
         // Also gets the errors of the request interceptor (getting a token), whose config is
         // the token request's and carries no Authorization header. A 401 with an error code
@@ -194,6 +194,6 @@ export function installApiInterceptors(
                 data,
             });
         }
-        return Promise.reject(err);
+        throw err;
     });
 }

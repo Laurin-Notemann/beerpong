@@ -70,10 +70,13 @@ function followIce(pc: RTCPeerConnection, onChange: (state: 'up' | 'gone') => vo
 /** reports a connection problem to Sentry (sentry.ts), with the TV feed's last stats */
 function report(problem: string, err?: unknown) {
     const context = feedEventContext();
+    const detail =
+        err instanceof Error ? err.toString() : typeof err === 'string' ? err : undefined;
     void import('@sentry/browser').then((Sentry) =>
-        Sentry.captureMessage(`camera feed: ${problem}${err ? ` (${err})` : ''}`, {
+        Sentry.captureMessage(`camera feed: ${problem}${detail ? ` (${detail})` : ''}`, {
             level: 'warning',
             ...context,
+            extra: { ...context.extra, error: err },
         })
     );
 }
@@ -94,9 +97,22 @@ export function useCameraFeed(
     const [problem, setProblem] = useState<string | null>(null);
     const pc = useRef<{ conn: RTCPeerConnection; at: number } | null>(null);
     const streamRef = useRef(stream);
-    streamRef.current = stream;
     const want = useRef(wanted);
-    want.current = wanted;
+    useEffect(() => {
+        streamRef.current = stream;
+        want.current = wanted;
+    }, [stream, wanted]);
+    const [previousFeed, setPreviousFeed] = useState({ id, secret, wanted, groupId, cameraId });
+    if (
+        previousFeed.id !== id ||
+        previousFeed.secret !== secret ||
+        previousFeed.wanted !== wanted ||
+        previousFeed.groupId !== groupId ||
+        previousFeed.cameraId !== cameraId
+    ) {
+        setPreviousFeed({ id, secret, wanted, groupId, cameraId });
+        setProblem(null);
+    }
 
     const close = useCallback(() => {
         const previous = pc.current;
@@ -106,7 +122,6 @@ export function useCameraFeed(
     }, []);
 
     useEffect(() => {
-        setProblem(null);
         if (!wanted || !webRtcSupported()) return;
         let stopped = false;
         let asking = false;
@@ -150,13 +165,13 @@ export function useCameraFeed(
                 asking = false;
             }
         };
-        ask();
-        const timer = setInterval(ask, RETRY_MS);
+        void ask();
+        const timer = setInterval(() => void ask(), RETRY_MS);
 
         // two checks in a row without a new byte of video: the camera is gone
         let last: number | undefined;
         let stalled = 0;
-        const watchdog = setInterval(async () => {
+        const check = async () => {
             const current = pc.current;
             if (!current || !isConnected(current.conn)) return;
             const bytes = await bytesReceived(current.conn);
@@ -168,6 +183,9 @@ export function useCameraFeed(
                 close();
                 setProblem('Camera video stopped. Reconnecting…');
             }
+        };
+        const watchdog = setInterval(() => {
+            void check().catch((err: unknown) => report('video watchdog failed', err));
         }, STALL_CHECK_MS);
 
         return () => {
@@ -272,7 +290,9 @@ export function useCameraSender(
     const pcs = useRef(new Map<string, RTCPeerConnection>());
     const [watching, setWatching] = useState(0);
     const latest = useRef(stream);
-    latest.current = stream;
+    useEffect(() => {
+        latest.current = stream;
+    }, [stream]);
 
     const count = useCallback(
         () => setWatching([...pcs.current.values()].filter(isConnected).length),

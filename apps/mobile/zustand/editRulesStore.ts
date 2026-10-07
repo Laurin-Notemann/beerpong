@@ -18,7 +18,7 @@ interface EditRulesStore {
     };
 }
 
-export const useEditRulesStore = create<EditRulesStore>()((set, get) => ({
+export const useEditRulesStore = create<EditRulesStore>()((set) => ({
     isDirty: false,
     rules: [],
 

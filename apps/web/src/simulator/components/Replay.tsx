@@ -37,7 +37,7 @@ export function Replay({
     const picked = replays.find((r) => r.dto.id === id);
     const steps = useMemo(
         () => (picked ? replaySteps(picked.dto).slice(0, maxSteps) : []),
-        [picked?.dto]
+        [picked]
     );
     const matchId = picked?.dto.resultMatchId;
     const [games, setGames] = useState<Game[]>();
@@ -47,10 +47,25 @@ export function Replay({
 
     // rated again when the weights change
     const { k, kr, ringWeight, swing, spread } = sim.params;
+    const requestKey = JSON.stringify([
+        code,
+        sim.seasonId,
+        matchId,
+        steps,
+        k,
+        kr,
+        ringWeight,
+        swing,
+        spread,
+    ]);
+    const [previousRequest, setPreviousRequest] = useState(requestKey);
+    if (previousRequest !== requestKey) {
+        setPreviousRequest(requestKey);
+        setError(undefined);
+    }
     useEffect(() => {
         if (!matchId || !sim.seasonId || !steps.length) return;
         let stale = false;
-        setError(undefined);
         getReplay({
             data: {
                 code,
@@ -75,12 +90,9 @@ export function Replay({
 
     const last = steps.length;
     const step = Math.min(at, last);
+    if (playing && step >= last) setPlaying(false);
     useEffect(() => {
-        if (!playing) return;
-        if (step >= last) {
-            setPlaying(false);
-            return;
-        }
+        if (!playing || step >= last) return;
         const t = setTimeout(() => setAt(step + 1), 1000);
         return () => clearTimeout(t);
     }, [playing, step, last]);

@@ -27,9 +27,9 @@ export default function Page() {
 
     const presets =
         presetsQuery.data?.data?.map((i) => ({
-            id: i.id!,
-            title: i.title!,
-            imageUrl: i.imageUrl!,
+            id: i.id,
+            title: i.title,
+            imageUrl: i.imageUrl,
         })) ?? [];
 
     const [createGroup, isCreating] = useSingleFlight(
