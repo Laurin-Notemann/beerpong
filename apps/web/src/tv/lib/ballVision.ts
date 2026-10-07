@@ -37,6 +37,10 @@ interface Rims {
     cups: Cup[];
 }
 export const LOOKBACK_MS = 12_000;
+interface TrackHint extends BallCandidate {
+    previousX?: number;
+    previousY?: number;
+}
 
 /** Motion is a proposal filter, not a semantic label: rings, hands and reflections can pass. */
 export function ballCandidates(
@@ -45,7 +49,7 @@ export function ballCandidates(
     width: number,
     height: number,
     areas?: PlayingArea[],
-    hints: BallCandidate[] = []
+    hints: TrackHint[] = []
 ) {
     const mask = new Uint8Array(width * height);
     const scale = width / 640;
@@ -239,7 +243,36 @@ export function ballCandidates(
     // A compression fringe can split into several orange components. One prediction
     // supports one observation; otherwise those fragments create competing tracks.
     const recoveredObservations = new Set<number>();
-    for (const hint of hints) {
+    const strongClaims = hints
+        .flatMap((hint, hintIndex) =>
+            balls.map((ball, ballIndex) => ({
+                hintIndex,
+                ballIndex,
+                distance:
+                    hint.previousX !== undefined &&
+                    hint.previousY !== undefined &&
+                    ball.color === hint.color &&
+                    ball.source === 'color-motion'
+                        ? Math.hypot(
+                              (ball.x - hint.previousX) * width,
+                              (ball.y - hint.previousY) * height
+                          )
+                        : Infinity,
+            }))
+        )
+        .filter((claim) => claim.distance < width * 0.15)
+        .sort((a, b) => a.distance - b.distance);
+    const claimedHints = new Set<number>(),
+        claimedBalls = new Set<number>();
+    for (const claim of strongClaims) {
+        if (claimedHints.has(claim.hintIndex) || claimedBalls.has(claim.ballIndex)) continue;
+        claimedHints.add(claim.hintIndex);
+        claimedBalls.add(claim.ballIndex);
+    }
+    for (const [hintIndex, hint] of hints.entries()) {
+        // A bounce can move the real ball away from its prediction. A strong observation
+        // claims one track; that track's old prediction cannot add another object.
+        if (claimedHints.has(hintIndex)) continue;
         const nearby = balls
             .map((ball, index) => ({
                 ball,
@@ -284,7 +317,15 @@ export class BallTracker {
             const distance = Math.hypot((b.x - a.x) * width, (b.y - a.y) * height);
             if (b.color !== 'orange' || distance < (18 * width) / 640 || b.at <= a.at) return [];
             const ratio = (at - b.at) / (b.at - a.at);
-            return [{ ...b, x: b.x + (b.x - a.x) * ratio, y: b.y + (b.y - a.y) * ratio }];
+            return [
+                {
+                    ...b,
+                    previousX: b.x,
+                    previousY: b.y,
+                    x: b.x + (b.x - a.x) * ratio,
+                    y: b.y + (b.y - a.y) * ratio,
+                },
+            ];
         });
         const result = ballCandidates(pixels, previous, width, height, areas, hints);
         if (result.obscured) {
