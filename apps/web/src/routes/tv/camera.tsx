@@ -6,8 +6,10 @@ import { CameraVideo } from '~/tv/components/CameraVideo';
 import { PlayingAreas } from '~/tv/components/PlayingAreas';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
 import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
+import type { VisionCommand } from '~/tv/lib/cameraVisionRemote';
 import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
+import { useCameraVisionRemote } from '~/tv/lib/useCameraVisionRemote';
 import { useCupDetector } from '~/tv/lib/useCupDetector';
 import { useCupFormationSync } from '~/tv/lib/useCupFormationSync';
 import { registerDisplay, setCameraOrientation, stopCamera } from '~/tv/server/functions';
@@ -138,6 +140,53 @@ function Camera() {
         media.stream,
         identity.config.groupId,
         matches
+    );
+    const applyVision = useCallback(
+        (command: VisionCommand) => {
+            const { settings } = command;
+            if (
+                settings.syncMatchId &&
+                !matches?.formations?.some((m) => m.id === settings.syncMatchId)
+            )
+                return false;
+            const value = settings.areas ? { device: cameraDevice, areas: settings.areas } : null;
+            if (value) localStorage.setItem('versus-playing-areas', JSON.stringify(value));
+            else localStorage.removeItem('versus-playing-areas');
+            localStorage.setItem('versus-cup-outlines', settings.enabled ? 'on' : 'off');
+            setCalibration(value);
+            setCupOutlines(settings.enabled);
+            setSyncMatchId(settings.syncMatchId);
+            setFirstTeam(settings.firstTeam);
+            return true;
+        },
+        [cameraDevice, matches]
+    );
+    useCameraVisionRemote(
+        identity.id,
+        identity.secret,
+        registered && !!identity.config.groupId,
+        {
+            enabled: cupOutlines,
+            areas,
+            syncMatchId,
+            firstTeam,
+            device: cameraDevice,
+            width: media.stream?.getVideoTracks()[0]?.getSettings().width ?? 0,
+            height: media.stream?.getVideoTracks()[0]?.getSettings().height ?? 0,
+            status: cupStatus,
+            syncStatus: formationSync.status,
+            watching: sender.watching,
+            recording: recording.recording,
+            pendingUploads: recording.pending,
+            selectingAreas,
+            matches: (matches?.formations ?? []).map((m) => ({
+                id: m.id,
+                seq: m.seq,
+                blue: m.blue.length,
+                red: m.red.length,
+            })),
+        },
+        applyVision
     );
     useWakeLock();
 

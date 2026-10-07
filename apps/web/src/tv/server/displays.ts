@@ -6,6 +6,7 @@ import {
     type CameraPosition,
     parseConfig,
 } from '@/lib/tvDisplay';
+import type { CameraVision } from '~/tv/server/cameraVision';
 
 /**
  * The TVs this server knows, in memory, and the cameras that film a table for them. A TV keeps
@@ -33,6 +34,7 @@ export interface Display {
     /** what the app's remote calls it, from its browser (`deviceName`) */
     name: string;
     lastSeen: number;
+    vision?: CameraVision;
 }
 
 /** an offer or answer of the WebRTC connection between a camera and a TV */
@@ -257,6 +259,8 @@ export function authorize(id: unknown, secret: unknown) {
 }
 
 export function update(display: Display, patch: DisplayPatch & Partial<DisplayConfig>) {
+    if (patch.groupId !== undefined && patch.groupId !== display.config.groupId)
+        display.vision = undefined;
     display.config = { ...display.config, ...patch };
     emit(display, { type: 'config', config: display.config });
     if (display.kind === 'camera' && display.config.groupId) {
