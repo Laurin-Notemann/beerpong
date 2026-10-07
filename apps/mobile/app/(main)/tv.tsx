@@ -14,6 +14,7 @@ import {
 import { Icon } from '@/components/Icon';
 import IconHead from '@/components/IconHead';
 import { CameraControls } from '@/components/tvRemote/CameraControls';
+import { CameraLayoutControls } from '@/components/tvRemote/CameraLayoutControls';
 import {
     Card,
     MatchSummary,
@@ -101,16 +102,19 @@ function Remote({
     const pastSeasons = seasons.filter(
         (i) => i.id !== group?.data?.activeSeasonId
     );
-    const { config } = tv;
+    const config = parseConfig(tv.config);
     const send = update.mutate;
     const cameras = useCameras(groupId).data ?? [];
     // Match the server's selected device and replacement-subject fallback.
+    const mainCameras = cameras.filter(
+        (c) => !config.cameraCorners.some((slot) => slot.cameraId === c.id)
+    );
     const camera =
-        cameras.find((i) => i.id === config.cameraId) ??
-        cameras.find(
+        mainCameras.find((i) => i.id === config.cameraId) ??
+        mainCameras.find(
             (i) => parseConfig(i.config).cameraSubject === config.cameraSubject
         ) ??
-        cameras[0];
+        mainCameras[0];
 
     // in the order they started, so rows don't move under your thumb while cups are hit
     const live = [...recent].sort(byStart);
@@ -224,7 +228,12 @@ function Remote({
                             }
                         />
                     </Card>
-                    {cameras.length > 0 && (
+                    <CameraLayoutControls
+                        config={config}
+                        cameras={cameras}
+                        send={send}
+                    />
+                    {config.cameraMainEnabled && cameras.length > 0 && (
                         <Card>
                             {cameras.map((c) => (
                                 <Row
@@ -240,6 +249,11 @@ function Remote({
                                     onPress={() =>
                                         send({
                                             cameraId: c.id,
+                                            cameraCorners:
+                                                config.cameraCorners.filter(
+                                                    (slot) =>
+                                                        slot.cameraId !== c.id
+                                                ),
                                             cameraSubject: parseConfig(c.config)
                                                 .cameraSubject,
                                         })
@@ -251,7 +265,7 @@ function Remote({
                             ))}
                         </Card>
                     )}
-                    {camera && (
+                    {config.cameraMainEnabled && camera && (
                         <CameraControls groupId={groupId} camera={camera} />
                     )}
                 </Section>

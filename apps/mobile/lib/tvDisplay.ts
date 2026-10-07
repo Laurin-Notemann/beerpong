@@ -22,12 +22,39 @@ export interface DisplayConfig {
      * then the group's first online camera
      */
     cameraId: string | null;
+    /** optional feeds over the main camera and scoreboard */
+    cameraCorners: CameraCorner[];
+    cameraMainEnabled: boolean;
+    /** clockwise quarter-turns for cameras mounted sideways */
+    cameraRotation: CameraRotation;
     /** swap the scoreboard sides on the camera video, without changing the match */
     cameraOverlayFlipped: boolean;
     /** what this camera films; on a TV, the preferred subject if its camera is replaced */
     cameraSubject: CameraSubject;
     /** mirror this camera's video horizontally, independently of the scoreboard */
     cameraVideoFlipped: boolean;
+}
+
+export const cameraPositions = [
+    'top-left',
+    'top-right',
+    'bottom-left',
+    'bottom-right',
+] as const;
+export type CameraPosition = (typeof cameraPositions)[number];
+export type CameraRotation = 0 | 90 | 180 | 270;
+export const cameraPositionLabel: Record<CameraPosition, string> = {
+    'top-left': 'Top left',
+    'top-right': 'Top right',
+    'bottom-left': 'Bottom left',
+    'bottom-right': 'Bottom right',
+};
+export interface CameraCorner {
+    position: CameraPosition;
+    cameraId: string;
+    subject: CameraSubject;
+    /** percentage of the TV width, bounded so opposing corners cannot overlap */
+    width: number;
 }
 
 export const cameraSubjects = ['table', 'blue', 'red'] as const;
@@ -38,7 +65,10 @@ export const cameraSubjectLabel: Record<CameraSubject, string> = {
     red: 'Red team',
 };
 export type CameraPatch = Partial<
-    Pick<DisplayConfig, 'cameraSubject' | 'cameraVideoFlipped'>
+    Pick<
+        DisplayConfig,
+        'cameraSubject' | 'cameraVideoFlipped' | 'cameraRotation'
+    >
 >;
 
 /** camera: a camera's video on the whole screen, the score over it */
@@ -60,6 +90,9 @@ export const emptyConfig: DisplayConfig = {
     pinnedMatchIds: [],
     focusMatchId: null,
     cameraId: null,
+    cameraCorners: [],
+    cameraMainEnabled: true,
+    cameraRotation: 0,
     cameraOverlayFlipped: false,
     cameraSubject: 'table',
     cameraVideoFlipped: false,
@@ -75,6 +108,9 @@ export type DisplayPatch = Partial<
         | 'pinnedMatchIds'
         | 'focusMatchId'
         | 'cameraId'
+        | 'cameraCorners'
+        | 'cameraMainEnabled'
+        | 'cameraRotation'
         | 'cameraOverlayFlipped'
         | 'cameraSubject'
         | 'cameraVideoFlipped'
@@ -97,6 +133,41 @@ export function parsePatch(value: unknown): DisplayPatch {
         patch.focusMatchId = v.focusMatchId;
     if (v.cameraId === null || isString(v.cameraId))
         patch.cameraId = v.cameraId;
+    if (typeof v.cameraMainEnabled === 'boolean')
+        patch.cameraMainEnabled = v.cameraMainEnabled;
+    if ([0, 90, 180, 270].includes(v.cameraRotation as number))
+        patch.cameraRotation = v.cameraRotation as CameraRotation;
+    if (Array.isArray(v.cameraCorners)) {
+        const positions = new Set<CameraPosition>();
+        const ids = new Set<string>();
+        patch.cameraCorners = [];
+        for (const raw of v.cameraCorners) {
+            if (!raw || typeof raw !== 'object') continue;
+            const c = raw as Record<string, unknown>;
+            const position = c.position as CameraPosition;
+            const subject = c.subject as CameraSubject;
+            if (
+                !cameraPositions.includes(position) ||
+                !cameraSubjects.includes(subject) ||
+                !isString(c.cameraId) ||
+                !c.cameraId ||
+                positions.has(position) ||
+                ids.has(c.cameraId)
+            )
+                continue;
+            positions.add(position);
+            ids.add(c.cameraId);
+            patch.cameraCorners.push({
+                position,
+                cameraId: c.cameraId,
+                subject,
+                width:
+                    typeof c.width === 'number' && Number.isFinite(c.width)
+                        ? Math.max(20, Math.min(50, c.width))
+                        : 30,
+            });
+        }
+    }
     if (typeof v.cameraOverlayFlipped === 'boolean')
         patch.cameraOverlayFlipped = v.cameraOverlayFlipped;
     if (cameraSubjects.includes(v.cameraSubject as CameraSubject))

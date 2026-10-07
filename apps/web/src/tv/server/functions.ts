@@ -1,11 +1,22 @@
 import { createServerFn } from '@tanstack/react-start';
 
+import { cameraPositions, parsePatch, type CameraPosition } from '@/lib/tvDisplay';
 import { socketUrl } from '~/apiUrl';
 import { validGrid } from '~/tv/lib/cupFormation';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
+import { removeGroup } from '~/tv/server/appRemote';
 import { buildBoard } from '~/tv/server/board';
 import { formationMatch } from '~/tv/server/cupFormation';
-import { authorize, cameraFor, register, setSession, signal, watch } from '~/tv/server/displays';
+import {
+    authorize,
+    cameraFor,
+    register,
+    setSession,
+    signal,
+    update,
+    watch,
+} from '~/tv/server/displays';
+import { claimPhoneCamera } from '~/tv/server/phoneCamera';
 
 // What the TV's and the camera's pages call. Phones change them through the app (appRemote.ts).
 
@@ -15,7 +26,7 @@ const asObject = (data: unknown) =>
 /** a TV or camera announcing itself, on load and whenever its connection comes back */
 export const registerDisplay = createServerFn({ method: 'POST' })
     .inputValidator(asObject)
-    .handler(({ data }) => {
+    .handler(async ({ data }) => {
         const display = register({
             // TV pages from before cameras don't send it
             kind: data.kind === 'camera' ? 'camera' : 'tv',
@@ -25,6 +36,8 @@ export const registerDisplay = createServerFn({ method: 'POST' })
             config: data.config,
             refreshToken: data.refreshToken,
         });
+        if (display.kind === 'camera' && typeof data.pairingToken === 'string')
+            await claimPhoneCamera(data.pairingToken, display);
         return { config: display.config, code: display.code, refreshToken: display.refreshToken };
     });
 
@@ -51,12 +64,15 @@ export const watchCamera = createServerFn({ method: 'POST' })
     .inputValidator(asObject)
     .handler(({ data }) => {
         const tv = authorize(data.id, data.key);
+        const position = cameraPositions.includes(data.position as CameraPosition)
+            ? (data.position as CameraPosition)
+            : 'main';
         const camera =
             tv.kind === 'tv' && ['auto', 'camera'].includes(tv.config.view)
-                ? cameraFor(tv)
+                ? cameraFor(tv, position)
                 : undefined;
         if (!camera) return null;
-        watch(camera, tv);
+        watch(camera, tv, position);
         return camera.id;
     });
 
@@ -117,4 +133,24 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
             liveMatchIds: matches.map((m) => m.id),
             formations: matches.map((match) => formationMatch(match, templates)),
         };
+    });
+
+/** Camera-local controls share the same settings as the app's remote. */
+export const setCameraOrientation = createServerFn({ method: 'POST' })
+    .inputValidator(asObject)
+    .handler(({ data }) => {
+        const camera = authorize(data.id, data.key);
+        if (camera.kind !== 'camera') return;
+        const patch = parsePatch(data);
+        update(camera, {
+            cameraRotation: patch.cameraRotation ?? camera.config.cameraRotation,
+            cameraVideoFlipped: patch.cameraVideoFlipped ?? camera.config.cameraVideoFlipped,
+        });
+    });
+
+export const stopCamera = createServerFn({ method: 'POST' })
+    .inputValidator(asObject)
+    .handler(async ({ data }) => {
+        const camera = authorize(data.id, data.key);
+        if (camera.kind === 'camera') await removeGroup(camera);
     });

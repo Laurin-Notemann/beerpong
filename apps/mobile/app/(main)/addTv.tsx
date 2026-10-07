@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
-import { useAddCamera, useAddTv } from '@/api/calls/tvHooks';
+import { useAddCamera, useAddTv, usePhoneCamera } from '@/api/calls/tvHooks';
 import { env } from '@/api/env';
 import { apiErrorCode } from '@/api/utils/apiInterceptors';
 import InputModal from '@/components/InputModal';
 import TextInput from '@/components/TextInput';
+import { Card, Row } from '@/components/tvRemote/RemoteParts';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 import { showErrorToast } from '@/toast';
@@ -25,6 +26,7 @@ export default function Page() {
     const { groupId, group } = useGroup();
     const addTv = useAddTv(groupId);
     const addCamera = useAddCamera(groupId);
+    const phoneCamera = usePhoneCamera(groupId);
     const pending = addTv.isPending || addCamera.isPending;
     const [code, setCode] = useState('');
     const groupName = group?.data?.name ?? 'your group';
@@ -75,6 +77,24 @@ export default function Page() {
                 </Stack.Toolbar.Button>
             </Stack.Toolbar>
             <InputModal>
+                {camera && (
+                    <Card>
+                        <Row
+                            icon="cellphone"
+                            title={
+                                phoneCamera.isPending
+                                    ? 'Opening camera…'
+                                    : 'Use this phone'
+                            }
+                            subtitle="Opens your camera in the browser, already paired"
+                            onPress={() => {
+                                if (!phoneCamera.isPending)
+                                    phoneCamera.mutate();
+                            }}
+                        />
+                    </Card>
+                )}
+
                 <TextInput
                     required
                     placeholder={
@@ -88,7 +108,7 @@ export default function Page() {
                     autoCorrect={false}
                     autoComplete="off"
                     maxLength={6}
-                    autoFocus
+                    autoFocus={!camera}
                     returnKeyType="done"
                     onSubmitEditing={() => code.length === 6 && onSubmit()}
                     style={{ alignSelf: 'stretch' }}

@@ -191,14 +191,14 @@ function cameraSample(stats: Stat[], diff: ReturnType<typeof differ>, now: numbe
     });
 }
 
-function tvSample(stats: Stat[], diff: ReturnType<typeof differ>, now: number) {
+function tvSample(stats: Stat[], diff: ReturnType<typeof differ>, now: number, cameraId: string) {
     // Chromium 63 counts frames on the remote `track`; newer browsers on inbound-rtp.
     const rtp = [
         ...rtpOf(stats, 'inbound-rtp'),
         ...stats.filter((s) => s.type === 'track' && s.remoteSource && kindOf(s) !== 'audio'),
     ];
     const pair = selectedPair(stats);
-    const player = tvVideo;
+    const player = tvVideos.get(cameraId);
     const quality = player?.getVideoPlaybackQuality?.();
     const { delta, rate } = diff(now, {
         bytesReceived: num(rtp, 'bytesReceived'),
@@ -254,12 +254,13 @@ interface Feed {
 }
 
 /** the TV's feed, which its player's notes and warnings belong to */
-let tvFeed: Feed | undefined;
+const tvFeeds = new Map<string, Feed>();
 /** the element the TV plays the feed in (CameraVideo) */
-let tvVideo: HTMLVideoElement | null = null;
+const tvVideos = new Map<string, HTMLVideoElement>();
 
-export function setFeedVideo(element: HTMLVideoElement | null) {
-    tvVideo = element;
+export function setFeedVideo(element: HTMLVideoElement | null, cameraId: string) {
+    if (element) tvVideos.set(cameraId, element);
+    else tvVideos.delete(cameraId);
 }
 
 /**
@@ -275,7 +276,7 @@ export function watchFeedStats(
     const start = performance.now();
     const diff = differ(start);
     const feed: Feed = { side, cameraId, tvId, samples: [], notes: [], pending: [], logged: {} };
-    if (side === 'tv') tvFeed = feed;
+    if (side === 'tv') tvFeeds.set(cameraId, feed);
     void sentry()
         .then((Sentry) => Sentry.setTag('camera', cameraId))
         .catch(() => {});
@@ -315,7 +316,7 @@ export function watchFeedStats(
                           ...cameraSample(stats, diff, now),
                           uploadMs: Math.round(uploadingMs(sampledAt, now)),
                       }
-                    : tvSample(stats, diff, now);
+                    : tvSample(stats, diff, now, cameraId);
             sampledAt = now;
             const ice = pc.iceConnectionState;
             const notes = feed.pending.splice(0).join(', ');
@@ -330,7 +331,7 @@ export function watchFeedStats(
                 const fps = fields.videoFps ?? fields.decodedFps;
                 if (typeof fps !== 'number') return;
                 // only while the camera is on screen (CameraVideo): elsewhere nothing waits for it
-                const shown = !!tvVideo && !document.hidden;
+                const shown = tvVideos.has(cameraId) && !document.hidden;
                 if (settled && shown && decoded && fps < FROZEN_FPS) {
                     report('camera feed: TV video froze', [
                         `${fields.videoFps ?? '?'} fps shown, ${fields.decodedFps ?? '?'} decoded`,
@@ -355,7 +356,7 @@ export function watchFeedStats(
     const timer = setInterval(() => void sample(), SAMPLE_MS);
     const stop = () => {
         clearInterval(timer);
-        if (tvFeed === feed) tvFeed = undefined;
+        if (tvFeeds.get(cameraId) === feed) tvFeeds.delete(cameraId);
     };
     return stop;
 }
@@ -372,16 +373,22 @@ function contextOf(feed: Feed) {
 }
 
 /** the TV feed's tags and last minute, for the TV's other camera warnings */
-export function feedEventContext() {
-    return tvFeed ? contextOf(tvFeed) : { tags: {}, extra: {} };
+export function feedEventContext(cameraId?: string) {
+    const feed = cameraId ? tvFeeds.get(cameraId) : tvFeeds.values().next().value;
+    return feed ? contextOf(feed) : { tags: {}, extra: {} };
 }
 
 /**
  * Notes what happens to the TV's player (its events, recovery, score clips over it) in the next
  * sample and in Sentry Logs, while the TV shows a camera.
  */
-export function noteFeed(note: string, fields: Fields = {}) {
-    const feed = tvFeed;
+export function noteFeed(note: string, fields: Fields = {}, cameraId?: string) {
+    // Score clips affect every visible feed; player notes identify just their own camera.
+    if (!cameraId) {
+        for (const id of tvFeeds.keys()) noteFeed(note, fields, id);
+        return;
+    }
+    const feed = tvFeeds.get(cameraId);
     if (!feed) return;
     if (!feed.pending.includes(note)) feed.pending.push(note);
     feed.notes.push(`${clock()} ${note}`);

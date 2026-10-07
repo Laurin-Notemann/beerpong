@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
+import type { CameraRotation } from '@/lib/tvDisplay';
 import { drawCups } from '~/tv/lib/cupVision';
 import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry';
 
@@ -11,12 +12,20 @@ import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry
 export function CameraVideo({
     stream,
     flipped = false,
+    rotation = 0,
+    cameraId,
+    videoRef,
 }: {
     stream: MediaStream;
     flipped?: boolean;
+    rotation?: CameraRotation;
+    cameraId: string;
+    /** The sending camera reuses the unrotated decoder for cup detection and calibration. */
+    videoRef?: RefObject<HTMLVideoElement | null>;
 }) {
     const canvas = useRef<HTMLCanvasElement>(null);
-    const decoder = useRef<HTMLVideoElement>(null);
+    const localDecoder = useRef<HTMLVideoElement>(null);
+    const decoder = videoRef ?? localDecoder;
     const [problem, setProblem] = useState<string | null>('Waiting for camera video…');
 
     useEffect(() => {
@@ -25,11 +34,13 @@ export function CameraVideo({
         // Keep a rendered source on the page instead of relying on a detached TV decoder.
         // The canvas presents the full picture; the native video plane stays one pixel.
         const video = decoder.current!;
+        // oxlint-disable-next-line react/immutability -- Cup calibration reuses this decoder's raw MediaStream frames.
         video.srcObject = stream;
-        setFeedVideo(video);
+        setFeedVideo(video, cameraId);
         // what the player says it waits for, next to the feed's stats (feedTelemetry.ts)
-        const onWaiting = () => noteFeed('video waiting');
-        const onStalled = () => noteFeed('video stalled');
+        const note = (message: string) => noteFeed(message, {}, cameraId);
+        const onWaiting = () => note('video waiting');
+        const onStalled = () => note('video stalled');
         video.addEventListener('waiting', onWaiting);
         video.addEventListener('stalled', onStalled);
         let stopped = false;
@@ -45,7 +56,7 @@ export function CameraVideo({
             setProblem(message);
             if (reported.has(message)) return;
             reported.add(message);
-            noteFeed(`playback warning: ${message}`);
+            note(`playback warning: ${message}`);
             // Capture before recovery resets the player, including when Sentry loads lazily.
             const extra = {
                 error: error instanceof Error ? error.message : error,
@@ -62,7 +73,7 @@ export function CameraVideo({
                 trackState: stream.getVideoTracks()[0]?.readyState,
                 trackMuted: stream.getVideoTracks()[0]?.muted,
             };
-            const feed = feedEventContext();
+            const feed = feedEventContext(cameraId);
             void import('@sentry/browser').then((Sentry) => {
                 if (stopped) return;
                 Sentry.captureMessage(`camera playback: ${message}`, {
@@ -113,17 +124,33 @@ export function CameraVideo({
                 if (moving) progressedAt = now;
                 if (!pixels.some((value, i) => i % 4 !== 3 && value > 4)) return;
                 const scale = Math.min(1, 1280 / video.videoWidth, 720 / video.videoHeight);
-                const width = Math.round(video.videoWidth * scale);
-                const height = Math.round(video.videoHeight * scale);
+                const sourceWidth = Math.round(video.videoWidth * scale);
+                const sourceHeight = Math.round(video.videoHeight * scale);
+                const sideways = rotation === 90 || rotation === 270;
+                const width = sideways ? sourceHeight : sourceWidth;
+                const height = sideways ? sourceWidth : sourceHeight;
                 if (surface.width !== width || surface.height !== height) {
                     surface.width = width;
                     surface.height = height;
                 }
-                context.drawImage(video, 0, 0, width, height);
-                drawCups(context, stream, now);
+                context.save();
+                context.clearRect(0, 0, width, height);
+                context.translate(width / 2, height / 2);
+                context.rotate((rotation * Math.PI) / 180);
+                context.drawImage(
+                    video,
+                    -sourceWidth / 2,
+                    -sourceHeight / 2,
+                    sourceWidth,
+                    sourceHeight
+                );
+                // Contours use raw frame coordinates and turn with the picture.
+                context.translate(-sourceWidth / 2, -sourceHeight / 2);
+                drawCups(context, stream, now, { width: sourceWidth, height: sourceHeight });
+                context.restore();
                 paintedAt = now;
                 if (moving) {
-                    if (reported.size) noteFeed('picture back');
+                    if (reported.size) note('picture back');
                     setProblem(null);
                     reported.clear();
                 }
@@ -148,7 +175,7 @@ export function CameraVideo({
             const now = performance.now();
             if (now - progressedAt > 5000) {
                 warn('Camera playback stalled. Restarting the player…');
-                noteFeed('recovery: restarted the player');
+                note('recovery: restarted the player');
                 // Reset this consumer, not the shared track or its WebRTC connection.
                 video.pause();
                 video.srcObject = null;
@@ -158,7 +185,7 @@ export function CameraVideo({
             } else if (now - paintedAt > 5000) {
                 warn('Camera frames are dark. Waiting for a visible picture…');
             } else if (video.paused) {
-                noteFeed('recovery: played the paused player');
+                note('recovery: played the paused player');
                 play();
             }
         }, 1000);
@@ -168,12 +195,12 @@ export function CameraVideo({
             clearInterval(recovery);
             video.removeEventListener('waiting', onWaiting);
             video.removeEventListener('stalled', onStalled);
-            setFeedVideo(null);
+            setFeedVideo(null, cameraId);
             video.pause();
             video.srcObject = null;
             // Do not stop any tracks: other consumers, including recording, own them.
         };
-    }, [stream]);
+    }, [stream, rotation, cameraId, decoder]);
 
     return (
         <>
@@ -187,7 +214,7 @@ export function CameraVideo({
             />
             <canvas
                 ref={canvas}
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-contain"
                 style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
             />
             {problem && (

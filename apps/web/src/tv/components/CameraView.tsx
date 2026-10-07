@@ -1,3 +1,10 @@
+import {
+    type CameraCorner,
+    type CameraRotation,
+    type DisplayConfig,
+    cameraPositionLabel,
+    cameraSubjectLabel,
+} from '@/lib/tvDisplay';
 import { Avatar } from '~/tv/components/Avatar';
 import { CameraVideo } from '~/tv/components/CameraVideo';
 import { CupRack } from '~/tv/components/CupRack';
@@ -22,19 +29,69 @@ export function CameraView({
     offline,
     flipped = false,
     videoFlipped = false,
+    rotation = 0,
+    cameraId,
+    corners,
 }: {
-    stream: MediaStream;
+    stream: MediaStream | null;
     match: LiveMatchView | undefined;
     groupName: string;
     offline: boolean;
     flipped?: boolean;
     videoFlipped?: boolean;
+    rotation?: CameraRotation;
+    cameraId: string;
+    corners: (CameraCorner & {
+        stream: MediaStream | null;
+        status: string;
+        config: DisplayConfig;
+    })[];
 }) {
     return (
         <div className="relative h-screen overflow-hidden bg-black">
-            <CameraVideo stream={stream} flipped={videoFlipped} />
+            {stream && (
+                <CameraVideo
+                    stream={stream}
+                    flipped={videoFlipped}
+                    rotation={rotation}
+                    cameraId={cameraId}
+                />
+            )}
+            {corners.map((corner) => (
+                <section
+                    key={corner.position}
+                    aria-label={`${cameraPositionLabel[corner.position]} camera`}
+                    className="absolute z-20 overflow-hidden rounded-[1rem] bg-black shadow-xl"
+                    style={{
+                        width: `${corner.width}%`,
+                        height: `${corner.width}%`,
+                        ...(corner.position.startsWith('top') ? { top: 0 } : { bottom: 0 }),
+                        ...(corner.position.endsWith('left') ? { left: 0 } : { right: 0 }),
+                        outline: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                >
+                    {corner.stream ? (
+                        <CameraVideo
+                            stream={corner.stream}
+                            flipped={corner.config.cameraVideoFlipped}
+                            rotation={corner.config.cameraRotation}
+                            cameraId={corner.cameraId}
+                        />
+                    ) : (
+                        <div
+                            role="status"
+                            className="absolute inset-0 flex items-center justify-center p-[1rem] text-center text-[1rem] text-text-2"
+                        >
+                            {corner.status}
+                        </div>
+                    )}
+                    <span className="absolute bottom-0 left-0 rounded-tr-[0.6rem] bg-black/70 px-[0.6rem] py-[0.3rem] text-[1rem] font-semibold">
+                        {cameraSubjectLabel[corner.subject]}
+                    </span>
+                </section>
+            ))}
             <header
-                className="absolute top-0 right-0 left-0 flex items-start gap-[2rem] px-[2.5rem] pt-[2rem] pb-[6rem]"
+                className="absolute top-0 right-0 left-0 z-30 flex items-start gap-[2rem] px-[2.5rem] pt-[2rem] pb-[6rem]"
                 style={shade('bottom')}
             >
                 <div className="min-w-0 flex-1">
@@ -114,7 +171,7 @@ function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }
 
     return (
         <div
-            className="absolute right-0 bottom-0 left-0 flex flex-col items-center gap-[0.8rem] px-[2.5rem] pt-[8rem] pb-[6rem]"
+            className="absolute right-0 bottom-0 left-0 z-30 flex flex-col items-center gap-[0.8rem] px-[2.5rem] pt-[8rem] pb-[6rem]"
             style={shade('top')}
         >
             <div className="flex items-center gap-[0.8rem] text-[1.3rem] font-semibold">
