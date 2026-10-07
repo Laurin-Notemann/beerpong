@@ -15,6 +15,7 @@ import { Route as SimulatorIndexRouteImport } from './routes/_simulator/index'
 import { Route as SimulatorCodeRouteImport } from './routes/_simulator/$code'
 import { Route as TvIndexRouteImport } from './routes/tv/index'
 import { Route as TvCameraRouteImport } from './routes/tv/camera'
+import { Route as TvApiReportsRouteImport } from './routes/tv/api/reports'
 import { Route as TvApiClipsIdRouteImport } from './routes/tv/api/clips.$id'
 import { Route as TvApiDisplaysIdEventsRouteImport } from './routes/tv/api/displays.$id.events'
 import { Route as TvApiGroupsGroupIdCamerasRouteImport } from './routes/tv/api/groups.$groupId.cameras'
@@ -51,6 +52,11 @@ const TvIndexRoute = TvIndexRouteImport.update({
 const TvCameraRoute = TvCameraRouteImport.update({
   id: '/camera',
   path: '/camera',
+  getParentRoute: () => TvRoute,
+} as any)
+const TvApiReportsRoute = TvApiReportsRouteImport.update({
+  id: '/api/reports',
+  path: '/api/reports',
   getParentRoute: () => TvRoute,
 } as any)
 const TvApiClipsIdRoute = TvApiClipsIdRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/$code': typeof SimulatorCodeRoute
   '/tv/camera': typeof TvCameraRoute
   '/tv/': typeof TvIndexRoute
+  '/tv/api/reports': typeof TvApiReportsRoute
   '/tv/api/clips/$id': typeof TvApiClipsIdRoute
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/cameras': typeof TvApiGroupsGroupIdCamerasRouteWithChildren
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/tv/camera': typeof TvCameraRoute
   '/': typeof SimulatorIndexRoute
   '/tv': typeof TvIndexRoute
+  '/tv/api/reports': typeof TvApiReportsRoute
   '/tv/api/clips/$id': typeof TvApiClipsIdRoute
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/cameras': typeof TvApiGroupsGroupIdCamerasRouteWithChildren
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/tv/camera': typeof TvCameraRoute
   '/_simulator/': typeof SimulatorIndexRoute
   '/tv/': typeof TvIndexRoute
+  '/tv/api/reports': typeof TvApiReportsRoute
   '/tv/api/clips/$id': typeof TvApiClipsIdRoute
   '/tv/api/displays/$id/events': typeof TvApiDisplaysIdEventsRoute
   '/tv/api/groups/$groupId/cameras': typeof TvApiGroupsGroupIdCamerasRouteWithChildren
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/$code'
     | '/tv/camera'
     | '/tv/'
+    | '/tv/api/reports'
     | '/tv/api/clips/$id'
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/cameras'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/tv/camera'
     | '/'
     | '/tv'
+    | '/tv/api/reports'
     | '/tv/api/clips/$id'
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/cameras'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/tv/camera'
     | '/_simulator/'
     | '/tv/'
+    | '/tv/api/reports'
     | '/tv/api/clips/$id'
     | '/tv/api/displays/$id/events'
     | '/tv/api/groups/$groupId/cameras'
@@ -241,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/camera'
       fullPath: '/tv/camera'
       preLoaderRoute: typeof TvCameraRouteImport
+      parentRoute: typeof TvRoute
+    }
+    '/tv/api/reports': {
+      id: '/tv/api/reports'
+      path: '/api/reports'
+      fullPath: '/tv/api/reports'
+      preLoaderRoute: typeof TvApiReportsRouteImport
       parentRoute: typeof TvRoute
     }
     '/tv/api/clips/$id': {
@@ -363,6 +382,7 @@ const TvApiGroupsGroupIdDisplaysRouteWithChildren =
 interface TvRouteChildren {
   TvCameraRoute: typeof TvCameraRoute
   TvIndexRoute: typeof TvIndexRoute
+  TvApiReportsRoute: typeof TvApiReportsRoute
   TvApiClipsIdRoute: typeof TvApiClipsIdRoute
   TvApiDisplaysIdEventsRoute: typeof TvApiDisplaysIdEventsRoute
   TvApiGroupsGroupIdCamerasRoute: typeof TvApiGroupsGroupIdCamerasRouteWithChildren
@@ -373,6 +393,7 @@ interface TvRouteChildren {
 const TvRouteChildren: TvRouteChildren = {
   TvCameraRoute: TvCameraRoute,
   TvIndexRoute: TvIndexRoute,
+  TvApiReportsRoute: TvApiReportsRoute,
   TvApiClipsIdRoute: TvApiClipsIdRoute,
   TvApiDisplaysIdEventsRoute: TvApiDisplaysIdEventsRoute,
   TvApiGroupsGroupIdCamerasRoute: TvApiGroupsGroupIdCamerasRouteWithChildren,

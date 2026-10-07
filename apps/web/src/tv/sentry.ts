@@ -15,6 +15,8 @@ export function initTvSentry() {
         dsn,
         environment: import.meta.env.MODE === 'production' ? 'staging' : 'development',
         release: commit ? `web@${commit}` : undefined,
+        // through this server, past content blockers (routes/tv/api/reports.ts)
+        tunnel: '/tv/api/reports',
         // no traces: a TV is one long-lived page, and old TV browsers are slow enough
         tracesSampleRate: 0,
         // the camera feed's stats, from the TV and the camera (lib/feedTelemetry.ts)
