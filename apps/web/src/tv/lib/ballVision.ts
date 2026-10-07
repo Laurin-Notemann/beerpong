@@ -194,7 +194,15 @@ export function ballCandidates(
         let score = Math.min(0.75, fill);
         if (ballModel?.supportedColors.includes(color)) {
             score = appearanceScore(
-                ballAppearance(pixels, width, height, sumX / size, sumY / size, Math.max(w, h) / 2),
+                ballAppearance(
+                    pixels,
+                    width,
+                    height,
+                    sumX / size,
+                    sumY / size,
+                    Math.max(w, h) / 2,
+                    ballModel.features
+                ),
                 ballModel
             );
             if (score < ballModel.threshold) continue;

@@ -155,7 +155,8 @@ def proposals(args):
                                      'recording_id': clip['id'], 'seconds': float(time),
                                      'center': [cx/frame.shape[1], cy/frame.shape[0]],
                                      'reviewPoint': [(cx-left)/(right-left), (cy-top)/(bottom-top)],
-                                     'features': raw_features(frame, cx, cy, max(bw, bh)/2),
+                                     'features': raw_features(frame, cx, cy, max(bw, bh)/2, args.features),
+                                     'featureVersion': args.features,
                                      'radius': max(bw, bh)/640/2,
                                      'color': 'orange' if orange[labels == index].mean() > .5 else 'white',
                                      'label': None, 'reviewer': None, 'cupRole': 'unknown',
@@ -242,7 +243,7 @@ def split(args):
     print(json.dumps({s: sum(e['split'] == s for e in approved) for s in ('train', 'valid', 'test')}))
 
 
-def raw_features(bgr, center_x, center_y, radius):
+def raw_features(bgr, center_x, center_y, radius, version='radial-rgb-color-v1'):
     """Exact source-pixel sampler from ballClassifier.ts; preview JPEGs do not train the model."""
     import numpy as np
     height, width = bgr.shape[:2]
@@ -265,12 +266,43 @@ def raw_features(bgr, center_x, center_y, radius):
                        ((r>.45)&(g>.2)&(r>g*1.13)&(g>b*1.3)&(r-b>.17))[mask].mean(),
                        ((patch.min(axis=2)>.6)&(patch.max(axis=2)-patch.min(axis=2)<.18))[mask].mean(),
                        (patch.max(axis=2)-patch.min(axis=2))[mask].mean()])
+    if version == 'radial-rgb-color-v1':
+        return [float(v) for v in values]
+    if version != 'radial-rgb-local-v2':
+        raise ValueError('Unsupported ball appearance features')
+    def sample(x,y):
+        x=max(0,min(width-1,x)); y=max(0,min(height-1,y))
+        x0,y0=math.floor(x),math.floor(y); x1,y1=min(width-1,x0+1),min(height-1,y0+1)
+        dx,dy=x-x0,y-y0
+        return ((rgb[y0,x0]*(1-dx)+rgb[y0,x1]*dx)*(1-dy)+(rgb[y1,x0]*(1-dx)+rgb[y1,x1]*dx)*dy)/255
+    def orange(c):
+        r,g,b=c
+        return r>.45 and g>.2 and r>g*1.13 and g>b*1.3 and r-b>.17
+    def saturation(c):return max(c)-min(c)
+    def white(c):return min(c)>.6 and saturation(c)<.18
+    center=sample(center_x,center_y); scale=width/640
+    inner_radius=max(2*scale,min(6*scale,radius*.75)); outer_radius=max(5*scale,min(14*scale,radius*2))
+    inner=[]; positions=[]
+    for y in range(-3,4):
+        for x in range(-3,4):
+            if math.hypot(x,y)>2.5:continue
+            c=sample(center_x+x*inner_radius/2.5,center_y+y*inner_radius/2.5)
+            inner.append(c)
+            if orange(c):positions.append((x,y))
+    outer=[sample(center_x+math.cos(i*math.pi/8)*outer_radius,center_y+math.sin(i*math.pi/8)*outer_radius) for i in range(16)]
+    inside=np.mean(inner,axis=0); outside=np.mean(outer,axis=0)
+    box_width=max(p[0] for p in positions)-min(p[0] for p in positions)+1 if positions else 0
+    box_height=max(p[1] for p in positions)-min(p[1] for p in positions)+1 if positions else 0
+    gradient=sum(abs(sum(c-center)/3) for c in inner)/len(inner)
+    values.extend([*center,saturation(center),*inside,sum(orange(c) for c in inner)/len(inner),sum(white(c) for c in inner)/len(inner),sum(saturation(c) for c in inner)/len(inner),*outside,*((inside-outside+1)/2),len(positions)/(box_width*box_height) if positions else 0,min(box_width,box_height)/max(box_width,box_height) if positions else 0,gradient])
     return [float(v) for v in values]
 
 
-def features(dataset, split_name, color='orange'):
+def features(dataset, split_name, color='orange', version='radial-rgb-color-v1'):
     import cv2
     import numpy as np
+    if version not in ('radial-rgb-color-v1','radial-rgb-local-v2'):raise ValueError('Unsupported ball appearance features')
+    expected_count = 18 if version == 'radial-rgb-color-v1' else 37
     root = Path(dataset)
     examples = [e for e in read(root / 'reviewed.json') if e['split'] == split_name and (color == 'both' or e['color'] == color)]
     x, y = [], []
@@ -280,10 +312,15 @@ def features(dataset, split_name, color='orange'):
             raise ValueError('Reviewed patch changed')
         if 'features' in e:
             values = e['features']
-            if len(values) != 18 or not all(isinstance(v,(int,float)) and math.isfinite(v) and 0 <= v <= 1 for v in values):
+            declared = e.get('featureVersion',e.get('featuresVersion'))
+            if declared is not None and declared != version:
+                raise ValueError('Reviewed feature version does not match model')
+            if len(values) != expected_count or not all(isinstance(v,(int,float)) and math.isfinite(v) and 0 <= v <= 1 for v in values):
                 raise ValueError('Invalid source-pixel features')
             x.append(values); y.append(e['label'] != 'negative')
             continue
+        if version != 'radial-rgb-color-v1':
+            raise ValueError('Local features require exact source-pixel samples')
         image = cv2.cvtColor(cv2.imread(str(path)), cv2.COLOR_BGR2RGB)
         patch = cv2.resize(image, (8, 8), interpolation=cv2.INTER_LINEAR).astype(float) / 255
         rgb = patch.reshape(-1, 3)
@@ -329,8 +366,8 @@ def predict(model, x):
 
 def train(args):
     from sklearn.ensemble import RandomForestClassifier
-    x, y, examples = features(args.dataset, 'train', args.color)
-    vx, vy, validation = features(args.dataset, 'valid', args.color)
+    x, y, examples = features(args.dataset, 'train', args.color, args.features)
+    vx, vy, validation = features(args.dataset, 'valid', args.color, args.features)
     if min(sum(y), len(y)-sum(y)) < 30 or min(sum(vy), len(vy)-sum(vy)) < 15:
         raise ValueError('Need sufficient reviewed positive and negative training/validation examples')
     supported = sorted({e['label'].split('-')[0] for e in examples if e['label'] != 'negative'})
@@ -351,7 +388,7 @@ def train(args):
                        int(tree.children_right[i]),float(tree.value[i][0][1]/tree.value[i][0].sum())]
                       for i in range(tree.node_count)])
     artifact = {'version':1,'id':args.id,'supportedColors':supported,'size':8,
-                'features':'radial-rgb-color-v1','trees':trees,'threshold':best[2],'proposalColors':args.color,
+                'features':args.features,'featureCount':18 if args.features == 'radial-rgb-color-v1' else 37,'trees':trees,'threshold':best[2],'proposalColors':args.color,
                 'validation':best[3],'validationPass':best[0] >= .7,
                 'trainingExamples':len(examples),'validationExamples':len(validation),
                 'review':'AI visual review; experimental, one camera/table/night',
@@ -366,7 +403,7 @@ def evaluate(args):
     dataset_sha = hashlib.file_digest((Path(args.dataset)/'reviewed.json').open('rb'),'sha256').hexdigest()
     if dataset_sha != model['datasetSha256']:
         raise ValueError('Reviewed dataset changed after training')
-    x, y, examples = features(args.dataset, args.split, model['proposalColors'])
+    x, y, examples = features(args.dataset, args.split, model['proposalColors'], model.get('features','radial-rgb-color-v1'))
     if not len(y):
         raise ValueError('Empty evaluation split')
     report = {'split':args.split,'modelSha256':hashlib.file_digest(Path(args.model).open('rb'),'sha256').hexdigest(),
@@ -394,10 +431,10 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     p = commands.add_parser('collect'); p.add_argument('--output', required=True); p.add_argument('--group', default='SBRIL5OJ5'); p.add_argument('--host', default='privaten'); p.set_defaults(run=collect)
     p = commands.add_parser('windows'); p.add_argument('--dataset', required=True); p.add_argument('--events', required=True); p.add_argument('--output', required=True); p.add_argument('--before', type=float, default=12); p.add_argument('--after', type=float, default=2); p.set_defaults(run=windows)
-    p = commands.add_parser('proposals'); p.add_argument('--dataset', required=True); p.add_argument('--windows', required=True); p.add_argument('--output', required=True); p.add_argument('--fps', type=float, default=15); p.add_argument('--limit', type=int, default=20); p.set_defaults(run=proposals)
+    p = commands.add_parser('proposals'); p.add_argument('--dataset', required=True); p.add_argument('--windows', required=True); p.add_argument('--output', required=True); p.add_argument('--fps', type=float, default=15); p.add_argument('--limit', type=int, default=20); p.add_argument('--features',choices=['radial-rgb-color-v1','radial-rgb-local-v2'],default='radial-rgb-color-v1'); p.set_defaults(run=proposals)
     p = commands.add_parser('review'); p.add_argument('--dataset', required=True); p.add_argument('--reviewer', required=True); p.add_argument('--port', type=int, default=3131); p.set_defaults(run=review)
     p = commands.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=17); p.set_defaults(run=split)
-    p = commands.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--color', choices=['orange','white','both'], default='orange'); p.set_defaults(run=train)
+    p = commands.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--color', choices=['orange','white','both'], default='orange'); p.add_argument('--features',choices=['radial-rgb-color-v1','radial-rgb-local-v2'],default='radial-rgb-color-v1'); p.set_defaults(run=train)
     p = commands.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--model', required=True); p.add_argument('--split', choices=['valid','test'], required=True); p.add_argument('--output', required=True); p.set_defaults(run=evaluate)
     p = commands.add_parser('export'); p.add_argument('--model', required=True); p.add_argument('--report', required=True); p.add_argument('--output', required=True); p.set_defaults(run=export)
     args = parser.parse_args(); args.run(args)
