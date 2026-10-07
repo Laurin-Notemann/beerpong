@@ -9,7 +9,7 @@ import * as Sentry from '@sentry/browser';
  */
 export function initTvSentry() {
     const dsn = import.meta.env.VITE_SENTRY_DSN;
-    if (!dsn) return;
+    if (!dsn || Sentry.getClient()) return;
     const commit = import.meta.env.VITE_GIT_COMMIT;
     Sentry.init({
         dsn,

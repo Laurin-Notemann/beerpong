@@ -20,6 +20,21 @@ export function useCupDetector(
         setStatus('Loading cup recognition…');
     }
     useEffect(() => {
+        const state = !enabled
+            ? 'off'
+            : !groupId
+              ? 'unpaired'
+              : !areas
+                ? 'needs-playing-areas'
+                : typeof Worker === 'undefined' || typeof WebAssembly === 'undefined'
+                  ? 'browser-unsupported'
+                  : 'starting';
+        // Child effects can run before the TV layout initializes Sentry.
+        void import('~/tv/sentry').then(async ({ initTvSentry }) => {
+            initTvSentry();
+            const Sentry = await import('@sentry/browser');
+            Sentry.logger.info('cup vision state', { cameraId, groupId, state });
+        });
         if (!enabled || !groupId || !areas) {
             return;
         }
