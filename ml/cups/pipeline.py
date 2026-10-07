@@ -523,12 +523,13 @@ def evaluate_runtime(args):
                 masks.append(polygon_mask(mapped_polygons, image['width'], image['height']))
             pairs = sorted([(float((p & t).sum()/max((p | t).sum(), 1)), i, j)
                             for i, p in enumerate(masks) for j, t in enumerate(targets)], reverse=True)
-            used_predictions, used_targets = set(), set()
+            used_predictions, used_targets, matches = set(), set(), {}
             score = empty_score()
             for iou, i, j in pairs:
                 if iou < .5 or i in used_predictions or j in used_targets:
                     continue
                 used_predictions.add(i); used_targets.add(j)
+                matches[j] = dict(prediction=i, maskIoU=iou, confidence=cups[i]['score'])
                 role = annotations[j]['cup_role']
                 if role == 'unknown':
                     score['excludedUnknownOutputs'] += 1
@@ -547,6 +548,14 @@ def evaluate_runtime(args):
                 totals[name][key] += value
                 cohort_metrics[cohort][name][key] += value
             item[name] = score
+            # Private per-instance evidence separates a missed mask from a cup
+            # discarded by playing membership. Public releases omit all frames.
+            item[name + 'Targets'] = [dict(annotation=annotation['id'], role=annotation['cup_role'],
+                bbox=annotation['bbox'], match=matches.get(j),
+                bestMaskIoU=max((pair[0] for pair in pairs if pair[2] == j), default=0))
+                for j, annotation in enumerate(annotations)]
+            item[name + 'FalsePredictions'] = [dict(prediction=i, confidence=cups[i]['score'])
+                for i in range(len(cups)) if i not in used_predictions]
         details.append(item)
     for score in list(totals.values()) + [score for metrics in cohort_metrics.values() for score in metrics.values()]:
         score.update(precisionIoU50=score['tp']/max(score['tp']+score['fp'], 1), recallIoU50=score['tp']/max(score['tp']+score['fn'], 1))
