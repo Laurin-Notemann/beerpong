@@ -391,7 +391,8 @@ def evaluate_runtime(args):
     artifact = json.loads(Path(args.results).read_text())
     repo = Path(__file__).resolve().parents[2]
     worker_sha = digest(repo / 'apps/web/src/tv/lib/cupWorker.ts')
-    if artifact.get('workerSha256') != worker_sha or artifact.get('errors'):
+    vision_sha = digest(repo / 'apps/web/src/tv/lib/cupVision.ts')
+    if artifact.get('workerSha256') != worker_sha or artifact.get('visionSha256') != vision_sha or artifact.get('errors'):
         raise ValueError('Need an error-free capture bound to the exact cup worker source')
     frames = json.loads((root / 'frames.json').read_text())
     gt_path = root / 'coco' / args.split / '_annotations.coco.json'
@@ -417,6 +418,8 @@ def evaluate_runtime(args):
         raw = frame.get('sourceImage', frame['image'])
         if digest(root / raw) != frame.get('sourceSha256', frame['sha256']):
             raise ValueError('Source pixels changed: ' + frame['id'])
+        if predictions[frame['id']].get('sourceSha256') != frame.get('sourceSha256', frame['sha256']):
+            raise ValueError('Worker output is not bound to these source pixels: ' + frame['id'])
         core = frame.get('calibrationCoreAreas')
         if not core:
             raise ValueError('Need independently reviewed core playing areas: ' + frame['id'])
@@ -500,7 +503,7 @@ def evaluate_runtime(args):
     for score in list(totals.values()) + [score for metrics in cohort_metrics.values() for score in metrics.values()]:
         score.update(precisionIoU50=score['tp']/max(score['tp']+score['fp'], 1), recallIoU50=score['tp']/max(score['tp']+score['fn'], 1))
     report = dict(scope='worker-outline-and-playing-membership', split=args.split, model=artifact['model'],
-                  workerSha256=worker_sha, membershipSourceSha256=membership['membershipSourceSha256'],
+                  workerSha256=worker_sha, visionSha256=vision_sha, membershipSourceSha256=membership['membershipSourceSha256'],
                   browserArtifactSha256=digest(args.results), annotationSha256=digest(gt_path),
                   datasetSha256=digest(root / 'coco/provenance.json'), eventsSha256=digest(args.events) if args.events else None,
                   cohorts=cohorts, cohortMetrics=cohort_metrics, metrics=totals, frames=details,
@@ -546,12 +549,51 @@ def export(args):
                 'source': 'reviewed-finetune' if args.checkpoint else 'coco-baseline', 'license': 'Apache-2.0',
                 'rfdetrVersion': '1.11.2', 'inputLayout': 'two-formations-side-by-side', 'checkpointSha256': digest(args.checkpoint) if args.checkpoint else 'official-coco',
                 'evaluation': json.loads(Path(args.report).read_text()) if args.report else None,
+                'validationEvaluation': validation if args.checkpoint else None,
                 'validationReportSha256': digest(args.validation_report) if args.checkpoint else None}
     write_json(root / 'model.json', manifest)
     license_path = Path(__file__).with_name('MODEL-LICENSE.txt')
     shutil.copy2(license_path, root / 'MODEL-LICENSE.txt')
     shutil.rmtree(root / 'raw')
     print(json.dumps({'model': args.id, 'bytes': manifest['size'], 'sha256': manifest['sha256']}))
+
+
+def runtime_promotion(manifest, paths):
+    """A segmentation-only score cannot promote a playing-cup outline pipeline."""
+    repo = Path(__file__).resolve().parents[2]
+    names = ('apps/web/src/tv/lib/cupMembership.ts', 'apps/web/src/tv/lib/cupPersistence.ts',
+             'apps/web/src/tv/lib/cupVision.ts', 'apps/mobile/lib/liveMatch/reducer.ts',
+             'apps/mobile/lib/cupHits.ts', 'apps/mobile/components/CupGrid/Formation.ts')
+    source_sha = hashlib.sha256(b''.join((repo / name).read_bytes() for name in names)).hexdigest()
+    reports = {}
+    for split, path in paths.items():
+        if not path:
+            raise ValueError('Custom promotion requires both validation and final runtime reports')
+        report = json.loads(Path(path).read_text())
+        native = manifest.get('validationEvaluation' if split == 'valid' else 'evaluation') or {}
+        model = report.get('model', {})
+        if (report.get('scope') != 'worker-outline-and-playing-membership' or report.get('split') != split
+                or model.get('sha256') != manifest['sha256'] or model.get('threshold') != manifest['threshold']
+                or report.get('workerSha256') != digest(repo / 'apps/web/src/tv/lib/cupWorker.ts')
+                or report.get('visionSha256') != digest(repo / 'apps/web/src/tv/lib/cupVision.ts')
+                or report.get('membershipSourceSha256') != source_sha
+                or not native.get('datasetSha256') or not native.get('annotationSha256')
+                or report.get('datasetSha256') != native['datasetSha256']
+                or report.get('annotationSha256') != native['annotationSha256']):
+            raise ValueError('Runtime report does not cover this exact model, labels and implementation')
+        metrics = report.get('metrics', {})
+        for name in ('playingDisplayed', 'playingFresh'):
+            score = metrics.get(name, {})
+            tp, fp, fn = (score.get(key, -1) for key in ('tp', 'fp', 'fn'))
+            if any(type(value) is not int or value < 0 for value in (tp, fp, fn)) or tp + fn < 30:
+                raise ValueError('Need sufficient reviewed visible playing-cup runtime counts')
+            if tp / max(tp + fp, 1) < .98 or tp / max(tp + fn, 1) < .98:
+                raise ValueError('Playing-cup runtime precision and recall must both reach 98 percent')
+        reports[split] = {key: report[key] for key in ('scope', 'split', 'workerSha256', 'visionSha256', 'membershipSourceSha256',
+                                                     'browserArtifactSha256', 'annotationSha256', 'datasetSha256',
+                                                     'cohorts', 'cohortMetrics', 'metrics', 'limitations')}
+        reports[split]['reportSha256'] = digest(path)
+    return reports
 
 
 def publish(args):
@@ -562,9 +604,12 @@ def publish(args):
     model = root / manifest['url']
     if digest(model) != manifest['sha256'] or model.stat().st_size != manifest['size']:
         raise ValueError('Model checksum mismatch')
+    if manifest['source'] == 'reviewed-finetune':
+        manifest['runtimeEvaluation'] = runtime_promotion(manifest, {'valid': args.runtime_validation_report, 'test': args.runtime_report})
     # Release metadata contains aggregate metrics, never private image identifiers.
-    if manifest.get('evaluation'):
-        manifest['evaluation'].pop('counts', None)
+    for key in ('evaluation', 'validationEvaluation'):
+        if manifest.get(key):
+            manifest[key].pop('counts', None)
     write_json(root / 'model.json', manifest)
     archive = root / 'cup-model.tar.gz'
     with tarfile.open(archive, 'w:gz') as tar:
@@ -596,7 +641,7 @@ def main():
     p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.add_argument('--augmentation-hue', type=float, default=.5); p.add_argument('--learning-rate', type=float); p.add_argument('--encoder-learning-rate', type=float); p.set_defaults(fn=train)
     p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.add_argument('--details'); p.set_defaults(fn=evaluate)
     p = sub.add_parser('evaluate-runtime'); p.add_argument('--dataset', required=True); p.add_argument('--results', required=True); p.add_argument('--events'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--output', required=True); p.set_defaults(fn=evaluate_runtime)
-    p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.set_defaults(fn=publish)
+    p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.add_argument('--runtime-report'); p.add_argument('--runtime-validation-report'); p.set_defaults(fn=publish)
     p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--validation-report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.98); p.add_argument('--min-recall', type=float, default=.98); p.set_defaults(fn=export)
     args = parser.parse_args(); args.fn(args)
 
