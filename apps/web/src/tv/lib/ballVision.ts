@@ -1,6 +1,7 @@
 import { appearanceScore, ballAppearance, ballModel } from '~/tv/lib/ballClassifier';
 import { cupVertices, type Cup, type PlayingArea } from '~/tv/lib/cupVision';
 
+export type BallColor = 'orange' | 'white' | 'both';
 export interface BallCandidate {
     x: number;
     y: number;
@@ -31,6 +32,7 @@ interface Observation {
     at: number;
     balls: BallCandidate[];
     obscured: boolean;
+    trajectories: BallPoint[][];
 }
 interface Rims {
     at: number;
@@ -50,7 +52,8 @@ export function ballCandidates(
     height: number,
     areas?: PlayingArea[],
     hints: TrackHint[] = [],
-    staticCandidates = false
+    staticCandidates = false,
+    colorPolicy: BallColor = 'both'
 ) {
     // Identity proposals require a trained orange classifier and configured scene bounds.
     // White brightness alone never supplies static identity or flight evidence.
@@ -89,10 +92,17 @@ export function ballCandidates(
             continue;
         const x = i % width,
             y = Math.floor(i / width);
-        const strictOrange = r > 110 && g > 55 && r > g * 1.13 && g > b * 1.3 && r - b > 45;
+        const strictOrange =
+            colorPolicy !== 'white' &&
+            r > 110 &&
+            g > 55 &&
+            r > g * 1.13 &&
+            g > b * 1.3 &&
+            r - b > 45;
         // Compression can turn a flying orange ball pink over a red rack. Relax color only
         // around an established moving track's prediction, never across the whole scene.
         const recoveredOrange =
+            colorPolicy !== 'white' &&
             r > 110 &&
             g > 55 &&
             r > g * 1.13 &&
@@ -105,7 +115,10 @@ export function ballCandidates(
             );
         const orange = strictOrange || recoveredOrange;
         if (staticCandidates && !strictOrange) continue;
-        let white = Math.min(r, g, b) > 155 && Math.max(r, g, b) - Math.min(r, g, b) < 45;
+        let white =
+            colorPolicy !== 'orange' &&
+            Math.min(r, g, b) > 155 &&
+            Math.max(r, g, b) - Math.min(r, g, b) < 45;
         if (white && previous) {
             const pr = previous[p],
                 pg = previous[p + 1],
@@ -300,29 +313,81 @@ export function ballCandidates(
         if (nearby[0]) recoveredObservations.add(nearby[0].index);
     }
     return {
-        balls: balls.filter(
-            (ball, index) =>
-                ball.source !== 'track-color-recovery' || recoveredObservations.has(index)
-        ),
+        balls:
+            moving / mask.length > 0.12
+                ? []
+                : balls.filter(
+                      (ball, index) =>
+                          ball.source !== 'track-color-recovery' || recoveredObservations.has(index)
+                  ),
         obscured: moving / mask.length > 0.12,
     };
 }
 
-/** Conservative temporal color recovery. Predicted positions never become detections without pixels. */
+export type BallPoint = BallCandidate & { at: number };
+
+/** Shared association for pixel observations, not predicted detections. Units are image height. */
+export function ballTrackDistance(
+    points: BallPoint[],
+    ball: BallCandidate,
+    at: number,
+    aspect: number
+) {
+    const last = points.at(-1);
+    if (!last || ball.color !== last.color) return Infinity;
+    const dt = (at - last.at) / 1000;
+    if (dt <= 0 || dt > 0.18) return Infinity;
+    // Motion fringes can change a ball's measured size sharply in one frame.
+    // Compare with the recent measured median rather than the preceding fragment.
+    const radii = points
+        .slice(-3)
+        .map((p) => p.radius)
+        .sort((a, b) => a - b);
+    const ratio = ball.radius / radii[Math.floor(radii.length / 2)];
+    if (ratio < 1 / 3.5 || ratio > 3.5) return Infinity;
+    const distance = Math.hypot((ball.x - last.x) * aspect, ball.y - last.y);
+    if (distance > Math.min(0.27, 4 * dt + 0.02)) return Infinity;
+    const prior = points.at(-2);
+    if (!prior || prior.at >= last.at) return distance;
+    const step = Math.hypot((last.x - prior.x) * aspect, last.y - prior.y);
+    const elapsed = (last.at - prior.at) / 1000;
+    const residual = Math.hypot(
+        (ball.x - last.x - ((last.x - prior.x) * dt) / elapsed) * aspect,
+        ball.y - last.y - ((last.y - prior.y) * dt) / elapsed
+    );
+    if (residual <= Math.max(0.025, step * 0.75)) return residual;
+    // A measured bounce may reverse velocity. Only strong current motion pixels can
+    // support that turn; relaxed color recovery cannot replace the prediction.
+    if (
+        ball.source === 'color-motion' &&
+        distance <= Math.max(0.035, step * 1.3) &&
+        residual <= Math.max(0.04, step * 2)
+    )
+        return residual + 0.015;
+    return Infinity;
+}
+
+/** Only repeated, unambiguous pixel observations reach outlines and hit evidence. */
 export class BallTracker {
-    private tracks: { points: (BallCandidate & { at: number })[] }[] = [];
+    private tracks: { points: BallPoint[] }[] = [];
+    private colorPolicy: BallColor = 'both';
+    reset() {
+        this.tracks = [];
+    }
     detect(
         pixels: Uint8ClampedArray,
         previous: Uint8ClampedArray | null,
         width: number,
         height: number,
         areas: PlayingArea[] | undefined,
-        at: number
+        at: number,
+        colorPolicy: BallColor = 'both'
     ) {
-        if (!previous) this.tracks = [];
+        if (!previous || this.colorPolicy !== colorPolicy) this.reset();
+        this.colorPolicy = colorPolicy;
         this.tracks = this.tracks.filter((t) => at - t.points.at(-1)!.at <= 180);
         const hints = this.tracks.flatMap((t) => {
-            if (t.points.length < 2 || t.points.every((p) => p.source === 'track-color-recovery'))
+            if (t.points.length < 3 || t.points.every((p) => p.source === 'track-color-recovery'))
                 return [];
             const a = t.points.at(-2)!,
                 b = t.points.at(-1)!;
@@ -339,58 +404,135 @@ export class BallTracker {
                 },
             ];
         });
-        const result = ballCandidates(pixels, previous, width, height, areas, hints);
-        const identities = ballCandidates(pixels, null, width, height, areas, [], true);
-        const complete = {
-            ...result,
-            balls: [
-                ...result.balls,
-                ...identities.balls.filter(
-                    (identity) =>
-                        !result.balls.some(
-                            (moving) =>
-                                moving.color === identity.color &&
-                                Math.hypot(
-                                    (moving.x - identity.x) * width,
-                                    (moving.y - identity.y) * height
-                                ) < Math.max(9 * (width / 640), identity.radius * width)
-                        )
-                ),
-            ].slice(0, 24),
-        };
+        const result = ballCandidates(
+            pixels,
+            previous,
+            width,
+            height,
+            areas,
+            hints,
+            false,
+            colorPolicy
+        );
         if (result.obscured) {
-            this.tracks = [];
-            return complete;
+            this.reset();
+            return {
+                ...result,
+                balls: [] as BallCandidate[],
+                trajectories: [] as BallPoint[][],
+                candidateCount: 0,
+                ambiguous: false,
+            };
         }
-        const used = new Set<number>();
-        for (const ball of result.balls) {
-            const possible = this.tracks
-                .map((t, index) => ({
-                    t,
-                    index,
-                    d: Math.hypot(
-                        (t.points.at(-1)!.x - ball.x) * width,
-                        (t.points.at(-1)!.y - ball.y) * height
-                    ),
+        const identities = ballCandidates(
+            pixels,
+            null,
+            width,
+            height,
+            areas,
+            [],
+            true,
+            colorPolicy
+        );
+        const candidates = [
+            ...result.balls,
+            ...identities.balls.filter(
+                (identity) =>
+                    !result.balls.some(
+                        (moving) =>
+                            moving.color === identity.color &&
+                            Math.hypot(
+                                (moving.x - identity.x) * width,
+                                (moving.y - identity.y) * height
+                            ) < Math.max(9 * (width / 640), identity.radius * width)
+                    )
+            ),
+        ].slice(0, 24);
+        const claims = candidates
+            .flatMap((ball, ballIndex) =>
+                this.tracks.map((track, trackIndex) => ({
+                    ballIndex,
+                    trackIndex,
+                    distance: ballTrackDistance(track.points, ball, at, width / height),
                 }))
-                .filter(
-                    (t) =>
-                        !used.has(t.index) &&
-                        t.t.points.at(-1)!.at < at &&
-                        t.t.points.at(-1)!.color === ball.color &&
-                        t.d < width * 0.15
+            )
+            .filter((claim) => Number.isFinite(claim.distance))
+            .sort((a, b) => a.distance - b.distance);
+        const ambiguousBalls = new Set<number>(),
+            ambiguousTracks = new Set<number>();
+        for (const claim of claims) {
+            if (
+                claims.some(
+                    (other) =>
+                        other !== claim &&
+                        Math.abs(other.distance - claim.distance) < 0.015 &&
+                        ((other.ballIndex === claim.ballIndex &&
+                            other.trackIndex !== claim.trackIndex) ||
+                            (other.trackIndex === claim.trackIndex &&
+                                other.ballIndex !== claim.ballIndex))
                 )
-                .sort((a, b) => a.d - b.d);
-            if (possible.length > 1 && possible[1].d - possible[0].d < width * 0.015) continue;
-            const found = possible[0];
-            if (found) {
-                found.t.points.push({ ...ball, at });
-                found.t.points = found.t.points.slice(-2);
-                used.add(found.index);
-            } else this.tracks.push({ points: [{ ...ball, at }] });
+            ) {
+                ambiguousBalls.add(claim.ballIndex);
+                ambiguousTracks.add(claim.trackIndex);
+            }
         }
-        this.tracks = this.tracks.slice(-24);
-        return complete;
+        const usedBalls = new Set<number>(),
+            usedTracks = new Set<number>();
+        const accepted: BallCandidate[] = [];
+        const trajectories: BallPoint[][] = [];
+        for (const claim of claims) {
+            if (
+                ambiguousBalls.has(claim.ballIndex) ||
+                ambiguousTracks.has(claim.trackIndex) ||
+                usedBalls.has(claim.ballIndex) ||
+                usedTracks.has(claim.trackIndex)
+            )
+                continue;
+            usedBalls.add(claim.ballIndex);
+            usedTracks.add(claim.trackIndex);
+            const track = this.tracks[claim.trackIndex],
+                ball = candidates[claim.ballIndex];
+            track.points.push({ ...ball, at });
+            track.points = track.points.slice(-6);
+            const previousPoint = track.points.at(-2)!;
+            const measuredTravel = Math.hypot(
+                ((ball.x - previousPoint.x) * width) / height,
+                ball.y - previousPoint.y
+            );
+            const shortFlight =
+                track.points.length === 2 &&
+                ball.source === 'color-motion' &&
+                previousPoint.source === 'color-motion' &&
+                ball.score >= 0.55 &&
+                previousPoint.score >= 0.55 &&
+                ball.radius / previousPoint.radius >= 1 / 3 &&
+                ball.radius / previousPoint.radius <= 3 &&
+                measuredTravel >= 0.04;
+            // Strong, size-consistent moving pixels can establish a short flight in two
+            // observations. Weaker/recovery evidence still needs three; hit evidence
+            // independently retains its three actually observed points.
+            if (track.points.length >= 3 || shortFlight) {
+                accepted.push(ball);
+                trajectories.push([...track.points]);
+            }
+        }
+        for (const [index, ball] of candidates.entries()) {
+            if (
+                !usedBalls.has(index) &&
+                !ambiguousBalls.has(index) &&
+                ball.source !== 'track-color-recovery'
+            )
+                this.tracks.push({ points: [{ ...ball, at }] });
+        }
+        // An ambiguous association invalidates the old identity; reacquire from fresh pixels.
+        this.tracks = this.tracks.filter((_, index) => !ambiguousTracks.has(index)).slice(-24);
+        return {
+            ...result,
+            balls: accepted,
+            trajectories,
+            candidateCount: candidates.length,
+            ambiguous: ambiguousBalls.size > 0 || ambiguousTracks.size > 0,
+        };
     }
 }
 
@@ -409,8 +551,12 @@ export function ballRim(cup: Cup) {
 export class BallHistory {
     private observations: Observation[] = [];
     private rims: Rims[] = [];
-    add(at: number, balls: BallCandidate[], obscured: boolean) {
-        this.observations.push({ at, balls, obscured });
+    reset() {
+        this.observations = [];
+        this.rims = [];
+    }
+    add(at: number, balls: BallCandidate[], obscured: boolean, trajectories: BallPoint[][] = []) {
+        this.observations.push({ at, balls, obscured, trajectories });
         this.observations = this.observations
             .filter((o) => o.at >= at - LOOKBACK_MS * 2 - 3000)
             .slice(-450);
@@ -447,29 +593,38 @@ export class BallHistory {
         const hits: { cup: { x: number; y: number }; at: number; color: 'orange' | 'white' }[] = [];
         for (const o of history) {
             tracks = tracks.filter((track) => o.at - track.last <= 220);
-            if (o.obscured) continue;
+            if (o.obscured) {
+                tracks = [];
+                continue;
+            }
             const used = new Set<number>();
-            for (const ball of o.balls) {
+            for (const [ballIndex, ball] of o.balls.entries()) {
                 if (ball.source === 'static-color-appearance') continue;
                 const candidates = tracks
                     .map((track, index) => ({
                         track,
                         index,
-                        d: distance(track.points[track.points.length - 1], ball),
+                        d: ballTrackDistance(track.points, ball, o.at, aspect),
                     }))
                     .filter(
                         (t) =>
                             !used.has(t.index) &&
                             o.at > t.track.last &&
                             o.at - t.track.last <= 220 &&
-                            t.d < 0.15 &&
+                            Number.isFinite(t.d) &&
                             t.track.points[t.track.points.length - 1].color === ball.color
                     )
                     .sort((a, b) => a.d - b.d);
                 // A crossing/ambiguous association does not establish a trajectory.
                 if (candidates.length > 1 && candidates[1].d - candidates[0].d < 0.015) continue;
                 const found = candidates[0];
-                const track = found?.track ?? { points: [], last: o.at };
+                const track = found?.track ?? {
+                    points: (o.trajectories[ballIndex] ?? []).filter(
+                        (p) =>
+                            p.at >= start && p.at < o.at && p.source !== 'static-color-appearance'
+                    ),
+                    last: o.at,
+                };
                 if (!found) tracks.push(track);
                 else used.add(found.index);
                 track.points.push({ ...ball, at: o.at });

@@ -1,4 +1,4 @@
-import { BallHistory, BallTracker, type HitEntry } from '~/tv/lib/ballVision';
+import { BallHistory, BallTracker, type BallColor, type HitEntry } from '~/tv/lib/ballVision';
 import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
 import { HitProposer } from '~/tv/lib/hitProposals';
 
@@ -6,9 +6,21 @@ const history = new BallHistory();
 const tracker = new BallTracker();
 const proposer = new HitProposer();
 let contextKey = '';
+let historyKey = '';
 let previous: Uint8ClampedArray | null = null;
 let lastAt = 0;
 let surface: OffscreenCanvas | null = null;
+let colorPolicy: BallColor = 'both';
+const reset = (context: string, color: BallColor, historyContext: string) => {
+    proposer.reset();
+    tracker.reset();
+    if (historyContext !== historyKey || color !== colorPolicy) history.reset();
+    historyKey = historyContext;
+    previous = null;
+    lastAt = 0;
+    contextKey = context;
+    colorPolicy = color;
+};
 self.onmessage = ({
     data,
 }: MessageEvent<
@@ -22,11 +34,20 @@ self.onmessage = ({
           height: number;
           at: number;
           areas: PlayingArea[];
+          ballColor?: BallColor;
+          historyContext?: string;
       }
     | { type: 'init' }
     | { type: 'cups'; at: number; cups: Cup[]; context: string }
-    | { type: 'reset'; context: string }
-    | { type: 'hit'; entry: HitEntry; area: PlayingArea; at: number; aspect: number }
+    | { type: 'reset'; context: string; ballColor?: BallColor; historyContext?: string }
+    | {
+          type: 'hit';
+          entry: HitEntry;
+          area: PlayingArea;
+          at: number;
+          aspect: number;
+          historyContext: string;
+      }
 >) => {
     try {
         if (data.type === 'init') {
@@ -42,27 +63,32 @@ self.onmessage = ({
             return;
         }
         if (data.type === 'reset') {
-            proposer.reset();
-            previous = null;
-            contextKey = data.context;
+            reset(data.context, data.ballColor ?? 'both', data.historyContext ?? data.context);
             return;
         }
         if (data.type === 'cups') {
-            if (data.context === contextKey) proposer.setCups(data.at, data.cups);
-            history.cups(data.at, data.cups);
+            if (data.context === contextKey) {
+                proposer.setCups(data.at, data.cups);
+                history.cups(data.at, data.cups);
+            }
             return;
         }
         if (data.type === 'hit') {
+            if (data.historyContext !== historyKey) return;
             self.postMessage({
                 type: 'hit',
+                historyContext: historyKey,
                 result: history.analyze(data.entry, data.area, data.at, data.aspect),
             });
             return;
         }
-        if (data.context !== contextKey) {
-            proposer.reset();
-            previous = null;
-            contextKey = data.context;
+        if (
+            data.context !== contextKey ||
+            (data.ballColor ?? 'both') !== colorPolicy ||
+            (data.historyContext ?? data.context) !== historyKey
+        ) {
+            data.bitmap?.close();
+            return;
         }
         const start = performance.now();
         // A changed input size or background pause invalidates frame differencing.
@@ -80,18 +106,32 @@ self.onmessage = ({
             }
         }
         if (!pixels) throw new Error('Ball frame missing');
-        if (previous?.length !== pixels.length || data.at - lastAt > 300) previous = null;
+        if (
+            previous &&
+            (previous.length !== pixels.length || data.at <= lastAt || data.at - lastAt > 300)
+        ) {
+            previous = null;
+            tracker.reset();
+            history.reset();
+            proposer.reset();
+        }
         const result = tracker.detect(
             pixels,
             previous,
             data.width,
             data.height,
             data.areas,
-            data.at
+            data.at,
+            colorPolicy
         );
         previous = pixels;
         lastAt = data.at;
-        history.add(data.at, result.balls, result.obscured);
+        history.add(
+            data.at,
+            result.balls,
+            result.obscured || result.ambiguous,
+            result.trajectories
+        );
         self.postMessage({
             type: 'frame',
             frameId: data.frameId,
@@ -101,10 +141,13 @@ self.onmessage = ({
             proposals: proposer.observe(
                 data.at,
                 result.balls,
-                result.obscured,
-                data.width / data.height
+                result.obscured || result.ambiguous,
+                data.width / data.height,
+                result.trajectories
             ),
             count: result.balls.length,
+            candidateCount: result.candidateCount,
+            ambiguous: result.ambiguous,
             staticCount: result.balls.filter((ball) => ball.source === 'static-color-appearance')
                 .length,
             movingCount: result.balls.filter((ball) => ball.source !== 'static-color-appearance')

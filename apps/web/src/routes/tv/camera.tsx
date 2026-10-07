@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type DisplayConfig, type CameraRotation, emptyConfig, parseConfig } from '@/lib/tvDisplay';
 import { CameraVideo } from '~/tv/components/CameraVideo';
 import { PlayingAreas } from '~/tv/components/PlayingAreas';
+import type { BallColor } from '~/tv/lib/ballVision';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
 import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
 import type { VisionCommand } from '~/tv/lib/cameraVisionRemote';
@@ -86,6 +87,10 @@ function Camera() {
     const [ballEnabled, setBallEnabled] = useState(
         () => localStorage.getItem('versus-ball-lookback') === 'on'
     );
+    const [ballColor, setBallColor] = useState<BallColor>(() => {
+        const saved = localStorage.getItem('versus-ball-color');
+        return saved === 'orange' || saved === 'white' ? saved : 'both';
+    });
     const [selectingAreas, setSelectingAreas] = useState(false);
     const cameraDevice = media.stream
         ? media.stream.getVideoTracks()[0]?.getSettings().deviceId ||
@@ -181,7 +186,8 @@ function Camera() {
         firstTeam,
         syncTvId,
         recording,
-        matches
+        matches,
+        ballColor
     );
     const ballAreas = useMemo(() => (areas ? cupSearchAreas(areas) : null), [areas]);
     const ballLookback = useBallHitLookback(
@@ -193,10 +199,12 @@ function Camera() {
         matches,
         {
             context: hitAssistance.context,
+            historyContext: hitAssistance.historyContext,
             send: sender.sendBalls,
             propose: hitAssistance.propose,
             observe: hitAssistance.observe,
-        }
+        },
+        ballColor
     );
     const cupStatus = useCupDetector(
         previewVideo,
@@ -239,6 +247,9 @@ function Camera() {
             const balls = settings.ballEnabled ?? false;
             localStorage.setItem('versus-ball-lookback', balls ? 'on' : 'off');
             setBallEnabled(balls);
+            const color = settings.ballColor ?? 'both';
+            localStorage.setItem('versus-ball-color', color);
+            setBallColor(color);
             setSyncMatchId(settings.syncMatchId);
             setFirstTeam(settings.firstTeam);
             setSyncTvId(settings.syncTvId ?? '');
@@ -254,6 +265,7 @@ function Camera() {
         {
             enabled: cupOutlines,
             ballEnabled,
+            ballColor,
             areas,
             syncMatchId,
             firstTeam,
@@ -264,6 +276,7 @@ function Camera() {
             status: cupStatus,
             syncStatus: formationSync.status,
             hitMatchId: detectionMatch?.id ?? '',
+            hitError: hitAssistance.error,
             watching: sender.watching,
             recording: recording.recording,
             recordingSessionId: recording.sessionId,
@@ -603,6 +616,24 @@ function Camera() {
                             >
                                 Clear suggestion
                             </button>
+                            {ballEnabled && (
+                                <label className="ml-3 inline-flex items-center gap-2">
+                                    Ball color
+                                    <select
+                                        className="min-h-11 rounded-xl bg-panel px-3 text-text"
+                                        value={ballColor}
+                                        onChange={(e) => {
+                                            const color = e.target.value as BallColor;
+                                            localStorage.setItem('versus-ball-color', color);
+                                            setBallColor(color);
+                                        }}
+                                    >
+                                        <option value="both">Orange or white</option>
+                                        <option value="orange">Orange</option>
+                                        <option value="white">White</option>
+                                    </select>
+                                </label>
+                            )}
                             {hitAssistance.error && (
                                 <p role="alert" className="text-red">
                                     {hitAssistance.error}
@@ -614,10 +645,16 @@ function Camera() {
                                 </p>
                             )}
                             <p role="status">{cupStatus}</p>
-                            {ballEnabled && !syncingMatch && (
+                            {ballEnabled && !detectionMatch && (
                                 <p role="status">
                                     Choose the active match and map both playing areas to enable hit
                                     suggestions.
+                                </p>
+                            )}
+                            {ballEnabled && detectionMatch && !syncingMatch && (
+                                <p role="status">
+                                    Hit assistance follows the active match. Formation syncing is
+                                    off.
                                 </p>
                             )}
                             {ballEnabled && (
@@ -628,7 +665,7 @@ function Camera() {
                                 </p>
                             )}
                             <label className="mt-2 block">
-                                Match for assistance and formation sync
+                                Match for formation sync
                                 <select
                                     className="ml-2 min-h-11 rounded-xl bg-panel px-3 text-text"
                                     value={syncMatchId}

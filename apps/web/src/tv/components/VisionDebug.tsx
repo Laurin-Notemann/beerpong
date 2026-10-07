@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { ballDebugStats } from '~/tv/lib/ballGeometry';
+import { cupSearchAreas } from '~/tv/lib/cupMembership';
 import { cupDebugStats } from '~/tv/lib/cupVision';
 import { useNow } from '~/tv/lib/hooks';
 import { getCameraVisionDebug } from '~/tv/server/cameraVision';
@@ -60,6 +61,18 @@ export function VisionDebug({
                                     fill="none"
                                     stroke={i === 0 ? '#59bfff' : '#ffbd59'}
                                     strokeWidth="2"
+                                />
+                            ))}
+                            {cupSearchAreas(state.areas).map((area, i) => (
+                                <rect
+                                    key={`search-${i}`}
+                                    x={area.x * width}
+                                    y={area.y * height}
+                                    width={area.width * width}
+                                    height={area.height * height}
+                                    fill="none"
+                                    stroke={i === 0 ? '#59bfff' : '#ffbd59'}
+                                    strokeWidth="1.5"
                                     strokeDasharray="8 5"
                                 />
                             ))}
@@ -101,12 +114,16 @@ export function VisionDebug({
                         </p>
                         <p>
                             Ball tracking: <strong>{state.ballEnabled ? 'on' : 'off'}</strong>
+                            {' · '}
+                            {state.ballColor ?? 'both'}
                         </p>
                         <p>
-                            TV ball candidates: {balls?.count ?? 'no packet'}
+                            TV ball tracks: {balls?.count ?? 'no packet'}
                             {balls ? ` · ${balls.ageMs}ms old` : ''}
                         </p>
+                        {balls && <p className="text-xs text-white/60">Tracker: {balls.model}</p>}
                         <p>Hit match: {state.hitMatchId || state.syncMatchId || 'none selected'}</p>
+                        {state.hitError && <p role="alert">{state.hitError}</p>}
                         <p>{state.syncStatus}</p>
                         <p>
                             Recording: {state.recording ? 'on' : 'off'} · pending uploads{' '}
@@ -126,9 +143,14 @@ export function VisionDebug({
                             />
                             Show playing-area boundaries
                         </label>
+                        {areasVisible && (
+                            <p className="text-xs text-white/60">
+                                Solid: calibration core. Dashed: allowed cup search.
+                            </p>
+                        )}
                         <p className="text-xs text-white/60">
-                            Candidate circles are observations, not confirmed hits. Feedback never
-                            changes the score.
+                            Ball tracks are observations, not confirmed hits. Feedback never changes
+                            the score.
                         </p>
                     </div>
                 )}

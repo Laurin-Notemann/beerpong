@@ -1,9 +1,10 @@
-import type { HitObservation } from '~/tv/lib/ballVision';
+import type { BallColor, HitObservation } from '~/tv/lib/ballVision';
 import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 
 export interface VisionSettings {
     enabled: boolean;
     ballEnabled?: boolean;
+    ballColor?: BallColor;
     areas: PlayingArea[] | null;
     syncMatchId: string;
     firstTeam: 'blue' | 'red';
@@ -19,6 +20,7 @@ export interface VisionState extends VisionSettings {
     syncStatus: string;
     /** Hit assistance can follow the sole live match without writing formations. */
     hitMatchId?: string;
+    hitError?: string | null;
     watching: number;
     recording: boolean;
     recordingSessionId?: string;
@@ -45,6 +47,10 @@ export function validVisionSettings(v: unknown): v is VisionSettings {
         object(v) &&
         typeof v.enabled === 'boolean' &&
         (v.ballEnabled === undefined || typeof v.ballEnabled === 'boolean') &&
+        (v.ballColor === undefined ||
+            v.ballColor === 'orange' ||
+            v.ballColor === 'white' ||
+            v.ballColor === 'both') &&
         (v.areas === null || validAreas(v.areas)) &&
         text(v.syncMatchId, 36) &&
         (v.syncMatchId === '' || /^[0-9a-f-]{36}$/.test(v.syncMatchId)) &&
@@ -69,6 +75,7 @@ export function validVisionState(v: unknown): v is VisionState {
         (v.hitMatchId === undefined ||
             (text(v.hitMatchId, 36) &&
                 (v.hitMatchId === '' || /^[0-9a-f-]{36}$/.test(v.hitMatchId)))) &&
+        (v.hitError === undefined || v.hitError === null || text(v.hitError)) &&
         integer(v.watching, 100) &&
         typeof v.recording === 'boolean' &&
         (v.recordingSessionId === undefined ||

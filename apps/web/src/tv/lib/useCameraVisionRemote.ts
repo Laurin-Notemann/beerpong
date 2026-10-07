@@ -27,6 +27,7 @@ export function useCameraVisionRemote(
             snapshot.device,
             snapshot.enabled,
             snapshot.ballEnabled,
+            snapshot.ballColor,
             snapshot.areas,
             snapshot.syncMatchId,
             snapshot.firstTeam,

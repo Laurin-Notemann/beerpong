@@ -99,6 +99,7 @@ export const reportCameraVision = createServerFn({ method: 'POST' })
                 settings: {
                     enabled: data.state.enabled,
                     ballEnabled: data.state.ballEnabled,
+                    ballColor: data.state.ballColor,
                     areas: data.state.areas,
                     syncMatchId: data.state.syncMatchId,
                     firstTeam: team,

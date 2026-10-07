@@ -47,6 +47,10 @@ export const proposeCameraHit = createServerFn({ method: 'POST' })
             typeof evidence.occluded !== 'boolean' ||
             typeof evidence.exitObserved !== 'boolean' ||
             !validAreas(data.areas) ||
+            (data.ballColor !== undefined &&
+                data.ballColor !== 'orange' &&
+                data.ballColor !== 'white' &&
+                data.ballColor !== 'both') ||
             !Number.isSafeInteger(data.seq) ||
             body.expectedSeq !== data.seq ||
             !bounded(data.clockUncertaintyMs, 2000) ||
@@ -119,6 +123,7 @@ export const proposeCameraHit = createServerFn({ method: 'POST' })
             return (
                 state.enabled &&
                 state.ballEnabled &&
+                (state.ballColor ?? 'both') === (data.ballColor ?? 'both') &&
                 state.recording &&
                 !state.selectingAreas &&
                 state.device === data.device &&

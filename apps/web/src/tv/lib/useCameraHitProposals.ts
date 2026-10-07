@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { VisionHitCreateDto, VisionHitDto } from '@/openapi/openapi';
-import { ballRim } from '~/tv/lib/ballVision';
+import { ballRim, type BallColor } from '~/tv/lib/ballVision';
 import type { useCameraMatches } from '~/tv/lib/cameraRecording';
 import { FormationFitter, cupPoints, type FormationMatch } from '~/tv/lib/cupFormation';
 import { cupSearchAreas } from '~/tv/lib/cupMembership';
@@ -23,7 +23,8 @@ export function useCameraHitProposals(
     firstTeam: 'blue' | 'red',
     syncTvId: string,
     recording: { sessionId: string; recording: boolean },
-    snapshot: ReturnType<typeof useCameraMatches>
+    snapshot: ReturnType<typeof useCameraMatches>,
+    ballColor: BallColor = 'both'
 ) {
     const context = JSON.stringify([
         enabled,
@@ -34,6 +35,19 @@ export function useCameraHitProposals(
         firstTeam,
         syncTvId,
         recording.sessionId,
+        ballColor,
+    ]);
+    // A new score invalidates proposal writes, while retrospective pixel evidence
+    // remains useful for that score's lookback within the same recording and mapping.
+    const historyContext = JSON.stringify([
+        enabled,
+        device,
+        match?.id,
+        areas,
+        firstTeam,
+        syncTvId,
+        recording.sessionId,
+        ballColor,
     ]);
     const current = useRef({
         context,
@@ -201,6 +215,7 @@ export function useCameraHitProposals(
                 firstTeam: live.firstTeam,
                 syncTvId: live.syncTvId,
                 device: live.device,
+                ballColor,
             };
             pending.current = true;
             const submit = async () => {
@@ -266,7 +281,7 @@ export function useCameraHitProposals(
                 pending.current = false;
             });
         },
-        [id, key, queryClient]
+        [id, key, queryClient, ballColor]
     );
     const now = useNow();
     const latest =
@@ -293,5 +308,5 @@ export function useCameraHitProposals(
             setError('Could not clear the shared suggestion. Try again.');
         }
     }, [id, key, latest, refresh]);
-    return { context, propose, observe, latest, clear, error };
+    return { context, historyContext, propose, observe, latest, clear, error };
 }

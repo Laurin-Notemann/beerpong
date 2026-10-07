@@ -1,4 +1,9 @@
-import { ballRim, type BallCandidate } from '~/tv/lib/ballVision';
+import {
+    ballRim,
+    ballTrackDistance,
+    type BallCandidate,
+    type BallPoint,
+} from '~/tv/lib/ballVision';
 import type { Cup } from '~/tv/lib/cupVision';
 import { hitModel, hitScore } from '~/tv/lib/hitClassifier';
 
@@ -38,9 +43,21 @@ export class HitProposer {
         this.cooldown = [];
         this.lastAt = 0;
     }
-    observe(at: number, balls: BallCandidate[], obscured: boolean, aspect: number): HitProposal[] {
+    observe(
+        at: number,
+        balls: BallCandidate[],
+        obscured: boolean,
+        aspect: number,
+        trajectories: BallPoint[][] = []
+    ): HitProposal[] {
         if (at <= this.lastAt || at - this.lastAt > 350) this.tracks = [];
         this.lastAt = at;
+        // Disappearance behind a hand is not ball-to-cup evidence. Reacquisition
+        // starts a new identity; pending approaches cannot survive obscuration.
+        if (obscured) {
+            this.tracks = [];
+            return [];
+        }
         const distance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
             Math.hypot((a.x - b.x) * aspect, a.y - b.y);
         const proposals: HitProposal[] = [];
@@ -71,21 +88,24 @@ export class HitProposer {
             });
         };
         for (const track of this.tracks) {
-            if (obscured && track.pending) track.pending.evidence.occluded = true;
             if (at - track.points[track.points.length - 1].at >= 220) emit(track, false);
         }
         this.tracks = this.tracks.filter((t) => at - t.points[t.points.length - 1].at < 350);
-        if (obscured) return proposals;
         const used = new Set<Track>();
-        for (const ball of balls) {
+        for (const [ballIndex, ball] of balls.entries()) {
             if (ball.source === 'static-color-appearance') continue;
             const options = this.tracks
                 .filter((t) => !used.has(t) && t.points[t.points.length - 1].color === ball.color)
-                .map((t) => ({ t, d: distance(t.points[t.points.length - 1], ball) }))
-                .filter((o) => o.d < 0.15)
+                .map((t) => ({ t, d: ballTrackDistance(t.points, ball, at, aspect) }))
+                .filter((o) => Number.isFinite(o.d))
                 .sort((a, b) => a.d - b.d);
             if (options.length > 1 && options[1].d - options[0].d < 0.015) continue;
-            const track = options[0]?.t ?? { points: [], emitted: false };
+            const track = options[0]?.t ?? {
+                points: (trajectories[ballIndex] ?? []).filter(
+                    (p) => p.at < at && at - p.at <= 600 && p.source !== 'static-color-appearance'
+                ),
+                emitted: false,
+            };
             if (!options.length) this.tracks.push(track);
             used.add(track);
             track.points.push({ ...ball, at });

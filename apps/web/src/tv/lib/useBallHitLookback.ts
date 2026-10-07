@@ -7,6 +7,7 @@ import {
     type HitEntry,
     type HitObservation,
     type BallCandidate,
+    type BallColor,
 } from '~/tv/lib/ballVision';
 import { cupSearchAreas } from '~/tv/lib/cupMembership';
 import type { CupFrame, PlayingArea } from '~/tv/lib/cupVision';
@@ -27,33 +28,46 @@ export function useBallHitLookback(
     } | null,
     live?: {
         context: string;
+        historyContext?: string;
         send: (frame: BallFrame) => void;
         propose: (proposal: HitProposal, context: string) => void;
         observe: (frame: CupFrame, aspect: number) => void;
-    }
+    },
+    ballColor: BallColor = 'both'
 ) {
     const liveRef = useRef(live);
     useEffect(() => {
         liveRef.current = live;
     }, [live]);
+    const worker = useRef<Worker | null>(null);
+    const seen = useRef(new Set<string>());
+    const [latest, setLatest] = useState<{ result: HitObservation; historyContext: string } | null>(
+        null
+    );
     const epoch = useRef(0);
     const sourceContext = live?.context;
+    const historyContext = live?.historyContext ?? sourceContext ?? '';
     useEffect(() => {
         epoch.current = Date.now();
         liveRef.current?.send({
             version: 1,
             enabled: false,
             since: epoch.current,
-            model: ballModel?.id ?? 'motion-proposals',
+            model: ballModel?.id ?? 'motion-tracks-v2',
             sequence: 0,
             ageMs: 0,
             balls: [],
         });
-        worker.current?.postMessage({ type: 'reset', context: sourceContext ?? '' });
-    }, [sourceContext]);
-    const worker = useRef<Worker | null>(null);
-    const seen = useRef(new Set<string>());
-    const [latest, setLatest] = useState<HitObservation | null>(null);
+        worker.current?.postMessage({
+            type: 'reset',
+            context: sourceContext ?? '',
+            ballColor,
+            historyContext,
+        });
+    }, [sourceContext, ballColor, historyContext]);
+    useEffect(() => {
+        seen.current.clear();
+    }, [historyContext, ballColor]);
     useEffect(() => {
         const log = (message: string, extra: Record<string, string | number> = {}) => {
             void import('~/tv/sentry').then(async ({ initTvSentry }) => {
@@ -90,6 +104,7 @@ export function useBallHitLookback(
             skipped = 0,
             totalMs = 0,
             proposals = 0,
+            candidates = 0,
             staticProposals = 0,
             movingProposals = 0,
             obscuredFrames = 0;
@@ -115,7 +130,7 @@ export function useBallHitLookback(
                 version: 1,
                 enabled: false,
                 since: epoch.current,
-                model: ballModel?.id ?? 'motion-proposals',
+                model: ballModel?.id ?? 'motion-tracks-v2',
                 sequence: 0,
                 ageMs: 0,
                 balls: [],
@@ -139,7 +154,7 @@ export function useBallHitLookback(
         }: MessageEvent<
             | { type: 'ready'; canvas: boolean }
             | { type: 'error'; message: string; phase: string }
-            | { type: 'hit'; result: HitObservation }
+            | { type: 'hit'; result: HitObservation; historyContext: string }
             | {
                   type: 'frame';
                   frameId: number;
@@ -149,6 +164,7 @@ export function useBallHitLookback(
                   balls: BallCandidate[];
                   proposals: HitProposal[];
                   count: number;
+                  candidateCount?: number;
                   staticCount?: number;
                   movingCount?: number;
                   obscured: boolean;
@@ -170,12 +186,21 @@ export function useBallHitLookback(
                 capture =
                     data.canvas && typeof createImageBitmap !== 'undefined' ? 'bitmap' : 'pixels';
                 worker.current = instance;
-                instance.postMessage({ type: 'reset', context: liveRef.current?.context ?? '' });
+                instance.postMessage({
+                    type: 'reset',
+                    context: liveRef.current?.context ?? '',
+                    ballColor,
+                    historyContext:
+                        liveRef.current?.historyContext ?? liveRef.current?.context ?? '',
+                });
                 log('state', { state: 'running', capture });
                 return;
             }
             if (data.type === 'hit') {
-                setLatest(data.result);
+                const currentHistory =
+                    liveRef.current?.historyContext ?? liveRef.current?.context ?? '';
+                if (data.historyContext !== currentHistory) return;
+                setLatest({ result: data.result, historyContext: data.historyContext });
                 void import('@sentry/browser').then((Sentry) =>
                     Sentry.logger.info('ball hit lookback', {
                         cameraId,
@@ -198,7 +223,7 @@ export function useBallHitLookback(
                             version: 1,
                             enabled: true,
                             since: epoch.current,
-                            model: ballModel?.id ?? 'motion-proposals',
+                            model: ballModel?.id ?? 'motion-tracks-v2',
                             sequence: 0,
                             ageMs,
                             balls: data.balls,
@@ -207,6 +232,7 @@ export function useBallHitLookback(
                 }
                 samples++;
                 proposals += data.count;
+                candidates += data.candidateCount ?? data.count;
                 staticProposals += data.staticCount ?? 0;
                 movingProposals += data.movingCount ?? data.count;
                 obscuredFrames += data.obscured ? 1 : 0;
@@ -254,6 +280,8 @@ export function useBallHitLookback(
                 const width = Math.min(640, v.videoWidth),
                     height = Math.round((width * v.videoHeight) / v.videoWidth);
                 const capturedAt = Date.now();
+                const capturedContext = liveRef.current?.context ?? '';
+                const capturedHistory = liveRef.current?.historyContext ?? capturedContext;
                 const id = ++frameId;
                 phase = 'capture';
                 busy = true;
@@ -272,13 +300,15 @@ export function useBallHitLookback(
                     instance.postMessage(
                         {
                             type: 'frame',
-                            context: liveRef.current?.context ?? '',
+                            context: capturedContext,
                             frameId: id,
                             pixels,
                             width,
                             height,
                             at: capturedAt,
                             areas,
+                            ballColor,
+                            historyContext: capturedHistory,
                         },
                         [pixels.buffer]
                     );
@@ -297,16 +327,27 @@ export function useBallHitLookback(
                             bitmap.close();
                             return;
                         }
+                        if (
+                            capturedContext !== (liveRef.current?.context ?? '') ||
+                            capturedHistory !==
+                                (liveRef.current?.historyContext ?? liveRef.current?.context ?? '')
+                        ) {
+                            bitmap.close();
+                            busy = false;
+                            return;
+                        }
                         instance.postMessage(
                             {
                                 type: 'frame',
-                                context: liveRef.current?.context ?? '',
+                                context: capturedContext,
                                 frameId: id,
                                 bitmap,
                                 width,
                                 height,
                                 at: capturedAt,
                                 areas,
+                                ballColor,
+                                historyContext: capturedHistory,
                             },
                             [bitmap]
                         );
@@ -334,10 +375,12 @@ export function useBallHitLookback(
                 samples,
                 skipped,
                 proposals,
+                candidates,
+                ballColor,
                 staticProposals,
                 movingProposals,
                 obscuredFrames,
-                model: ballModel?.id ?? 'motion-proposals',
+                model: ballModel?.id ?? 'motion-tracks-v2',
                 trainedColors: ballModel?.supportedColors.join(',') ?? '',
                 featureVersion: ballModel ? (ballModel.features ?? 'radial-rgb-color-v1') : 'none',
                 featureCount: ballModel ? (ballModel.featureCount ?? 18) : 0,
@@ -349,6 +392,7 @@ export function useBallHitLookback(
                 skipped =
                 totalMs =
                 proposals =
+                candidates =
                 staticProposals =
                 movingProposals =
                 obscuredFrames =
@@ -358,11 +402,13 @@ export function useBallHitLookback(
             );
         }, 30_000);
         return stop;
-    }, [video, enabled, cameraId, areas, firstTeam]);
+    }, [video, enabled, cameraId, areas, firstTeam, ballColor]);
     useEffect(() => {
         if (!snapshot || !areas || !worker.current) return;
         setLatest((current) =>
-            current && !snapshot.hits.some((entry) => entry.id === current.entryId) ? null : current
+            current && !snapshot.hits.some((entry) => entry.id === current.result.entryId)
+                ? null
+                : current
         );
         const now = Date.now();
         // Server entry time is not physical hit time. Correct obvious clock skew; uncertainty is
@@ -379,14 +425,18 @@ export function useBallHitLookback(
                 continue;
             worker.current.postMessage({
                 type: 'hit',
+                historyContext,
                 entry: { ...entry, enteredAt: entry.enteredAt + offset },
                 area: cupSearchAreas(areas)[entry.team === firstTeam ? 0 : 1],
                 at: now,
                 aspect: (video.current?.videoWidth ?? 1) / (video.current?.videoHeight ?? 1),
             });
         }
-        if (seen.current.size > 500) seen.current = new Set(snapshot.hits.map((h) => h.id));
-    }, [snapshot, areas, firstTeam, video]);
+        if (seen.current.size > 500) {
+            seen.current.clear();
+            for (const hit of snapshot.hits) seen.current.add(hit.id);
+        }
+    }, [snapshot, areas, firstTeam, video, historyContext]);
     const observe = useCallback((frame: CupFrame, aspect: number) => {
         liveRef.current?.observe(frame, aspect);
         worker.current?.postMessage({
@@ -396,5 +446,9 @@ export function useBallHitLookback(
             cups: frame.cups,
         });
     }, []);
-    return { observe, latest: enabled && areas ? latest : null };
+    return {
+        observe,
+        latest:
+            enabled && areas && latest?.historyContext === historyContext ? latest.result : null,
+    };
 }
