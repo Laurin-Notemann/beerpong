@@ -90,6 +90,19 @@ export function ScoreClipPanel({
         setShown(false);
         if (playId === undefined) return;
         const v = video.current!;
+        // Successful clip phases let camera warnings distinguish overlap from a load failure.
+        const mark = (phase: string) => {
+            const data = {
+                playId,
+                nativeVideoLayer,
+                currentTime: v.currentTime,
+                readyState: v.readyState,
+            };
+            void import('@sentry/browser').then((Sentry) =>
+                Sentry.addBreadcrumb({ category: 'score-clip', message: phase, data })
+            );
+        };
+        mark('requested');
         let stopped = false;
         let started = false;
         let finishing = false;
@@ -104,6 +117,7 @@ export function ScoreClipPanel({
         const finish = () => {
             if (stopped || finishing) return;
             finishing = true;
+            mark('finishing');
             setLeaving(true);
             // Keep playing under the last frame until the board covers the column again.
             leave = setTimeout(() => done.current(), LEAVE_MS);
@@ -131,6 +145,7 @@ export function ScoreClipPanel({
         const onPlaying = () => {
             if (started || stopped || finishing) return;
             started = true;
+            mark('playing');
             setPlaying(true);
             if (!nativeVideoLayer) {
                 const reveal = () => {
@@ -183,6 +198,7 @@ export function ScoreClipPanel({
             finish();
         }, LOAD_TIMEOUT_MS);
         return () => {
+            mark('released');
             stopped = true;
             cancelAnimationFrame(opening);
             cancelAnimationFrame(frame);
