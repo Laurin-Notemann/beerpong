@@ -98,9 +98,9 @@ def extract(args):
                 continue
             previous[record['session_id']] = signature
             name = f"{record['id']}-{offset:04d}"
-            path = root / 'frames' / (name + '.jpg')
+            path = root / 'frames' / (name + '.png')
             path.parent.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(str(path), image, [cv2.IMWRITE_JPEG_QUALITY, 95])
+            cv2.imwrite(str(path), image)
             frames.append({'id': name, 'image': str(path.relative_to(root)), 'session': record['session_id'],
                            'recording': record['id'], 'offset': offset, 'width': image.shape[1],
                            'height': image.shape[0], 'sha256': digest(path)})
@@ -168,8 +168,9 @@ def prepare(args):
         if not (a['x']+a['width'] <= b['x'] or b['x']+b['width'] <= a['x'] or a['y']+a['height'] <= b['y'] or b['y']+b['height'] <= a['y']):
             raise ValueError('Playing areas overlap')
         name = frame['id'] + '-formations'
-        path = root / 'montages' / (name + '.jpg'); path.parent.mkdir(exist_ok=True)
-        cv2.imwrite(str(path), np.concatenate(parts,axis=1), [cv2.IMWRITE_JPEG_QUALITY,95])
+        # JPEG recompression changed borderline confidence in the browser parity audit.
+        path = root / 'montages' / (name + '.png'); path.parent.mkdir(exist_ok=True)
+        cv2.imwrite(str(path), np.concatenate(parts,axis=1))
         frames.append({**frame, 'id':name, 'image':str(path.relative_to(root)), 'width':312, 'height':312,
                        'sourceImage':frame['image'], 'sourceSha256':frame['sha256'], 'areas':areas, 'sha256':digest(path)})
     if not frames:
