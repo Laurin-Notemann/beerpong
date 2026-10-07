@@ -26,6 +26,7 @@ export type RootStackParamList = {
     minMatchesToQualifySettings: undefined;
     tvRemote: undefined;
     tv: { id: string };
+    tvCamera: { groupId: string };
     /** `kind: 'camera'` adds a camera instead */
     addTv: { kind?: 'camera' } | undefined;
     saveSeason: undefined;

@@ -2,16 +2,11 @@ import { Stack } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
-import {
-    Tv,
-    useCameras,
-    useTvMatches,
-    useTvs,
-    usePhoneCamera,
-} from '@/api/calls/tvHooks';
+import { Tv, useCameras, useTvMatches, useTvs } from '@/api/calls/tvHooks';
 import { env } from '@/api/env';
 import { LiveDot } from '@/components/liveMatch/LiveDot';
 import { CameraControls } from '@/components/tvRemote/CameraControls';
+import { PhoneCameraRow } from '@/components/tvRemote/PhoneCameraRow';
 import {
     Card,
     Chevron,
@@ -143,7 +138,6 @@ export default function Page() {
 function Cameras({ groupId }: { groupId: string | null }) {
     const nav = useNavigation();
     const cameras = useCameras(groupId).data ?? [];
-    const phoneCamera = usePhoneCamera(groupId);
 
     return (
         <Section
@@ -158,18 +152,7 @@ function Cameras({ groupId }: { groupId: string | null }) {
                 />
             ))}
             <Card>
-                <Row
-                    icon="cellphone"
-                    title={
-                        phoneCamera.isPending
-                            ? 'Opening camera…'
-                            : 'Use this phone'
-                    }
-                    subtitle="Camera opens in your browser, already paired"
-                    onPress={() => {
-                        if (!phoneCamera.isPending) phoneCamera.mutate();
-                    }}
-                />
+                <PhoneCameraRow groupId={groupId} />
                 <Row
                     icon="plus"
                     title="External camera code"
