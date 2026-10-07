@@ -27,7 +27,7 @@ const SETTLE_MS = 15_000;
 const REPORT_EVERY_MS = 60_000;
 /** the same note is logged once in this long */
 const NOTE_EVERY_MS = 5_000;
-/** the camera films at 30 fps; less than this decoded over a sample is a frozen picture */
+/** the camera films at 30 fps; less than this shown over a sample is a frozen picture */
 const FROZEN_FPS = 5;
 
 const sentry = () => import('@sentry/browser');
@@ -326,12 +326,15 @@ export function watchFeedStats(
 
             const settled = now - start > SETTLE_MS && (ice === 'connected' || ice === 'completed');
             if (side === 'tv') {
-                const fps = fields.decodedFps ?? fields.videoFps;
+                // What the player shows: Tizen's stood still while WebRTC decoded 30 fps.
+                const fps = fields.videoFps ?? fields.decodedFps;
                 if (typeof fps !== 'number') return;
                 // only while the camera is on screen (CameraVideo): elsewhere nothing waits for it
                 const shown = !!tvVideo && !document.hidden;
                 if (settled && shown && decoded && fps < FROZEN_FPS) {
-                    report('camera feed: TV video froze', [`${fps} fps decoded`]);
+                    report('camera feed: TV video froze', [
+                        `${fields.videoFps ?? '?'} fps shown, ${fields.decodedFps ?? '?'} decoded`,
+                    ]);
                 }
                 decoded ||= fps > 0;
             } else if (settled) {
