@@ -30,7 +30,8 @@ def serve(args):
                 return self.reply('{}', code=404)
             frame = by_id[parts[2]]
             if parts[1] == 'image':
-                return self.reply((root / frame['image']).read_bytes(), 'image/jpeg')
+                return self.reply((root / frame['image']).read_bytes(),
+                                  'image/png' if Path(frame['image']).suffix.lower() == '.png' else 'image/jpeg')
             if parts[1] == 'label':
                 path = root / 'annotations' / (frame['id'] + '.json')
                 return self.reply(path.read_text() if path.exists() else '{"polygons": [], "reviewed": false}')
@@ -50,17 +51,15 @@ def serve(args):
             try:
                 label = json.loads(self.rfile.read(size))
                 polygons = label['polygons']
-                if not isinstance(polygons, list) or len(polygons) > 100 or not label.get('reviewer'):
+                if not label.get('reviewer'):
                     raise ValueError()
-                for polygon in polygons:
-                    if not isinstance(polygon, list) or not 3 <= len(polygon) <= 256:
-                        raise ValueError()
-                    for point in polygon:
-                        if not isinstance(point, list) or len(point) != 2 or not all(isinstance(n, (int,float)) and 0 <= n <= 1 for n in point):
-                            raise ValueError()
+                from pipeline import annotation_instances
+                annotation_instances(label, name)
+                roles = label.get('roles', ['unknown'] * len(polygons))
+                parts = label.get('parts', [[] for _ in polygons])
                 from pipeline import write_json
                 write_json(root / 'annotations' / (name + '.json'), {
-                    'polygons': polygons, 'reviewed': True, 'reviewer': str(label['reviewer'])[:100],
+                    'polygons': polygons, 'parts': parts, 'roles': roles, 'reviewed': True, 'reviewer': str(label['reviewer'])[:100],
                     'reviewedAt': datetime.now(timezone.utc).isoformat(), 'imageSha256': by_id[name]['sha256'],
                 })
             except (ValueError, KeyError, TypeError):

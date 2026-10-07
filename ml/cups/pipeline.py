@@ -218,6 +218,32 @@ def prelabel(args):
     print('Prelabels created. Every image needs visible inspection and corrections before training.')
 
 
+def annotation_instances(label, frame_id):
+    """Additional visible contours belong to the same physical cup, never extra instances."""
+    import numpy as np
+    polygons = label.get('polygons')
+    if not isinstance(polygons, list) or len(polygons) > 100:
+        raise ValueError('Invalid cup polygons ' + frame_id)
+    parts = label.get('parts', [[] for _ in polygons])
+    roles = label.get('roles', ['unknown'] * len(polygons))
+    if not isinstance(parts, list) or not isinstance(roles, list) or len(parts) != len(polygons) or len(roles) != len(polygons):
+        raise ValueError('Invalid cup parts or roles ' + frame_id)
+    instances = []
+    for polygon, additional, role in zip(polygons, parts, roles):
+        if role not in ('playing', 'removed', 'unknown') or not isinstance(additional, list) or len(additional) > 32:
+            raise ValueError('Invalid cup parts or role ' + frame_id)
+        contours = []
+        for contour in [polygon, *additional]:
+            if not isinstance(contour, list) or any(not isinstance(point, list) or len(point) != 2 or not all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in point) for point in contour):
+                raise ValueError('Invalid visible polygon ' + frame_id)
+            points = np.asarray(contour, dtype=np.float64)
+            if points.ndim != 2 or points.shape[1] != 2 or not 3 <= len(points) <= 256 or not np.isfinite(points).all() or (points < 0).any() or (points > 1).any():
+                raise ValueError('Invalid visible polygon ' + frame_id)
+            contours.append(points)
+        instances.append((contours, role))
+    return instances
+
+
 def split(args):
     import cv2
     import numpy as np
@@ -257,19 +283,17 @@ def split(args):
             shutil.copy2(root / frame['image'], target)
             image_id = len(images) + 1
             images.append({'id': image_id, 'file_name': target.name, 'width': frame['width'], 'height': frame['height']})
-            roles = label.get('roles', ['unknown'] * len(label['polygons']))
-            if len(roles) != len(label['polygons']) or any(role not in ('playing', 'removed', 'unknown') for role in roles):
-                raise ValueError('Invalid cup roles ' + frame['id'])
-            for polygon, role in zip(label['polygons'], roles):
-                points = np.asarray(polygon, dtype=np.float64)
-                if points.ndim != 2 or points.shape[1] != 2 or len(points) < 3 or not np.isfinite(points).all() or (points < 0).any() or (points > 1).any():
-                    raise ValueError('Invalid polygon ' + frame['id'])
-                points *= [frame['width'], frame['height']]
-                x, y = points.min(axis=0); xmax, ymax = points.max(axis=0)
+            for contours, role in annotation_instances(label, frame['id']):
+                scaled = [points * [frame['width'], frame['height']] for points in contours]
+                all_points = np.concatenate(scaled)
+                x, y = all_points.min(axis=0); xmax, ymax = all_points.max(axis=0)
+                visible = np.zeros((frame['height'], frame['width']), dtype=np.uint8)
+                for points in scaled:
+                    cv2.fillPoly(visible, [points.astype('int32')], 1)
                 annotations.append({'id': len(annotations) + 1, 'image_id': image_id, 'category_id': 1,
-                                    'segmentation': [points.reshape(-1).tolist()], 'bbox': [x, y, xmax - x, ymax - y],
-                                    'area': float(cv2.contourArea(points.astype('float32'))), 'iscrowd': 0,
-                                    'cup_role': role})
+                                    'segmentation': [points.reshape(-1).tolist() for points in scaled],
+                                    'bbox': [x, y, xmax - x, ymax - y], 'area': int(visible.sum()),
+                                    'iscrowd': 0, 'cup_role': role})
         if not images:
             raise ValueError('Empty split: ' + name)
         write_json(destination / name / '_annotations.coco.json', {'images': images, 'annotations': annotations,

@@ -44,9 +44,15 @@
     </div>
     <div>
         <button id="add">Add cup</button
+        ><button id="part">Add visible part</button
         ><button id="close">Close polygon</button
         ><button id="remove">Delete selected</button
+        ><button id="removePart">Delete selected part</button
         ><button id="undo">Undo vertex</button
+        ><select id="role" aria-label="Cup role">
+            <option value="unknown">Role unknown</option>
+            <option value="playing">Playing cup</option>
+            <option value="removed">Removed cup</option></select
         ><input
             id="reviewer"
             placeholder="Reviewer name"
@@ -55,18 +61,22 @@
     </div>
     <p>
         Click an outline to select it. In Add cup mode click around the
-        silhouette and use Close polygon. Selected vertices can be dragged. Save
-        only after checking the entire image.
+        silhouette and use Close polygon. Add visible part keeps separated rim
+        or body fragments in the same cup; leave hand pixels outside every part.
+        Selected vertices can be dragged. Save only after checking the entire
+        image.
     </p>
     <canvas id="canvas"></canvas>
     <script>
         const canvas = document.querySelector('#canvas'),
             ctx = canvas.getContext('2d'),
-            image = new Image();
+            image = new Image(),
+            role = document.querySelector('#role');
         let frames = [],
             index = 0,
-            polygons = [],
+            cups = [],
             selected = -1,
+            selectedPart = 0,
             adding = false,
             drag = null;
         const point = (e) => {
@@ -76,37 +86,56 @@
                 Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)),
             ];
         };
+        const selectedPolygon = () => cups[selected]?.contours[selectedPart];
+        function path(poly) {
+            ctx.beginPath();
+            poly.forEach(([x, y], j) =>
+                j
+                    ? ctx.lineTo(x * canvas.width, y * canvas.height)
+                    : ctx.moveTo(x * canvas.width, y * canvas.height)
+            );
+            ctx.closePath();
+        }
         function paint() {
             ctx.drawImage(image, 0, 0);
-            polygons.forEach((p, i) => {
-                ctx.beginPath();
-                p.forEach(([x, y], j) =>
-                    j
-                        ? ctx.lineTo(x * canvas.width, y * canvas.height)
-                        : ctx.moveTo(x * canvas.width, y * canvas.height)
-                );
-                if (!(adding && i === selected)) ctx.closePath();
-                ctx.strokeStyle = i === selected ? '#fff' : '#65ffbe';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                if (i === selected)
-                    p.forEach(([x, y]) => {
-                        ctx.fillStyle = '#fff';
-                        ctx.fillRect(
-                            x * canvas.width - 3,
-                            y * canvas.height - 3,
-                            6,
-                            6
-                        );
-                    });
-            });
+            role.value = cups[selected]?.role ?? 'unknown';
+            cups.forEach((cup, i) =>
+                cup.contours.forEach((poly, k) => {
+                    path(poly);
+                    ctx.strokeStyle =
+                        i === selected
+                            ? '#fff'
+                            : cup.role === 'removed'
+                              ? '#ffb15b'
+                              : cup.role === 'playing'
+                                ? '#65ffbe'
+                                : '#a6bcff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    if (i === selected && k === selectedPart)
+                        poly.forEach(([x, y]) => {
+                            ctx.fillStyle = '#fff';
+                            ctx.fillRect(
+                                x * canvas.width - 3,
+                                y * canvas.height - 3,
+                                6,
+                                6
+                            );
+                        });
+                })
+            );
         }
         async function load() {
-            const frame = frames[index];
-            const label = await (await fetch('/label/' + frame.id)).json();
-            polygons = label.polygons;
+            const frame = frames[index],
+                label = await (await fetch('/label/' + frame.id)).json();
+            cups = label.polygons.map((poly, i) => ({
+                contours: [poly, ...(label.parts?.[i] ?? [])],
+                role: label.roles?.[i] ?? 'unknown',
+            }));
             selected = -1;
+            selectedPart = 0;
             adding = false;
+            drag = null;
             document.querySelector('#name').textContent =
                 index +
                 1 +
@@ -126,69 +155,105 @@
         }
         canvas.onpointerdown = (e) => {
             const p = point(e);
+            drag = null;
             if (adding) {
-                polygons[selected].push(p);
+                selectedPolygon().push(p);
                 paint();
                 return;
             }
             let nearest = 20 / canvas.width;
-            polygons.forEach((poly, i) =>
-                poly.forEach((v, j) => {
-                    const d = Math.hypot(
-                        v[0] - p[0],
-                        ((v[1] - p[1]) * canvas.height) / canvas.width
-                    );
-                    if (d < nearest) {
-                        nearest = d;
-                        selected = i;
-                        drag = [i, j];
-                    }
-                })
+            cups.forEach((cup, i) =>
+                cup.contours.forEach((poly, k) =>
+                    poly.forEach((v, j) => {
+                        const d = Math.hypot(
+                            v[0] - p[0],
+                            ((v[1] - p[1]) * canvas.height) / canvas.width
+                        );
+                        if (d < nearest) {
+                            nearest = d;
+                            selected = i;
+                            selectedPart = k;
+                            drag = [i, k, j];
+                        }
+                    })
+                )
             );
             if (!drag) {
-                selected = polygons.findIndex((poly) => {
-                    ctx.beginPath();
-                    poly.forEach(([x, y], i) =>
-                        i
-                            ? ctx.lineTo(x * canvas.width, y * canvas.height)
-                            : ctx.moveTo(x * canvas.width, y * canvas.height)
-                    );
-                    ctx.closePath();
-                    return ctx.isPointInPath(
-                        p[0] * canvas.width,
-                        p[1] * canvas.height
-                    );
-                });
+                selected = -1;
+                cups.some((cup, i) =>
+                    cup.contours.some((poly, k) => {
+                        path(poly);
+                        if (
+                            ctx.isPointInPath(
+                                p[0] * canvas.width,
+                                p[1] * canvas.height
+                            )
+                        ) {
+                            selected = i;
+                            selectedPart = k;
+                            return true;
+                        }
+                        return false;
+                    })
+                );
             }
             canvas.setPointerCapture(e.pointerId);
             paint();
         };
         canvas.onpointermove = (e) => {
             if (drag) {
-                polygons[drag[0]][drag[1]] = point(e);
+                cups[drag[0]].contours[drag[1]][drag[2]] = point(e);
                 paint();
             }
         };
-        canvas.onpointerup = () => (drag = null);
+        canvas.onpointerup = () => {
+            drag = null;
+        };
         document.querySelector('#add').onclick = () => {
-            polygons.push([]);
-            selected = polygons.length - 1;
+            cups.push({ contours: [[]], role: 'unknown' });
+            selected = cups.length - 1;
+            selectedPart = 0;
+            adding = true;
+            paint();
+        };
+        document.querySelector('#part').onclick = () => {
+            if (selected < 0 || adding) return;
+            cups[selected].contours.push([]);
+            selectedPart = cups[selected].contours.length - 1;
             adding = true;
             paint();
         };
         document.querySelector('#close').onclick = () => {
-            if (selected >= 0 && polygons[selected].length >= 3) adding = false;
+            if (selectedPolygon()?.length >= 3) adding = false;
             paint();
         };
         document.querySelector('#remove').onclick = () => {
-            if (selected >= 0) polygons.splice(selected, 1);
+            if (selected >= 0) cups.splice(selected, 1);
             selected = -1;
             adding = false;
             paint();
         };
-        document.querySelector('#undo').onclick = () => {
-            if (selected >= 0) polygons[selected].pop();
+        document.querySelector('#removePart').onclick = () => {
+            if (selected < 0) return;
+            const contours = cups[selected].contours;
+            contours.splice(selectedPart, 1);
+            if (!contours.length) {
+                cups.splice(selected, 1);
+                selected = -1;
+            }
+            selectedPart = 0;
+            adding = false;
             paint();
+        };
+        document.querySelector('#undo').onclick = () => {
+            selectedPolygon()?.pop();
+            paint();
+        };
+        role.onchange = () => {
+            if (selected >= 0) {
+                cups[selected].role = role.value;
+                paint();
+            }
         };
         document.querySelector('#prev').onclick = () => {
             index = Math.max(0, index - 1);
@@ -200,15 +265,24 @@
         };
         document.querySelector('#save').onclick = async () => {
             const reviewer = document.querySelector('#reviewer').value.trim();
-            if (!reviewer || polygons.some((p) => p.length < 3)) {
+            if (
+                !reviewer ||
+                adding ||
+                cups.some((cup) => cup.contours.some((poly) => poly.length < 3))
+            ) {
                 document.querySelector('#status').textContent =
-                    'Add a reviewer and finish every polygon';
+                    'Add a reviewer and finish every visible part';
                 return;
             }
             const r = await fetch('/label/' + frames[index].id, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ polygons, reviewer }),
+                body: JSON.stringify({
+                    polygons: cups.map((cup) => cup.contours[0]),
+                    parts: cups.map((cup) => cup.contours.slice(1)),
+                    roles: cups.map((cup) => cup.role),
+                    reviewer,
+                }),
             });
             document.querySelector('#status').textContent = r.ok
                 ? 'Reviewed and saved'
