@@ -137,6 +137,7 @@ jobs:
           java-version: "17"
 
       - name: Build
+        id: native_build
         if: ${{ !steps.match.outputs.build_id }}
         run: |
           eas build --local -p "$PLATFORM" --profile "$PROFILE" --non-interactive \
@@ -153,7 +154,8 @@ jobs:
             --fingerprint "${{ steps.match.outputs.fingerprint }}" --non-interactive
 
       - name: Keep the build
-        if: ${{ !steps.match.outputs.build_id }}
+        # Retain a completed binary even if submission or EAS registration fails.
+        if: ${{ !cancelled() && steps.native_build.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ github.sha }}
