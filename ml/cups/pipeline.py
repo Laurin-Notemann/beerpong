@@ -521,6 +521,13 @@ def export(args):
     if args.checkpoint:
         if not args.report:
             raise ValueError('A held-out evaluation report is required for a custom model')
+        if not args.validation_report:
+            raise ValueError('Validation selection evidence is required for a custom model')
+        validation = json.loads(Path(args.validation_report).read_text())
+        if validation['split'] != 'valid' or validation['checkpointSha256'] != digest(args.checkpoint) or validation['threshold'] != args.threshold:
+            raise ValueError('Validation selection does not cover this checkpoint and confidence')
+        if validation['precisionIoU50'] < args.min_precision or validation['recallIoU50'] < args.min_recall:
+            raise ValueError('Model has not passed the validation precision/recall promotion gate')
         report = json.loads(Path(args.report).read_text())
         if report['split'] != 'test' or report['checkpointSha256'] != digest(args.checkpoint) or report['threshold'] != args.threshold:
             raise ValueError('Evaluation does not cover this checkpoint on the held-out test set')
@@ -538,7 +545,8 @@ def export(args):
                 'cupClass': 0 if args.checkpoint else 47, 'threshold': args.threshold, 'inputSize': 312,
                 'source': 'reviewed-finetune' if args.checkpoint else 'coco-baseline', 'license': 'Apache-2.0',
                 'rfdetrVersion': '1.11.2', 'inputLayout': 'two-formations-side-by-side', 'checkpointSha256': digest(args.checkpoint) if args.checkpoint else 'official-coco',
-                'evaluation': json.loads(Path(args.report).read_text()) if args.report else None}
+                'evaluation': json.loads(Path(args.report).read_text()) if args.report else None,
+                'validationReportSha256': digest(args.validation_report) if args.checkpoint else None}
     write_json(root / 'model.json', manifest)
     license_path = Path(__file__).with_name('MODEL-LICENSE.txt')
     shutil.copy2(license_path, root / 'MODEL-LICENSE.txt')
@@ -589,7 +597,7 @@ def main():
     p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.add_argument('--details'); p.set_defaults(fn=evaluate)
     p = sub.add_parser('evaluate-runtime'); p.add_argument('--dataset', required=True); p.add_argument('--results', required=True); p.add_argument('--events'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--output', required=True); p.set_defaults(fn=evaluate_runtime)
     p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.set_defaults(fn=publish)
-    p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.85); p.add_argument('--min-recall', type=float, default=.8); p.set_defaults(fn=export)
+    p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--validation-report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.98); p.add_argument('--min-recall', type=float, default=.98); p.set_defaults(fn=export)
     args = parser.parse_args(); args.fn(args)
 
 
