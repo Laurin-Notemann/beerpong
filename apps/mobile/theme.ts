@@ -1,3 +1,5 @@
+import type { ImageSource } from 'expo-image';
+
 import { useLocalSettings } from '@/zustand/localSettingsStore';
 
 const black = '#000';
@@ -84,7 +86,7 @@ export interface Theme {
         secondary: string;
     };
     bg: {
-        url?: any; // image or undefined
+        url?: ImageSource | number;
     };
 }
 
@@ -361,7 +363,7 @@ const darkWithGloss: Theme = {
         secondary: '#666',
     },
     bg: {
-        url: require('./assets/images/background.png'),
+        url: require('@/assets/images/background.png') as number,
     },
 };
 

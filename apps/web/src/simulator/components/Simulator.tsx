@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
     type Game,
@@ -76,15 +76,17 @@ export function Simulator({
     // what the sliders show while the API computes them
     const [draft, setDraft] = useState<Params>();
     const params = draft ?? sim.params;
+    const change = useRef(onChange);
+    useEffect(() => {
+        change.current = onChange;
+    }, [onChange]);
     useEffect(() => {
         if (!draft) return;
-        const t = setTimeout(() => onChange(draft), 150);
+        const t = setTimeout(() => change.current(draft), 150);
         return () => clearTimeout(t);
     }, [draft]);
     // the API caught up with the sliders
-    useEffect(() => {
-        if (draft && weights.every((key) => draft[key] === sim.params[key])) setDraft(undefined);
-    }, [sim.params]);
+    if (draft && weights.every((key) => draft[key] === sim.params[key])) setDraft(undefined);
 
     const [best, setBest] = useState<Search>();
     const [searching, setSearching] = useState(false);
@@ -337,7 +339,10 @@ function Season({
     // the season's games entered live, to replay; fetched again when a game comes in. A failed
     // fetch only leaves the replay out (the server reports it).
     const [liveLogs, setLiveLogs] = useState<LiveMatchDto[]>([]);
-    const stored = sim.games.filter((g) => g.testIndex == null && g.liveMatchId == null);
+    const stored = useMemo(
+        () => sim.games.filter((g) => g.testIndex == null && g.liveMatchId == null),
+        [sim.games]
+    );
     useEffect(() => {
         if (!sim.seasonId) return;
         let stale = false;
@@ -357,7 +362,7 @@ function Season({
                     return dto ? [{ dto, game }] : [];
                 })
                 .reverse(),
-        [liveLogs, sim.games]
+        [liveLogs, stored]
     );
     // the open game by id: live games come and go, so positions shift and an
     // open game can disappear

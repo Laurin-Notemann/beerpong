@@ -15,7 +15,10 @@ const readLegacyGroupIds = async () => {
     const raw = await AsyncStorage.getItem(LEGACY_GROUP_STORAGE_KEY);
     if (!raw) return [];
     try {
-        const ids: unknown = JSON.parse(raw)?.state?.groupIds;
+        const parsed = JSON.parse(raw) as {
+            state?: { groupIds?: unknown };
+        } | null;
+        const ids = parsed?.state?.groupIds;
         return Array.isArray(ids)
             ? ids.filter((id): id is string => typeof id === 'string')
             : [];

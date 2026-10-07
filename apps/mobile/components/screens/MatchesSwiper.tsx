@@ -39,6 +39,7 @@ export function MatchesSwiper() {
     const seasonMatches = props?.matches;
 
     const todayMatches = useMemo(() => {
+        // oxlint-disable-next-line react/purity -- Keep today current on refetch.
         const todayStart = getWakeTimeDayStart(new Date(), wakeTime).getTime();
         return (seasonMatches ?? []).filter(
             (m) =>
@@ -81,7 +82,7 @@ export function MatchesSwiper() {
                         paddingTop: insets.top,
                         paddingBottom: insets.bottom + 64,
                     }}
-                    pastSeasonIds={pastSeasons.map((i) => i.id!)}
+                    pastSeasonIds={pastSeasons.map((i) => i.id)}
                 />
             )}
         </Swiper>

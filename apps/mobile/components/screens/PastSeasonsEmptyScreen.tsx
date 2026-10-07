@@ -142,7 +142,6 @@ const DecorativeSeasonCard: React.FC<ViewProps & SeasonCardProps> = ({
     season,
     players,
     numMatches,
-    ...props
 }) => {
     const theme = useTheme();
 
@@ -205,13 +204,14 @@ export const SeasonCard: React.FC<SeasonCardProps> = ({
 }) => {
     return (
         <View
-            style={{
-                flex: 1,
+            style={[
+                {
+                    flex: 1,
 
-                paddingBottom: 32,
-
-                ...(style ?? {}),
-            }}
+                    paddingBottom: 32,
+                },
+                style,
+            ]}
         >
             {/* only used as a decorative card inside the empty screen's ScrollView */}
             <Leaderboard

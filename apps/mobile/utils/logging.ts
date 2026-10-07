@@ -116,8 +116,7 @@ export class ScopedLogger implements Logger {
         for (const handler of this.handlers[event] ?? []) {
             try {
                 handler(...args);
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (err) {}
+            } catch {}
         }
     }
 

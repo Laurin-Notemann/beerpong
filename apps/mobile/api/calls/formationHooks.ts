@@ -83,7 +83,7 @@ export function useSaveFormation(groupId: ApiId | null) {
         onError: (err) => {
             captureMutationErr('saveFormation')(err);
             showErrorToast("Couldn't save the formation.", err);
-            qc.invalidateQueries({
+            void qc.invalidateQueries({
                 queryKey: formationsKey(groupId ?? 'NULL'),
             });
         },
@@ -105,7 +105,7 @@ export function useDeleteFormation(groupId: ApiId | null) {
         onError: (err) => {
             captureMutationErr('deleteFormation')(err);
             showErrorToast("Couldn't delete the formation.", err);
-            qc.invalidateQueries({
+            void qc.invalidateQueries({
                 queryKey: formationsKey(groupId ?? 'NULL'),
             });
         },
@@ -124,6 +124,6 @@ export function applyFormationEvent(
     } else if (scope === 'formationDelete' && typeof body === 'string') {
         remove(qc, groupId, body);
     } else {
-        qc.invalidateQueries({ queryKey: formationsKey(groupId) });
+        void qc.invalidateQueries({ queryKey: formationsKey(groupId) });
     }
 }

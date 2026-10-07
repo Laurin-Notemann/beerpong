@@ -27,7 +27,7 @@ async function call<T>(
     const text = await res.text();
     let envelope: { status?: string; data?: T; error?: { code?: string } } | undefined;
     try {
-        envelope = JSON.parse(text);
+        envelope = JSON.parse(text) as typeof envelope;
     } catch {
         // the auth filter answers in plain text
     }
@@ -47,7 +47,7 @@ export async function signup(displayId: string, kind: 'tv' | 'camera' = 'tv') {
         method: 'POST',
         body: { installationType: 'ANDROID', deviceId: `versus-${kind}:${displayId}` },
     });
-    return dto.token!;
+    return dto.token;
 }
 
 /** the groups of the user an app's access token belongs to (see appRemote.ts) */
@@ -73,8 +73,8 @@ async function accessToken(refreshToken: string) {
         method: 'POST',
         body: { refreshToken },
     });
-    accessTokens.set(refreshToken, { token: dto.token!, expiresAt: Date.now() + 50 * 60_000 });
-    return dto.token!;
+    accessTokens.set(refreshToken, { token: dto.token, expiresAt: Date.now() + 50 * 60_000 });
+    return dto.token;
 }
 
 /** the API as one TV's user */

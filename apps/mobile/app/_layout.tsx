@@ -1,4 +1,3 @@
-import * as SplashScreen from 'expo-splash-screen';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { ErrorBoundary as ExpoErrorBoundary } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
@@ -7,6 +6,7 @@ import {
     DefaultTheme,
     ThemeProvider,
 } from 'expo-router/react-navigation';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { Appearance, StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -28,11 +28,14 @@ import { useSentryScreenTransactions } from '@/hooks/useSentryScreenTransactions
 import '@/lib/widgets/LiveMatchActivity';
 import '@/lib/widgets/liveScoresTask';
 import { useTheme } from '@/theme';
+import { ScopedLogger } from '@/utils/logging';
 import { Sentry } from '@/utils/sentry';
 import { LoggingProvider } from '@/utils/useLogging';
 import { ScopePickerProvider } from '@/zustand/useScopePicker';
 
 export const unstable_settings = { anchor: '(main)' };
+
+const logger = new ScopedLogger('root-layout');
 
 // Render errors inside a route are reported with the route attached, and only that route shows
 // the error UI (expo-router renders the exported boundary per route).
@@ -40,7 +43,9 @@ export const ErrorBoundary =
     Sentry.wrapExpoRouterErrorBoundary(ExpoErrorBoundary);
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch((err: unknown) =>
+    logger.error('failed to keep the splash screen visible', err)
+);
 
 function RootLayout() {
     const theme = useTheme();
@@ -58,7 +63,9 @@ function RootLayout() {
     useSentryScreenTransactions();
 
     useEffect(() => {
-        SplashScreen.hideAsync();
+        void SplashScreen.hideAsync().catch((err: unknown) =>
+            logger.error('failed to hide the splash screen', err)
+        );
     }, []);
 
     useEffect(() => {
@@ -69,11 +76,11 @@ function RootLayout() {
         // Catches render errors and fatal global errors (timers, handlers, native calls) for the
         // whole app: the event is sent to Sentry before the fallback replaces the crash.
         <Sentry.GlobalErrorBoundary
-            fallback={({ error, eventId, resetError }) => (
+            fallback={(crash) => (
                 <CrashFallback
-                    error={error}
-                    eventId={eventId}
-                    onRetry={resetError}
+                    error={crash.error}
+                    eventId={crash.eventId}
+                    onRetry={() => crash.resetError()}
                 />
             )}
         >

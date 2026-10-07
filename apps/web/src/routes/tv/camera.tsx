@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type DisplayConfig, emptyConfig, parseConfig } from '@/lib/tvDisplay';
-import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
+import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -34,10 +34,13 @@ const DEVICE_KEY = 'versus-camera-device';
 
 function loadIdentity(): Identity {
     try {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
+        const stored = JSON.parse(
+            localStorage.getItem(STORAGE_KEY) ?? ''
+        ) as Partial<Identity> | null;
         if (stored?.id && stored?.secret) {
             return {
-                ...stored,
+                id: stored.id,
+                secret: stored.secret,
                 refreshToken: stored.refreshToken ?? null,
                 code: stored.code ?? null,
                 config: parseConfig(stored.config),
@@ -100,13 +103,19 @@ function Camera() {
         setRegistered(true);
     }, [identity]);
 
+    const registerRef = useRef(register);
+    useEffect(() => {
+        registerRef.current = register;
+    }, [register]);
+
     // registers once (until it works); the events stream registers again when it loses the server
     useEffect(() => {
         let stopped = false;
-        const attempt = () =>
-            register().catch(() => {
+        const attempt = () => {
+            void registerRef.current().catch(() => {
                 if (!stopped) setTimeout(attempt, 3_000);
             });
+        };
         attempt();
         return () => {
             stopped = true;
@@ -114,7 +123,9 @@ function Camera() {
     }, []);
 
     const handlers = useRef(sender);
-    handlers.current = sender;
+    useEffect(() => {
+        handlers.current = sender;
+    }, [sender]);
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
         if (event.type === 'session')
@@ -290,14 +301,15 @@ function useCamera(deviceId: string | null) {
     const [error, setError] = useState<string | null>(null);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [attempt, setAttempt] = useState(0);
-
-    useEffect(() => {
+    const [previousCamera, setPreviousCamera] = useState({ deviceId, attempt });
+    if (previousCamera.deviceId !== deviceId || previousCamera.attempt !== attempt) {
+        setPreviousCamera({ deviceId, attempt });
         setStream(null);
         setError(null);
-        if (!navigator.mediaDevices?.getUserMedia) {
-            setError("This browser can't use a camera here.");
-            return;
-        }
+    }
+
+    useEffect(() => {
+        if (!navigator.mediaDevices?.getUserMedia) return;
         let stopped = false;
         let started: MediaStream | undefined;
         navigator.mediaDevices
@@ -335,7 +347,15 @@ function useCamera(deviceId: string | null) {
         };
     }, [deviceId, attempt]);
 
-    return { stream, error, devices, retry: () => setAttempt((a) => a + 1) };
+    return {
+        stream,
+        error:
+            typeof navigator.mediaDevices?.getUserMedia === 'function'
+                ? error
+                : "This browser can't use a camera here.",
+        devices,
+        retry: () => setAttempt((a) => a + 1),
+    };
 }
 
 /** keeps the screen on, so the device doesn't sleep at the table */

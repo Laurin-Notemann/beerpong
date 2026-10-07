@@ -67,12 +67,28 @@ export function ScoreClipPanel({
     const [frames, setFrames] = useState(true);
     const [side, setSide] = useState(from);
     const done = useRef(onDone);
-    done.current = onDone;
-
     useEffect(() => {
-        // A camera connecting or a remote layout change must not move a playing native layer.
-        if (playId === undefined) setSide(from);
-    }, [from, playId]);
+        done.current = onDone;
+    }, [onDone]);
+
+    // A camera connecting or a remote layout change must not move a playing native layer.
+    if (playId === undefined && side !== from) setSide(from);
+    const [previousPlayback, setPreviousPlayback] = useState({
+        playId,
+        url: clip.url,
+        nativeVideoLayer,
+    });
+    if (
+        previousPlayback.playId !== playId ||
+        previousPlayback.url !== clip.url ||
+        previousPlayback.nativeVideoLayer !== nativeVideoLayer
+    ) {
+        setPreviousPlayback({ playId, url: clip.url, nativeVideoLayer });
+        setOpen(false);
+        setPlaying(false);
+        setLeaving(false);
+        setShown(false);
+    }
 
     useEffect(() => {
         const v = video.current!;
@@ -85,10 +101,6 @@ export function ScoreClipPanel({
     }, [clip.url]);
 
     useEffect(() => {
-        setOpen(false);
-        setPlaying(false);
-        setLeaving(false);
-        setShown(false);
         if (playId === undefined) return;
         const v = video.current!;
         // Successful clip phases let camera warnings distinguish overlap from a load failure.

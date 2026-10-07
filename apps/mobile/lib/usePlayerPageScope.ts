@@ -36,7 +36,7 @@ export function usePlayerPageScope(playerId: string) {
 
     const seasonsQuery = useAllSeasonsQuery(groupId);
     const seasons = seasonsQuery.data?.data ?? [];
-    const seasonIds = seasons.map((i) => i.id!);
+    const seasonIds = seasons.map((i) => i.id);
 
     const seasonMatches = useSeasonMatches(groupId, seasonIds);
     const { leaderboardBySeason } = useSeasonLeaderboards(groupId, seasonIds);
@@ -59,6 +59,7 @@ export function usePlayerPageScope(playerId: string) {
     const { seasonSettings } = useSeasonSettings(groupId!, seasonId!);
 
     const todayStart = getWakeTimeDayStart(
+        // oxlint-disable-next-line react/purity -- today is read on each render, so it moves on after midnight
         new Date(),
         seasonSettings?.wakeTime
     ).getTime();
@@ -76,12 +77,12 @@ export function usePlayerPageScope(playerId: string) {
     const scopes = new Map<string, ScopeInfo>();
     for (const season of seasons) {
         scopes.set(
-            season.id!,
+            season.id,
             getScope(
                 profileId,
                 matchesOf(season.id),
                 season.seasonSettings,
-                leaderboardBySeason.get(season.id!) ?? [],
+                leaderboardBySeason.get(season.id) ?? [],
                 season.name || 'Unknown'
             )
         );

@@ -71,7 +71,7 @@ function num(stats: (Stat | undefined)[], key: string, scale = 1) {
 }
 
 function str(stats: Stat[], key: string) {
-    for (const s of stats) if (typeof s[key] === 'string') return s[key] as string;
+    for (const s of stats) if (typeof s[key] === 'string') return s[key];
     return undefined;
 }
 

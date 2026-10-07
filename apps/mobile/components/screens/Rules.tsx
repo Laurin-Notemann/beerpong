@@ -40,7 +40,6 @@ export default function Rules({
     onReorderRules,
     onDeleteRules,
     onResetRules,
-    onUpdateRule,
 }: RulesProps) {
     const theme = useTheme();
     const [isEditing, setIsEditing] = useState(false);

@@ -8,12 +8,8 @@ import {
     useRef,
     useState,
 } from 'react';
-import { StyleProp, View, ViewStyle } from 'react-native';
-import PagerView, {
-    PagerViewOnPageScrollEvent,
-    PagerViewOnPageSelectedEvent,
-    PageScrollStateChangedNativeEvent,
-} from 'react-native-pager-view';
+import { NativeSyntheticEvent, StyleProp, View, ViewStyle } from 'react-native';
+import PagerView from 'react-native-pager-view';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
 
 export interface SwiperRef {
@@ -102,18 +98,29 @@ export const Swiper = forwardRef<SwiperRef, SwiperProps>(
                 style={[{ flex: 1 }, style]}
                 initialPage={defaultIndex}
                 scrollEnabled={enabled}
-                onPageScroll={(e: PagerViewOnPageScrollEvent) => {
+                onPageScroll={(
+                    e: NativeSyntheticEvent<{
+                        position: number;
+                        offset: number;
+                    }>
+                ) => {
                     swiperProgress.set(
                         e.nativeEvent.position + e.nativeEvent.offset
                     );
                 }}
                 onPageScrollStateChanged={(
-                    e: PageScrollStateChangedNativeEvent
+                    e: NativeSyntheticEvent<{
+                        pageScrollState: 'idle' | 'dragging' | 'settling';
+                    }>
                 ) => {
                     if (e.nativeEvent.pageScrollState === 'dragging')
                         onScrollStart?.();
                 }}
-                onPageSelected={(e: PagerViewOnPageSelectedEvent) => {
+                onPageSelected={(
+                    e: NativeSyntheticEvent<{
+                        position: number;
+                    }>
+                ) => {
                     const idx = e.nativeEvent.position;
                     currentIndex.current = idx;
                     if (lazyWindow != null && !visited.has(idx)) {

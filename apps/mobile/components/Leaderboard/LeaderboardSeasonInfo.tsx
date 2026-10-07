@@ -15,7 +15,7 @@ export interface LeaderboardSeasonInfoProps {
      * if this is not set and `isCurrentSeason` is false, shows "Unknown Season"
      */
     name?: string;
-    startDate: string;
+    startDate?: string | null;
     endDate?: string;
 
     numPlayers: number;
@@ -45,7 +45,7 @@ export const LeaderBoardSeasonInfo = ({
                     {name || 'Unknown Season'}
                 </Text>
             )}
-            {endDate && (
+            {startDate && endDate && (
                 <Text
                     style={{
                         fontSize: 12,

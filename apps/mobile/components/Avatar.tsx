@@ -52,7 +52,7 @@ export interface AvatarProps {
     url?: string | null;
     name?: string;
     content?: string;
-    size?: 128 | 96 | 40 | 36 | number;
+    size?: number;
 
     style?: ViewStyle;
 
@@ -118,7 +118,7 @@ function Avatar({
 
                         borderRadius: borderRadius,
 
-                        backgroundColor: !!theme.blur?.intensity
+                        backgroundColor: theme.blur?.intensity
                             ? undefined
                             : theme.avatar.bg,
 

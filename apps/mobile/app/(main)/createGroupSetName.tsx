@@ -10,7 +10,7 @@ export default function Page() {
     const { addName } = useCreateGroupStore();
     const createGroupMutation = useCreateGroupMutation();
 
-    async function onNameGroup(group: { name: string }) {
+    function onNameGroup(group: { name: string }) {
         addName(group.name);
 
         nav.navigate('createGroupSetGame');

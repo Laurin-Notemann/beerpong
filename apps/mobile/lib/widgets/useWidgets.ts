@@ -186,21 +186,26 @@ function useWidgetProps(
 }
 
 const writeLeaderboard = (json: string) => {
-    leaderboardWidget?.updateSnapshot(JSON.parse(json));
+    leaderboardWidget?.updateSnapshot(
+        JSON.parse(json) as LeaderboardWidgetProps
+    );
     writtenLeaderboard = json;
 };
 const writeLiveMatches = (json: string) => {
     writtenLiveMatches = json;
-    const next = JSON.parse(json) as LiveMatchesWidgetProps;
+    const parsed = JSON.parse(json) as LiveMatchesWidgetProps;
+    const next = {
+        ...parsed,
+        matches: parsed.matches.map((match) => ({
+            ...match,
+            // Missing dates use the write time, outside render.
+            startedAt: match.startedAt || Date.now(),
+        })),
+    };
     liveMatchesWidget
         ?.getTimeline()
         .then((timeline) =>
-            showLiveMatches(
-                mergeLiveMatches(
-                    next,
-                    timeline[0]?.props as LiveMatchesWidgetProps | undefined
-                )
-            )
+            showLiveMatches(mergeLiveMatches(next, timeline[0]?.props))
         )
         .catch((err) => {
             writtenLiveMatches = undefined;
@@ -255,7 +260,7 @@ export function useHomeScreenWidgets() {
             groupId,
             matches: scores.map((i) => ({
                 id: i.id,
-                startedAt: Date.parse(i.startedAt) || Date.now(),
+                startedAt: Date.parse(i.startedAt) || 0,
                 ...i.score,
                 players: i.players.map(({ name, team }) => ({ name, team })),
                 moves: i.moves,

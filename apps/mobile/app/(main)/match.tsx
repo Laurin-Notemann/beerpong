@@ -141,7 +141,7 @@ export default function Page() {
     const { invalidateMatches } = useQueryInvalidation();
 
     const refresh = usePullToRefresh(() =>
-        invalidateMatches(groupId!, seasonId!)
+        invalidateMatches(groupId!, seasonId)
     );
     const navStyles = useNavStyles();
 
@@ -232,7 +232,7 @@ export default function Page() {
             }
             showSuccessToast('Updated match.');
             setIsEditing(false);
-            invalidateMatches(groupId, seasonId);
+            void invalidateMatches(groupId, seasonId);
         } catch (err) {
             ConsoleLogger.error(
                 'failed to update match:',
@@ -269,7 +269,7 @@ export default function Page() {
     }
     const teamMembers = displayMatch.blueTeam.concat(displayMatch.redTeam);
 
-    async function onEditCancel() {
+    function onEditCancel() {
         if (matchDraft.isDirty) {
             // TODO: show confirmation dialog
         }
@@ -426,7 +426,7 @@ export default function Page() {
                             });
                         } else {
                             nav.navigate('player', {
-                                id: player.id!,
+                                id: player.id,
                             });
                         }
                     }}

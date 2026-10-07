@@ -192,15 +192,19 @@ export function liveScoresOf(
     data: unknown
 ): { groupId: string; matches: WidgetLiveMatch[] } | undefined {
     const value = (data as { liveScores?: unknown } | null)?.liveScores as
-        { groupId?: unknown; matches?: unknown } | undefined;
+        | { groupId?: unknown; matches?: unknown }
+        | undefined;
     if (typeof value?.groupId !== 'string' || !Array.isArray(value.matches)) {
         return;
     }
     const isTeam = (team: unknown) => team === 'red' || team === 'blue';
+    const isRecord = (item: unknown): item is Record<string, unknown> =>
+        item !== null && typeof item === 'object';
     const matches = value.matches
         .filter(
-            (i): i is WidgetLiveMatch =>
-                typeof i?.id === 'string' &&
+            (i: unknown): i is WidgetLiveMatch =>
+                isRecord(i) &&
+                typeof i.id === 'string' &&
                 typeof i.blueNames === 'string' &&
                 typeof i.redNames === 'string' &&
                 typeof i.blueScore === 'number' &&
@@ -211,16 +215,18 @@ export function liveScoresOf(
             ...i,
             players: Array.isArray(i.players)
                 ? i.players.filter(
-                      (p): p is WidgetPlayer =>
-                          typeof p?.name === 'string' &&
+                      (p: unknown): p is WidgetPlayer =>
+                          isRecord(p) &&
+                          typeof p.name === 'string' &&
                           isTeam(p.team) &&
                           (p.elo === undefined || typeof p.elo === 'number')
                   )
                 : undefined,
             moves: Array.isArray(i.moves)
                 ? i.moves.filter(
-                      (m): m is WidgetMove =>
-                          typeof m?.name === 'string' &&
+                      (m: unknown): m is WidgetMove =>
+                          isRecord(m) &&
+                          typeof m.name === 'string' &&
                           isTeam(m.team) &&
                           typeof m.move === 'string'
                   )

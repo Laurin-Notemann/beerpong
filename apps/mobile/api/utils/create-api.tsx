@@ -1,5 +1,5 @@
+import { fetch } from '@react-native-community/netinfo';
 import * as Sentry from '@sentry/react-native';
-import NetInfo from '@react-native-community/netinfo';
 import OpenAPIClientAxios, { Document } from 'openapi-client-axios';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
@@ -54,7 +54,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
             // NetInfo is already in the app (useRefetchEverythingOnWifiReconnect). Unknown
             // reachability (null) counts as online.
             isOffline: async () => {
-                const state = await NetInfo.fetch();
+                const state = await fetch();
                 return (
                     state.isConnected === false ||
                     state.isInternetReachable === false
@@ -68,10 +68,8 @@ export function ApiProvider({ children }: { children: ReactNode }) {
 
     const { realtime, connectRealtime } = useRealtimeConnection();
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [isLoading, setIsLoading] = useState(true);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [error, setError] = useState<Error | null>(null);
+    const [isLoading] = useState(true);
+    const [error] = useState<Error | null>(null);
 
     const contextValue: ApiContextType = {
         realtime,

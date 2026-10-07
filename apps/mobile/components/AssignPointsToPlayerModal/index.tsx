@@ -19,7 +19,7 @@ export interface AssignPointsToPlayerModalProps {
 
     setMoveCount: (playerId: string, moveId: string, count: number) => void;
 
-    match: MinimalMatch;
+    match: Pick<MinimalMatch, 'blueTeam' | 'redTeam'>;
 
     initialPageIdx: number | null;
 }
@@ -53,7 +53,7 @@ export default function AssignPointsToPlayerModal({
     const isAssignFinisherPage = swiper.swiperPage === players.length;
     const isAssignFinishMovePage = swiper.swiperPage === players.length + 1;
 
-    async function onSetFinishMove(move: PerformedMove) {
+    function onSetFinishMove(move: PerformedMove) {
         if (finisher) {
             // remove existing finish move
             if (finishMove) setMoveCount(finisher.id, finishMove.id, 0);
@@ -62,7 +62,7 @@ export default function AssignPointsToPlayerModal({
         }
     }
 
-    async function onSetFinisher(player: TeamMember) {
+    function onSetFinisher(player: TeamMember) {
         if (finishMove) {
             setMoveCount(finisher!.id, finishMove.id, 0);
             setMoveCount(player.id, finishMove.id, 1);

@@ -42,9 +42,7 @@ export interface GroupSettingsProps {
 }
 export default function GroupSettingsScreen({
     id,
-    hasPremium,
     groupName,
-    pastSeasons,
     groupCode,
     onLeaveGroup,
 

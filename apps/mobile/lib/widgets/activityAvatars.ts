@@ -25,7 +25,13 @@ const copying = new Set<string>();
  * shows initials for players this phone has no copy of yet.
  */
 export function useActivityAvatars(avatarUrls: (string | null | undefined)[]) {
-    const key = [...new Set(avatarUrls.filter((i) => !!i))].sort().join(' ');
+    const key = [
+        ...new Set(
+            avatarUrls.filter((i): i is string => typeof i === 'string' && !!i)
+        ),
+    ]
+        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+        .join(' ');
 
     useEffect(() => {
         if (Platform.OS !== 'ios' || !widgetsDirectory || !key) return;
@@ -60,5 +66,5 @@ async function copy(url: string, directory: Directory, file: File) {
         quality: 0.7,
     });
     download.delete();
-    file.write(byteArray);
+    await file.write(byteArray);
 }

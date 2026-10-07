@@ -11,7 +11,8 @@ import { useInsets } from '@/lib/useInsets';
  * Picking one makes the dock show it.
  */
 export default function Page() {
-    const { groupId, matches, shownId, show } = useLiveMatchesSheet();
+    const sheet = useLiveMatchesSheet();
+    const { groupId, matches, shownId } = sheet;
     const insets = useInsets();
 
     return (
@@ -34,7 +35,7 @@ export default function Page() {
                                 groupId={groupId}
                                 match={i}
                                 isShown={i.id === shownId}
-                                onPress={() => show(i.id)}
+                                onPress={() => sheet.show(i.id)}
                             />
                         ))}
                 </ScrollView>

@@ -75,8 +75,12 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
         const camera = authorize(data.id, data.key);
         if (camera.kind !== 'camera' || !camera.config.groupId) return null;
         const groupId = camera.config.groupId;
-        if (!camera.refreshToken) setSession(camera, await signup(camera.id, 'camera'));
-        const api = apiFor(camera.refreshToken!);
+        let refreshToken = camera.refreshToken;
+        if (!refreshToken) {
+            refreshToken = await signup(camera.id, 'camera');
+            setSession(camera, refreshToken);
+        }
+        const api = apiFor(refreshToken);
         const matches = await api.liveMatches(groupId).catch(async (error: unknown) => {
             // Previously paired cameras have no membership yet. Retry a failed join on the next snapshot.
             if (

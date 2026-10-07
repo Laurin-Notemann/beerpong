@@ -5,6 +5,8 @@ import Text from '@/components/Text';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { useTheme } from '@/theme';
 
+const phoneImage = require('@/assets/images/phone.png') as number;
+
 export default function OnboardingModal() {
     const navigation = useNavigation();
 
@@ -62,7 +64,7 @@ export default function OnboardingModal() {
                 }}
             >
                 <Image
-                    source={require('../assets/images/phone.png')}
+                    source={phoneImage}
                     style={{
                         width: 100,
                         height: 100 * 2.1741293532,
@@ -73,7 +75,7 @@ export default function OnboardingModal() {
                     }}
                 />
                 <Image
-                    source={require('../assets/images/phone.png')}
+                    source={phoneImage}
                     style={{
                         width: 100,
                         height: 100 * 2.1741293532,
@@ -81,7 +83,7 @@ export default function OnboardingModal() {
                     }}
                 />
                 <Image
-                    source={require('../assets/images/phone.png')}
+                    source={phoneImage}
                     style={{
                         width: 100,
                         height: 100 * 2.1741293532,

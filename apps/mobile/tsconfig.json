@@ -9,7 +9,6 @@
     "include": [
         "**/*.ts",
         "**/*.tsx",
-        ".eslintrc.js",
         "babel.config.js",
         "metro.config.js",
         ".expo/types/**/*.ts",

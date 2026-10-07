@@ -1,5 +1,5 @@
 // PressableScale.tsx
-import React, { useImperativeHandle, useMemo, useRef } from 'react';
+import React, { useImperativeHandle, useMemo, useState } from 'react';
 import {
     Animated,
     Pressable,
@@ -43,7 +43,7 @@ const PressableScale = React.forwardRef<PressableScaleHandle, Props>(
         },
         ref
     ) => {
-        const scale = useRef(new Animated.Value(1)).current;
+        const [scale] = useState(() => new Animated.Value(1));
 
         const animate = (to: number) =>
             Animated.spring(scale, {

@@ -42,13 +42,13 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
     const wallpaperQuery = useAssetQuery(data?.data?.assetIdWallpaper);
 
     async function onUploadWallpaperPress() {
-        const [result] = await launchImageLibrary({
-            mediaTypes: ['images'],
-            selectionLimit: 1,
-        });
-        if (!groupId || !result) return;
-
+        if (!groupId) return;
         try {
+            const [result] = await launchImageLibrary({
+                mediaTypes: ['images'],
+                selectionLimit: 1,
+            });
+            if (!result) return;
             const { byteArray, mimeType } = await compressImage(
                 result.uri,
                 IMAGE_SIZES.wallpaper
@@ -95,14 +95,14 @@ export const useGroupSettingsProps = (): ScreenState<GroupSettingsProps> => {
 
     const props: GroupSettingsProps | null = data?.data
         ? {
-              id: data.data.id!,
+              id: data.data.id,
               groupCode: data.data.inviteCode!,
               groupName: data.data.name || 'Unknown Group',
               hasPremium: false,
               pastSeasons: pastSeasons.length,
-              onUploadWallpaperPress,
-              onDeleteWallpaperPress,
-              onLeaveGroup,
+              onUploadWallpaperPress: () => void onUploadWallpaperPress(),
+              onDeleteWallpaperPress: () => void onDeleteWallpaperPress(),
+              onLeaveGroup: () => void onLeaveGroup(),
               wallpaperAsset: wallpaperQuery.data?.data,
               isUpdatingWallpaper: updateGroupWallpaperMutation.isPending,
           }

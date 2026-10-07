@@ -1,9 +1,9 @@
 name: Web CI
 
-# Format, typecheck and the production build of the web app (apps/web/: the Elo simulator
+# Typecheck and the production build of the web app (apps/web/: the Elo simulator
 # and Versus TV). The TV reduces live matches with the app's code, so changes to those parts of
 # apps/mobile/ run it too. The staging deploy runs this next to the image build and deploys
-# only if both pass.
+# only if both pass. Lint and format run for the whole repo in lint.yml.
 
 on:
   push:
@@ -35,6 +35,5 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run format:check
       - run: npm run typecheck
       - run: npm run build

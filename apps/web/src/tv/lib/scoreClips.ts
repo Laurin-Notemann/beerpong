@@ -1,5 +1,4 @@
 import type { LiveMatchOpDto } from '@/openapi/openapi';
-
 import type { LiveMatchView } from '~/tv/server/board';
 
 /** a player's score clip, waiting to play on the TV */

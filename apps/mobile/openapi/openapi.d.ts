@@ -1,9 +1,9 @@
 import type {
-    AxiosRequestConfig,
     OpenAPIClient,
-    OperationResponse,
     Parameters,
     UnknownParamsObject,
+    OperationResponse,
+    AxiosRequestConfig,
 } from 'openapi-client-axios';
 
 declare namespace Components {
@@ -824,7 +824,10 @@ declare namespace Components {
                 maxTeamSize?: number; // int32
                 rankingAlgorithm?: 'AVERAGE' | 'ELO' | null;
                 dailyLeaderboard?:
-                    'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
+                    | 'RESET_AT_MIDNIGHT'
+                    | 'WAKE_TIME'
+                    | 'LAST_24_HOURS'
+                    | null;
                 wakeTime?: string;
                 /**
                  * Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.
@@ -861,7 +864,10 @@ declare namespace Components {
                 maxTeamSize?: number; // int32
                 rankingAlgorithm?: 'AVERAGE' | 'ELO' | null;
                 dailyLeaderboard?:
-                    'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
+                    | 'RESET_AT_MIDNIGHT'
+                    | 'WAKE_TIME'
+                    | 'LAST_24_HOURS'
+                    | null;
                 wakeTime?: string;
                 /**
                  * Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.
@@ -893,7 +899,10 @@ declare namespace Components {
             maxTeamSize?: number; // int32
             rankingAlgorithm?: 'AVERAGE' | 'ELO' | null;
             dailyLeaderboard?:
-                'RESET_AT_MIDNIGHT' | 'WAKE_TIME' | 'LAST_24_HOURS' | null;
+                | 'RESET_AT_MIDNIGHT'
+                | 'WAKE_TIME'
+                | 'LAST_24_HOURS'
+                | null;
             wakeTime?: string;
             /**
              * Elo: rating for scoring, above your share, what an average player in your spot scores in a full game (at swing 1). Responses have the weight in effect; in an update a missing weight stays and null is the default.

@@ -49,7 +49,7 @@ export type DisplayEvent =
 
 // kept on globalThis so dev reloads of this module don't forget the TVs
 const g = globalThis as typeof globalThis & { __versusDisplays?: Map<string, Display> };
-const displays = (g.__versusDisplays ??= new Map());
+const displays = (g.__versusDisplays ??= new Map<string, Display>());
 
 export class DisplayError extends Error {
     constructor(

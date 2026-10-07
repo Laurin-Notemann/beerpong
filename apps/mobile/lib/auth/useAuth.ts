@@ -1,5 +1,5 @@
-import * as Application from 'expo-application';
 import { isAxiosError } from 'axios';
+import * as Application from 'expo-application';
 // import * as Notifications from 'expo-notifications';
 // import * as Permissions from 'expo-permissions';
 import { Platform } from 'react-native';
@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 import { decodeJwt, JwtPayload } from '@/lib/auth/decodeJwt';
 import { createTokenCache, tokenExpiresAt } from '@/lib/auth/tokenCache';
 import { versusDeviceStorage } from '@/lib/deviceStorage';
-import { Client as BeerPongClient } from '@/openapi/openapi';
+import { Client as BeerPongClient, Components } from '@/openapi/openapi';
 import { ScopedLogger } from '@/utils/logging';
 
 const logger = new ScopedLogger('auth');
@@ -148,12 +148,12 @@ async function getAccessToken(
         }
     } catch (err) {
         logger.error('Failed to get access token:', err);
-        if (isAxiosError(err)) {
+        if (isAxiosError<{ error?: Components.Schemas.ErrorDetails }>(err)) {
             // more detailed error response returned by the backend, can be found in apps/api/internal/api/errors.go
             const customErrorCode = err.response?.data.error?.code;
 
-            // standard http error code, e.g. "Bad Request"
-            const httpErrorCode = err.response?.data.error;
+            // standard HTTP status, when the backend sent no custom code
+            const httpErrorCode = err.response?.status;
 
             const isInvalidRefreshToken =
                 customErrorCode === 'authRefreshInvalidToken';
@@ -164,7 +164,7 @@ async function getAccessToken(
                 );
                 await versusDeviceStorage.removeRefreshToken();
 
-                err = new RefreshTokenRejectedError();
+                throw new RefreshTokenRejectedError();
             } else {
                 const message = customErrorCode ?? httpErrorCode ?? err.message;
 
@@ -219,6 +219,7 @@ export function useAuth() {
     return {
         getAccessToken: getValidAccessToken,
         /** after the API rejected `accessToken` with a 401 */
-        invalidateAccessToken: tokenCache.invalidate,
+        invalidateAccessToken: (accessToken: string) =>
+            tokenCache.invalidate(accessToken),
     };
 }

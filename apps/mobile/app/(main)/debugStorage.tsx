@@ -17,8 +17,8 @@ export default function Page() {
         gcTime: 0,
         queryFn: async () => {
             const keys = await AsyncStorage.getAllKeys();
-            const pairs = await AsyncStorage.multiGet(keys);
-            return pairs
+            const values = await AsyncStorage.getMany(keys);
+            return Object.entries(values)
                 .map(([key, value]) => ({ key, value: value ?? '' }))
                 .sort((a, b) => a.key.localeCompare(b.key));
         },

@@ -66,19 +66,14 @@ export interface AllowedMovesProps extends MenuSectionProps {
 export const AllowedMoves: React.FC<AllowedMovesProps> = ({
     moves,
     onNewPress,
-    onDelete,
+    onDelete: _onDelete,
     onReorder,
     editable = true,
     ...rest
 }) => {
     const nav = useNavigation();
 
-    const renderItem = ({
-        item,
-        drag,
-        isActive,
-        getIndex,
-    }: RenderItemParams<Move>) => {
+    const renderItem = ({ item, drag, getIndex }: RenderItemParams<Move>) => {
         return (
             <MenuItem
                 border={getIndex() !== 0}

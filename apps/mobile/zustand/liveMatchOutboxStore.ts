@@ -267,7 +267,7 @@ export function mergeOutbox(
     persisted: Partial<OutboxState>,
     current: OutboxState
 ): OutboxState {
-    const entries = { ...(persisted.entries ?? {}) };
+    const entries = { ...persisted.entries };
 
     for (const [id, newer] of Object.entries(current.entries)) {
         const older = entries[id];

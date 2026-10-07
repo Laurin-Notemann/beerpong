@@ -30,13 +30,13 @@ export const useLeaderboardProps = (
     );
 
     const dailyPlayers: Player[] =
-        dailyLeaderboardQuery.data?.data?.entries!.map(toPlayer) ?? [];
+        dailyLeaderboardQuery.data?.data?.entries?.map(toPlayer) ?? [];
 
     const currentSeasonPlayers: Player[] =
-        seasonLeaderboardQuery.data?.data?.entries!.map(toPlayer) ?? [];
+        seasonLeaderboardQuery.data?.data?.entries?.map(toPlayer) ?? [];
 
     const alltimePlayers: Player[] =
-        alltimeLeaderboardQuery.data?.data?.entries!.map(toPlayer) ?? [];
+        alltimeLeaderboardQuery.data?.data?.entries?.map(toPlayer) ?? [];
 
     return {
         currentSeasonPlayers,
@@ -45,17 +45,17 @@ export const useLeaderboardProps = (
         dailyLeaderboard: {
             numMatches: dailyLeaderboardQuery.data?.data?.numMatches ?? 0,
             numPlayers: dailyLeaderboardQuery.data?.data?.numPlayers ?? 0,
-            startDate: dailyLeaderboardQuery.data?.data?.startedAt!,
+            startDate: dailyLeaderboardQuery.data?.data?.startedAt ?? '',
         },
         currentSeasonLeaderboard: {
             numMatches: seasonLeaderboardQuery.data?.data?.numMatches ?? 0,
             numPlayers: seasonLeaderboardQuery.data?.data?.numPlayers ?? 0,
-            startDate: seasonLeaderboardQuery.data?.data?.startedAt!,
+            startDate: seasonLeaderboardQuery.data?.data?.startedAt ?? '',
         },
         alltimeLeaderboard: {
             numMatches: alltimeLeaderboardQuery.data?.data?.numMatches ?? 0,
             numPlayers: alltimeLeaderboardQuery.data?.data?.numPlayers ?? 0,
-            startDate: alltimeLeaderboardQuery.data?.data?.startedAt!,
+            startDate: alltimeLeaderboardQuery.data?.data?.startedAt ?? '',
         },
     };
 };

@@ -78,7 +78,7 @@ export default function Page() {
         setIsSaving(true);
         try {
             await attachTeamPhotos(api, { groupId, seasonId, matchId }, photos);
-            qc.invalidateQueries({
+            void qc.invalidateQueries({
                 queryKey: [QK.group, groupId, QK.season, seasonId, QK.matches],
             });
             showSuccessToast('Team photo saved.');

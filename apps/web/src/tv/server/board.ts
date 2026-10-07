@@ -1,8 +1,7 @@
 import type { DisplayConfig } from '@/lib/tvDisplay';
+import type * as Dto from '@/openapi/openapi';
 import { foldLiveMatch, type RackCup } from '~/tv/lib/liveMatch';
 import { type RankingAlgorithm, rankingNames, rankPlayers } from '~/tv/lib/ranking';
-import type * as Dto from '@/openapi/openapi';
-
 import { apiFor, assetUrl } from '~/tv/server/api';
 import { clipPath } from '~/tv/server/clips';
 
@@ -100,7 +99,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
 
     const avatars = new Map(
         await Promise.all(
-            profiles.map(async (i) => [i.id!, await assetUrl(i.assetIdAvatar)] as const)
+            profiles.map(async (i) => [i.id, await assetUrl(i.assetIdAvatar)] as const)
         )
     );
     const profile = (profileId: string | null | undefined): BoardPlayer => {
@@ -137,7 +136,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
                 )
             )
             .map(async (dto) => {
-                const [players, moves] = await dataOf(dto.seasonId!);
+                const [players, moves] = await dataOf(dto.seasonId);
                 return { dto, players, ...foldLiveMatch(dto, moves) };
             })
     );
@@ -219,11 +218,11 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
     return {
         group: { id: groupId, name: group.name ?? '' },
         seasons: seasons.map((i) => ({
-            id: i.id!,
+            id: i.id,
             name: i.name || 'Current season',
             active: i.id === group.activeSeasonId,
         })),
-        season: season ? { id: season.id!, name: season.name || 'Current season' } : null,
+        season: season ? { id: season.id, name: season.name || 'Current season' } : null,
         ranking: rankingNames[algo],
         leaderboard: {
             rows,
@@ -253,7 +252,7 @@ export async function buildBoard(refreshToken: string, config: DisplayConfig): P
                 }),
             });
             return {
-                id: dto.id!,
+                id: dto.id,
                 startedAt: dto.startedAt ?? '',
                 lastActivityAt: dto.lastActivityAt ?? dto.startedAt ?? '',
                 blue: team(blue),

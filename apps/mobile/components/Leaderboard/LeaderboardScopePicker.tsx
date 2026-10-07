@@ -104,12 +104,12 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
               seasonsQuery.data?.data?.filter((i) => i.id === onlyShowSeason) ??
               []
           ).map((i) => ({
-              id: i.id!,
+              id: i.id,
               label: i.name || 'Unknown',
           }))
         : scopePicker.isPastSeasonsMode
           ? pastSeasons.map((i) => ({
-                id: i.id!,
+                id: i.id,
                 label: i.name || 'Unknown',
             }))
           : [
@@ -324,11 +324,9 @@ export const LeaderboardScopePicker: React.FC<LeaderboardScopePickerProps> = ({
                             ref={containerRef}
                             style={styles.container}
                             onLayout={() => {
-                                containerRef.current?.measure(
-                                    (x, y, width, height) => {
-                                        setContainerWidth(width);
-                                    }
-                                );
+                                containerRef.current?.measure((x, y, width) => {
+                                    setContainerWidth(width);
+                                });
                             }}
                         >
                             <BlurView

@@ -14,12 +14,10 @@ export function useAnimatedSideActionStyle(
     const margin = useSharedValue(isExpanded ? 12 : 0);
 
     useEffect(() => {
-        deleteActionWidth.value = withTiming(isExpanded ? expandedWidth : 0, {
-            duration: 150,
-        });
-        margin.value = withTiming(isExpanded ? 12 : 0, {
-            duration: 150,
-        });
+        deleteActionWidth.set(
+            withTiming(isExpanded ? expandedWidth : 0, { duration: 150 })
+        );
+        margin.set(withTiming(isExpanded ? 12 : 0, { duration: 150 }));
     }, [deleteActionWidth, expandedWidth, isExpanded, margin]);
 
     const animatedStyle = useAnimatedStyle(() => ({

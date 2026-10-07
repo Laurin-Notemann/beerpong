@@ -208,14 +208,13 @@ function waitUntilSent(id: ApiId, timeoutMs: number) {
             resolve();
             return;
         }
-        let timer: ReturnType<typeof setTimeout> | undefined;
         const unsubscribe = useLiveMatchOutboxStore.subscribe(() => {
             if (!isSent()) return;
             clearTimeout(timer);
             unsubscribe();
             resolve();
         });
-        timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             unsubscribe();
             reject(new LiveMatchOfflineError());
         }, timeoutMs);
@@ -381,9 +380,9 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
             throw new Error('finishLiveMatch: no result match');
         }
         applyLiveMatchEnd(qc, groupId, result);
-        invalidateMatches(groupId, seasonId);
-        invalidatePlayers(groupId, seasonId);
-        invalidateLeaderboard(groupId);
+        void invalidateMatches(groupId, seasonId);
+        void invalidatePlayers(groupId, seasonId);
+        void invalidateLeaderboard(groupId);
 
         return { matchId: result.resultMatchId, seasonId };
     }

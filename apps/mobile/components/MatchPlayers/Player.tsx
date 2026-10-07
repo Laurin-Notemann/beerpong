@@ -80,8 +80,6 @@ export default function Player({
 
     border = false,
 
-    expanded,
-    setIsExpanded,
     editable = false,
 
     setMoveCount,
@@ -89,18 +87,6 @@ export default function Player({
     eloChange,
 }: PlayerProps) {
     const [animation] = useState(() => new Animated.Value(0)); // start with height 0
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const toggleCollapse = () => {
-        // Animate the height when toggling
-        Animated.timing(animation, {
-            toValue: expanded ? 0 : 1, // expand or collapse
-            duration: 300, // animation duration in ms
-            useNativeDriver: false, // we animate height, which cannot use native driver
-        }).start();
-
-        setIsExpanded(!expanded);
-    };
 
     // Interpolate the animated value to control height
     const contentHeight = animation.interpolate({

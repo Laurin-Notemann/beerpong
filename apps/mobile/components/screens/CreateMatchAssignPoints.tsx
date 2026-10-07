@@ -33,7 +33,6 @@ export default function CreateMatchAssignPoints({
     players,
     liveMatchId,
     onSubmit,
-    onCancel,
     onPlayerPress,
     eloChanges,
 }: CreateMatchAssignPointsProps) {

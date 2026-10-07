@@ -18,8 +18,14 @@ export const Route = createFileRoute('/tv/api/groups/$groupId/displays')({
                 ),
             POST: ({ request, params }) =>
                 asMember(request, params.groupId, async () => {
-                    const body = await request.json().catch(() => null);
-                    const code = typeof body?.code === 'string' ? body.code : '';
+                    const body: unknown = await request.json().catch(() => null);
+                    const code =
+                        body &&
+                        typeof body === 'object' &&
+                        'code' in body &&
+                        typeof body.code === 'string'
+                            ? body.code
+                            : '';
                     const display = byCode(code);
                     if (!display) return fail(404, 'tvCodeNotFound');
                     await putGroupOn(display, params.groupId);

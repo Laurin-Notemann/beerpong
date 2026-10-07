@@ -55,18 +55,29 @@ export function useCameraMatches(
             Sentry.captureException(error, { tags: { feature: 'camera-recording-snapshot' } });
         }
     }, [id, secret]);
-    useGroupSocket(enabled ? groupId : null, refresh);
-    useEffect(() => {
+    useGroupSocket(enabled ? groupId : null, () => void refresh());
+    const [previousSource, setPreviousSource] = useState({ id, secret, groupId, enabled });
+    if (
+        previousSource.id !== id ||
+        previousSource.secret !== secret ||
+        previousSource.groupId !== groupId ||
+        previousSource.enabled !== enabled
+    ) {
+        setPreviousSource({ id, secret, groupId, enabled });
         setSnapshot(null);
+    }
+    useEffect(() => {
         if (!enabled || !groupId) return;
+        // oxlint-disable-next-line react/set-state-in-effect -- The snapshot updates only after the server request resolves.
         void refresh();
         const timer = setInterval(() => void refresh(), 15_000);
+        const currentGeneration = generation;
         return () => {
-            generation.current++;
+            currentGeneration.current++;
             clearInterval(timer);
         };
     }, [enabled, groupId, refresh]);
-    return snapshot?.groupId === groupId ? snapshot : null;
+    return enabled && snapshot?.groupId === groupId ? snapshot : null;
 }
 
 /** Recording and uploading never change the stream or wait on the TV's WebRTC connection. */
@@ -84,7 +95,9 @@ export function useCameraRecording(
     const index = useRef(0);
     const queue = useRef<Segment[]>([]);
     const activeGroup = useRef(groupId);
-    activeGroup.current = groupId;
+    useEffect(() => {
+        activeGroup.current = groupId;
+    }, [groupId]);
     const upload = useRef<AbortController | null>(null);
     const wakeUpload = useRef(() => {});
 
@@ -159,7 +172,7 @@ export function useCameraRecording(
             if (stopped) return;
             setPending(queue.current.length);
             retry = setTimeout(
-                drain,
+                () => void drain(),
                 segment.attempts ? Math.min(30_000, 1_000 * 2 ** Math.min(segment.attempts, 5)) : 0
             );
         };
@@ -212,6 +225,7 @@ export function useCameraRecording(
     const matchKey = snapshot?.liveMatchIds.slice().sort().join(',') ?? '';
     const cameraName = snapshot?.name ?? 'Camera';
     useEffect(() => {
+        // oxlint-disable-next-line react/set-state-in-effect -- Recording status follows the synchronous MediaRecorder lifecycle.
         setError(null);
         if (!stream || !groupId || !matchKey) {
             setRecording(false);

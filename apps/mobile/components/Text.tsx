@@ -47,19 +47,20 @@ export default function Text({
             selectable={paragraph}
             selectionColor={theme.color.text.emphasis}
             {...rest}
-            style={{
-                fontSize: fontSizeMap[variant],
-                color: code
-                    ? theme.color.text.emphasis
-                    : theme.color.text[color],
-                fontWeight: bold || code ? 'bold' : undefined,
+            style={[
+                {
+                    fontSize: fontSizeMap[variant],
+                    color: code
+                        ? theme.color.text.emphasis
+                        : theme.color.text[color],
+                    fontWeight: bold || code ? 'bold' : undefined,
 
-                fontStyle: italic ? 'italic' : 'normal',
+                    fontStyle: italic ? 'italic' : 'normal',
 
-                lineHeight: paragraph ? 28 : undefined,
-
-                ...((rest.style as Record<string, string>) ?? {}),
-            }}
+                    lineHeight: paragraph ? 28 : undefined,
+                },
+                rest.style,
+            ]}
         >
             {children}
         </ReactNativeText>

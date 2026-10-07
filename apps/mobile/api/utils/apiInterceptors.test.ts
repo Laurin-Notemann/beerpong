@@ -16,7 +16,8 @@ const SEASON = 'ba19e6c2-cb15-45e6-8752-b0965e309c68';
 const PLAYER = '28f5db58-a1e9-45c9-b89e-f54f965581e8';
 
 type Answer =
-    { status: number; data?: unknown } | { noResponse: true; code?: string };
+    | { status: number; data?: unknown }
+    | { noResponse: true; code?: string };
 
 /** An API client whose server answers with `answers`, one per request. */
 function setup(answers: Answer[], options: { offline?: boolean } = {}) {

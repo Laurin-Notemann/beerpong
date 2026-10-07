@@ -1,5 +1,7 @@
 name: Mobile App CI
 
+# Typechecks the app (TypeScript 7). Lint and format run for the whole repo in lint.yml.
+
 on:
   push:
     paths:
@@ -11,8 +13,8 @@ defaults:
     working-directory: apps/mobile
 
 jobs:
-  lint:
-    name: Lint Code
+  typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,21 +24,6 @@ jobs:
         with:
           node-version: "lts/*"
       - name: Install dependencies
-        run: npm install
-      - name: Run lint
-        run: npm run ci:lint
-
-  format:
-    name: Assert code formatting
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-      - name: Install dependencies
-        run: npm install
-      - name: Run format check
-        run: npm run ci:format
+        run: npm ci
+      - name: Run typecheck
+        run: npm run typecheck

@@ -61,7 +61,7 @@ export function LeaderboardList({
     className?: string;
     style?: React.CSSProperties;
 }) {
-    const ref = useFlip<HTMLOListElement>([rows.map((i) => i.id).join()]);
+    const ref = useFlip<HTMLOListElement>(rows.map((i) => i.id).join());
     // rows rise in once; later they slide (an animation would restart when a row moves)
     const [entered, setEntered] = useState(false);
     useEffect(() => {

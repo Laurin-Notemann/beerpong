@@ -124,7 +124,7 @@ export function useLiveMatchScreen(id: string) {
         attachTeamPhotos(api, { groupId, seasonId, matchId }, photos)
             .then(() => {
                 useLiveMatchPhotoStore.getState().actions.set(id, null);
-                qc.invalidateQueries({
+                void qc.invalidateQueries({
                     queryKey: [
                         QK.group,
                         groupId,
@@ -229,7 +229,7 @@ export function useLiveMatchScreen(id: string) {
             openFinish();
             return;
         }
-        finish();
+        void finish();
     }
 
     function discard() {

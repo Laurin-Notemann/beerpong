@@ -53,12 +53,12 @@ export function getDisplayMatch(
             change: 0, // we set this later, can't set it here bc we need matchObj to calculate it which requires teamMembers 🙃
             moves: allowedMoves.map((j) => {
                 return {
-                    id: j.id!,
+                    id: j.id,
                     count: i.moves.find((k) => k.moveId === j.id)?.count ?? 0,
                     title: j.name || 'Unknown',
-                    points: j.pointsForScorer!,
-                    pointsForTeam: j.pointsForTeam!,
-                    isFinish: j.finishingMove!,
+                    points: j.pointsForScorer,
+                    pointsForTeam: j.pointsForTeam,
+                    isFinish: j.finishingMove,
                     cups: cupsPerHit(j),
                 };
             }),

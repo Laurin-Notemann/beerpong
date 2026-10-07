@@ -2,14 +2,12 @@
     "$schema": "https://turborepo.com/schema.json",
     "agentGuidance": false,
     "tasks": {
-        "lint": {},
+        "//#lint": {},
         "typecheck": {},
         "test": {},
-        "format:check": {},
+        "//#format:check": {},
         "build": {
-            "outputs": [
-                ".output/**"
-            ]
+            "outputs": [".output/**"]
         }
     }
 }

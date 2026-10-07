@@ -1,0 +1,42 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "useTabs": false,
+    "printWidth": 80,
+    "sortPackageJson": false,
+    "sortImports": {
+        "groups": [
+            ["builtin", "external"],
+            "internal",
+            ["parent", "sibling", "index"]
+        ],
+        "newlinesBetween": true,
+        "ignoreCase": true
+    },
+    "ignorePatterns": [
+        // formats the apps' code and the root's JSON; workflows, Docker files and docs keep their own style
+        ".github/**",
+        "docker/**",
+        "scripts/**",
+        "/*.md",
+        ".claude/**",
+        "mobile-app/**",
+        "apps/api/**",
+        "api-tests/**",
+        "apps/mobile/android/**",
+        "apps/mobile/ios/**",
+        "apps/web/src/routeTree.gen.ts",
+        "apps/web/.output/**",
+        "apps/web/public/tv/polyfills.js",
+        "apps/web/src/simulator/styles.css"
+    ],
+    "overrides": [
+        {
+            "files": ["apps/web/**"],
+            "options": { "printWidth": 100 }
+        }
+    ]
+}

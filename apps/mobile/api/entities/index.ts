@@ -32,23 +32,23 @@ export class MatchMoveImpl {
     public move!: RuleMoveImpl;
 
     public get title(): string {
-        return this.move!.name;
+        return this.move.name;
     }
     public get points(): number {
-        return this.move!.pointsForScorer!;
+        return this.move.pointsForScorer;
     }
     public get pointsForTeam(): number {
-        return this.move!.pointsForTeam;
+        return this.move.pointsForTeam;
     }
     public get isFinish(): boolean {
-        return this.move!.finishingMove;
+        return this.move.finishingMove;
     }
     public get cups(): number {
-        return this.move!.cups;
+        return this.move.cups;
     }
 
     public get id(): string {
-        return this.move!.id;
+        return this.move.id;
     }
 
     public teamMemberId: string;
@@ -158,7 +158,7 @@ export class TeamMemberImpl {
     public get pointsScoredThemselves(): number {
         return (
             this.moves.reduce(
-                (sum, i) => sum + i.count * i.move!.pointsForScorer,
+                (sum, i) => sum + i.count * i.move.pointsForScorer,
                 0
             ) ?? 0
         );
@@ -170,7 +170,7 @@ export class TeamMemberImpl {
     public toJSON(): TeamMember {
         return {
             id: this.playerId,
-            profileId: this.player?.profileId!,
+            profileId: this.player?.profileId,
             change: this.change,
             moves: this.moves.map((i) => i.toJSON()),
             name: this.name,
@@ -286,7 +286,7 @@ export class MatchImpl {
         this.seasonId = _data.seasonId!;
         this.id = _data.id!;
         this.date = new Date(_data.date!);
-        this.teams = _data.teams!.map((i) => new TeamImpl(i));
+        this.teams = _data.teams.map((i) => new TeamImpl(i));
         this.blueTeamPhotoAssetId = _data.teams[0]?.photoAssetId ?? null;
         this.redTeamPhotoAssetId = _data.teams[1]?.photoAssetId ?? null;
 
@@ -312,12 +312,12 @@ export class MatchImpl {
         }
 
         for (const team of this.teams) {
-            const members = _data.teamMembers!.filter(
+            const members = _data.teamMembers.filter(
                 (i) => i.teamId === team.id
             );
             team.setMembers(members.map((i) => new TeamMemberImpl(i)));
 
-            for (const member of team.members!) {
+            for (const member of team.members) {
                 const player = players.find((i) => i.id === member.playerId);
 
                 if (!player) {

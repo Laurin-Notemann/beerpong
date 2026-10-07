@@ -14,7 +14,7 @@ export function Avatar({
         .split(/\s+/)
         .filter(Boolean)
         .slice(0, 2)
-        .map((i) => i[0]!.toUpperCase())
+        .map((i) => i[0].toUpperCase())
         .join('');
 
     return (

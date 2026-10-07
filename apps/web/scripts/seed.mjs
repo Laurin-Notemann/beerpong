@@ -44,7 +44,7 @@ async function call(path, { method = 'GET', token, body } = {}) {
             'Content-Type': 'application/json',
             ...(token && { Authorization: `Bearer ${token}` }),
         },
-        body: body && JSON.stringify(body),
+        ...(body && { body: JSON.stringify(body) }),
     });
     const json = await res.json().catch(() => null);
     if (json?.status !== 'OK')

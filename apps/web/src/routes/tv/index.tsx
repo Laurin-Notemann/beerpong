@@ -1,13 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react';
 
-import { CameraView } from '~/tv/components/CameraView';
-import { FocusView } from '~/tv/components/FocusView';
-import { FullscreenButton } from '~/tv/components/FullscreenButton';
-import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
-import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
-import { LiveMatchPanel } from '~/tv/components/LiveMatchPanel';
-import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import {
     type DisplayConfig,
     emptyConfig,
@@ -15,6 +8,13 @@ import {
     parseConfig,
     pickMatches,
 } from '@/lib/tvDisplay';
+import { CameraView } from '~/tv/components/CameraView';
+import { FocusView } from '~/tv/components/FocusView';
+import { FullscreenButton } from '~/tv/components/FullscreenButton';
+import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
+import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
+import { LiveMatchPanel } from '~/tv/components/LiveMatchPanel';
+import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import { useCameraFeed } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import {
@@ -46,10 +46,13 @@ const STORAGE_KEY = 'versus-tv';
 
 function loadIdentity(): Identity {
     try {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '');
+        const stored = JSON.parse(
+            localStorage.getItem(STORAGE_KEY) ?? ''
+        ) as Partial<Identity> | null;
         if (stored?.id && stored?.secret) {
             return {
-                ...stored,
+                id: stored.id,
+                secret: stored.secret,
                 code: stored.code ?? null,
                 config: parseConfig(stored.config),
                 refreshToken: stored.refreshToken ?? null,
@@ -89,13 +92,19 @@ function Tv() {
         setRegistered(true);
     }, [identity]);
 
+    const registerRef = useRef(register);
+    useEffect(() => {
+        registerRef.current = register;
+    }, [register]);
+
     // registers once (until it works); the events stream registers again when it loses the server
     useEffect(() => {
         let stopped = false;
-        const attempt = () =>
-            register().catch(() => {
+        const attempt = () => {
+            void registerRef.current().catch(() => {
                 if (!stopped) setTimeout(attempt, 3_000);
             });
+        };
         attempt();
         return () => {
             stopped = true;
@@ -111,7 +120,9 @@ function Tv() {
         identity.config.cameraId
     );
     const onFeedSignal = useRef(feed.onSignal);
-    onFeedSignal.current = feed.onSignal;
+    useEffect(() => {
+        onFeedSignal.current = feed.onSignal;
+    }, [feed.onSignal]);
 
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
@@ -140,16 +151,21 @@ function Tv() {
             if (scored.length) setClips((queue) => [...queue, ...scored]);
         }
     );
-    liveMatches.current = pickMatches(board.data?.liveMatches ?? [], [
+    const matches = pickMatches(board.data?.liveMatches ?? [], [
         ...(identity.config.focusMatchId ? [identity.config.focusMatchId] : []),
         ...identity.config.pinnedMatchIds.filter((id) => id !== identity.config.focusMatchId),
     ]);
-    const readyClips = liveScoreClips(liveMatches.current);
-    const clipKeys = JSON.stringify(readyClips.map((clip) => clip.key));
     useEffect(() => {
-        const keys = new Set<string>(JSON.parse(clipKeys));
+        liveMatches.current = matches;
+    }, [matches]);
+    const readyClips = liveScoreClips(matches);
+    const clipKeys = JSON.stringify(readyClips.map((clip) => clip.key));
+    const [previousClipKeys, setPreviousClipKeys] = useState(clipKeys);
+    if (previousClipKeys !== clipKeys) {
+        setPreviousClipKeys(clipKeys);
+        const keys = new Set(readyClips.map((clip) => clip.key));
         setClips((queue) => queue.filter((clip) => keys.has(clip.key)));
-    }, [clipKeys]);
+    }
     const clipDone = useCallback(() => setClips((queue) => queue.slice(1)), []);
 
     const { config } = identity;

@@ -39,7 +39,7 @@ export const useCreateGroupStore = create<GroupStore>((set) => ({
         }));
     },
     setSportCustomName: (name) => {
-        set((state) => ({
+        set(() => ({
             sport: { custom: { name } },
         }));
     },

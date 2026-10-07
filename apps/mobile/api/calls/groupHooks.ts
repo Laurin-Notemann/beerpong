@@ -48,7 +48,7 @@ export const useJoinGroupMutation = () => {
             const res = await (await api).findGroupByInviteCode({ inviteCode });
 
             if (res.data.data) {
-                await (await api).joinGroup({ id: res.data.data.id! }, {});
+                await (await api).joinGroup({ id: res.data.data.id }, {});
             }
             return res?.data;
         },
