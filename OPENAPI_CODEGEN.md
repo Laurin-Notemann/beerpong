@@ -18,8 +18,8 @@ served but not documented, or the other way round.
 
 `make gen-open-api` from the root copies it to `apps/mobile/api/generated/openapi.json`, which the
 client loads at runtime, and generates `apps/mobile/openapi/openapi.d.ts` from it with `openapicmd`
-(`npm run gen-types`). Never edit those two files by hand. The copy happens in `scripts/gen-api`
-rather than the npm script because `package.json` scripts are part of the app's runtime fingerprint.
+(`pnpm run gen-types`). Never edit those two files by hand. The copy happens in `scripts/gen-api`
+rather than a `package.json` script because `package.json` scripts are part of the app's runtime fingerprint.
 
 So an API change is: change the handler and its DTO in `apps/api`, update `openapi.json` to match,
 run `make gen-open-api`, and update the hooks that use the changed types. The `Generate OpenApi`

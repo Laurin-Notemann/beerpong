@@ -1,6 +1,6 @@
 # native-sim-template-version: 19
 # Adapted from native-sim 0.1.1's template (templates/native-sim.yml, v19) for an
-# Expo app that lives in `apps/mobile/` (an npm workspace) instead of the repo
+# Expo app that lives in `apps/mobile/` (a pnpm workspace) instead of the repo
 # root. Start it with `scripts/native-sim-up`, not `native-sim up` (see
 # .claude/skills/native-sim).
 # Changes vs. the template, all marked "apps/mobile:" below: run steps default to
@@ -127,14 +127,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Cache npm + CocoaPods
+      - name: Cache pnpm + CocoaPods
         uses: actions/cache@v6
         with:
           path: |
-            ~/.npm
+            ~/Library/pnpm/store
             ~/Library/Caches/CocoaPods
           # apps/mobile: the lockfile is the workspace root's.
-          key: native-sim-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: native-sim-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: native-sim-${{ runner.os }}-
 
       - name: Install JS dependencies
@@ -142,15 +142,13 @@ jobs:
         if: inputs.mode != 'app'
         run: |
           set -euo pipefail
-          if [ -f pnpm-lock.yaml ]; then
+          # apps/mobile: the lockfile is at the workspace root.
+          if [ -f pnpm-lock.yaml ] || [ -f ../../pnpm-lock.yaml ]; then
             corepack enable && pnpm install --frozen-lockfile
           elif [ -f yarn.lock ]; then
             corepack enable
             # --immutable is Yarn 2+; Yarn 1 wants --frozen-lockfile.
             yarn install --immutable || yarn install --frozen-lockfile
-          # apps/mobile: the lockfile is at the workspace root; npm ci here installs this workspace.
-          elif [ -f ../../package-lock.json ]; then
-            npm ci
           else
             npm install
           fi

@@ -1,0 +1,12 @@
+packages:
+    - 'apps/*'
+
+# pnpm runs no dependency's install scripts unless they're listed here
+allowBuilds:
+    # downloads the sentry-cli binary the source map upload uses
+    '@sentry/cli': true
+    # macOS file watcher
+    fsevents: true
+    core-js: false
+    '@scarf/scarf': false
+    yarn: false

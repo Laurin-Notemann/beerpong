@@ -16,7 +16,7 @@ on:
       - staging
     paths:
       - "apps/mobile/**"
-      - "package-lock.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/mobile-app-eas.yml"
   workflow_dispatch:
     inputs:
@@ -60,12 +60,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # eas build --local installs the app again with the lockfile's package manager
+      - uses: pnpm/action-setup@v6
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-          cache-dependency-path: "package-lock.json"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
@@ -76,7 +79,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # The profile name is also the channel and the EAS environment (see eas.json).
       - name: Find matching build
@@ -115,7 +118,7 @@ jobs:
           mkdir "$EXPO_METRO_CACHE_OUTPUT_DIR"
           eas update --platform "$PLATFORM" --channel "$PROFILE" --environment "$PROFILE" \
             --message "staging $GITHUB_SHA" --non-interactive
-          npx sentry-expo-upload-sourcemaps dist
+          pnpm exec sentry-expo-upload-sourcemaps dist
 
       - name: Save Metro cache
         if: steps.match.outputs.build_id

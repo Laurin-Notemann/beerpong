@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "npm run polyfills && vite dev",
-        "build": "npm run polyfills && vite build",
+        "dev": "pnpm run polyfills && vite dev",
+        "build": "pnpm run polyfills && vite build",
         "start": "node .output/server/index.mjs",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",

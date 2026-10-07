@@ -22,14 +22,14 @@ The two share only the document (`src/routes/__root.tsx`). Each brings its own h
 ## Run it
 
 ```sh
-npm install                                           # in the repo root
-VERSUS_API_URL=http://localhost:8080 npm run dev      # http://localhost:3100/ and /tv/
-VERSUS_API_URL=http://localhost:8080 npm run seed     # a made-up group with 2 live matches (LIVE=1..3); prints its code
-VERSUS_API_URL=http://localhost:8080 npm run seed -- play   # keeps hitting cups in those live matches
-npm run typecheck && npm test && npm run build
+pnpm install                                          # in the repo root
+VERSUS_API_URL=http://localhost:8080 pnpm run dev     # http://localhost:3100/ and /tv/
+VERSUS_API_URL=http://localhost:8080 pnpm run seed    # a made-up group with 2 live matches (LIVE=1..3); prints its code
+VERSUS_API_URL=http://localhost:8080 pnpm run seed play   # keeps hitting cups in those live matches
+pnpm run typecheck && pnpm test && pnpm run build
 ```
 
-`VERSUS_API_URL` is how the server reaches the API (default `http://localhost:8080`). `VERSUS_API_PUBLIC_URL` is how browsers reach its websocket, when that differs (on staging an internal Docker hostname for the server, the public HTTPS URL for browsers). `PORT` defaults to 3000. The simulator only reads, so `VERSUS_API_URL=https://beerpong.lb.staging.laurinnotemann.dev npm run dev` shows staging's groups; don't open the TV against it, it signs up users there.
+`VERSUS_API_URL` is how the server reaches the API (default `http://localhost:8080`). `VERSUS_API_PUBLIC_URL` is how browsers reach its websocket, when that differs (on staging an internal Docker hostname for the server, the public HTTPS URL for browsers). `PORT` defaults to 3000. The simulator only reads, so `VERSUS_API_URL=https://beerpong.lb.staging.laurinnotemann.dev pnpm run dev` shows staging's groups; don't open the TV against it, it signs up users there.
 
 ## Staging
 
