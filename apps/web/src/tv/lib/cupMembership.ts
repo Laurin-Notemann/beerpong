@@ -39,7 +39,7 @@ export function cupSearchAreas(areas: PlayingArea[]): PlayingArea[] {
 
 /** Cup segmentation finds objects; rack membership uses spatial neighbours and recent positions.
  * The match count is an upper bound, never a reason to invent a missing observation. Ambiguous
- * surplus cups can be shown conservatively but cannot update the shared formation. */
+ * surplus cups cannot update trusted positions, display or the shared formation. */
 export class CupMembership {
     private previous: { point: Point; seen: number }[][] = [[], []];
     private key = '';
@@ -96,8 +96,35 @@ export class CupMembership {
                 distance(p, centre) / Math.max(spacing, 1e-6);
             candidates.sort((a, b) => priority(b) - priority(a));
             const limit = expected ? expected[side] : 10;
-            ambiguousSides[side] = candidates.length > limit;
-            const fresh = candidates.slice(0, limit);
+            let resolved = candidates;
+            if (expected && candidates.length > limit) {
+                // A larger stored rack must not become an active rack simply by
+                // trimming its densest cups to the match count. Compare whole
+                // connected groups; partial or competing groups stay ambiguous.
+                const pending = new Set(candidates);
+                const components: Point[][] = [];
+                while (pending.size) {
+                    const seed = pending.values().next().value;
+                    if (!seed) break;
+                    pending.delete(seed);
+                    const component = [seed];
+                    for (let i = 0; i < component.length; i++) {
+                        for (const p of pending) {
+                            if (nearby(component[i], p)) {
+                                pending.delete(p);
+                                component.push(p);
+                            }
+                        }
+                    }
+                    components.push(component);
+                }
+                const compatible = components.filter((group) => group.length <= limit);
+                if (compatible.length === 1 && compatible[0].length === limit)
+                    resolved = compatible[0];
+            }
+            ambiguousSides[side] = resolved.length > limit;
+            if (ambiguousSides[side]) return [];
+            const fresh = resolved;
             this.previous[side] = fresh.map((p) => ({ point: p, seen: now }));
             return fresh.map((p) => p.cup);
         });
