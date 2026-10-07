@@ -29,6 +29,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
         let frame = 0;
         let paintedAt = performance.now();
         let progressedAt = paintedAt;
+        let shownAt = -Infinity;
         let previousTime = -1;
         let previousCount = -1;
         let previousPixels: Uint8ClampedArray | undefined;
@@ -99,7 +100,10 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                 const pixels = sample.getImageData(0, 0, 8, 8).data;
                 progressed ||= pixels.some((value, i) => value !== previousPixels?.[i]);
                 previousPixels = pixels;
-                if (progressed) progressedAt = now;
+                // A frame now and then (Tizen's player on a new stream) is no moving picture.
+                const moving = progressed && now - shownAt < 1000;
+                if (progressed) shownAt = now;
+                if (moving) progressedAt = now;
                 if (!pixels.some((value, i) => i % 4 !== 3 && value > 4)) return;
                 const scale = Math.min(1, 1280 / video.videoWidth, 720 / video.videoHeight);
                 const width = Math.round(video.videoWidth * scale);
@@ -110,7 +114,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                 }
                 context.drawImage(video, 0, 0, width, height);
                 paintedAt = now;
-                if (progressed) {
+                if (moving) {
                     if (reported.size) noteFeed('picture back');
                     setProblem(null);
                     reported.clear();
