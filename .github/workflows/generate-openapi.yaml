@@ -6,10 +6,12 @@ on:
   push:
     paths:
       - "apps/api/openapi/openapi.json"
-  pull_request:
-    paths:
-      - "apps/api/openapi/openapi.json"
   workflow_dispatch:
+
+# A branch push already covers its PR. Serialize writers to avoid competing generated commits.
+concurrency:
+  group: openapi-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   generate-types:

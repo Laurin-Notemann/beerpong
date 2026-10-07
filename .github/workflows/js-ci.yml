@@ -1,0 +1,48 @@
+name: JS CI
+
+# Install once for lint, formatting, both typechecks and the web production build.
+# All checks run on each relevant push; Turbo reuses only successful, unchanged tasks.
+on:
+  push:
+    paths:
+      - "apps/mobile/**"
+      - "apps/web/**"
+      - ".oxlintrc.json"
+      - ".oxfmtrc.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - "scripts/check"
+      - "scripts/setup"
+      - ".github/workflows/js-ci.yml"
+      - ".github/workflows/web-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: js-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, format, typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - uses: actions/cache@v6
+        with:
+          path: .turbo/cache
+          key: js-check-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            js-check-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: ./scripts/check js

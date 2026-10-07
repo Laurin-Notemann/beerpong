@@ -3,6 +3,7 @@
     "extends": ["//"],
     "tasks": {
         "typecheck": {
+            "dependsOn": ["build"],
             "inputs": [
                 "$TURBO_DEFAULT$",
                 "$TURBO_ROOT$/apps/mobile/lib/**",
@@ -23,8 +24,10 @@
             ]
         },
         "build": {
+            "outputs": [".output/**", "public/tv/polyfills.js", "src/routeTree.gen.ts"],
             "inputs": [
                 "$TURBO_DEFAULT$",
+                "!src/routeTree.gen.ts",
                 "$TURBO_ROOT$/apps/mobile/lib/**",
                 "$TURBO_ROOT$/apps/mobile/api/utils/**",
                 "$TURBO_ROOT$/apps/mobile/components/CupGrid/**",

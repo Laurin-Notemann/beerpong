@@ -2,6 +2,7 @@
     "name": "api",
     "private": true,
     "scripts": {
+        "check": "../../scripts/check-api",
         "lint": "go vet ./...",
         "test": "go test ./..."
     }

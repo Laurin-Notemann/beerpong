@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# One verification command for agents and CI. Turbo shares successful checks across worktrees.
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+scope=${1:-all}
+if [ "$#" -gt 0 ]; then shift; fi
+case "$scope" in
+  all|js) ;;
+  api) exec ./scripts/check-api ;;
+  *) printf 'Usage: scripts/check [all|js|api] [turbo run flags]\n' >&2; exit 2 ;;
+esac
+
+./scripts/setup
+VERSUS_NODE_VERSION=$(node --version)
+export VERSUS_NODE_VERSION
+tasks=('//#lint' '//#format:check' 'mobile-app#typecheck' 'web#typecheck' 'web#build')
+if [ "$scope" = all ]; then
+  if ! command -v go >/dev/null && [ -x "$HOME/.local/go/bin/go" ]; then
+    export PATH="$HOME/.local/go/bin:$PATH"
+  fi
+  VERSUS_GO_VERSION=$(go version)
+  export VERSUS_GO_VERSION
+  tasks+=('api#check')
+fi
+pnpm exec turbo run "${tasks[@]}" --concurrency=4 --output-logs=new-only "$@"

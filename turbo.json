@@ -3,12 +3,20 @@
     "agentGuidance": false,
     "tasks": {
         "lint": {},
-        "//#lint": {},
-        "typecheck": {},
+        "//#lint": {
+            "env": ["VERSUS_NODE_VERSION"]
+        },
+        "typecheck": {
+            "env": ["VERSUS_NODE_VERSION"]
+        },
         "test": {},
-        "//#format:check": {},
+        "//#format:check": {
+            "env": ["VERSUS_NODE_VERSION"]
+        },
+        "check": {},
         "build": {
-            "outputs": [".output/**"]
+            "env": ["VERSUS_NODE_VERSION", "VITE_*", "NODE_ENV"],
+            "outputs": [".output/**", "public/tv/polyfills.js"]
         }
     }
 }

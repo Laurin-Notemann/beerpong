@@ -1,21 +1,9 @@
 name: Web CI
 
-# Typecheck and the production build of the web app (apps/web/: the Elo simulator
-# and Versus TV). The TV reduces live matches with the app's code, so changes to those parts of
-# apps/mobile/ run it too. The staging deploy runs this next to the image build and deploys
-# only if both pass. Lint and format run for the whole repo in lint.yml.
+# The staging deploy vets the web app next to its image build and deploys only if both pass.
+# Branch checks (including the shared mobile code) run once in js-ci.yml.
 
 on:
-  push:
-    paths:
-      - "apps/web/**"
-      - "apps/mobile/lib/**"
-      - "apps/mobile/api/utils/**"
-      - "apps/mobile/components/CupGrid/**"
-      - "apps/mobile/utils/**"
-      - "apps/mobile/openapi/**"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/web-ci.yml"
   workflow_call:
   workflow_dispatch:
 
@@ -35,6 +23,6 @@ jobs:
           node-version: "24"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - run: pnpm run typecheck
       - run: pnpm run build
