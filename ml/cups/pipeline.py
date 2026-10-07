@@ -254,6 +254,26 @@ def annotation_instances(label, frame_id):
     return instances
 
 
+def uncertain_playing_count(label, frame_id):
+    # Unconfirmed cup-vs-skin fragments have no invented instance mask. Source
+    # reviewers can bound how many additional visible playing cups they may hide.
+    count = label.get('uncertainPlayingCount', 0)
+    if type(count) is not int or not 0 <= count <= 20:
+        raise ValueError('Invalid source uncertainty count ' + frame_id)
+    return count
+
+
+def cup_score_bounds(score):
+    tp, fp, fn = (score[key] for key in ('tp', 'fp', 'fn'))
+    unknown = score.get('unknownTargets', 0)
+    excluded = score.get('excludedUnknownOutputs', 0)
+    uncertain = score.get('uncertainTargets', 0)
+    if any(type(v) is not int or v < 0 for v in (tp, fp, fn, unknown, excluded, uncertain)) or excluded > unknown:
+        raise ValueError('Invalid reviewed cup uncertainty counts')
+    return dict(precisionLowerBound=tp / max(tp + fp + excluded, 1),
+                recallLowerBound=tp / max(tp + fn + unknown - excluded + uncertain, 1))
+
+
 def split(args):
     import cv2
     import numpy as np
@@ -292,7 +312,8 @@ def split(args):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(root / frame['image'], target)
             image_id = len(images) + 1
-            images.append({'id': image_id, 'file_name': target.name, 'width': frame['width'], 'height': frame['height']})
+            images.append({'id': image_id, 'file_name': target.name, 'width': frame['width'], 'height': frame['height'],
+                           'uncertain_playing_count': uncertain_playing_count(label, frame['id'])})
             for contours, role in annotation_instances(label, frame['id']):
                 scaled = [points * [frame['width'], frame['height']] for points in contours]
                 all_points = np.concatenate(scaled)
@@ -441,6 +462,7 @@ def evaluate_runtime(args):
     frames = json.loads((root / 'frames.json').read_text())
     gt_path = root / 'coco' / args.split / '_annotations.coco.json'
     gt = json.loads(gt_path.read_text())
+    provenance = json.loads((root / 'coco/provenance.json').read_text())
     by_file = {frame['image']: frame for frame in frames}
     selected = []
     for image in gt['images']:
@@ -450,9 +472,14 @@ def evaluate_runtime(args):
         frame = matches[0]
         if digest(root / frame['image']) != frame['sha256']:
             raise ValueError('Reviewed montage pixels changed: ' + frame['id'])
-        label = json.loads((root / 'annotations' / (frame['id'] + '.json')).read_text())
+        label_path = root / 'annotations' / (frame['id'] + '.json')
+        label = json.loads(label_path.read_text())
         if not label.get('reviewed') or label.get('imageSha256') != frame['sha256'] or not label.get('reviewer') or not label.get('reviewedAt'):
             raise ValueError('Missing source review provenance: ' + frame['id'])
+        if provenance.get('labels', {}).get(frame['id']) != digest(label_path):
+            raise ValueError('Reviewed label changed after the dataset was frozen: ' + frame['id'])
+        if image.get('uncertain_playing_count', 0) != uncertain_playing_count(label, frame['id']):
+            raise ValueError('Frozen source uncertainty does not match reviewed label: ' + frame['id'])
         selected.append((frame, image))
     predictions = {row['id']: row for row in artifact['results']}
     if len(predictions) != len(artifact['results']) or set(predictions) != {f['id'] for f, _ in selected}:
@@ -485,7 +512,7 @@ def evaluate_runtime(args):
     observed = {row['id']: row for row in membership['results']}
     names = ('rawAllCups', 'playingSelected', 'playingDisplayed', 'playingFresh')
     def empty_score():
-        return dict(tp=0, fp=0, fn=0, unknownTargets=0, excludedUnknownOutputs=0, removedOutputs=0)
+        return dict(tp=0, fp=0, fn=0, unknownTargets=0, excludedUnknownOutputs=0, uncertainTargets=0, removedOutputs=0)
     totals = {name: empty_score() for name in names}
     cohorts, cohort_metrics, details = {}, {}, []
     for frame, image in selected:
@@ -503,6 +530,9 @@ def evaluate_runtime(args):
         cohorts[cohort] = cohorts.get(cohort, 0) + 1
         cohort_metrics.setdefault(cohort, {name: empty_score() for name in names})
         item = dict(id=frame['id'], context=cohort, expected=row['expected'], ambiguous=row['ambiguous'], held=row['held'], ignoredOpIds=row['ignoredOpIds'])
+        uncertain = image.get('uncertain_playing_count', 0)
+        if type(uncertain) is not int or not 0 <= uncertain <= 20:
+            raise ValueError('Invalid frozen source uncertainty count')
         for name, cups in (('rawAllCups', predictions[frame['id']]['cups']), ('playingSelected', row['cups']), ('playingDisplayed', row['displayed']), ('playingFresh', row['fresh'])):
             masks = []
             for cup in cups:
@@ -525,22 +555,23 @@ def evaluate_runtime(args):
                             for i, p in enumerate(masks) for j, t in enumerate(targets)], reverse=True)
             used_predictions, used_targets, matches = set(), set(), {}
             score = empty_score()
+            score['uncertainTargets'] = uncertain
             for iou, i, j in pairs:
                 if iou < .5 or i in used_predictions or j in used_targets:
                     continue
                 used_predictions.add(i); used_targets.add(j)
                 matches[j] = dict(prediction=i, maskIoU=iou, confidence=cups[i]['score'])
                 role = annotations[j]['cup_role']
-                if role == 'unknown':
-                    score['excludedUnknownOutputs'] += 1
-                elif name == 'rawAllCups' or role == 'playing':
+                if name == 'rawAllCups' or role == 'playing':
                     score['tp'] += 1
+                elif role == 'unknown':
+                    score['excludedUnknownOutputs'] += 1
                 else:
                     score['fp'] += 1; score['removedOutputs'] += 1
             score['fp'] += len(masks) - len(used_predictions)
             for j, annotation in enumerate(annotations):
                 role = annotation['cup_role']
-                if role == 'unknown':
+                if role == 'unknown' and name != 'rawAllCups':
                     score['unknownTargets'] += 1
                 elif j not in used_targets and (name == 'rawAllCups' or role == 'playing'):
                     score['fn'] += 1
@@ -559,8 +590,10 @@ def evaluate_runtime(args):
         details.append(item)
     for score in list(totals.values()) + [score for metrics in cohort_metrics.values() for score in metrics.values()]:
         score.update(precisionIoU50=score['tp']/max(score['tp']+score['fp'], 1), recallIoU50=score['tp']/max(score['tp']+score['fn'], 1))
+        score.update(cup_score_bounds(score))
     report = dict(scope='worker-outline-and-playing-membership', split=args.split, model=artifact['model'],
                   segmentationRasterization='coco-pixel-center',
+                  uncertaintyProtocol='visible-cup-conservative-bounds-v1',
                   workerSha256=worker_sha, visionSha256=vision_sha, membershipSourceSha256=membership['membershipSourceSha256'],
                   browserArtifactSha256=digest(args.results), annotationSha256=digest(gt_path),
                   datasetSha256=digest(root / 'coco/provenance.json'), eventsSha256=digest(args.events) if args.events else None,
@@ -638,6 +671,7 @@ def runtime_promotion(manifest, paths):
         native = manifest.get('validationEvaluation' if split == 'valid' else 'evaluation') or {}
         model = report.get('model', {})
         if (report.get('scope') != 'worker-outline-and-playing-membership' or report.get('split') != split
+                or report.get('uncertaintyProtocol') != 'visible-cup-conservative-bounds-v1'
                 or report.get('segmentationRasterization') != 'coco-pixel-center'
                 or native.get('segmentationRasterization') != 'coco-pixel-center'
                 or model.get('sha256') != manifest['sha256'] or model.get('threshold') != manifest['threshold']
@@ -654,9 +688,10 @@ def runtime_promotion(manifest, paths):
             tp, fp, fn = (score.get(key, -1) for key in ('tp', 'fp', 'fn'))
             if any(type(value) is not int or value < 0 for value in (tp, fp, fn)) or tp + fn < 30:
                 raise ValueError('Need sufficient reviewed visible playing-cup runtime counts')
-            if tp / max(tp + fp, 1) < .98 or tp / max(tp + fn, 1) < .98:
+            bounds = cup_score_bounds(score)
+            if bounds['precisionLowerBound'] < .98 or bounds['recallLowerBound'] < .98:
                 raise ValueError('Playing-cup runtime precision and recall must both reach 98 percent')
-        reports[split] = {key: report[key] for key in ('scope', 'split', 'segmentationRasterization', 'workerSha256', 'visionSha256', 'membershipSourceSha256',
+        reports[split] = {key: report[key] for key in ('scope', 'split', 'segmentationRasterization', 'uncertaintyProtocol', 'workerSha256', 'visionSha256', 'membershipSourceSha256',
                                                      'browserArtifactSha256', 'annotationSha256', 'datasetSha256',
                                                      'cohorts', 'cohortMetrics', 'metrics', 'limitations')}
         reports[split]['reportSha256'] = digest(path)

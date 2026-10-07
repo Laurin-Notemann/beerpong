@@ -53,13 +53,15 @@ def serve(args):
                 polygons = label['polygons']
                 if not label.get('reviewer'):
                     raise ValueError()
-                from pipeline import annotation_instances
+                from pipeline import annotation_instances, uncertain_playing_count
                 annotation_instances(label, name)
+                uncertainty = uncertain_playing_count(label, name)
                 roles = label.get('roles', ['unknown'] * len(polygons))
                 parts = label.get('parts', [[] for _ in polygons])
                 from pipeline import write_json
                 write_json(root / 'annotations' / (name + '.json'), {
                     'polygons': polygons, 'parts': parts, 'roles': roles, 'reviewed': True, 'reviewer': str(label['reviewer'])[:100],
+                    'uncertainPlayingCount': uncertainty,
                     'reviewedAt': datetime.now(timezone.utc).isoformat(), 'imageSha256': by_id[name]['sha256'],
                 })
             except (ValueError, KeyError, TypeError):

@@ -75,6 +75,7 @@
         let frames = [],
             index = 0,
             cups = [],
+            sourceUncertainty = 0,
             selected = -1,
             selectedPart = 0,
             adding = false,
@@ -128,6 +129,7 @@
         async function load() {
             const frame = frames[index],
                 label = await (await fetch('/label/' + frame.id)).json();
+            sourceUncertainty = label.uncertainPlayingCount ?? 0;
             cups = label.polygons.map((poly, i) => ({
                 contours: [poly, ...(label.parts?.[i] ?? [])],
                 role: label.roles?.[i] ?? 'unknown',
@@ -281,6 +283,7 @@
                     polygons: cups.map((cup) => cup.contours[0]),
                     parts: cups.map((cup) => cup.contours.slice(1)),
                     roles: cups.map((cup) => cup.role),
+                    uncertainPlayingCount: sourceUncertainty,
                     reviewer,
                 }),
             });
