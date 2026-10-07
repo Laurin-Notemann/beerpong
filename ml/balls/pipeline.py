@@ -368,6 +368,12 @@ def train(args):
     from sklearn.ensemble import RandomForestClassifier
     x, y, examples = features(args.dataset, 'train', args.color, args.features)
     vx, vy, validation = features(args.dataset, 'valid', args.color, args.features)
+    split_sessions = {}
+    for example in read(Path(args.dataset) / 'reviewed.json'):
+        split_sessions.setdefault(example['split'],set()).add(example['session_id'])
+    for name,sessions in split_sessions.items():
+        if any(sessions & other for other_name,other in split_sessions.items() if other_name != name):
+            raise ValueError('Training, validation and final-test sessions must be disjoint')
     if min(sum(y), len(y)-sum(y)) < 30 or min(sum(vy), len(vy)-sum(vy)) < 15:
         raise ValueError('Need sufficient reviewed positive and negative training/validation examples')
     supported = sorted({e['label'].split('-')[0] for e in examples if e['label'] != 'negative'})
@@ -378,7 +384,7 @@ def train(args):
         scores = forest.predict_proba(vx)[:,1]
         for threshold in (.6,.7,.8,.85,.9,.95):
             result = metrics(vy,scores,threshold)
-            objective = result['recall'] if result['precision'] >= .95 else -1
+            objective = result['recall'] if result['precision'] >= args.minimum_precision else -1
             if best is None or objective > best[0]:
                 best = (objective,forest,threshold,result)
     trees = []
@@ -389,7 +395,8 @@ def train(args):
                       for i in range(tree.node_count)])
     artifact = {'version':1,'id':args.id,'supportedColors':supported,'size':8,
                 'features':args.features,'featureCount':18 if args.features == 'radial-rgb-color-v1' else 37,'trees':trees,'threshold':best[2],'proposalColors':args.color,
-                'validation':best[3],'validationPass':best[0] >= .7,
+                'validation':best[3],'validationPass':best[0] >= args.minimum_recall,
+                'qualityGate':{'precision':args.minimum_precision,'recall':args.minimum_recall},
                 'trainingExamples':len(examples),'validationExamples':len(validation),
                 'review':'AI visual review; experimental, one camera/table/night',
                 'datasetSha256':hashlib.file_digest((Path(args.dataset)/'reviewed.json').open('rb'),'sha256').hexdigest()}
@@ -418,9 +425,23 @@ def export(args):
     model, report = read(args.model), read(args.report)
     expected = hashlib.file_digest(Path(args.model).open('rb'),'sha256').hexdigest()
     quality = report['metrics']
-    if not model.get('validationPass') or report['split'] != 'test' or report['modelSha256'] != expected or quality['precision'] < .9 or quality['recall'] < .8 or quality['tp']+quality['fn'] < 30 or quality['negatives'] < 30:
+    required = {'precision':args.minimum_precision,'recall':args.minimum_recall}
+    validation = model.get('validation',{})
+    if not model.get('validationPass') or report['split'] != 'test' or report['modelSha256'] != expected or report.get('datasetSha256') != model['datasetSha256'] or report.get('sessions',0) < 2 or any(quality.get(key,0) < value or validation.get(key,0) < value for key,value in required.items()) or quality['tp']+quality['fn'] < 30 or quality['negatives'] < 30:
         raise ValueError('Exact model must pass a reviewed held-out report before promotion')
+    tracker = read(args.tracker_report)
+    repo = Path(__file__).resolve().parents[2]
+    source_sha = hashlib.sha256(b'\n'.join((repo / 'apps/web/src/tv/lib' / name).read_bytes() for name in ('ballClassifier.ts','ballVision.ts'))).hexdigest()
+    counts = tracker.get('metrics',{})
+    tp,fp,fn = (counts.get(key,-1) for key in ('tp','fp','fn'))
+    if any(not isinstance(v,int) or v < 0 for v in (tp,fp,fn)):
+        raise ValueError('Tracker report requires reviewed object counts')
+    tracker_quality = {'precision':tp/max(1,tp+fp),'recall':tp/max(1,tp+fn)}
+    if tracker.get('scope') != 'full-visible-ball-tracker' or tracker.get('split') != 'test' or tracker.get('modelSha256') != expected or tracker.get('runtimeSourceSha256') != source_sha or tracker.get('datasetSha256') != model['datasetSha256'] or sorted(tracker.get('colors',[])) != sorted(model['supportedColors']) or tracker.get('sessions',0) < 2 or tp+fn < 30 or not tracker.get('includesMissedProposals') or not tracker.get('allOutputObjectsReviewed') or any(tracker_quality[key] < value for key,value in required.items()):
+        raise ValueError('Exact runtime must pass independent full-visible-object precision and recall, including missed proposals')
     model['heldout'] = report
+    model['trackerHeldout'] = {key:tracker[key] for key in ('scope','split','modelSha256','runtimeSourceSha256','datasetSha256','colors','sessions','metrics')}
+    model['qualityGate'] = required
     # Weights/aggregate counts only; private footage and per-example labels never enter the repo.
     write(args.output,model)
     print(json.dumps({'exported':args.output,'supportedColors':model['supportedColors']}))
@@ -434,10 +455,14 @@ def main():
     p = commands.add_parser('proposals'); p.add_argument('--dataset', required=True); p.add_argument('--windows', required=True); p.add_argument('--output', required=True); p.add_argument('--fps', type=float, default=15); p.add_argument('--limit', type=int, default=20); p.add_argument('--features',choices=['radial-rgb-color-v1','radial-rgb-local-v2'],default='radial-rgb-color-v1'); p.set_defaults(run=proposals)
     p = commands.add_parser('review'); p.add_argument('--dataset', required=True); p.add_argument('--reviewer', required=True); p.add_argument('--port', type=int, default=3131); p.set_defaults(run=review)
     p = commands.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=17); p.set_defaults(run=split)
-    p = commands.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--color', choices=['orange','white','both'], default='orange'); p.add_argument('--features',choices=['radial-rgb-color-v1','radial-rgb-local-v2'],default='radial-rgb-color-v1'); p.set_defaults(run=train)
+    p = commands.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--color', choices=['orange','white','both'], default='orange'); p.add_argument('--features',choices=['radial-rgb-color-v1','radial-rgb-local-v2'],default='radial-rgb-color-v1'); p.add_argument('--minimum-precision',type=float,default=.98); p.add_argument('--minimum-recall',type=float,default=.98); p.set_defaults(run=train)
     p = commands.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--model', required=True); p.add_argument('--split', choices=['valid','test'], required=True); p.add_argument('--output', required=True); p.set_defaults(run=evaluate)
-    p = commands.add_parser('export'); p.add_argument('--model', required=True); p.add_argument('--report', required=True); p.add_argument('--output', required=True); p.set_defaults(run=export)
-    args = parser.parse_args(); args.run(args)
+    p = commands.add_parser('export'); p.add_argument('--model', required=True); p.add_argument('--report', required=True); p.add_argument('--tracker-report',required=True); p.add_argument('--output', required=True); p.add_argument('--minimum-precision',type=float,default=.98); p.add_argument('--minimum-recall',type=float,default=.98); p.set_defaults(run=export)
+    args = parser.parse_args()
+    for name in ('minimum_precision','minimum_recall'):
+        if hasattr(args,name) and not 0 < getattr(args,name) <= 1:
+            parser.error('Quality targets must be between zero and one')
+    args.run(args)
 
 
 if __name__ == '__main__':
