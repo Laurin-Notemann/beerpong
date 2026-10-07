@@ -149,7 +149,7 @@ export function useCupDetector(
                     model,
                     sequence: ++sequence,
                     ageMs,
-                    cups: selected.ambiguous ? [] : selected.cups,
+                    cups: selected.fresh,
                 };
                 const key = membershipRef.current?.key ?? '';
                 if (key !== persistenceKey) {

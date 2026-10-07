@@ -49,7 +49,7 @@ export class CupMembership {
             this.key = key;
         }
         const points = cups.map((cup) => point(cup, aspect));
-        let ambiguous = false;
+        const ambiguousSides: boolean[] = [];
         const sides = areas.map((area, side) => {
             const search = cupSearchAreas(areas)[side];
             const inside = (p: Point, box: PlayingArea) =>
@@ -103,12 +103,19 @@ export class CupMembership {
                 distance(p, centre) / Math.max(spacing, 1e-6);
             candidates.sort((a, b) => priority(b) - priority(a));
             const limit = expected ? expected[side] : 10;
-            if (candidates.length > limit) ambiguous = true;
+            ambiguousSides[side] = candidates.length > limit;
             const fresh = candidates.slice(0, limit);
             this.previous[side] = fresh.map((p) => ({ point: p, seen: now }));
             return fresh.map((p) => p.cup);
         });
         const selected = sides.flat();
-        return { cups: selected, sides, ignored: cups.length - selected.length, ambiguous };
+        return {
+            cups: selected,
+            sides,
+            // An uncertain rack must not erase fresh evidence for the other team.
+            fresh: sides.flatMap((cups, side) => (ambiguousSides[side] ? [] : cups)),
+            ignored: cups.length - selected.length,
+            ambiguous: ambiguousSides.some(Boolean),
+        };
     }
 }
