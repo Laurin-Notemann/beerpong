@@ -83,9 +83,13 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
             attemptedAt = now;
             if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
             const decoded = video.getVideoPlaybackQuality?.().totalVideoFrames;
+            // A live stream's currentTime runs on while its picture stands still (Tizen's player
+            // shows no new frame after a score clip, though WebRTC still decodes them), so count
+            // the frames it shows where the browser does.
             let progressed =
-                video.currentTime !== previousTime ||
-                (decoded !== undefined && decoded !== previousCount);
+                decoded === undefined
+                    ? video.currentTime !== previousTime
+                    : decoded !== previousCount;
             previousTime = video.currentTime;
             previousCount = decoded ?? -1;
             try {
