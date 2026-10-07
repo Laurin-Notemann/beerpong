@@ -57,7 +57,28 @@ export interface CupFormationProps {
      * gets ignored if `canEdit` is true
      */
     onCupTap?: (cup: { x: number; y: number }) => void;
+    /**
+     * holding a standing cup instead of tapping it (ignored if `canEdit` is true): `start` once
+     * the hold is recognized, `move` while the finger drags, `end` when it lets go and `cancel`
+     * if the gesture was interrupted
+     */
+    onCupHold?: (event: CupHoldEvent) => void;
+    /** drawn over the cups, e.g. a menu at a held cup's `center` */
+    children?: React.ReactNode;
 }
+
+export interface CupHoldEvent {
+    phase: 'start' | 'move' | 'end' | 'cancel';
+    cup: { x: number; y: number };
+    /** the cup's middle, within the grid */
+    center: { x: number; y: number };
+    /** how far the finger moved since the hold started */
+    dx: number;
+    dy: number;
+}
+
+/** how long a cup has to be held before it's a hold, not a tap */
+const HOLD_MS = 250;
 
 const CupGrid = ({
     color = '#EE4A58', // our red color
@@ -70,6 +91,8 @@ const CupGrid = ({
     formation = Formation.Pyramid_10,
     onChange = () => {},
     onCupTap,
+    onCupHold,
+    children,
 }: CupFormationProps) => {
     const {
         height,
@@ -86,6 +109,32 @@ const CupGrid = ({
         formation,
         onChange,
     });
+
+    const getCupHoldGesture = (cup: (typeof cups)[number]) => {
+        const at = {
+            cup: { x: cup.x, y: cup.y },
+            center: {
+                x: cup.pos.posX + cupRadius,
+                y: cup.pos.posY + cupRadius,
+            },
+        };
+        const send = (phase: CupHoldEvent['phase'], dx: number, dy: number) =>
+            onCupHold?.({ phase, ...at, dx, dy });
+
+        return Gesture.Pan()
+            .activateAfterLongPress(HOLD_MS)
+            .onStart(() => runOnJS(send)('start', 0, 0))
+            .onUpdate((e) =>
+                runOnJS(send)('move', e.translationX, e.translationY)
+            )
+            .onEnd((e, success) =>
+                runOnJS(send)(
+                    success ? 'end' : 'cancel',
+                    e.translationX,
+                    e.translationY
+                )
+            );
+    };
 
     return (
         <GestureDetector gesture={containerTapGesture}>
@@ -113,6 +162,11 @@ const CupGrid = ({
                             // only an editable grid moves cups; otherwise a drag
                             // that starts on a cup should still scroll the page
                             onPan={canEdit ? getCupPanGesture(cup) : undefined}
+                            onHold={
+                                !canEdit && onCupHold
+                                    ? getCupHoldGesture(cup)
+                                    : undefined
+                            }
                             onTap={
                                 canEdit
                                     ? getCupTapGesture(cup)
@@ -125,6 +179,7 @@ const CupGrid = ({
                         />
                     );
                 })}
+                {children}
             </View>
         </GestureDetector>
     );

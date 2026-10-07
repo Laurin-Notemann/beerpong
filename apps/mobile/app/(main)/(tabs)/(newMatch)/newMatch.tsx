@@ -159,7 +159,8 @@ export default function NewMatchScreen() {
 
     const isValidGame = numFinishes === 1;
 
-    const [onCreateMatch, isCreating] = useSingleFlight(async () => {
+    // a rematch keeps the teams for the next match, on the points page
+    const [create, isCreating] = useSingleFlight(async (rematch: boolean) => {
         if (!groupId || !seasonId) {
             ConsoleLogger.warn('no groupId or seasonId');
             return;
@@ -197,6 +198,24 @@ export default function NewMatchScreen() {
         });
 
         matchDraft.actions.clear();
+
+        if (rematch) {
+            const ids = (team: typeof draft.redTeam) =>
+                team.teamMembers.map((i) => ({ id: i.playerId }));
+            matchDraft.actions.setTeams(
+                ids(draft.redTeam),
+                ids(draft.blueTeam)
+            );
+            matchDraft.actions.setHasBeenOnPageTwo();
+            triggerHapticBump('toast:success');
+            showSuccessToast(
+                onlineManager.isOnline()
+                    ? 'Saved. Same teams again.'
+                    : "Saved. It's sent when you're back online. Same teams again."
+            );
+            return;
+        }
+
         // show the new match where it lands: the current season, today
         scopePicker.setIsPastSeasonsMode(false);
         scrollControlledSwipers(scopePicker.leaderboardSwiperProgress, 0);
@@ -211,6 +230,7 @@ export default function NewMatchScreen() {
             nav.navigate('matchPhotoModal', { matchId, seasonId });
         }
     });
+    const onCreateMatch = () => create(false);
 
     // a second tap in the same frame is ignored; after that the cleared draft has no teams
     const isStarting = useRef(false);
@@ -439,6 +459,7 @@ export default function NewMatchScreen() {
                             isPending={isCreating}
                             players={teamMembers}
                             onSubmit={onCreateMatch}
+                            onRematch={() => create(true)}
                             onCancel={() => {
                                 matchDraft.actions.clear();
                                 nav.goBack();

@@ -10,6 +10,7 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useSeasonQuery } from '@/api/calls/seasonHooks';
 import { useLiveEloChanges } from '@/api/liveMatch/useLiveEloChanges';
 import {
+    startLiveMatch,
     useLiveMatch,
     useLiveMatchActions,
 } from '@/api/liveMatch/useLiveMatch';
@@ -156,15 +157,41 @@ export function useLiveMatchScreen(id: string) {
         }
     }, [resultMatchId, resultSeasonId]);
 
-    async function finish() {
+    // player ids are per season: a rematch only works in the season that's still active
+    const canRematch = !!seasonId && seasonId === activeSeasonId;
+
+    /** saves the match; a rematch then starts the next live match with the same teams */
+    async function finish(rematch = false) {
         if (finishInFlight.current) return;
         finishInFlight.current = true;
         setIsFinishing(true);
+        const ids = (team: typeof live.state.redTeam) =>
+            team.teamMembers.map((i) => i.playerId);
+        const teams = {
+            redPlayerIds: ids(live.state.redTeam),
+            bluePlayerIds: ids(live.state.blueTeam),
+        };
         try {
             const result = await actions.finish();
-            showSuccessToast('Match saved.');
+            showSuccessToast(
+                rematch ? 'Match saved. Rematch!' : 'Match saved.'
+            );
             if (!isFocusedRef.current) return;
             setIsLeaving(true);
+            if (rematch && groupId && canRematch) {
+                const next = startLiveMatch({
+                    groupId,
+                    seasonId: result.seasonId,
+                    ...teams,
+                });
+                router.replace({
+                    pathname: '/liveMatch',
+                    params: { id: next },
+                });
+                // a photo taken during the match still goes onto it; no asking for one now
+                attachPhoto(result.matchId, result.seasonId);
+                return;
+            }
             router.replace({
                 pathname: '/match',
                 params: { id: result.matchId, seasonId: result.seasonId },
@@ -261,7 +288,8 @@ export function useLiveMatchScreen(id: string) {
         moveLog: namedMoveLog(live.state.cupHits, moves, teamMembers),
         hint,
         isFinishing,
-        finish,
+        finish: () => finish(),
+        rematch: canRematch ? () => finish(true) : undefined,
         finishOrExplain,
         discard,
         viewResult,

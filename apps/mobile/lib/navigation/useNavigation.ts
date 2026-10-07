@@ -39,6 +39,7 @@ export type RootStackParamList = {
     settings: undefined;
     allowedMoves: undefined;
     allowedMove: { id: string };
+    defaultMoveSettings: undefined;
 
     'static/aboutTheEloAlgorithm': undefined;
     'static/privacyPolicy': undefined;
@@ -63,6 +64,9 @@ export type RootStackParamList = {
         y: number;
         rotated: boolean;
         liveMatchId?: string;
+        /** a quick hit's scorer, and the default move it couldn't record on its own */
+        playerId?: string;
+        moveId?: string;
     };
     editMatchPoints: { pageIdx: number };
     rerackModal: { liveMatchId?: string };

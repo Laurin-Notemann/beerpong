@@ -57,6 +57,7 @@ export default function MainLayout() {
             />
 
             <Stack.Screen name="teamSizeSettings" options={modalStyles} />
+            <Stack.Screen name="defaultMoveSettings" options={modalStyles} />
             <Stack.Screen
                 name="minMatchesToQualifySettings"
                 options={modalStyles}

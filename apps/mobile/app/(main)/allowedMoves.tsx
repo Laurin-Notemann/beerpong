@@ -45,6 +45,7 @@ export default function Page() {
                             name: i.name!,
                             finishingMove: i.finishingMove!,
                             cups: cupsPerHit(i),
+                            defaultMove: !!i.defaultMove,
                             pointsForScorer: i.pointsForScorer!,
                             pointsForTeam: i.pointsForTeam!,
                         }))}

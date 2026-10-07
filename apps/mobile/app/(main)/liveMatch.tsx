@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
@@ -47,6 +47,8 @@ export default function LiveMatchPage() {
 
     const pagerRef = useRef<SwiperRef>(null);
     const pagerProgress = useSharedValue(0);
+    // a held cup's drag picks a player; the pages stay put meanwhile
+    const [isHoldingCup, setIsHoldingCup] = useState(false);
 
     const isLive = !!screen.header && !screen.ended;
 
@@ -86,8 +88,15 @@ export default function LiveMatchPage() {
                     pointerEvents={screen.isFinishing ? 'none' : 'auto'}
                 >
                     <InsetFree>
-                        <Swiper ref={pagerRef} swiperProgress={pagerProgress}>
-                            <NewMatchCups liveMatchId={id} />
+                        <Swiper
+                            ref={pagerRef}
+                            swiperProgress={pagerProgress}
+                            enabled={!isHoldingCup}
+                        >
+                            <NewMatchCups
+                                liveMatchId={id}
+                                onHoldingChange={setIsHoldingCup}
+                            />
                             <CreateMatchAssignPoints
                                 liveMatchId={id}
                                 players={screen.teamMembers}
@@ -102,6 +111,7 @@ export default function LiveMatchPage() {
                     hint={screen.hint}
                     isFinishing={screen.isFinishing}
                     onFinish={screen.finish}
+                    onRematch={screen.rematch}
                     onHintPress={screen.openFinish}
                 />
             </View>

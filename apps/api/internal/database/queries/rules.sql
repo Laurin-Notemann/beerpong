@@ -24,18 +24,21 @@ SELECT * FROM rule_moves WHERE id = $1;
 SELECT * FROM rule_moves WHERE id = ANY (@ids::text[]);
 
 -- name: InsertRuleMove :one
-INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups, default_move)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
 -- name: InsertRuleMoves :copyfrom
-INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups)
-VALUES ($1, $2, $3, $4, $5, $6, $7);
+INSERT INTO rule_moves (id, finishing_move, name, points_for_scorer, points_for_team, season_id, cups, default_move)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: UpdateRuleMove :one
-UPDATE rule_moves SET name = $2, points_for_team = $3, points_for_scorer = $4, finishing_move = $5, cups = $6
+UPDATE rule_moves SET name = $2, points_for_team = $3, points_for_scorer = $4, finishing_move = $5, cups = $6, default_move = $7
 WHERE id = $1
 RETURNING *;
+
+-- name: ClearDefaultRuleMove :exec
+UPDATE rule_moves SET default_move = false WHERE season_id = $1 AND default_move;
 
 -- name: RuleMoveExistsInSeason :one
 SELECT EXISTS (SELECT 1 FROM rule_moves WHERE id = $1 AND season_id = $2);

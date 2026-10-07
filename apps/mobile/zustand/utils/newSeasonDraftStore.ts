@@ -8,6 +8,8 @@ export interface NewSeasonMoveInput {
     pointsForTeam: number;
     /** cups one hit takes off the table */
     cups: number;
+    /** what a pro mode quick hit counts as; one move at most, never a finish */
+    defaultMove: boolean;
 }
 
 interface NewSeasonDraftStore {

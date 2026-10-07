@@ -100,9 +100,25 @@ export default function AllowedMovesSwiper({
                                             ? {
                                                   ...i,
                                                   finishingMove,
+                                                  // a finish is never the default
+                                                  defaultMove:
+                                                      i.defaultMove &&
+                                                      !finishingMove,
                                               }
                                             : i
                                     )
+                                );
+                            }}
+                            onChangeIsDefault={(defaultMove) => {
+                                // one default move: marking this one unmarks the others
+                                seasonDraft.actions.setNewSeasonAllowedMoves(
+                                    allowedMoves.map((i) => ({
+                                        ...i,
+                                        defaultMove:
+                                            i.id === move.id
+                                                ? defaultMove
+                                                : i.defaultMove && !defaultMove,
+                                    }))
                                 );
                             }}
                             onDelete={() => {
@@ -126,6 +142,7 @@ const AllowedMovePage: React.FC<{
     onChangePointsForTeam: (points: number) => void;
     onChangeCups: (cups: number) => void;
     onChangeIsFinish: (isFinish: boolean) => void;
+    onChangeIsDefault: (isDefault: boolean) => void;
     onDelete: () => void;
 }> = ({
     move,
@@ -134,6 +151,7 @@ const AllowedMovePage: React.FC<{
     onChangePointsForTeam,
     onChangeCups,
     onChangeIsFinish,
+    onChangeIsDefault,
     onDelete,
 }) => {
     const theme = useTheme();
@@ -195,6 +213,19 @@ const AllowedMovePage: React.FC<{
                                 />
                             }
                         />
+                        {!move.finishingMove && (
+                            <MenuItem
+                                title="Default Move"
+                                subtitle="What holding a cup and dragging to the scorer counts as"
+                                headIcon="gesture-tap-hold"
+                                tailContent={
+                                    <Switch
+                                        value={move.defaultMove}
+                                        onValueChange={onChangeIsDefault}
+                                    />
+                                }
+                            />
+                        )}
 
                         <MenuItem
                             title="Delete Move"

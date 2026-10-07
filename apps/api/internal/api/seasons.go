@@ -421,7 +421,7 @@ func (s *Server) startSeason(r *request) response {
 
 		newMoves := make([]defaultMove, len(moves))
 		for i, m := range moves {
-			newMoves[i] = defaultMove{name: *m.name, pointsForScorer: m.pointsForScorer, pointsForTeam: m.pointsForTeam, finish: m.finish, cups: m.cups}
+			newMoves[i] = defaultMove{name: *m.name, pointsForScorer: m.pointsForScorer, pointsForTeam: m.pointsForTeam, finish: m.finish, cups: m.cups, isDefault: m.defaultOr(false)}
 		}
 		if err := insertRuleMoves(ctx, q, newSeason.ID, newMoves); err != nil {
 			return nil, err
@@ -510,12 +510,16 @@ func insertRuleMoves(ctx context.Context, q *db.Queries, seasonID string, moves 
 		return nil
 	}
 	rows := make([]db.InsertRuleMovesParams, len(moves))
+	hasDefault := false
 	for i, m := range moves {
 		cups := defaultCupsFor(&m.name, m.finish)
 		if m.cups != nil {
 			cups = *m.cups
 		}
-		rows[i] = db.InsertRuleMovesParams{ID: uuid.NewString(), FinishingMove: m.finish, Name: ptr(m.name), PointsForScorer: m.pointsForScorer, PointsForTeam: m.pointsForTeam, SeasonID: &seasonID, Cups: &cups}
+		// a season has one default move: the first one marked
+		isDefault := m.isDefault && !hasDefault
+		hasDefault = hasDefault || isDefault
+		rows[i] = db.InsertRuleMovesParams{ID: uuid.NewString(), FinishingMove: m.finish, Name: ptr(m.name), PointsForScorer: m.pointsForScorer, PointsForTeam: m.pointsForTeam, SeasonID: &seasonID, Cups: &cups, DefaultMove: isDefault}
 	}
 	_, err := q.InsertRuleMoves(ctx, rows)
 	return err

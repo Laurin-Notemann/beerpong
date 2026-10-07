@@ -8,26 +8,37 @@ import { useTheme } from '@/theme';
 const HINT_HEIGHT = 20;
 
 /**
- * The bottom of the live match screen: the Finish button, and one line on why it's disabled. The hint's line is always reserved, so the button doesn't
- * jump when it appears.
+ * The bottom of the live match screen: the Finish button (and Rematch, which finishes and starts
+ * the next match with the same teams), and one line on why they're disabled. The hint's line is
+ * always reserved, so the buttons don't jump when it appears.
  */
 export function FinishBar({
     hint,
     isFinishing,
     onFinish,
+    onRematch,
     onHintPress,
 }: {
     /** set while the match can't be finished */
     hint: string | undefined;
     isFinishing: boolean;
     onFinish: () => void;
+    onRematch?: () => void;
     onHintPress: () => void;
 }) {
     const theme = useTheme();
 
     return (
         <View style={{ gap: 10, paddingHorizontal: 8 }}>
-            <View style={{ flexDirection: 'row' }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+                {onRematch && (
+                    <OverlayTextButton
+                        title="Rematch"
+                        isPending={isFinishing}
+                        disabled={!!hint}
+                        onPress={onRematch}
+                    />
+                )}
                 <OverlayTextButton
                     fullWidth
                     title="Finish match"

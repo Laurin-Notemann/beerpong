@@ -319,19 +319,19 @@ func (s *Server) deleteWallpaper(r *request) response {
 }
 
 var defaultBeerpongMoves = []defaultMove{
-	{"Normal", 1, 0, false, nil},
-	{"Bomb", 2, 0, false, nil},
-	{"Bouncer", 2, 0, false, nil},
-	{"Trickshot", 2, 0, false, nil},
-	{"Save", 2, 0, false, nil},
-	{"Finish - Normal", 1, 3, true, nil},
-	{"Finish - Ring of fire", 1, 10, true, nil},
-	{"Finish - Ring of water", 1, 10, true, nil},
+	{"Normal", 1, 0, false, nil, false},
+	{"Bomb", 2, 0, false, nil, false},
+	{"Bouncer", 2, 0, false, nil, false},
+	{"Trickshot", 2, 0, false, nil, false},
+	{"Save", 2, 0, false, nil, false},
+	{"Finish - Normal", 1, 3, true, nil, false},
+	{"Finish - Ring of fire", 1, 10, true, nil, false},
+	{"Finish - Ring of water", 1, 10, true, nil, false},
 }
 
 var defaultMoves = []defaultMove{
-	{"Normal", 1, 0, false, nil},
-	{"Finish - Normal", 1, 3, true, nil},
+	{"Normal", 1, 0, false, nil, false},
+	{"Finish - Normal", 1, 3, true, nil, false},
 }
 
 type defaultMove struct {
@@ -340,6 +340,7 @@ type defaultMove struct {
 	pointsForTeam   int32
 	finish          bool
 	cups            *int32 // nil: the default for the name
+	isDefault       bool   // the season's default move (see ruleMoveInput)
 }
 
 var defaultBeerpongRules = [][2]string{

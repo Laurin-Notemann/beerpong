@@ -220,6 +220,47 @@ export function cupsTakenBy(
     return [tapped, ...(rest as CupPosition[])].map(({ x, y }) => ({ x, y }));
 }
 
+/** whether one of the players already has a finish counted; a match has only one */
+export const hasFinish = (
+    players: { moves: { moveId: string; count: number }[] }[],
+    moves: CupMove[]
+) =>
+    players.some((player) =>
+        player.moves.some(
+            (move) =>
+                move.count > 0 &&
+                moves.find((i) => i.id === move.moveId)?.isFinish
+        )
+    );
+
+/**
+ * A pro mode quick hit (holding a cup and dragging to the scorer): `move`, the season's default
+ * move, on `cup`, as long as it goes in without questions. Undefined when the cup hit modal has to
+ * ask: the move doesn't fit, it takes cups the scorer picks, or the last cup needs its finish.
+ */
+export function quickHit(
+    hits: CupHit[],
+    team: CupTeam,
+    cup: CupPosition,
+    move: CupMove,
+    hasFinish: boolean,
+    moves: CupMove[]
+): Pick<CupHit, 'cups' | 'finishMoveId'> | undefined {
+    const standing = standingCups(hits, team);
+
+    if (
+        !hittableMoves([move], standing, cup, hasFinish).length ||
+        picksOtherCups(move, standing.length)
+    ) {
+        return;
+    }
+    const finish = finishForHit(move, standing.length, hasFinish, moves);
+    const cups = cupsTakenBy(hits, team, cup, move);
+    if (finish === 'ask' || !cups) return;
+
+    return { cups, finishMoveId: finish.finishMoveId };
+}
+
 /**
  * Drops the hits the players' move counts no longer cover: hits of players who left the match or
  * switched to the team they hit, and the latest hits of a move whose count went down on the

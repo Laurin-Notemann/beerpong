@@ -48,6 +48,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                 pointsForScorer: i.pointsForScorer!,
                 pointsForTeam: i.pointsForTeam!,
                 cups: cupsPerHit(i),
+                defaultMove: !!i.defaultMove,
             }))
         );
     }, [newSeasonDraft.actions, oldSeasonMoves]);
@@ -134,6 +135,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                                 pointsForScorer: 1,
                                 pointsForTeam: 0,
                                 cups: 1,
+                                defaultMove: false,
                             },
                         ]);
                         nav.navigate('allowedMove', {

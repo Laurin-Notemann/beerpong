@@ -171,6 +171,21 @@ export default function GroupSettingsScreen({
                             tailContent={allowedMoves.length}
                             onPress={() => nav.navigate('allowedMoves')}
                         />
+                        {/* pro mode's quick hit uses it */}
+                        {experiments.beerpongProMode && (
+                            <MenuItem
+                                title="Default Move"
+                                headIcon="gesture-tap-hold"
+                                tailIconType="next"
+                                tailContent={
+                                    allowedMoves.find((i) => i.defaultMove)
+                                        ?.name ?? 'None'
+                                }
+                                onPress={() =>
+                                    nav.navigate('defaultMoveSettings')
+                                }
+                            />
+                        )}
                         <MenuItem
                             title="Rank Players by"
                             headIcon="division"

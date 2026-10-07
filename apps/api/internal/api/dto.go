@@ -306,10 +306,11 @@ type ruleMoveDTO struct {
 	PointsForScorer int32   `json:"pointsForScorer"`
 	FinishingMove   bool    `json:"finishingMove"`
 	Cups            int32   `json:"cups"`
+	DefaultMove     bool    `json:"defaultMove"`
 }
 
 func toRuleMoveDTO(m db.RuleMove) ruleMoveDTO {
-	return ruleMoveDTO{ID: m.ID, Name: m.Name, SeasonID: m.SeasonID, PointsForTeam: m.PointsForTeam, PointsForScorer: m.PointsForScorer, FinishingMove: m.FinishingMove, Cups: cupsPerHit(m)}
+	return ruleMoveDTO{ID: m.ID, Name: m.Name, SeasonID: m.SeasonID, PointsForTeam: m.PointsForTeam, PointsForScorer: m.PointsForScorer, FinishingMove: m.FinishingMove, Cups: cupsPerHit(m), DefaultMove: m.DefaultMove}
 }
 
 type assetMetadataDTO struct {

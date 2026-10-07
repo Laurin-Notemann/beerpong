@@ -19,6 +19,7 @@ import {
     CupTeam,
     finishesOnTopOfLastCup,
     finishForHit,
+    hasFinish as hasFinishMove,
     hittableMoves,
     picksOtherCups,
     ringCompletion,
@@ -41,6 +42,9 @@ export default function Page() {
         rotated: string;
         /** the live match being entered; without it, the local draft */
         liveMatchId?: string;
+        /** a quick hit that has questions picked its scorer already, and maybe its move */
+        playerId?: string;
+        moveId?: string;
     }>();
     const team = params.team;
     const cup = { x: parseInt(params.x), y: parseInt(params.y) };
@@ -78,13 +82,7 @@ export default function Page() {
                 'Unknown',
         }));
 
-    const hasFinish = players.some((player) =>
-        player.moves.some(
-            (move) =>
-                move.count > 0 &&
-                moves.find((i) => i.id === move.moveId)?.isFinish
-        )
-    );
+    const hasFinish = hasFinishMove(players, moves);
 
     const standing = standingCups(entry.cupHits, team);
     const isStanding = standing.some((i) => i.x === cup.x && i.y === cup.y);
@@ -92,15 +90,26 @@ export default function Page() {
     const finishOptions = finishesOnTopOfLastCup(moves);
 
     const [playerId, setPlayerId] = useState<string | null>(
-        scorers.length === 1 ? scorers[0].id : null
+        scorers.find((i) => i.id === params.playerId)?.id ??
+            (scorers.length === 1 ? scorers[0].id : null)
     );
     const player = scorers.find((i) => i.id === playerId);
 
+    const preselected = moveOptions.find((i) => i.id === params.moveId);
     // a hit on the last cup that still needs to know which finish it was
-    const [lastCupMove, setLastCupMove] = useState<CupMove | null>(null);
+    const [lastCupMove, setLastCupMove] = useState<CupMove | null>(() =>
+        preselected &&
+        !picksOtherCups(preselected, standing.length) &&
+        finishForHit(preselected, standing.length, hasFinish, moves) === 'ask'
+            ? preselected
+            : null
+    );
     // a hit that takes more cups than the tapped one (a bouncer), and the other cups picked so far
     const [pickMove, setPickMove] = useState<(typeof moves)[number] | null>(
-        null
+        () =>
+            preselected && picksOtherCups(preselected, standing.length)
+                ? preselected
+                : null
     );
     const [picked, setPicked] = useState<CupPosition[]>([]);
     // the cups picked leave a ring's shape: whether the hit threw the ring too

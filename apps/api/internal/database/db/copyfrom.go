@@ -142,6 +142,7 @@ func (r iteratorForInsertRuleMoves) Values() ([]interface{}, error) {
 		r.rows[0].PointsForTeam,
 		r.rows[0].SeasonID,
 		r.rows[0].Cups,
+		r.rows[0].DefaultMove,
 	}, nil
 }
 
@@ -150,7 +151,7 @@ func (r iteratorForInsertRuleMoves) Err() error {
 }
 
 func (q *Queries) InsertRuleMoves(ctx context.Context, arg []InsertRuleMovesParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"rule_moves"}, []string{"id", "finishing_move", "name", "points_for_scorer", "points_for_team", "season_id", "cups"}, &iteratorForInsertRuleMoves{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"rule_moves"}, []string{"id", "finishing_move", "name", "points_for_scorer", "points_for_team", "season_id", "cups", "default_move"}, &iteratorForInsertRuleMoves{rows: arg})
 }
 
 // iteratorForInsertRules implements pgx.CopyFromSource.

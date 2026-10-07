@@ -793,6 +793,10 @@ declare namespace Components {
             pointsForScorer?: number; // int32
             finishingMove?: boolean;
             cups?: number; // int32
+            /**
+             * Whether a pro mode quick hit counts as this move. A season has at most one; marking a move clears the others. Never a finishing move. Left out on an update, the move keeps its flag.
+             */
+            defaultMove?: boolean;
         }
         export interface RuleMoveDto {
             id: string;
@@ -802,6 +806,7 @@ declare namespace Components {
             pointsForScorer: number; // int32
             finishingMove: boolean;
             cups: number; // int32
+            defaultMove: boolean;
         }
         export interface SeasonCreateDto {
             oldSeasonName?: string;

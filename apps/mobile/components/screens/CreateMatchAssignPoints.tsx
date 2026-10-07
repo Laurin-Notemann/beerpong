@@ -22,6 +22,8 @@ export interface CreateMatchAssignPointsProps {
     /** the draft's Create button */
     isPending?: boolean;
     onSubmit?: () => void;
+    /** creates the match like `onSubmit`, then starts the next one with the same teams */
+    onRematch?: () => void;
     onCancel?: () => void;
 
     onPlayerPress: (player: TeamMember) => void;
@@ -33,6 +35,7 @@ export default function CreateMatchAssignPoints({
     players,
     liveMatchId,
     onSubmit,
+    onRematch,
     onCancel,
     onPlayerPress,
     eloChanges,
@@ -118,6 +121,13 @@ export default function CreateMatchAssignPoints({
                         gap: 16,
                     }}
                 >
+                    {onRematch && (
+                        <OverlayTextButton
+                            title="Rematch"
+                            isPending={isPending}
+                            onPress={onRematch}
+                        />
+                    )}
                     <OverlayTextButton
                         fullWidth
                         title="Create"

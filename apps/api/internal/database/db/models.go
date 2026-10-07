@@ -160,6 +160,7 @@ type RuleMove struct {
 	PointsForTeam   int32
 	SeasonID        *string
 	Cups            *int32
+	DefaultMove     bool
 }
 
 type Season struct {

@@ -190,6 +190,7 @@
     "response": {
       "data": {
         "cups": 0,
+        "defaultMove": false,
         "finishingMove": false,
         "id": "\u003cid14\u003e",
         "name": "Finish - Normal",

@@ -1,21 +1,32 @@
 import { MenuView } from '@expo/ui/community/menu';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup } from '@/api/calls/seasonHooks';
-import CupGrid from '@/components/CupGrid';
+import { cupsPerHit } from '@/api/utils/ruleMoveCups';
+import CupGrid, { CupHoldEvent } from '@/components/CupGrid';
 import { rotateFormation, rotatePoint } from '@/components/CupGrid/Formation';
+import { CupHoldMenu, pickedPlayer } from '@/components/CupHoldMenu';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
 import { triggerHapticBump } from '@/haptics';
-import { CUP_FORMATION, CupPosition, CupTeam, findHit } from '@/lib/cupHits';
+import {
+    CUP_FORMATION,
+    CupPosition,
+    CupTeam,
+    findHit,
+    hasFinish,
+    quickHit,
+} from '@/lib/cupHits';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
 import { useMatchEntry } from '@/lib/useMatchEntry';
 import { useTheme } from '@/theme';
+import { showSuccessToast } from '@/toast';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
+import { draftPlayers } from '@/zustand/matchEditDraftStore';
 
 const HINT_HEIGHT = 64;
 const GRID_GAP = 32;
@@ -25,16 +36,22 @@ const SIDE_BUTTONS_WIDTH = 72;
 
 /**
  * The live match screen's cups page: both teams' cups, as on the table. Tapping a cup records
- * who hit it; tapping a hit cup puts it back. The team at the bottom is drawn turned around, facing
- * the other team, and the swap button switches which team that is. The button below it re-racks
- * a team's cups into a saved formation. With Track Misses on, a live match also gets a Miss
- * button: a menu of the players, and taking back the latest miss.
+ * who hit it; tapping a hit cup puts it back. Holding a cup is the quick way: the players who can
+ * hit it show up around it, and dragging to one records the season's default move for them
+ * (or opens the cup hit modal with them picked, if there's no default or it has questions).
+ * The team at the bottom is drawn turned around, facing the other team, and the swap button
+ * switches which team that is. The button below it re-racks a team's cups into a saved
+ * formation. With Track Misses on, a live match also gets a Miss button: a menu of the players,
+ * and taking back the latest miss. Undo takes back the latest cup hit.
  */
 export default function NewMatchCups({
     liveMatchId,
+    onHoldingChange,
 }: {
     /** the live match to enter into; without it, the local draft */
     liveMatchId?: string;
+    /** while a cup is held, so the pages don't swipe under the drag */
+    onHoldingChange?: (isHolding: boolean) => void;
 }) {
     const theme = useTheme();
     const nav = useNavigation();
@@ -78,9 +95,118 @@ export default function NewMatchCups({
         return team === bottomTeam ? rotateFormation(formation) : formation;
     }
 
-    const nameOf = (playerId: string) =>
-        playersQuery.data?.data?.find((i) => i.id === playerId)?.profile
-            ?.name || 'Unknown';
+    const profileOf = (playerId: string) =>
+        playersQuery.data?.data?.find((i) => i.id === playerId)?.profile;
+    const nameOf = (playerId: string) => profileOf(playerId)?.name || 'Unknown';
+
+    const moves = movesQuery.data?.data ?? [];
+    const cupMoves = moves.map((i) => ({
+        id: i.id!,
+        cups: cupsPerHit(i),
+        isFinish: !!i.finishingMove,
+    }));
+    const defaultMove = cupMoves.find(
+        (i) => !i.isFinish && moves.find((j) => j.id === i.id)?.defaultMove
+    );
+
+    /** the players who can hit the team's cups: the other team */
+    const scorersOf = (team: CupTeam) =>
+        entry[team === 'red' ? 'blueTeam' : 'redTeam'].teamMembers.map(
+            ({ playerId }) => ({
+                id: playerId,
+                name: nameOf(playerId),
+                avatarUrl: profileOf(playerId)?.avatarUrl,
+            })
+        );
+
+    const [hold, setHold] = useState<{
+        team: CupTeam;
+        cup: CupPosition;
+        center: { x: number; y: number };
+        picked?: number;
+    } | null>(null);
+    // the hold's events come faster than renders
+    const holdRef = useRef(hold);
+    function updateHold(next: typeof hold) {
+        holdRef.current = next;
+        setHold(next);
+    }
+
+    function onCupHold(team: CupTeam, e: CupHoldEvent) {
+        const current = holdRef.current;
+
+        if (e.phase === 'start') {
+            const cup = cupOf(team, e.cup);
+            if (!cup || findHit(entry.cupHits, team, cup)) return;
+            if (!scorersOf(team).length) return;
+
+            updateHold({ team, cup, center: e.center });
+            onHoldingChange?.(true);
+            triggerHapticBump('light');
+            return;
+        }
+        if (!current || current.team !== team) return;
+
+        const picked = pickedPlayer(scorersOf(team).length, e.dx, e.dy);
+        if (e.phase === 'move') {
+            if (picked === current.picked) return;
+            updateHold({ ...current, picked });
+            if (picked !== undefined) triggerHapticBump('selection');
+            return;
+        }
+
+        updateHold(null);
+        onHoldingChange?.(false);
+        const scorer =
+            picked === undefined ? undefined : scorersOf(team)[picked];
+        if (e.phase === 'end' && scorer) {
+            recordQuickHit(team, current.cup, scorer.id);
+        }
+    }
+
+    function recordQuickHit(team: CupTeam, cup: CupPosition, playerId: string) {
+        const hit =
+            defaultMove &&
+            quickHit(
+                entry.cupHits,
+                team,
+                cup,
+                defaultMove,
+                hasFinish(draftPlayers(entry), cupMoves),
+                cupMoves
+            );
+        if (defaultMove && hit) {
+            entry.actions.recordCupHit({
+                team,
+                playerId,
+                moveId: defaultMove.id,
+                ...hit,
+            });
+            triggerHapticBump('toast:success');
+            return;
+        }
+        triggerHapticBump('selection');
+        nav.navigate('assignCupHitModal', {
+            team,
+            ...cup,
+            rotated: team === bottomTeam,
+            liveMatchId,
+            playerId,
+            moveId: defaultMove?.id,
+        });
+    }
+
+    const lastHit = entry.cupHits.at(-1);
+    function undoLastHit() {
+        if (!lastHit) return;
+
+        entry.actions.undoCupHit(lastHit.team, lastHit.cups[0]);
+        triggerHapticBump('selection');
+        const move = moves.find((i) => i.id === lastHit.moveId);
+        showSuccessToast(
+            `Took back ${nameOf(lastHit.playerId)}'s ${move?.name ?? 'hit'}.`
+        );
+    }
 
     const lastMiss = entry.misses.at(-1);
     const missActions = [
@@ -126,7 +252,7 @@ export default function NewMatchCups({
         if (!hit) return;
 
         const name = nameOf(hit.playerId);
-        const move = movesQuery.data?.data?.find((i) => i.id === hit.moveId);
+        const move = moves.find((i) => i.id === hit.moveId);
         const cups = hit.cups.length;
 
         Alert.alert(
@@ -148,12 +274,18 @@ export default function NewMatchCups({
         );
     }
 
+    /** the cup at a position as the grid draws it */
+    function cupOf(team: CupTeam, drawn: CupPosition) {
+        const cup = cupAt(
+            layoutOf(team),
+            team === bottomTeam ? rotatePoint(CUP_FORMATION, drawn) : drawn
+        );
+        return cup && { x: cup.x, y: cup.y };
+    }
+
     function onCupTap(team: CupTeam, tapped: CupPosition) {
-        const drawn =
-            team === bottomTeam ? rotatePoint(CUP_FORMATION, tapped) : tapped;
-        const cup = cupAt(layoutOf(team), drawn);
-        if (!cup) return;
-        const position = { x: cup.x, y: cup.y };
+        const position = cupOf(team, tapped);
+        if (!position) return;
 
         triggerHapticBump('selection');
 
@@ -196,8 +328,8 @@ export default function NewMatchCups({
                             fontSize: 13,
                         }}
                     >
-                        Tap a cup when it&apos;s hit. Tap a hit cup to put it
-                        back.
+                        Tap a cup when it&apos;s hit, or hold it and drag to the
+                        scorer. Tap a hit cup to put it back.
                     </Text>
                 </View>
                 <View
@@ -239,17 +371,44 @@ export default function NewMatchCups({
                             </View>
                         </MenuView>
                     )}
+                    {lastHit && (
+                        <OverlayIconButton
+                            iconName="undo"
+                            onPress={undoLastHit}
+                        />
+                    )}
                 </View>
                 {gridWidth > 0 && (
                     <View style={{ gap: GRID_GAP }}>
                         {[topTeam, bottomTeam].map((team) => (
-                            <CupGrid
+                            // the held grid's menu goes over the other grid
+                            <View
                                 key={team}
-                                color={theme.color.team[team]}
-                                width={gridWidth}
-                                formation={formationOf(team)}
-                                onCupTap={(cup) => onCupTap(team, cup)}
-                            />
+                                style={{ zIndex: hold?.team === team ? 1 : 0 }}
+                            >
+                                <CupGrid
+                                    color={theme.color.team[team]}
+                                    width={gridWidth}
+                                    formation={formationOf(team)}
+                                    onCupTap={(cup) => onCupTap(team, cup)}
+                                    onCupHold={(e) => onCupHold(team, e)}
+                                >
+                                    {hold?.team === team && (
+                                        <CupHoldMenu
+                                            center={hold.center}
+                                            players={scorersOf(team)}
+                                            picked={hold.picked}
+                                            color={
+                                                theme.color.team[
+                                                    team === 'red'
+                                                        ? 'blue'
+                                                        : 'red'
+                                                ]
+                                            }
+                                        />
+                                    )}
+                                </CupGrid>
+                            </View>
                         ))}
                     </View>
                 )}

@@ -185,6 +185,15 @@ export function useRealtimeConnection() {
                         e.groupId,
                         QK.season,
                         '*',
+                        QK.ruleMoves,
+                    ]),
+                });
+                qc.invalidateQueries({
+                    predicate: replaceWildcards([
+                        QK.group,
+                        e.groupId,
+                        QK.season,
+                        '*',
                         QK.players,
                     ]),
                 });

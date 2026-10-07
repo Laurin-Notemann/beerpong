@@ -233,6 +233,15 @@ func (o object) primitiveBool(key string) (bool, error) {
 	}
 }
 
+// boolean binds a Boolean field (nil when missing or null), like primitiveBool.
+func (o object) boolean(key string) (*bool, error) {
+	if o[key] == nil {
+		return nil, nil
+	}
+	v, err := o.primitiveBool(key)
+	return &v, err
+}
+
 // enum binds an enum field by name (or ordinal, as Jackson allows). The
 // result is the ordinal, which is also how the value is stored.
 func (o object) enum(key string, names []string) (*int16, error) {

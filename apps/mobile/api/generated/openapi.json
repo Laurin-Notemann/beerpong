@@ -3118,7 +3118,11 @@
                     "pointsForTeam": { "type": "integer", "format": "int32" },
                     "pointsForScorer": { "type": "integer", "format": "int32" },
                     "finishingMove": { "type": "boolean" },
-                    "cups": { "type": "integer", "format": "int32" }
+                    "cups": { "type": "integer", "format": "int32" },
+                    "defaultMove": {
+                        "type": "boolean",
+                        "description": "Whether a pro mode quick hit counts as this move. A season has at most one; marking a move clears the others. Never a finishing move. Left out on an update, the move keeps its flag."
+                    }
                 }
             },
             "ResponseEnvelopeRuleMoveDto": {
@@ -3140,7 +3144,8 @@
                     "pointsForTeam": { "type": "integer", "format": "int32" },
                     "pointsForScorer": { "type": "integer", "format": "int32" },
                     "finishingMove": { "type": "boolean" },
-                    "cups": { "type": "integer", "format": "int32" }
+                    "cups": { "type": "integer", "format": "int32" },
+                    "defaultMove": { "type": "boolean" }
                 },
                 "required": [
                     "id",
@@ -3149,7 +3154,8 @@
                     "pointsForTeam",
                     "pointsForScorer",
                     "finishingMove",
-                    "cups"
+                    "cups",
+                    "defaultMove"
                 ]
             },
             "MatchCreateDto": {

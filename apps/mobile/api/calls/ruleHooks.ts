@@ -212,3 +212,70 @@ export function useRules() {
         updateRule,
     };
 }
+
+/**
+ * marks the season's default move, what a pro mode quick hit counts as; null: none. Shown right
+ * away; the server clears the other moves' flag and tells the group.
+ */
+export const useSetDefaultMoveMutation = (
+    groupId: ApiId | null,
+    seasonId: ApiId | null | undefined
+) => {
+    const { api } = useApi();
+    const qc = useQueryClient();
+    const queryKey = [
+        QK.group,
+        groupId ?? 'NULL',
+        QK.season,
+        seasonId ?? 'NULL',
+        QK.ruleMoves,
+    ];
+
+    return useMutation<void, Error, string | null, { previous: unknown }>({
+        mutationFn: async (moveId) => {
+            const moves =
+                qc.getQueryData<Paths.GetAllRuleMoves.Responses.$200>(queryKey)
+                    ?.data ?? [];
+            // unmarking is an update of the move that was the default
+            const move = moves.find((i) =>
+                moveId ? i.id === moveId : i.defaultMove
+            );
+            if (!groupId || !seasonId || !move?.id) return;
+
+            await (
+                await api
+            ).updateRuleMove(
+                { groupId, seasonId, ruleMoveId: move.id },
+                {
+                    name: move.name ?? undefined,
+                    pointsForScorer: move.pointsForScorer,
+                    pointsForTeam: move.pointsForTeam,
+                    finishingMove: move.finishingMove,
+                    cups: move.cups,
+                    defaultMove: !!moveId,
+                }
+            );
+        },
+        onMutate: async (moveId) => {
+            await qc.cancelQueries({ queryKey });
+            const previous = qc.getQueryData(queryKey);
+            qc.setQueryData<Paths.GetAllRuleMoves.Responses.$200>(
+                queryKey,
+                (prev) =>
+                    prev && {
+                        ...prev,
+                        data: prev.data?.map((i) => ({
+                            ...i,
+                            defaultMove: !!moveId && i.id === moveId,
+                        })),
+                    }
+            );
+            return { previous };
+        },
+        onError: (err, _moveId, context) => {
+            qc.setQueryData(queryKey, context?.previous);
+            captureMutationErr('setDefaultMove')(err);
+        },
+        onSettled: () => qc.invalidateQueries({ queryKey }),
+    });
+};

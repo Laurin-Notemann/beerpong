@@ -122,10 +122,21 @@ type ruleMoveInput struct {
 	finish          bool
 	// cups is optional; older apps don't send it.
 	cups *int32
+	// isDefault is optional too; nil leaves an existing move's flag as it is.
+	isDefault *bool
 }
 
 func (m ruleMoveInput) invalid() bool {
-	return m.name == nil || javaTrimEmpty(*m.name) || m.pointsForTeam < 0 || m.pointsForScorer < 0 || (m.cups != nil && *m.cups < 0)
+	return m.name == nil || javaTrimEmpty(*m.name) || m.pointsForTeam < 0 || m.pointsForScorer < 0 || (m.cups != nil && *m.cups < 0) ||
+		(m.finish && m.isDefault != nil && *m.isDefault)
+}
+
+// defaultOr is whether the move is its season's default move, given what it was before.
+func (m ruleMoveInput) defaultOr(current bool) bool {
+	if m.isDefault != nil {
+		current = *m.isDefault
+	}
+	return current && !m.finish
 }
 
 func (m ruleMoveInput) cupsOrDefault() int32 {
@@ -141,10 +152,11 @@ func readRuleMove(o object) (ruleMoveInput, error) {
 	scorer, err2 := o.primitiveInt("pointsForScorer")
 	finish, err3 := o.primitiveBool("finishingMove")
 	cups, err4 := o.integer("cups")
-	if err := errors.Join(err, err1, err2, err3, err4); err != nil {
+	isDefault, err5 := o.boolean("defaultMove")
+	if err := errors.Join(err, err1, err2, err3, err4, err5); err != nil {
 		return ruleMoveInput{}, err
 	}
-	return ruleMoveInput{name: name, pointsForScorer: scorer, pointsForTeam: team, finish: finish, cups: cups}, nil
+	return ruleMoveInput{name: name, pointsForScorer: scorer, pointsForTeam: team, finish: finish, cups: cups, isDefault: isDefault}, nil
 }
 
 // parseRuleMoveList binds a List<RuleMoveCreateDto>; moves is nil for a
@@ -218,9 +230,16 @@ func (s *Server) createRuleMove(r *request) response {
 		if move.invalid() {
 			return fail(errRuleMoveInvalidDto), nil
 		}
+		isDefault := move.defaultOr(false)
+		if isDefault {
+			if err := q.ClearDefaultRuleMove(ctx, &seasonID); err != nil {
+				return nil, err
+			}
+		}
 		row, err := q.InsertRuleMove(ctx, db.InsertRuleMoveParams{
 			ID: uuid.NewString(), FinishingMove: move.finish, Name: move.name,
 			PointsForScorer: move.pointsForScorer, PointsForTeam: move.pointsForTeam, SeasonID: &seasonID, Cups: ptr(move.cupsOrDefault()),
+			DefaultMove: isDefault,
 		})
 		if err != nil {
 			return nil, err
@@ -257,7 +276,8 @@ func (s *Server) updateRuleMove(r *request) response {
 		if move.invalid() {
 			return fail(errRuleMoveInvalidDto), nil
 		}
-		if _, err := q.GetRuleMove(ctx, moveID); notFound(err) {
+		current, err := q.GetRuleMove(ctx, moveID)
+		if notFound(err) {
 			return fail(errRuleMoveNotFound), nil
 		} else if err != nil {
 			return nil, err
@@ -269,7 +289,14 @@ func (s *Server) updateRuleMove(r *request) response {
 		if !inSeason {
 			return fail(errRuleMoveValidationFailed), nil
 		}
-		row, err := q.UpdateRuleMove(ctx, db.UpdateRuleMoveParams{ID: moveID, Name: move.name, PointsForTeam: move.pointsForTeam, PointsForScorer: move.pointsForScorer, FinishingMove: move.finish, Cups: ptr(move.cupsOrDefault())})
+		// the season's other moves stop being the default; the realtime event refetches them all
+		isDefault := move.defaultOr(current.DefaultMove)
+		if isDefault && !current.DefaultMove {
+			if err := q.ClearDefaultRuleMove(ctx, &seasonID); err != nil {
+				return nil, err
+			}
+		}
+		row, err := q.UpdateRuleMove(ctx, db.UpdateRuleMoveParams{ID: moveID, Name: move.name, PointsForTeam: move.pointsForTeam, PointsForScorer: move.pointsForScorer, FinishingMove: move.finish, Cups: ptr(move.cupsOrDefault()), DefaultMove: isDefault})
 		if err != nil {
 			return nil, err
 		}

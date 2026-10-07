@@ -22,6 +22,7 @@ const formatStats = (move: Move): string => {
         : null;
 
     const finishingMove = move.finishingMove ? 'Finishing Move' : null;
+    const defaultMove = move.defaultMove ? 'Default' : null;
 
     const cups =
         move.cups == null
@@ -30,7 +31,13 @@ const formatStats = (move: Move): string => {
               ? '1 Cup'
               : `${move.cups} Cups`;
 
-    const stats = [pointsForScorer, pointsForTeam, cups, finishingMove]
+    const stats = [
+        pointsForScorer,
+        pointsForTeam,
+        cups,
+        finishingMove,
+        defaultMove,
+    ]
         .filter((i) => i != null)
         .join(' ⸱ ');
 
@@ -44,6 +51,7 @@ interface Move {
     pointsForTeam: number;
     finishingMove: boolean;
     cups: number;
+    defaultMove: boolean;
 }
 
 export interface AllowedMovesProps extends MenuSectionProps {

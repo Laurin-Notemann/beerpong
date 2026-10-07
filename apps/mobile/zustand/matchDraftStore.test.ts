@@ -8,6 +8,7 @@ import {
     CupTeam,
     finishForHit,
     hittableMoves,
+    quickHit,
     ringCompletion,
     ringHit,
     standingCups,
@@ -330,5 +331,52 @@ describe('pro mode cups', () => {
 
     it('a save takes no cup, so it is never a cup hit', () => {
         expect(cupsTakenBy([], 'red', { x: 3, y: 6 }, save)).toBeUndefined();
+    });
+
+    it('a quick hit with the default move goes in without asking', () => {
+        const hit = quickHit([], 'red', corner(3, 6), normal, false, moves);
+        expect(hit).toEqual({ cups: [corner(3, 6)], finishMoveId: undefined });
+
+        // a quick hit on the last cup is also the finish, when there's only one to pick
+        const standing = standingCups([], 'red');
+        const lastCup = standing[9];
+        const others = standing.slice(0, 9).map((cup) => ({
+            team: 'red' as const,
+            playerId: 'carl',
+            moveId: normal.id,
+            cups: [cup],
+        }));
+        expect(
+            quickHit(others, 'red', lastCup, normal, false, [normal, finish])
+                ?.finishMoveId
+        ).toBe(finish.id);
+    });
+
+    it('a quick hit opens the cup hit modal when it has questions', () => {
+        // the bouncer's second cup
+        expect(
+            quickHit([], 'red', corner(3, 6), bouncer, false, moves)
+        ).toBeUndefined();
+
+        const standing = standingCups([], 'red');
+        const lastCup = standing[9];
+        const others = standing.slice(0, 9).map((cup) => ({
+            team: 'red' as const,
+            playerId: 'carl',
+            moveId: normal.id,
+            cups: [cup],
+        }));
+        // the last cup with several finishes to pick from
+        expect(
+            quickHit(others, 'red', lastCup, normal, false, [
+                normal,
+                finish,
+                { id: 'other-finish', cups: 0, isFinish: true },
+            ])
+        ).toBeUndefined();
+        // a cup that's already gone
+        expect(
+            quickHit(others, 'red', standing[0], normal, false, moves)
+        ).toBeUndefined();
     });
 });
