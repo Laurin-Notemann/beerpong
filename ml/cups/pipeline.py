@@ -255,7 +255,10 @@ def split(args):
             shutil.copy2(root / frame['image'], target)
             image_id = len(images) + 1
             images.append({'id': image_id, 'file_name': target.name, 'width': frame['width'], 'height': frame['height']})
-            for polygon in label['polygons']:
+            roles = label.get('roles', ['unknown'] * len(label['polygons']))
+            if len(roles) != len(label['polygons']) or any(role not in ('playing', 'removed', 'unknown') for role in roles):
+                raise ValueError('Invalid cup roles ' + frame['id'])
+            for polygon, role in zip(label['polygons'], roles):
                 points = np.asarray(polygon, dtype=np.float64)
                 if points.ndim != 2 or points.shape[1] != 2 or len(points) < 3 or not np.isfinite(points).all() or (points < 0).any() or (points > 1).any():
                     raise ValueError('Invalid polygon ' + frame['id'])
@@ -263,7 +266,8 @@ def split(args):
                 x, y = points.min(axis=0); xmax, ymax = points.max(axis=0)
                 annotations.append({'id': len(annotations) + 1, 'image_id': image_id, 'category_id': 1,
                                     'segmentation': [points.reshape(-1).tolist()], 'bbox': [x, y, xmax - x, ymax - y],
-                                    'area': float(cv2.contourArea(points.astype('float32'))), 'iscrowd': 0})
+                                    'area': float(cv2.contourArea(points.astype('float32'))), 'iscrowd': 0,
+                                    'cup_role': role})
         if not images:
             raise ValueError('Empty split: ' + name)
         write_json(destination / name / '_annotations.coco.json', {'images': images, 'annotations': annotations,
@@ -290,10 +294,12 @@ def train(args):
         kwargs['lr'] = args.learning_rate
     if args.encoder_learning_rate is not None:
         kwargs['lr_encoder'] = args.encoder_learning_rate
+    if not 0 <= args.augmentation_hue <= .5:
+        raise ValueError('Augmentation hue must be between zero and .5')
     if args.augment:
         kwargs.update(augmentation_backend='albumentations', scale_jitter=False, aug_config={
             'HorizontalFlip': {'p': .5},
-            'ColorJitter': {'brightness': .25, 'contrast': .25, 'saturation': .5, 'hue': .5, 'p': .7},
+            'ColorJitter': {'brightness': .25, 'contrast': .25, 'saturation': .5, 'hue': args.augmentation_hue, 'p': .7},
             'ToGray': {'p': .15},
             'GaussianBlur': {'blur_limit': [3, 3], 'sigma_limit': [.1, .8], 'p': .15},
         })
@@ -301,6 +307,7 @@ def train(args):
     # those sessions in train; new held-out sessions must remain unseen by both models.
     provenance['parentCheckpointSha256'] = digest(args.checkpoint) if args.checkpoint else 'official-coco'
     provenance['colorAugmentation'] = bool(args.augment)
+    provenance['augmentationHue'] = args.augmentation_hue if args.augment else None
     provenance['learningRate'] = args.learning_rate
     provenance['encoderLearningRate'] = args.encoder_learning_rate
     write_json(Path(args.output) / 'dataset-provenance.json', provenance)
@@ -315,43 +322,61 @@ def evaluate(args):
     annotations = json.loads((root / 'coco' / args.split / '_annotations.coco.json').read_text())
     model = load_model(args.checkpoint)
     tp = fp = fn = 0
-    ious, latencies, counts = [], [], []
+    ious, latencies, counts, details = [], [], [], []
+    role_counts = {role: {'expected': 0, 'matched': 0} for role in ('playing', 'removed', 'unknown')}
     for image in annotations['images']:
         start = time.perf_counter()
         predictions = model.predict(str(root / 'coco' / args.split / image['file_name']), threshold=args.threshold)
         latencies.append((time.perf_counter() - start) * 1000)
-        masks = []
-        for mask, cls in zip(predictions.mask, predictions.class_id):
+        masks, scores = [], []
+        for mask, cls, score in zip(predictions.mask, predictions.class_id, predictions.confidence):
             if cls != (0 if args.checkpoint else 47):
                 continue
             if not any(np.logical_and(mask, old).sum() / max(np.logical_or(mask, old).sum(), 1) > .8 for old in masks):
                 masks.append(mask)
-        targets = []
+                scores.append(float(score))
+        targets, target_annotations = [], []
         for annotation in annotations['annotations']:
             if annotation['image_id'] != image['id']:
                 continue
             target = np.zeros((image['height'], image['width']), dtype='uint8')
             cv2.fillPoly(target, [np.array(poly).reshape(-1, 2).astype('int32') for poly in annotation['segmentation']], 1)
             targets.append(target.astype(bool))
+            target_annotations.append(annotation)
         pairs = []
         for i, mask in enumerate(masks):
             for j, target in enumerate(targets):
                 union = np.logical_or(mask, target).sum()
                 pairs.append((float(np.logical_and(mask, target).sum() / max(union, 1)), i, j))
-        matched_predictions, matched_targets = set(), set()
+        matched_predictions, matched_targets, matches = set(), set(), {}
         for iou, i, j in sorted(pairs, reverse=True):
             if iou < 0.5 or i in matched_predictions or j in matched_targets:
                 continue
             matched_predictions.add(i); matched_targets.add(j); ious.append(iou)
+            matches[j] = {'prediction': i, 'maskIoU': iou, 'confidence': scores[i]}
         tp += len(matched_targets); fp += len(masks) - len(matched_predictions); fn += len(targets) - len(matched_targets)
         counts.append({'image': image['file_name'], 'expected': len(targets), 'detected': len(masks), 'matched': len(matched_targets)})
+        for j, annotation in enumerate(target_annotations):
+            role = annotation.get('cup_role', 'unknown')
+            role_counts[role]['expected'] += 1
+            role_counts[role]['matched'] += int(j in matched_targets)
+        if args.details:
+            details.append({'image': image['file_name'], 'targets': [
+                {'annotation': annotation['id'], 'role': annotation.get('cup_role', 'unknown'),
+                 'bbox': annotation['bbox'], 'match': matches.get(j),
+                 'bestMaskIoU': max((pair[0] for pair in pairs if pair[2] == j), default=0)}
+                for j, annotation in enumerate(target_annotations)],
+                'falsePredictions': [{'prediction': i, 'confidence': scores[i]} for i in range(len(masks)) if i not in matched_predictions]})
     report = {'checkpointSha256': digest(args.checkpoint) if args.checkpoint else 'pretrained-coco',
               'datasetSha256': digest(root / 'coco/provenance.json'),
               'annotationSha256': digest(root / 'coco' / args.split / '_annotations.coco.json'), 'split': args.split, 'threshold': args.threshold,
               'precisionIoU50': tp / max(tp + fp, 1), 'recallIoU50': tp / max(tp + fn, 1),
               'meanMatchedMaskIoU': float(np.mean(ious)) if ious else 0,
-              'inferenceP95Ms': float(np.percentile(latencies, 95)), 'counts': counts}
+              'inferenceP95Ms': float(np.percentile(latencies, 95)), 'counts': counts,
+              'truePositives': tp, 'falsePositives': fp, 'falseNegatives': fn, 'roleCounts': role_counts}
     write_json(args.output, report)
+    if args.details:
+        write_json(args.details, details)
     print(json.dumps(report, indent=2))
 
 
@@ -428,8 +453,8 @@ def main():
     p = sub.add_parser('prelabel'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--threshold', type=float, default=.2); p.set_defaults(fn=prelabel)
     p = sub.add_parser('review'); p.add_argument('--dataset', required=True); p.add_argument('--port', type=int, default=3198); p.set_defaults(fn=lambda args: __import__('review').serve(args))
     p = sub.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=42); p.add_argument('--session-splits'); p.set_defaults(fn=split)
-    p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.add_argument('--learning-rate', type=float); p.add_argument('--encoder-learning-rate', type=float); p.set_defaults(fn=train)
-    p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.set_defaults(fn=evaluate)
+    p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.add_argument('--augmentation-hue', type=float, default=.5); p.add_argument('--learning-rate', type=float); p.add_argument('--encoder-learning-rate', type=float); p.set_defaults(fn=train)
+    p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.add_argument('--details'); p.set_defaults(fn=evaluate)
     p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.set_defaults(fn=publish)
     p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.85); p.add_argument('--min-recall', type=float, default=.8); p.set_defaults(fn=export)
     args = parser.parse_args(); args.fn(args)
