@@ -157,6 +157,7 @@ def load_model(checkpoint=None, freeze=False):
 
 def prelabel(args):
     import cv2
+    import numpy as np
     root = Path(args.dataset).resolve()
     model = load_model(args.checkpoint)
     for frame in json.loads((root / 'frames.json').read_text()):
@@ -164,10 +165,13 @@ def prelabel(args):
         if path.exists():
             continue  # Never overwrite someone's corrections.
         prediction = model.predict(str(root / frame['image']), threshold=args.threshold)
-        polygons = []
+        polygons, masks = [], []
         for mask, cls in zip(prediction.mask, prediction.class_id):
             if cls != (0 if args.checkpoint else 47):
                 continue
+            if any(np.logical_and(mask, old).sum() / max(np.logical_or(mask, old).sum(), 1) > .8 for old in masks):
+                continue
+            masks.append(mask)
             contours, _ = cv2.findContours(mask.astype('uint8'), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             if not contours:
                 continue
@@ -204,6 +208,10 @@ def split(args):
     random.Random(args.seed).shuffle(sessions)
     holdout = max(1, round(len(sessions) * .2))
     assignments = {s: ('test' if i < holdout else 'valid' if i < 2*holdout else 'train') for i, s in enumerate(sessions)}
+    if args.session_splits:
+        assignments = json.loads(Path(args.session_splits).read_text())
+        if set(assignments) != set(sessions) or set(assignments.values()) != {'train', 'valid', 'test'}:
+            raise ValueError('Session assignments must cover every reviewed session with train/valid/test')
     destination = root / 'coco'
     for name in ('train', 'valid', 'test'):
         images, annotations = [], []
@@ -239,13 +247,24 @@ def split(args):
 def train(args):
     root = Path(args.dataset).resolve()
     provenance = json.loads((root / 'coco/provenance.json').read_text())
-    model = load_model(freeze=args.freeze_encoder)
+    model = load_model(args.checkpoint, freeze=args.freeze_encoder)
     kwargs = dict(dataset_dir=str(root / 'coco'), output_dir=args.output, epochs=args.epochs,
                   batch_size=1 if args.device == 'cpu' else 4, grad_accum_steps=4,
                   num_workers=0 if args.device == 'cpu' else 2, device=args.device, seed=args.seed,
                   multi_scale=False, use_ema=True, eval_base_model=True, checkpoint_interval=5, run_test=False,
                   amp_dtype=None if args.device == 'cpu' else 'auto', early_stopping=True,
                   early_stopping_patience=10, tensorboard=False, wandb=False)
+    if args.augment:
+        kwargs.update(augmentation_backend='albumentations', scale_jitter=False, aug_config={
+            'HorizontalFlip': {'p': .5},
+            'ColorJitter': {'brightness': .25, 'contrast': .25, 'saturation': .5, 'hue': .5, 'p': .7},
+            'ToGray': {'p': .15},
+            'GaussianBlur': {'blur_limit': [3, 3], 'sigma_limit': [.1, .8], 'p': .15},
+        })
+    # The parent weights may already have seen earlier sessions. Explicit assignments keep
+    # those sessions in train; new held-out sessions must remain unseen by both models.
+    provenance['parentCheckpointSha256'] = digest(args.checkpoint) if args.checkpoint else 'official-coco'
+    provenance['colorAugmentation'] = bool(args.augment)
     write_json(Path(args.output) / 'dataset-provenance.json', provenance)
     model.train(**kwargs)
     print('Training complete. Evaluate on the held-out test split before promotion.')
@@ -370,8 +389,8 @@ def main():
     p = sub.add_parser('prepare'); p.add_argument('--dataset', required=True); p.add_argument('--areas', required=True); p.set_defaults(fn=prepare)
     p = sub.add_parser('prelabel'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--threshold', type=float, default=.2); p.set_defaults(fn=prelabel)
     p = sub.add_parser('review'); p.add_argument('--dataset', required=True); p.add_argument('--port', type=int, default=3198); p.set_defaults(fn=lambda args: __import__('review').serve(args))
-    p = sub.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=42); p.set_defaults(fn=split)
-    p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.set_defaults(fn=train)
+    p = sub.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=42); p.add_argument('--session-splits'); p.set_defaults(fn=split)
+    p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.set_defaults(fn=train)
     p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.set_defaults(fn=evaluate)
     p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.set_defaults(fn=publish)
     p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.85); p.add_argument('--min-recall', type=float, default=.8); p.set_defaults(fn=export)
