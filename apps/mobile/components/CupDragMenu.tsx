@@ -60,7 +60,6 @@ export function CupDragMenu({
                 position: 'absolute',
                 left: center.x,
                 top: center.y,
-                zIndex: 100,
             }}
         >
             <View

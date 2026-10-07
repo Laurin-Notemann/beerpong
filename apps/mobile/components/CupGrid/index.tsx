@@ -183,7 +183,25 @@ const CupGrid = ({
                         />
                     );
                 })}
-                {children}
+                {children && (
+                    <View
+                        pointerEvents="box-none"
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            // Cups use their pixel y position as zIndex; overlays must clear every row.
+                            zIndex:
+                                Math.max(
+                                    0,
+                                    ...cups.map((cup) =>
+                                        Math.round(cup.pos.posY)
+                                    )
+                                ) + 1,
+                        }}
+                    >
+                        {children}
+                    </View>
+                )}
             </View>
         </GestureDetector>
     );
