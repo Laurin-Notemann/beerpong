@@ -132,7 +132,9 @@ async function process({ data }: MessageEvent<CupRequest>) {
                         if (a && b) intersection++;
                         if (a || b) union++;
                     }
-                    return union > 0 && intersection / union > 0.8;
+                    // Duplicate instance masks must not inflate the rack count
+                    // and suppress every real cup when membership is checked.
+                    return union > 0 && intersection / union > 0.6;
                 });
                 if (!duplicate) kept.push(candidate);
             }

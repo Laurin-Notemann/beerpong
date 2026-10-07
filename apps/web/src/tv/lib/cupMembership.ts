@@ -85,11 +85,15 @@ export class CupMembership {
             const continuity = (p: Point) =>
                 old.length ? Math.min(...old.map((o) => distance(p, o.point))) : Infinity;
             const candidates = available.filter(
-                (p) =>
-                    core.includes(p) ||
-                    core.some((r) => nearby(r, p)) ||
-                    continuity(p) < spacing * 1.8
+                (p) => core.includes(p) || continuity(p) < spacing * 1.8
             );
+            // A rack can extend more than one cup beyond its calibration core.
+            // Follow connected neighbours inside the bounded search area.
+            for (let i = 0; i < candidates.length; i++) {
+                for (const p of available) {
+                    if (!candidates.includes(p) && nearby(candidates[i], p)) candidates.push(p);
+                }
+            }
             const priority = (p: Point) =>
                 (continuity(p) < spacing * 0.6 ? 4 : 0) +
                 candidates.filter((other) => other !== p && nearby(p, other)).length -
