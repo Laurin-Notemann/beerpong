@@ -49,7 +49,10 @@ export const watchCamera = createServerFn({ method: 'POST' })
     .inputValidator(asObject)
     .handler(({ data }) => {
         const tv = authorize(data.id, data.key);
-        const camera = tv.kind === 'tv' && tv.config.view === 'camera' ? cameraFor(tv) : undefined;
+        const camera =
+            tv.kind === 'tv' && ['auto', 'camera'].includes(tv.config.view)
+                ? cameraFor(tv)
+                : undefined;
         if (!camera) return null;
         watch(camera, tv);
         return camera.id;

@@ -21,16 +21,18 @@ export function CameraView({
     groupName,
     offline,
     flipped = false,
+    videoFlipped = false,
 }: {
     stream: MediaStream;
     match: LiveMatchView | undefined;
     groupName: string;
     offline: boolean;
     flipped?: boolean;
+    videoFlipped?: boolean;
 }) {
     return (
         <div className="relative h-screen overflow-hidden bg-black">
-            <CameraVideo stream={stream} />
+            <CameraVideo stream={stream} flipped={videoFlipped} />
             <header
                 className="absolute top-0 right-0 left-0 flex items-start gap-[2rem] px-[2.5rem] pt-[2rem] pb-[6rem]"
                 style={shade('bottom')}
@@ -121,7 +123,12 @@ function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }
                 <span className="tabular text-text-2">{elapsed}</span>
             </div>
             <div className="flex w-full items-center gap-[2rem]">
-                <CupRack cups={match[left].cups} team={left} className="w-[8rem] shrink-0" />
+                <CupRack
+                    cups={match[left].cups}
+                    team={left}
+                    side="left"
+                    className="w-[8rem] shrink-0"
+                />
                 <Players team={match[left]} side={left} align="left" />
                 <div className="tabular flex shrink-0 items-center gap-[1.2rem] text-[7rem] leading-none font-black">
                     <span
@@ -139,7 +146,12 @@ function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }
                     </span>
                 </div>
                 <Players team={match[right]} side={right} align="right" />
-                <CupRack cups={match[right].cups} team={right} className="w-[8rem] shrink-0" />
+                <CupRack
+                    cups={match[right].cups}
+                    team={right}
+                    side="right"
+                    className="w-[8rem] shrink-0"
+                />
             </div>
         </div>
     );

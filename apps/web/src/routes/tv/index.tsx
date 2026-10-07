@@ -13,7 +13,6 @@ import { FocusView } from '~/tv/components/FocusView';
 import { FullscreenButton } from '~/tv/components/FullscreenButton';
 import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
-import { LiveMatchPanel } from '~/tv/components/LiveMatchPanel';
 import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import { useCameraFeed } from '~/tv/lib/cameraFeed';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
@@ -23,7 +22,7 @@ import {
     type ScoreClip,
     scoreClipsOf,
 } from '~/tv/lib/scoreClips';
-import type { Board, LeaderboardRow } from '~/tv/server/board';
+import type { Board } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
 /** The TV: what's on it comes from the app's TV remote, which adds it with the code it shows. */
@@ -73,6 +72,7 @@ function loadIdentity(): Identity {
 function Tv() {
     const [identity, setIdentity] = useState(loadIdentity);
     const [registered, setRegistered] = useState(false);
+    const [cameraConfig, setCameraConfig] = useState(emptyConfig);
 
     useEffect(() => {
         document.documentElement.classList.add('tv');
@@ -111,11 +111,28 @@ function Tv() {
         };
     }, []);
 
-    // the Camera view's video, from the camera the app picked (lib/cameraFeed.ts)
+    // every score with a clip queues it; they play one after another
+    const [clips, setClips] = useState<ScoreClip[]>([]);
+    const liveMatches = useRef<Board['liveMatches']>([]);
+    const board = useBoard(
+        identity.id,
+        identity.secret,
+        registered ? identity.config : undefined,
+        (event) => {
+            const scored = scoreClipsOf(event, liveMatches.current);
+            if (scored.length) setClips((queue) => [...queue, ...scored]);
+        }
+    );
+    // Auto only requests video while a match is live; explicit Camera keeps it on while idle.
     const feed = useCameraFeed(
         identity.id,
         identity.secret,
-        registered && !!identity.config.groupId && identity.config.view === 'camera',
+        registered &&
+            !!identity.config.groupId &&
+            (identity.config.view === 'camera' ||
+                (identity.config.view === 'auto' &&
+                    !!board.data?.liveMatches.length &&
+                    !board.data.liveMatches.some((m) => m.id === identity.config.focusMatchId))),
         identity.config.groupId,
         identity.config.cameraId
     );
@@ -126,6 +143,7 @@ function Tv() {
 
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
+        if (event.type === 'cameraConfig') setCameraConfig(parseConfig(event.config));
         if (event.type === 'signal') return void onFeedSignal.current(event.from, event.signal);
         if (event.type === 'config') setIdentity((i) => ({ ...i, config: event.config }));
         if (event.type === 'session') {
@@ -138,18 +156,6 @@ function Tv() {
         identity.secret,
         onEvent,
         register
-    );
-    // every score with a clip queues it; they play one after another
-    const [clips, setClips] = useState<ScoreClip[]>([]);
-    const liveMatches = useRef<Board['liveMatches']>([]);
-    const board = useBoard(
-        identity.id,
-        identity.secret,
-        registered ? identity.config : undefined,
-        (event) => {
-            const scored = scoreClipsOf(event, liveMatches.current);
-            if (scored.length) setClips((queue) => [...queue, ...scored]);
-        }
     );
     const matches = pickMatches(board.data?.liveMatches ?? [], [
         ...(identity.config.focusMatchId ? [identity.config.focusMatchId] : []),
@@ -179,6 +185,7 @@ function Tv() {
                     offline={!connected || board.isError}
                     feed={feed.stream}
                     cameraStatus={feed.status}
+                    videoFlipped={cameraConfig.cameraVideoFlipped}
                     readyClips={readyClips}
                     clip={clips.find((clip) => readyClips.some((ready) => ready.key === clip.key))}
                     onClipDone={clipDone}
@@ -220,6 +227,7 @@ function Screen({
     offline,
     feed,
     cameraStatus,
+    videoFlipped,
     readyClips,
     clip,
     onClipDone,
@@ -230,6 +238,7 @@ function Screen({
     /** the camera's video, while it comes in */
     feed: MediaStream | null;
     cameraStatus: string;
+    videoFlipped: boolean;
     readyClips: Omit<ScoreClip, 'id'>[];
     clip: ScoreClip | undefined;
     onClipDone: () => void;
@@ -237,13 +246,15 @@ function Screen({
     const live = board?.liveMatches ?? [];
     const matches = pickMatches(live, config.pinnedMatchIds);
     const liveIds = live.map((i) => i.id);
-    const wanted = layoutFor(config, liveIds);
-    // until the camera's video comes in, what auto shows
+    const wanted = layoutFor(config, liveIds, !!feed);
+    // While connecting, keep a live match or leaderboard visible.
     const layout =
-        wanted === 'camera' && !feed ? layoutFor({ ...config, view: 'auto' }, liveIds) : wanted;
-    const focused = live.find((i) => i.id === config.focusMatchId);
+        wanted === 'camera' && !feed
+            ? layoutFor({ ...config, view: 'auto' }, liveIds, false)
+            : wanted;
+    const focused = live.find((i) => i.id === config.focusMatchId) ?? matches[0];
     const rows = board?.leaderboard.rows ?? [];
-    // Next to the leaderboard clips use the right column; other views use the team side.
+    // Clips follow the scoreboard's team side.
     const nativeVideoLayer = usesNativeVideoLayer();
 
     return (
@@ -259,10 +270,11 @@ function Screen({
                     clip={ready}
                     playId={clip?.key === ready.key ? clip.id : undefined}
                     from={
-                        layout === 'split' ||
-                        (layout === 'camera' && config.cameraOverlayFlipped
-                            ? ready.team === 'blue'
-                            : ready.team === 'red')
+                        (
+                            layout === 'camera' && config.cameraOverlayFlipped
+                                ? ready.team === 'blue'
+                                : ready.team === 'red'
+                        )
                             ? 'right'
                             : 'left'
                     }
@@ -278,6 +290,7 @@ function Screen({
                         groupName={board?.group.name ?? config.groupName ?? ''}
                         offline={offline}
                         flipped={config.cameraOverlayFlipped}
+                        videoFlipped={videoFlipped}
                     />
                 </main>
             ) : (
@@ -286,7 +299,12 @@ function Screen({
                         board={board}
                         config={config}
                         offline={offline}
-                        cameraStatus={wanted === 'camera' ? cameraStatus : null}
+                        cameraStatus={
+                            wanted === 'camera' ||
+                            (config.view === 'auto' && live.length && !feed && !config.focusMatchId)
+                                ? cameraStatus
+                                : null
+                        }
                     />
                     {!board ? (
                         <div className="grid flex-1 place-items-center text-[2rem] text-text-3">
@@ -294,27 +312,6 @@ function Screen({
                         </div>
                     ) : layout === 'focus' && focused ? (
                         <FocusView match={focused} />
-                    ) : layout === 'split' ? (
-                        <div className="flex min-h-0 flex-1 gap-[2.5rem]">
-                            <section className="flex min-h-0 flex-[1.45] flex-col gap-[1rem] overflow-hidden">
-                                <SectionTitle>
-                                    Leaderboard · {board.ranking} · as if it ended now
-                                </SectionTitle>
-                                <LeaderboardList
-                                    rows={withLivePlayers(rows, 8)}
-                                    fill
-                                    className="min-h-0 flex-1"
-                                />
-                            </section>
-                            <aside className="flex min-h-0 flex-1 flex-col gap-[1.2rem]">
-                                <LiveMatchPanel match={matches[0]} className="min-h-0 flex-1" />
-                                {live.length > 1 && (
-                                    <AlsoLive
-                                        matches={live.filter((i) => i.id !== matches[0].id)}
-                                    />
-                                )}
-                            </aside>
-                        </div>
                     ) : layout === 'live' ? (
                         matches.length ? (
                             <Matches matches={matches} className="flex-1" />
@@ -410,52 +407,6 @@ function Matches({
         </div>
     );
 }
-
-/**
- * The first `max` rows, with the players of live matches always among them: if any rank lower,
- * they take the last places, so the table shows what's happening at the tables.
- */
-function withLivePlayers(rows: LeaderboardRow[], max: number) {
-    const below = rows.slice(max).filter((i) => i.change);
-    const top = rows.slice(0, Math.max(0, max - below.length));
-    return [...top, ...below.slice(0, max)];
-}
-
-/** the other live matches, one line each, under the one next to the leaderboard */
-function AlsoLive({ matches }: { matches: Board['liveMatches'] }) {
-    const names = (team: Board['liveMatches'][number]['blue']) =>
-        team.players.map((p) => p.name).join(' & ') || '…';
-    return (
-        <div className="flex flex-col gap-[0.6rem]">
-            <SectionTitle>Also live</SectionTitle>
-            {matches.slice(0, 2).map((m) => (
-                <div
-                    key={m.id}
-                    className="flex items-center gap-[1rem] rounded-[1.2rem] bg-panel px-[1.4rem] py-[0.8rem] text-[1.4rem]"
-                >
-                    <span className="min-w-0 flex-1 truncate text-blue">{names(m.blue)}</span>
-                    <span className="tabular shrink-0 text-[1.8rem] font-black">
-                        <span className="text-blue">{m.blue.score}</span>
-                        <span className="text-text-3"> – </span>
-                        <span className="text-red">{m.red.score}</span>
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-right text-red">
-                        {names(m.red)}
-                    </span>
-                </div>
-            ))}
-            {matches.length > 2 && (
-                <div className="text-[1.3rem] text-text-3">and {matches.length - 2} more</div>
-            )}
-        </div>
-    );
-}
-
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-[1.3rem] font-semibold tracking-[0.2em] text-text-3 uppercase">
-        {children}
-    </h2>
-);
 
 const Empty = ({ children }: { children: React.ReactNode }) => (
     <div className="grid flex-1 place-items-center text-[2.4rem] text-text-3">{children}</div>

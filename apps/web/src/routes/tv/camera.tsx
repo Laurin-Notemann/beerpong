@@ -24,7 +24,7 @@ interface Identity {
     /** what it shows to be added in the app; the server hands it out on the first register */
     code: string | null;
     refreshToken: string | null;
-    /** only the group counts */
+    /** group, subject and video orientation, kept across reloads */
     config: DisplayConfig;
 }
 
@@ -149,7 +149,9 @@ function Camera() {
 
     return (
         <main className="relative h-screen overflow-hidden bg-black text-text">
-            {media.stream && <Preview stream={media.stream} />}
+            {media.stream && (
+                <Preview stream={media.stream} flipped={identity.config.cameraVideoFlipped} />
+            )}
             {!groupName ? (
                 <div className="absolute inset-0 grid place-items-center bg-black/60 p-6">
                     <div className="flex max-w-xl flex-col items-center gap-6 text-center">
@@ -258,7 +260,7 @@ function Camera() {
     );
 }
 
-function Preview({ stream }: { stream: MediaStream }) {
+function Preview({ stream, flipped }: { stream: MediaStream; flipped: boolean }) {
     const video = useRef<HTMLVideoElement>(null);
     useEffect(() => {
         video.current!.srcObject = stream;
@@ -270,6 +272,7 @@ function Preview({ stream }: { stream: MediaStream }) {
             autoPlay
             playsInline
             className="absolute inset-0 h-full w-full object-cover"
+            style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
         />
     );
 }

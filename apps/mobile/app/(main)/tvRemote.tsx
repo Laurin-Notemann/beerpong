@@ -1,16 +1,11 @@
 import { Stack } from 'expo-router';
-import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { useGroup } from '@/api/calls/seasonHooks';
-import {
-    Tv,
-    useCameras,
-    useRemoveCamera,
-    useTvMatches,
-    useTvs,
-} from '@/api/calls/tvHooks';
+import { Tv, useCameras, useTvMatches, useTvs } from '@/api/calls/tvHooks';
 import { env } from '@/api/env';
 import { LiveDot } from '@/components/liveMatch/LiveDot';
+import { CameraControls } from '@/components/tvRemote/CameraControls';
 import {
     Card,
     Chevron,
@@ -43,8 +38,6 @@ export default function Page() {
     // what the TV shows, as its remote says it
     const showing = (tv: Tv) => {
         const screen = screenOf(tv.config, liveIds);
-        if (screen === 'camera' && !liveIds.length)
-            return `Camera Auto · Leaderboard · ${scopeLabel(tv.config.scope)}`;
         return screen === 'auto' || screen === 'leaderboard'
             ? `${screenLabel(screen)} · ${scopeLabel(tv.config.scope)}`
             : screenLabel(screen);
@@ -140,43 +133,24 @@ export default function Page() {
     );
 }
 
-/** the group's cameras that are on; tapping one takes the group off it */
+/** Label and orient each camera independently; remove it through its native menu. */
 function Cameras({ groupId }: { groupId: string | null }) {
     const nav = useNavigation();
     const cameras = useCameras(groupId).data ?? [];
-    const remove = useRemoveCamera(groupId);
 
     return (
         <Section
             title="Cameras"
-            footer="A laptop or phone at the table films it, and a TV shows the video with the score over it: choose Camera on the TV."
+            footer="Choose what each camera shows in its menu. Auto uses a camera during matches; Camera keeps its video on while idle."
         >
+            {cameras.map((camera) => (
+                <CameraControls
+                    key={camera.id}
+                    groupId={groupId}
+                    camera={camera}
+                />
+            ))}
             <Card>
-                {cameras.map((camera) => (
-                    <Row
-                        key={camera.id}
-                        icon="video-outline"
-                        title={camera.name}
-                        subtitle="On"
-                        selected
-                        haptic={false}
-                        disabled={remove.isPending}
-                        onPress={() =>
-                            Alert.alert(
-                                'Remove Group from Camera',
-                                'The camera shows its code again, and TVs stop showing its video.',
-                                [
-                                    { text: 'Cancel', style: 'cancel' },
-                                    {
-                                        text: 'Remove',
-                                        style: 'destructive',
-                                        onPress: () => remove.mutate(camera.id),
-                                    },
-                                ]
-                            )
-                        }
-                    />
-                ))}
                 <Row
                     icon="plus"
                     title="Add Camera"

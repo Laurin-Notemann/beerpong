@@ -2,16 +2,18 @@ import type { RackCup } from '~/tv/lib/liveMatch';
 
 /**
  * A team's cups as they're drawn on the table (re-racked, or the pyramid), apex towards the
- * middle of the screen: the blue team's rack on the left points right, the red team's on the
- * right points left. Cups that are gone stay as faint rings, so you see where they were hit.
+ * middle of the screen. Direction follows screen position independently of team color.
+ * Cups that are gone stay as faint rings, so you see where they were hit.
  */
 export function CupRack({
     cups,
     team,
+    side = team === 'blue' ? 'left' : 'right',
     className,
 }: {
     cups: RackCup[];
     team: 'blue' | 'red';
+    side?: 'left' | 'right';
     className?: string;
 }) {
     // the app's cup grid is 7x7; rows run from the base (y 0) to the apex (y 6)
@@ -24,7 +26,7 @@ export function CupRack({
             {cups.map(({ at, up }) => (
                 <circle
                     key={`${at.x}:${at.y}`}
-                    cx={team === 'blue' ? at.y : size - 1 - at.y}
+                    cx={side === 'left' ? at.y : size - 1 - at.y}
                     cy={at.x}
                     r={0.92}
                     fill={up ? color : 'transparent'}

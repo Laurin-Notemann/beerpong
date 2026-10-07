@@ -1,12 +1,32 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { parsePatch } from '@/lib/tvDisplay';
 import { asMember, fail, removeGroup } from '~/tv/server/appRemote';
-import { byGroup } from '~/tv/server/displays';
+import { byGroup, update } from '~/tv/server/displays';
 
-/** one of the group's cameras, for the app's TV remote: DELETE takes the group off it */
+/** PATCH labels or flips a camera; DELETE takes the group off it. */
 export const Route = createFileRoute('/tv/api/groups/$groupId/cameras/$id')({
     server: {
         handlers: {
+            PATCH: ({ request, params }) =>
+                asMember(request, params.groupId, async () => {
+                    const camera = byGroup(params.groupId, 'camera').find(
+                        (d) => d.id === params.id
+                    );
+                    if (!camera) return fail(404, 'cameraNotFound');
+                    const { cameraSubject, cameraVideoFlipped } = parsePatch(
+                        await request.json().catch(() => null)
+                    );
+                    update(camera, {
+                        ...(cameraSubject !== undefined ? { cameraSubject } : {}),
+                        ...(cameraVideoFlipped !== undefined ? { cameraVideoFlipped } : {}),
+                    });
+                    return Response.json({
+                        id: camera.id,
+                        name: camera.name,
+                        config: camera.config,
+                    });
+                }),
             DELETE: ({ request, params }) =>
                 asMember(request, params.groupId, async () => {
                     const camera = byGroup(params.groupId, 'camera').find(

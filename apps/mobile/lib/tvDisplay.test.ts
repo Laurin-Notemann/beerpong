@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { layoutFor, parsePatch, pickMatches } from '@/lib/tvDisplay';
+import {
+    layoutFor,
+    parseConfig,
+    parsePatch,
+    pickMatches,
+    screenOf,
+} from '@/lib/tvDisplay';
 
 // most recently active first, as the board lists them
 const live = [
@@ -66,12 +72,40 @@ describe('layoutFor', () => {
         ).toBe('leaderboard');
     });
 
-    it('shows the leaderboard next to a live match in auto, alone without one', () => {
+    it('shows one full-screen match in auto, or the leaderboard while idle', () => {
         expect(layoutFor({ view: 'auto', focusMatchId: null }, ['a'])).toBe(
-            'split'
+            'focus'
         );
         expect(layoutFor({ view: 'auto', focusMatchId: null }, [])).toBe(
             'leaderboard'
         );
+    });
+    it('uses an available camera in auto only while a match is live', () => {
+        const config = { view: 'auto' as const, focusMatchId: null };
+        expect(layoutFor(config, ['a'], true)).toBe('camera');
+        expect(layoutFor(config, [], true)).toBe('leaderboard');
+        expect(screenOf(config, ['a'])).toBe('auto');
+    });
+
+    it('keeps explicit Camera selected even while idle', () => {
+        expect(layoutFor({ view: 'camera', focusMatchId: null }, [])).toBe(
+            'camera'
+        );
+    });
+
+    it('defaults camera settings from older stored configs and validates new patches', () => {
+        expect(parseConfig({ view: 'camera' })).toMatchObject({
+            cameraSubject: 'table',
+            cameraVideoFlipped: false,
+        });
+        expect(
+            parsePatch({ cameraSubject: 'blue', cameraVideoFlipped: true })
+        ).toEqual({
+            cameraSubject: 'blue',
+            cameraVideoFlipped: true,
+        });
+        expect(
+            parsePatch({ cameraSubject: 'unknown', cameraVideoFlipped: 'true' })
+        ).toEqual({});
     });
 });

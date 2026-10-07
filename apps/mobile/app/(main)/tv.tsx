@@ -13,6 +13,7 @@ import {
 } from '@/api/calls/tvHooks';
 import { Icon } from '@/components/Icon';
 import IconHead from '@/components/IconHead';
+import { CameraControls } from '@/components/tvRemote/CameraControls';
 import {
     Card,
     MatchSummary,
@@ -32,6 +33,8 @@ import { useNavStyles } from '@/lib/navigation/navStyles';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import {
     byStart,
+    cameraSubjectLabel,
+    parseConfig,
     MAX_MATCHES,
     pickMatches,
     Screen,
@@ -101,17 +104,21 @@ function Remote({
     const { config } = tv;
     const send = update.mutate;
     const cameras = useCameras(groupId).data ?? [];
-    // the one the TV shows: the one it's set to, else the first (as on the TV's server)
-    const camera = cameras.find((i) => i.id === config.cameraId) ?? cameras[0];
+    // Match the server's selected device and replacement-subject fallback.
+    const camera =
+        cameras.find((i) => i.id === config.cameraId) ??
+        cameras.find(
+            (i) => parseConfig(i.config).cameraSubject === config.cameraSubject
+        ) ??
+        cameras[0];
 
     // in the order they started, so rows don't move under your thumb while cups are hit
     const live = [...recent].sort(byStart);
     const liveIds = live.map((i) => i.id);
-    // the live matches the TV shows (the first one next to the leaderboard)
+    // Auto and Camera use the first selected live match.
     const picked = pickMatches(recent, config.pinnedMatchIds);
     const pinned = config.pinnedMatchIds.filter((i) => liveIds.includes(i));
     const screen = screenOf(config, liveIds);
-    const cameraIdle = config.view === 'camera' && !live.length;
 
     const choose = (next: Screen) => {
         if (next !== 'focus') send({ view: next, focusMatchId: null });
@@ -130,15 +137,15 @@ function Remote({
     const running = live.length ? `${live.length} running` : 'None running';
     const captions: Record<Screen, string> = {
         auto: live.length
-            ? 'Leaderboard + a live match'
+            ? camera
+                ? 'Camera feed · live score'
+                : 'One live match on the whole screen'
             : 'Leaderboard, no match running',
         leaderboard: scopeLabel(config.scope),
         live: running,
-        camera: cameraIdle
-            ? 'Now leaderboard · camera when a match starts'
-            : camera
-              ? `Video from ${camera.name}, the score over it`
-              : 'No camera on · showing Auto',
+        camera: camera
+            ? `Video from ${camera.name}, even while idle`
+            : 'No camera on · waiting for a camera',
         focus:
             screen === 'focus' && picked.length
                 ? versus(
@@ -179,12 +186,7 @@ function Remote({
                             subtitle={captions[s.value]}
                             selected={screen === s.value}
                             // one match on the whole screen needs a live match
-                            disabled={
-                                (s.value === 'focus' && !live.length) ||
-                                (s.value === 'camera' &&
-                                    !cameras.length &&
-                                    screen !== 'camera')
-                            }
+                            disabled={s.value === 'focus' && !live.length}
                             onPress={() => choose(s.value)}
                             trailing={<Radio on={screen === s.value} />}
                         />
@@ -192,7 +194,7 @@ function Remote({
                 </Card>
             </Section>
 
-            {screen === 'camera' && (
+            {(screen === 'camera' || screen === 'auto') && (
                 <Section
                     title="Camera"
                     footer={
@@ -229,8 +231,19 @@ function Remote({
                                     key={c.id}
                                     icon="video-outline"
                                     title={c.name}
+                                    subtitle={
+                                        cameraSubjectLabel[
+                                            parseConfig(c.config).cameraSubject
+                                        ]
+                                    }
                                     selected={camera?.id === c.id}
-                                    onPress={() => send({ cameraId: c.id })}
+                                    onPress={() =>
+                                        send({
+                                            cameraId: c.id,
+                                            cameraSubject: parseConfig(c.config)
+                                                .cameraSubject,
+                                        })
+                                    }
                                     trailing={
                                         <Radio on={camera?.id === c.id} />
                                     }
@@ -238,22 +251,21 @@ function Remote({
                             ))}
                         </Card>
                     )}
+                    {camera && (
+                        <CameraControls groupId={groupId} camera={camera} />
+                    )}
                 </Section>
             )}
 
             {(screen === 'auto' || screen === 'camera') && (
                 <Section
-                    title={
-                        screen === 'camera'
-                            ? 'Score on the video'
-                            : 'Next to the leaderboard'
-                    }
+                    title="Live match"
                     footer={
                         live.length
                             ? undefined
                             : screen === 'camera'
-                              ? 'The leaderboard shows while idle. The next match automatically brings back the camera and its score.'
-                              : 'When someone starts a match, it shows next to the leaderboard.'
+                              ? 'The camera stays on while idle. The next match adds its score.'
+                              : 'Auto shows the leaderboard while idle, then the camera or one live match when a match starts.'
                     }
                 >
                     {live.length > 0 && (
@@ -293,7 +305,7 @@ function Remote({
                 </Section>
             )}
 
-            {(screen === 'auto' || screen === 'leaderboard' || cameraIdle) && (
+            {(screen === 'auto' || screen === 'leaderboard') && (
                 <Section title="Leaderboard">
                     <Segmented
                         value={config.scope}

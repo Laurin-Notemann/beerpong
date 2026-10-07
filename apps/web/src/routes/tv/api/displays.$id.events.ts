@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import {
     authorize,
+    cameraFor,
     deviceName,
     type DisplayEvent,
     DisplayError,
@@ -51,6 +52,14 @@ export const Route = createFileRoute('/tv/api/displays/$id/events')({
                         if (display.refreshToken)
                             send({ type: 'session', refreshToken: display.refreshToken });
                         send({ type: 'config', config: display.config });
+                        // Catch up on camera settings changed while this event stream was down.
+                        const camera = display.kind === 'tv' ? cameraFor(display) : undefined;
+                        if (camera)
+                            send({
+                                type: 'cameraConfig',
+                                cameraId: camera.id,
+                                config: camera.config,
+                            });
                         const unsubscribe = subscribe(display, send);
                         // proxies close connections that stay quiet
                         const ping = setInterval(
