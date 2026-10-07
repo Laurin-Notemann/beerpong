@@ -404,6 +404,14 @@ def evaluate(args):
                  'bestMaskIoU': max((pair[0] for pair in pairs if pair[2] == j), default=0)}
                 for j, annotation in enumerate(target_annotations)],
                 'falsePredictions': [{'prediction': i, 'confidence': scores[i]} for i in range(len(masks)) if i not in matched_predictions]})
+    # Native masks have no playing-role output. Keep every unmatched prediction as
+    # a conservative playing FP; only the runtime membership evaluator can reject it.
+    playing_tp = role_counts['playing']['matched']
+    playing_fn = role_counts['playing']['expected'] - playing_tp
+    playing = {'truePositives': playing_tp, 'falsePositives': fp, 'falseNegatives': playing_fn,
+               'precisionIoU50': playing_tp / max(playing_tp + fp, 1),
+               'recallIoU50': playing_tp / max(playing_tp + playing_fn, 1),
+               'falsePositiveProtocol': 'All unmatched predictions retained; no removed-region exclusion.'}
     report = {'checkpointSha256': digest(args.checkpoint) if args.checkpoint else 'pretrained-coco',
               'datasetSha256': digest(root / 'coco/provenance.json'),
               'annotationSha256': digest(root / 'coco' / args.split / '_annotations.coco.json'), 'split': args.split, 'threshold': args.threshold,
@@ -411,7 +419,7 @@ def evaluate(args):
               'precisionIoU50': tp / max(tp + fp, 1), 'recallIoU50': tp / max(tp + fn, 1),
               'meanMatchedMaskIoU': float(np.mean(ious)) if ious else 0,
               'inferenceP95Ms': float(np.percentile(latencies, 95)), 'counts': counts,
-              'truePositives': tp, 'falsePositives': fp, 'falseNegatives': fn, 'roleCounts': role_counts}
+              'truePositives': tp, 'falsePositives': fp, 'falseNegatives': fn, 'roleCounts': role_counts, 'playingIoU50': playing}
     write_json(args.output, report)
     if args.details:
         write_json(args.details, details)
