@@ -7,6 +7,7 @@ import {
     Spacer,
     Text,
     VStack,
+    ZStack,
 } from '@expo/ui/swift-ui';
 import {
     background,
@@ -20,27 +21,39 @@ import {
     layoutPriority,
     lineLimit,
     monospacedDigit,
+    offset,
     padding,
+    resizable,
 } from '@expo/ui/swift-ui/modifiers';
-import { createWidget, type WidgetEnvironment } from 'expo-widgets';
+import {
+    createWidget,
+    type WidgetEnvironment,
+    widgetsDirectory,
+} from 'expo-widgets';
 import { Platform } from 'react-native';
 
-import type { LiveMatchesWidgetProps } from '@/lib/widgets/props';
+import { activityAvatarsDirectory } from '@/lib/widgets/activityAvatars';
+import type { LiveMatchesWidgetProps, WidgetPlayer } from '@/lib/widgets/props';
+
+/** `avatarsDirectory` in the layout's source, which only knows its props */
+const AVATARS_DIRECTORY = '__VERSUS_WIDGET_AVATARS__';
 
 /**
  * The "Live matches" home screen widget: one of the selected group's matches running now, with a
  * button to move on to the next. (No match timer: a timer Text left the widget black.) Small
- * shows the names and the score, medium every player with
- * their live Elo change and the last move, large also the moves so far with the score after
- * each. Like the leaderboard widget it runs in the widget extension's own JS runtime; the app
- * gives it its props while it runs, and the API's silent pushes while it doesn't
- * (`liveScoresTask`).
+ * shows the names and the score; medium, like the Live Activity, each team's cups and its
+ * players' avatars with their live Elo change, and the last move; large also the moves so far
+ * with the score after each. Like the leaderboard widget it runs in the widget extension's own
+ * JS runtime; the app gives it its props while it runs, and the API's silent pushes while it
+ * doesn't (`liveScoresTask`).
  */
 const LiveMatchesWidget = (
     props: LiveMatchesWidgetProps,
     environment: WidgetEnvironment
 ) => {
     'widget';
+    // the app puts its directory here when it registers the layout (createWidget below)
+    const avatarsDirectory = '__VERSUS_WIDGET_AVATARS__';
     const family = environment.widgetFamily;
     const small = family === 'systemSmall';
     const large = family === 'systemLarge';
@@ -209,96 +222,155 @@ const LiveMatchesWidget = (
         );
     }
 
-    // a team as an invisible grid: names left-aligned, live Elo changes right-aligned
-    const team = (side: 'blue' | 'red') => {
-        const players = (match.players ?? []).filter((p) => p.team === side);
-        const color = colorOf(side);
-        const name = (value: string) => (
-            <Text
-                modifiers={[
-                    font({ weight: 'semibold', size: 14 }),
-                    foregroundStyle(color),
-                    lineLimit(1),
-                    frame({ maxWidth: Infinity, alignment: 'leading' }),
-                ]}
-            >
-                {value}
-            </Text>
-        );
+    const eloOf = (elo: number) => ({
+        text: elo > 0 ? `+${elo}` : elo < 0 ? `−${-elo}` : '0',
+        color: elo > 0 ? LIVE : elo < 0 ? RED : GRAY,
+        tint: elo > 0 ? '#1BC09726' : elo < 0 ? '#EE4A5826' : '#8E8E9326',
+    });
+    /** a team's cups as the Live Activity draws them: blue's apex points right, red's left */
+    const rack = (team: 'blue' | 'red', cell: number) => {
+        const code = team === 'blue' ? match.blueCups : match.redCups;
+        const cups = (code ?? '').match(/.{3}/g) ?? [];
+        if (!cups.length) return null;
         return (
-            <VStack
-                alignment="leading"
-                spacing={5}
+            <ZStack
                 modifiers={[
-                    frame({ maxWidth: Infinity, alignment: 'leading' }),
+                    frame({ width: cell * 8, height: cell * 8 }),
+                    fixedSize(),
                 ]}
             >
-                {players.length === 0
-                    ? name(side === 'blue' ? match.blueNames : match.redNames)
-                    : players.map((p) => (
-                          <HStack key={p.name} spacing={8}>
-                              {name(p.name)}
-                              {p.elo !== undefined && (
-                                  <Text
-                                      modifiers={[
-                                          font({ weight: 'bold', size: 11 }),
-                                          monospacedDigit(),
-                                          foregroundStyle(
-                                              p.elo > 0
-                                                  ? LIVE
-                                                  : p.elo < 0
-                                                    ? RED
-                                                    : GRAY
-                                          ),
-                                          padding({
-                                              horizontal: 5,
-                                              vertical: 2,
-                                          }),
-                                          background(
-                                              p.elo > 0
-                                                  ? '#1BC09726'
-                                                  : p.elo < 0
-                                                    ? '#EE4A5826'
-                                                    : '#8E8E9326'
-                                          ),
-                                          clipShape('roundedRectangle', 6),
-                                          fixedSize(),
-                                      ]}
-                                  >
-                                      {p.elo > 0
-                                          ? `+${p.elo}`
-                                          : p.elo < 0
-                                            ? `−${-p.elo}`
-                                            : '0'}
-                                  </Text>
-                              )}
-                          </HStack>
-                      ))}
-            </VStack>
+                {cups.map((cup) => {
+                    const x = Number(cup[0]);
+                    const y = Number(cup[1]);
+                    const column = team === 'blue' ? y : 6 - y;
+                    return (
+                        <Circle
+                            key={cup.slice(0, 2)}
+                            modifiers={[
+                                foregroundStyle(
+                                    cup[2] === '1' ? colorOf(team) : '#8E8E9340'
+                                ),
+                                frame({
+                                    width: cell * 1.8,
+                                    height: cell * 1.8,
+                                }),
+                                offset({
+                                    x: (column - 3) * cell,
+                                    y: (x - 3) * cell,
+                                }),
+                            ]}
+                        />
+                    );
+                })}
+            </ZStack>
         );
     };
-    const teams = (size: number) => (
-        <HStack spacing={10}>
-            {team('blue')}
-            {scoreLine(size)}
-            {team('red')}
-        </HStack>
+    /** a player's avatar; initials until this phone has a copy (activityAvatars.ts) */
+    const avatar = (player: WidgetPlayer, size: number) => (
+        <ZStack modifiers={[fixedSize()]}>
+            <Circle
+                modifiers={[
+                    foregroundStyle(colorOf(player.team)),
+                    frame({ width: size, height: size }),
+                ]}
+            />
+            <Text
+                modifiers={[
+                    font({ weight: 'bold', size: size * 0.4 }),
+                    foregroundStyle('#FFFFFF'),
+                ]}
+            >
+                {player.name
+                    .split(' ')
+                    .map((i) => i.slice(0, 1))
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase()}
+            </Text>
+            {!!player.avatar && (
+                <Image
+                    uiImage={`${avatarsDirectory}${player.avatar}.jpg`}
+                    modifiers={[
+                        resizable(),
+                        frame({ width: size, height: size }),
+                        clipShape('circle'),
+                    ]}
+                />
+            )}
+        </ZStack>
     );
+    const playersOf = (side: 'blue' | 'red') =>
+        (match.players ?? []).filter((p) => p.team === side);
 
     const moves = match.moves ?? [];
 
     if (!large) {
         const last = moves[0];
+        // a team as the Live Activity shows it: the avatars, each with its live Elo change
+        // under it, over the names
+        const team = (side: 'blue' | 'red') => {
+            const alignment = side === 'blue' ? 'leading' : 'trailing';
+            return (
+                <VStack
+                    alignment={alignment}
+                    spacing={4}
+                    modifiers={[frame({ maxWidth: Infinity, alignment })]}
+                >
+                    <HStack spacing={2}>
+                        {playersOf(side)
+                            .slice(0, 3)
+                            .map((p) => (
+                                <VStack key={p.name} spacing={1}>
+                                    {avatar(p, 20)}
+                                    {p.elo !== undefined && (
+                                        <Text
+                                            modifiers={[
+                                                font({
+                                                    weight: 'bold',
+                                                    size: 9,
+                                                }),
+                                                monospacedDigit(),
+                                                foregroundStyle(
+                                                    eloOf(p.elo).color
+                                                ),
+                                                lineLimit(1),
+                                                fixedSize(),
+                                            ]}
+                                        >
+                                            {eloOf(p.elo).text}
+                                        </Text>
+                                    )}
+                                </VStack>
+                            ))}
+                    </HStack>
+                    <Text
+                        modifiers={[
+                            font({ weight: 'semibold', size: 13 }),
+                            foregroundStyle(colorOf(side)),
+                            lineLimit(2),
+                            frame({ maxWidth: Infinity, alignment }),
+                        ]}
+                    >
+                        {side === 'blue' ? match.blueNames : match.redNames}
+                    </Text>
+                </VStack>
+            );
+        };
         return (
             <VStack spacing={0} modifiers={[fill, background_]}>
                 {header}
-                <VStack
+                <HStack
+                    spacing={8}
                     modifiers={[
                         frame({ maxWidth: Infinity, maxHeight: Infinity }),
                     ]}
                 >
-                    {teams(48)}
-                </VStack>
+                    {rack('blue', 4)}
+                    {team('blue')}
+                    {scoreLine(36)}
+                    {team('red')}
+                    {rack('red', 4)}
+                </HStack>
                 {last && (
                     <HStack spacing={0}>
                         <Text modifiers={[font({ size: 12 }), secondary]}>
@@ -328,20 +400,81 @@ const LiveMatchesWidget = (
         );
     }
 
+    // a team as an invisible grid: avatars and names left-aligned, live Elo changes right-aligned
+    const team = (side: 'blue' | 'red') => {
+        const players = playersOf(side);
+        const color = colorOf(side);
+        const name = (value: string) => (
+            <Text
+                modifiers={[
+                    font({ weight: 'semibold', size: 14 }),
+                    foregroundStyle(color),
+                    lineLimit(1),
+                    frame({ maxWidth: Infinity, alignment: 'leading' }),
+                ]}
+            >
+                {value}
+            </Text>
+        );
+        return (
+            <VStack
+                alignment="leading"
+                spacing={5}
+                modifiers={[
+                    frame({ maxWidth: Infinity, alignment: 'leading' }),
+                ]}
+            >
+                {players.length === 0
+                    ? name(side === 'blue' ? match.blueNames : match.redNames)
+                    : players.slice(0, 3).map((p) => (
+                          <HStack key={p.name} spacing={6}>
+                              {avatar(p, 20)}
+                              {name(p.name)}
+                              {p.elo !== undefined && (
+                                  <Text
+                                      modifiers={[
+                                          font({ weight: 'bold', size: 11 }),
+                                          monospacedDigit(),
+                                          foregroundStyle(eloOf(p.elo).color),
+                                          padding({
+                                              horizontal: 5,
+                                              vertical: 2,
+                                          }),
+                                          background(eloOf(p.elo).tint),
+                                          clipShape('roundedRectangle', 6),
+                                          fixedSize(),
+                                      ]}
+                                  >
+                                      {eloOf(p.elo).text}
+                                  </Text>
+                              )}
+                          </HStack>
+                      ))}
+            </VStack>
+        );
+    };
+
     return (
         <VStack alignment="leading" spacing={0} modifiers={[fill, background_]}>
             {header}
-            <VStack
-                modifiers={[
-                    frame({
-                        maxWidth: Infinity,
-                        minHeight: 104,
-                        maxHeight: 104,
-                    }),
-                ]}
+            <HStack
+                spacing={8}
+                modifiers={[padding({ top: 8 }), frame({ maxWidth: Infinity })]}
             >
-                {teams(56)}
-            </VStack>
+                {rack('blue', 6)}
+                <Spacer />
+                {scoreLine(52)}
+                <Spacer />
+                {rack('red', 6)}
+            </HStack>
+            <HStack
+                alignment="top"
+                spacing={12}
+                modifiers={[padding({ top: 8, bottom: 10 })]}
+            >
+                {team('blue')}
+                {team('red')}
+            </HStack>
             <Divider />
             <Text
                 modifiers={[
@@ -357,7 +490,7 @@ const LiveMatchesWidget = (
                     No cups yet.
                 </Text>
             ) : (
-                moves.slice(0, 7).map((m, i) => (
+                moves.slice(0, 5).map((m, i) => (
                     <HStack
                         key={String(i)}
                         spacing={8}
@@ -431,7 +564,15 @@ const LiveMatchesWidget = (
 /** null where there are no widgets (Android) */
 export const liveMatchesWidget =
     Platform.OS === 'ios'
-        ? createWidget('LiveMatchesWidget', LiveMatchesWidget)
+        ? createWidget(
+              'LiveMatchesWidget',
+              // the babel plugin turned the layout into its source; this phone's avatar copies
+              // are where the widget extension can read them
+              (LiveMatchesWidget as unknown as string).replace(
+                  AVATARS_DIRECTORY,
+                  activityAvatarsDirectory(widgetsDirectory)
+              ) as unknown as typeof LiveMatchesWidget
+          )
         : null;
 
 /**

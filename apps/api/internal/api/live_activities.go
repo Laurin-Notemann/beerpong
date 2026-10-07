@@ -617,9 +617,9 @@ func liveMatchURL(lm db.LiveMatch) string {
 }
 
 // pushWidgets sends the group's phones the scores of its matches running now,
-// with their players' live Elo and their moves. It's a silent push: iOS wakes
-// the app for a moment to update the "Live matches" widget, as often as it
-// allows.
+// with their players' live Elo and avatars, their moves and their cups. It's a
+// silent push: iOS wakes the app for a moment to update the "Live matches"
+// widget, as often as it allows.
 func (s *Server) pushWidgets(ctx context.Context, groupID string, tokens []db.GroupPushTokensRow) error {
 	rows, err := s.q.InProgressLiveMatchesByGroup(ctx, groupID)
 	if err != nil {
@@ -659,6 +659,9 @@ func (s *Server) pushWidgets(ctx context.Context, groupID string, tokens []db.Gr
 		players := []map[string]any{}
 		for _, p := range m.score.Players {
 			player := map[string]any{"name": p.Name, "team": p.Team}
+			if p.Avatar != "" {
+				player["avatar"] = p.Avatar
+			}
 			if change, found := elo[p.ID]; found {
 				player["elo"] = int(math.Round(change))
 			}
@@ -677,19 +680,24 @@ func (s *Server) pushWidgets(ctx context.Context, groupID string, tokens []db.Gr
 			"startedAt": m.lm.StartedAt.UnixMilli(),
 			"players":   players,
 			"moves":     moves,
+			"blueCups":  m.score.BlueCups,
+			"redCups":   m.score.RedCups,
 		})
 	}
 	payload := map[string]any{
 		"aps":        map[string]any{"content-available": 1},
 		"liveScores": map[string]any{"groupId": groupID, "matches": matches},
 	}
-	// APNs refuses a payload over 4 KB: without the moves, then without the players
-	for _, details := range []string{"moves", "players"} {
+	// APNs refuses a payload over 4 KB: without the moves, then without the
+	// cups, then without the players
+	for _, details := range [][]string{{"moves"}, {"blueCups", "redCups"}, {"players"}} {
 		if b, _ := json.Marshal(payload); len(b) <= maxPushBytes {
 			break
 		}
 		for _, m := range matches {
-			delete(m, details)
+			for _, key := range details {
+				delete(m, key)
+			}
 		}
 	}
 
