@@ -51,6 +51,3 @@ WHERE g.id = ANY(@group_ids::text[])
         WHERE eg.group_id = g.id AND e.revoked_at IS NULL
     )
 RETURNING *;
-
--- name: GroupPremium :one
-SELECT premium FROM groups WHERE id = $1;

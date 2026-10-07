@@ -20,7 +20,7 @@ type Config struct {
 
 	AWS AWS
 
-	APNs APNs
+	APNs   APNs
 	Apple  Apple
 	Google Google
 

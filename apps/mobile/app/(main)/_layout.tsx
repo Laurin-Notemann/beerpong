@@ -10,9 +10,9 @@ import {
     TOURNAMENT_BANNER_INSET,
 } from '@/components/tournament/TournamentBanner';
 import { useModalStyles } from '@/lib/navigation/modalStyles';
+import { usePremiumSync } from '@/lib/premium/usePremium';
 import { FloatingDockInsetContext, useInsets } from '@/lib/useInsets';
 import { useHomeScreenWidgets, usePushTokens } from '@/lib/widgets/useWidgets';
-import { usePremiumSync } from '@/lib/premium/usePremium';
 import {
     useEnsureGroupSelected,
     useGroupStore,

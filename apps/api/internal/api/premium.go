@@ -229,22 +229,6 @@ func (s *Server) publishGroups(groups []db.Group) {
 	}
 }
 
-// requirePremium answers 403 premiumRequired when the group hasn't unlocked
-// premium, and nil when it has.
-func (s *Server) requirePremium(r *request, groupID string) response {
-	premium, err := s.q.GroupPremium(r.Context(), groupID)
-	if notFound(err) {
-		return fail(errGroupNotFound)
-	}
-	if err != nil {
-		return internal(err)
-	}
-	if !premium {
-		return fail(errPremiumRequired)
-	}
-	return nil
-}
-
 func millis(ms *int64) *time.Time {
 	if ms == nil {
 		return nil

@@ -81,7 +81,6 @@ var (
 	errLeaderboardInvalidProjection = errorCode{400, "leaderboardInvalidProjection", "A projection needs matches: [{teams: [blue, red]}], every member with a playerId and moves, at most 20 matches."}
 
 	errPurchaseInvalid = errorCode{400, "purchaseInvalid", "The purchase could not be verified with the store, is not Versus Premium or has been refunded!"}
-	errPremiumRequired = errorCode{403, "premiumRequired", "This needs Versus Premium for the group!"}
 
 	errAuthRegisterInvalidDto  = errorCode{400, "authRegisterInvalidDto", "The installationType or deviceId is invalid!"}
 	errAuthRefreshInvalidDto   = errorCode{400, "authRefreshInvalidDto", "The refreshToken has to be non-null and non-empty!"}

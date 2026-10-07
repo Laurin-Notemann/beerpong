@@ -90,7 +90,8 @@ export default function Page() {
                             textAlign: 'center',
                         }}
                     >
-                        Premium purchases aren’t available yet. All features remain available.
+                        Premium purchases aren’t available yet. All features
+                        remain available.
                     </Text>
                 )}
             </PremiumPerksCarousel>

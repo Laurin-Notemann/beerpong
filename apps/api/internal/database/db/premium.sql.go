@@ -59,17 +59,6 @@ func (q *Queries) GetEntitlement(ctx context.Context, arg GetEntitlementParams) 
 	return i, err
 }
 
-const groupPremium = `-- name: GroupPremium :one
-SELECT premium FROM groups WHERE id = $1
-`
-
-func (q *Queries) GroupPremium(ctx context.Context, id string) (bool, error) {
-	row := q.db.QueryRow(ctx, groupPremium, id)
-	var premium bool
-	err := row.Scan(&premium)
-	return premium, err
-}
-
 const linkEntitlementUser = `-- name: LinkEntitlementUser :exec
 INSERT INTO entitlement_users (entitlement_id, user_id) VALUES ($1, $2)
 ON CONFLICT DO NOTHING

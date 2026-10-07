@@ -3577,7 +3577,7 @@
                     "numberOfSeasons": { "type": "integer", "format": "int64" },
                     "premium": {
                         "type": "boolean",
-                        "description": "Versus Premium is unlocked for the group: seasons, photos, pro mode and the TV."
+                        "description": "A store purchase covers this group. Premium enforcement is deferred while store setup is in progress."
                     }
                 },
                 "required": [

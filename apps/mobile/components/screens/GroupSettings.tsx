@@ -45,6 +45,7 @@ export interface GroupSettingsProps {
 }
 export default function GroupSettingsScreen({
     id,
+    hasPremium,
     groupName,
     groupCode,
     onLeaveGroup,
@@ -112,7 +113,9 @@ export default function GroupSettingsScreen({
                             title="Versus Premium"
                             headIcon="check-decagram"
                             tailIconType="next"
-                            tailContent={hasPremium ? 'Unlocked' : <PremiumChip />}
+                            tailContent={
+                                hasPremium ? 'Unlocked' : <PremiumChip />
+                            }
                             onPress={() => nav.navigate('static/aboutPremium')}
                         />
                         {experiments.showWallpaper &&

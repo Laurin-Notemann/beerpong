@@ -17,8 +17,8 @@ import (
 	"github.com/laurin-notemann/beerpong/api-go/internal/config"
 	"github.com/laurin-notemann/beerpong/api-go/internal/database"
 	"github.com/laurin-notemann/beerpong/api-go/internal/observability"
-	"github.com/laurin-notemann/beerpong/api-go/internal/push"
 	"github.com/laurin-notemann/beerpong/api-go/internal/purchases"
+	"github.com/laurin-notemann/beerpong/api-go/internal/push"
 	"github.com/laurin-notemann/beerpong/api-go/internal/realtime"
 	"github.com/laurin-notemann/beerpong/api-go/internal/storage"
 )

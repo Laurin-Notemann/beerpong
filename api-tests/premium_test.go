@@ -12,11 +12,11 @@ import (
 // newTransactionID is an App Store originalTransactionId nobody used before;
 // purchases outlive a test run in the database.
 func newTransactionID(h *H) string {
-    n, err := rand.Int(rand.Reader, big.NewInt(1e15))
-    if err != nil {
-        h.Fatalf("transaction id: %v", err)
-    }
-    return "2000" + n.String()
+	n, err := rand.Int(rand.Reader, big.NewInt(1e15))
+	if err != nil {
+		h.Fatalf("transaction id: %v", err)
+	}
+	return "2000" + n.String()
 }
 
 // redeem is what the app sends after a restore or on a new install; buy is
