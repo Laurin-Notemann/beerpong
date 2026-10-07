@@ -81,7 +81,8 @@ export function useCupDetector(
         let heldCupCount = 0;
         let ignoredCupCount = 0;
         let playingCupCount = 0;
-        const persistence = new CupPersistence();
+        let persistence = [new CupPersistence(), new CupPersistence()];
+        let persistenceKey = '';
         const rackMembership = new CupMembership();
         const searchAreas = cupSearchAreas(areas);
         const attributes = () => ({ cameraId, groupId, model, backend: 'wasm-worker' });
@@ -150,9 +151,16 @@ export function useCupDetector(
                     ageMs,
                     cups: selected.ambiguous ? [] : selected.cups,
                 };
-                const shown = persistence.observe(selected.cups, performance.now());
-                const limit = membershipRef.current?.counts.reduce((sum, count) => sum + count, 0);
-                const displayed = limit === undefined ? shown.cups : shown.cups.slice(0, limit);
+                const key = membershipRef.current?.key ?? '';
+                if (key !== persistenceKey) {
+                    persistence = [new CupPersistence(), new CupPersistence()];
+                    persistenceKey = key;
+                }
+                const displayed = selected.sides.flatMap((cups, side) => {
+                    const shown = persistence[side].observe(cups, performance.now());
+                    const limit = membershipRef.current?.counts[side];
+                    return limit === undefined ? shown.cups : shown.cups.slice(0, limit);
+                });
                 heldCupCount = Math.max(0, displayed.length - selected.cups.length);
                 send({ ...frame, cups: displayed });
                 rawObserverRef.current?.(

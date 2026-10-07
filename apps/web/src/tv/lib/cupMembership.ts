@@ -50,7 +50,7 @@ export class CupMembership {
         }
         const points = cups.map((cup) => point(cup, aspect));
         let ambiguous = false;
-        const selected = areas.flatMap((area, side) => {
+        const sides = areas.map((area, side) => {
             const search = cupSearchAreas(areas)[side];
             const inside = (p: Point, box: PlayingArea) =>
                 p.x >= box.x * aspect &&
@@ -108,6 +108,7 @@ export class CupMembership {
             this.previous[side] = fresh.map((p) => ({ point: p, seen: now }));
             return fresh.map((p) => p.cup);
         });
-        return { cups: selected, ignored: cups.length - selected.length, ambiguous };
+        const selected = sides.flat();
+        return { cups: selected, sides, ignored: cups.length - selected.length, ambiguous };
     }
 }
