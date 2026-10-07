@@ -5,6 +5,7 @@ import { Camera, useRemoveCamera, useUpdateCamera } from '@/api/calls/tvHooks';
 import { Card, Chevron, Radio, Row } from '@/components/tvRemote/RemoteParts';
 import {
     cameraSubjectLabel,
+    type CameraRotation,
     cameraSubjects,
     parseConfig,
 } from '@/lib/tvDisplay';
@@ -68,6 +69,18 @@ export function CameraControls({
                     trailing={<Chevron />}
                 />
             </MenuView>
+            <Row
+                icon="rotate-right"
+                title="Rotate camera video"
+                subtitle={`${config.cameraRotation}° · tap to turn 90°`}
+                onPress={() =>
+                    update.mutate({
+                        cameraRotation: ((config.cameraRotation + 90) %
+                            360) as CameraRotation,
+                    })
+                }
+                trailing={<Chevron />}
+            />
             <Row
                 icon="swap-horizontal"
                 title="Flip camera video"

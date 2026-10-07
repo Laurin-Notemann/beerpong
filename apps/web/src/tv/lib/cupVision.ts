@@ -70,11 +70,12 @@ export function receiveCups(stream: MediaStream, value: CupFrame, now = performa
 export function drawCups(
     context: CanvasRenderingContext2D,
     stream: MediaStream,
-    now = performance.now()
+    now = performance.now(),
+    size: { width: number; height: number } = context.canvas
 ) {
     const frame = frames.get(stream);
     if (!frame || now - frame.received + frame.value.ageMs > MAX_AGE_MS) return;
-    const { width, height } = context.canvas;
+    const { width, height } = size;
     context.save();
     context.strokeStyle = 'rgba(110,255,218,0.95)';
     context.lineWidth = Math.max(1, width / 720);

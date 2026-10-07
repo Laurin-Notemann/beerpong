@@ -14,7 +14,7 @@ import { FullscreenButton } from '~/tv/components/FullscreenButton';
 import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
-import { useCameraFeed } from '~/tv/lib/cameraFeed';
+import { type CameraFeeds, useCameraFeeds } from '~/tv/lib/cameraFeeds';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import {
     usesNativeVideoLayer,
@@ -72,7 +72,7 @@ function loadIdentity(): Identity {
 function Tv() {
     const [identity, setIdentity] = useState(loadIdentity);
     const [registered, setRegistered] = useState(false);
-    const [cameraConfig, setCameraConfig] = useState(emptyConfig);
+    const [cameraConfigs, setCameraConfigs] = useState<Record<string, DisplayConfig>>({});
 
     useEffect(() => {
         document.documentElement.classList.add('tv');
@@ -124,7 +124,7 @@ function Tv() {
         }
     );
     // Auto only requests video while a match is live; explicit Camera keeps it on while idle.
-    const feed = useCameraFeed(
+    const feeds = useCameraFeeds(
         identity.id,
         identity.secret,
         registered &&
@@ -133,18 +133,25 @@ function Tv() {
                 (identity.config.view === 'auto' &&
                     !!board.data?.liveMatches.length &&
                     !board.data.liveMatches.some((m) => m.id === identity.config.focusMatchId))),
-        identity.config.groupId,
-        identity.config.cameraId
+        identity.config
     );
-    const onFeedSignal = useRef(feed.onSignal);
+    const feedHandlers = useRef(feeds);
     useEffect(() => {
-        onFeedSignal.current = feed.onSignal;
-    }, [feed.onSignal]);
+        feedHandlers.current = feeds;
+    }, [feeds]);
 
     const onEvent = useCallback((event: DisplayEvent) => {
         if (event.type === 'reload') return location.reload();
-        if (event.type === 'cameraConfig') setCameraConfig(parseConfig(event.config));
-        if (event.type === 'signal') return void onFeedSignal.current(event.from, event.signal);
+        if (event.type === 'cameraConfig')
+            setCameraConfigs((previous) => ({
+                ...previous,
+                [event.cameraId]: parseConfig(event.config),
+            }));
+        if (event.type === 'signal')
+            return void feedHandlers.current[event.position ?? 'main'].onSignal(
+                event.from,
+                event.signal
+            );
         if (event.type === 'config') setIdentity((i) => ({ ...i, config: event.config }));
         if (event.type === 'session') {
             setIdentity((i) => ({ ...i, refreshToken: event.refreshToken }));
@@ -183,9 +190,8 @@ function Tv() {
                     board={board.data ?? null}
                     config={config}
                     offline={!connected || board.isError}
-                    feed={feed.stream}
-                    cameraStatus={feed.status}
-                    videoFlipped={cameraConfig.cameraVideoFlipped}
+                    feeds={feeds}
+                    cameraConfigs={cameraConfigs}
                     readyClips={readyClips}
                     clip={clips.find((clip) => readyClips.some((ready) => ready.key === clip.key))}
                     onClipDone={clipDone}
@@ -225,9 +231,8 @@ function Screen({
     board,
     config,
     offline,
-    feed,
-    cameraStatus,
-    videoFlipped,
+    feeds,
+    cameraConfigs,
     readyClips,
     clip,
     onClipDone,
@@ -235,10 +240,8 @@ function Screen({
     board: Board | null;
     config: DisplayConfig;
     offline: boolean;
-    /** the camera's video, while it comes in */
-    feed: MediaStream | null;
-    cameraStatus: string;
-    videoFlipped: boolean;
+    feeds: CameraFeeds;
+    cameraConfigs: Record<string, DisplayConfig>;
     readyClips: Omit<ScoreClip, 'id'>[];
     clip: ScoreClip | undefined;
     onClipDone: () => void;
@@ -246,10 +249,17 @@ function Screen({
     const live = board?.liveMatches ?? [];
     const matches = pickMatches(live, config.pinnedMatchIds);
     const liveIds = live.map((i) => i.id);
-    const wanted = layoutFor(config, liveIds, !!feed);
+    const feed = feeds.main.stream;
+    const cameraStatus = config.cameraMainEnabled
+        ? feeds.main.status
+        : config.cameraCorners[0]
+          ? feeds[config.cameraCorners[0].position].status
+          : 'No cameras selected. Choose one in TV Remote.';
+    const available = Object.values(feeds).some((f) => !!f.stream);
+    const wanted = layoutFor(config, liveIds, available);
     // While connecting, keep a live match or leaderboard visible.
     const layout =
-        wanted === 'camera' && !feed
+        wanted === 'camera' && !available
             ? layoutFor({ ...config, view: 'auto' }, liveIds, false)
             : wanted;
     const focused = live.find((i) => i.id === config.focusMatchId) ?? matches[0];
@@ -282,7 +292,7 @@ function Screen({
                     onDone={onClipDone}
                 />
             ))}
-            {layout === 'camera' && feed ? (
+            {layout === 'camera' ? (
                 <main className="tv-board relative z-10 h-screen bg-bg">
                     <CameraView
                         stream={feed}
@@ -290,7 +300,17 @@ function Screen({
                         groupName={board?.group.name ?? config.groupName ?? ''}
                         offline={offline}
                         flipped={config.cameraOverlayFlipped}
-                        videoFlipped={videoFlipped}
+                        videoFlipped={cameraConfigs[feeds.main.cameraId ?? '']?.cameraVideoFlipped}
+                        rotation={cameraConfigs[feeds.main.cameraId ?? '']?.cameraRotation}
+                        cameraId={feeds.main.cameraId ?? ''}
+                        corners={config.cameraCorners.map((corner) => ({
+                            ...corner,
+                            stream: feeds[corner.position].stream,
+                            status: feeds[corner.position].status,
+                            cameraId: feeds[corner.position].cameraId ?? corner.cameraId,
+                            config:
+                                cameraConfigs[feeds[corner.position].cameraId ?? ''] ?? emptyConfig,
+                        }))}
                     />
                 </main>
             ) : (
@@ -301,7 +321,10 @@ function Screen({
                         offline={offline}
                         cameraStatus={
                             wanted === 'camera' ||
-                            (config.view === 'auto' && live.length && !feed && !config.focusMatchId)
+                            (config.view === 'auto' &&
+                                live.length &&
+                                !available &&
+                                !config.focusMatchId)
                                 ? cameraStatus
                                 : null
                         }

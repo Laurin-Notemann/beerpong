@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Linking } from 'react-native';
 
 import { usePlayersQuery } from '@/api/calls/playerHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
@@ -220,6 +221,26 @@ export function useAddCamera(groupId: ApiId | null) {
         },
         onSettled: () =>
             qc.invalidateQueries({ queryKey: camerasKey(groupId ?? 'NULL') }),
+    });
+}
+
+/** One tap from the app, then the phone's browser owns capture and WebRTC. */
+export function usePhoneCamera(groupId: ApiId | null) {
+    const { api } = useApi();
+    return useMutation({
+        mutationFn: async () => {
+            if (!groupId) throw new Error('no group');
+            const res = await (
+                await api
+            ).post<{ pairingToken: string }>(camerasUrl(groupId), {
+                phone: true,
+            });
+            await Linking.openURL(
+                `${env.tvBaseUrl}/tv/camera#pair=${encodeURIComponent(res.data.pairingToken)}`
+            );
+        },
+        onError: (err) =>
+            showErrorToast("Couldn't start this phone's camera.", err),
     });
 }
 

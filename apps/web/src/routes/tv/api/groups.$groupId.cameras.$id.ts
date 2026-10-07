@@ -14,10 +14,11 @@ export const Route = createFileRoute('/tv/api/groups/$groupId/cameras/$id')({
                         (d) => d.id === params.id
                     );
                     if (!camera) return fail(404, 'cameraNotFound');
-                    const { cameraSubject, cameraVideoFlipped } = parsePatch(
+                    const { cameraSubject, cameraVideoFlipped, cameraRotation } = parsePatch(
                         await request.json().catch(() => null)
                     );
                     update(camera, {
+                        ...(cameraRotation !== undefined ? { cameraRotation } : {}),
                         ...(cameraSubject !== undefined ? { cameraSubject } : {}),
                         ...(cameraVideoFlipped !== undefined ? { cameraVideoFlipped } : {}),
                     });

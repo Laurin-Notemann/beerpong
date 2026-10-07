@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { CameraPosition } from '@/lib/tvDisplay';
 import { CUP_CHANNEL, parseCupFrame, receiveCups, type CupFrame } from '~/tv/lib/cupVision';
 import { feedEventContext, watchFeedStats } from '~/tv/lib/feedTelemetry';
 import type { Signal } from '~/tv/server/displays';
@@ -69,8 +70,8 @@ function followIce(pc: RTCPeerConnection, onChange: (state: 'up' | 'gone') => vo
 }
 
 /** reports a connection problem to Sentry (sentry.ts), with the TV feed's last stats */
-function report(problem: string, err?: unknown) {
-    const context = feedEventContext();
+function report(problem: string, err?: unknown, cameraId?: string) {
+    const context = feedEventContext(cameraId);
     const detail =
         err instanceof Error ? err.toString() : typeof err === 'string' ? err : undefined;
     void import('@sentry/browser').then((Sentry) =>
@@ -92,11 +93,13 @@ export function useCameraFeed(
     secret: string,
     wanted: boolean,
     groupId: string | null,
-    cameraId: string | null
+    cameraId: string | null,
+    position: CameraPosition | 'main' = 'main'
 ) {
     const [stream, setStream] = useState<MediaStream | null>(null);
+    const [sourceId, setSourceId] = useState<string | null>(null);
     const [problem, setProblem] = useState<string | null>(null);
-    const pc = useRef<{ conn: RTCPeerConnection; at: number } | null>(null);
+    const pc = useRef<{ conn: RTCPeerConnection; at: number; cameraId: string } | null>(null);
     const streamRef = useRef(stream);
     const want = useRef(wanted);
     useEffect(() => {
@@ -115,6 +118,11 @@ export function useCameraFeed(
         setProblem(null);
     }
 
+    const reportFeed = useCallback(
+        (problem: string, error?: unknown) => report(problem, error, pc.current?.cameraId),
+        []
+    );
+
     const close = useCallback(() => {
         const previous = pc.current;
         pc.current = null;
@@ -132,13 +140,13 @@ export function useCameraFeed(
             if (asking || (current && isConnected(current.conn) && streamRef.current)) return;
             if (current && Date.now() - current.at < RETRY_MS) return;
             if (current) {
-                report('connection timed out', current.conn.iceConnectionState);
+                reportFeed('connection timed out', current.conn.iceConnectionState);
                 close();
                 setProblem("Can't connect to the camera. Check both devices' Wi-Fi.");
             }
             asking = true;
             try {
-                const camera = await watchCamera({ data: { id, key: secret } });
+                const camera = await watchCamera({ data: { id, key: secret, position } });
                 if (stopped) return;
                 if (!camera) {
                     waiting = undefined;
@@ -150,7 +158,7 @@ export function useCameraFeed(
                 } else if (!pc.current && Date.now() - waiting.at >= RETRY_MS) {
                     if (!waiting.warned) {
                         waiting.warned = true;
-                        report('camera did not offer video');
+                        reportFeed('camera did not offer video');
                     }
                     setProblem(
                         (previous) =>
@@ -160,7 +168,7 @@ export function useCameraFeed(
                 }
             } catch (err) {
                 if (stopped) return;
-                report('could not ask for the camera', err);
+                reportFeed('could not ask for the camera', err);
                 setProblem('Camera signaling failed. Reload this page if it keeps happening.');
             } finally {
                 asking = false;
@@ -180,13 +188,13 @@ export function useCameraFeed(
             stalled = bytes !== undefined && bytes === last ? stalled + 1 : 0;
             last = bytes;
             if (stalled >= 2) {
-                report('video stopped arriving');
+                reportFeed('video stopped arriving');
                 close();
                 setProblem('Camera video stopped. Reconnecting…');
             }
         };
         const watchdog = setInterval(() => {
-            void check().catch((err: unknown) => report('video watchdog failed', err));
+            void check().catch((err: unknown) => reportFeed('video watchdog failed', err));
         }, STALL_CHECK_MS);
 
         return () => {
@@ -195,14 +203,15 @@ export function useCameraFeed(
             clearInterval(watchdog);
             close();
         };
-    }, [id, secret, wanted, groupId, cameraId, close]);
+    }, [id, secret, wanted, groupId, cameraId, position, close, reportFeed]);
 
     const onSignal = useCallback(
         async (from: string, signal: Signal) => {
             if (!want.current || signal.type !== 'offer' || !webRtcSupported()) return;
             close();
+            setSourceId(from);
             const conn = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-            pc.current = { conn, at: Date.now() };
+            pc.current = { conn, at: Date.now(), cameraId: from };
             watchFeedStats(conn, 'tv', from, id);
             let incoming: MediaStream | null = null;
             const mine = () => pc.current?.conn === conn;
@@ -249,7 +258,7 @@ export function useCameraFeed(
                     setStream(incoming);
                     setProblem(null);
                 } else {
-                    report('connection lost', conn.iceConnectionState);
+                    reportFeed('connection lost', conn.iceConnectionState);
                     close();
                     setProblem("Can't connect to the camera. Check both devices' Wi-Fi.");
                 }
@@ -280,16 +289,17 @@ export function useCameraFeed(
                 }
             } catch (err) {
                 if (!mine()) return;
-                report('the TV could not answer', err);
+                reportFeed('the TV could not answer', err);
                 close();
                 setProblem('Camera connection failed. Reload the TV and camera pages.');
             }
         },
-        [id, secret, close]
+        [id, secret, close, reportFeed]
     );
 
     return {
         stream,
+        cameraId: sourceId,
         onSignal,
         status: !webRtcSupported()
             ? "This browser can't show the camera"
@@ -384,7 +394,7 @@ export function useCameraSender(
                     count();
                 }
             } catch (err) {
-                report('the camera could not offer', err);
+                report('the camera could not offer', err, id);
                 pc.close();
                 if (pcs.current.get(tvId) === pc) pcs.current.delete(tvId);
             }
@@ -392,16 +402,19 @@ export function useCameraSender(
         [id, secret, groupId, count]
     );
 
-    const onSignal = useCallback(async (from: string, signal: Signal) => {
-        const pc = pcs.current.get(from);
-        if (!pc || signal.type !== 'answer' || pc.signalingState !== 'have-local-offer') return;
-        try {
-            await pc.setRemoteDescription(signal);
-            await limitBitrate(pc);
-        } catch (err) {
-            report('the camera could not take the answer', err);
-        }
-    }, []);
+    const onSignal = useCallback(
+        async (from: string, signal: Signal) => {
+            const pc = pcs.current.get(from);
+            if (!pc || signal.type !== 'answer' || pc.signalingState !== 'have-local-offer') return;
+            try {
+                await pc.setRemoteDescription(signal);
+                await limitBitrate(pc);
+            } catch (err) {
+                report('the camera could not take the answer', err, id);
+            }
+        },
+        [id]
+    );
 
     const sendCups = useCallback((frame: CupFrame) => {
         const payload = JSON.stringify({ ...frame, sequence: ++cupSequence.current });

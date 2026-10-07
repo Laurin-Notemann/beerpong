@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type DisplayConfig, emptyConfig, parseConfig } from '@/lib/tvDisplay';
+import { type DisplayConfig, type CameraRotation, emptyConfig, parseConfig } from '@/lib/tvDisplay';
+import { CameraVideo } from '~/tv/components/CameraVideo';
 import { PlayingAreas } from '~/tv/components/PlayingAreas';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
 import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
@@ -9,7 +10,7 @@ import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
 import { useCupDetector } from '~/tv/lib/useCupDetector';
 import { useCupFormationSync } from '~/tv/lib/useCupFormationSync';
-import { registerDisplay } from '~/tv/server/functions';
+import { registerDisplay, setCameraOrientation, stopCamera } from '~/tv/server/functions';
 
 /**
  * A camera for Versus TV: a laptop (or a phone's browser) at the table films it, and the group's
@@ -64,9 +65,14 @@ function loadIdentity(): Identity {
 
 function Camera() {
     const [identity, setIdentity] = useState(loadIdentity);
+    const [pairingToken, setPairingToken] = useState(() =>
+        new URLSearchParams(location.hash.slice(1)).get('pair')
+    );
+    const [pairingError, setPairingError] = useState<string | null>(null);
+    const [capturing, setCapturing] = useState(true);
     const [registered, setRegistered] = useState(false);
     const [deviceId, setDeviceId] = useState(() => localStorage.getItem(DEVICE_KEY));
-    const media = useCamera(deviceId);
+    const media = useCamera(deviceId, capturing);
     const previewVideo = useRef<HTMLVideoElement>(null);
     const [cupOutlines, setCupOutlines] = useState(
         () => localStorage.getItem('versus-cup-outlines') !== 'off'
@@ -136,13 +142,37 @@ function Camera() {
     useWakeLock();
 
     useEffect(() => {
+        const receive = () => {
+            const token = new URLSearchParams(location.hash.slice(1)).get('pair');
+            if (!token) return;
+            setPairingToken(token);
+            setRegistered(false);
+            setCapturing(true);
+            history.replaceState(history.state, '', location.pathname + location.search);
+        };
+        // Browsers may reuse the open camera tab for another Use this phone handoff.
+        if (pairingToken)
+            history.replaceState(history.state, '', location.pathname + location.search);
+        window.addEventListener('hashchange', receive);
+        return () => window.removeEventListener('hashchange', receive);
+    }, [pairingToken]);
+
+    useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(identity));
     }, [identity]);
 
     const register = useCallback(async () => {
         const { id, secret, code, config, refreshToken } = identity;
         const res = await registerDisplay({
-            data: { kind: 'camera', id, secret, code, config, refreshToken },
+            data: {
+                kind: 'camera',
+                id,
+                secret,
+                code,
+                config,
+                refreshToken,
+                pairingToken: registered ? undefined : pairingToken,
+            },
         });
         setIdentity((i) => ({
             ...i,
@@ -151,7 +181,8 @@ function Camera() {
             refreshToken: res.refreshToken,
         }));
         setRegistered(true);
-    }, [identity]);
+        setPairingError(null);
+    }, [identity, pairingToken, registered]);
 
     const registerRef = useRef(register);
     useEffect(() => {
@@ -162,7 +193,13 @@ function Camera() {
     useEffect(() => {
         let stopped = false;
         const attempt = () => {
-            void registerRef.current().catch(() => {
+            void registerRef.current().catch((error: unknown) => {
+                if (stopped) return;
+                setPairingError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Could not pair this phone. Try again from TV Remote.'
+                );
                 if (!stopped) setTimeout(attempt, 3_000);
             });
         };
@@ -170,7 +207,7 @@ function Camera() {
         return () => {
             stopped = true;
         };
-    }, []);
+    }, [pairingToken]);
 
     const handlers = useRef(sender);
     useEffect(() => {
@@ -197,12 +234,26 @@ function Camera() {
         setDeviceId(id);
     };
 
+    const orientation = (rotation: CameraRotation) => {
+        void setCameraOrientation({
+            data: { id: identity.id, key: identity.secret, cameraRotation: rotation },
+        }).catch(() => setPairingError('Could not rotate the camera. Try again.'));
+    };
+    const stop = () => {
+        setCapturing(false);
+        void stopCamera({ data: { id: identity.id, key: identity.secret } }).catch(() =>
+            setPairingError('Could not remove the camera. Remove it in TV Remote.')
+        );
+    };
+
     return (
         <main className="relative h-screen overflow-hidden bg-black text-text">
             {media.stream && (
-                <Preview
+                <CameraVideo
                     stream={media.stream}
-                    video={previewVideo}
+                    videoRef={previewVideo}
+                    rotation={identity.config.cameraRotation}
+                    cameraId={identity.id}
                     flipped={identity.config.cameraVideoFlipped}
                 />
             )}
@@ -240,6 +291,16 @@ function Camera() {
                             In the Versus app, open Settings → TV Remote → Add Camera and enter this
                             code.
                         </p>
+                        {pairingError && (
+                            <p role="alert" className="text-red">
+                                {pairingError}
+                            </p>
+                        )}
+                        {!capturing && (
+                            <p>
+                                Camera stopped. Choose Use this phone in TV Remote to pair it again.
+                            </p>
+                        )}
                         <Problems error={media.error} offline={registered && !connected} />
                         {media.error && <RetryButton onPress={media.retry} />}
                     </div>
@@ -287,6 +348,11 @@ function Camera() {
                         }}
                     >
                         <div className="min-w-0 flex-1 text-sm text-text-2">
+                            {pairingError && (
+                                <p role="alert" className="text-red">
+                                    {pairingError}
+                                </p>
+                            )}
                             <Problems error={media.error} offline={!connected} />
                             {recording.error && (
                                 <p className="font-semibold text-red">{recording.error}</p>
@@ -373,6 +439,24 @@ function Camera() {
                                 </p>
                             )}
                         </div>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                orientation(
+                                    ((identity.config.cameraRotation + 90) % 360) as CameraRotation
+                                )
+                            }
+                            className="min-h-11 rounded-xl bg-panel px-4 py-2 text-sm font-semibold"
+                        >
+                            Rotate 90°
+                        </button>
+                        <button
+                            type="button"
+                            onClick={stop}
+                            className="min-h-11 rounded-xl bg-panel px-4 py-2 text-sm font-semibold"
+                        >
+                            Stop camera
+                        </button>
                         {media.devices.length > 1 && (
                             <select
                                 value={
@@ -381,7 +465,8 @@ function Camera() {
                                     ''
                                 }
                                 onChange={(e) => pickDevice(e.target.value)}
-                                className="max-w-full rounded-xl bg-panel px-3 py-2 text-sm"
+                                aria-label="Camera lens"
+                                className="min-h-11 max-w-full rounded-xl bg-panel px-3 py-2 text-sm"
                             >
                                 {media.devices.map((d, i) => (
                                     <option key={d.deviceId} value={d.deviceId}>
@@ -394,32 +479,6 @@ function Camera() {
                 </>
             )}
         </main>
-    );
-}
-
-function Preview({
-    stream,
-    video,
-    flipped,
-}: {
-    stream: MediaStream;
-    video: React.RefObject<HTMLVideoElement | null>;
-    flipped: boolean;
-}) {
-    useEffect(() => {
-        const element = video.current;
-        // oxlint-disable-next-line react/immutability -- MediaStream playback requires assigning the DOM element's srcObject.
-        if (element) element.srcObject = stream;
-    }, [stream, video]);
-    return (
-        <video
-            ref={video}
-            muted
-            autoPlay
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
-        />
     );
 }
 
@@ -445,20 +504,24 @@ function RetryButton({ onPress }: { onPress: () => void }) {
 }
 
 /** this device's camera (`deviceId`, or the one facing away), and the others it could use */
-function useCamera(deviceId: string | null) {
+function useCamera(deviceId: string | null, capturing: boolean) {
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [attempt, setAttempt] = useState(0);
-    const [previousCamera, setPreviousCamera] = useState({ deviceId, attempt });
-    if (previousCamera.deviceId !== deviceId || previousCamera.attempt !== attempt) {
-        setPreviousCamera({ deviceId, attempt });
+    const [previousCamera, setPreviousCamera] = useState({ deviceId, attempt, capturing });
+    if (
+        previousCamera.deviceId !== deviceId ||
+        previousCamera.attempt !== attempt ||
+        previousCamera.capturing !== capturing
+    ) {
+        setPreviousCamera({ deviceId, attempt, capturing });
         setStream(null);
         setError(null);
     }
 
     useEffect(() => {
-        if (!navigator.mediaDevices?.getUserMedia) return;
+        if (!capturing || !navigator.mediaDevices?.getUserMedia) return;
         let stopped = false;
         let started: MediaStream | undefined;
         navigator.mediaDevices
@@ -468,6 +531,7 @@ function useCamera(deviceId: string | null) {
                     ...(deviceId
                         ? { deviceId: { ideal: deviceId } }
                         : { facingMode: { ideal: 'environment' } }),
+                    aspectRatio: { ideal: 16 / 9 },
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
                     frameRate: { ideal: 30 },
@@ -476,6 +540,12 @@ function useCamera(deviceId: string | null) {
             .then(async (s) => {
                 if (stopped) return s.getTracks().forEach((t) => t.stop());
                 started = s;
+                for (const track of s.getVideoTracks())
+                    track.addEventListener('ended', () => {
+                        if (stopped) return;
+                        setStream(null);
+                        setError('Camera stopped. Try again to reconnect it.');
+                    });
                 setStream(s);
                 setError(null);
                 const all = await navigator.mediaDevices.enumerateDevices();
@@ -484,6 +554,13 @@ function useCamera(deviceId: string | null) {
             .catch((err: unknown) => {
                 if (stopped) return;
                 const name = err instanceof Error ? err.name : String(err);
+                void import('@sentry/browser').then((Sentry) =>
+                    Sentry.captureMessage('Camera capture failed', {
+                        level: 'warning',
+                        tags: { feature: 'camera-capture' },
+                        extra: { name },
+                    })
+                );
                 setError(
                     name === 'NotAllowedError'
                         ? 'Allow this page to use the camera, then try again.'
@@ -494,7 +571,7 @@ function useCamera(deviceId: string | null) {
             stopped = true;
             started?.getTracks().forEach((t) => t.stop());
         };
-    }, [deviceId, attempt]);
+    }, [deviceId, attempt, capturing]);
 
     return {
         stream,

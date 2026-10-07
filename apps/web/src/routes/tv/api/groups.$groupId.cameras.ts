@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { asMember, fail, putGroupOnCamera } from '~/tv/server/appRemote';
 import { byCode, byGroup, type Display } from '~/tv/server/displays';
+import { phoneCameraToken } from '~/tv/server/phoneCamera';
 
 const asJson = (d: Display) => ({ id: d.id, name: d.name, config: d.config });
 
@@ -19,6 +20,8 @@ export const Route = createFileRoute('/tv/api/groups/$groupId/cameras')({
             POST: ({ request, params }) =>
                 asMember(request, params.groupId, async () => {
                     const body: unknown = await request.json().catch(() => null);
+                    if (body && typeof body === 'object' && 'phone' in body && body.phone === true)
+                        return Response.json({ pairingToken: phoneCameraToken(params.groupId) });
                     const code =
                         body &&
                         typeof body === 'object' &&

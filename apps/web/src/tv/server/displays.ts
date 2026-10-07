@@ -1,6 +1,11 @@
 import { randomInt, timingSafeEqual } from 'node:crypto';
 
-import { type DisplayConfig, type DisplayPatch, parseConfig } from '@/lib/tvDisplay';
+import {
+    type DisplayConfig,
+    type DisplayPatch,
+    type CameraPosition,
+    parseConfig,
+} from '@/lib/tvDisplay';
 
 /**
  * The TVs this server knows, in memory, and the cameras that film a table for them. A TV keeps
@@ -39,7 +44,12 @@ export interface Signal {
 export type DisplayEvent =
     | { type: 'config'; config: DisplayConfig }
     /** the selected camera's settings, both when watching starts and when a phone changes them */
-    | { type: 'cameraConfig'; cameraId: string; config: DisplayConfig }
+    | {
+          type: 'cameraConfig';
+          position?: CameraPosition | 'main';
+          cameraId: string;
+          config: DisplayConfig;
+      }
     /** so the TV can keep its session across server restarts */
     | { type: 'session'; refreshToken: string }
     /** reload the page, to pick up a deploy */
@@ -47,7 +57,7 @@ export type DisplayEvent =
     /** to a camera: this TV wants its video, send it an offer */
     | { type: 'watch'; tvId: string }
     /** from the TV or camera `from` */
-    | { type: 'signal'; from: string; signal: Signal };
+    | { type: 'signal'; position?: CameraPosition | 'main'; from: string; signal: Signal };
 
 // kept on globalThis so dev reloads of this module don't forget the TVs
 const g = globalThis as typeof globalThis & { __versusDisplays?: Map<string, Display> };
@@ -97,16 +107,43 @@ export function byGroup(groupId: string, kind: Display['kind'] = 'tv'): Display[
     );
 }
 
-/** Prefer the selected device, then another camera filming the same subject after replacement. */
-export function cameraFor(tv: Display) {
-    if (!tv.config.groupId) return undefined;
-    const cameras = byGroup(tv.config.groupId, 'camera');
-    return (
-        cameras.find((c) => c.id === tv.config.cameraId) ??
-        cameras.find((c) => c.config.cameraSubject === tv.config.cameraSubject) ??
-        cameras[0]
-    );
+/** Reserve each corner's camera before choosing the main feed; never connect twice to one device. */
+export function camerasFor(tv: Display) {
+    const selected = new Map<CameraPosition | 'main', Display>();
+    if (!tv.config.groupId) return selected;
+    const online = byGroup(tv.config.groupId, 'camera');
+    const used = new Set<string>();
+    // Exact selections win over replacement fallbacks in other corners.
+    for (const corner of tv.config.cameraCorners ?? []) {
+        const camera = online.find((c) => c.id === corner.cameraId);
+        if (camera && !used.has(camera.id)) {
+            selected.set(corner.position, camera);
+            used.add(camera.id);
+        }
+    }
+    for (const corner of tv.config.cameraCorners ?? []) {
+        if (selected.has(corner.position)) continue;
+        const camera = online.find(
+            (c) => !used.has(c.id) && c.config.cameraSubject === corner.subject
+        );
+        if (camera) {
+            selected.set(corner.position, camera);
+            used.add(camera.id);
+        }
+    }
+    if (tv.config.cameraMainEnabled !== false) {
+        const available = online.filter((c) => !used.has(c.id));
+        const camera =
+            available.find((c) => c.id === tv.config.cameraId) ??
+            available.find((c) => c.config.cameraSubject === tv.config.cameraSubject) ??
+            available[0];
+        if (camera) selected.set('main', camera);
+    }
+    return selected;
 }
+
+export const cameraFor = (tv: Display, position: CameraPosition | 'main' = 'main') =>
+    camerasFor(tv).get(position);
 
 /**
  * A name for the TV from its browser's user agent, e.g. "Samsung TV" or "Chrome on Mac".
@@ -224,12 +261,28 @@ export function update(display: Display, patch: DisplayPatch & Partial<DisplayCo
     emit(display, { type: 'config', config: display.config });
     if (display.kind === 'camera' && display.config.groupId) {
         for (const tv of byGroup(display.config.groupId)) {
-            if (tv.config.cameraId === display.id) {
-                // Remember its subject so a new device can replace this camera later.
-                tv.config = { ...tv.config, cameraSubject: display.config.cameraSubject };
+            const corners = tv.config.cameraCorners.map((corner) =>
+                corner.cameraId === display.id
+                    ? { ...corner, subject: display.config.cameraSubject }
+                    : corner
+            );
+            if (
+                tv.config.cameraId === display.id ||
+                corners.some((corner, i) => corner !== tv.config.cameraCorners[i])
+            ) {
+                // Remember subjects so a new device can replace this camera later.
+                tv.config = {
+                    ...tv.config,
+                    cameraCorners: corners,
+                    cameraSubject:
+                        tv.config.cameraId === display.id
+                            ? display.config.cameraSubject
+                            : tv.config.cameraSubject,
+                };
                 emit(tv, { type: 'config', config: tv.config });
             }
-            if (cameraFor(tv) === display) cameraConfig(display, tv);
+            for (const [position, camera] of camerasFor(tv))
+                if (camera === display) cameraConfig(display, tv, position);
         }
     }
 }
@@ -244,13 +297,13 @@ export function reload(display: Display) {
 }
 
 /** asks the camera for its video, for this TV */
-export function watch(camera: Display, tv: Display) {
-    cameraConfig(camera, tv);
+export function watch(camera: Display, tv: Display, position: CameraPosition | 'main' = 'main') {
+    cameraConfig(camera, tv, position);
     emit(camera, { type: 'watch', tvId: tv.id });
 }
 
-function cameraConfig(camera: Display, tv: Display) {
-    emit(tv, { type: 'cameraConfig', cameraId: camera.id, config: camera.config });
+function cameraConfig(camera: Display, tv: Display, position: CameraPosition | 'main') {
+    emit(tv, { position, type: 'cameraConfig', cameraId: camera.id, config: camera.config });
 }
 
 /**
@@ -262,9 +315,10 @@ export function signal(from: Display, toId: unknown, value: Signal) {
     if (!to || to.kind === from.kind) return false;
     const [tv, camera] = from.kind === 'tv' ? [from, to] : [to, from];
     if (!camera.config.groupId || tv.config.groupId !== camera.config.groupId) return false;
-    if (!['auto', 'camera'].includes(tv.config.view) || cameraFor(tv) !== camera) return false;
+    const position = [...camerasFor(tv)].find(([, selected]) => selected === camera)?.[0];
+    if (!['auto', 'camera'].includes(tv.config.view) || !position) return false;
     if (value.type !== (from === camera ? 'offer' : 'answer')) return false;
-    emit(to, { type: 'signal', from: from.id, signal: value });
+    emit(to, { type: 'signal', position, from: from.id, signal: value });
     return true;
 }
 
