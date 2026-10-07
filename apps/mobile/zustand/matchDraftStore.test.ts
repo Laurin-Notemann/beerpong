@@ -20,7 +20,12 @@ const normal: CupMove = { id: 'normal', cups: 1, isFinish: false };
 const bomb: CupMove = { id: 'bomb', cups: 1, isFinish: false };
 const bouncer: CupMove = { id: 'bouncer', cups: 2, isFinish: false };
 const save: CupMove = { id: 'save', cups: 0, isFinish: false };
-const finish: CupMove = { id: 'finish', cups: 0, isFinish: true };
+const finish: CupMove = {
+    id: 'finish',
+    name: 'Finish - Normal',
+    cups: 0,
+    isFinish: true,
+};
 const ringOfFire: CupMove = { id: 'ring-of-fire', cups: 6, isFinish: true };
 const ringOfWater: CupMove = { id: 'ring-of-water', cups: 4, isFinish: true };
 const moves = [normal, bomb, bouncer, save, finish, ringOfFire, ringOfWater];
@@ -352,11 +357,11 @@ describe('pro mode cups', () => {
         ).toBe(finish.id);
     });
 
-    it('a quick hit opens the cup hit modal when it has questions', () => {
-        // the bouncer's second cup
+    it('a quick hit resolves extra cups and the normal finish without asking', () => {
+        // the default bouncer takes the next standing cup without asking for it
         expect(
-            quickHit([], 'red', corner(3, 6), bouncer, false, moves)
-        ).toBeUndefined();
+            quickHit([], 'red', corner(3, 6), bouncer, false, moves)?.cups
+        ).toEqual([corner(3, 6), standingCups([], 'red')[0]]);
 
         const standing = standingCups([], 'red');
         const lastCup = standing[9];
@@ -366,14 +371,14 @@ describe('pro mode cups', () => {
             moveId: normal.id,
             cups: [cup],
         }));
-        // the last cup with several finishes to pick from
+        // prefer the normal finish even when another finish comes first
         expect(
             quickHit(others, 'red', lastCup, normal, false, [
                 normal,
-                finish,
                 { id: 'other-finish', cups: 0, isFinish: true },
-            ])
-        ).toBeUndefined();
+                finish,
+            ])?.finishMoveId
+        ).toBe(finish.id);
         // a cup that's already gone
         expect(
             quickHit(others, 'red', standing[0], normal, false, moves)

@@ -17,8 +17,8 @@ export interface CupProps {
     y: number;
     width: number;
     onPan?: GestureType;
-    /** holding the cup; like the pan, only for a cup that's still standing */
-    onHold?: GestureType;
+    /** quick hit drag; like the pan, only for a cup that's still standing */
+    onQuickDrag?: GestureType;
     onTap?: GestureType;
 }
 
@@ -29,7 +29,7 @@ export function Cup({
     y,
     width,
     onPan,
-    onHold,
+    onQuickDrag,
     onTap,
 }: CupProps) {
     const animatedStyle = useAnimatedStyle(() => ({
@@ -45,7 +45,7 @@ export function Cup({
     // a disabled cup can't be moved, but stays tappable (pro mode puts a hit cup back on tap)
     const gestures = [
         onPan?.enabled(!disabled),
-        onHold?.enabled(!disabled),
+        onQuickDrag?.enabled(!disabled),
         onTap,
     ].filter((i) => i != null);
 

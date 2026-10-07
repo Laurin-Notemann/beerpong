@@ -58,27 +58,27 @@ export interface CupFormationProps {
      */
     onCupTap?: (cup: { x: number; y: number }) => void;
     /**
-     * holding a standing cup instead of tapping it (ignored if `canEdit` is true): `start` once
-     * the hold is recognized, `move` while the finger drags, `end` when it lets go and `cancel`
-     * if the gesture was interrupted
+     * dragging from a standing cup (ignored if `canEdit` is true): `touch` reserves the
+     * gesture for the cup, `start` opens the scorer menu, `move` picks a scorer, `end` records
+     * the hit, and `cancel` releases the gesture, including a touch that stayed a tap
      */
-    onCupHold?: (event: CupHoldEvent) => void;
-    /** drawn over the cups, e.g. a menu at a held cup's `center` */
+    onCupDrag?: (event: CupDragEvent) => void;
+    /** drawn over the cups, e.g. a menu at a dragged cup's `center` */
     children?: React.ReactNode;
 }
 
-export interface CupHoldEvent {
-    phase: 'start' | 'move' | 'end' | 'cancel';
+export interface CupDragEvent {
+    phase: 'touch' | 'start' | 'move' | 'end' | 'cancel';
     cup: { x: number; y: number };
     /** the cup's middle, within the grid */
     center: { x: number; y: number };
-    /** how far the finger moved since the hold started */
+    /** movement from where the finger first touched the cup */
     dx: number;
     dy: number;
 }
 
-/** how long a cup has to be held before it's a hold, not a tap */
-const HOLD_MS = 250;
+/** a little movement separates a drag from a tap, without waiting for a hold */
+const DRAG_DISTANCE = 8;
 
 const CupGrid = ({
     color = '#EE4A58', // our red color
@@ -91,7 +91,7 @@ const CupGrid = ({
     formation = Formation.Pyramid_10,
     onChange = () => {},
     onCupTap,
-    onCupHold,
+    onCupDrag,
     children,
 }: CupFormationProps) => {
     const {
@@ -110,7 +110,7 @@ const CupGrid = ({
         onChange,
     });
 
-    const getCupHoldGesture = (cup: (typeof cups)[number]) => {
+    const getCupDragGesture = (cup: (typeof cups)[number]) => {
         const at = {
             cup: { x: cup.x, y: cup.y },
             center: {
@@ -118,12 +118,15 @@ const CupGrid = ({
                 y: cup.pos.posY + cupRadius,
             },
         };
-        const send = (phase: CupHoldEvent['phase'], dx: number, dy: number) =>
-            onCupHold?.({ phase, ...at, dx, dy });
+        const send = (phase: CupDragEvent['phase'], dx: number, dy: number) =>
+            onCupDrag?.({ phase, ...at, dx, dy });
 
         return Gesture.Pan()
-            .activateAfterLongPress(HOLD_MS)
-            .onStart(() => runOnJS(send)('start', 0, 0))
+            .minDistance(DRAG_DISTANCE)
+            .onTouchesDown(() => runOnJS(send)('touch', 0, 0))
+            .onStart((e) =>
+                runOnJS(send)('start', e.translationX, e.translationY)
+            )
             .onUpdate((e) =>
                 runOnJS(send)('move', e.translationX, e.translationY)
             )
@@ -133,7 +136,8 @@ const CupGrid = ({
                     e.translationX,
                     e.translationY
                 )
-            );
+            )
+            .onFinalize(() => runOnJS(send)('cancel', 0, 0));
     };
 
     return (
@@ -159,19 +163,19 @@ const CupGrid = ({
                             x={cup.pos.posX}
                             y={cup.pos.posY}
                             width={cupRadius * 2}
-                            // only an editable grid moves cups; otherwise a drag
-                            // that starts on a cup should still scroll the page
+                            // editing moves cups; pro mode drags pick the scorer
                             onPan={canEdit ? getCupPanGesture(cup) : undefined}
-                            onHold={
-                                !canEdit && onCupHold
-                                    ? getCupHoldGesture(cup)
+                            onQuickDrag={
+                                !canEdit && onCupDrag
+                                    ? getCupDragGesture(cup)
                                     : undefined
                             }
                             onTap={
                                 canEdit
                                     ? getCupTapGesture(cup)
                                     : Gesture.Tap().onEnd(
-                                          () =>
+                                          (_, success) =>
+                                              success &&
                                               onCupTap &&
                                               runOnJS(onCupTap)?.(cup)
                                       )

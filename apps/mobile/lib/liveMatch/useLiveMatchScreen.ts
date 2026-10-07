@@ -10,7 +10,6 @@ import { useMoves } from '@/api/calls/ruleHooks';
 import { useGroup, useSeasonQuery } from '@/api/calls/seasonHooks';
 import { useLiveEloChanges } from '@/api/liveMatch/useLiveEloChanges';
 import {
-    startLiveMatch,
     useLiveMatch,
     useLiveMatchActions,
 } from '@/api/liveMatch/useLiveMatch';
@@ -25,6 +24,7 @@ import {
 import { finishHint, namedMoveLog } from '@/lib/liveMatch/labels';
 import { errorCode } from '@/lib/liveMatch/sync';
 import { useNavigation } from '@/lib/navigation/useNavigation';
+import { RematchParams, useOfferRematch } from '@/lib/useOfferRematch';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { ScopedLogger } from '@/utils/logging';
 import { liveMatchOutbox } from '@/zustand/liveMatchOutboxStore';
@@ -43,6 +43,7 @@ const toBadgePlayer = (i: TeamMember) => ({
 export function useLiveMatchScreen(id: string) {
     const router = useRouter();
     const nav = useNavigation();
+    const offerRematch = useOfferRematch();
     const { groupId, seasonId: activeSeasonId, activeSeason } = useGroup();
 
     const live = useLiveMatch(groupId ?? '', id);
@@ -157,51 +158,43 @@ export function useLiveMatchScreen(id: string) {
         }
     }, [resultMatchId, resultSeasonId]);
 
-    // player ids are per season: a rematch only works in the season that's still active
-    const canRematch = !!seasonId && seasonId === activeSeasonId;
-
-    /** saves the match; a rematch then starts the next live match with the same teams */
-    async function finish(rematch = false) {
+    /** Saves the match, then completes the photo step before offering a rematch. */
+    async function finish() {
         if (finishInFlight.current) return;
         finishInFlight.current = true;
         setIsFinishing(true);
         const ids = (team: typeof live.state.redTeam) =>
-            team.teamMembers.map((i) => i.playerId);
+            team.teamMembers.map((i) => i.playerId).join(',');
         const teams = {
             redPlayerIds: ids(live.state.redTeam),
             bluePlayerIds: ids(live.state.blueTeam),
         };
         try {
             const result = await actions.finish();
-            showSuccessToast(
-                rematch ? 'Match saved. Rematch!' : 'Match saved.'
-            );
+            showSuccessToast('Match saved.');
             if (!isFocusedRef.current) return;
             setIsLeaving(true);
-            if (rematch && groupId && canRematch) {
-                const next = startLiveMatch({
-                    groupId,
-                    seasonId: result.seasonId,
-                    ...teams,
-                });
-                router.replace({
-                    pathname: '/liveMatch',
-                    params: { id: next },
-                });
-                // a photo taken during the match still goes onto it; no asking for one now
-                attachPhoto(result.matchId, result.seasonId);
-                return;
-            }
             router.replace({
                 pathname: '/match',
                 params: { id: result.matchId, seasonId: result.seasonId },
             });
+            const rematch: RematchParams | undefined = groupId
+                ? {
+                      groupId,
+                      seasonId: result.seasonId,
+                      ...teams,
+                      rematch: 'live',
+                  }
+                : undefined;
             if (!attachPhoto(result.matchId, result.seasonId)) {
                 // no team photo was taken during the match, so ask for one
                 nav.navigate('matchPhotoModal', {
                     matchId: result.matchId,
                     seasonId: result.seasonId,
+                    ...rematch,
                 });
+            } else if (rematch) {
+                offerRematch(rematch);
             }
         } catch (err) {
             if (err instanceof LiveMatchOfflineError) {
@@ -286,10 +279,7 @@ export function useLiveMatchScreen(id: string) {
         eloChanges,
         /** the cups so far, newest first */
         moveLog: namedMoveLog(live.state.cupHits, moves, teamMembers),
-        hint,
         isFinishing,
-        finish: () => finish(),
-        rematch: canRematch ? () => finish(true) : undefined,
         finishOrExplain,
         discard,
         viewResult,

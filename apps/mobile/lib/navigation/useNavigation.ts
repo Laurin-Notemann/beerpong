@@ -1,6 +1,8 @@
 import { useNavigation as useRawNavigation } from 'expo-router';
 import { NavigationProp } from 'expo-router/react-navigation';
 
+import { RematchParams } from '@/lib/useOfferRematch';
+
 export type RootStackParamList = {
     cropAvatar: { imageKey: string; profileId: string };
     index: undefined;
@@ -31,7 +33,10 @@ export type RootStackParamList = {
     liveMatch: { id: string };
     liveMatches: undefined;
     liveMatchTeamsModal: { liveMatchId: string };
-    matchPhotoModal: { matchId: string; seasonId: string };
+    matchPhotoModal: {
+        matchId: string;
+        seasonId: string;
+    } & Partial<RematchParams>;
     matches: undefined;
     newMatch: undefined;
 
@@ -64,7 +69,7 @@ export type RootStackParamList = {
         y: number;
         rotated: boolean;
         liveMatchId?: string;
-        /** a quick hit's scorer, and the default move it couldn't record on its own */
+        /** optional preselected scorer and move */
         playerId?: string;
         moveId?: string;
     };
