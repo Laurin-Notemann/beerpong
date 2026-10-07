@@ -26,6 +26,7 @@ export function useCameraVisionRemote(
         const signature = JSON.stringify([
             snapshot.device,
             snapshot.enabled,
+            snapshot.ballEnabled,
             snapshot.areas,
             snapshot.syncMatchId,
             snapshot.firstTeam,

@@ -44,13 +44,27 @@ export function useCameraMatches(
     groupId: string | null,
     enabled: boolean
 ) {
-    const [snapshot, setSnapshot] = useState<Awaited<ReturnType<typeof getCameraMatches>>>(null);
+    type Snapshot = NonNullable<Awaited<ReturnType<typeof getCameraMatches>>> & {
+        receivedAt: number;
+        clockUncertaintyMs: number;
+    };
+    const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
     const generation = useRef(0);
     const refresh = useCallback(async () => {
         const current = ++generation.current;
+        const sentAt = Date.now();
         try {
             const next = await getCameraMatches({ data: { id, key: secret } });
-            if (current === generation.current) setSnapshot(next);
+            if (current === generation.current)
+                setSnapshot(
+                    next
+                        ? {
+                              ...next,
+                              receivedAt: Date.now(),
+                              clockUncertaintyMs: Date.now() - sentAt,
+                          }
+                        : null
+                );
         } catch (error) {
             Sentry.captureException(error, { tags: { feature: 'camera-recording-snapshot' } });
         }

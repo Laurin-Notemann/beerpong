@@ -1,0 +1,29 @@
+# Ball and hit evidence
+
+Experimental ball lookback is off by default and can be enabled separately on the camera or with the authenticated remote `ballEnabled` setting. The camera keeps a bounded metadata history of moving orange/white candidates and fresh cup masks in a separate worker, looking twelve seconds before each entry. Extra history covers delayed snapshots. A recorded single-cup hit triggers a retrospective search for a short ball trajectory approaching one cup rim. Results are **candidates**, not confirmed hits: an image projection cannot prove that a ball entered a cup. Multiple cups, substantial scene movement, video gaps, stale geometry and competing trajectories cause abstention. Small hand movements can still produce misleading proposals; no hand detector is claimed. The authenticated camera `/vision` report exposes the latest `ballHit`; Sentry receives `ball hit lookback` and `ball lookback stats`. Neither writes a score, a formation, or a training label. Tizen receives no ball inference workload.
+
+Raw video is sampled at 640 pixels wide and approximately 15 fps, without queuing frames. Pixel readback runs in an OffscreenCanvas worker; unsupported browsers skip this experimental path. Small, blurred or occluded balls can be missed at that resolution. Sampling pauses in background tabs; lookbacks spanning a pause abstain. Areas are source-video rectangles, with the existing team mapping. Clear or change areas, turn outlines off, or move the input device to reset history.
+
+Manual entry timestamps are delayed and server-clock based; they establish search windows, not the physical hit time. The existing camera snapshot supplies reducer-accepted, still-active entry IDs/times, and the client retains response timing to bound clock uncertainty. Slow snapshots are withheld. A hit entered after a match immediately finishes can disappear from the in-progress snapshot before observation; offline review covers those events. Past recordings do not include historical camera flips/team mappings, so a scored cup ID must not be mapped onto an image without reviewing that session's orientation. Pickups, misses, bounces, held balls and hands are useful hard cases, not automatic positives.
+
+## Local training and review
+
+Keep all footage, patches and per-event labels outside git. Use the cup pipeline environment plus `pip install -r ml/balls/requirements.txt`. The collector performs read-only SQL over SSH and reuses verified local bucket recordings from the cup pipeline.
+
+```sh
+python ml/balls/pipeline.py collect --output /tmp/balls --group SBRIL5OJ5
+python ml/balls/pipeline.py windows --dataset /tmp/cups --events /tmp/balls/events.json --output /tmp/balls
+python ml/balls/pipeline.py proposals --dataset /tmp/cups --windows /tmp/balls/windows.json --output /tmp/balls
+python ml/balls/pipeline.py review --dataset /tmp/balls --reviewer maintainer
+python ml/balls/pipeline.py split --dataset /tmp/balls
+python ml/balls/pipeline.py train --dataset /tmp/balls --color orange --id ball-v1 --output /tmp/ball-model.json
+python ml/balls/pipeline.py evaluate --dataset /tmp/balls --model /tmp/ball-model.json --split valid --output /tmp/ball-valid.json
+python ml/balls/pipeline.py evaluate --dataset /tmp/balls --model /tmp/ball-model.json --split test --output /tmp/ball-heldout.json
+python ml/balls/pipeline.py export --model /tmp/ball-model.json --report /tmp/ball-heldout.json --output apps/web/src/tv/lib/ballModel.json
+```
+
+Proposals use moving, compact colored components; the review UI marks the proposed center. Label that object rather than a neighboring ball. Uncertain patches stay out of training. Ball-presence labels do not establish flight, a hit or a particular cup. The patch reviewer may record cup context as playing, removed or unknown; unknown is the default. Review that role against the surrounding video, not cup appearance. Roles remain contextual labels for future membership training, rather than altering segmentation classes. Event windows retain coverage gaps and unchecked `physical_hit_at`/`hit_cup`/`cup_roles` fields for separate video review. Do not convert the recorded move's `cups` into these fields automatically.
+
+The small learned candidate classifier uses radial RGB/color features and a bounded random forest. It selects depth and confidence from validation only. `--color white` requires reviewed white-ball positives; `--color both` supports a combined dataset. Session-disjoint training/validation/test partitions prevent adjacent frames leaking between splits. Sessions from one camera/night remain related; add different lighting, nights, camera views and negative scenes before claiming general accuracy. Checksum checks reject changed approved images. Export requires the exact model to pass validation and held-out candidate precision ≥0.90 and recall ≥0.80, with at least thirty positive and negative held-out examples. These are proposal-classification metrics; also measure missed proposals and physical-hit localization separately. Never retune after inspecting test results.
+
+The first experiment reviewed 656 patches from five sessions, including 204 visible orange balls and 452 hard negatives. No verified white-ball positives were found. Its candidate classifier failed the separate-session validation gate and **is not deployed**. Live ball recognition currently supplies motion/geometry proposals with explicit uncertainty; it does not claim learned ball accuracy. Raw weights remain outside the repository until a model passes promotion gates. The runtime registry `ballModel.json` is currently null. Export a passing model into that file, then ship it through the normal web deploy; inference uses the same radial features and bounded trees in the existing ball worker. Roll back to null to restore motion-only proposals. Unsupported colors remain explicitly untrained proposals.

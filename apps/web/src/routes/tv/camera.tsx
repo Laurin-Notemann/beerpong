@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type DisplayConfig, type CameraRotation, emptyConfig, parseConfig } from '@/lib/tvDisplay';
 import { CameraVideo } from '~/tv/components/CameraVideo';
@@ -7,8 +7,10 @@ import { PlayingAreas } from '~/tv/components/PlayingAreas';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
 import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
 import type { VisionCommand } from '~/tv/lib/cameraVisionRemote';
+import { cupSearchAreas } from '~/tv/lib/cupMembership';
 import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
+import { useBallHitLookback } from '~/tv/lib/useBallHitLookback';
 import { useCameraVisionRemote } from '~/tv/lib/useCameraVisionRemote';
 import { useCupDetector } from '~/tv/lib/useCupDetector';
 import { useCupFormationSync } from '~/tv/lib/useCupFormationSync';
@@ -79,6 +81,9 @@ function Camera() {
     const previewVideo = useRef<HTMLVideoElement>(null);
     const [cupOutlines, setCupOutlines] = useState(
         () => localStorage.getItem('versus-cup-outlines') !== 'off'
+    );
+    const [ballEnabled, setBallEnabled] = useState(
+        () => localStorage.getItem('versus-ball-lookback') === 'on'
     );
     const [selectingAreas, setSelectingAreas] = useState(false);
     const cameraDevice = media.stream
@@ -158,6 +163,15 @@ function Camera() {
         firstTeam,
         syncTvId
     );
+    const ballAreas = useMemo(() => (areas ? cupSearchAreas(areas) : null), [areas]);
+    const ballLookback = useBallHitLookback(
+        previewVideo,
+        ballEnabled && cupOutlines && !selectingAreas && !!identity.config.groupId,
+        identity.id,
+        ballAreas,
+        firstTeam,
+        matches
+    );
     const cupStatus = useCupDetector(
         previewVideo,
         cupOutlines,
@@ -174,7 +188,8 @@ function Camera() {
                           ? [detectionMatch.blue.length, detectionMatch.red.length]
                           : [detectionMatch.red.length, detectionMatch.blue.length],
               }
-            : null
+            : null,
+        ballLookback.observe
     );
     if (syncMatchId && matches && !syncingMatch) setSyncMatchId('');
     const recording = useCameraRecording(
@@ -202,6 +217,9 @@ function Camera() {
                 JSON.stringify(previous) === JSON.stringify(value) ? previous : value
             );
             setCupOutlines(settings.enabled);
+            const balls = settings.ballEnabled ?? false;
+            localStorage.setItem('versus-ball-lookback', balls ? 'on' : 'off');
+            setBallEnabled(balls);
             setSyncMatchId(settings.syncMatchId);
             setFirstTeam(settings.firstTeam);
             setSyncTvId(settings.syncTvId ?? '');
@@ -216,6 +234,7 @@ function Camera() {
         registered && !!identity.config.groupId,
         {
             enabled: cupOutlines,
+            ballEnabled,
             areas,
             syncMatchId,
             firstTeam,
@@ -229,6 +248,7 @@ function Camera() {
             recording: recording.recording,
             pendingUploads: recording.pending,
             selectingAreas,
+            ballHit: ballLookback.latest,
             matches: (matches?.formations ?? []).map((m) => ({
                 id: m.id,
                 seq: m.seq,
@@ -532,7 +552,30 @@ function Camera() {
                             >
                                 {areas ? 'Adjust playing areas' : 'Select playing areas'}
                             </button>
+                            <button
+                                type="button"
+                                aria-pressed={ballEnabled}
+                                className="ml-3 min-h-11 rounded-xl bg-panel px-3 py-2 text-sm font-semibold"
+                                onClick={() =>
+                                    setBallEnabled((on) => {
+                                        localStorage.setItem(
+                                            'versus-ball-lookback',
+                                            on ? 'off' : 'on'
+                                        );
+                                        return !on;
+                                    })
+                                }
+                            >
+                                {ballEnabled
+                                    ? 'Turn ball lookback off'
+                                    : 'Try experimental ball lookback'}
+                            </button>
                             <p role="status">{cupStatus}</p>
+                            {ballEnabled && (
+                                <p>
+                                    Ball evidence is experimental; recorded hits stay authoritative.
+                                </p>
+                            )}
                             <label className="mt-2 block">
                                 Sync formations to match
                                 <select

@@ -1,7 +1,9 @@
+import type { HitObservation } from '~/tv/lib/ballVision';
 import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 
 export interface VisionSettings {
     enabled: boolean;
+    ballEnabled?: boolean;
     areas: PlayingArea[] | null;
     syncMatchId: string;
     firstTeam: 'blue' | 'red';
@@ -21,6 +23,8 @@ export interface VisionState extends VisionSettings {
     selectingAreas: boolean;
     matches: { id: string; seq: number; blue: number; red: number }[];
     lastCommand: 'applied' | 'rejected' | null;
+    /** Optional across deployed camera versions; evidence never changes the shared score. */
+    ballHit?: HitObservation | null;
 }
 export interface VisionCommand {
     session: string;
@@ -37,6 +41,7 @@ export function validVisionSettings(v: unknown): v is VisionSettings {
     return (
         object(v) &&
         typeof v.enabled === 'boolean' &&
+        (v.ballEnabled === undefined || typeof v.ballEnabled === 'boolean') &&
         (v.areas === null || validAreas(v.areas)) &&
         text(v.syncMatchId, 36) &&
         (v.syncMatchId === '' || /^[0-9a-f-]{36}$/.test(v.syncMatchId)) &&
@@ -63,6 +68,7 @@ export function validVisionState(v: unknown): v is VisionState {
         integer(v.pendingUploads, 100) &&
         typeof v.selectingAreas === 'boolean' &&
         (v.lastCommand === null || v.lastCommand === 'applied' || v.lastCommand === 'rejected') &&
+        (v.ballHit === undefined || v.ballHit === null || validHitObservation(v.ballHit)) &&
         Array.isArray(v.matches) &&
         v.matches.length <= 100 &&
         v.matches.every(
@@ -73,5 +79,26 @@ export function validVisionState(v: unknown): v is VisionState {
                 integer(m.blue, 10) &&
                 integer(m.red, 10)
         )
+    );
+}
+
+function validHitObservation(value: unknown): value is HitObservation {
+    if (!object(value)) return false;
+    return (
+        text(value.entryId, 64) &&
+        text(value.matchId, 64) &&
+        (value.status === 'candidate' || value.status === 'abstained') &&
+        text(value.reason, 100) &&
+        (value.ballColor === null || value.ballColor === 'orange' || value.ballColor === 'white') &&
+        (value.secondsBeforeEntry === null ||
+            (typeof value.secondsBeforeEntry === 'number' &&
+                Number.isFinite(value.secondsBeforeEntry) &&
+                value.secondsBeforeEntry >= 0 &&
+                value.secondsBeforeEntry <= 12)) &&
+        (value.cup === null ||
+            (object(value.cup) &&
+                [value.cup.x, value.cup.y].every(
+                    (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1
+                )))
     );
 }

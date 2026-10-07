@@ -1,0 +1,281 @@
+import { appearanceScore, ballAppearance, ballModel } from '~/tv/lib/ballClassifier';
+import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
+
+export interface BallCandidate {
+    x: number;
+    y: number;
+    radius: number;
+    color: 'orange' | 'white';
+    score: number;
+}
+export interface HitEntry {
+    id: string;
+    matchId: string;
+    seq: number;
+    enteredAt: number;
+    team: 'blue' | 'red';
+    cupCount: number;
+}
+export interface HitObservation {
+    entryId: string;
+    matchId: string;
+    status: 'candidate' | 'abstained';
+    reason: string;
+    /** Source-video coordinates; a candidate is not proof of a scored hit. */
+    cup: { x: number; y: number } | null;
+    secondsBeforeEntry: number | null;
+    ballColor: 'orange' | 'white' | null;
+}
+interface Observation {
+    at: number;
+    balls: BallCandidate[];
+    obscured: boolean;
+}
+interface Rims {
+    at: number;
+    cups: Cup[];
+}
+export const LOOKBACK_MS = 12_000;
+
+/** Motion is a proposal filter, not a semantic label: rings, hands and reflections can pass. */
+export function ballCandidates(
+    pixels: Uint8ClampedArray,
+    previous: Uint8ClampedArray | null,
+    width: number,
+    height: number,
+    areas?: PlayingArea[]
+) {
+    const mask = new Uint8Array(width * height);
+    const scale = width / 640;
+    let moving = 0;
+    const bounds = areas?.length
+        ? {
+              left: Math.max(0, Math.min(...areas.map((a) => a.x)) - 0.05),
+              right: Math.min(1, Math.max(...areas.map((a) => a.x + a.width)) + 0.05),
+              top: Math.max(0, Math.min(...areas.map((a) => a.y)) - 0.1),
+              bottom: Math.min(1, Math.max(...areas.map((a) => a.y + a.height)) + 0.1),
+          }
+        : null;
+    for (let i = 0; i < mask.length; i++) {
+        const p = i * 4,
+            r = pixels[p],
+            g = pixels[p + 1],
+            b = pixels[p + 2];
+        const motion = previous
+            ? Math.abs(r - previous[p]) +
+              Math.abs(g - previous[p + 1]) +
+              Math.abs(b - previous[p + 2])
+            : 0;
+        if (motion > 70) moving++;
+        if (motion < 70) continue;
+        if (
+            bounds &&
+            (i % width < bounds.left * width ||
+                i % width > bounds.right * width ||
+                Math.floor(i / width) < bounds.top * height ||
+                Math.floor(i / width) > bounds.bottom * height)
+        )
+            continue;
+        const orange = r > 110 && g > 55 && r > g * 1.13 && g > b * 1.3 && r - b > 45;
+        const white = Math.min(r, g, b) > 155 && Math.max(r, g, b) - Math.min(r, g, b) < 45;
+        if (orange || white) mask[i] = orange ? 1 : 2;
+    }
+    const balls: BallCandidate[] = [];
+    const stack = new Int32Array(mask.length);
+    for (let i = 0; i < mask.length; i++) {
+        if (!mask[i]) continue;
+        let tail = 1,
+            size = 0,
+            sumX = 0,
+            sumY = 0,
+            orange = 0;
+        let minX = width,
+            maxX = 0,
+            minY = height,
+            maxY = 0;
+        stack[0] = i;
+        const visit = (p: number) => {
+            if (mask[p]) {
+                stack[tail++] = p;
+                mask[p] = 0;
+            }
+        };
+        orange += mask[i] === 1 ? 1 : 0;
+        mask[i] = 0;
+        while (tail) {
+            const p = stack[--tail],
+                x = p % width,
+                y = Math.floor(p / width);
+            size++;
+            sumX += x;
+            sumY += y;
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+            for (const q of [
+                x > 0 ? p - 1 : -1,
+                x + 1 < width ? p + 1 : -1,
+                y > 0 ? p - width : -1,
+                y + 1 < height ? p + width : -1,
+            ]) {
+                if (q >= 0 && mask[q]) {
+                    orange += mask[q] === 1 ? 1 : 0;
+                    visit(q);
+                }
+            }
+        }
+        const w = maxX - minX + 1,
+            h = maxY - minY + 1,
+            fill = size / (w * h);
+        // At 640 px, the ball is usually 3–14 px. Large connected hands are withheld.
+        if (
+            size < 4 * scale * scale ||
+            size > 180 * scale * scale ||
+            w > 25 * scale ||
+            h > 25 * scale ||
+            Math.max(w, h) / Math.min(w, h) > 3 ||
+            fill < 0.25
+        )
+            continue;
+        const color = orange > size / 2 ? 'orange' : 'white';
+        let score = Math.min(0.75, fill);
+        if (ballModel?.supportedColors.includes(color)) {
+            score = appearanceScore(
+                ballAppearance(pixels, width, height, sumX / size, sumY / size, Math.max(w, h) / 2),
+                ballModel
+            );
+            if (score < ballModel.threshold) continue;
+        }
+        balls.push({
+            x: sumX / size / width,
+            y: sumY / size / height,
+            radius: Math.max(w, h) / width / 2,
+            color,
+            score,
+        });
+        if (balls.length >= 24) break;
+    }
+    return { balls, obscured: moving / mask.length > 0.12 };
+}
+
+function rim(cup: Cup) {
+    const low = Math.min(...cup.outline.map((p) => p[1])),
+        high = Math.max(...cup.outline.map((p) => p[1]));
+    const top = cup.outline.filter((p) => p[1] < low + (high - low) * 0.3);
+    if (!top.length) return null;
+    const left = Math.min(...top.map((p) => p[0])),
+        right = Math.max(...top.map((p) => p[0]));
+    return { x: (left + right) / 2, y: low + (high - low) * 0.12, radius: (right - left) / 2 };
+}
+
+/** Bounded metadata history. No frames are retained or uploaded by hit recognition. */
+export class BallHistory {
+    private observations: Observation[] = [];
+    private rims: Rims[] = [];
+    add(at: number, balls: BallCandidate[], obscured: boolean) {
+        this.observations.push({ at, balls, obscured });
+        this.observations = this.observations
+            .filter((o) => o.at >= at - LOOKBACK_MS * 2 - 3000)
+            .slice(-450);
+        this.rims = this.rims.filter((o) => o.at >= at - LOOKBACK_MS * 2 - 3000).slice(-40);
+    }
+    cups(at: number, cups: Cup[]) {
+        this.rims.push({ at, cups });
+        this.rims = this.rims.slice(-40);
+    }
+    analyze(entry: HitEntry, area: PlayingArea, now: number, aspect: number): HitObservation {
+        const result = (reason: string): HitObservation => ({
+            entryId: entry.id,
+            matchId: entry.matchId,
+            status: 'abstained',
+            reason,
+            cup: null,
+            secondsBeforeEntry: null,
+            ballColor: null,
+        });
+        if (entry.cupCount !== 1) return result('multiple-cups-entered');
+        if (entry.enteredAt > now + 2000 || now - entry.enteredAt > LOOKBACK_MS)
+            return result('entry-outside-history');
+        const start = entry.enteredAt - LOOKBACK_MS;
+        const history = this.observations.filter((o) => o.at >= start && o.at <= entry.enteredAt);
+        if (!history.length || history[0].at > start + 1000) return result('incomplete-lookback');
+        if (
+            entry.enteredAt - history[history.length - 1].at > 350 ||
+            history.some((o, i) => i > 0 && o.at - history[i - 1].at > 350)
+        )
+            return result('video-sampling-gap');
+        const distance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+            Math.hypot((a.x - b.x) * aspect, a.y - b.y);
+        let tracks: { points: (BallCandidate & { at: number })[]; last: number }[] = [];
+        const hits: { cup: { x: number; y: number }; at: number; color: 'orange' | 'white' }[] = [];
+        for (const o of history) {
+            tracks = tracks.filter((track) => o.at - track.last <= 220);
+            if (o.obscured) continue;
+            const used = new Set<number>();
+            for (const ball of o.balls) {
+                const candidates = tracks
+                    .map((track, index) => ({
+                        track,
+                        index,
+                        d: distance(track.points[track.points.length - 1], ball),
+                    }))
+                    .filter(
+                        (t) =>
+                            !used.has(t.index) &&
+                            o.at > t.track.last &&
+                            o.at - t.track.last <= 220 &&
+                            t.d < 0.15 &&
+                            t.track.points[t.track.points.length - 1].color === ball.color
+                    )
+                    .sort((a, b) => a.d - b.d);
+                // A crossing/ambiguous association does not establish a trajectory.
+                if (candidates.length > 1 && candidates[1].d - candidates[0].d < 0.015) continue;
+                const found = candidates[0];
+                const track = found?.track ?? { points: [], last: o.at };
+                if (!found) tracks.push(track);
+                else used.add(found.index);
+                track.points.push({ ...ball, at: o.at });
+                track.last = o.at;
+                track.points = track.points.slice(-6);
+                if (track.points.length < 3) continue;
+                const first = track.points[0];
+                if (o.at - first.at > 500 || distance(first, ball) < 0.025) continue;
+                const cups = this.rims.filter((r) => r.at <= o.at && o.at - r.at < 1200).at(-1);
+                const targets = (cups?.cups ?? [])
+                    .map(rim)
+                    .filter(
+                        (r): r is NonNullable<typeof r> =>
+                            !!r &&
+                            r.x >= area.x &&
+                            r.x <= area.x + area.width &&
+                            r.y >= area.y &&
+                            r.y <= area.y + area.height
+                    )
+                    .filter(
+                        (r) =>
+                            distance(r, ball) < r.radius * aspect * 0.8 &&
+                            distance(r, first) > distance(r, ball) + 0.02
+                    );
+                if (targets.length === 1)
+                    hits.push({ cup: targets[0], at: o.at, color: ball.color });
+            }
+        }
+        const distinct = hits.filter(
+            (hit, i) =>
+                !hits
+                    .slice(0, i)
+                    .some((h) => distance(h.cup, hit.cup) < 0.02 && Math.abs(h.at - hit.at) < 1000)
+        );
+        if (distinct.length !== 1)
+            return result(distinct.length ? 'ambiguous-trajectories' : 'no-ball-to-rim-evidence');
+        const hit = distinct[0];
+        return {
+            ...result('moving-ball-near-rim'),
+            status: 'candidate',
+            cup: { x: hit.cup.x, y: hit.cup.y },
+            secondsBeforeEntry: (entry.enteredAt - hit.at) / 1000,
+            ballColor: hit.color,
+        };
+    }
+}

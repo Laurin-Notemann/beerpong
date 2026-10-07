@@ -1,7 +1,10 @@
 import { createServerFn } from '@tanstack/react-start';
 
+import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
+import { toLiveOps } from '@/lib/liveMatch/types';
 import { cameraPositions, parsePatch, type CameraPosition } from '@/lib/tvDisplay';
 import { socketUrl } from '~/apiUrl';
+import type { HitEntry } from '~/tv/lib/ballVision';
 import { validGrid } from '~/tv/lib/cupFormation';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
 import { removeGroup } from '~/tv/server/appRemote';
@@ -134,6 +137,40 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
             liveMatchIds: matches.map((m) => m.id),
             formations: matches.map((match) => formationMatch(match, templates)),
             tvs: byGroup(groupId).map((tv) => ({ id: tv.id, name: tv.name })),
+            serverAt: Date.now(),
+            hits: matches.flatMap((match) => {
+                const ops = toLiveOps(match.ops);
+                const ignored = new Set(reduceLiveMatch(ops).ignoredOpIds);
+                return ops.flatMap((op, index): HitEntry[] => {
+                    if (op.type !== 'RECORD_CUP_HIT' || ignored.has(op.id)) return [];
+                    // An accepted undo removes the whole original hit, including multi-cup moves.
+                    const undone = ops
+                        .slice(index + 1)
+                        .some(
+                            (later) =>
+                                later.type === 'UNDO_CUP_HIT' &&
+                                !ignored.has(later.id) &&
+                                later.team === op.team &&
+                                op.cups.some(
+                                    (cup) => cup.x === later.cup.x && cup.y === later.cup.y
+                                )
+                        );
+                    const createdAt = match.ops.find((dto) => dto.id === op.id)?.createdAt;
+                    const enteredAt = createdAt ? Date.parse(createdAt) : NaN;
+                    return undone || !Number.isFinite(enteredAt)
+                        ? []
+                        : [
+                              {
+                                  id: op.id,
+                                  matchId: match.id,
+                                  seq: op.seq ?? 0,
+                                  enteredAt,
+                                  team: op.team,
+                                  cupCount: op.cups.length,
+                              },
+                          ];
+                });
+            }),
         };
     });
 
