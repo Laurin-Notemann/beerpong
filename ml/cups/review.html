@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+    <meta charset="utf-8" /><title>Versus cup labels</title>
+    <style>
+        body {
+            background: #101719;
+            color: #e8f4f2;
+            font: 16px system-ui;
+            margin: 24px;
+        }
+        button,
+        input {
+            font: inherit;
+            padding: 8px;
+            margin: 4px;
+        }
+        canvas {
+            width: min(100%, 1280px);
+            background: #000;
+            cursor: crosshair;
+        }
+        p {
+            max-width: 1000px;
+            line-height: 1.5;
+        }
+        .selected {
+            color: #fff;
+        }
+        #status {
+            color: #82eed1;
+        }
+    </style>
+    <h1>Review cup outlines</h1>
+    <p>
+        Label visible beer pong cups, including partially hidden cups. Follow
+        the visible silhouette; do not invent hidden surfaces. Exclude cans,
+        bottles, glasses and printed cups on the phone. Inspect every proposed
+        outline, remove false positives, add missed cups. Empty images are
+        useful negative examples.
+    </p>
+    <div>
+        <button id="prev">Previous</button><button id="next">Next</button
+        ><span id="name"></span>
+    </div>
+    <div>
+        <button id="add">Add cup</button
+        ><button id="close">Close polygon</button
+        ><button id="remove">Delete selected</button
+        ><button id="undo">Undo vertex</button
+        ><input
+            id="reviewer"
+            placeholder="Reviewer name"
+            aria-label="Reviewer name"
+        /><button id="save">Approve and save</button><span id="status"></span>
+    </div>
+    <p>
+        Click an outline to select it. In Add cup mode click around the
+        silhouette and use Close polygon. Selected vertices can be dragged. Save
+        only after checking the entire image.
+    </p>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.querySelector('#canvas'),
+            ctx = canvas.getContext('2d'),
+            image = new Image();
+        let frames = [],
+            index = 0,
+            polygons = [],
+            selected = -1,
+            adding = false,
+            drag = null;
+        const point = (e) => {
+            const r = canvas.getBoundingClientRect();
+            return [
+                Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)),
+                Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)),
+            ];
+        };
+        function paint() {
+            ctx.drawImage(image, 0, 0);
+            polygons.forEach((p, i) => {
+                ctx.beginPath();
+                p.forEach(([x, y], j) =>
+                    j
+                        ? ctx.lineTo(x * canvas.width, y * canvas.height)
+                        : ctx.moveTo(x * canvas.width, y * canvas.height)
+                );
+                if (!(adding && i === selected)) ctx.closePath();
+                ctx.strokeStyle = i === selected ? '#fff' : '#65ffbe';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                if (i === selected)
+                    p.forEach(([x, y]) => {
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(
+                            x * canvas.width - 3,
+                            y * canvas.height - 3,
+                            6,
+                            6
+                        );
+                    });
+            });
+        }
+        async function load() {
+            const frame = frames[index];
+            const label = await (await fetch('/label/' + frame.id)).json();
+            polygons = label.polygons;
+            selected = -1;
+            adding = false;
+            document.querySelector('#name').textContent =
+                index +
+                1 +
+                ' / ' +
+                frames.length +
+                ' · ' +
+                frame.session.slice(0, 8);
+            document.querySelector('#status').textContent = label.reviewed
+                ? 'Reviewed'
+                : 'Needs review';
+            image.onload = () => {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                paint();
+            };
+            image.src = '/image/' + frame.id;
+        }
+        canvas.onpointerdown = (e) => {
+            const p = point(e);
+            if (adding) {
+                polygons[selected].push(p);
+                paint();
+                return;
+            }
+            let nearest = 20 / canvas.width;
+            polygons.forEach((poly, i) =>
+                poly.forEach((v, j) => {
+                    const d = Math.hypot(
+                        v[0] - p[0],
+                        ((v[1] - p[1]) * canvas.height) / canvas.width
+                    );
+                    if (d < nearest) {
+                        nearest = d;
+                        selected = i;
+                        drag = [i, j];
+                    }
+                })
+            );
+            if (!drag) {
+                selected = polygons.findIndex((poly) => {
+                    ctx.beginPath();
+                    poly.forEach(([x, y], i) =>
+                        i
+                            ? ctx.lineTo(x * canvas.width, y * canvas.height)
+                            : ctx.moveTo(x * canvas.width, y * canvas.height)
+                    );
+                    ctx.closePath();
+                    return ctx.isPointInPath(
+                        p[0] * canvas.width,
+                        p[1] * canvas.height
+                    );
+                });
+            }
+            canvas.setPointerCapture(e.pointerId);
+            paint();
+        };
+        canvas.onpointermove = (e) => {
+            if (drag) {
+                polygons[drag[0]][drag[1]] = point(e);
+                paint();
+            }
+        };
+        canvas.onpointerup = () => (drag = null);
+        document.querySelector('#add').onclick = () => {
+            polygons.push([]);
+            selected = polygons.length - 1;
+            adding = true;
+            paint();
+        };
+        document.querySelector('#close').onclick = () => {
+            if (selected >= 0 && polygons[selected].length >= 3) adding = false;
+            paint();
+        };
+        document.querySelector('#remove').onclick = () => {
+            if (selected >= 0) polygons.splice(selected, 1);
+            selected = -1;
+            adding = false;
+            paint();
+        };
+        document.querySelector('#undo').onclick = () => {
+            if (selected >= 0) polygons[selected].pop();
+            paint();
+        };
+        document.querySelector('#prev').onclick = () => {
+            index = Math.max(0, index - 1);
+            load();
+        };
+        document.querySelector('#next').onclick = () => {
+            index = Math.min(frames.length - 1, index + 1);
+            load();
+        };
+        document.querySelector('#save').onclick = async () => {
+            const reviewer = document.querySelector('#reviewer').value.trim();
+            if (!reviewer || polygons.some((p) => p.length < 3)) {
+                document.querySelector('#status').textContent =
+                    'Add a reviewer and finish every polygon';
+                return;
+            }
+            const r = await fetch('/label/' + frames[index].id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ polygons, reviewer }),
+            });
+            document.querySelector('#status').textContent = r.ok
+                ? 'Reviewed and saved'
+                : 'Save failed';
+        };
+        fetch('/frames')
+            .then((r) => r.json())
+            .then((f) => {
+                frames = f;
+                load();
+            });
+    </script>
+</html>

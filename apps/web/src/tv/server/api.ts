@@ -130,6 +130,8 @@ export function apiFor(refreshToken: string) {
             post(`/groups/${groupId}/recordings/${id}/complete`),
         liveMatches: (groupId: string) =>
             get<Dto.LiveMatchDto[]>(`/groups/${groupId}/live-matches`),
+        appendFormation: (groupId: string, id: string, body: Dto.LiveMatchOpsDto) =>
+            post<Dto.LiveMatchOpsResultDto>(`/groups/${groupId}/live-matches/${id}/ops`, body),
     };
 }
 

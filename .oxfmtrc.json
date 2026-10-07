@@ -31,6 +31,7 @@
         "apps/web/src/routeTree.gen.ts",
         "apps/web/.output/**",
         "apps/web/public/tv/polyfills.js",
+        "apps/web/public/vision/**",
         "apps/web/src/simulator/styles.css"
     ],
     "overrides": [

@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { socketUrl } from '~/apiUrl';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
 import { buildBoard } from '~/tv/server/board';
+import { formationMatch } from '~/tv/server/cupFormation';
 import { authorize, cameraFor, register, setSession, signal, watch } from '~/tv/server/displays';
 
 // What the TV's and the camera's pages call. Phones change them through the app (appRemote.ts).
@@ -101,5 +102,10 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
         });
         // A removal or re-pairing while the API request ran wins.
         if (camera.config.groupId !== groupId) return null;
-        return { groupId, name: camera.name, liveMatchIds: matches.map((m) => m.id) };
+        return {
+            groupId,
+            name: camera.name,
+            liveMatchIds: matches.map((m) => m.id),
+            formations: matches.map(formationMatch),
+        };
     });

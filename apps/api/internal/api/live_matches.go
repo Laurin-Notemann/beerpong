@@ -521,6 +521,10 @@ func (s *Server) appendOps(r *request) response {
 	if err != nil {
 		return springError(400)
 	}
+	expectedSeq, err := o.long("expectedSeq")
+	if err != nil || (expectedSeq != nil && *expectedSeq < 0) {
+		return springError(400)
+	}
 	groupID, id := r.path("groupId"), r.path("id")
 
 	ctx := r.Context()
@@ -542,6 +546,11 @@ func (s *Server) appendOps(r *request) response {
 		}
 		if memberID == "" {
 			return fail(errAuthUserNotInGroup), nil
+		}
+		// Optional for camera re-racks: a manual change during recognition wins.
+		// Existing phone outboxes omit this and keep their idempotent append behavior.
+		if expectedSeq != nil && *expectedSeq != lm.LiveMatch.LastSeq {
+			return fail(errLiveMatchStale), nil
 		}
 		ops, valid := normalizeLiveOps(rawOps, present)
 		if !valid {

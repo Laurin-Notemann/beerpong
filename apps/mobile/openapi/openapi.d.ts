@@ -410,6 +410,10 @@ declare namespace Components {
             formationId?: string;
         }
         export interface LiveMatchOpsDto {
+            /**
+             * Optional compare-and-set: reject with liveMatchStale if the match changed. Omit for offline phone outboxes.
+             */
+            expectedSeq?: number; // int64
             ops?: LiveMatchOpDto[];
         }
         export interface LiveMatchOpsResultDto {

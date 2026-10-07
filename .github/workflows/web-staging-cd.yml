@@ -13,6 +13,7 @@ on:
       - "staging"
     paths:
       - "apps/web/**"
+      - "ml/cups/release.json"
       - "apps/mobile/lib/**"
       - "apps/mobile/api/utils/**"
       - "apps/mobile/components/CupGrid/**"
