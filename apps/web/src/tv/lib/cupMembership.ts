@@ -39,9 +39,10 @@ export function cupSearchAreas(areas: PlayingArea[]): PlayingArea[] {
 
 /** Cup segmentation finds objects; rack membership uses spatial neighbours and recent positions.
  * The match count is an upper bound, never a reason to invent a missing observation. Ambiguous
- * surplus cups cannot update trusted positions, display or the shared formation. */
+ * surplus cups cannot update trusted positions or the shared formation. */
 export class CupMembership {
     private previous: { point: Point; seen: number }[][] = [[], []];
+    private displayed: { point: Point; seen: number }[][] = [[], []];
     private key = '';
     observe(
         cups: Cup[],
@@ -53,6 +54,7 @@ export class CupMembership {
     ) {
         if (this.key !== key) {
             this.previous = [[], []];
+            this.displayed = [[], []];
             this.key = key;
         }
         const points = cups.map((cup) => point(cup, aspect));
@@ -127,9 +129,37 @@ export class CupMembership {
                     resolved = compatible[0];
             }
             ambiguousSides[side] = resolved.length > limit;
-            if (ambiguousSides[side]) return [];
+            if (ambiguousSides[side]) {
+                // Surplus observations may follow known cups for display only;
+                // one-to-one close matches cannot seed a new rack or formation.
+                const tracked = this.displayed[side].filter((p) => now - p.seen < 2500);
+                const matches = tracked.flatMap((old) =>
+                    resolved
+                        .map((p) => ({ old, point: p, distance: distance(p, old.point) }))
+                        .filter(
+                            (pair) =>
+                                pair.distance <
+                                Math.min(pair.point.diameter, old.point.diameter) * 0.6
+                        )
+                );
+                matches.sort((a, b) => a.distance - b.distance);
+                const used = new Set<Point>();
+                const seen = new Set<(typeof tracked)[number]>();
+                const followed: Point[] = [];
+                if (tracked.length <= limit) {
+                    for (const match of matches) {
+                        if (used.has(match.point) || seen.has(match.old)) continue;
+                        used.add(match.point);
+                        seen.add(match.old);
+                        followed.push(match.point);
+                    }
+                }
+                this.displayed[side] = followed.map((p) => ({ point: p, seen: now }));
+                return followed.map((p) => p.cup);
+            }
             const fresh = resolved;
             this.previous[side] = fresh.map((p) => ({ point: p, seen: now }));
+            this.displayed[side] = this.previous[side];
             return fresh.map((p) => p.cup);
         });
         const selected = sides.flat();

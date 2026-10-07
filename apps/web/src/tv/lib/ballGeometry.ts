@@ -72,6 +72,18 @@ export function receiveBalls(stream: MediaStream, value: BallFrame, now = perfor
 export function clearBalls(stream: MediaStream) {
     frames.delete(stream);
 }
+export function ballDebugStats(stream: MediaStream) {
+    const frame = frames.get(stream);
+    return frame
+        ? {
+              count: frame.value.balls.length,
+              sequence: frame.value.sequence,
+              model: frame.value.model,
+              enabled: frame.value.enabled,
+              ageMs: Math.round(performance.now() - frame.received + frame.value.ageMs),
+          }
+        : null;
+}
 export function ballAssistanceEnabled(
     stream: MediaStream,
     now = performance.now(),

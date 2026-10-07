@@ -79,6 +79,17 @@ export function receiveCups(stream: MediaStream, value: CupFrame, now = performa
     frames.set(stream, { value, received: now });
     return true;
 }
+export function cupDebugStats(stream: MediaStream) {
+    const frame = frames.get(stream);
+    return frame
+        ? {
+              count: frame.value.cups.length,
+              sequence: frame.value.sequence,
+              model: frame.value.model,
+              ageMs: Math.round(performance.now() - frame.received + frame.value.ageMs),
+          }
+        : null;
+}
 
 export function drawCups(
     context: CanvasRenderingContext2D,

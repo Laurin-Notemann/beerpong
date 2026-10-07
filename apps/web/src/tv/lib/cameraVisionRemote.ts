@@ -17,6 +17,8 @@ export interface VisionState extends VisionSettings {
     height: number;
     status: string;
     syncStatus: string;
+    /** Hit assistance can follow the sole live match without writing formations. */
+    hitMatchId?: string;
     watching: number;
     recording: boolean;
     recordingSessionId?: string;
@@ -64,6 +66,9 @@ export function validVisionState(v: unknown): v is VisionState {
         integer(v.height, 16384) &&
         text(v.status) &&
         text(v.syncStatus) &&
+        (v.hitMatchId === undefined ||
+            (text(v.hitMatchId, 36) &&
+                (v.hitMatchId === '' || /^[0-9a-f-]{36}$/.test(v.hitMatchId)))) &&
         integer(v.watching, 100) &&
         typeof v.recording === 'boolean' &&
         (v.recordingSessionId === undefined ||

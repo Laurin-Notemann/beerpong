@@ -17,6 +17,7 @@ import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import { TournamentView } from '~/tv/components/TournamentView';
+import { VisionDebug } from '~/tv/components/VisionDebug';
 import { ballAssistanceEnabled } from '~/tv/lib/ballGeometry';
 import { type CameraFeeds, useCameraFeeds } from '~/tv/lib/cameraFeeds';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
@@ -75,6 +76,7 @@ function loadIdentity(): Identity {
 }
 
 function Tv() {
+    const [debug] = useState(() => new URLSearchParams(location.search).get('debug') === 'vision');
     const [identity, setIdentity] = useState(loadIdentity);
     const [registered, setRegistered] = useState(false);
     const [cameraConfigs, setCameraConfigs] = useState<Record<string, DisplayConfig>>({});
@@ -223,6 +225,9 @@ function Tv() {
             )}
             {/* it sits in the corner a clip from the right plays in */}
             {!clips.length && <FullscreenButton />}
+            {debug && registered && config.groupId && (
+                <VisionDebug id={identity.id} secret={identity.secret} stream={feeds.main.stream} />
+            )}
         </>
     );
 }

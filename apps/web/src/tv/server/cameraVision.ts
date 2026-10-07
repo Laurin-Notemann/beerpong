@@ -98,6 +98,7 @@ export const reportCameraVision = createServerFn({ method: 'POST' })
                 device: data.state.device,
                 settings: {
                     enabled: data.state.enabled,
+                    ballEnabled: data.state.ballEnabled,
                     areas: data.state.areas,
                     syncMatchId: data.state.syncMatchId,
                     firstTeam: team,
@@ -108,4 +109,22 @@ export const reportCameraVision = createServerFn({ method: 'POST' })
         }
         camera.vision = { state: data.state, reportedAt: Date.now(), command };
         return command;
+    });
+
+/** The paired debug viewer reads metadata through its own display identity. */
+export const getCameraVisionDebug = createServerFn({ method: 'POST' })
+    .inputValidator((data: { id: string; key: string }) => data)
+    .handler(({ data }) => {
+        const tv = authorize(data.id, data.key);
+        if (tv.kind !== 'tv' || !tv.config.groupId) throw new DisplayError('displayNotPaired', 403);
+        const camera = cameraFor(tv);
+        if (!camera) return null;
+        return {
+            cameraId: camera.id,
+            name: camera.name,
+            config: camera.config,
+            state: camera.vision?.state ?? null,
+            reportedAt: camera.vision?.reportedAt ?? 0,
+            commandPending: !!camera.vision?.command,
+        };
     });

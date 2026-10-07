@@ -123,7 +123,7 @@ export const proposeCameraHit = createServerFn({ method: 'POST' })
                 !state.selectingAreas &&
                 state.device === data.device &&
                 state.recordingSessionId === body.sessionId &&
-                state.syncMatchId === body.liveMatchId &&
+                (state.hitMatchId ?? state.syncMatchId) === body.liveMatchId &&
                 state.firstTeam === data.firstTeam &&
                 (state.syncTvId ?? '') === data.syncTvId &&
                 JSON.stringify(state.areas) === JSON.stringify(data.areas) &&
