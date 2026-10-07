@@ -1,0 +1,43 @@
+name: Lint and Format
+
+# oxlint (type-aware, one config for every app: .oxlintrc.json) and oxfmt (.oxfmtrc.json),
+# run once at the root. The apps' own workflows typecheck and build.
+
+on:
+  push:
+    paths:
+      - "apps/mobile/**"
+      - "apps/web/**"
+      - ".oxlintrc.json"
+      - ".oxfmtrc.json"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/lint.yml"
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: oxlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  format:
+    name: oxfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run format:check

@@ -4,6 +4,5 @@
 # fingerprint.
 set -e
 cp apps/api/openapi/openapi.json apps/mobile/api/generated/openapi.json
-cd apps/mobile
-npm run gen-types
-npx prettier --write api/generated/openapi.json openapi/openapi.d.ts
+(cd apps/mobile && npm run gen-types)
+npx oxfmt apps/mobile/api/generated/openapi.json apps/mobile/openapi/openapi.d.ts

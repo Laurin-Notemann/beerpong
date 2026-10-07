@@ -9,8 +9,6 @@
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "seed": "node scripts/seed.mjs",
-        "format": "prettier --write .",
-        "format:check": "prettier --check .",
         "polyfills": "node scripts/polyfills.mjs"
     },
     "dependencies": {
@@ -33,7 +31,6 @@
         "abortcontroller-polyfill": "^1.7.8",
         "core-js-builder": "^3.50.0",
         "postcss": "^8.5.29",
-        "prettier": "^3.9.9",
         "tailwindcss": "^4.3.3",
         "typescript": "^7.0.2",
         "vite": "^8.3.2",

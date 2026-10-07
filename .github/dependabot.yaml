@@ -8,6 +8,10 @@ updates:
       patch-dependencies:
         update-types:
           - 'patch'
+    ignore:
+      # Expo's Babel preset and its plugins require Babel 7 (api.assertVersion(7))
+      - dependency-name: '@babel/core'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: 'github-actions'
     directory: '/'

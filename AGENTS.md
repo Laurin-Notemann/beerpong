@@ -46,8 +46,8 @@ We need to be on the same page with terminology. When communicating, use this la
 ## The three ways to hurt yourself
 
 1. **Touching the live server by hand.** `ssh privaten` hosts the staging API (`~/docker/beerpong-api-go`) and its Postgres (`~/docker/beerpong-api`). The database there is real user data. Never run destructive SQL, `docker compose down -v`, or volume prunes against it. Read logs freely; change things through the deploy workflow. If `ssh privaten` doesn't connect, ask. Never reach the server through CI secrets or a temporary workflow.
-2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, `apps/mobile/package.json` scripts, or permissions changes the fingerprint. So does hoisting the app's packages: the root `package-lock.json` keeps them under `apps/mobile/node_modules`, so never `npm dedupe` or regenerate the lockfile from scratch. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
-3. **Hand-editing generated API types.** `apps/mobile/api/generated/openapi.json` and `apps/mobile/openapi/openapi.d.ts` are generated from `apps/api/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile. Edit `openapi.json` as text in place; re-serializing it or running Prettier on it reformats the whole file.
+2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, `apps/mobile/package.json` scripts, or permissions changes the fingerprint. So does hoisting the app's packages: the root `package-lock.json` keeps them under `apps/mobile/node_modules`, so never `npm dedupe` or regenerate the lockfile from scratch. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect. `npm install` (and Dependabot) moves the packages it touches to the root `node_modules/`: after adding or bumping one, check `git diff package-lock.json` for `apps/mobile/node_modules/…` entries that became `node_modules/…` and put them back.
+3. **Hand-editing generated API types.** `apps/mobile/api/generated/openapi.json` and `apps/mobile/openapi/openapi.d.ts` are generated from `apps/api/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile. Edit `openapi.json` as text in place; re-serializing it or running a formatter on it reformats the whole file.
 
 ## Hit every surface
 
@@ -76,10 +76,11 @@ An empty database is a bad test. For realistic data, dump the staging database r
 ## Verifying
 
 - **NEVER run tests.** Not `go test`, not the contract suite in `api-tests/`, not vitest (`npm run ci:test`, `npm test`), not `turbo run test`.
-- Lint, typecheck and format the scope you touched before every push: CI fails on Prettier.
+- Lint, typecheck and format before every push: CI fails on oxlint warnings and on oxfmt.
   - API: `cd apps/api && gofmt -l . && go vet ./... && go build ./...`.
-  - App: `cd apps/mobile && npm run lint` (eslint + `tsc --noEmit`), `npm run ci:format`.
-  - Web (the simulator and the TV): `cd apps/web && npm run format:check && npm run typecheck && npm run build`.
+  - Lint and format (every app, one config each at the root: `.oxlintrc.json`, `.oxfmtrc.json`): `npm run lint` (type-aware oxlint) and `npm run format:check` from the root; `npm run format` fixes formatting.
+  - App: `cd apps/mobile && npm run typecheck` (TypeScript 7).
+  - Web (the simulator and the TV): `cd apps/web && npm run typecheck && npm run build`.
 - Don't verify with simulators, devices or browsers unless the developer asks.
 
 ## Testing the Elo
@@ -135,7 +136,7 @@ The app talks to the API over REST through a typed `openapi-client-axios` client
 ## Taste
 
 - Complexity belongs at the boundaries (API mapping, client hooks). Screens stay dumb.
-- Inferred types over annotations. `any` is the enemy. Imports use the `@/` alias; eslint forbids relative imports.
+- Inferred types over annotations. `any` is the enemy. Imports use the `@/` alias; oxlint forbids relative imports.
 - Never import `@react-navigation/*` in the app. Expo Router bundles its own React Navigation; use `expo-router/react-navigation`, the `Drawer`/`Stack`/`NativeTabs` layouts and `Stack.Toolbar`. A second copy builds and type-checks fine but crashes at launch ("Couldn't register the navigator").
 - `NativeTabs.Trigger` reads only its direct `Icon` children; Android icons use `VectorIcon` (`expo-symbols` isn't installed). With React Compiler on, read store state through selectors, not `actions.getX()`.
 - Native UI over JS imitations: header buttons are `Stack.Toolbar` items, menus are native (`Stack.Toolbar.Menu` / `@expo/ui` `MenuView`), confirmations are `Alert.alert`.

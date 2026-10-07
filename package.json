@@ -2,10 +2,18 @@
     "name": "versus",
     "private": true,
     "packageManager": "npm@11.16.0",
+    "scripts": {
+        "lint": "oxlint --deny-warnings",
+        "format": "oxfmt",
+        "format:check": "oxfmt --check"
+    },
     "workspaces": [
         "apps/*"
     ],
     "devDependencies": {
+        "oxfmt": "^0.72.0",
+        "oxlint": "^1.87.0",
+        "oxlint-tsgolint": "^7.0.2003",
         "turbo": "^2.11.7"
     }
 }

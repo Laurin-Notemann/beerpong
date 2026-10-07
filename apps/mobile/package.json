@@ -9,15 +9,9 @@
         "ios": "expo run:ios",
         "test": "vitest .",
         "typecheck": "tsc --noEmit",
-        "lint": "npm run lint:eslint && npm run typecheck",
         "build:ios:local": "npx eas build --local --platform ios",
-        "format": "prettier --write .",
-        "format:check": "prettier --check .",
         "gen-types": "npx openapicmd typegen  ./api/generated/openapi.json > openapi/openapi.d.ts",
-        "ci:format": "npm run format:check",
-        "ci:lint": "npm run lint",
-        "ci:test": "TEST_ENV=CI npm run test",
-        "lint:eslint": "expo lint"
+        "ci:test": "TEST_ENV=CI npm run test"
     },
     "dependencies": {
         "@expo/metro-runtime": "~58.0.10",
@@ -25,7 +19,7 @@
         "@expo/vector-icons": "^15.0.3",
         "@legendapp/list": "^3.6.0",
         "@openspacelabs/react-native-zoomable-view": "^2.4.2",
-        "@react-native-async-storage/async-storage": "^2.1.0",
+        "@react-native-async-storage/async-storage": "^3.1.1",
         "@react-native-community/datetimepicker": "9.2.1",
         "@react-native-community/netinfo": "12.0.1",
         "@sentry/react-native": "^8.29.0",
@@ -65,7 +59,7 @@
         "react-native": "0.88.0-rc.3",
         "react-native-confirmation-code-field": "^9.0.0",
         "react-native-draggable-flatlist": "^4.0.1",
-        "react-native-gesture-handler": "~3.2.1",
+        "react-native-gesture-handler": "~3.3.0",
         "react-native-pager-view": "9.0.6",
         "react-native-reanimated": "4.7.0",
         "react-native-safe-area-context": "~5.9.1",
@@ -79,16 +73,11 @@
         "@babel/core": "^7.29.7",
         "@testing-library/dom": "^10.4.2",
         "@testing-library/react": "^16.3.3",
-        "@trivago/prettier-plugin-sort-imports": "^6.0.2",
         "@types/react": "~19.3.0",
-        "eslint": "^9.39.5",
-        "eslint-config-expo": "~58.0.4",
         "jsdom": "^30.1.1",
         "openapicmd": "^2.9.2",
-        "prettier": "^3.9.9",
         "react-dom": "^19.3.0",
-        "typescript": "~6.0.3",
-        "typescript-eslint": "^8.71.0",
+        "typescript": "~7.0.2",
         "vite": "^8.3.2",
         "vitest": "^5.0.3"
     },
@@ -98,7 +87,10 @@
             "exclude": [
                 "@sentry/react-native",
                 "react-native-pager-view",
-                "expo-video"
+                "expo-video",
+                "react-native-gesture-handler",
+                "@react-native-async-storage/async-storage",
+                "typescript"
             ]
         }
     }
