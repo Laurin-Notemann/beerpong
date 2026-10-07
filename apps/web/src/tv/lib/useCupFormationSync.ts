@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { detectedFormation, StableFormation, type FormationMatch } from '~/tv/lib/cupFormation';
+import {
+    cupPoints,
+    FormationFitter,
+    StableFormation,
+    type FormationMatch,
+} from '~/tv/lib/cupFormation';
 import type { CupFrame, PlayingArea } from '~/tv/lib/cupVision';
 import { syncCameraFormation } from '~/tv/server/cupFormation';
 
@@ -23,6 +28,7 @@ export function useCupFormationSync(
         state.current = { match, areas, firstTeam };
     }, [match, areas, firstTeam]);
     const trackers = useRef({ blue: new StableFormation(), red: new StableFormation() });
+    const fitters = useRef({ blue: new FormationFitter(), red: new FormationFitter() });
     const busy = useRef(false);
     const resetAt = useRef(0);
     const generation = useRef(0);
@@ -31,6 +37,9 @@ export function useCupFormationSync(
         resetAt.current = performance.now();
         generation.current++;
     }, [match?.id, match?.seq, areas, firstTeam]);
+    useEffect(() => {
+        fitters.current = { blue: new FormationFitter(), red: new FormationFitter() };
+    }, [match?.id, areas, firstTeam]);
     const observe = useCallback(
         (frame: CupFrame, aspect: number) => {
             const { match, areas, firstTeam } = state.current;
@@ -41,11 +50,24 @@ export function useCupFormationSync(
                 setMessage({ source: `${match.id}:${match.seq}:${firstTeam}`, areas, text });
             for (const [i, team] of [firstTeam, firstTeam === 'blue' ? 'red' : 'blue'].entries()) {
                 const side = team as 'blue' | 'red';
-                const drawn = detectedFormation(frame.cups, areas[i], side, aspect);
+                const seen = cupPoints(frame.cups, areas[i], aspect).length;
+                const other = areas[1 - i];
+                const towards = {
+                    x: (other.x + other.width / 2 - areas[i].x - areas[i].width / 2) * aspect,
+                    y: other.y + other.height / 2 - areas[i].y - areas[i].height / 2,
+                };
+                const drawn = fitters.current[side].observe(
+                    frame.cups,
+                    areas[i],
+                    aspect,
+                    match[side].map((slot) => slot.drawn),
+                    match.templates,
+                    towards
+                );
                 if (!drawn || drawn.length !== match[side].length) {
                     trackers.current[side].observe(null, performance.now());
                     setStatus(
-                        `${side === 'blue' ? 'Blue' : 'Red'}: ${drawn ? `${drawn.length} seen, ${match[side].length} in match` : 'cup positions ambiguous'}; sync paused`
+                        `${side === 'blue' ? 'Blue' : 'Red'}: ${seen !== match[side].length ? `${seen} seen, ${match[side].length} in match; check playing area includes every cup` : 'grid fit ambiguous'}; sync paused`
                     );
                     continue;
                 }

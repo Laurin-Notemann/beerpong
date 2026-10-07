@@ -1,3 +1,4 @@
+import { Formation } from '@/components/CupGrid/Formation';
 import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
 
 export interface GridCup {
@@ -7,6 +8,7 @@ export interface GridCup {
 export interface FormationMatch {
     id: string;
     seq: number;
+    templates?: GridCup[][];
     blue: { cup: GridCup; drawn: GridCup }[];
     red: { cup: GridCup; drawn: GridCup }[];
 }
@@ -36,38 +38,177 @@ export function validGrid(value: unknown): value is GridCup[] {
     );
 }
 
-/** Cup bases locate the table contact, rather than the height-dependent silhouette centre.
- * Keep the camera's projected shape on the existing integer grid; this isn't a calibrated
- * measurement of physical distances. Ambiguous/overlapping projections are withheld. */
-export function detectedFormation(
-    cups: Cup[],
-    area: PlayingArea,
-    team: 'blue' | 'red',
-    aspect: number
-): GridCup[] | null {
-    const points = cups.flatMap((c) => {
-        const x0 = Math.min(...c.outline.map((p) => p[0])),
-            x1 = Math.max(...c.outline.map((p) => p[0]));
-        const y = Math.max(...c.outline.map((p) => p[1])),
-            x = (x0 + x1) / 2;
-        return x >= area.x && x <= area.x + area.width && y >= area.y && y <= area.y + area.height
-            ? [{ x: x * aspect, y }]
+type Point = { x: number; y: number };
+type Transform = { origin: Point; across: Point; depth: Point };
+type Fit = { grid: GridCup[]; error: number; transform: Transform; template: GridCup[] };
+const subtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
+const cross = (a: Point, b: Point) => a.x * b.y - a.y * b.x;
+const dot = (a: Point, b: Point) => a.x * b.x + a.y * b.y;
+
+/** Rim centres stay put when an overlapping cup hides part of another cup's body. */
+export function cupPoints(cups: Cup[], area: PlayingArea, aspect: number): Point[] {
+    return cups.flatMap((cup) => {
+        const top = Math.min(...cup.outline.map((p) => p[1]));
+        const bottom = Math.max(...cup.outline.map((p) => p[1]));
+        const rim = cup.outline.filter((p) => p[1] <= top + (bottom - top) * 0.25);
+        const x = (Math.min(...rim.map((p) => p[0])) + Math.max(...rim.map((p) => p[0]))) / 2;
+        return x >= area.x &&
+            x <= area.x + area.width &&
+            top >= area.y &&
+            top <= area.y + area.height
+            ? [{ x: x * aspect, y: top }]
             : [];
     });
-    if (!points.length || points.length > 10) return null;
-    if (points.length === 1) return [{ x: 3, y: 3 }];
-    const minX = Math.min(...points.map((p) => p.x)),
-        maxX = Math.max(...points.map((p) => p.x));
-    const minY = Math.min(...points.map((p) => p.y)),
-        maxY = Math.max(...points.map((p) => p.y));
-    const scale = 6 / Math.max(maxX - minX, maxY - minY);
-    if (!Number.isFinite(scale)) return null;
-    const result = points.map((p) => ({
-        x: Math.round(3 + (p.y - (minY + maxY) / 2) * scale),
-        y: Math.round(3 + (team === 'blue' ? 1 : -1) * (p.x - (minX + maxX) / 2) * scale),
-    }));
-    if (!validGrid(result)) return null;
-    return result.sort((a, b) => a.y - b.y || a.x - b.x);
+}
+
+function project(points: Point[], template: GridCup[], transform: Transform): Fit | null {
+    const { origin, across, depth } = transform;
+    const determinant = cross(across, depth);
+    if (Math.abs(determinant) < 1e-8) return null;
+    const grid: GridCup[] = [];
+    let error = 0;
+    for (const point of points) {
+        const relative = subtract(point, origin);
+        const x = cross(relative, depth) / determinant;
+        const y = cross(across, relative) / determinant;
+        let distance = Infinity;
+        let closest = template[0];
+        for (const slot of template) {
+            const d = (x - slot.x) ** 2 + (y - slot.y) ** 2;
+            if (d < distance) {
+                distance = d;
+                closest = slot;
+            }
+        }
+        // Less than a third of normal cup spacing. Never merge detections or invent cups.
+        if (
+            distance > 0.6 ** 2 ||
+            grid.some((slot) => slot.x === closest.x && slot.y === closest.y)
+        )
+            return null;
+        grid.push(closest);
+        error += distance;
+    }
+    error /= points.length;
+    return error <= 0.12 ? { grid, error, transform, template } : null;
+}
+
+/** Fit the app's existing templates, removing camera rotation, scale and affine skew.
+ * Store occupied grid slots, never rounded image coordinates. The first fit is bounded by
+ * ten cups; subsequent frames reuse its calibration so the rack cannot drift with jitter. */
+export class FormationFitter {
+    private fitted: Fit | null = null;
+    observe(
+        cups: Cup[],
+        area: PlayingArea,
+        aspect: number,
+        current: GridCup[],
+        templates: GridCup[][] = [],
+        towards: Point = { x: 1, y: 0 }
+    ): GridCup[] | null {
+        const points = cupPoints(cups, area, aspect);
+        if (!points.length || points.length > 10 || points.length !== current.length) return null;
+        if (this.fitted) {
+            const continued = project(points, this.fitted.template, this.fitted.transform);
+            if (continued) return continued.grid;
+        }
+        // A few/collinear cups cannot establish a new table plane. Keep the known formation.
+        if (points.length < 4) return validGrid(current) ? current : null;
+        const acrossDirection = { x: -towards.y, y: towards.x };
+        if (acrossDirection.y < 0) {
+            acrossDirection.x *= -1;
+            acrossDirection.y *= -1;
+        }
+        const available = [Formation.Pyramid_10.cups, current, ...templates.slice(0, 16)]
+            .filter((grid) => validGrid(grid) && grid.length >= points.length)
+            .filter(
+                (grid, index, all) => all.findIndex((g) => gridKey(g) === gridKey(grid)) === index
+            );
+        // A larger template already tests every occupied subset of its slots.
+        const candidates = available.filter(
+            (grid) =>
+                !available.some(
+                    (other) =>
+                        other.length > grid.length &&
+                        grid.every((slot) => other.some((p) => p.x === slot.x && p.y === slot.y))
+                )
+        );
+        const fits = new Map<string, Fit>();
+        for (const template of candidates) {
+            for (let a = 0; a < template.length - 2; a++) {
+                for (let b = a + 1; b < template.length - 1; b++) {
+                    for (let c = b + 1; c < template.length; c++) {
+                        const u = subtract(template[b], template[a]),
+                            v = subtract(template[c], template[a]);
+                        const determinant = cross(u, v);
+                        if (Math.abs(determinant) < 1) continue;
+                        for (let i = 0; i < points.length; i++) {
+                            for (let j = 0; j < points.length; j++) {
+                                if (i === j) continue;
+                                for (let k = 0; k < points.length; k++) {
+                                    if (k === i || k === j) continue;
+                                    const p = subtract(points[j], points[i]),
+                                        q = subtract(points[k], points[i]);
+                                    const across = {
+                                        x: (p.x * v.y - q.x * u.y) / determinant,
+                                        y: (p.y * v.y - q.y * u.y) / determinant,
+                                    };
+                                    const depth = {
+                                        x: (q.x * u.x - p.x * v.x) / determinant,
+                                        y: (q.y * u.x - p.y * v.x) / determinant,
+                                    };
+                                    const width = Math.hypot(across.x, across.y),
+                                        length = Math.hypot(depth.x, depth.y);
+                                    // Cup rows run across the table; depth points toward the other playing area.
+                                    if (
+                                        width / length < 0.4 ||
+                                        width / length > 2.5 ||
+                                        dot(across, acrossDirection) <
+                                            width *
+                                                Math.hypot(acrossDirection.x, acrossDirection.y) *
+                                                0.65 ||
+                                        dot(depth, towards) <
+                                            length * Math.hypot(towards.x, towards.y) * 0.65 ||
+                                        Math.abs(cross(across, depth)) < width * length * 0.5
+                                    )
+                                        continue;
+                                    const origin = {
+                                        x:
+                                            points[i].x -
+                                            across.x * template[a].x -
+                                            depth.x * template[a].y,
+                                        y:
+                                            points[i].y -
+                                            across.y * template[a].x -
+                                            depth.y * template[a].y,
+                                    };
+                                    const fit = project(points, template, {
+                                        origin,
+                                        across,
+                                        depth,
+                                    });
+                                    if (!fit) continue;
+                                    const key = gridKey(fit.grid),
+                                        previous = fits.get(key);
+                                    if (!previous || fit.error < previous.error) fits.set(key, fit);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        const ranked = [...fits.values()].sort((a, b) => a.error - b.error);
+        if (!ranked.length) return null;
+        // Prefer a geometrically consistent saved formation. With equally plausible new
+        // occupancies, hold the match instead of guessing which original cup moved.
+        const known = fits.get(gridKey(current));
+        const best = known && known.error <= ranked[0].error + 0.025 ? known : ranked[0];
+        const alternative = ranked.find((fit) => gridKey(fit.grid) !== gridKey(best.grid));
+        if (best !== known && alternative && alternative.error - best.error < 0.025) return null;
+        this.fitted = best;
+        return best.grid;
+    }
 }
 
 /** Require repeated identical grid positions, then bound writes even under noisy detections. */

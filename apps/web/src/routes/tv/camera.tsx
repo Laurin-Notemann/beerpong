@@ -199,7 +199,13 @@ function Camera() {
 
     return (
         <main className="relative h-screen overflow-hidden bg-black text-text">
-            {media.stream && <Preview stream={media.stream} video={previewVideo} flipped={identity.config.cameraVideoFlipped} />}
+            {media.stream && (
+                <Preview
+                    stream={media.stream}
+                    video={previewVideo}
+                    flipped={identity.config.cameraVideoFlipped}
+                />
+            )}
             {selectingAreas && (
                 <PlayingAreas
                     video={previewVideo}
@@ -391,7 +397,11 @@ function Camera() {
     );
 }
 
-function Preview({ stream, video, flipped }: {
+function Preview({
+    stream,
+    video,
+    flipped,
+}: {
     stream: MediaStream;
     video: React.RefObject<HTMLVideoElement | null>;
     flipped: boolean;

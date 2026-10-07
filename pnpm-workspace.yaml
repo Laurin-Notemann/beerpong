@@ -10,3 +10,5 @@ allowBuilds:
     core-js: false
     '@scarf/scarf': false
     yarn: false
+    # protobufjs ships generated runtime code; its optional postinstall is unnecessary
+    protobufjs: false

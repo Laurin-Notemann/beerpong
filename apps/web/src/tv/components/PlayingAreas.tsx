@@ -65,8 +65,8 @@ export function PlayingAreas({
                 Select the playing formations
             </h2>
             <p className="mt-1 text-sm text-text-2">
-                Drag a box around each team’s cups, with room to rearrange them. Keep spare cups and
-                drinks outside. Redo this if the camera moves.
+                Include every whole cup in each playing formation, with room to rearrange them. Keep
+                spare cups and drinks outside. Redo this if the camera moves.
             </p>
             <div className="my-4 flex min-h-0 flex-1 items-center justify-center overflow-auto">
                 <div

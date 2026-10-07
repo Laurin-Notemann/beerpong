@@ -6,11 +6,17 @@ import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
 import { toLiveOps } from '@/lib/liveMatch/types';
 import { cupLayout } from '@/lib/rerack';
 import type { LiveMatchDto } from '@/openapi/openapi';
-import { gridKey, pairFormation, validGrid, type FormationMatch } from '~/tv/lib/cupFormation';
+import {
+    gridKey,
+    pairFormation,
+    validGrid,
+    type FormationMatch,
+    type GridCup,
+} from '~/tv/lib/cupFormation';
 import { apiFor, ApiError } from '~/tv/server/api';
 import { authorize } from '~/tv/server/displays';
 
-export function formationMatch(dto: LiveMatchDto): FormationMatch {
+export function formationMatch(dto: LiveMatchDto, templates: GridCup[][] = []): FormationMatch {
     const { state } = reduceLiveMatch(toLiveOps(dto.ops));
     const side = (team: 'blue' | 'red') => {
         const standing = standingCups(state.cupHits, team);
@@ -18,7 +24,7 @@ export function formationMatch(dto: LiveMatchDto): FormationMatch {
             standing.some((c) => c.x === slot.cup.x && c.y === slot.cup.y)
         );
     };
-    return { id: dto.id, seq: dto.lastSeq ?? 0, blue: side('blue'), red: side('red') };
+    return { id: dto.id, seq: dto.lastSeq ?? 0, blue: side('blue'), red: side('red'), templates };
 }
 
 // Camera observations use the existing shared re-rack op, not a second phone-only formation.

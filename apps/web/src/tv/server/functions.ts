@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 
 import { socketUrl } from '~/apiUrl';
+import { validGrid } from '~/tv/lib/cupFormation';
 import { apiFor, ApiError, signup } from '~/tv/server/api';
 import { buildBoard } from '~/tv/server/board';
 import { formationMatch } from '~/tv/server/cupFormation';
@@ -102,10 +103,18 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
         });
         // A removal or re-pairing while the API request ran wins.
         if (camera.config.groupId !== groupId) return null;
+        // Optional saved templates must not prevent the recording snapshot from succeeding.
+        const saved = await api.formations(groupId).catch(async (error: unknown) => {
+            const Sentry = await import('@sentry/node');
+            Sentry.captureException(error, { tags: { operation: 'cup-formation-templates' } });
+            return [];
+        });
+        const templates = saved.map((formation) => formation.cups).filter(validGrid);
+        if (camera.config.groupId !== groupId) return null;
         return {
             groupId,
             name: camera.name,
             liveMatchIds: matches.map((m) => m.id),
-            formations: matches.map(formationMatch),
+            formations: matches.map((match) => formationMatch(match, templates)),
         };
     });
