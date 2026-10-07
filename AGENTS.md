@@ -76,7 +76,9 @@ An empty database is a bad test. For realistic data, dump the staging database r
 ## Verifying
 
 - **NEVER run tests.** Not `go test`, not the contract suite in `api-tests/`, not vitest (`pnpm run ci:test`, `pnpm test`), not `turbo run test`.
-- Lint, typecheck and format before every push: CI fails on oxlint warnings and on oxfmt.
+- Run `./scripts/check` before every push. It installs the pinned dependencies, then runs lint, format, both typechecks, the web build and Go checks in parallel. Successful unchanged tasks are cached across worktrees; shared mobile inputs also invalidate the web checks. Use `./scripts/check js` or `./scripts/check api` for focused work and `./scripts/check all --force` to bypass cached results. No tests run.
+- On a fresh worktree, `./scripts/setup` installs from the shared pnpm store without sharing `node_modules` between checkouts. Do not reuse another worktree's package links.
+- The individual commands remain available (CI fails on oxlint warnings and on oxfmt):
   - API: `cd apps/api && gofmt -l . && go vet ./... && go build ./...`.
   - Lint and format (every app, one config each at the root: `.oxlintrc.json`, `.oxfmtrc.json`): `pnpm run lint` (type-aware oxlint) and `pnpm run format:check` from the root; `pnpm run format` fixes formatting.
   - App: `cd apps/mobile && pnpm run typecheck` (TypeScript 7).
@@ -106,6 +108,7 @@ The Elo lives in `apps/api/internal/leaderboard/elo.go`; its comment explains th
 - UI changes need before/after images. Motion or timing needs a short video.
 - One concern per PR. If the description says "also", split it.
 - The `Generate OpenApi` action may push a `chore: update openapi types` commit after a change to `apps/api/openapi/openapi.json`. Pull before pushing again.
+- If the harness provides `watch_pull_request`, use it and end the turn while CI runs; resume on its notification instead of repeatedly polling `gh`. Merge only after checking the current head's checks and mergeability.
 
 ## Documentation
 

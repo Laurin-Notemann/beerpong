@@ -12,6 +12,7 @@ on:
       - "apps/api/**"
       - ".github/workflows/api-staging-cd.yml"
       - ".github/workflows/api-go-ci.yml"
+      - "scripts/check-api"
   workflow_dispatch:
 
 concurrency:

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Keep each worktree's package links separate; pnpm reuses its content-addressed store.
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+if ! command -v pnpm >/dev/null; then
+  corepack enable
+fi
+pnpm install --frozen-lockfile --prefer-offline

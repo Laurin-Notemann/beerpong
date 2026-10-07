@@ -1,14 +1,15 @@
 name: Api Go CI
 
 # Vets and builds the Go API. The staging deploy runs this next to the image build
-# and deploys only if both pass. The unit tests and the contract suite (api-tests/)
-# don't run in CI; run them locally.
+# and deploys only if both pass. Tests do not run here or in scripts/check.
 
 on:
   push:
+    branches-ignore: [staging]
     paths:
       - "apps/api/**"
       - ".github/workflows/api-go-ci.yml"
+      - "scripts/check-api"
   workflow_call:
   workflow_dispatch:
 
@@ -16,6 +17,10 @@ jobs:
   test:
     name: Go vet and build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: api-check-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'push' && github.ref != 'refs/heads/staging' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v7
@@ -24,5 +29,4 @@ jobs:
           cache-dependency-path: apps/api/go.sum
 
       - name: Vet and build
-        working-directory: apps/api
-        run: go vet ./... && go build ./...
+        run: ./scripts/check-api

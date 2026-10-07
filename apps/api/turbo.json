@@ -2,6 +2,10 @@
     "$schema": "https://turborepo.com/schema.json",
     "extends": ["//"],
     "tasks": {
+        "check": {
+            "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/check-api"],
+            "env": ["VERSUS_GO_VERSION", "GOFLAGS", "CGO_ENABLED", "GOOS", "GOARCH"]
+        },
         "test": {
             "env": ["POSTGRES_*"]
         }
