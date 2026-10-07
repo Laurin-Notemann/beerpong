@@ -22,6 +22,7 @@
         "apps/web/.output/**",
         "apps/web/src/routeTree.gen.ts",
         "apps/web/public/tv/polyfills.js",
+        "apps/web/public/vision/**",
         // vitest files are left out of the apps' tsconfigs, so they have no types to lint with
         "**/*.test.ts",
         "**/*.test.tsx"

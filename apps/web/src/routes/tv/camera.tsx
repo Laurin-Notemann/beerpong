@@ -2,9 +2,13 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type DisplayConfig, emptyConfig, parseConfig } from '@/lib/tvDisplay';
+import { PlayingAreas } from '~/tv/components/PlayingAreas';
 import { useCameraSender } from '~/tv/lib/cameraFeed';
 import { useCameraMatches, useCameraRecording } from '~/tv/lib/cameraRecording';
+import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
+import { useCupDetector } from '~/tv/lib/useCupDetector';
+import { useCupFormationSync } from '~/tv/lib/useCupFormationSync';
 import { registerDisplay } from '~/tv/server/functions';
 
 /**
@@ -63,6 +67,32 @@ function Camera() {
     const [registered, setRegistered] = useState(false);
     const [deviceId, setDeviceId] = useState(() => localStorage.getItem(DEVICE_KEY));
     const media = useCamera(deviceId);
+    const previewVideo = useRef<HTMLVideoElement>(null);
+    const [cupOutlines, setCupOutlines] = useState(
+        () => localStorage.getItem('versus-cup-outlines') !== 'off'
+    );
+    const [selectingAreas, setSelectingAreas] = useState(false);
+    const cameraDevice = media.stream
+        ? media.stream.getVideoTracks()[0]?.getSettings().deviceId ||
+          deviceId ||
+          media.stream.getVideoTracks()[0]?.label ||
+          'default-camera'
+        : '';
+    const [calibration, setCalibration] = useState<{ device: string; areas: PlayingArea[] } | null>(
+        () => {
+            try {
+                const value = JSON.parse(
+                    localStorage.getItem('versus-playing-areas') ?? 'null'
+                ) as { device?: unknown; areas?: unknown } | null;
+                return value && typeof value.device === 'string' && validAreas(value.areas)
+                    ? { device: value.device, areas: value.areas }
+                    : null;
+            } catch {
+                return null;
+            }
+        }
+    );
+    const areas = cameraDevice && calibration?.device === cameraDevice ? calibration.areas : null;
     const groupName = identity.config.groupId ? identity.config.groupName : null;
     const sender = useCameraSender(
         identity.id,
@@ -76,6 +106,26 @@ function Camera() {
         identity.config.groupId,
         registered
     );
+    const [syncMatchId, setSyncMatchId] = useState('');
+    const [firstTeam, setFirstTeam] = useState<'blue' | 'red'>('blue');
+    const syncingMatch = matches?.formations?.find((m) => m.id === syncMatchId);
+    const formationSync = useCupFormationSync(
+        identity.id,
+        identity.secret,
+        cupOutlines && !selectingAreas ? syncingMatch : undefined,
+        areas,
+        firstTeam
+    );
+    const cupStatus = useCupDetector(
+        previewVideo,
+        cupOutlines,
+        sender.sendCups,
+        identity.id,
+        identity.config.groupId,
+        selectingAreas ? null : areas,
+        formationSync.observe
+    );
+    if (syncMatchId && matches && !syncingMatch) setSyncMatchId('');
     const recording = useCameraRecording(
         identity.id,
         identity.secret,
@@ -149,7 +199,25 @@ function Camera() {
 
     return (
         <main className="relative h-screen overflow-hidden bg-black text-text">
-            {media.stream && <Preview stream={media.stream} />}
+            {media.stream && <Preview stream={media.stream} video={previewVideo} />}
+            {selectingAreas && (
+                <PlayingAreas
+                    video={previewVideo}
+                    initial={areas}
+                    cancel={() => setSelectingAreas(false)}
+                    remove={() => {
+                        localStorage.removeItem('versus-playing-areas');
+                        setCalibration(null);
+                        setSelectingAreas(false);
+                    }}
+                    save={(selected) => {
+                        const value = { device: cameraDevice, areas: selected };
+                        localStorage.setItem('versus-playing-areas', JSON.stringify(value));
+                        setCalibration(value);
+                        setSelectingAreas(false);
+                    }}
+                />
+            )}
             {!groupName ? (
                 <div className="absolute inset-0 grid place-items-center bg-black/60 p-6">
                     <div className="flex max-w-xl flex-col items-center gap-6 text-center">
@@ -217,6 +285,71 @@ function Camera() {
                             {recording.error && (
                                 <p className="font-semibold text-red">{recording.error}</p>
                             )}
+                            <button
+                                type="button"
+                                aria-pressed={cupOutlines}
+                                className="min-h-11 rounded-xl bg-panel px-3 py-2 text-sm font-semibold"
+                                onClick={() => {
+                                    setCupOutlines((on) => {
+                                        localStorage.setItem(
+                                            'versus-cup-outlines',
+                                            on ? 'off' : 'on'
+                                        );
+                                        return !on;
+                                    });
+                                }}
+                            >
+                                {cupOutlines
+                                    ? 'Turn experimental outlines off'
+                                    : 'Turn experimental outlines on'}
+                            </button>
+                            <button
+                                type="button"
+                                className="ml-3 min-h-11 rounded-xl bg-panel px-3 py-2 text-sm font-semibold"
+                                disabled={!media.stream}
+                                onClick={() => setSelectingAreas(true)}
+                            >
+                                {areas ? 'Adjust playing areas' : 'Select playing areas'}
+                            </button>
+                            <p role="status">{cupStatus}</p>
+                            <label className="mt-2 block">
+                                Sync formations to match
+                                <select
+                                    className="ml-2 min-h-11 rounded-xl bg-panel px-3 text-text"
+                                    value={syncMatchId}
+                                    disabled={!cupOutlines || !areas}
+                                    onChange={(event) => setSyncMatchId(event.target.value)}
+                                >
+                                    <option value="">Off</option>
+                                    {(matches?.formations ?? []).map((match, index) => (
+                                        <option key={match.id} value={match.id}>
+                                            Live match {index + 1} · {match.id.slice(0, 8)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            {syncMatchId && (
+                                <>
+                                    <label className="block">
+                                        Area 1 belongs to
+                                        <select
+                                            className="ml-2 min-h-11 rounded-xl bg-panel px-3 text-text"
+                                            value={firstTeam}
+                                            onChange={(event) =>
+                                                setFirstTeam(event.target.value as 'blue' | 'red')
+                                            }
+                                        >
+                                            <option value="blue">Blue team</option>
+                                            <option value="red">Red team</option>
+                                        </select>
+                                    </label>
+                                    <p role="status">{formationSync.status}</p>
+                                    <p>
+                                        Area 2 is the other team. Positions sync after staying
+                                        stable; enter scores on your phone.
+                                    </p>
+                                </>
+                            )}
                             <p>Live-match footage is saved to Versus storage while REC is shown.</p>
                             {recording.pending > 0 && (
                                 <p>
@@ -258,11 +391,18 @@ function Camera() {
     );
 }
 
-function Preview({ stream }: { stream: MediaStream }) {
-    const video = useRef<HTMLVideoElement>(null);
+function Preview({
+    stream,
+    video,
+}: {
+    stream: MediaStream;
+    video: React.RefObject<HTMLVideoElement | null>;
+}) {
     useEffect(() => {
-        video.current!.srcObject = stream;
-    }, [stream]);
+        const element = video.current;
+        // oxlint-disable-next-line react/immutability -- MediaStream playback requires assigning the DOM element's srcObject.
+        if (element) element.srcObject = stream;
+    }, [stream, video]);
     return (
         <video
             ref={video}

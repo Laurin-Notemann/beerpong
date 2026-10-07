@@ -36,8 +36,43 @@ export default defineConfig({
     // one tsconfig for every file, also the shared ones in apps/mobile/ (whose tsconfig extends
     // Expo's, which isn't installed here)
     tsconfig: './tsconfig.json',
-    resolve: { alias: aliases },
+    // External WASM glue keeps its own worker URL when Vite bundles the detector.
+    resolve: {
+        alias: aliases,
+        conditions: [
+            'onnxruntime-web-use-extern-wasm',
+            'module',
+            'browser',
+            'development|production',
+        ],
+    },
     build: { target: browsers, cssTarget: browsers },
     css: { postcss: { plugins: [flexGapFallback(), postcssCascadeLayers()] } },
-    plugins: [tanstackStart(), nitro(), viteReact(), tailwindcss(), noImportMeta],
+    plugins: [
+        tanstackStart(),
+        nitro({
+            routeRules: {
+                '/tv/camera': {
+                    headers: {
+                        'Cross-Origin-Opener-Policy': 'same-origin',
+                        'Cross-Origin-Embedder-Policy': 'require-corp',
+                    },
+                },
+                '/assets/**': { headers: { 'Cross-Origin-Embedder-Policy': 'require-corp' } },
+                '/vision/runtime/**': {
+                    headers: {
+                        'Cross-Origin-Embedder-Policy': 'require-corp',
+                        'Cache-Control': 'public, max-age=31536000, immutable',
+                    },
+                },
+                '/vision/model.json': { headers: { 'Cache-Control': 'no-store' } },
+                '/vision/**': {
+                    headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
+                },
+            },
+        }),
+        viteReact(),
+        tailwindcss(),
+        noImportMeta,
+    ],
 });

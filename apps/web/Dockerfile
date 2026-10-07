@@ -17,11 +17,12 @@ COPY apps/mobile/components/CupGrid apps/mobile/components/CupGrid
 COPY apps/mobile/utils apps/mobile/utils
 COPY apps/mobile/openapi apps/mobile/openapi
 COPY apps/web/ apps/web/
+COPY ml/cups/release.json ml/cups/
 WORKDIR /src/apps/web
 # baked into the TV's client for Sentry (src/tv/sentry.ts); empty means no reporting
 ARG VITE_SENTRY_DSN
 ARG VITE_GIT_COMMIT
-RUN pnpm run build
+RUN node scripts/cup-model.mjs && pnpm run build
 
 FROM node:24-alpine
 # converts score clips into MP4s the TV can play (src/tv/server/clips.ts)

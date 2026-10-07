@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { drawCups } from '~/tv/lib/cupVision';
 import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry';
 
 /**
@@ -113,6 +114,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                     surface.height = height;
                 }
                 context.drawImage(video, 0, 0, width, height);
+                drawCups(context, stream, now);
                 paintedAt = now;
                 if (moving) {
                     if (reported.size) noteFeed('picture back');

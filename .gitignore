@@ -14,3 +14,7 @@ build-*.tar.gz
 
 .claude/worktrees/
 .turbo
+
+# Generated cup-model/runtime assets; datasets and checkpoints live outside this repo.
+apps/web/public/vision/
+ml/cups/__pycache__/

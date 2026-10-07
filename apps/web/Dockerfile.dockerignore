@@ -3,3 +3,6 @@
 **/.nitro
 **/.tanstack
 apps/web/scripts/.seed.json
+
+# Private validation footage and generated models are never part of the build context.
+apps/web/public/vision

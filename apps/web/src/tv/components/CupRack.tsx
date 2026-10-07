@@ -17,6 +17,14 @@ export function CupRack({
     // the app's cup grid is 7x7; rows run from the base (y 0) to the apex (y 6)
     const size = 7;
     const color = team === 'blue' ? 'var(--color-blue)' : 'var(--color-red)';
+    const distances = cups
+        .flatMap((cup, i) =>
+            cups
+                .slice(i + 1)
+                .map((other) => Math.hypot(cup.at.x - other.at.x, cup.at.y - other.at.y))
+        )
+        .filter((d) => d > 0);
+    const radius = Math.min(0.92, ...distances.map((d) => d * 0.44));
 
     return (
         // cups sit on the grid (0 to 6), one cell around for their radius
@@ -26,7 +34,7 @@ export function CupRack({
                     key={`${at.x}:${at.y}`}
                     cx={team === 'blue' ? at.y : size - 1 - at.y}
                     cy={at.x}
-                    r={0.92}
+                    r={radius}
                     fill={up ? color : 'transparent'}
                     stroke={up ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)'}
                     strokeWidth={0.1}

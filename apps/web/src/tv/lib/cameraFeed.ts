@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CUP_CHANNEL, parseCupFrame, receiveCups, type CupFrame } from '~/tv/lib/cupVision';
 import { feedEventContext, watchFeedStats } from '~/tv/lib/feedTelemetry';
 import type { Signal } from '~/tv/server/displays';
 import { sendSignal, watchCamera } from '~/tv/server/functions';
@@ -206,6 +207,27 @@ export function useCameraFeed(
             let incoming: MediaStream | null = null;
             const mine = () => pc.current?.conn === conn;
 
+            conn.ondatachannel = ({ channel }) => {
+                if (channel.label !== CUP_CHANNEL) return channel.close();
+                let lastLog = 0;
+                channel.onmessage = ({ data }) => {
+                    if (!mine() || !incoming) return;
+                    const cups = parseCupFrame(data);
+                    if (!cups || !receiveCups(incoming, cups)) return;
+                    if (performance.now() - lastLog > 30_000) {
+                        lastLog = performance.now();
+                        void import('@sentry/browser').then((Sentry) =>
+                            Sentry.logger.info('cup vision received', {
+                                cameraId: from,
+                                tvId: id,
+                                model: cups.model,
+                                cupCount: cups.cups.length,
+                                ageMs: Math.round(cups.ageMs),
+                            })
+                        );
+                    }
+                };
+            };
             conn.ontrack = (e) => {
                 incoming = e.streams[0] ?? new MediaStream([e.track]);
                 if (mine() && isConnected(conn)) {
@@ -288,6 +310,8 @@ export function useCameraSender(
     groupId: string | null
 ) {
     const pcs = useRef(new Map<string, RTCPeerConnection>());
+    const channels = useRef(new Map<string, RTCDataChannel>());
+    const cupSequence = useRef(0);
     const [watching, setWatching] = useState(0);
     const latest = useRef(stream);
     useEffect(() => {
@@ -301,6 +325,7 @@ export function useCameraSender(
     const closeAll = useCallback(() => {
         for (const pc of pcs.current.values()) pc.close();
         pcs.current.clear();
+        channels.current.clear();
         count();
     }, [count]);
 
@@ -321,6 +346,15 @@ export function useCameraSender(
             pcs.current.get(tvId)?.close();
             const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
             pcs.current.set(tvId, pc);
+            // Unordered/unreliable geometry never blocks the video or replays stale positions.
+            const channel = pc.createDataChannel(CUP_CHANNEL, {
+                ordered: false,
+                maxRetransmits: 0,
+            });
+            channels.current.set(tvId, channel);
+            channel.onclose = () => {
+                if (channels.current.get(tvId) === channel) channels.current.delete(tvId);
+            };
             watchFeedStats(pc, 'camera', id, tvId);
             for (const track of media.getVideoTracks()) pc.addTrack(track, media);
             followIce(pc, (state) => {
@@ -369,7 +403,19 @@ export function useCameraSender(
         }
     }, []);
 
-    return { watching, onWatch, onSignal };
+    const sendCups = useCallback((frame: CupFrame) => {
+        const payload = JSON.stringify({ ...frame, sequence: ++cupSequence.current });
+        for (const channel of channels.current.values()) {
+            if (channel.readyState !== 'open' || channel.bufferedAmount > 16_000) continue;
+            try {
+                channel.send(payload);
+            } catch {
+                /* closing peer; the video owns reconnect */
+            }
+        }
+    }, []);
+
+    return { watching, onWatch, onSignal, sendCups };
 }
 
 /** the video bytes the connection got so far; undefined where the browser doesn't say */

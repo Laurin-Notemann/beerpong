@@ -4192,6 +4192,7 @@
             "LiveMatchOpsDto": {
                 "type": "object",
                 "properties": {
+                    "expectedSeq": { "type": "integer", "format": "int64", "minimum": 0, "description": "Optional compare-and-set: reject with liveMatchStale if the match changed. Omit for offline phone outboxes." },
                     "ops": {
                         "type": "array",
                         "items": {
