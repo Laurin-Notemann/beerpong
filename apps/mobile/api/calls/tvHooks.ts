@@ -11,7 +11,12 @@ import {
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK } from '@/api/utils/reactQuery';
-import { DisplayConfig, DisplayPatch, parseConfig } from '@/lib/tvDisplay';
+import {
+    CameraPatch,
+    DisplayConfig,
+    DisplayPatch,
+    parseConfig,
+} from '@/lib/tvDisplay';
 import { showErrorToast } from '@/toast';
 
 /**
@@ -132,6 +137,7 @@ export interface Camera {
     id: string;
     /** from its browser, e.g. "Chrome on Mac"; numbered when several have the same */
     name: string;
+    config: DisplayConfig;
 }
 
 const camerasKey = (groupId: ApiId) => [QK.group, groupId, QK.tvs, 'cameras'];
@@ -150,7 +156,9 @@ export function useCameras(groupId: ApiId | null) {
             if (!groupId) return [];
             const res = await (
                 await api
-            ).get<{ id: string; name?: string }[]>(camerasUrl(groupId));
+            ).get<{ id: string; name?: string; config?: unknown }[]>(
+                camerasUrl(groupId)
+            );
             const seen = new Map<string, number>();
             return res.data.map((i) => {
                 const name = i.name || 'Camera';
@@ -159,10 +167,44 @@ export function useCameras(groupId: ApiId | null) {
                 return {
                     id: i.id,
                     name: count > 1 ? `${name} ${count}` : name,
+                    config: parseConfig(i.config),
                 };
             });
         },
         refetchInterval: 3_000,
+    });
+}
+
+/** Per-camera settings are shared with every TV and persisted by the camera page. */
+export function useUpdateCamera(groupId: ApiId | null, cameraId: string) {
+    const { api } = useApi();
+    const qc = useQueryClient();
+    const key = camerasKey(groupId ?? 'NULL');
+    return useMutation({
+        mutationFn: async (patch: CameraPatch) => {
+            if (!groupId) throw new Error('no group');
+            await (
+                await api
+            ).patch(`${camerasUrl(groupId)}/${cameraId}`, patch);
+        },
+        onMutate: async (patch) => {
+            await qc.cancelQueries({ queryKey: key });
+            qc.setQueryData<Camera[]>(key, (prev) =>
+                prev?.map((camera) =>
+                    camera.id === cameraId
+                        ? {
+                              ...camera,
+                              config: {
+                                  ...parseConfig(camera.config),
+                                  ...patch,
+                              },
+                          }
+                        : camera
+                )
+            );
+        },
+        onError: (err) => showErrorToast("Couldn't change the camera.", err),
+        onSettled: () => qc.invalidateQueries({ queryKey: key }),
     });
 }
 

@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { asMember, fail, putGroupOnCamera } from '~/tv/server/appRemote';
 import { byCode, byGroup, type Display } from '~/tv/server/displays';
 
-const asJson = (d: Display) => ({ id: d.id, name: d.name });
+const asJson = (d: Display) => ({ id: d.id, name: d.name, config: d.config });
 
 /**
  * The group's cameras, for the app's TV remote (see appRemote.ts): GET the ones that are on,

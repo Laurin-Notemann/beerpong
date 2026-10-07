@@ -5,26 +5,41 @@
 export interface DisplayConfig {
     groupId: string | null;
     groupName: string | null;
-    /** auto: the leaderboard next to a live match while any is live, else only the leaderboard */
+    /** auto: leaderboard while idle, camera or one full-screen match while live */
     view: View;
     scope: Scope;
     /** the season of the leaderboard; null follows the group's active season */
     seasonId: string | null;
     /**
-     * live matches the TV shows first, in this order; the rest fill up by latest activity. Next
-     * to the leaderboard only the first one shows.
+     * live matches the TV shows first, in this order; the rest fill up by latest activity.
+     * Auto and Camera use only the first one.
      */
     pinnedMatchIds: string[];
     /** a live match on the whole screen, until it ends or a phone leaves it */
     focusMatchId: string | null;
     /**
-     * the camera the Camera view shows (a laptop or phone with `/tv/camera` open); null takes
-     * the group's first one that's on
+     * the camera Auto and Camera use; if unavailable, prefer one filming cameraSubject,
+     * then the group's first online camera
      */
     cameraId: string | null;
     /** swap the scoreboard sides on the camera video, without changing the match */
     cameraOverlayFlipped: boolean;
+    /** what this camera films; on a TV, the preferred subject if its camera is replaced */
+    cameraSubject: CameraSubject;
+    /** mirror this camera's video horizontally, independently of the scoreboard */
+    cameraVideoFlipped: boolean;
 }
+
+export const cameraSubjects = ['table', 'blue', 'red'] as const;
+export type CameraSubject = (typeof cameraSubjects)[number];
+export const cameraSubjectLabel: Record<CameraSubject, string> = {
+    table: 'Table',
+    blue: 'Blue team',
+    red: 'Red team',
+};
+export type CameraPatch = Partial<
+    Pick<DisplayConfig, 'cameraSubject' | 'cameraVideoFlipped'>
+>;
 
 /** camera: a camera's video on the whole screen, the score over it */
 export const views = ['auto', 'leaderboard', 'live', 'camera'] as const;
@@ -46,6 +61,8 @@ export const emptyConfig: DisplayConfig = {
     focusMatchId: null,
     cameraId: null,
     cameraOverlayFlipped: false,
+    cameraSubject: 'table',
+    cameraVideoFlipped: false,
 };
 
 /** what a phone may change; the group goes on with the app's Add TV, which joins it */
@@ -59,6 +76,8 @@ export type DisplayPatch = Partial<
         | 'focusMatchId'
         | 'cameraId'
         | 'cameraOverlayFlipped'
+        | 'cameraSubject'
+        | 'cameraVideoFlipped'
     >
 >;
 
@@ -80,6 +99,10 @@ export function parsePatch(value: unknown): DisplayPatch {
         patch.cameraId = v.cameraId;
     if (typeof v.cameraOverlayFlipped === 'boolean')
         patch.cameraOverlayFlipped = v.cameraOverlayFlipped;
+    if (cameraSubjects.includes(v.cameraSubject as CameraSubject))
+        patch.cameraSubject = v.cameraSubject as CameraSubject;
+    if (typeof v.cameraVideoFlipped === 'boolean')
+        patch.cameraVideoFlipped = v.cameraVideoFlipped;
     if (Array.isArray(v.pinnedMatchIds) && v.pinnedMatchIds.every(isString)) {
         patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(
             0,
@@ -127,22 +150,24 @@ export const byStart = (a: { startedAt: string }, b: { startedAt: string }) =>
     a.startedAt.localeCompare(b.startedAt);
 
 /**
- * What the TV shows: a focused live match on the whole screen while it's live; in auto the
- * leaderboard next to one live match while any is live, else only the leaderboard. Camera is
- * a saved preference: while idle it shows the leaderboard, then resumes for the next match.
- * Until its video comes in, it shows what auto shows.
+ * Auto shows the leaderboard while idle, then the camera if video is available, otherwise
+ * one full-screen live match. Explicit Camera stays on the feed even without a live match.
  */
 export function layoutFor(
     config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
-    liveIds: string[]
+    liveIds: string[],
+    cameraAvailable = false
 ) {
     if (config.focusMatchId && liveIds.includes(config.focusMatchId))
         return 'focus';
     if (config.view === 'leaderboard') return 'leaderboard';
     if (config.view === 'live') return 'live';
-    if (config.view === 'camera')
-        return liveIds.length ? 'camera' : 'leaderboard';
-    return liveIds.length > 0 ? 'split' : 'leaderboard';
+    if (config.view === 'camera') return 'camera';
+    return liveIds.length > 0
+        ? cameraAvailable
+            ? 'camera'
+            : 'focus'
+        : 'leaderboard';
 }
 
 /** what a remote shows as chosen: one of the views, or a live match on the whole screen */
@@ -151,4 +176,7 @@ export type Screen = View | 'focus';
 export const screenOf = (
     config: Pick<DisplayConfig, 'view' | 'focusMatchId'>,
     liveIds: string[]
-): Screen => (layoutFor(config, liveIds) === 'focus' ? 'focus' : config.view);
+): Screen =>
+    config.focusMatchId && liveIds.includes(config.focusMatchId)
+        ? 'focus'
+        : config.view;

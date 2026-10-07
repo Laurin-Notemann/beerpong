@@ -11,7 +11,7 @@ import { type DisplayConfig, type DisplayPatch, parseConfig } from '@/lib/tvDisp
  * the app (appRemote.ts): a TV without a group shows its `code`, which the app's Add TV takes.
  *
  * A camera (`/tv/camera`, a laptop or a phone's browser) is added the same way, with Add Camera.
- * Of its config only the group counts. It sends its video to the group's TVs over WebRTC, peer to
+ * Its config keeps its group, subject and video orientation. It sends video over WebRTC, peer to
  * peer; this server only passes on what they say to connect (`signal`, routes/tv/camera.tsx and
  * lib/cameraFeed.ts).
  */
@@ -38,6 +38,8 @@ export interface Signal {
 
 export type DisplayEvent =
     | { type: 'config'; config: DisplayConfig }
+    /** the selected camera's settings, both when watching starts and when a phone changes them */
+    | { type: 'cameraConfig'; cameraId: string; config: DisplayConfig }
     /** so the TV can keep its session across server restarts */
     | { type: 'session'; refreshToken: string }
     /** reload the page, to pick up a deploy */
@@ -95,11 +97,15 @@ export function byGroup(groupId: string, kind: Display['kind'] = 'tv'): Display[
     );
 }
 
-/** the camera whose video the TV shows: the one it's set to, else the group's first */
+/** Prefer the selected device, then another camera filming the same subject after replacement. */
 export function cameraFor(tv: Display) {
     if (!tv.config.groupId) return undefined;
     const cameras = byGroup(tv.config.groupId, 'camera');
-    return cameras.find((c) => c.id === tv.config.cameraId) ?? cameras[0];
+    return (
+        cameras.find((c) => c.id === tv.config.cameraId) ??
+        cameras.find((c) => c.config.cameraSubject === tv.config.cameraSubject) ??
+        cameras[0]
+    );
 }
 
 /**
@@ -216,6 +222,16 @@ export function authorize(id: unknown, secret: unknown) {
 export function update(display: Display, patch: DisplayPatch & Partial<DisplayConfig>) {
     display.config = { ...display.config, ...patch };
     emit(display, { type: 'config', config: display.config });
+    if (display.kind === 'camera' && display.config.groupId) {
+        for (const tv of byGroup(display.config.groupId)) {
+            if (tv.config.cameraId === display.id) {
+                // Remember its subject so a new device can replace this camera later.
+                tv.config = { ...tv.config, cameraSubject: display.config.cameraSubject };
+                emit(tv, { type: 'config', config: tv.config });
+            }
+            if (cameraFor(tv) === display) cameraConfig(display, tv);
+        }
+    }
 }
 
 export function setSession(display: Display, refreshToken: string) {
@@ -229,7 +245,12 @@ export function reload(display: Display) {
 
 /** asks the camera for its video, for this TV */
 export function watch(camera: Display, tv: Display) {
+    cameraConfig(camera, tv);
     emit(camera, { type: 'watch', tvId: tv.id });
+}
+
+function cameraConfig(camera: Display, tv: Display) {
+    emit(tv, { type: 'cameraConfig', cameraId: camera.id, config: camera.config });
 }
 
 /**
@@ -241,7 +262,7 @@ export function signal(from: Display, toId: unknown, value: Signal) {
     if (!to || to.kind === from.kind) return false;
     const [tv, camera] = from.kind === 'tv' ? [from, to] : [to, from];
     if (!camera.config.groupId || tv.config.groupId !== camera.config.groupId) return false;
-    if (tv.config.view !== 'camera' || cameraFor(tv) !== camera) return false;
+    if (!['auto', 'camera'].includes(tv.config.view) || cameraFor(tv) !== camera) return false;
     if (value.type !== (from === camera ? 'offer' : 'answer')) return false;
     emit(to, { type: 'signal', from: from.id, signal: value });
     return true;

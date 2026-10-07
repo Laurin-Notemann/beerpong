@@ -7,7 +7,13 @@ import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry
  * follow its CSS transforms. The decoder stays attached across clips and fullscreen changes;
  * the stream belongs to cameraFeed, and recording belongs to the sending camera.
  */
-export function CameraVideo({ stream }: { stream: MediaStream }) {
+export function CameraVideo({
+    stream,
+    flipped = false,
+}: {
+    stream: MediaStream;
+    flipped?: boolean;
+}) {
     const canvas = useRef<HTMLCanvasElement>(null);
     const decoder = useRef<HTMLVideoElement>(null);
     const [problem, setProblem] = useState<string | null>('Waiting for camera video…');
@@ -177,7 +183,11 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                 aria-hidden="true"
                 className="pointer-events-none absolute top-0 left-0 z-10 h-px w-px"
             />
-            <canvas ref={canvas} className="absolute inset-0 h-full w-full object-cover" />
+            <canvas
+                ref={canvas}
+                className="absolute inset-0 h-full w-full object-cover"
+                style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
+            />
             {problem && (
                 <div
                     role="status"
