@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { noteFeed } from '~/tv/lib/feedTelemetry';
 import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
 
 /** a clip plays at most this long, whatever was uploaded */
@@ -101,6 +102,8 @@ export function ScoreClipPanel({
             void import('@sentry/browser').then((Sentry) =>
                 Sentry.addBreadcrumb({ category: 'score-clip', message: phase, data })
             );
+            // also next to the camera feed's stats, while one shows
+            noteFeed(`score clip ${phase}`, { playId, nativeVideoLayer });
         };
         mark('requested');
         let stopped = false;

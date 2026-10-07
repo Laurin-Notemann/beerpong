@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry';
+
 /**
  * Paint WebRTC frames into the board, rather than asking a TV's separate video plane to
  * follow its CSS transforms. The decoder stays attached across clips and fullscreen changes;
@@ -17,6 +19,12 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
         // The canvas presents the full picture; the native video plane stays one pixel.
         const video = decoder.current!;
         video.srcObject = stream;
+        setFeedVideo(video);
+        // what the player says it waits for, next to the feed's stats (feedTelemetry.ts)
+        const onWaiting = () => noteFeed('video waiting');
+        const onStalled = () => noteFeed('video stalled');
+        video.addEventListener('waiting', onWaiting);
+        video.addEventListener('stalled', onStalled);
         let stopped = false;
         let frame = 0;
         let paintedAt = performance.now();
@@ -29,6 +37,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
             setProblem(message);
             if (reported.has(message)) return;
             reported.add(message);
+            noteFeed(`playback warning: ${message}`);
             // Capture before recovery resets the player, including when Sentry loads lazily.
             const extra = {
                 error: error === undefined ? undefined : String(error),
@@ -45,12 +54,13 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                 trackState: stream.getVideoTracks()[0]?.readyState,
                 trackMuted: stream.getVideoTracks()[0]?.muted,
             };
+            const feed = feedEventContext();
             void import('@sentry/browser').then((Sentry) => {
                 if (stopped) return;
                 Sentry.captureMessage(`camera playback: ${message}`, {
                     level: 'warning',
-                    tags: { operation: 'camera-playback' },
-                    extra,
+                    tags: { ...feed.tags, operation: 'camera-playback' },
+                    extra: { ...extra, ...feed.extra },
                 });
             });
         };
@@ -97,6 +107,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
                 context.drawImage(video, 0, 0, width, height);
                 paintedAt = now;
                 if (progressed) {
+                    if (reported.size) noteFeed('picture back');
                     setProblem(null);
                     reported.clear();
                 }
@@ -120,6 +131,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
             const now = performance.now();
             if (now - progressedAt > 5000) {
                 warn('Camera playback stalled. Restarting the player…');
+                noteFeed('recovery: restarted the player');
                 // Reset this consumer, not the shared track or its WebRTC connection.
                 video.pause();
                 video.srcObject = null;
@@ -129,6 +141,7 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
             } else if (now - paintedAt > 5000) {
                 warn('Camera frames are dark. Waiting for a visible picture…');
             } else if (video.paused) {
+                noteFeed('recovery: played the paused player');
                 play();
             }
         }, 1000);
@@ -136,6 +149,9 @@ export function CameraVideo({ stream }: { stream: MediaStream }) {
             stopped = true;
             cancelAnimationFrame(frame);
             clearInterval(recovery);
+            video.removeEventListener('waiting', onWaiting);
+            video.removeEventListener('stalled', onStalled);
+            setFeedVideo(null);
             video.pause();
             video.srcObject = null;
             // Do not stop any tracks: other consumers, including recording, own them.

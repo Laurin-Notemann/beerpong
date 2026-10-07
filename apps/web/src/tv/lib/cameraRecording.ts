@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { CameraRecordingCreateDto } from '@/openapi/openapi';
+import { startUpload } from '~/tv/lib/feedTelemetry';
 import { useGroupSocket } from '~/tv/lib/hooks';
 import { getCameraMatches } from '~/tv/server/functions';
 
@@ -98,6 +99,13 @@ export function useCameraRecording(
             const controller = new AbortController();
             upload.current = controller;
             const timeout = setTimeout(() => controller.abort(), 130_000);
+            // Logged with the feed's stats, to line uploads up with the TV's picture.
+            const finished = startUpload(id, {
+                segmentId: segment.id,
+                bytes: segment.blob.size,
+                attempt: segment.attempts + 1,
+            });
+            let status: number | undefined;
             try {
                 const res = await fetch(`/tv/api/cameras/${id}/recordings/${segment.id}`, {
                     method: 'PUT',
@@ -109,13 +117,16 @@ export function useCameraRecording(
                     body: segment.blob,
                     signal: controller.signal,
                 });
+                status = res.status;
                 if (!res.ok) throw new Error(`Camera recording upload failed (${res.status})`);
                 queue.current = queue.current.filter((item) => item !== segment);
+                finished({ ok: true, status });
             } catch (err) {
+                finished({ ok: false, status, error: String(err) });
                 if (!stopped) {
                     segment.attempts++;
                     Sentry.captureException(err, {
-                        tags: { feature: 'camera-recording-upload' },
+                        tags: { feature: 'camera-recording-upload', camera: id },
                         extra: { segmentId: segment.id, attempt: segment.attempts },
                     });
                 }

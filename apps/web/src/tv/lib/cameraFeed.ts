@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { feedEventContext, watchFeedStats } from '~/tv/lib/feedTelemetry';
 import type { Signal } from '~/tv/server/displays';
 import { sendSignal, watchCamera } from '~/tv/server/functions';
 
@@ -66,10 +67,14 @@ function followIce(pc: RTCPeerConnection, onChange: (state: 'up' | 'gone') => vo
     };
 }
 
-/** reports a connection problem to Sentry (sentry.ts) */
+/** reports a connection problem to Sentry (sentry.ts), with the TV feed's last stats */
 function report(problem: string, err?: unknown) {
+    const context = feedEventContext();
     void import('@sentry/browser').then((Sentry) =>
-        Sentry.captureMessage(`camera feed: ${problem}${err ? ` (${err})` : ''}`, 'warning')
+        Sentry.captureMessage(`camera feed: ${problem}${err ? ` (${err})` : ''}`, {
+            level: 'warning',
+            ...context,
+        })
     );
 }
 
@@ -179,6 +184,7 @@ export function useCameraFeed(
             close();
             const conn = new RTCPeerConnection({ iceServers: ICE_SERVERS });
             pc.current = { conn, at: Date.now() };
+            watchFeedStats(conn, 'tv', from, id);
             let incoming: MediaStream | null = null;
             const mine = () => pc.current?.conn === conn;
 
@@ -295,6 +301,7 @@ export function useCameraSender(
             pcs.current.get(tvId)?.close();
             const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
             pcs.current.set(tvId, pc);
+            watchFeedStats(pc, 'camera', id, tvId);
             for (const track of media.getVideoTracks()) pc.addTrack(track, media);
             followIce(pc, (state) => {
                 if (state === 'gone') {

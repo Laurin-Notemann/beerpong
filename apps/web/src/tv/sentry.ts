@@ -15,8 +15,10 @@ export function initTvSentry() {
         dsn,
         environment: import.meta.env.MODE === 'production' ? 'staging' : 'development',
         release: commit ? `web@${commit}` : undefined,
-        // errors only: a TV is one long-lived page, and old TV browsers are slow enough
+        // no traces: a TV is one long-lived page, and old TV browsers are slow enough
         tracesSampleRate: 0,
+        // the camera feed's stats, from the TV and the camera (lib/feedTelemetry.ts)
+        enableLogs: true,
     });
     Sentry.setTag('app', 'tv');
 }
