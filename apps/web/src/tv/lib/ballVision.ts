@@ -7,7 +7,7 @@ export interface BallCandidate {
     radius: number;
     color: 'orange' | 'white';
     score: number;
-    source?: 'color-motion' | 'track-color-recovery';
+    source?: 'color-motion' | 'track-color-recovery' | 'static-color-appearance';
 }
 export interface HitEntry {
     id: string;
@@ -49,8 +49,13 @@ export function ballCandidates(
     width: number,
     height: number,
     areas?: PlayingArea[],
-    hints: TrackHint[] = []
+    hints: TrackHint[] = [],
+    staticCandidates = false
 ) {
+    // Identity proposals require a trained orange classifier and configured scene bounds.
+    // White brightness alone never supplies static identity or flight evidence.
+    if (staticCandidates && (!ballModel?.supportedColors.includes('orange') || !areas?.length))
+        return { balls: [] as BallCandidate[], obscured: false };
     const mask = new Uint8Array(width * height);
     const scale = width / 640;
     let moving = 0;
@@ -73,7 +78,7 @@ export function ballCandidates(
               Math.abs(b - previous[p + 2])
             : 0;
         if (motion > 70) moving++;
-        if (motion < 70) continue;
+        if (!staticCandidates && motion < 70) continue;
         if (
             bounds &&
             (i % width < bounds.left * width ||
@@ -99,6 +104,7 @@ export function ballCandidates(
                     Math.hypot(x - h.x * width, y - h.y * height) < 24 * scale
             );
         const orange = strictOrange || recoveredOrange;
+        if (staticCandidates && !strictOrange) continue;
         let white = Math.min(r, g, b) > 155 && Math.max(r, g, b) - Math.min(r, g, b) < 45;
         if (white && previous) {
             const pr = previous[p],
@@ -130,6 +136,7 @@ export function ballCandidates(
         if (orange || white) mask[i] = orange ? (strictOrange ? 1 : 3) : 2;
     }
     const balls: BallCandidate[] = [];
+    let classifiedComponents = 0;
     const stack = new Int32Array(mask.length);
     for (let i = 0; i < mask.length; i++) {
         if (!mask[i]) continue;
@@ -195,6 +202,7 @@ export function ballCandidates(
         )
             continue;
         const color = orange > size / 2 ? 'orange' : 'white';
+        if (staticCandidates && ++classifiedComponents > 64) break;
         let temporalRecovery = color === 'orange' && orange - recovered < 4 * scale * scale;
         let score = Math.min(0.75, fill);
         if (ballModel?.supportedColors.includes(color)) {
@@ -236,9 +244,13 @@ export function ballCandidates(
             radius: Math.max(w, h) / width / 2,
             color,
             score,
-            source: temporalRecovery ? 'track-color-recovery' : 'color-motion',
+            source: staticCandidates
+                ? 'static-color-appearance'
+                : temporalRecovery
+                  ? 'track-color-recovery'
+                  : 'color-motion',
         });
-        if (balls.length >= 24) break;
+        if (balls.length >= (staticCandidates ? 12 : 24)) break;
     }
     // A compression fringe can split into several orange components. One prediction
     // supports one observation; otherwise those fragments create competing tracks.
@@ -328,9 +340,27 @@ export class BallTracker {
             ];
         });
         const result = ballCandidates(pixels, previous, width, height, areas, hints);
+        const identities = ballCandidates(pixels, null, width, height, areas, [], true);
+        const complete = {
+            ...result,
+            balls: [
+                ...result.balls,
+                ...identities.balls.filter(
+                    (identity) =>
+                        !result.balls.some(
+                            (moving) =>
+                                moving.color === identity.color &&
+                                Math.hypot(
+                                    (moving.x - identity.x) * width,
+                                    (moving.y - identity.y) * height
+                                ) < Math.max(9 * (width / 640), identity.radius * width)
+                        )
+                ),
+            ].slice(0, 24),
+        };
         if (result.obscured) {
             this.tracks = [];
-            return result;
+            return complete;
         }
         const used = new Set<number>();
         for (const ball of result.balls) {
@@ -360,7 +390,7 @@ export class BallTracker {
             } else this.tracks.push({ points: [{ ...ball, at }] });
         }
         this.tracks = this.tracks.slice(-24);
-        return result;
+        return complete;
     }
 }
 
@@ -419,6 +449,7 @@ export class BallHistory {
             if (o.obscured) continue;
             const used = new Set<number>();
             for (const ball of o.balls) {
+                if (ball.source === 'static-color-appearance') continue;
                 const candidates = tracks
                     .map((track, index) => ({
                         track,

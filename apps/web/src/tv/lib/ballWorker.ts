@@ -79,6 +79,10 @@ self.onmessage = ({
             type: 'frame',
             frameId: data.frameId,
             count: result.balls.length,
+            staticCount: result.balls.filter((ball) => ball.source === 'static-color-appearance')
+                .length,
+            movingCount: result.balls.filter((ball) => ball.source !== 'static-color-appearance')
+                .length,
             obscured: result.obscured,
             processingMs: performance.now() - start,
         });

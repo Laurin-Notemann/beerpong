@@ -58,6 +58,8 @@ export function useBallHitLookback(
             skipped = 0,
             totalMs = 0,
             proposals = 0,
+            staticProposals = 0,
+            movingProposals = 0,
             obscuredFrames = 0;
         let capture: 'bitmap' | 'pixels' = 'pixels';
         let phase: 'capture' | 'processing' = 'capture';
@@ -102,6 +104,8 @@ export function useBallHitLookback(
                   frameId: number;
                   processingMs: number;
                   count: number;
+                  staticCount?: number;
+                  movingCount?: number;
                   obscured: boolean;
               }
         >) => {
@@ -142,6 +146,8 @@ export function useBallHitLookback(
                 busy = false;
                 samples++;
                 proposals += data.count;
+                staticProposals += data.staticCount ?? 0;
+                movingProposals += data.movingCount ?? data.count;
                 obscuredFrames += data.obscured ? 1 : 0;
                 totalMs += data.processingMs;
             }
@@ -265,6 +271,8 @@ export function useBallHitLookback(
                 samples,
                 skipped,
                 proposals,
+                staticProposals,
+                movingProposals,
                 obscuredFrames,
                 model: ballModel?.id ?? 'motion-proposals',
                 trainedColors: ballModel?.supportedColors.join(',') ?? '',
@@ -274,7 +282,14 @@ export function useBallHitLookback(
                 capture,
                 processingMeanMs: samples ? Math.round(totalMs / samples) : 0,
             };
-            samples = skipped = totalMs = proposals = obscuredFrames = 0;
+            samples =
+                skipped =
+                totalMs =
+                proposals =
+                staticProposals =
+                movingProposals =
+                obscuredFrames =
+                    0;
             void import('@sentry/browser').then((Sentry) =>
                 Sentry.logger.info('ball lookback stats', stats)
             );
