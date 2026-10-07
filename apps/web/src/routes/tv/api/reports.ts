@@ -11,7 +11,13 @@ export const Route = createFileRoute('/tv/api/reports')({
             POST: async ({ request }) => {
                 const dsn = import.meta.env.VITE_SENTRY_DSN;
                 if (!dsn) return new Response(null, { status: 404 });
-                const body = new Uint8Array(await request.arrayBuffer());
+                let body: Uint8Array<ArrayBuffer>;
+                try {
+                    body = new Uint8Array(await request.arrayBuffer());
+                } catch {
+                    // the page went away while sending (a reload), nothing to pass on
+                    return new Response(null, { status: 400 });
+                }
                 if (body.byteLength > 1_000_000) return new Response(null, { status: 413 });
                 const newline = body.indexOf(10);
                 const header = new TextDecoder().decode(
