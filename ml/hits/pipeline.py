@@ -352,12 +352,15 @@ def cycle(args):
     collect_args = argparse.Namespace(**vars(args))
     collect_args.output = str(exported)
     collect(collect_args)
-    if previous.exists():
-        old = json.loads(previous.read_text())
-        if old.get('supervisionSha256') == supervision_digest(json.loads((exported / 'dataset.json').read_text())):
-            write(exported / 'cycle.json', {'state': 'no-new-reviewed-feedback', 'promoted': False})
-            print('No new reviewed evidence; retained candidate unchanged')
-            return
+    fingerprint = supervision_digest(json.loads((exported / 'dataset.json').read_text()))
+    attempted = state_root / 'last-attempt.json'
+    if attempted.exists() and json.loads(attempted.read_text())['supervisionSha256'] == fingerprint:
+        write(exported / 'cycle.json', {'state': 'no-new-reviewed-feedback', 'promoted': False})
+        print('No new reviewed evidence; retained candidate unchanged')
+        return
+    # Failed retention keeps the incumbent weights, but still consumes this fit
+    # attempt. Waiting for new labels prevents repeatedly selecting on VALID.
+    write(attempted, {'supervisionSha256': fingerprint, 'export': str(exported)})
     model_path = exported / 'candidate.json'
     fit_args = argparse.Namespace(dataset=str(exported), parent=str(previous) if previous.exists() else None,
                                   id='hit-' + stamp, output=str(model_path), epochs=args.epochs, learning_rate=args.learning_rate)

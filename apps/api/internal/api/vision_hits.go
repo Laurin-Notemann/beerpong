@@ -38,6 +38,7 @@ type visionEvidenceDTO struct {
 // Acceptance describes recognition only. These handlers never append score ops.
 type visionHitCreateDTO struct {
 	LiveMatchID      string            `json:"liveMatchId"`
+	ExpectedSeq      *int32            `json:"expectedSeq"`
 	CameraID         string            `json:"cameraId"`
 	SessionID        string            `json:"sessionId"`
 	Model            string            `json:"model"`
@@ -52,15 +53,16 @@ type visionHitCreateDTO struct {
 
 type visionHitDTO struct {
 	visionHitCreateDTO
-	ID             string     `json:"id"`
-	GroupID        string     `json:"groupId"`
-	CreatedAt      time.Time  `json:"createdAt"`
-	Revision       int32      `json:"revision"`
-	Label          string     `json:"label"`
-	FeedbackSource *string    `json:"feedbackSource"`
-	ReviewerModel  *string    `json:"reviewerModel"`
-	Reason         *string    `json:"reason"`
-	ReviewedAt     *time.Time `json:"reviewedAt"`
+	ID                string     `json:"id"`
+	GroupID           string     `json:"groupId"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	Revision          int32      `json:"revision"`
+	Label             string     `json:"label"`
+	FeedbackSource    *string    `json:"feedbackSource"`
+	ReviewerModel     *string    `json:"reviewerModel"`
+	Reason            *string    `json:"reason"`
+	ReviewedAt        *time.Time `json:"reviewedAt"`
+	ReplayRequestedAt *time.Time `json:"replayRequestedAt"`
 }
 
 type visionHitFeedbackDTO struct {
@@ -90,7 +92,7 @@ type visionHitReplayDTO struct {
 
 var (
 	errVisionHitInvalid  = errorCode{400, "visionHitInvalid", "Invalid hit metadata, feedback or cursor."}
-	errVisionHitConflict = errorCode{409, "visionHitConflict", "Hit metadata, camera owner or feedback revision conflicts. Refetch before retrying."}
+	errVisionHitConflict = errorCode{409, "visionHitConflict", "Hit metadata, camera owner, match sequence or feedback revision conflicts. Refetch before retrying."}
 	errVisionHitNotFound = errorCode{404, "visionHitNotFound", "Vision hit not found."}
 	errVisionHitRate     = errorCode{429, "visionHitRateLimited", "Camera hit limit or duplicate cooldown reached. Retry later."}
 )
@@ -156,6 +158,7 @@ func readVisionHit(r *request) (visionHitCreateDTO, response) {
 		return dto, fail(errVisionHitInvalid)
 	}
 	if !isUUID(r.path("id")) || !isUUID(dto.LiveMatchID) || !isUUID(dto.SessionID) || !validVisionIdentity(dto.CameraID, 64) || !validVisionIdentity(dto.Model, 128) ||
+		(dto.ExpectedSeq != nil && *dto.ExpectedSeq < 0) ||
 		(dto.Team != "red" && dto.Team != "blue") || dto.OccurredAt.IsZero() || dto.CameraOccurredAt.IsZero() ||
 		!visionRange(dto.Confidence, 0, 1) || !visionRange(dto.ImageCup.X, 0, 1) || !visionRange(dto.ImageCup.Y, 0, 1) || !visionRange(dto.ImageCup.Radius, 0.000001, 0.5) ||
 		!visionRange(dto.Evidence.ApproachDistance, 0, 10) || !visionRange(dto.Evidence.RimDistance, 0, 10) || !visionRange(dto.Evidence.Speed, 0, 100) || dto.Evidence.Observations < 1 || dto.Evidence.Observations > 10000 ||
@@ -169,7 +172,8 @@ func readVisionHit(r *request) (visionHitCreateDTO, response) {
 
 func toVisionHitDTO(row db.VisionHit) (visionHitDTO, error) {
 	dto := visionHitDTO{ID: row.ID, GroupID: row.GroupID, CreatedAt: row.CreatedAt, Revision: row.Revision, Label: row.Label,
-		FeedbackSource: row.FeedbackSource, ReviewerModel: row.ReviewerModel, Reason: row.Reason, ReviewedAt: row.ReviewedAt}
+		FeedbackSource: row.FeedbackSource, ReviewerModel: row.ReviewerModel, Reason: row.Reason, ReviewedAt: row.ReviewedAt,
+		ReplayRequestedAt: row.LastReplayRequestedAt}
 	err := json.Unmarshal(row.Proposal, &dto.visionHitCreateDTO)
 	return dto, err
 }
@@ -240,6 +244,9 @@ func (s *Server) putVisionHit(r *request) response {
 		}
 		if err != nil {
 			return nil, err
+		}
+		if dto.ExpectedSeq != nil && int64(*dto.ExpectedSeq) != match.LiveMatch.LastSeq {
+			return fail(errVisionHitConflict), nil
 		}
 		if match.LiveMatch.Status != liveInProgress || dto.OccurredAt.Before(match.LiveMatch.StartedAt.Add(-10*time.Second)) {
 			return fail(errVisionHitInvalid), nil

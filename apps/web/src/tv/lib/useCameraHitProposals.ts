@@ -174,6 +174,7 @@ export function useCameraHitProposals(
             const hitId = crypto.randomUUID();
             const hit: VisionHitCreateDto = {
                 liveMatchId: live.match.id,
+                expectedSeq: live.match.seq,
                 cameraId: id,
                 sessionId: live.recording.sessionId,
                 model: hitModel?.id ?? HIT_MODEL,

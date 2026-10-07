@@ -186,7 +186,7 @@
                         "description": "visionHitInvalid: invalid DTO or cursor."
                     },
                     "409": {
-                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                        "description": "visionHitConflict: immutable metadata, camera owner, expected match sequence, or expected revision conflict."
                     },
                     "429": {
                         "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
@@ -3091,6 +3091,14 @@
                         "type": "string",
                         "format": "uuid"
                     },
+                    "expectedSeq": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0,
+                        "maximum": 2147483647,
+                        "nullable": true,
+                        "description": "Live match sequence observed for this proposal. First insertion returns 409 if the locked match has advanced. Immutable on exact retries; omitted or null for legacy clients."
+                    },
                     "cameraId": {
                         "type": "string",
                         "minLength": 1,
@@ -3239,6 +3247,14 @@
                     "liveMatchId": {
                         "type": "string",
                         "format": "uuid"
+                    },
+                    "expectedSeq": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0,
+                        "maximum": 2147483647,
+                        "nullable": true,
+                        "description": "Live match sequence observed for this proposal. First insertion returns 409 if the locked match has advanced. Immutable on exact retries; omitted or null for legacy clients."
                     },
                     "cameraId": {
                         "type": "string",
@@ -3420,6 +3436,12 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    },
+                    "replayRequestedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "UTC time of the latest successful replay broadcast request, or null when no replay has been requested."
                     }
                 },
                 "required": [
@@ -3439,7 +3461,8 @@
                     "revision",
                     "label",
                     "feedbackSource",
-                    "reviewedAt"
+                    "reviewedAt",
+                    "replayRequestedAt"
                 ]
             },
             "VisionHitFeedbackDto": {

@@ -1075,6 +1075,10 @@ declare namespace Components {
         }
         export interface VisionHitCreateDto {
             liveMatchId: string; // uuid
+            /**
+             * Live match sequence observed for this proposal. First insertion returns 409 if the locked match has advanced. Immutable on exact retries; omitted or null for legacy clients.
+             */
+            expectedSeq?: number | null; // int32
             cameraId: string; // ^[A-Za-z0-9._:-]+$
             sessionId: string; // uuid
             model: string; // ^[A-Za-z0-9._:-]+$
@@ -1117,6 +1121,10 @@ declare namespace Components {
         }
         export interface VisionHitDto {
             liveMatchId: string; // uuid
+            /**
+             * Live match sequence observed for this proposal. First insertion returns 409 if the locked match has advanced. Immutable on exact retries; omitted or null for legacy clients.
+             */
+            expectedSeq?: number | null; // int32
             cameraId: string; // ^[A-Za-z0-9._:-]+$
             sessionId: string; // uuid
             model: string; // ^[A-Za-z0-9._:-]+$
@@ -1165,6 +1173,10 @@ declare namespace Components {
             reviewerModel?: string | null; // ^[A-Za-z0-9._:-]+$
             reason?: string | null;
             reviewedAt: string | null; // date-time
+            /**
+             * UTC time of the latest successful replay broadcast request, or null when no replay has been requested.
+             */
+            replayRequestedAt: string | null; // date-time
         }
         export interface VisionHitFeedbackDto {
             expectedRevision: number; // int32

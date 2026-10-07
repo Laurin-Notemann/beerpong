@@ -8,16 +8,30 @@ import { getDisplayHitReplay, getDisplayVisionHits } from '~/tv/server/visionHit
 
 export function useVisionHits(id: string, key: string, groupId: string | null, liveIds: string[]) {
     const queryClient = useQueryClient();
+    const liveContext = JSON.stringify([...liveIds].sort());
     const active = useRef({ groupId, liveIds });
-    useEffect(() => {
-        active.current = { groupId, liveIds };
-    }, [groupId, liveIds]);
     const [replay, setReplay] = useState<{ hit: VisionHitDto; replay: VisionHitReplayDto } | null>(
         null
     );
     const [message, setMessage] = useState<string | null>(null);
     const generation = useRef(0);
-    const seen = useRef(new Set<string>());
+    const seen = useRef(new Map<string, number>());
+    const cancelPending = useCallback(() => {
+        generation.current++;
+    }, []);
+    useEffect(() => {
+        const ids = JSON.parse(liveContext) as string[];
+        active.current = { groupId, liveIds: ids };
+        generation.current++;
+        // oxlint-disable-next-line react/set-state-in-effect -- End external playback when its group or match is gone.
+        setReplay((current) =>
+            current && current.hit.groupId === groupId && ids.includes(current.hit.liveMatchId)
+                ? current
+                : null
+        );
+        // Cancel pending loads even when no replay has reached the screen yet.
+        return cancelPending;
+    }, [id, key, groupId, liveContext, cancelPending]);
     const close = useCallback(() => {
         generation.current++;
         setReplay(null);
@@ -25,44 +39,36 @@ export function useVisionHits(id: string, key: string, groupId: string | null, l
     const refresh = useCallback(() => {
         void queryClient.invalidateQueries({ queryKey: ['vision-hits-tv', id] });
     }, [queryClient, id]);
-    const onEvent = useCallback(
-        (event: unknown) => {
-            const e = event as {
-                eventType?: string;
-                scope?: string;
-                body?: { id?: string; liveMatchId?: string; requestedAt?: string };
-            } | null;
-            if (e?.eventType !== 'VISION_HITS') return;
-            if (e.scope === 'visionHitDeleted') {
-                // A fetch already in flight must not resurrect a deleted replay.
-                generation.current++;
-                setReplay((current) => (current?.hit.id === e.body?.id ? null : current));
-                queryClient.setQueriesData<VisionHitDto[]>(
-                    { queryKey: ['vision-hits-tv', id] },
-                    (rows) => rows?.filter((hit) => hit.id !== e.body?.id)
-                );
-                return;
-            }
+    const requestReplay = useCallback(
+        (group: string, hitId: string, liveMatchId: string, requestedAt: string) => {
+            const at = Date.parse(requestedAt),
+                now = Date.now();
             if (
-                e.scope !== 'visionHitReplay' ||
-                typeof e.body?.id !== 'string' ||
-                typeof e.body.requestedAt !== 'string' ||
-                !active.current.liveIds.includes(e.body.liveMatchId ?? '')
+                !Number.isFinite(at) ||
+                at > now ||
+                now - at > 20_000 ||
+                group !== active.current.groupId ||
+                !active.current.liveIds.includes(liveMatchId)
             )
                 return;
-            const requestKey = `${e.body.id}:${e.body.requestedAt}`;
-            if (seen.current.has(requestKey)) return;
-            seen.current.add(requestKey);
-            if (seen.current.size > 200) seen.current = new Set([requestKey]);
-            const hitId = e.body.id,
-                token = ++generation.current,
-                group = active.current.groupId;
+            // Go events and Postgres timestamps may spell the same instant differently.
+            const requestKey = `${hitId}:${at}`;
+            for (const [request, time] of seen.current) {
+                if (now - time > 20_000) seen.current.delete(request);
+            }
+            if (seen.current.has(requestKey) || seen.current.size >= 200) return;
+            // Closing, finishing or failing a request must not replay it on the next refetch.
+            seen.current.set(requestKey, at);
+            const token = ++generation.current;
             void getDisplayHitReplay({ data: { id, key, hitId } })
                 .then((value) => {
                     if (
                         token !== generation.current ||
                         group !== active.current.groupId ||
-                        !active.current.liveIds.includes(value.hit.liveMatchId)
+                        value.hit.groupId !== group ||
+                        value.hit.liveMatchId !== liveMatchId ||
+                        !active.current.liveIds.includes(liveMatchId) ||
+                        Date.now() - at > 20_000
                     )
                         return;
                     if (!value.replay.complete || !value.replay.segments.length) {
@@ -85,7 +91,37 @@ export function useVisionHits(id: string, key: string, groupId: string | null, l
                     });
                 });
         },
-        [id, key, queryClient]
+        [id, key]
+    );
+    const onEvent = useCallback(
+        (event: unknown) => {
+            const e = event as {
+                groupId?: string;
+                eventType?: string;
+                scope?: string;
+                body?: { id?: string; liveMatchId?: string; requestedAt?: string };
+            } | null;
+            if (e?.eventType !== 'VISION_HITS' || e.groupId !== active.current.groupId) return;
+            if (e.scope === 'visionHitDeleted') {
+                // A fetch already in flight must not resurrect a deleted replay.
+                generation.current++;
+                setReplay((current) => (current?.hit.id === e.body?.id ? null : current));
+                queryClient.setQueriesData<VisionHitDto[]>(
+                    { queryKey: ['vision-hits-tv', id] },
+                    (rows) => rows?.filter((hit) => hit.id !== e.body?.id)
+                );
+                return;
+            }
+            if (
+                e.scope === 'visionHitReplay' &&
+                typeof e.groupId === 'string' &&
+                typeof e.body?.id === 'string' &&
+                typeof e.body.liveMatchId === 'string' &&
+                typeof e.body.requestedAt === 'string'
+            )
+                requestReplay(e.groupId, e.body.id, e.body.liveMatchId, e.body.requestedAt);
+        },
+        [id, queryClient, requestReplay]
     );
     useGroupSocket(groupId, refresh, onEvent);
     const hits = useQuery({
@@ -95,14 +131,15 @@ export function useVisionHits(id: string, key: string, groupId: string | null, l
         refetchInterval: 10_000,
     });
     useEffect(() => {
-        // Re-pairing never leaves another group's replay visible.
-        // oxlint-disable-next-line react/set-state-in-effect -- End external replay playback when its group changes.
-        close();
-    }, [groupId, close]);
-    useEffect(() => {
-        // oxlint-disable-next-line react/set-state-in-effect -- Release the external video decoder when its match ends.
-        if (replay && !liveIds.includes(replay.hit.liveMatchId)) close();
-    }, [replay, liveIds, close]);
+        // Reconnect refetches recover replay broadcasts missed while the socket was down.
+        // Old cached rows may not have the nullable replay timestamp yet.
+        const requested = (hits.data ?? [])
+            .filter((hit) => typeof hit.replayRequestedAt === 'string')
+            .sort((a, b) => Date.parse(a.replayRequestedAt!) - Date.parse(b.replayRequestedAt!));
+        for (const hit of requested) {
+            requestReplay(hit.groupId, hit.id, hit.liveMatchId, hit.replayRequestedAt!);
+        }
+    }, [hits.data, requestReplay, groupId, liveContext]);
     useEffect(() => {
         if (!replay) return;
         const timeout = setTimeout(close, 20_000);

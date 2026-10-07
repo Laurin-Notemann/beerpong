@@ -48,6 +48,7 @@ export const proposeCameraHit = createServerFn({ method: 'POST' })
             typeof evidence.exitObserved !== 'boolean' ||
             !validAreas(data.areas) ||
             !Number.isSafeInteger(data.seq) ||
+            body.expectedSeq !== data.seq ||
             !bounded(data.clockUncertaintyMs, 2000) ||
             !Number.isFinite(data.receivedAt)
         )
@@ -62,6 +63,7 @@ export const proposeCameraHit = createServerFn({ method: 'POST' })
                 const immutable = (value: VisionHitCreateDto) =>
                     JSON.stringify([
                         value.liveMatchId,
+                        value.expectedSeq ?? null,
                         value.cameraId,
                         value.sessionId,
                         value.model,
