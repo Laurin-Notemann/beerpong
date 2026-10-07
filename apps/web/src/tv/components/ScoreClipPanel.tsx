@@ -7,13 +7,11 @@ import { frameOf, type ScoreClip } from '~/tv/lib/scoreClips';
 const MAX_SECONDS = 10;
 /**
  * Tizen's separate video layer stays black after `playing` (longer than 0.2 s), so it still
- * needs the first-frame cover for 0.5 s of playback and a fade. Other browsers uncover a painted
- * video frame instead. The last frame covers the video shortly before its end on every browser.
+ * needs 0.5 s of playback behind the full board. Other browsers wait for a painted video frame.
+ * Only then does the board move aside; a cover fading into a different frame would flash.
  */
 const TIZEN_SHOWN_AT = 0.5;
 const COVER_BEFORE_END = 0.2;
-/** Preloaded clips start this far before the board finishes shrinking aside. */
-const PLAY_BEFORE_BOARD_END_MS = 100;
 /** a clip that hasn't started by then is skipped */
 const LOAD_TIMEOUT_MS = 8_000;
 /**
@@ -63,7 +61,7 @@ export function ScoreClipPanel({
     const [open, setOpen] = useState(false);
     const [playing, setPlaying] = useState(false);
     const [leaving, setLeaving] = useState(false);
-    const [shown, setShown] = useState(false);
+    const [covered, setCovered] = useState(false);
     const [frames, setFrames] = useState(true);
     const [side, setSide] = useState(from);
     const done = useRef(onDone);
@@ -87,7 +85,7 @@ export function ScoreClipPanel({
         setOpen(false);
         setPlaying(false);
         setLeaving(false);
-        setShown(false);
+        setCovered(false);
     }
 
     useEffect(() => {
@@ -103,6 +101,9 @@ export function ScoreClipPanel({
     useEffect(() => {
         if (playId === undefined) return;
         const v = video.current!;
+        const requestedAt = performance.now();
+        let maxFrameGapMs = 0;
+        let sampledAt = requestedAt;
         // Successful clip phases let camera warnings distinguish overlap from a load failure.
         const mark = (phase: string) => {
             const data = {
@@ -110,10 +111,15 @@ export function ScoreClipPanel({
                 nativeVideoLayer,
                 currentTime: v.currentTime,
                 readyState: v.readyState,
+                networkState: v.networkState,
+                elapsedMs: Math.round(performance.now() - requestedAt),
+                maxFrameGapMs: Math.round(maxFrameGapMs),
             };
-            void import('@sentry/browser').then((Sentry) =>
-                Sentry.addBreadcrumb({ category: 'score-clip', message: phase, data })
-            );
+            void import('@sentry/browser').then((Sentry) => {
+                Sentry.addBreadcrumb({ category: 'score-clip', message: phase, data });
+                // Every score, even without a camera: noteFeed throttles repeated notes for 5 s.
+                Sentry.logger.info(`score clip ${phase}`, data);
+            });
             // also next to the camera feed's stats, while one shows
             noteFeed(`score clip ${phase}`, { playId, nativeVideoLayer });
         };
@@ -121,21 +127,32 @@ export function ScoreClipPanel({
         let stopped = false;
         let started = false;
         let finishing = false;
+        let opened = false;
         let retried = false;
         let attempt = 0;
         let frame = 0;
         let revealFrame = 0;
+        let finishFrame = 0;
         let videoFrame: number | undefined;
-        let start: ReturnType<typeof setTimeout> | undefined;
         let cap: ReturnType<typeof setTimeout> | undefined;
         let leave: ReturnType<typeof setTimeout> | undefined;
         const finish = () => {
             if (stopped || finishing) return;
             finishing = true;
             mark('finishing');
-            setLeaving(true);
-            // Keep playing under the last frame until the board covers the column again.
-            leave = setTimeout(() => done.current(), LEAVE_MS);
+            if (!opened) return done.current();
+            setCovered(true);
+            // Paint the end cover before pausing. Decoder work and natural end must not
+            // compete with the board's return; release resources only after it covers us.
+            finishFrame = requestAnimationFrame(() => {
+                finishFrame = requestAnimationFrame(() => {
+                    if (stopped) return;
+                    v.pause();
+                    setLeaving(true);
+                    mark('closing');
+                    leave = setTimeout(() => done.current(), LEAVE_MS);
+                });
+            });
         };
         const play = () => {
             if (stopped || finishing) return;
@@ -144,6 +161,8 @@ export function ScoreClipPanel({
         };
         const retry = () => {
             if (stopped || finishing) return;
+            // A visible clip must close under its end cover rather than reload in view.
+            if (started) return finish();
             if (retried) return finish();
             retried = true;
             report(v, 'preloaded video did not play; loading the server URL again');
@@ -152,20 +171,30 @@ export function ScoreClipPanel({
             play();
         };
         const tick = () => {
-            if (nativeVideoLayer && v.currentTime >= TIZEN_SHOWN_AT) setShown(true);
-            const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
-            if (v.currentTime >= end) finish();
-            else frame = requestAnimationFrame(tick);
+            if (stopped) return;
+            const now = performance.now();
+            maxFrameGapMs = Math.max(maxFrameGapMs, now - sampledAt);
+            sampledAt = now;
+            if (!finishing) {
+                const end = Math.min(v.duration || MAX_SECONDS, MAX_SECONDS) - COVER_BEFORE_END;
+                if (v.currentTime >= end) finish();
+                else if (nativeVideoLayer && v.currentTime >= TIZEN_SHOWN_AT) reveal();
+            }
+            frame = requestAnimationFrame(tick);
+        };
+        const reveal = () => {
+            if (stopped || finishing || opened) return;
+            opened = true;
+            setOpen(true);
+            mark('revealed');
         };
         const onPlaying = () => {
             if (started || stopped || finishing) return;
             started = true;
+            sampledAt = performance.now();
             mark('playing');
             setPlaying(true);
             if (!nativeVideoLayer) {
-                const reveal = () => {
-                    if (!stopped && !finishing) setShown(true);
-                };
                 if (typeof v.requestVideoFrameCallback === 'function') {
                     videoFrame = v.requestVideoFrameCallback(reveal);
                 } else {
@@ -183,26 +212,22 @@ export function ScoreClipPanel({
             report(v, `error ${v.error?.code}`);
             retry();
         };
+        const onWaiting = () => mark('waiting');
         v.addEventListener('playing', onPlaying);
         v.addEventListener('ended', finish);
         v.addEventListener('error', onError);
+        v.addEventListener('waiting', onWaiting);
         // A frame lets the TV paint the stationary column before playback starts.
         const opening = requestAnimationFrame(() => {
-            setOpen(true);
             v.muted = false;
             if (nativeVideoLayer) {
                 v.preload = 'auto';
                 v.load();
-                // Warm Tizen's native layer during the slide, under its safe startup cover.
-                play();
+                // Warm Tizen's stationary native layer behind the full board.
             } else {
                 if (v.readyState >= HTMLMediaElement.HAVE_METADATA) v.currentTime = 0;
-                // CSS owns the slide duration (in ms); changing it moves playback with it.
-                const boardMs = parseFloat(
-                    getComputedStyle(v).getPropertyValue('--board-transition-duration')
-                );
-                start = setTimeout(play, Math.max(0, boardMs - PLAY_BEFORE_BOARD_END_MS));
             }
+            play();
         });
         const fresh = setTimeout(() => {
             if (!started) retry();
@@ -215,11 +240,15 @@ export function ScoreClipPanel({
         return () => {
             mark('released');
             stopped = true;
+            v.removeEventListener('playing', onPlaying);
+            v.removeEventListener('ended', finish);
+            v.removeEventListener('error', onError);
+            v.removeEventListener('waiting', onWaiting);
             cancelAnimationFrame(opening);
             cancelAnimationFrame(frame);
             cancelAnimationFrame(revealFrame);
+            cancelAnimationFrame(finishFrame);
             if (videoFrame !== undefined) v.cancelVideoFrameCallback(videoFrame);
-            clearTimeout(start);
             clearTimeout(fresh);
             clearTimeout(timeout);
             clearTimeout(cap);
@@ -258,13 +287,13 @@ export function ScoreClipPanel({
                             src={frameOf(clip.url, 'first')}
                             alt=""
                             onError={() => setFrames(false)}
-                            className={`clip-cover absolute inset-0 h-full w-full bg-black object-contain ${shown ? (nativeVideoLayer ? 'clip-cover-fade' : 'clip-cover-hidden') : ''}`}
+                            className={`absolute inset-0 h-full w-full bg-black object-contain ${open ? 'clip-cover-hidden' : ''}`}
                         />
                         <img
                             src={frameOf(clip.url, 'last')}
                             alt=""
                             onError={() => setFrames(false)}
-                            className={`clip-cover absolute inset-0 h-full w-full bg-black object-contain ${leaving ? '' : 'clip-cover-hidden'}`}
+                            className={`absolute inset-0 h-full w-full bg-black object-contain ${covered ? '' : 'clip-cover-hidden'}`}
                         />
                     </>
                 )}
