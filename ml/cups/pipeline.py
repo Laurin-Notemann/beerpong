@@ -31,11 +31,12 @@ def collect(args):
     import boto3
     root = Path(args.output).resolve()
     root.mkdir(parents=True, exist_ok=True)
-    if not args.group.isalnum() or not 1 <= args.limit <= 500:
+    if not args.group.isalnum() or not 1 <= args.limit <= 500 or args.per_session < 1:
         raise ValueError('Invalid group code or limit')
+    limit = '' if args.all else f' LIMIT {args.limit}'
     query = ("BEGIN READ ONLY; SELECT row_to_json(r) FROM (SELECT c.* FROM camera_recordings c "
              "JOIN groups g ON g.id=c.group_id WHERE c.uploaded_at IS NOT NULL "
-             f"AND g.invite_code='{args.group}' ORDER BY c.started_at DESC LIMIT {args.limit}) r; ROLLBACK;")
+             f"AND g.invite_code='{args.group}' ORDER BY c.started_at DESC{limit}) r; ROLLBACK;")
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', args.host,
                              'docker exec -i beerpong-db-staging psql -X -qAt -U beerpong_user -d beerpong'],
                             input=query, text=True, capture_output=True, check=True)
@@ -51,10 +52,11 @@ def collect(args):
     rng = random.Random(args.seed)
     sessions = sorted({row['session_id'] for row in rows})
     # Cover sessions before taking more clips of the same almost-identical table.
-    chosen = []
-    for session in sessions:
-        candidates = [row for row in rows if row['session_id'] == session]
-        chosen += rng.sample(candidates, min(args.per_session, len(candidates)))
+    chosen = rows if args.all else []
+    if not args.all:
+        for session in sessions:
+            candidates = [row for row in rows if row['session_id'] == session]
+            chosen += rng.sample(candidates, min(args.per_session, len(candidates)))
     manifest = []
     for row in chosen:
         path = root / 'videos' / row['session_id'] / (row['id'] + Path(row['object_key']).suffix)
@@ -66,6 +68,8 @@ def collect(args):
                 temporary.unlink()
                 raise ValueError('Recording size mismatch: ' + row['id'])
             temporary.replace(path)
+        if path.stat().st_size != row['size_bytes']:
+            raise ValueError('Cached recording size mismatch: ' + row['id'])
         manifest.append({**row, 'path': str(path.relative_to(root)), 'sha256': digest(path)})
     write_json(root / 'recordings.json', manifest)
     print(json.dumps({'recordings': len(manifest), 'sessions': len(sessions), 'output': str(root)}))
@@ -418,7 +422,7 @@ def publish(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
-    p = sub.add_parser('collect'); p.add_argument('--output', required=True); p.add_argument('--group', default='SBRIL5OJ5'); p.add_argument('--host', default='privaten'); p.add_argument('--limit', type=int, default=200); p.add_argument('--per-session', type=int, default=2); p.add_argument('--seed', type=int, default=42); p.set_defaults(fn=collect)
+    p = sub.add_parser('collect'); p.add_argument('--output', required=True); p.add_argument('--group', default='SBRIL5OJ5'); p.add_argument('--host', default='privaten'); p.add_argument('--limit', type=int, default=200); p.add_argument('--per-session', type=int, default=2); p.add_argument('--all', action='store_true', help='Collect every completed recording instead of sampling sessions'); p.add_argument('--seed', type=int, default=42); p.set_defaults(fn=collect)
     p = sub.add_parser('extract'); p.add_argument('--dataset', required=True); p.add_argument('--every', type=int, default=10); p.add_argument('--min-change', type=int, default=3); p.set_defaults(fn=extract)
     p = sub.add_parser('prepare'); p.add_argument('--dataset', required=True); p.add_argument('--areas', required=True); p.add_argument('--search-padding', action='store_true'); p.set_defaults(fn=prepare)
     p = sub.add_parser('prelabel'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--threshold', type=float, default=.2); p.set_defaults(fn=prelabel)
