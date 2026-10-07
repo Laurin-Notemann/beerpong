@@ -45,7 +45,7 @@ After changing apps/api, restart the API: `docker rm -f bp-local-api`, then the 
 
 A new route goes into `apps/api/openapi/openapi.json`, edited as text in place (never
 re-serialize or format it). Regenerate the app's types
-with `scripts/gen-api` (from the repo root, after `npm install`), or let the Generate OpenApi
+with `scripts/gen-api` (from the repo root, after `pnpm install`), or let the Generate OpenApi
 action push `chore: update openapi types` and pull before pushing again.
 
 ## Cleanup

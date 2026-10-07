@@ -46,7 +46,7 @@ We need to be on the same page with terminology. When communicating, use this la
 ## The three ways to hurt yourself
 
 1. **Touching the live server by hand.** `ssh privaten` hosts the staging API (`~/docker/beerpong-api-go`) and its Postgres (`~/docker/beerpong-api`). The database there is real user data. Never run destructive SQL, `docker compose down -v`, or volume prunes against it. Read logs freely; change things through the deploy workflow. If `ssh privaten` doesn't connect, ask. Never reach the server through CI secrets or a temporary workflow.
-2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, `apps/mobile/package.json` scripts, or permissions changes the fingerprint. So does hoisting the app's packages: the root `package-lock.json` keeps them under `apps/mobile/node_modules`, so never `npm dedupe` or regenerate the lockfile from scratch. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect. `npm install` (and Dependabot) moves the packages it touches to the root `node_modules/`: after adding or bumping one, check `git diff package-lock.json` for `apps/mobile/node_modules/…` entries that became `node_modules/…` and put them back.
+2. **Breaking the runtime by accident.** Adding or upgrading a native package, editing `app.json` plugins, `apps/mobile/package.json` scripts, or permissions changes the fingerprint. So does changing how the app's packages are installed: never change pnpm's `nodeLinker` or regenerate `pnpm-lock.yaml` from scratch. The staging workflow then builds and submits new native builds instead of publishing an update. Do it on purpose, not as a side effect.
 3. **Hand-editing generated API types.** `apps/mobile/api/generated/openapi.json` and `apps/mobile/openapi/openapi.d.ts` are generated from `apps/api/openapi/openapi.json`. Change the Go handler, update that document and regenerate (see `OPENAPI_CODEGEN.md`); never patch the generated files to make the app compile. Edit `openapi.json` as text in place; re-serializing it or running a formatter on it reformats the whole file.
 
 ## Hit every surface
@@ -65,8 +65,8 @@ The most common defect in this repo is a change that works on the path you teste
 - On this machine Go is in `~/.local/go/bin` and port 5432 is taken: run the API with the `api-local` skill instead of the next two lines.
 - Database: `cp .env.example .env`, then `make docker-db-up`. The API reads `POSTGRES_HOST/PORT/DB_NAME/USER/PASSWORD`, `JWT_SECRET`, `BACKEND_SENTRY_DSN`, the `AWS_*` S3 settings and the optional `APNS_*` push key from the environment.
 - API: `set -a; source .env; set +a; cd apps/api && go run ./cmd/api` (Go 1.26; runs the migrations on start), or `make docker-backend-up` to run it in Docker.
-- App: `npm install` at the root, then `cd apps/mobile && npm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
-- npm is the package manager (npm workspaces, one root `package-lock.json`). Don't add a second lockfile.
+- App: `pnpm install` at the root, then `cd apps/mobile && pnpm start`. Use a development build (`eas build --profile development`); Expo Go doesn't have the native modules. EAS environment `development` points the app at `http://localhost:8080`.
+- pnpm is the package manager: workspaces in `pnpm-workspace.yaml`, one root `pnpm-lock.yaml`, the version pinned in `packageManager` (`corepack enable` gets it). Don't add a second lockfile. Installs are isolated, so a package the app or the web app imports must be in its own `package.json`. A dependency's install script only runs if `allowBuilds` in `pnpm-workspace.yaml` allows it.
 - Stop what you started. This machine runs other projects' servers too.
 
 ## Test data
@@ -75,12 +75,12 @@ An empty database is a bad test. For realistic data, dump the staging database r
 
 ## Verifying
 
-- **NEVER run tests.** Not `go test`, not the contract suite in `api-tests/`, not vitest (`npm run ci:test`, `npm test`), not `turbo run test`.
+- **NEVER run tests.** Not `go test`, not the contract suite in `api-tests/`, not vitest (`pnpm run ci:test`, `pnpm test`), not `turbo run test`.
 - Lint, typecheck and format before every push: CI fails on oxlint warnings and on oxfmt.
   - API: `cd apps/api && gofmt -l . && go vet ./... && go build ./...`.
-  - Lint and format (every app, one config each at the root: `.oxlintrc.json`, `.oxfmtrc.json`): `npm run lint` (type-aware oxlint) and `npm run format:check` from the root; `npm run format` fixes formatting.
-  - App: `cd apps/mobile && npm run typecheck` (TypeScript 7).
-  - Web (the simulator and the TV): `cd apps/web && npm run typecheck && npm run build`.
+  - Lint and format (every app, one config each at the root: `.oxlintrc.json`, `.oxfmtrc.json`): `pnpm run lint` (type-aware oxlint) and `pnpm run format:check` from the root; `pnpm run format` fixes formatting.
+  - App: `cd apps/mobile && pnpm run typecheck` (TypeScript 7).
+  - Web (the simulator and the TV): `cd apps/web && pnpm run typecheck && pnpm run build`.
 - Don't verify with simulators, devices or browsers unless the developer asks.
 
 ## Testing the Elo

@@ -18,7 +18,7 @@ on:
       - "apps/mobile/components/CupGrid/**"
       - "apps/mobile/utils/**"
       - "apps/mobile/openapi/**"
-      - "package-lock.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/web-staging-cd.yml"
       - ".github/workflows/web-ci.yml"
   workflow_dispatch:
@@ -63,7 +63,7 @@ jobs:
           file: apps/web/Dockerfile
           platforms: linux/amd64
           tags: europe-west10-docker.pkg.dev/beer-pong-441815/api-beerpong/web-staging:${{ github.sha }}
-          # mode=max also caches the build stage (npm ci), not just the final image
+          # mode=max also caches the build stage (pnpm install), not just the final image
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
           # the TV's pages report to the Sentry project `web` (DSNs are public)

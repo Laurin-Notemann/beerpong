@@ -14,7 +14,7 @@ on:
       - "apps/mobile/components/CupGrid/**"
       - "apps/mobile/utils/**"
       - "apps/mobile/openapi/**"
-      - "package-lock.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/web-ci.yml"
   workflow_call:
   workflow_dispatch:
@@ -29,11 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run build
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+      - run: pnpm run build

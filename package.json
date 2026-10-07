@@ -1,15 +1,12 @@
 {
     "name": "versus",
     "private": true,
-    "packageManager": "npm@11.16.0",
+    "packageManager": "pnpm@12.9.1",
     "scripts": {
         "lint": "oxlint --deny-warnings",
         "format": "oxfmt",
         "format:check": "oxfmt --check"
     },
-    "workspaces": [
-        "apps/*"
-    ],
     "devDependencies": {
         "oxfmt": "^0.72.0",
         "oxlint": "^1.87.0",
