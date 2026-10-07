@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CameraRecordingCreateDto } from '@/openapi/openapi';
 import { startUpload } from '~/tv/lib/feedTelemetry';
 import { useGroupSocket } from '~/tv/lib/hooks';
+import { fixMp4Duration } from '~/tv/lib/mp4Duration';
 import { getCameraMatches } from '~/tv/server/functions';
 
 const SEGMENT_MS = 30_000;
@@ -17,6 +18,8 @@ interface Segment {
     blob: Blob;
     attempts: number;
 }
+
+let unfixedReported = false;
 
 function warning(message: string, extra?: Record<string, unknown>) {
     Sentry.captureMessage(message, {
@@ -165,6 +168,21 @@ export function useCameraRecording(
         wakeUpload.current();
     }, [groupId]);
 
+    // Bounded, oldest dropped first, so a long outage can't fill the camera's memory.
+    const enqueue = useCallback((segment: Segment) => {
+        queue.current.push(segment);
+        let queuedBytes = queue.current.reduce((total, item) => total + item.blob.size, 0);
+        while (queue.current.length > MAX_QUEUE_SEGMENTS || queuedBytes > MAX_QUEUE_BYTES) {
+            const oldest = queue.current.shift()!;
+            queuedBytes -= oldest.blob.size;
+            warning('Camera recording queue full; dropped oldest segment', {
+                segmentId: oldest.id,
+            });
+        }
+        setPending(queue.current.length);
+        wakeUpload.current();
+    }, []);
+
     const matchKey = snapshot?.liveMatchIds.slice().sort().join(',') ?? '';
     const cameraName = snapshot?.name ?? 'Camera';
     useEffect(() => {
@@ -235,46 +253,46 @@ export function useCameraRecording(
                     clearTimeout(timer);
                     if (!stopped) setRecording(false);
                     endedAt ??= new Date().toISOString();
-                    const blob = new Blob(chunks, { type: fileRecorder.mimeType });
-                    if (!failed && blob.size > 0 && endedAt && endedAt > startedAt) {
-                        const segment: Segment = {
-                            id: crypto.randomUUID(),
-                            blob,
-                            attempts: 0,
-                            metadata: {
-                                groupId,
-                                cameraId: id,
-                                cameraName,
-                                sessionId: session.current!,
-                                segmentIndex,
-                                startedAt,
-                                endedAt,
-                                liveMatchIds: matchKey.split(
-                                    ','
-                                ) as CameraRecordingCreateDto['liveMatchIds'],
-                                contentType: fileRecorder.mimeType.startsWith('video/mp4')
-                                    ? 'video/mp4'
-                                    : 'video/webm',
-                                sizeBytes: blob.size,
-                            },
+                    const raw = new Blob(chunks, { type: fileRecorder.mimeType });
+                    if (!failed && raw.size > 0 && endedAt > startedAt) {
+                        const contentType = fileRecorder.mimeType.startsWith('video/mp4')
+                            ? 'video/mp4'
+                            : 'video/webm';
+                        const metadata: Omit<Segment['metadata'], 'sizeBytes'> = {
+                            groupId,
+                            cameraId: id,
+                            cameraName,
+                            sessionId: session.current!,
+                            segmentIndex,
+                            startedAt,
+                            endedAt,
+                            liveMatchIds: matchKey.split(
+                                ','
+                            ) as CameraRecordingCreateDto['liveMatchIds'],
+                            contentType,
                         };
-                        queue.current.push(segment);
-                        let queuedBytes = queue.current.reduce(
-                            (total, item) => total + item.blob.size,
-                            0
-                        );
-                        while (
-                            queue.current.length > MAX_QUEUE_SEGMENTS ||
-                            queuedBytes > MAX_QUEUE_BYTES
-                        ) {
-                            const oldest = queue.current.shift()!;
-                            queuedBytes -= oldest.blob.size;
-                            warning('Camera recording queue full; dropped oldest segment', {
-                                segmentId: oldest.id,
+                        const fixed =
+                            contentType === 'video/mp4'
+                                ? fixMp4Duration(raw)
+                                : Promise.resolve({ blob: raw, durationMs: null });
+                        void fixed.then(({ blob, durationMs }) => {
+                            if (
+                                contentType === 'video/mp4' &&
+                                durationMs === null &&
+                                !unfixedReported
+                            ) {
+                                unfixedReported = true;
+                                warning(
+                                    "Camera recording MP4 header wasn't recognised; its duration stays unset"
+                                );
+                            }
+                            enqueue({
+                                id: crypto.randomUUID(),
+                                blob,
+                                attempts: 0,
+                                metadata: { ...metadata, sizeBytes: blob.size },
                             });
-                        }
-                        setPending(queue.current.length);
-                        wakeUpload.current();
+                        });
                     }
                     if (!stopped && !failed) start();
                 };
@@ -300,7 +318,7 @@ export function useCameraRecording(
             close();
             window.removeEventListener('pagehide', close);
         };
-    }, [stream, groupId, matchKey, id, cameraName]);
+    }, [stream, groupId, matchKey, id, cameraName, enqueue]);
 
     return { recording, error, pending };
 }
