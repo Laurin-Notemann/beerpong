@@ -148,6 +148,8 @@ function Camera() {
         () => localStorage.getItem('versus-formation-tv') ?? ''
     );
     const syncingMatch = matches?.formations?.find((m) => m.id === syncMatchId);
+    const detectionMatch =
+        syncingMatch ?? (matches?.formations?.length === 1 ? matches.formations[0] : undefined);
     const formationSync = useCupFormationSync(
         identity.id,
         identity.secret,
@@ -163,7 +165,16 @@ function Camera() {
         identity.id,
         identity.config.groupId,
         selectingAreas ? null : areas,
-        formationSync.observe
+        formationSync.observe,
+        detectionMatch
+            ? {
+                  key: `${detectionMatch.id}:${firstTeam}`,
+                  counts:
+                      firstTeam === 'blue'
+                          ? [detectionMatch.blue.length, detectionMatch.red.length]
+                          : [detectionMatch.red.length, detectionMatch.blue.length],
+              }
+            : null
     );
     if (syncMatchId && matches && !syncingMatch) setSyncMatchId('');
     const recording = useCameraRecording(

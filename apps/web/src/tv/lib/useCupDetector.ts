@@ -1,5 +1,6 @@
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
+import { CupMembership, cupSearchAreas } from '~/tv/lib/cupMembership';
 import { CupPersistence } from '~/tv/lib/cupPersistence';
 import { MAX_AGE_MS, type CupFrame, type PlayingArea } from '~/tv/lib/cupVision';
 import type { CupResult } from '~/tv/lib/cupWorker';
@@ -12,8 +13,16 @@ export function useCupDetector(
     cameraId: string,
     groupId: string | null,
     areas: PlayingArea[] | null,
-    observe: (frame: CupFrame, aspect: number) => void
+    observe: (frame: CupFrame, aspect: number) => void,
+    membership: { key: string; counts: [number, number] } | null = null,
+    observeRaw?: (frame: CupFrame, aspect: number) => void
 ) {
+    const membershipRef = useRef(membership);
+    const rawObserverRef = useRef(observeRaw);
+    useEffect(() => {
+        membershipRef.current = membership;
+        rawObserverRef.current = observeRaw;
+    }, [membership, observeRaw]);
     const [status, setStatus] = useState('Cup outlines off');
     const [previous, setPrevious] = useState({ enabled, groupId, areas });
     if (previous.enabled !== enabled || previous.groupId !== groupId || previous.areas !== areas) {
@@ -70,7 +79,11 @@ export function useCupDetector(
         let latencies: number[] = [];
         let lastCupCount = 0;
         let heldCupCount = 0;
+        let ignoredCupCount = 0;
+        let playingCupCount = 0;
         const persistence = new CupPersistence();
+        const rackMembership = new CupMembership();
+        const searchAreas = cupSearchAreas(areas);
         const attributes = () => ({ cameraId, groupId, model, backend: 'wasm-worker' });
         const log = (message: string, extra: Record<string, string | number> = {}) => {
             void import('@sentry/browser').then((Sentry) =>
@@ -120,16 +133,32 @@ export function useCupDetector(
             const ageMs = performance.now() - capturedAt;
             // Leave headroom for the peer connection; old positions shouldn't outline new frames.
             if (ageMs < MAX_AGE_MS * 0.9) {
+                const selected = rackMembership.observe(
+                    data.cups,
+                    areas,
+                    surface.width / surface.height,
+                    performance.now(),
+                    membershipRef.current?.counts ?? null,
+                    membershipRef.current?.key ?? ''
+                );
+                ignoredCupCount = selected.ignored;
+                playingCupCount = selected.cups.length;
                 const frame = {
                     version: 1 as const,
                     model,
                     sequence: ++sequence,
                     ageMs,
-                    cups: data.cups,
+                    cups: selected.ambiguous ? [] : selected.cups,
                 };
-                const shown = persistence.observe(data.cups, performance.now());
-                heldCupCount = shown.held;
-                send({ ...frame, cups: shown.cups });
+                const shown = persistence.observe(selected.cups, performance.now());
+                const limit = membershipRef.current?.counts.reduce((sum, count) => sum + count, 0);
+                const displayed = limit === undefined ? shown.cups : shown.cups.slice(0, limit);
+                heldCupCount = Math.max(0, displayed.length - selected.cups.length);
+                send({ ...frame, cups: displayed });
+                rawObserverRef.current?.(
+                    { ...frame, cups: data.cups },
+                    surface.width / surface.height
+                );
                 observe(frame, surface.width / surface.height);
             } else dropped++;
             nextAt = performance.now() + 150;
@@ -138,7 +167,7 @@ export function useCupDetector(
             latencies.push(data.inferenceMs);
             setStatus(
                 ageMs < MAX_AGE_MS * 0.9
-                    ? `Cup outlines: ${lastCupCount} detected${heldCupCount ? ` · ${heldCupCount} briefly tracked` : ''}`
+                    ? `Cup outlines: ${playingCupCount} in racks${ignoredCupCount ? ` · ${ignoredCupCount} outside play` : ''}${heldCupCount ? ` · ${heldCupCount} briefly tracked` : ''}`
                     : 'Recognition is too slow on this device; outlines paused'
             );
         };
@@ -166,7 +195,13 @@ export function useCupDetector(
                 waiting = true;
                 deadline = setTimeout(() => fail('Inference timed out'), 20_000);
                 worker.postMessage(
-                    { type: 'frame', pixels, width: surface.width, height: surface.height, areas },
+                    {
+                        type: 'frame',
+                        pixels,
+                        width: surface.width,
+                        height: surface.height,
+                        areas: searchAreas,
+                    },
                     [pixels.buffer]
                 );
             } catch (error) {
@@ -182,6 +217,8 @@ export function useCupDetector(
                 dropped,
                 cupCount: lastCupCount,
                 heldCupCount,
+                ignoredCupCount,
+                playingCupCount,
                 inferenceP50Ms: Math.round(latencies[Math.floor(latencies.length * 0.5)] ?? 0),
                 inferenceP95Ms: Math.round(latencies[Math.floor(latencies.length * 0.95)] ?? 0),
                 hidden: document.hidden ? 1 : 0,

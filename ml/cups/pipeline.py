@@ -254,6 +254,10 @@ def train(args):
                   multi_scale=False, use_ema=True, eval_base_model=True, checkpoint_interval=5, run_test=False,
                   amp_dtype=None if args.device == 'cpu' else 'auto', early_stopping=True,
                   early_stopping_patience=10, tensorboard=False, wandb=False)
+    if args.learning_rate is not None:
+        kwargs['lr'] = args.learning_rate
+    if args.encoder_learning_rate is not None:
+        kwargs['lr_encoder'] = args.encoder_learning_rate
     if args.augment:
         kwargs.update(augmentation_backend='albumentations', scale_jitter=False, aug_config={
             'HorizontalFlip': {'p': .5},
@@ -265,6 +269,8 @@ def train(args):
     # those sessions in train; new held-out sessions must remain unseen by both models.
     provenance['parentCheckpointSha256'] = digest(args.checkpoint) if args.checkpoint else 'official-coco'
     provenance['colorAugmentation'] = bool(args.augment)
+    provenance['learningRate'] = args.learning_rate
+    provenance['encoderLearningRate'] = args.encoder_learning_rate
     write_json(Path(args.output) / 'dataset-provenance.json', provenance)
     model.train(**kwargs)
     print('Training complete. Evaluate on the held-out test split before promotion.')
@@ -390,7 +396,7 @@ def main():
     p = sub.add_parser('prelabel'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--threshold', type=float, default=.2); p.set_defaults(fn=prelabel)
     p = sub.add_parser('review'); p.add_argument('--dataset', required=True); p.add_argument('--port', type=int, default=3198); p.set_defaults(fn=lambda args: __import__('review').serve(args))
     p = sub.add_parser('split'); p.add_argument('--dataset', required=True); p.add_argument('--seed', type=int, default=42); p.add_argument('--session-splits'); p.set_defaults(fn=split)
-    p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.set_defaults(fn=train)
+    p = sub.add_parser('train'); p.add_argument('--dataset', required=True); p.add_argument('--output', required=True); p.add_argument('--epochs', type=int, default=50); p.add_argument('--device', default='cpu', choices=['cpu','cuda','mps']); p.add_argument('--seed', type=int, default=42); p.add_argument('--freeze-encoder', action='store_true'); p.add_argument('--checkpoint'); p.add_argument('--augment', action='store_true'); p.add_argument('--learning-rate', type=float); p.add_argument('--encoder-learning-rate', type=float); p.set_defaults(fn=train)
     p = sub.add_parser('evaluate'); p.add_argument('--dataset', required=True); p.add_argument('--checkpoint'); p.add_argument('--split', default='test', choices=['valid','test']); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--output', required=True); p.set_defaults(fn=evaluate)
     p = sub.add_parser('publish'); p.add_argument('--model', required=True); p.add_argument('--tag', required=True); p.add_argument('--output', required=True); p.add_argument('--target'); p.add_argument('--prepare-only', action='store_true'); p.set_defaults(fn=publish)
     p = sub.add_parser('export'); p.add_argument('--checkpoint'); p.add_argument('--report'); p.add_argument('--output', required=True); p.add_argument('--id', required=True); p.add_argument('--threshold', type=float, default=.3); p.add_argument('--min-precision', type=float, default=.85); p.add_argument('--min-recall', type=float, default=.8); p.set_defaults(fn=export)

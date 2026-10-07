@@ -47,15 +47,16 @@ const dot = (a: Point, b: Point) => a.x * b.x + a.y * b.y;
 
 /** Rim centres stay put when an overlapping cup hides part of another cup's body. */
 export function cupPoints(cups: Cup[], area: PlayingArea, aspect: number): Point[] {
+    const left = Math.max(0, area.x - area.width * 0.4);
+    const right = Math.min(1, area.x + area.width * 1.4);
+    const upper = Math.max(0, area.y - area.height * 0.4);
+    const lower = Math.min(1, area.y + area.height * 1.4);
     return cups.flatMap((cup) => {
         const top = Math.min(...cup.outline.map((p) => p[1]));
         const bottom = Math.max(...cup.outline.map((p) => p[1]));
         const rim = cup.outline.filter((p) => p[1] <= top + (bottom - top) * 0.25);
         const x = (Math.min(...rim.map((p) => p[0])) + Math.max(...rim.map((p) => p[0]))) / 2;
-        return x >= area.x &&
-            x <= area.x + area.width &&
-            top >= area.y &&
-            top <= area.y + area.height
+        return x >= left && x <= right && top >= upper && top <= lower
             ? [{ x: x * aspect, y: top }]
             : [];
     });
