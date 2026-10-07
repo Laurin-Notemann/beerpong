@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import subprocess
 import random
+import math
 
 
 def read(path):
@@ -141,9 +142,9 @@ def proposals(args):
                     if not 4 <= size <= 180 or max(bw, bh) > 25 or max(bw, bh) / min(bw, bh) > 3 or size / (bw * bh) < .25:
                         continue
                     cx, cy = centers[index]
-                    padding = max(12, int(max(bw, bh) * 1.5))
-                    left, top = max(0, round(cx-padding)), max(0, round(cy-padding))
-                    right, bottom = min(frame.shape[1], round(cx+padding)), min(frame.shape[0], round(cy+padding))
+                    padding = max(12, max(bw, bh) * 1.5)
+                    left, top = max(0, math.floor(cx-padding+.5)), max(0, math.floor(cy-padding+.5))
+                    right, bottom = min(frame.shape[1], math.floor(cx+padding+.5)), min(frame.shape[0], math.floor(cy+padding+.5))
                     patch = cv2.resize(frame[top:bottom, left:right], (96, 96))
                     identifier = f'{len(examples):06d}'
                     path = out / 'patches' / (identifier + '.jpg')
@@ -153,6 +154,8 @@ def proposals(args):
                                      'session_id': case['session_id'], 'case_id': case['id'],
                                      'recording_id': clip['id'], 'seconds': float(time),
                                      'center': [cx/frame.shape[1], cy/frame.shape[0]],
+                                     'reviewPoint': [(cx-left)/(right-left), (cy-top)/(bottom-top)],
+                                     'features': raw_features(frame, cx, cy, max(bw, bh)/2),
                                      'radius': max(bw, bh)/640/2,
                                      'color': 'orange' if orange[labels == index].mean() > .5 else 'white',
                                      'label': None, 'reviewer': None, 'cupRole': 'unknown',
@@ -185,7 +188,7 @@ def review(args):
     <button onclick="label('orange-ball')">Orange ball</button><button onclick="label('white-ball')">White ball</button>
     <button onclick="label('negative')">Other object</button><button onclick="label(null)">Uncertain / skip</button>
     <label>Cup context <select id="role"><option value="unknown">Unknown / no cup</option><option value="playing">Playing cup</option><option value="removed">Removed cup</option></select></label><button onclick="i=Math.max(0,i-1);show()">Previous</button>
-    <script>let xs=[],i=0;async function show(){const x=xs[i];role.value=x?.cupRole||'unknown';if(!x){info.textContent='Review complete';return;}const image=new Image();image.src='/'+x.path;image.onload=()=>{const c=view.getContext('2d');c.drawImage(image,0,0,384,384);c.strokeStyle='#00ff99';c.beginPath();c.moveTo(180,192);c.lineTo(204,192);c.moveTo(192,180);c.lineTo(192,204);c.stroke()};info.textContent=JSON.stringify({index:i,total:xs.length,id:x.id,session:x.session_id,seconds:x.seconds,label:x.label})}
+    <script>let xs=[],i=0;async function show(){const x=xs[i];role.value=x?.cupRole||'unknown';if(!x){info.textContent='Review complete';return;}const image=new Image();image.src='/'+x.path;image.onload=()=>{const c=view.getContext('2d');c.drawImage(image,0,0,384,384);const [px,py]=x.reviewPoint||[.5,.5],cx=px*384,cy=py*384;c.strokeStyle='#00ff99';c.beginPath();c.moveTo(cx-12,cy);c.lineTo(cx+12,cy);c.moveTo(cx,cy-12);c.lineTo(cx,cy+12);c.stroke()};info.textContent=JSON.stringify({index:i,total:xs.length,id:x.id,session:x.session_id,seconds:x.seconds,label:x.label})}
     async function label(value){await fetch('/label',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:xs[i].id,label:value,cupRole:role.value})});i++;show()}
     fetch('/examples').then(r=>r.json()).then(v=>{xs=v;show()})</script></body></html>"""
     class Handler(BaseHTTPRequestHandler):
@@ -239,6 +242,32 @@ def split(args):
     print(json.dumps({s: sum(e['split'] == s for e in approved) for s in ('train', 'valid', 'test')}))
 
 
+def raw_features(bgr, center_x, center_y, radius):
+    """Exact source-pixel sampler from ballClassifier.ts; preview JPEGs do not train the model."""
+    import numpy as np
+    height, width = bgr.shape[:2]
+    padding = max(12*width/640, radius*3)
+    left, top = max(0, math.floor(center_x-padding+.5)), max(0, math.floor(center_y-padding+.5))
+    right, bottom = min(width, math.floor(center_x+padding+.5)), min(height, math.floor(center_y+padding+.5))
+    yy, xx = np.mgrid[0:8, 0:8]
+    sx = left+(xx+.5)*(right-left)/8-.5
+    sy = top+(yy+.5)*(bottom-top)/8-.5
+    x0 = np.clip(np.floor(sx).astype(int),0,width-1); x1 = np.minimum(width-1,x0+1)
+    y0 = np.clip(np.floor(sy).astype(int),0,height-1); y1 = np.minimum(height-1,y0+1)
+    dx = (sx-np.floor(sx))[...,None]; dy = (sy-np.floor(sy))[...,None]
+    rgb = bgr[...,::-1].astype(float)
+    patch = ((rgb[y0,x0]*(1-dx)+rgb[y0,x1]*dx)*(1-dy)+(rgb[y1,x0]*(1-dx)+rgb[y1,x1]*dx)*dy)/255
+    r,g,b = patch[:,:,0],patch[:,:,1],patch[:,:,2]
+    distance = np.hypot(xx-3.5,yy-3.5); values=[]
+    for low,high in ((0,1.5),(1.5,3),(3,6)):
+        mask=(distance>=low)&(distance<high)
+        values.extend([r[mask].mean(),g[mask].mean(),b[mask].mean(),
+                       ((r>.45)&(g>.2)&(r>g*1.13)&(g>b*1.3)&(r-b>.17))[mask].mean(),
+                       ((patch.min(axis=2)>.6)&(patch.max(axis=2)-patch.min(axis=2)<.18))[mask].mean(),
+                       (patch.max(axis=2)-patch.min(axis=2))[mask].mean()])
+    return [float(v) for v in values]
+
+
 def features(dataset, split_name, color='orange'):
     import cv2
     import numpy as np
@@ -249,6 +278,12 @@ def features(dataset, split_name, color='orange'):
         path = root / e['path']
         if hashlib.file_digest(path.open('rb'), 'sha256').hexdigest() != e['sha256']:
             raise ValueError('Reviewed patch changed')
+        if 'features' in e:
+            values = e['features']
+            if len(values) != 18 or not all(isinstance(v,(int,float)) and math.isfinite(v) and 0 <= v <= 1 for v in values):
+                raise ValueError('Invalid source-pixel features')
+            x.append(values); y.append(e['label'] != 'negative')
+            continue
         image = cv2.cvtColor(cv2.imread(str(path)), cv2.COLOR_BGR2RGB)
         patch = cv2.resize(image, (8, 8), interpolation=cv2.INTER_LINEAR).astype(float) / 255
         rgb = patch.reshape(-1, 3)
