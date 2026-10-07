@@ -27,6 +27,16 @@ def digest(path):
         return hashlib.file_digest(file, 'sha256').hexdigest()
 
 
+def polygon_mask(polygons, width, height):
+    """Use the same pixel-center polygon convention as COCO training, including visible parts."""
+    import numpy as np
+    from pycocotools import mask
+    if not polygons:
+        return np.zeros((height, width), dtype=bool)
+    rles = mask.frPyObjects(polygons, height, width)
+    return mask.decode(mask.merge(rles)).astype(bool)
+
+
 def collect(args):
     """Only completed footage is collected, through read-only SSH/database/storage calls."""
     import boto3
@@ -287,11 +297,12 @@ def split(args):
                 scaled = [points * [frame['width'], frame['height']] for points in contours]
                 all_points = np.concatenate(scaled)
                 x, y = all_points.min(axis=0); xmax, ymax = all_points.max(axis=0)
-                visible = np.zeros((frame['height'], frame['width']), dtype=np.uint8)
-                for points in scaled:
-                    cv2.fillPoly(visible, [points.astype('int32')], 1)
+                segmentation = [points.reshape(-1).tolist() for points in scaled]
+                visible = polygon_mask(segmentation, frame['width'], frame['height'])
+                if not visible.any():
+                    raise ValueError('Visible cup annotation has no rasterized pixels: ' + frame['id'])
                 annotations.append({'id': len(annotations) + 1, 'image_id': image_id, 'category_id': 1,
-                                    'segmentation': [points.reshape(-1).tolist() for points in scaled],
+                                    'segmentation': segmentation,
                                     'bbox': [x, y, xmax - x, ymax - y], 'area': int(visible.sum()),
                                     'iscrowd': 0, 'cup_role': role})
         if not images:
@@ -342,7 +353,6 @@ def train(args):
 
 
 def evaluate(args):
-    import cv2
     import numpy as np
     root = Path(args.dataset).resolve()
     annotations = json.loads((root / 'coco' / args.split / '_annotations.coco.json').read_text())
@@ -365,9 +375,10 @@ def evaluate(args):
         for annotation in annotations['annotations']:
             if annotation['image_id'] != image['id']:
                 continue
-            target = np.zeros((image['height'], image['width']), dtype='uint8')
-            cv2.fillPoly(target, [np.array(poly).reshape(-1, 2).astype('int32') for poly in annotation['segmentation']], 1)
-            targets.append(target.astype(bool))
+            target = polygon_mask(annotation['segmentation'], image['width'], image['height'])
+            if not target.any():
+                raise ValueError('Visible cup annotation has no rasterized pixels')
+            targets.append(target)
             target_annotations.append(annotation)
         pairs = []
         for i, mask in enumerate(masks):
@@ -396,6 +407,7 @@ def evaluate(args):
     report = {'checkpointSha256': digest(args.checkpoint) if args.checkpoint else 'pretrained-coco',
               'datasetSha256': digest(root / 'coco/provenance.json'),
               'annotationSha256': digest(root / 'coco' / args.split / '_annotations.coco.json'), 'split': args.split, 'threshold': args.threshold,
+              'segmentationRasterization': 'coco-pixel-center',
               'precisionIoU50': tp / max(tp + fp, 1), 'recallIoU50': tp / max(tp + fn, 1),
               'meanMatchedMaskIoU': float(np.mean(ious)) if ious else 0,
               'inferenceP95Ms': float(np.percentile(latencies, 95)), 'counts': counts,
@@ -472,11 +484,12 @@ def evaluate_runtime(args):
         annotations = [a for a in gt['annotations'] if a['image_id'] == image['id']]
         targets = []
         for annotation in annotations:
-            mask = np.zeros((image['height'], image['width']), np.uint8)
-            cv2.fillPoly(mask, [np.array(p).reshape(-1, 2).astype(np.int32) for p in annotation['segmentation']], 1)
+            mask = polygon_mask(annotation['segmentation'], image['width'], image['height'])
+            if not mask.any():
+                raise ValueError('Visible cup annotation has no rasterized pixels')
             if annotation.get('cup_role') not in ('playing', 'removed', 'unknown'):
                 raise ValueError('Explicit playing/removed/unknown role required')
-            targets.append(mask.astype(bool))
+            targets.append(mask)
         row = observed[frame['id']]
         cohort = row['context']
         cohorts[cohort] = cohorts.get(cohort, 0) + 1
@@ -494,12 +507,12 @@ def evaluate_runtime(args):
                 if len(candidates) != 1:
                     raise ValueError('Worker outline outside its search montage')
                 side = candidates[0]; area = frame['areas'][side]
-                mask = np.zeros((image['height'], image['width']), np.uint8)
+                mapped_polygons = []
                 for outline in outlines:
                     p = np.array(outline, dtype=float)
                     q = np.column_stack([side*.5+(p[:, 0]-area['x'])/area['width']*.5, (p[:, 1]-area['y'])/area['height']])
-                    cv2.fillPoly(mask, [(q * [image['width'], image['height']]).astype(np.int32)], 1)
-                masks.append(mask.astype(bool))
+                    mapped_polygons.append((q * [image['width'], image['height']]).reshape(-1).tolist())
+                masks.append(polygon_mask(mapped_polygons, image['width'], image['height']))
             pairs = sorted([(float((p & t).sum()/max((p | t).sum(), 1)), i, j)
                             for i, p in enumerate(masks) for j, t in enumerate(targets)], reverse=True)
             used_predictions, used_targets = set(), set()
@@ -530,6 +543,7 @@ def evaluate_runtime(args):
     for score in list(totals.values()) + [score for metrics in cohort_metrics.values() for score in metrics.values()]:
         score.update(precisionIoU50=score['tp']/max(score['tp']+score['fp'], 1), recallIoU50=score['tp']/max(score['tp']+score['fn'], 1))
     report = dict(scope='worker-outline-and-playing-membership', split=args.split, model=artifact['model'],
+                  segmentationRasterization='coco-pixel-center',
                   workerSha256=worker_sha, visionSha256=vision_sha, membershipSourceSha256=membership['membershipSourceSha256'],
                   browserArtifactSha256=digest(args.results), annotationSha256=digest(gt_path),
                   datasetSha256=digest(root / 'coco/provenance.json'), eventsSha256=digest(args.events) if args.events else None,
@@ -600,6 +614,8 @@ def runtime_promotion(manifest, paths):
         native = manifest.get('validationEvaluation' if split == 'valid' else 'evaluation') or {}
         model = report.get('model', {})
         if (report.get('scope') != 'worker-outline-and-playing-membership' or report.get('split') != split
+                or report.get('segmentationRasterization') != 'coco-pixel-center'
+                or native.get('segmentationRasterization') != 'coco-pixel-center'
                 or model.get('sha256') != manifest['sha256'] or model.get('threshold') != manifest['threshold']
                 or report.get('workerSha256') != digest(repo / 'apps/web/src/tv/lib/cupWorker.ts')
                 or report.get('visionSha256') != digest(repo / 'apps/web/src/tv/lib/cupVision.ts')
@@ -616,7 +632,7 @@ def runtime_promotion(manifest, paths):
                 raise ValueError('Need sufficient reviewed visible playing-cup runtime counts')
             if tp / max(tp + fp, 1) < .98 or tp / max(tp + fn, 1) < .98:
                 raise ValueError('Playing-cup runtime precision and recall must both reach 98 percent')
-        reports[split] = {key: report[key] for key in ('scope', 'split', 'workerSha256', 'visionSha256', 'membershipSourceSha256',
+        reports[split] = {key: report[key] for key in ('scope', 'split', 'segmentationRasterization', 'workerSha256', 'visionSha256', 'membershipSourceSha256',
                                                      'browserArtifactSha256', 'annotationSha256', 'datasetSha256',
                                                      'cohorts', 'cohortMetrics', 'metrics', 'limitations')}
         reports[split]['reportSha256'] = digest(path)
