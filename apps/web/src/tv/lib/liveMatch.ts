@@ -26,6 +26,7 @@ export interface LiveTeamState {
 /** a cup where it's drawn, and whether it's still on the table */
 export interface RackCup {
     at: CupPosition;
+    original?: CupPosition;
     up: boolean;
 }
 
@@ -69,6 +70,7 @@ export function foldLiveMatch(
         score: teamScore(state, side, cups),
         cups: cupLayout(state.cupHits, side, state.reracks[side]).map((i) => ({
             at: i.drawn,
+            original: i.cup,
             up: !findHit(state.cupHits, side, i.cup),
         })),
     });

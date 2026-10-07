@@ -6,6 +6,7 @@ import {
     cameraPositionLabel,
     cameraSubjectLabel,
 } from '@/lib/tvDisplay';
+import type { VisionHitDto } from '@/openapi/openapi';
 import { Avatar } from '~/tv/components/Avatar';
 import { CameraVideo } from '~/tv/components/CameraVideo';
 import { CupRack } from '~/tv/components/CupRack';
@@ -34,6 +35,8 @@ export function CameraView({
     rotation = 0,
     cameraId,
     corners,
+    hit,
+    suspended = false,
 }: {
     stream: MediaStream | null;
     match: LiveMatchView | undefined;
@@ -43,6 +46,8 @@ export function CameraView({
     videoFlipped?: boolean;
     rotation?: CameraRotation;
     cameraId: string;
+    hit?: VisionHitDto | null;
+    suspended?: boolean;
     corners: (CameraCorner & {
         stream: MediaStream | null;
         status: string;
@@ -57,6 +62,8 @@ export function CameraView({
                     flipped={videoFlipped}
                     rotation={rotation}
                     cameraId={cameraId}
+                    hit={hit}
+                    suspended={suspended}
                 />
             )}
             {corners.map((corner) => (
@@ -78,6 +85,8 @@ export function CameraView({
                             flipped={corner.config.cameraVideoFlipped}
                             rotation={corner.config.cameraRotation}
                             cameraId={corner.cameraId}
+                            suspended={suspended}
+                            hit={hit?.cameraId === corner.cameraId ? hit : null}
                         />
                     ) : (
                         <div
@@ -117,7 +126,11 @@ export function CameraView({
                 )}
             </header>
             {match ? (
-                <ScoreBar match={match} flipped={flipped} />
+                <ScoreBar
+                    match={match}
+                    flipped={flipped}
+                    hit={hit?.liveMatchId === match.id ? hit : null}
+                />
             ) : (
                 <div
                     className="absolute right-0 bottom-0 left-0 px-[2.5rem] pt-[6rem] pb-[2.5rem] text-[2rem] text-text-2"
@@ -174,7 +187,15 @@ function LatestMove({ match, flipped }: { match: LiveMatchView; flipped: boolean
 }
 
 /** the complete scoreboard sides swap; the camera video and match data stay as recorded */
-function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }) {
+function ScoreBar({
+    match,
+    flipped,
+    hit,
+}: {
+    match: LiveMatchView;
+    flipped: boolean;
+    hit?: VisionHitDto | null;
+}) {
     const left = flipped ? 'red' : 'blue';
     const right = flipped ? 'blue' : 'red';
     const now = useNow();
@@ -190,9 +211,20 @@ function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }
                 <span className="tracking-[0.18em] text-live">LIVE</span>
                 <span className="tabular text-text-2">{elapsed}</span>
             </div>
+            {hit && (
+                <div
+                    role="status"
+                    className="rounded-full bg-black/80 px-5 py-2 text-[1.5rem] font-bold"
+                    style={{ color: '#ffe27a' }}
+                >
+                    Possible hit · {hit.team === 'blue' ? 'Blue' : 'Red'} target
+                    {hit.cup ? ` · cup ${hit.cup.x},${hit.cup.y}` : ' · cup identity unknown'}
+                </div>
+            )}
             <div className="flex w-full items-center gap-[2rem]">
                 <CupRack
                     cups={match[left].cups}
+                    highlight={hit?.team === left ? hit.cup : null}
                     team={left}
                     side="left"
                     className="w-[8rem] shrink-0"
@@ -216,6 +248,7 @@ function ScoreBar({ match, flipped }: { match: LiveMatchView; flipped: boolean }
                 <Players team={match[right]} side={right} align="right" />
                 <CupRack
                     cups={match[right].cups}
+                    highlight={hit?.team === right ? hit.cup : null}
                     team={right}
                     side="right"
                     className="w-[8rem] shrink-0"

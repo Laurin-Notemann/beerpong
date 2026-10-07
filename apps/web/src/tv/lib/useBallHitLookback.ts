@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
 import { ballModel } from '~/tv/lib/ballClassifier';
-import { LOOKBACK_MS, type HitEntry, type HitObservation } from '~/tv/lib/ballVision';
+import type { BallFrame } from '~/tv/lib/ballGeometry';
+import {
+    LOOKBACK_MS,
+    type HitEntry,
+    type HitObservation,
+    type BallCandidate,
+} from '~/tv/lib/ballVision';
 import { cupSearchAreas } from '~/tv/lib/cupMembership';
 import type { CupFrame, PlayingArea } from '~/tv/lib/cupVision';
+import type { HitProposal } from '~/tv/lib/hitProposals';
 
 /** This camera-only path proposes evidence; recorded hits and the shared score stay authoritative. */
 export function useBallHitLookback(
@@ -17,8 +24,33 @@ export function useBallHitLookback(
         serverAt: number;
         receivedAt: number;
         clockUncertaintyMs: number;
-    } | null
+    } | null,
+    live?: {
+        context: string;
+        send: (frame: BallFrame) => void;
+        propose: (proposal: HitProposal, context: string) => void;
+        observe: (frame: CupFrame, aspect: number) => void;
+    }
 ) {
+    const liveRef = useRef(live);
+    useEffect(() => {
+        liveRef.current = live;
+    }, [live]);
+    const epoch = useRef(0);
+    const sourceContext = live?.context;
+    useEffect(() => {
+        epoch.current = Date.now();
+        liveRef.current?.send({
+            version: 1,
+            enabled: false,
+            since: epoch.current,
+            model: ballModel?.id ?? 'motion-proposals',
+            sequence: 0,
+            ageMs: 0,
+            balls: [],
+        });
+        worker.current?.postMessage({ type: 'reset', context: sourceContext ?? '' });
+    }, [sourceContext]);
     const worker = useRef<Worker | null>(null);
     const seen = useRef(new Set<string>());
     const [latest, setLatest] = useState<HitObservation | null>(null);
@@ -79,6 +111,15 @@ export function useBallHitLookback(
             clearInterval(timers.heartbeat);
             if (worker.current === instance) worker.current = null;
             instance.terminate();
+            liveRef.current?.send({
+                version: 1,
+                enabled: false,
+                since: epoch.current,
+                model: ballModel?.id ?? 'motion-proposals',
+                sequence: 0,
+                ageMs: 0,
+                balls: [],
+            });
         };
         const fail = (message: string, phase: string) => {
             if (stopped) return;
@@ -103,6 +144,10 @@ export function useBallHitLookback(
                   type: 'frame';
                   frameId: number;
                   processingMs: number;
+                  at: number;
+                  context: string;
+                  balls: BallCandidate[];
+                  proposals: HitProposal[];
                   count: number;
                   staticCount?: number;
                   movingCount?: number;
@@ -125,6 +170,7 @@ export function useBallHitLookback(
                 capture =
                     data.canvas && typeof createImageBitmap !== 'undefined' ? 'bitmap' : 'pixels';
                 worker.current = instance;
+                instance.postMessage({ type: 'reset', context: liveRef.current?.context ?? '' });
                 log('state', { state: 'running', capture });
                 return;
             }
@@ -144,6 +190,21 @@ export function useBallHitLookback(
             } else {
                 if (data.frameId !== frameId) return;
                 busy = false;
+                const current = liveRef.current;
+                if (current && current.context === data.context) {
+                    const ageMs = Date.now() - data.at;
+                    if (ageMs >= 0 && ageMs <= 600)
+                        current.send({
+                            version: 1,
+                            enabled: true,
+                            since: epoch.current,
+                            model: ballModel?.id ?? 'motion-proposals',
+                            sequence: 0,
+                            ageMs,
+                            balls: data.balls,
+                        });
+                    for (const proposal of data.proposals) current.propose(proposal, data.context);
+                }
                 samples++;
                 proposals += data.count;
                 staticProposals += data.staticCount ?? 0;
@@ -211,6 +272,7 @@ export function useBallHitLookback(
                     instance.postMessage(
                         {
                             type: 'frame',
+                            context: liveRef.current?.context ?? '',
                             frameId: id,
                             pixels,
                             width,
@@ -238,6 +300,7 @@ export function useBallHitLookback(
                         instance.postMessage(
                             {
                                 type: 'frame',
+                                context: liveRef.current?.context ?? '',
                                 frameId: id,
                                 bitmap,
                                 width,
@@ -324,9 +387,11 @@ export function useBallHitLookback(
         }
         if (seen.current.size > 500) seen.current = new Set(snapshot.hits.map((h) => h.id));
     }, [snapshot, areas, firstTeam, video]);
-    const observe = useCallback((frame: CupFrame) => {
+    const observe = useCallback((frame: CupFrame, aspect: number) => {
+        liveRef.current?.observe(frame, aspect);
         worker.current?.postMessage({
             type: 'cups',
+            context: liveRef.current?.context ?? '',
             at: Date.now() - frame.ageMs,
             cups: frame.cups,
         });

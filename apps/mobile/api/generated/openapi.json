@@ -8,6 +8,406 @@
         }
     ],
     "paths": {
+        "/groups/{groupId}/vision-hits": {
+            "get": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "getVisionHits",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "liveMatchId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "review",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "description": "Only uncertain hits or unreviewed hits older than 30 seconds."
+                    },
+                    {
+                        "name": "training",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "description": "Only accepted/declined labels. Filter feedbackSource player/human-review for supervised training; ai-review is unapproved provenance."
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 50
+                        },
+                        "description": "Server caps at 200."
+                    },
+                    {
+                        "name": "before",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Exclusive stable cursor: createdAt RFC3339Nano, a literal | separator, and hit UUID (max 100 characters)."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeListVisionHitDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    }
+                },
+                "description": "Includes ended matches. Ordered createdAt DESC, id DESC. For the next page, pass the last DTO as before=<createdAt RFC3339Nano>|<id>; URL-encode the cursor. An empty page ends pagination. review and training cannot both be true."
+            }
+        },
+        "/groups/{groupId}/vision-hits/{id}": {
+            "get": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "getVisionHit",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeVisionHitDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    },
+                    "404": {
+                        "description": "visionHitNotFound: no suggestion in this group."
+                    }
+                }
+            },
+            "put": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "putVisionHit",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeVisionHitDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    },
+                    "404": {
+                        "description": "visionHitNotFound: no suggestion in this group."
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VisionHitCreateDto"
+                            }
+                        }
+                    }
+                },
+                "description": "Immutable idempotent proposal, revision 0/unreviewed. Bind cameraId to its first authenticated creator and sessionId to its first camera/creator (uploads share these bindings; no prior recording row is required). Validate active group match only on first insertion; exact creator/body retries work after ending. At most 60 new hits per camera per minute, at least 250 ms apart; same session/match/team/cup within 2 seconds is a duplicate. No scoring operation is emitted."
+            },
+            "delete": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "deleteVisionHit",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeString"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    },
+                    "404": {
+                        "description": "visionHitNotFound: no suggestion in this group."
+                    }
+                },
+                "description": "Idempotently deletes only the suggestion and feedback history. Does not remove footage or affect scores."
+            }
+        },
+        "/groups/{groupId}/vision-hits/{id}/feedback": {
+            "post": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "feedbackVisionHit",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeVisionHitDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    },
+                    "404": {
+                        "description": "visionHitNotFound: no suggestion in this group."
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VisionHitFeedbackDto"
+                            }
+                        }
+                    }
+                },
+                "description": "Compare-and-swap expectedRevision, increment revision, and append actor/source/model/reason audit. unreviewed resets the current label while retaining history. Same actor and exact feedback retry of the immediately previous revision returns the committed DTO. Other stale revisions return 409. AI feedback is not independent human approval."
+            }
+        },
+        "/groups/{groupId}/vision-hits/{id}/replay": {
+            "get": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "getVisionHitReplay",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeVisionHitReplayDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    },
+                    "404": {
+                        "description": "visionHitNotFound: no suggestion in this group."
+                    }
+                },
+                "description": "Fixed cameraOccurredAt -3s/+2s window. Ordered uploaded segments only, matching exact group/match/camera/session/creator. Offsets clip playback to the 5-second interval without duplicate overlap. Any coverage gap returns complete=false (HTTP 200); retry GET while uploads are pending. Footage deletion can make replay unavailable. URLs use the existing bucket public accessor and never enter realtime payloads."
+            },
+            "post": {
+                "tags": ["vision-hit-controller"],
+                "operationId": "postVisionHitReplay",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeVisionHitReplayDto"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "visionHitInvalid: invalid DTO or cursor."
+                    },
+                    "409": {
+                        "description": "visionHitConflict: immutable metadata, camera owner, or expected revision conflict."
+                    },
+                    "429": {
+                        "description": "visionHitRateLimited: camera proposal quota, duplicate, or replay cooldown."
+                    },
+                    "404": {
+                        "description": "visionHitNotFound: no suggestion in this group."
+                    }
+                },
+                "description": "Returns the same replay DTO. Broadcasts VISION_HITS/visionHitReplay only with complete coverage; pending is HTTP 200/complete=false. Complete requests have a 5-second per-hit cooldown (429). No scores change."
+            }
+        },
         "/groups/{groupId}/tournaments": {
             "get": {
                 "tags": ["tournament-controller"],
@@ -2656,6 +3056,502 @@
     },
     "components": {
         "schemas": {
+            "VisionHitCreateDto": {
+                "type": "object",
+                "properties": {
+                    "liveMatchId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "cameraId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9._:-]+$"
+                    },
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "model": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9._:-]+$"
+                    },
+                    "occurredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "UTC event time synchronized to the server. First insertion must be within the last 2 minutes and at most 10 seconds ahead."
+                    },
+                    "cameraOccurredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "UTC event time on the recording camera clock, within 10 minutes of occurredAt. Replay spans 3 seconds before to 2 seconds after."
+                    },
+                    "team": {
+                        "type": "string",
+                        "enum": ["red", "blue"],
+                        "description": "Target team; acceptance never changes the score."
+                    },
+                    "cup": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "x": {
+                                "type": "integer",
+                                "format": "int32",
+                                "minimum": 0,
+                                "maximum": 6
+                            },
+                            "y": {
+                                "type": "integer",
+                                "format": "int32",
+                                "minimum": 0,
+                                "maximum": 6
+                            }
+                        },
+                        "required": ["x", "y"],
+                        "description": "Original standing grid identity, or null when calibration is ambiguous."
+                    },
+                    "imageCup": {
+                        "type": "object",
+                        "properties": {
+                            "x": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "y": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "radius": {
+                                "type": "number",
+                                "minimum": 1e-6,
+                                "maximum": 0.5
+                            }
+                        },
+                        "required": ["x", "y", "radius"]
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Evidence score, not a calibrated probability."
+                    },
+                    "evidence": {
+                        "type": "object",
+                        "properties": {
+                            "approachDistance": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 10
+                            },
+                            "rimDistance": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 10
+                            },
+                            "speed": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                            },
+                            "observations": {
+                                "type": "integer",
+                                "format": "int32",
+                                "minimum": 1,
+                                "maximum": 10000
+                            },
+                            "occluded": {
+                                "type": "boolean"
+                            },
+                            "exitObserved": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "approachDistance",
+                            "rimDistance",
+                            "speed",
+                            "observations",
+                            "occluded",
+                            "exitObserved"
+                        ]
+                    }
+                },
+                "required": [
+                    "liveMatchId",
+                    "cameraId",
+                    "sessionId",
+                    "model",
+                    "occurredAt",
+                    "cameraOccurredAt",
+                    "team",
+                    "imageCup",
+                    "confidence",
+                    "evidence"
+                ]
+            },
+            "VisionHitDto": {
+                "type": "object",
+                "properties": {
+                    "liveMatchId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "cameraId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9._:-]+$"
+                    },
+                    "sessionId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "model": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9._:-]+$"
+                    },
+                    "occurredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "UTC event time synchronized to the server. First insertion must be within the last 2 minutes and at most 10 seconds ahead."
+                    },
+                    "cameraOccurredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "UTC event time on the recording camera clock, within 10 minutes of occurredAt. Replay spans 3 seconds before to 2 seconds after."
+                    },
+                    "team": {
+                        "type": "string",
+                        "enum": ["red", "blue"],
+                        "description": "Target team; acceptance never changes the score."
+                    },
+                    "cup": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "x": {
+                                "type": "integer",
+                                "format": "int32",
+                                "minimum": 0,
+                                "maximum": 6
+                            },
+                            "y": {
+                                "type": "integer",
+                                "format": "int32",
+                                "minimum": 0,
+                                "maximum": 6
+                            }
+                        },
+                        "required": ["x", "y"],
+                        "description": "Original standing grid identity, or null when calibration is ambiguous."
+                    },
+                    "imageCup": {
+                        "type": "object",
+                        "properties": {
+                            "x": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "y": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "radius": {
+                                "type": "number",
+                                "minimum": 1e-6,
+                                "maximum": 0.5
+                            }
+                        },
+                        "required": ["x", "y", "radius"]
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Evidence score, not a calibrated probability."
+                    },
+                    "evidence": {
+                        "type": "object",
+                        "properties": {
+                            "approachDistance": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 10
+                            },
+                            "rimDistance": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 10
+                            },
+                            "speed": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 100
+                            },
+                            "observations": {
+                                "type": "integer",
+                                "format": "int32",
+                                "minimum": 1,
+                                "maximum": 10000
+                            },
+                            "occluded": {
+                                "type": "boolean"
+                            },
+                            "exitObserved": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "approachDistance",
+                            "rimDistance",
+                            "speed",
+                            "observations",
+                            "occluded",
+                            "exitObserved"
+                        ]
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "revision": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                    },
+                    "label": {
+                        "type": "string",
+                        "enum": [
+                            "unreviewed",
+                            "accepted",
+                            "declined",
+                            "uncertain"
+                        ]
+                    },
+                    "feedbackSource": {
+                        "type": "string",
+                        "enum": ["player", "human-review", "ai-review", null],
+                        "nullable": true
+                    },
+                    "reviewerModel": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9._:-]+$",
+                        "nullable": true
+                    },
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 1000
+                    },
+                    "reviewedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "liveMatchId",
+                    "cameraId",
+                    "sessionId",
+                    "model",
+                    "occurredAt",
+                    "cameraOccurredAt",
+                    "team",
+                    "imageCup",
+                    "confidence",
+                    "evidence",
+                    "id",
+                    "groupId",
+                    "createdAt",
+                    "revision",
+                    "label",
+                    "feedbackSource",
+                    "reviewedAt"
+                ]
+            },
+            "VisionHitFeedbackDto": {
+                "type": "object",
+                "properties": {
+                    "expectedRevision": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0,
+                        "maximum": 2147483646
+                    },
+                    "label": {
+                        "type": "string",
+                        "enum": [
+                            "unreviewed",
+                            "accepted",
+                            "declined",
+                            "uncertain"
+                        ]
+                    },
+                    "source": {
+                        "type": "string",
+                        "enum": ["player", "human-review", "ai-review"]
+                    },
+                    "reviewerModel": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9._:-]+$",
+                        "nullable": true,
+                        "description": "Required non-null model identity for ai-review. AI labels remain separate from human supervised labels."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 1000
+                    }
+                },
+                "required": ["expectedRevision", "label", "source"]
+            },
+            "VisionHitReplaySegmentDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "startedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "endedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "startSeconds": {
+                        "type": "number",
+                        "minimum": 0
+                    },
+                    "endSeconds": {
+                        "type": "number",
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "id",
+                    "url",
+                    "startedAt",
+                    "endedAt",
+                    "startSeconds",
+                    "endSeconds"
+                ]
+            },
+            "VisionHitReplayDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "from": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "complete": {
+                        "type": "boolean"
+                    },
+                    "segments": {
+                        "type": "array",
+                        "description": "At most 64 ordered uploaded segments, clipped to the fixed replay window.",
+                        "items": {
+                            "$ref": "#/components/schemas/VisionHitReplaySegmentDto"
+                        }
+                    }
+                },
+                "required": ["id", "from", "to", "complete", "segments"]
+            },
+            "ResponseEnvelopeVisionHitDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["OK", "ERROR"]
+                    },
+                    "httpCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VisionHitDto"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetails"
+                    }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
+            "ResponseEnvelopeListVisionHitDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["OK", "ERROR"]
+                    },
+                    "httpCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VisionHitDto"
+                        }
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetails"
+                    }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
+            "ResponseEnvelopeVisionHitReplayDto": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["OK", "ERROR"]
+                    },
+                    "httpCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VisionHitReplayDto"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetails"
+                    }
+                },
+                "required": ["status", "httpCode", "data"]
+            },
             "TournamentTeamDto": {
                 "type": "object",
                 "properties": {

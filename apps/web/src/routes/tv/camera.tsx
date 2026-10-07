@@ -11,6 +11,7 @@ import { cupSearchAreas } from '~/tv/lib/cupMembership';
 import { validAreas, type PlayingArea } from '~/tv/lib/cupVision';
 import { type DisplayEvent, randomToken, useDisplayEvents } from '~/tv/lib/hooks';
 import { useBallHitLookback } from '~/tv/lib/useBallHitLookback';
+import { useCameraHitProposals } from '~/tv/lib/useCameraHitProposals';
 import { useCameraVisionRemote } from '~/tv/lib/useCameraVisionRemote';
 import { useCupDetector } from '~/tv/lib/useCupDetector';
 import { useCupFormationSync } from '~/tv/lib/useCupFormationSync';
@@ -163,6 +164,25 @@ function Camera() {
         firstTeam,
         syncTvId
     );
+    const recording = useCameraRecording(
+        identity.id,
+        identity.secret,
+        media.stream,
+        identity.config.groupId,
+        matches
+    );
+    const hitAssistance = useCameraHitProposals(
+        identity.id,
+        identity.secret,
+        ballEnabled && cupOutlines && !selectingAreas && !!media.stream,
+        cameraDevice,
+        syncingMatch,
+        areas,
+        firstTeam,
+        syncTvId,
+        recording,
+        matches
+    );
     const ballAreas = useMemo(() => (areas ? cupSearchAreas(areas) : null), [areas]);
     const ballLookback = useBallHitLookback(
         previewVideo,
@@ -170,7 +190,13 @@ function Camera() {
         identity.id,
         ballAreas,
         firstTeam,
-        matches
+        matches,
+        {
+            context: hitAssistance.context,
+            send: sender.sendBalls,
+            propose: hitAssistance.propose,
+            observe: hitAssistance.observe,
+        }
     );
     const cupStatus = useCupDetector(
         previewVideo,
@@ -192,13 +218,6 @@ function Camera() {
         ballLookback.observe
     );
     if (syncMatchId && matches && !syncingMatch) setSyncMatchId('');
-    const recording = useCameraRecording(
-        identity.id,
-        identity.secret,
-        media.stream,
-        identity.config.groupId,
-        matches
-    );
     const applyVision = useCallback(
         (command: VisionCommand) => {
             const { settings } = command;
@@ -246,6 +265,7 @@ function Camera() {
             syncStatus: formationSync.status,
             watching: sender.watching,
             recording: recording.recording,
+            recordingSessionId: recording.sessionId,
             pendingUploads: recording.pending,
             selectingAreas,
             ballHit: ballLookback.latest,
@@ -423,6 +443,7 @@ function Camera() {
                 <CameraVideo
                     stream={media.stream}
                     videoRef={previewVideo}
+                    hit={hitAssistance.latest}
                     rotation={identity.config.cameraRotation}
                     cameraId={identity.id}
                     flipped={identity.config.cameraVideoFlipped}
@@ -571,24 +592,49 @@ function Camera() {
                                 }
                             >
                                 {ballEnabled
-                                    ? 'Turn ball lookback off'
-                                    : 'Try experimental ball lookback'}
+                                    ? 'Turn hit assistance off'
+                                    : 'Try experimental hit assistance'}
                             </button>
+                            <button
+                                type="button"
+                                className="ml-3 min-h-11 rounded-xl bg-panel px-3 py-2 text-sm font-semibold"
+                                onClick={() => void hitAssistance.clear()}
+                            >
+                                Clear suggestion
+                            </button>
+                            {hitAssistance.error && (
+                                <p role="alert" className="text-red">
+                                    {hitAssistance.error}
+                                </p>
+                            )}
+                            {hitAssistance.latest && (
+                                <p role="status">
+                                    Possible hit on {hitAssistance.latest.team} — review in the app.
+                                </p>
+                            )}
                             <p role="status">{cupStatus}</p>
+                            {ballEnabled && !syncingMatch && (
+                                <p role="status">
+                                    Choose the active match and map both playing areas to enable hit
+                                    suggestions.
+                                </p>
+                            )}
                             {ballEnabled && (
                                 <p>
-                                    Ball evidence is experimental; recorded hits stay authoritative.
+                                    Experimental motion assistance supports orange/white balls only;
+                                    other colors are unsupported. It can miss or misidentify hits.
+                                    Confirm in the app; scores stay unchanged.
                                 </p>
                             )}
                             <label className="mt-2 block">
-                                Sync formations to match
+                                Match for assistance and formation sync
                                 <select
                                     className="ml-2 min-h-11 rounded-xl bg-panel px-3 text-text"
                                     value={syncMatchId}
                                     disabled={!cupOutlines || !areas}
                                     onChange={(event) => setSyncMatchId(event.target.value)}
                                 >
-                                    <option value="">Off</option>
+                                    <option value="">Choose a match (assistance paused)</option>
                                     {(matches?.formations ?? []).map((match, index) => (
                                         <option key={match.id} value={match.id}>
                                             Live match {index + 1} · {match.id.slice(0, 8)}

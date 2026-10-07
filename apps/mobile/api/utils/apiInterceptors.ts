@@ -24,6 +24,10 @@ const EXPECTED_ERROR_CODES = new Set([
     'liveMatchNotFound',
     // the TV went off while the TV remote showed it
     'tvNotFound',
+    // camera suggestions can be reviewed/deleted elsewhere, or replayed moments ago
+    'visionHitNotFound',
+    'visionHitConflict',
+    'visionHitRateLimited',
     // a mistyped TV code (Add TV)
     'tvCodeNotFound',
     // the app signs up again (useAuth)

@@ -12,6 +12,7 @@ const MOVEMENT_ANIMATION_DURATION_MS = 0;
 
 export interface CupProps {
     disabled?: boolean;
+    highlighted?: boolean;
     color: string;
     x: number;
     y: number;
@@ -24,6 +25,7 @@ export interface CupProps {
 
 export function Cup({
     disabled = false,
+    highlighted = false,
     color,
     x,
     y,
@@ -59,10 +61,14 @@ export function Cup({
                         height: width,
 
                         backgroundColor: disabled ? '#2E2E2E' : color,
-                        borderColor: '#222',
+                        borderColor: highlighted ? '#FFD46A' : '#222',
 
                         borderRadius: width / 2,
-                        borderWidth: disabled ? 0 : width / 16,
+                        borderWidth: highlighted
+                            ? Math.max(3, width / 10)
+                            : disabled
+                              ? 0
+                              : width / 16,
                     },
                     animatedStyle,
                 ]}

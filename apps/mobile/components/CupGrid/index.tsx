@@ -14,6 +14,8 @@ export interface CupFormationProps {
      * @default #EE4A58 (our red color)
      */
     color?: string;
+    /** A suggestion highlight in drawn grid coordinates; never changes cup state. */
+    highlightedCup?: { x: number; y: number };
     /**
      * scales the cup formation to the specified width
      *
@@ -83,6 +85,7 @@ const DRAG_DISTANCE = 8;
 const CupGrid = ({
     color = '#EE4A58', // our red color
     width,
+    highlightedCup,
 
     canEdit = false,
     canAddOrRemoveCups = canEdit,
@@ -163,6 +166,10 @@ const CupGrid = ({
                             x={cup.pos.posX}
                             y={cup.pos.posY}
                             width={cupRadius * 2}
+                            highlighted={
+                                highlightedCup?.x === cup.x &&
+                                highlightedCup?.y === cup.y
+                            }
                             // editing moves cups; pro mode drags pick the scorer
                             onPan={canEdit ? getCupPanGesture(cup) : undefined}
                             onQuickDrag={

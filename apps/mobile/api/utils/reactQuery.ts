@@ -24,6 +24,7 @@ export const QK = {
 
     groupCode: 'groupCode',
     tournaments: 'tournaments',
+    visionHits: 'visionHits',
 };
 
 /**

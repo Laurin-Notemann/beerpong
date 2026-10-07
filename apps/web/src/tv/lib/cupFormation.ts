@@ -100,6 +100,23 @@ function project(points: Point[], template: GridCup[], transform: Transform): Fi
  * ten cups; subsequent frames reuse its calibration so the rack cannot drift with jitter. */
 export class FormationFitter {
     private fitted: Fit | null = null;
+    /** Identity requires a measured plane, never the small-rack fallback. Return drawn slot only
+     * when its projection is unique; the caller maps it back to the original standing cup. */
+    identify(point: Point, current: GridCup[]): GridCup | null {
+        if (!this.fitted) return null;
+        const { origin, across, depth } = this.fitted.transform;
+        const determinant = cross(across, depth);
+        if (Math.abs(determinant) < 1e-8) return null;
+        const relative = subtract(point, origin);
+        const x = cross(relative, depth) / determinant;
+        const y = cross(across, relative) / determinant;
+        const slots = current
+            .map((slot) => ({ slot, d: Math.hypot(x - slot.x, y - slot.y) }))
+            .sort((a, b) => a.d - b.d);
+        if (!slots.length || slots[0].d > 0.45 || (slots[1] && slots[1].d - slots[0].d < 0.25))
+            return null;
+        return slots[0].slot;
+    }
     observe(
         cups: Cup[],
         area: PlayingArea,

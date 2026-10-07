@@ -4,6 +4,8 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSharedValue } from 'react-native-reanimated';
 
+import { useGroup } from '@/api/calls/seasonHooks';
+import { useCurrentVisionSuggestion } from '@/api/calls/visionHitHooks';
 import ErrorScreen from '@/components/ErrorScreen';
 import { InsetFree } from '@/components/liveMatch/InsetFree';
 import { LiveMatchEnded } from '@/components/liveMatch/LiveMatchEnded';
@@ -51,6 +53,8 @@ export default function LiveMatchPage() {
     const [isDraggingCup, setIsDraggingCup] = useState(false);
 
     const isLive = !!screen.header && !screen.ended;
+    const currentGroupId = useGroup().groupId;
+    const vision = useCurrentVisionSuggestion(currentGroupId, id, isLive);
 
     const body = (() => {
         if (screen.ended === 'finished') {
@@ -77,7 +81,11 @@ export default function LiveMatchPage() {
                         id={screen.header?.tournamentId}
                         stage={screen.header?.tournamentStage}
                     />
-                    <Scoreboard red={screen.red} blue={screen.blue} />
+                    <Scoreboard
+                        red={screen.red}
+                        blue={screen.blue}
+                        suggestedTarget={isLive ? vision.hit?.team : undefined}
+                    />
                     <PageTabs
                         titles={['Cups', 'Points', 'Moves']}
                         progress={pagerProgress}
@@ -99,6 +107,9 @@ export default function LiveMatchPage() {
                         >
                             <NewMatchCups
                                 liveMatchId={id}
+                                visionHit={vision.hit}
+                                visionError={vision.isError}
+                                retryVision={() => void vision.refetch()}
                                 onDraggingChange={setIsDraggingCup}
                             />
                             <CreateMatchAssignPoints

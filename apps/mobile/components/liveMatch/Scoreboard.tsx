@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { ScoreChip } from '@/components/liveMatch/ScoreChip';
 import { TeamBadge, TeamBadgePlayer } from '@/components/liveMatch/TeamBadge';
 import { useNextTokens } from '@/components/next/tokens';
+import { CupTeam } from '@/lib/cupHits';
 import { teamNames } from '@/lib/liveMatch/labels';
 
 /**
@@ -13,9 +14,11 @@ import { teamNames } from '@/lib/liveMatch/labels';
 export function Scoreboard({
     red,
     blue,
+    suggestedTarget,
 }: {
     red: { players: TeamBadgePlayer[]; score: number };
     blue: { players: TeamBadgePlayer[]; score: number };
+    suggestedTarget?: CupTeam;
 }) {
     const t = useNextTokens();
     const label = (name: string, team: typeof red) =>
@@ -24,7 +27,7 @@ export function Scoreboard({
     return (
         <View
             accessible
-            accessibilityLabel={`${label('Blue', blue)}. ${label('Red', red)}`}
+            accessibilityLabel={`${label('Blue', blue)}. ${label('Red', red)}${suggestedTarget ? `. Camera suggested hit on ${suggestedTarget} cups` : ''}`}
             style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -38,14 +41,56 @@ export function Scoreboard({
                 backgroundColor: t.surface,
             }}
         >
-            <View style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <View
+                style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    borderRadius: 8,
+                    backgroundColor:
+                        suggestedTarget === 'blue' ? t.blueTint : undefined,
+                }}
+            >
                 <TeamBadge team="blue" players={blue.players} />
+                {suggestedTarget === 'blue' && (
+                    <View
+                        pointerEvents="none"
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: 8,
+                            borderWidth: 2,
+                            borderColor: t.blue,
+                        }}
+                    />
+                )}
             </View>
             <ScoreChip team="blue" value={blue.score} />
             <Text style={{ color: t.textSecondary, fontSize: 17 }}>–</Text>
             <ScoreChip team="red" value={red.score} />
-            <View style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <View
+                style={{
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    borderRadius: 8,
+                    backgroundColor:
+                        suggestedTarget === 'red' ? t.redTint : undefined,
+                }}
+            >
                 <TeamBadge team="red" players={red.players} align="end" />
+                {suggestedTarget === 'red' && (
+                    <View
+                        pointerEvents="none"
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: 8,
+                            borderWidth: 2,
+                            borderColor: t.red,
+                        }}
+                    />
+                )}
             </View>
         </View>
     );

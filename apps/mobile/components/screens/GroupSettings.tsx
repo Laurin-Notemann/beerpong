@@ -110,6 +110,14 @@ export default function GroupSettingsScreen({
                             onPress={() => nav.navigate('tvRemote')}
                         />
                         <MenuItem
+                            title="Camera Review"
+                            headIcon="camera-outline"
+                            tailIconType="next"
+                            onPress={() =>
+                                nav.navigate('visionReview', { groupId: id })
+                            }
+                        />
+                        <MenuItem
                             title="Versus Premium"
                             headIcon="check-decagram"
                             tailIconType="next"

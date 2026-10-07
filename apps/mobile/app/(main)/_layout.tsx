@@ -126,6 +126,8 @@ export default function MainLayout() {
                         options={modalStyles}
                     />
                     <Stack.Screen name="scoreClips" options={modalStyles} />
+                    <Stack.Screen name="visionReplay" options={modalStyles} />
+                    <Stack.Screen name="visionReview" />
                     <Stack.Screen
                         name="editMatchPoints"
                         options={modalStyles}

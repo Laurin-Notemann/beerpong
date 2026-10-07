@@ -1,8 +1,11 @@
 import { BallHistory, BallTracker, type HitEntry } from '~/tv/lib/ballVision';
 import type { Cup, PlayingArea } from '~/tv/lib/cupVision';
+import { HitProposer } from '~/tv/lib/hitProposals';
 
 const history = new BallHistory();
 const tracker = new BallTracker();
+const proposer = new HitProposer();
+let contextKey = '';
 let previous: Uint8ClampedArray | null = null;
 let lastAt = 0;
 let surface: OffscreenCanvas | null = null;
@@ -11,6 +14,7 @@ self.onmessage = ({
 }: MessageEvent<
     | {
           type: 'frame';
+          context: string;
           frameId: number;
           pixels?: Uint8ClampedArray;
           bitmap?: ImageBitmap;
@@ -20,7 +24,8 @@ self.onmessage = ({
           areas: PlayingArea[];
       }
     | { type: 'init' }
-    | { type: 'cups'; at: number; cups: Cup[] }
+    | { type: 'cups'; at: number; cups: Cup[]; context: string }
+    | { type: 'reset'; context: string }
     | { type: 'hit'; entry: HitEntry; area: PlayingArea; at: number; aspect: number }
 >) => {
     try {
@@ -36,7 +41,14 @@ self.onmessage = ({
             self.postMessage({ type: 'ready', canvas });
             return;
         }
+        if (data.type === 'reset') {
+            proposer.reset();
+            previous = null;
+            contextKey = data.context;
+            return;
+        }
         if (data.type === 'cups') {
+            if (data.context === contextKey) proposer.setCups(data.at, data.cups);
             history.cups(data.at, data.cups);
             return;
         }
@@ -46,6 +58,11 @@ self.onmessage = ({
                 result: history.analyze(data.entry, data.area, data.at, data.aspect),
             });
             return;
+        }
+        if (data.context !== contextKey) {
+            proposer.reset();
+            previous = null;
+            contextKey = data.context;
         }
         const start = performance.now();
         // A changed input size or background pause invalidates frame differencing.
@@ -78,6 +95,15 @@ self.onmessage = ({
         self.postMessage({
             type: 'frame',
             frameId: data.frameId,
+            at: data.at,
+            context: data.context,
+            balls: result.balls,
+            proposals: proposer.observe(
+                data.at,
+                result.balls,
+                result.obscured,
+                data.width / data.height
+            ),
             count: result.balls.length,
             staticCount: result.balls.filter((ball) => ball.source === 'static-color-appearance')
                 .length,

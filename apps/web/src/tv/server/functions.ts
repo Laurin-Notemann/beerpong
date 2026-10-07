@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
+import { randomUUID } from 'node:crypto';
 
 import { reduceLiveMatch } from '@/lib/liveMatch/reducer';
 import { toLiveOps } from '@/lib/liveMatch/types';
@@ -131,13 +132,25 @@ export const getCameraMatches = createServerFn({ method: 'POST' })
         });
         const templates = saved.map((formation) => formation.cups).filter(validGrid);
         if (camera.config.groupId !== groupId) return null;
+        const serverAt = Date.now();
+        const snapshotId = randomUUID();
+        camera.cameraSnapshots = [
+            ...(camera.cameraSnapshots ?? []).filter((s) => serverAt - s.serverAt < 30_000),
+            {
+                id: snapshotId,
+                groupId,
+                serverAt,
+                matches: matches.map((m) => ({ id: m.id, seq: m.lastSeq ?? 0 })),
+            },
+        ].slice(-2);
         return {
+            snapshotId,
             groupId,
             name: camera.name,
             liveMatchIds: matches.map((m) => m.id),
             formations: matches.map((match) => formationMatch(match, templates)),
             tvs: byGroup(groupId).map((tv) => ({ id: tv.id, name: tv.name })),
-            serverAt: Date.now(),
+            serverAt,
             hits: matches.flatMap((match) => {
                 const ops = toLiveOps(match.ops);
                 const ignored = new Set(reduceLiveMatch(ops).ignoredOpIds);

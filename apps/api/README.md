@@ -58,3 +58,12 @@ acknowledge the successful bucket PUT with `POST .../{id}/complete`, and can rem
 `DELETE .../{id}`. ML exports should select `camera_recordings.uploaded_at IS NOT NULL` and join
 `camera_recording_matches` to `live_matches.result_match_id` for the eventual finished match.
 The segment's UTC times come from the camera clock; synchronize devices when aligning cup hits.
+Uploads and vision proposals bind each group camera ID permanently to its first authenticated creator
+and each recording session ID to its first camera/creator, even before any footage is uploaded.
+Vision feedback records recognition labels without scoring; the immutable proposal and append-only
+`vision_hit_feedback` revisions preserve model, evidence, actor and source for exports. Only current
+accepted/declined labels from player or human-review sources establish held-out truth. The hit
+pipeline can explicitly include independent, identified AI reviews in TRAIN at reduced weight;
+they never establish held-out truth. Replay footage must match the proposal's exact
+match, camera, session and creator and cover its full camera-clock -3s/+2s interval.
+Missing/deleted footage and gaps stay unavailable; do not fit those examples.

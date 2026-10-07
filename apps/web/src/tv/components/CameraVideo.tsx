@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
 import type { CameraRotation } from '@/lib/tvDisplay';
+import type { VisionHitDto } from '@/openapi/openapi';
+import { drawBalls, ballAssistanceEnabled } from '~/tv/lib/ballGeometry';
 import { drawCups } from '~/tv/lib/cupVision';
 import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry';
 
@@ -15,6 +17,8 @@ export function CameraVideo({
     rotation = 0,
     cameraId,
     videoRef,
+    suspended = false,
+    hit,
 }: {
     stream: MediaStream;
     flipped?: boolean;
@@ -22,10 +26,23 @@ export function CameraVideo({
     cameraId: string;
     /** The sending camera reuses the unrotated decoder for cup detection and calibration. */
     videoRef?: RefObject<HTMLVideoElement | null>;
+    suspended?: boolean;
+    hit?: VisionHitDto | null;
 }) {
     const canvas = useRef<HTMLCanvasElement>(null);
     const localDecoder = useRef<HTMLVideoElement>(null);
     const decoder = videoRef ?? localDecoder;
+    const suspendedRef = useRef(suspended);
+    const hitRef = useRef(hit);
+    useEffect(() => {
+        hitRef.current = hit;
+    }, [hit]);
+    useEffect(() => {
+        suspendedRef.current = suspended;
+        const video = decoder.current;
+        if (suspended) video?.pause();
+        else if (video?.srcObject) void video.play().catch(() => {});
+    }, [suspended, decoder]);
     const [problem, setProblem] = useState<string | null>('Waiting for camera video…');
 
     useEffect(() => {
@@ -84,6 +101,7 @@ export function CameraVideo({
             });
         };
         const play = () => {
+            if (suspendedRef.current) return;
             video.play().catch((error: unknown) => {
                 if (!stopped) warn('Camera video could not play. Reconnecting…', error);
             });
@@ -98,6 +116,11 @@ export function CameraVideo({
         let paintFailed = false;
         const paint = (now: number) => {
             frame = requestAnimationFrame(paint);
+            if (suspendedRef.current) {
+                paintedAt = now;
+                progressedAt = now;
+                return;
+            }
             if (!context || !sample || now - attemptedAt < 1000 / 30) return;
             attemptedAt = now;
             if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) return;
@@ -147,6 +170,28 @@ export function CameraVideo({
                 // Contours use raw frame coordinates and turn with the picture.
                 context.translate(-sourceWidth / 2, -sourceHeight / 2);
                 drawCups(context, stream, now, { width: sourceWidth, height: sourceHeight });
+                drawBalls(context, stream, now, { width: sourceWidth, height: sourceHeight });
+                const suggestion = hitRef.current;
+                if (
+                    suggestion &&
+                    suggestion.cameraId === cameraId &&
+                    ballAssistanceEnabled(stream, now, suggestion.cameraOccurredAt)
+                ) {
+                    const c = suggestion.imageCup;
+                    context.strokeStyle = '#ffe27a';
+                    context.lineWidth = Math.max(2, sourceWidth / 240);
+                    context.beginPath();
+                    context.ellipse(
+                        c.x * sourceWidth,
+                        c.y * sourceHeight,
+                        c.radius * sourceWidth * 1.2,
+                        Math.max(4, c.radius * sourceWidth * 0.5),
+                        0,
+                        0,
+                        Math.PI * 2
+                    );
+                    context.stroke();
+                }
                 context.restore();
                 paintedAt = now;
                 if (moving) {
@@ -166,7 +211,7 @@ export function CameraVideo({
         else frame = requestAnimationFrame(paint);
         play();
         const recovery = setInterval(() => {
-            if (document.hidden) {
+            if (document.hidden || suspendedRef.current) {
                 paintedAt = performance.now();
                 progressedAt = paintedAt;
                 return;
@@ -217,7 +262,7 @@ export function CameraVideo({
                 className="absolute inset-0 h-full w-full object-contain"
                 style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
             />
-            {problem && (
+            {problem && !suspended && (
                 <div
                     role="status"
                     className="absolute inset-0 flex items-center justify-center bg-black/40 px-[4rem] text-center text-[1.8rem] text-text-2"

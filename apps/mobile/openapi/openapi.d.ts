@@ -745,6 +745,12 @@ declare namespace Components {
             data: TournamentDto[];
             error?: ErrorDetails;
         }
+        export interface ResponseEnvelopeListVisionHitDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: VisionHitDto[];
+            error?: ErrorDetails;
+        }
         export interface ResponseEnvelopeLiveMatchDisplayResultDto {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
@@ -827,6 +833,18 @@ declare namespace Components {
             status: 'OK' | 'ERROR';
             httpCode: number; // int32
             data: TournamentDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeVisionHitDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: VisionHitDto;
+            error?: ErrorDetails;
+        }
+        export interface ResponseEnvelopeVisionHitReplayDto {
+            status: 'OK' | 'ERROR';
+            httpCode: number; // int32
+            data: VisionHitReplayDto;
             error?: ErrorDetails;
         }
         export interface RuleCreateDto {
@@ -1054,6 +1072,127 @@ declare namespace Components {
             id: string;
             name: string;
             playerIds: string[];
+        }
+        export interface VisionHitCreateDto {
+            liveMatchId: string; // uuid
+            cameraId: string; // ^[A-Za-z0-9._:-]+$
+            sessionId: string; // uuid
+            model: string; // ^[A-Za-z0-9._:-]+$
+            /**
+             * UTC event time synchronized to the server. First insertion must be within the last 2 minutes and at most 10 seconds ahead.
+             */
+            occurredAt: string; // date-time
+            /**
+             * UTC event time on the recording camera clock, within 10 minutes of occurredAt. Replay spans 3 seconds before to 2 seconds after.
+             */
+            cameraOccurredAt: string; // date-time
+            /**
+             * Target team; acceptance never changes the score.
+             */
+            team: 'red' | 'blue';
+            /**
+             * Original standing grid identity, or null when calibration is ambiguous.
+             */
+            cup?: {
+                x: number; // int32
+                y: number; // int32
+            } | null;
+            imageCup: {
+                x: number;
+                y: number;
+                radius: number;
+            };
+            /**
+             * Evidence score, not a calibrated probability.
+             */
+            confidence: number;
+            evidence: {
+                approachDistance: number;
+                rimDistance: number;
+                speed: number;
+                observations: number; // int32
+                occluded: boolean;
+                exitObserved: boolean;
+            };
+        }
+        export interface VisionHitDto {
+            liveMatchId: string; // uuid
+            cameraId: string; // ^[A-Za-z0-9._:-]+$
+            sessionId: string; // uuid
+            model: string; // ^[A-Za-z0-9._:-]+$
+            /**
+             * UTC event time synchronized to the server. First insertion must be within the last 2 minutes and at most 10 seconds ahead.
+             */
+            occurredAt: string; // date-time
+            /**
+             * UTC event time on the recording camera clock, within 10 minutes of occurredAt. Replay spans 3 seconds before to 2 seconds after.
+             */
+            cameraOccurredAt: string; // date-time
+            /**
+             * Target team; acceptance never changes the score.
+             */
+            team: 'red' | 'blue';
+            /**
+             * Original standing grid identity, or null when calibration is ambiguous.
+             */
+            cup?: {
+                x: number; // int32
+                y: number; // int32
+            } | null;
+            imageCup: {
+                x: number;
+                y: number;
+                radius: number;
+            };
+            /**
+             * Evidence score, not a calibrated probability.
+             */
+            confidence: number;
+            evidence: {
+                approachDistance: number;
+                rimDistance: number;
+                speed: number;
+                observations: number; // int32
+                occluded: boolean;
+                exitObserved: boolean;
+            };
+            id: string; // uuid
+            groupId: string;
+            createdAt: string; // date-time
+            revision: number; // int32
+            label: 'unreviewed' | 'accepted' | 'declined' | 'uncertain';
+            feedbackSource: 'player' | 'human-review' | 'ai-review' | null;
+            reviewerModel?: string | null; // ^[A-Za-z0-9._:-]+$
+            reason?: string | null;
+            reviewedAt: string | null; // date-time
+        }
+        export interface VisionHitFeedbackDto {
+            expectedRevision: number; // int32
+            label: 'unreviewed' | 'accepted' | 'declined' | 'uncertain';
+            source: 'player' | 'human-review' | 'ai-review';
+            /**
+             * Required non-null model identity for ai-review. AI labels remain separate from human supervised labels.
+             */
+            reviewerModel?: string | null; // ^[A-Za-z0-9._:-]+$
+            reason?: string | null;
+        }
+        export interface VisionHitReplayDto {
+            id: string;
+            from: string; // date-time
+            to: string; // date-time
+            complete: boolean;
+            /**
+             * At most 64 ordered uploaded segments, clipped to the fixed replay window.
+             */
+            segments: VisionHitReplaySegmentDto[];
+        }
+        export interface VisionHitReplaySegmentDto {
+            id: string;
+            url: string;
+            startedAt: string; // date-time
+            endedAt: string; // date-time
+            startSeconds: number;
+            endSeconds: number;
         }
     }
 }
@@ -1306,6 +1445,23 @@ declare namespace Paths {
             export type $200 = Components.Schemas.ResponseEnvelopeProfileDto;
         }
     }
+    namespace DeleteVisionHit {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string; // uuid
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id /* uuid */;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeString;
+            export interface $400 {}
+            export interface $404 {}
+            export interface $409 {}
+            export interface $429 {}
+        }
+    }
     namespace DeleteWallpaper {
         namespace Parameters {
             export type Id = string;
@@ -1315,6 +1471,24 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
+        }
+    }
+    namespace FeedbackVisionHit {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string; // uuid
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id /* uuid */;
+        }
+        export type RequestBody = Components.Schemas.VisionHitFeedbackDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeVisionHitDto;
+            export interface $400 {}
+            export interface $404 {}
+            export interface $409 {}
+            export interface $429 {}
         }
     }
     namespace FindGroupByInviteCode {
@@ -1731,6 +1905,68 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeListTournamentDto;
         }
     }
+    namespace GetVisionHit {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string; // uuid
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id /* uuid */;
+        }
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeVisionHitDto;
+            export interface $400 {}
+            export interface $404 {}
+            export interface $409 {}
+            export interface $429 {}
+        }
+    }
+    namespace GetVisionHitReplay {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string; // uuid
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id /* uuid */;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeVisionHitReplayDto;
+            export interface $400 {}
+            export interface $404 {}
+            export interface $409 {}
+            export interface $429 {}
+        }
+    }
+    namespace GetVisionHits {
+        namespace Parameters {
+            export type Before = string;
+            export type GroupId = string;
+            export type Limit = number;
+            export type LiveMatchId = string; // uuid
+            export type Review = boolean;
+            export type Training = boolean;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        export interface QueryParameters {
+            liveMatchId?: Parameters.LiveMatchId /* uuid */;
+            review?: Parameters.Review;
+            training?: Parameters.Training;
+            limit?: Parameters.Limit;
+            before?: Parameters.Before;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeListVisionHitDto;
+            export interface $400 {}
+            export interface $409 {}
+            export interface $429 {}
+        }
+    }
     namespace GoogleNotification {
         namespace Parameters {
             export type Token = string;
@@ -1778,6 +2014,24 @@ declare namespace Paths {
                 Components.Schemas.ResponseEnvelopeListProfileDto;
         }
     }
+    namespace PostVisionHitReplay {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string; // uuid
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id /* uuid */;
+        }
+        namespace Responses {
+            export type $200 =
+                Components.Schemas.ResponseEnvelopeVisionHitReplayDto;
+            export interface $400 {}
+            export interface $404 {}
+            export interface $409 {}
+            export interface $429 {}
+        }
+    }
     namespace PutCameraRecording {
         namespace Parameters {
             export type GroupId = string;
@@ -1791,6 +2045,24 @@ declare namespace Paths {
         namespace Responses {
             export type $200 =
                 Components.Schemas.ResponseEnvelopeCameraRecordingUploadDto;
+        }
+    }
+    namespace PutVisionHit {
+        namespace Parameters {
+            export type GroupId = string;
+            export type Id = string; // uuid
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+            id: Parameters.Id /* uuid */;
+        }
+        export type RequestBody = Components.Schemas.VisionHitCreateDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeVisionHitDto;
+            export interface $400 {}
+            export interface $404 {}
+            export interface $409 {}
+            export interface $429 {}
         }
     }
     namespace RedeemPurchase {
@@ -2066,6 +2338,65 @@ declare namespace Paths {
 }
 
 export interface OperationMethods {
+    /**
+     * getVisionHits - Includes ended matches. Ordered createdAt DESC, id DESC. For the next page, pass the last DTO as before=<createdAt RFC3339Nano>|<id>; URL-encode the cursor. An empty page ends pagination. review and training cannot both be true.
+     */
+    getVisionHits(
+        parameters?: Parameters<
+            Paths.GetVisionHits.QueryParameters &
+                Paths.GetVisionHits.PathParameters
+        > | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetVisionHits.Responses.$200>;
+    /**
+     * getVisionHit
+     */
+    getVisionHit(
+        parameters?: Parameters<Paths.GetVisionHit.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetVisionHit.Responses.$200>;
+    /**
+     * putVisionHit - Immutable idempotent proposal, revision 0/unreviewed. Bind cameraId to its first authenticated creator and sessionId to its first camera/creator (uploads share these bindings; no prior recording row is required). Validate active group match only on first insertion; exact creator/body retries work after ending. At most 60 new hits per camera per minute, at least 250 ms apart; same session/match/team/cup within 2 seconds is a duplicate. No scoring operation is emitted.
+     */
+    putVisionHit(
+        parameters?: Parameters<Paths.PutVisionHit.PathParameters> | null,
+        data?: Paths.PutVisionHit.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.PutVisionHit.Responses.$200>;
+    /**
+     * deleteVisionHit - Idempotently deletes only the suggestion and feedback history. Does not remove footage or affect scores.
+     */
+    deleteVisionHit(
+        parameters?: Parameters<Paths.DeleteVisionHit.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.DeleteVisionHit.Responses.$200>;
+    /**
+     * feedbackVisionHit - Compare-and-swap expectedRevision, increment revision, and append actor/source/model/reason audit. unreviewed resets the current label while retaining history. Same actor and exact feedback retry of the immediately previous revision returns the committed DTO. Other stale revisions return 409. AI feedback is not independent human approval.
+     */
+    feedbackVisionHit(
+        parameters?: Parameters<Paths.FeedbackVisionHit.PathParameters> | null,
+        data?: Paths.FeedbackVisionHit.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.FeedbackVisionHit.Responses.$200>;
+    /**
+     * getVisionHitReplay - Fixed cameraOccurredAt -3s/+2s window. Ordered uploaded segments only, matching exact group/match/camera/session/creator. Offsets clip playback to the 5-second interval without duplicate overlap. Any coverage gap returns complete=false (HTTP 200); retry GET while uploads are pending. Footage deletion can make replay unavailable. URLs use the existing bucket public accessor and never enter realtime payloads.
+     */
+    getVisionHitReplay(
+        parameters?: Parameters<Paths.GetVisionHitReplay.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.GetVisionHitReplay.Responses.$200>;
+    /**
+     * postVisionHitReplay - Returns the same replay DTO. Broadcasts VISION_HITS/visionHitReplay only with complete coverage; pending is HTTP 200/complete=false. Complete requests have a 5-second per-hit cooldown (429). No scores change.
+     */
+    postVisionHitReplay(
+        parameters?: Parameters<Paths.PostVisionHitReplay.PathParameters> | null,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.PostVisionHitReplay.Responses.$200>;
     /**
      * getTournaments
      */
@@ -2688,6 +3019,73 @@ export interface OperationMethods {
 }
 
 export interface PathsDictionary {
+    ['/groups/{groupId}/vision-hits']: {
+        /**
+         * getVisionHits - Includes ended matches. Ordered createdAt DESC, id DESC. For the next page, pass the last DTO as before=<createdAt RFC3339Nano>|<id>; URL-encode the cursor. An empty page ends pagination. review and training cannot both be true.
+         */
+        get(
+            parameters?: Parameters<
+                Paths.GetVisionHits.QueryParameters &
+                    Paths.GetVisionHits.PathParameters
+            > | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetVisionHits.Responses.$200>;
+    };
+    ['/groups/{groupId}/vision-hits/{id}']: {
+        /**
+         * getVisionHit
+         */
+        get(
+            parameters?: Parameters<Paths.GetVisionHit.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetVisionHit.Responses.$200>;
+        /**
+         * putVisionHit - Immutable idempotent proposal, revision 0/unreviewed. Bind cameraId to its first authenticated creator and sessionId to its first camera/creator (uploads share these bindings; no prior recording row is required). Validate active group match only on first insertion; exact creator/body retries work after ending. At most 60 new hits per camera per minute, at least 250 ms apart; same session/match/team/cup within 2 seconds is a duplicate. No scoring operation is emitted.
+         */
+        put(
+            parameters?: Parameters<Paths.PutVisionHit.PathParameters> | null,
+            data?: Paths.PutVisionHit.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.PutVisionHit.Responses.$200>;
+        /**
+         * deleteVisionHit - Idempotently deletes only the suggestion and feedback history. Does not remove footage or affect scores.
+         */
+        delete(
+            parameters?: Parameters<Paths.DeleteVisionHit.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.DeleteVisionHit.Responses.$200>;
+    };
+    ['/groups/{groupId}/vision-hits/{id}/feedback']: {
+        /**
+         * feedbackVisionHit - Compare-and-swap expectedRevision, increment revision, and append actor/source/model/reason audit. unreviewed resets the current label while retaining history. Same actor and exact feedback retry of the immediately previous revision returns the committed DTO. Other stale revisions return 409. AI feedback is not independent human approval.
+         */
+        post(
+            parameters?: Parameters<Paths.FeedbackVisionHit.PathParameters> | null,
+            data?: Paths.FeedbackVisionHit.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.FeedbackVisionHit.Responses.$200>;
+    };
+    ['/groups/{groupId}/vision-hits/{id}/replay']: {
+        /**
+         * getVisionHitReplay - Fixed cameraOccurredAt -3s/+2s window. Ordered uploaded segments only, matching exact group/match/camera/session/creator. Offsets clip playback to the 5-second interval without duplicate overlap. Any coverage gap returns complete=false (HTTP 200); retry GET while uploads are pending. Footage deletion can make replay unavailable. URLs use the existing bucket public accessor and never enter realtime payloads.
+         */
+        get(
+            parameters?: Parameters<Paths.GetVisionHitReplay.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.GetVisionHitReplay.Responses.$200>;
+        /**
+         * postVisionHitReplay - Returns the same replay DTO. Broadcasts VISION_HITS/visionHitReplay only with complete coverage; pending is HTTP 200/complete=false. Complete requests have a 5-second per-hit cooldown (429). No scores change.
+         */
+        post(
+            parameters?: Parameters<Paths.PostVisionHitReplay.PathParameters> | null,
+            data?: any,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.PostVisionHitReplay.Responses.$200>;
+    };
     ['/groups/{groupId}/tournaments']: {
         /**
          * getTournaments
@@ -3543,6 +3941,8 @@ export type ResponseEnvelopeListSeasonDto =
     Components.Schemas.ResponseEnvelopeListSeasonDto;
 export type ResponseEnvelopeListTournamentDto =
     Components.Schemas.ResponseEnvelopeListTournamentDto;
+export type ResponseEnvelopeListVisionHitDto =
+    Components.Schemas.ResponseEnvelopeListVisionHitDto;
 export type ResponseEnvelopeLiveMatchDisplayResultDto =
     Components.Schemas.ResponseEnvelopeLiveMatchDisplayResultDto;
 export type ResponseEnvelopeLiveMatchDto =
@@ -3570,6 +3970,10 @@ export type ResponseEnvelopeTeamDto =
     Components.Schemas.ResponseEnvelopeTeamDto;
 export type ResponseEnvelopeTournamentDto =
     Components.Schemas.ResponseEnvelopeTournamentDto;
+export type ResponseEnvelopeVisionHitDto =
+    Components.Schemas.ResponseEnvelopeVisionHitDto;
+export type ResponseEnvelopeVisionHitReplayDto =
+    Components.Schemas.ResponseEnvelopeVisionHitReplayDto;
 export type RuleCreateDto = Components.Schemas.RuleCreateDto;
 export type RuleDto = Components.Schemas.RuleDto;
 export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
@@ -3593,3 +3997,9 @@ export type TournamentStageDto = Components.Schemas.TournamentStageDto;
 export type TournamentTeamCreateDto =
     Components.Schemas.TournamentTeamCreateDto;
 export type TournamentTeamDto = Components.Schemas.TournamentTeamDto;
+export type VisionHitCreateDto = Components.Schemas.VisionHitCreateDto;
+export type VisionHitDto = Components.Schemas.VisionHitDto;
+export type VisionHitFeedbackDto = Components.Schemas.VisionHitFeedbackDto;
+export type VisionHitReplayDto = Components.Schemas.VisionHitReplayDto;
+export type VisionHitReplaySegmentDto =
+    Components.Schemas.VisionHitReplaySegmentDto;

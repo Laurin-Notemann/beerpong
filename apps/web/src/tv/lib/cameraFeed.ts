@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { CameraPosition } from '@/lib/tvDisplay';
+import {
+    BALL_CHANNEL,
+    parseBallFrame,
+    receiveBalls,
+    clearBalls,
+    type BallFrame,
+} from '~/tv/lib/ballGeometry';
 import { CUP_CHANNEL, parseCupFrame, receiveCups, type CupFrame } from '~/tv/lib/cupVision';
 import { feedEventContext, watchFeedStats } from '~/tv/lib/feedTelemetry';
 import type { Signal } from '~/tv/server/displays';
@@ -217,6 +224,17 @@ export function useCameraFeed(
             const mine = () => pc.current?.conn === conn;
 
             conn.ondatachannel = ({ channel }) => {
+                if (channel.label === BALL_CHANNEL) {
+                    channel.onmessage = ({ data }) => {
+                        if (!mine() || !incoming) return;
+                        const frame = parseBallFrame(data);
+                        if (frame) receiveBalls(incoming, frame);
+                    };
+                    channel.onclose = () => {
+                        if (incoming) clearBalls(incoming);
+                    };
+                    return;
+                }
                 if (channel.label !== CUP_CHANNEL) return channel.close();
                 let lastLog = 0;
                 channel.onmessage = ({ data }) => {
@@ -321,6 +339,8 @@ export function useCameraSender(
 ) {
     const pcs = useRef(new Map<string, RTCPeerConnection>());
     const channels = useRef(new Map<string, RTCDataChannel>());
+    const ballChannels = useRef(new Map<string, RTCDataChannel>());
+    const ballSequence = useRef(0);
     const cupSequence = useRef(0);
     const [watching, setWatching] = useState(0);
     const latest = useRef(stream);
@@ -336,6 +356,7 @@ export function useCameraSender(
         for (const pc of pcs.current.values()) pc.close();
         pcs.current.clear();
         channels.current.clear();
+        ballChannels.current.clear();
         count();
     }, [count]);
 
@@ -364,6 +385,15 @@ export function useCameraSender(
             channels.current.set(tvId, channel);
             channel.onclose = () => {
                 if (channels.current.get(tvId) === channel) channels.current.delete(tvId);
+            };
+            const ballChannel = pc.createDataChannel(BALL_CHANNEL, {
+                ordered: false,
+                maxRetransmits: 0,
+            });
+            ballChannels.current.set(tvId, ballChannel);
+            ballChannel.onclose = () => {
+                if (ballChannels.current.get(tvId) === ballChannel)
+                    ballChannels.current.delete(tvId);
             };
             watchFeedStats(pc, 'camera', id, tvId);
             for (const track of media.getVideoTracks()) pc.addTrack(track, media);
@@ -428,7 +458,22 @@ export function useCameraSender(
         }
     }, []);
 
-    return { watching, onWatch, onSignal, sendCups };
+    const sendBalls = useCallback((frame: BallFrame) => {
+        const value = { ...frame, sequence: ++ballSequence.current };
+        const payload = JSON.stringify(value);
+        if (!parseBallFrame(payload)) return;
+        const media = latest.current;
+        if (media) receiveBalls(media, value);
+        for (const channel of ballChannels.current.values()) {
+            if (channel.readyState !== 'open' || channel.bufferedAmount > 8000) continue;
+            try {
+                channel.send(payload);
+            } catch {
+                /* Closing peer; video owns reconnection. */
+            }
+        }
+    }, []);
+    return { watching, onWatch, onSignal, sendCups, sendBalls };
 }
 
 /** the video bytes the connection got so far; undefined where the browser doesn't say */

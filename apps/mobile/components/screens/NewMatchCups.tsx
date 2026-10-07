@@ -10,6 +10,7 @@ import { CupDragMenu, pickedPlayer } from '@/components/CupDragMenu';
 import CupGrid, { CupDragEvent } from '@/components/CupGrid';
 import { rotateFormation, rotatePoint } from '@/components/CupGrid/Formation';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import { VisionButton, VisionHitCard } from '@/components/vision/VisionHitCard';
 import { triggerHapticBump } from '@/haptics';
 import {
     CUP_FORMATION,
@@ -23,6 +24,7 @@ import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
 import { useMatchEntry } from '@/lib/useMatchEntry';
+import { VisionHitDto } from '@/openapi/openapi';
 import { useTheme } from '@/theme';
 import { showErrorToast, showSuccessToast } from '@/toast';
 import { useLocalSettingsStore } from '@/zustand/localSettingsStore';
@@ -47,11 +49,17 @@ const SIDE_BUTTONS_WIDTH = 72;
 export default function NewMatchCups({
     liveMatchId,
     onDraggingChange,
+    visionHit,
+    visionError,
+    retryVision,
 }: {
     /** the live match to enter into; without it, the local draft */
     liveMatchId?: string;
     /** while a cup is touched or dragged, so the pages don't swipe under the drag */
     onDraggingChange?: (isDragging: boolean) => void;
+    visionHit?: VisionHitDto;
+    visionError?: boolean;
+    retryVision?: () => void;
 }) {
     const theme = useTheme();
     const nav = useNavigation();
@@ -83,6 +91,17 @@ export default function NewMatchCups({
 
     const layoutOf = (team: CupTeam) =>
         cupLayout(entry.cupHits, team, entry.reracks[team]);
+
+    function highlightedCup(team: CupTeam) {
+        if (visionHit?.team !== team || !visionHit.cup) return;
+        const slot = layoutOf(team).find(
+            (i) => i.cup.x === visionHit.cup?.x && i.cup.y === visionHit.cup?.y
+        );
+        if (!slot) return;
+        return team === bottomTeam
+            ? rotatePoint(CUP_FORMATION, slot.drawn)
+            : slot.drawn;
+    }
 
     function formationOf(team: CupTeam) {
         const formation = {
@@ -318,6 +337,41 @@ export default function NewMatchCups({
                 paddingBottom: insets.bottom,
             }}
         >
+            {liveMatchId && groupId && (
+                <View
+                    style={{ paddingHorizontal: 16, gap: 8, paddingBottom: 8 }}
+                >
+                    {visionHit && (
+                        <VisionHitCard key={visionHit.id} hit={visionHit} />
+                    )}
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <VisionButton
+                            title="Camera review"
+                            onPress={() =>
+                                nav.navigate('visionReview', { groupId })
+                            }
+                        />
+                        {visionError && retryVision && (
+                            <VisionButton
+                                title="Retry camera"
+                                onPress={retryVision}
+                            />
+                        )}
+                    </View>
+                    {visionError && (
+                        <Text
+                            accessibilityRole="alert"
+                            style={{
+                                color: theme.color.text.secondary,
+                                fontSize: 12,
+                            }}
+                        >
+                            Camera suggestions couldn't refresh. You can still
+                            enter cups.
+                        </Text>
+                    )}
+                </View>
+            )}
             <View
                 style={{ flex: 1, alignItems: 'center' }}
                 onLayout={(e) => setSize(e.nativeEvent.layout)}
@@ -399,6 +453,7 @@ export default function NewMatchCups({
                                     color={theme.color.team[team]}
                                     width={gridWidth}
                                     formation={formationOf(team)}
+                                    highlightedCup={highlightedCup(team)}
                                     onCupTap={(cup) => onCupTap(team, cup)}
                                     onCupDrag={(e) => onCupDrag(team, e)}
                                 >

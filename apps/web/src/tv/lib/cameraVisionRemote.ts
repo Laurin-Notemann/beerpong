@@ -19,6 +19,7 @@ export interface VisionState extends VisionSettings {
     syncStatus: string;
     watching: number;
     recording: boolean;
+    recordingSessionId?: string;
     pendingUploads: number;
     selectingAreas: boolean;
     matches: { id: string; seq: number; blue: number; red: number }[];
@@ -65,6 +66,8 @@ export function validVisionState(v: unknown): v is VisionState {
         text(v.syncStatus) &&
         integer(v.watching, 100) &&
         typeof v.recording === 'boolean' &&
+        (v.recordingSessionId === undefined ||
+            (text(v.recordingSessionId, 36) && /^[0-9a-f-]{36}$/.test(v.recordingSessionId))) &&
         integer(v.pendingUploads, 100) &&
         typeof v.selectingAreas === 'boolean' &&
         (v.lastCommand === null || v.lastCommand === 'applied' || v.lastCommand === 'rejected') &&

@@ -36,6 +36,8 @@ export type RootStackParamList = {
     match: { id: string; seasonId: string };
     liveMatch: { id: string };
     liveMatches: undefined;
+    visionReview: { groupId: string };
+    visionReplay: { groupId: string; id: string };
     liveMatchTeamsModal: { liveMatchId: string };
     matchPhotoModal: {
         matchId: string;

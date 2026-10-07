@@ -35,6 +35,13 @@ export interface Display {
     name: string;
     lastSeen: number;
     vision?: CameraVision;
+    /** Last two authorized clock/match snapshots, bounded across an in-flight refresh. */
+    cameraSnapshots?: {
+        id: string;
+        groupId: string;
+        serverAt: number;
+        matches: { id: string; seq: number }[];
+    }[];
 }
 
 /** an offer or answer of the WebRTC connection between a camera and a TV */

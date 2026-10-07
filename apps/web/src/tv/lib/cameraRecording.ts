@@ -370,5 +370,5 @@ export function useCameraRecording(
         };
     }, [stream, groupId, matchKey, id, cameraName, session, enqueue]);
 
-    return { recording, error, pending };
+    return { recording, error, pending, sessionId: session };
 }

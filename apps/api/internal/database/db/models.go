@@ -250,3 +250,49 @@ type Tournament struct {
 type User struct {
 	ID string
 }
+
+type VisionCamera struct {
+	GroupID    string
+	CameraID   string
+	CreatedBy  string
+	RateWindow time.Time
+	RateCount  int32
+	LastHitAt  time.Time
+}
+
+type VisionCameraSession struct {
+	GroupID   string
+	SessionID string
+	CameraID  string
+	CreatedBy string
+}
+
+type VisionHit struct {
+	ID                    string
+	GroupID               string
+	LiveMatchID           string
+	CameraID              string
+	SessionID             string
+	CreatedBy             string
+	CameraOccurredAt      time.Time
+	Proposal              []byte
+	CreatedAt             time.Time
+	Revision              int32
+	Label                 string
+	FeedbackSource        *string
+	ReviewerModel         *string
+	Reason                *string
+	ReviewedAt            *time.Time
+	LastReplayRequestedAt *time.Time
+}
+
+type VisionHitFeedback struct {
+	HitID         string
+	Revision      int32
+	ActorUserID   string
+	Label         string
+	Source        string
+	ReviewerModel *string
+	Reason        *string
+	CreatedAt     time.Time
+}

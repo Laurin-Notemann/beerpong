@@ -8,13 +8,16 @@ import {
     parseConfig,
     pickMatches,
 } from '@/lib/tvDisplay';
+import type { VisionHitDto, VisionHitReplayDto } from '@/openapi/openapi';
 import { CameraView } from '~/tv/components/CameraView';
 import { FocusView } from '~/tv/components/FocusView';
 import { FullscreenButton } from '~/tv/components/FullscreenButton';
+import { HitReplay } from '~/tv/components/HitReplay';
 import { LeaderboardList, Podium } from '~/tv/components/Leaderboard';
 import { type CardSize, LiveMatchCard } from '~/tv/components/LiveMatchCard';
 import { boardScale, ScoreClipPanel } from '~/tv/components/ScoreClipPanel';
 import { TournamentView } from '~/tv/components/TournamentView';
+import { ballAssistanceEnabled } from '~/tv/lib/ballGeometry';
 import { type CameraFeeds, useCameraFeeds } from '~/tv/lib/cameraFeeds';
 import { type DisplayEvent, randomToken, useBoard, useDisplayEvents, useNow } from '~/tv/lib/hooks';
 import {
@@ -23,6 +26,7 @@ import {
     type ScoreClip,
     scoreClipsOf,
 } from '~/tv/lib/scoreClips';
+import { useVisionHits } from '~/tv/lib/useVisionHits';
 import type { Board } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
@@ -172,6 +176,12 @@ function Tv() {
     useEffect(() => {
         liveMatches.current = matches;
     }, [matches]);
+    const vision = useVisionHits(
+        identity.id,
+        identity.secret,
+        identity.config.groupId,
+        (board.data?.liveMatches ?? []).map((m) => m.id)
+    );
     const readyClips = liveScoreClips(matches);
     const clipKeys = JSON.stringify(readyClips.map((clip) => clip.key));
     const [previousClipKeys, setPreviousClipKeys] = useState(clipKeys);
@@ -196,9 +206,20 @@ function Tv() {
                     readyClips={readyClips}
                     clip={clips.find((clip) => readyClips.some((ready) => ready.key === clip.key))}
                     onClipDone={clipDone}
+                    visionHits={vision.hits}
+                    replay={vision.replay}
+                    onReplayDone={vision.close}
                 />
             ) : (
                 <Pairing code={identity.code} />
+            )}
+            {vision.message && (
+                <div
+                    role="status"
+                    className="absolute top-6 left-6 z-50 rounded-xl bg-black/90 px-6 py-4 text-[1.5rem]"
+                >
+                    {vision.message}
+                </div>
             )}
             {/* it sits in the corner a clip from the right plays in */}
             {!clips.length && <FullscreenButton />}
@@ -237,6 +258,9 @@ function Screen({
     readyClips,
     clip,
     onClipDone,
+    visionHits,
+    replay,
+    onReplayDone,
 }: {
     board: Board | null;
     config: DisplayConfig;
@@ -246,6 +270,9 @@ function Screen({
     readyClips: Omit<ScoreClip, 'id'>[];
     clip: ScoreClip | undefined;
     onClipDone: () => void;
+    visionHits: VisionHitDto[];
+    replay: { hit: VisionHitDto; replay: VisionHitReplayDto } | null;
+    onReplayDone: () => void;
 }) {
     const live = board?.liveMatches ?? [];
     const matches = pickMatches(live, config.pinnedMatchIds);
@@ -270,6 +297,21 @@ function Screen({
             : wanted;
     const focused = live.find((i) => i.id === config.focusMatchId) ?? matches[0];
     const rows = board?.leaderboard.rows ?? [];
+    const now = useNow();
+    const highlight = visionHits.find(
+        (hit) =>
+            hit.liveMatchId === focused?.id &&
+            hit.cameraId === feeds.main.cameraId &&
+            hit.label !== 'declined' &&
+            now - Date.parse(hit.occurredAt) < 10_000 &&
+            Date.parse(hit.occurredAt) <= now + 2000
+    );
+    const shownHighlight =
+        feed && ballAssistanceEnabled(feed, undefined, highlight?.cameraOccurredAt)
+            ? highlight
+            : undefined;
+    const replayCamera = replay ? cameraConfigs[replay.hit.cameraId] : undefined;
+    const activeClip = replay ? undefined : clip;
     // Clips follow the scoreboard's team side.
     const nativeVideoLayer = usesNativeVideoLayer();
 
@@ -278,13 +320,23 @@ function Screen({
         // styles.css); it has to come first for that
         <div
             className="relative h-screen overflow-hidden"
-            style={clip && ({ '--board-scale': boardScale() } as CSSProperties)}
+            style={activeClip && ({ '--board-scale': boardScale() } as CSSProperties)}
         >
+            {replay && (
+                <HitReplay
+                    key={replay.hit.id}
+                    hit={replay.hit}
+                    replay={replay.replay}
+                    rotation={replayCamera?.cameraRotation}
+                    flipped={replayCamera?.cameraVideoFlipped}
+                    onDone={onReplayDone}
+                />
+            )}
             {readyClips.map((ready) => (
                 <ScoreClipPanel
                     key={ready.key}
                     clip={ready}
-                    playId={clip?.key === ready.key ? clip.id : undefined}
+                    playId={activeClip?.key === ready.key ? activeClip.id : undefined}
                     from={
                         (
                             layout === 'camera' && config.cameraOverlayFlipped
@@ -302,6 +354,8 @@ function Screen({
                 <main className="tv-board relative z-10 h-screen bg-bg">
                     <CameraView
                         stream={feed}
+                        hit={shownHighlight}
+                        suspended={!!replay || !!activeClip}
                         match={focused ?? matches[0]}
                         groupName={board?.group.name ?? config.groupName ?? ''}
                         offline={offline}

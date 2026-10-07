@@ -34,7 +34,7 @@ function connect() {
         // deserialize the event
         // format:
         //  groupId: string,
-        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES | LIVE_MATCHES | FORMATIONS
+        //  eventType: MATCHES | PLAYERS | SEASONS | GROUPS | RULES | RULE_MOVES | ASSETS | PROFILES | LIVE_MATCHES | FORMATIONS | TOURNAMENTS | VISION_HITS
         //  scope: string
         //  body: a dto matching the eventType (MatchDto, PlayerDto, ...)
         const socketEvent = JSON.parse(event.data);
@@ -146,6 +146,12 @@ Every asset event goes to the group the wallpaper, profile or match belongs to.
 
 * **formationUpdate:** When a formation is created or changed
 * **formationDelete:** When a formation is deleted, result is its id
+
+#### Vision suggestions (eventType: VISION_HITS)
+
+* **visionHitCreated / visionHitFeedback:** Body is VisionHitDto, without footage URLs; labels never change scores.
+* **visionHitDeleted:** Body is `{id, liveMatchId}`.
+* **visionHitReplay:** Body is `{id, liveMatchId, requestedAt}`. Sent only after uploaded footage covers the full replay window. Fetch the replay endpoint for segment URLs; refetch suggestions on reconnect.
 
 ### TODO
 

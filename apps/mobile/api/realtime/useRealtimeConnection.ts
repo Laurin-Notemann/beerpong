@@ -9,6 +9,10 @@ import {
 
 import { applyFormationEvent } from '@/api/calls/formationHooks';
 import { applyTournamentEvent } from '@/api/calls/tournamentHooks';
+import {
+    applyVisionHitEvent,
+    invalidateVisionHits,
+} from '@/api/calls/visionHitHooks';
 import { env } from '@/api/env';
 import {
     applyLiveMatchEvent,
@@ -247,6 +251,9 @@ export function useRealtimeConnection() {
             case 'TOURNAMENTS':
                 applyTournamentEvent(qc, e.groupId, e.body);
                 break;
+            case 'VISION_HITS':
+                applyVisionHitEvent(qc, e.groupId, e.scope, e.body);
+                break;
             case 'FORMATIONS':
                 applyFormationEvent(qc, e.groupId, e.scope, e.body);
                 break;
@@ -261,6 +268,7 @@ export function useRealtimeConnection() {
         realtime.on.event((e) => onRealtimeEvent(e));
         const offReconnect = realtime.on.reconnect(() => {
             void invalidateLiveMatches(qc);
+            void invalidateVisionHits(qc);
             void qc.invalidateQueries({
                 predicate: (query) => query.queryKey.includes(QK.tournaments),
             });

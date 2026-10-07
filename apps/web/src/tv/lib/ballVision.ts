@@ -394,7 +394,7 @@ export class BallTracker {
     }
 }
 
-function rim(cup: Cup) {
+export function ballRim(cup: Cup) {
     const vertices = cupVertices(cup);
     const low = Math.min(...vertices.map((p) => p[1])),
         high = Math.max(...vertices.map((p) => p[1]));
@@ -480,7 +480,7 @@ export class BallHistory {
                 if (o.at - first.at > 500 || distance(first, ball) < 0.025) continue;
                 const cups = this.rims.filter((r) => r.at <= o.at && o.at - r.at < 1200).at(-1);
                 const targets = (cups?.cups ?? [])
-                    .map(rim)
+                    .map(ballRim)
                     .filter(
                         (r): r is NonNullable<typeof r> =>
                             !!r &&

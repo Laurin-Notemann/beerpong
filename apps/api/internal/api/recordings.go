@@ -81,6 +81,9 @@ func (s *Server) putCameraRecording(r *request) response {
 	key := fmt.Sprintf("recordings/%s/%s/%06d-%s.%s", groupID, dto.SessionID, dto.SegmentIndex, id, ext)
 	ctx := r.Context()
 	return s.tx(ctx, func(q *db.Queries) (response, error) {
+		if res, err := claimVisionCamera(ctx, q, groupID, dto.CameraID, dto.SessionID, r.userID); res != nil || err != nil {
+			return res, err
+		}
 		n, err := q.InsertCameraRecording(ctx, db.InsertCameraRecordingParams{
 			ID: id, GroupID: groupID, CreatedBy: r.userID, CameraID: dto.CameraID, CameraName: dto.CameraName,
 			SessionID: dto.SessionID, SegmentIndex: dto.SegmentIndex, StartedAt: dto.StartedAt, EndedAt: dto.EndedAt,

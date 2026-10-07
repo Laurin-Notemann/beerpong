@@ -128,6 +128,37 @@ export function apiFor(refreshToken: string) {
             ),
         completeRecording: (groupId: string, id: string) =>
             post(`/groups/${groupId}/recordings/${id}/complete`),
+        visionHits: (
+            groupId: string,
+            query: { liveMatchId?: string; review?: boolean; before?: string; limit?: number } = {}
+        ) => {
+            const params = new URLSearchParams();
+            if (query.liveMatchId) params.set('liveMatchId', query.liveMatchId);
+            if (query.review) params.set('review', 'true');
+            if (query.before) params.set('before', query.before);
+            params.set('limit', String(query.limit ?? 50));
+            return get<Dto.VisionHitDto[]>(`/groups/${groupId}/vision-hits?${params}`);
+        },
+        visionHit: (groupId: string, id: string) =>
+            get<Dto.VisionHitDto>(`/groups/${groupId}/vision-hits/${id}`),
+        createVisionHit: (groupId: string, id: string, body: Dto.VisionHitCreateDto) =>
+            accessToken(refreshToken).then((token) =>
+                call<Dto.VisionHitDto>(`/groups/${groupId}/vision-hits/${id}`, {
+                    method: 'PUT',
+                    token,
+                    body,
+                })
+            ),
+        deleteVisionHit: (groupId: string, id: string) =>
+            accessToken(refreshToken).then((token) =>
+                call(`/groups/${groupId}/vision-hits/${id}`, { method: 'DELETE', token })
+            ),
+        visionHitFeedback: (groupId: string, id: string, body: Dto.VisionHitFeedbackDto) =>
+            post<Dto.VisionHitDto>(`/groups/${groupId}/vision-hits/${id}/feedback`, body),
+        visionHitReplay: (groupId: string, id: string, request = false) =>
+            request
+                ? post<Dto.VisionHitReplayDto>(`/groups/${groupId}/vision-hits/${id}/replay`)
+                : get<Dto.VisionHitReplayDto>(`/groups/${groupId}/vision-hits/${id}/replay`),
         tournaments: (groupId: string) =>
             get<Dto.TournamentDto[]>(`/groups/${groupId}/tournaments`).catch((err) => {
                 if (err instanceof ApiError && err.httpCode === 404) return [];
