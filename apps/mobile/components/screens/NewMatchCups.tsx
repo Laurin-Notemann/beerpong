@@ -337,27 +337,21 @@ export default function NewMatchCups({
                 paddingBottom: insets.bottom,
             }}
         >
-            {liveMatchId && groupId && (
+            {liveMatchId && (visionHit || visionError) && (
                 <View
                     style={{ paddingHorizontal: 16, gap: 8, paddingBottom: 8 }}
                 >
                     {visionHit && (
                         <VisionHitCard key={visionHit.id} hit={visionHit} />
                     )}
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <VisionButton
-                            title="Camera review"
-                            onPress={() =>
-                                nav.navigate('visionReview', { groupId })
-                            }
-                        />
-                        {visionError && retryVision && (
+                    {visionError && retryVision && (
+                        <View style={{ flexDirection: 'row' }}>
                             <VisionButton
                                 title="Retry camera"
                                 onPress={retryVision}
                             />
-                        )}
-                    </View>
+                        </View>
+                    )}
                     {visionError && (
                         <Text
                             accessibilityRole="alert"

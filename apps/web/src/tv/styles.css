@@ -35,6 +35,11 @@ html.tv {
     overflow: hidden;
 }
 
+/* the app's Camera tab: a phone in portrait, so everything is larger relative to the width */
+html.tv.in-app {
+    font-size: calc(100vw / 70);
+}
+
 /* the pointer is how the TV remote reaches the fullscreen button; once fullscreen it's in the way */
 html.tv.fullscreen {
     cursor: none;
