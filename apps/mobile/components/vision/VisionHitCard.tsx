@@ -1,6 +1,6 @@
 import { MenuView } from '@expo/ui/community/menu';
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Alert, Text, View } from 'react-native';
 
 import { useVisionFeedback, visionConflict } from '@/api/calls/visionHitHooks';
 import { useNextTokens } from '@/components/next/tokens';
@@ -56,6 +56,8 @@ export function VisionHitCard({
     const t = useNextTokens();
     const nav = useNavigation();
     const feedback = useVisionFeedback(hit.groupId);
+    const saving = useRef(false);
+    const declineOpen = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const [retryChoice, setRetryChoice] = useState<
         Parameters<typeof feedback.mutateAsync>[0] | null
@@ -66,7 +68,14 @@ export function VisionHitCard({
     const reconciling =
         conflictRevision !== null && hit.revision <= conflictRevision;
     async function save(choice: Parameters<typeof feedback.mutateAsync>[0]) {
-        if (feedback.isPending || reconciling) return;
+        if (
+            saving.current ||
+            declineOpen.current ||
+            feedback.isPending ||
+            reconciling
+        )
+            return;
+        saving.current = true;
         setError(null);
         setRetryChoice(null);
         setConflictRevision(null);
@@ -81,16 +90,63 @@ export function VisionHitCard({
             );
             if (conflict) setConflictRevision(choice.hit.revision);
             else setRetryChoice(choice);
+        } finally {
+            saving.current = false;
         }
     }
-    function label(value: VisionHitFeedbackDto['label']) {
+    function label(
+        value: VisionHitFeedbackDto['label'],
+        reason: VisionHitFeedbackDto['reason'] = null
+    ) {
         // A new decision uses the displayed revision; a retry keeps its original CAS.
         return save({
             hit,
             label: value,
             source: review ? 'human-review' : 'player',
+            reason,
         });
     }
+    function decline() {
+        if (
+            saving.current ||
+            declineOpen.current ||
+            feedback.isPending ||
+            reconciling
+        )
+            return;
+        declineOpen.current = true;
+        const choose = (reason: 'no-hit' | 'wrong-cup') => {
+            declineOpen.current = false;
+            void label('declined', reason);
+        };
+        Alert.alert(
+            'Why decline?',
+            'No hit: the ball missed, hit the rim, or bounced out.\n\nWrong cup: the ball landed in a cup, but a different cup was highlighted.',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                    onPress: () => {
+                        declineOpen.current = false;
+                    },
+                },
+                { text: 'No hit', onPress: () => choose('no-hit') },
+                { text: 'Wrong cup', onPress: () => choose('wrong-cup') },
+            ],
+            {
+                cancelable: true,
+                onDismiss: () => {
+                    declineOpen.current = false;
+                },
+            }
+        );
+    }
+    const reason =
+        hit.reason === 'no-hit'
+            ? 'No hit'
+            : hit.reason === 'wrong-cup'
+              ? 'Wrong cup'
+              : hit.reason;
     const source =
         hit.feedbackSource === 'human-review'
             ? 'Human review'
@@ -131,7 +187,7 @@ export function VisionHitCard({
                         ? ` · Reviewed ${new Date(hit.reviewedAt).toLocaleString()}`
                         : ''}
                     {hit.reviewerModel ? ` · ${hit.reviewerModel}` : ''}
-                    {hit.reason ? ` · ${hit.reason}` : ''}
+                    {reason ? ` · ${reason}` : ''}
                 </Text>
             )}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -143,7 +199,7 @@ export function VisionHitCard({
                 <VisionButton
                     title="Decline"
                     disabled={feedback.isPending || reconciling}
-                    onPress={() => void label('declined')}
+                    onPress={decline}
                 />
                 {showReplay && (
                     <VisionButton

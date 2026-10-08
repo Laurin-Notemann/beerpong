@@ -1,6 +1,6 @@
 # Learning from reviewed hit suggestions
 
-A possible hit highlights a cup and offers a replay from three seconds before it. Accept and decline label recognition only; they never enter a score. No answer leaves the case unlabelled. The group settings review queue includes archived matches and lets a reviewer mark a case uncertain or reset a mistaken label.
+A possible hit highlights a cup and offers a replay from three seconds before it. Accept confirms the ball landed inside the suggested cup. Decline distinguishes a rim contact, bounce or miss (`no-hit`) from a real hit assigned to the wrong cup (`wrong-cup`). Feedback never enters a score. Wrong-cup decisions and older unexplained declines remain available for review but do not train the binary hit outcome classifier as misses. Human or AI outcome reviews can use `no-hit: explanation` for a confirmed miss. No answer leaves the case unlabelled. The group settings review queue includes archived matches and lets a reviewer mark a case uncertain or reset a mistaken label.
 
 The API keeps revisions and reviewer provenance alongside the recording session. This pipeline downloads complete replay evidence, freezes its hashes, and fits an event classifier from `ball-to-rim-evidence-v1` features. It does not train cup segmentation or ball localization. AI reviews require a distinct reviewer model and a reason; `--include-ai-review` includes them only in TRAIN at one quarter weight. Held-out truth always requires a player or human review.
 

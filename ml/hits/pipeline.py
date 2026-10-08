@@ -101,6 +101,12 @@ def supervision_digest(data):
 def supervised(hit, include_ai=False):
     if hit.get('label') not in ('accepted', 'declined'):
         return False
+    # A declined target can still be a real scored hit assigned to the wrong cup.
+    # The app records the outcome explicitly; older unexplained declines stay
+    # available for individual review instead of teaching the model "no hit".
+    reason = hit.get('reason') or ''
+    if hit['label'] == 'declined' and reason != 'no-hit' and not reason.startswith('no-hit:'):
+        return False
     source = hit.get('feedbackSource')
     if source in ('player', 'human-review'):
         return True

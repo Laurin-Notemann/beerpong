@@ -293,10 +293,12 @@ export function useVisionFeedback(groupId: string) {
             hit,
             label,
             source,
+            reason = null,
         }: {
             hit: VisionHitDto;
             label: VisionHitFeedbackDto['label'];
             source: 'player' | 'human-review';
+            reason?: VisionHitFeedbackDto['reason'];
         }) => {
             const updated = (
                 await (
@@ -308,7 +310,7 @@ export function useVisionFeedback(groupId: string) {
                         label,
                         source,
                         reviewerModel: null,
-                        reason: null,
+                        reason,
                     }
                 )
             ).data.data;
