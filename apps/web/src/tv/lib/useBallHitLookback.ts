@@ -60,7 +60,7 @@ export function useBallHitLookback(
             version: 1,
             enabled: false,
             since: epoch.current,
-            model: ballModel?.id ?? 'motion-tracks-v2',
+            model: ballModel?.id ?? 'motion-tracks-v3',
             sequence: 0,
             ageMs: 0,
             balls: [],
@@ -112,6 +112,7 @@ export function useBallHitLookback(
             totalMs = 0,
             proposals = 0,
             candidates = 0,
+            independentHitProposals = 0,
             staticProposals = 0,
             movingProposals = 0,
             obscuredFrames = 0;
@@ -137,7 +138,7 @@ export function useBallHitLookback(
                 version: 1,
                 enabled: false,
                 since: epoch.current,
-                model: ballModel?.id ?? 'motion-tracks-v2',
+                model: ballModel?.id ?? 'motion-tracks-v3',
                 sequence: 0,
                 ageMs: 0,
                 balls: [],
@@ -230,7 +231,7 @@ export function useBallHitLookback(
                             version: 1,
                             enabled: true,
                             since: epoch.current,
-                            model: ballModel?.id ?? 'motion-tracks-v2',
+                            model: ballModel?.id ?? 'motion-tracks-v3',
                             sequence: 0,
                             ageMs,
                             balls: data.balls,
@@ -239,6 +240,7 @@ export function useBallHitLookback(
                 }
                 samples++;
                 proposals += data.count;
+                independentHitProposals += data.proposals.length;
                 candidates += data.candidateCount ?? data.count;
                 staticProposals += data.staticCount ?? 0;
                 movingProposals += data.movingCount ?? data.count;
@@ -373,7 +375,10 @@ export function useBallHitLookback(
                 captureErrors++;
                 if (captureErrors >= 3) fail(String(error), 'capture');
             }
-        }, 67);
+            // A fast rim crossing may last fewer than three 15 Hz samples. Sample
+            // actual new video frames at up to 30 Hz; busy/hidden/stale-media gates
+            // still cap work and predictions never replace captured observations.
+        }, 33);
         timers.heartbeat = setInterval(() => {
             if (stopped) return;
             // Capture counters before the async Sentry import and interval reset.
@@ -383,11 +388,12 @@ export function useBallHitLookback(
                 skipped,
                 proposals,
                 candidates,
+                independentHitProposals,
                 ballColor,
                 staticProposals,
                 movingProposals,
                 obscuredFrames,
-                model: ballModel?.id ?? 'motion-tracks-v2',
+                model: ballModel?.id ?? 'motion-tracks-v3',
                 trainedColors: ballModel?.supportedColors.join(',') ?? '',
                 featureVersion: ballModel ? (ballModel.features ?? 'radial-rgb-color-v1') : 'none',
                 featureCount: ballModel ? (ballModel.featureCount ?? 18) : 0,
@@ -400,6 +406,7 @@ export function useBallHitLookback(
                 totalMs =
                 proposals =
                 candidates =
+                independentHitProposals =
                 staticProposals =
                 movingProposals =
                 obscuredFrames =

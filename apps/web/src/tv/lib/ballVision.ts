@@ -559,7 +559,7 @@ export class BallHistory {
         this.observations.push({ at, balls, obscured, trajectories });
         this.observations = this.observations
             .filter((o) => o.at >= at - LOOKBACK_MS * 2 - 3000)
-            .slice(-450);
+            .slice(-900);
         this.rims = this.rims.filter((o) => o.at >= at - LOOKBACK_MS * 2 - 3000).slice(-40);
     }
     cups(at: number, cups: Cup[]) {
