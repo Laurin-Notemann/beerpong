@@ -1,6 +1,6 @@
 import { MenuView } from '@expo/ui/community/menu';
 import { useRef, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Platform, Text, View } from 'react-native';
 
 import { useVisionFeedback, visionConflict } from '@/api/calls/visionHitHooks';
 import { useNextTokens } from '@/components/next/tokens';
@@ -115,23 +115,34 @@ export function VisionHitCard({
         )
             return;
         declineOpen.current = true;
-        const choose = (reason: 'no-hit' | 'wrong-cup') => {
+        const choose = (
+            reason: 'no-hit' | 'wrong-cup' | 'intentional-wetting'
+        ) => {
             declineOpen.current = false;
             void label('declined', reason);
         };
         Alert.alert(
             'Why decline?',
-            'No hit: the ball missed, hit the rim, or bounced out.\n\nWrong cup: the ball landed in a cup, but a different cup was highlighted.',
+            'No hit: the ball missed, hit the rim, or bounced out.\n\nWrong cup: the ball landed in a cup, but a different cup was highlighted.\n\nIntentional wetting: someone placed the ball in a cup to wet it.',
             [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                    onPress: () => {
-                        declineOpen.current = false;
-                    },
-                },
+                // Android supports three buttons; tapping outside or Back cancels.
+                ...(Platform.OS === 'android'
+                    ? []
+                    : [
+                          {
+                              text: 'Cancel',
+                              style: 'cancel' as const,
+                              onPress: () => {
+                                  declineOpen.current = false;
+                              },
+                          },
+                      ]),
                 { text: 'No hit', onPress: () => choose('no-hit') },
                 { text: 'Wrong cup', onPress: () => choose('wrong-cup') },
+                {
+                    text: 'Intentional wetting',
+                    onPress: () => choose('intentional-wetting'),
+                },
             ],
             {
                 cancelable: true,
@@ -146,7 +157,9 @@ export function VisionHitCard({
             ? 'No hit'
             : hit.reason === 'wrong-cup'
               ? 'Wrong cup'
-              : hit.reason;
+              : hit.reason === 'intentional-wetting'
+                ? 'Intentional wetting of the ball'
+                : hit.reason;
     const source =
         hit.feedbackSource === 'human-review'
             ? 'Human review'
