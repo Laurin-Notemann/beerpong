@@ -11,12 +11,15 @@ export function CupRack({
     side = team === 'blue' ? 'left' : 'right',
     className,
     highlight,
+    cameraMirrored,
 }: {
     cups: RackCup[];
     team: 'blue' | 'red';
     side?: 'left' | 'right';
     className?: string;
     highlight?: { x: number; y: number } | null;
+    /** Camera racks rotate the canonical grid with the table, then reflect with its picture. */
+    cameraMirrored?: boolean;
 }) {
     // the app's cup grid is 7x7; rows run from the base (y 0) to the apex (y 6)
     const size = 7;
@@ -29,7 +32,11 @@ export function CupRack({
                 <circle
                     key={`${at.x}:${at.y}`}
                     cx={side === 'left' ? at.y : size - 1 - at.y}
-                    cy={at.x}
+                    cy={
+                        cameraMirrored !== undefined && (side === 'left') !== cameraMirrored
+                            ? size - 1 - at.x
+                            : at.x
+                    }
                     r={0.92}
                     fill={up ? color : 'transparent'}
                     stroke={

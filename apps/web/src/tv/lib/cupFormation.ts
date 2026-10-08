@@ -139,11 +139,9 @@ export class FormationFitter {
         }
         // A few/collinear cups cannot establish a new table plane. Keep the known formation.
         if (points.length < 4) return validGrid(current) ? current : null;
-        const acrossDirection = { x: -towards.y, y: towards.x };
-        if (acrossDirection.y < 0) {
-            acrossDirection.x *= -1;
-            acrossDirection.y *= -1;
-        }
+        // The app's x/y grid retains its handedness when the opposing rack turns
+        // around. Forcing both racks' x axes down the camera image mirrors one team.
+        const acrossDirection = { x: towards.y, y: -towards.x };
         const available = [Formation.Pyramid_10.cups, current, ...templates.slice(0, 16)]
             .filter((grid) => validGrid(grid) && grid.length >= points.length)
             .filter(
@@ -194,7 +192,7 @@ export class FormationFitter {
                                                 0.65 ||
                                         dot(depth, towards) <
                                             length * Math.hypot(towards.x, towards.y) * 0.65 ||
-                                        Math.abs(cross(across, depth)) < width * length * 0.5
+                                        cross(across, depth) < width * length * 0.5
                                     )
                                         continue;
                                     const origin = {

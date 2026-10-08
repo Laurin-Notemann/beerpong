@@ -129,6 +129,7 @@ export function CameraView({
                 <ScoreBar
                     match={match}
                     flipped={flipped}
+                    videoFlipped={videoFlipped}
                     hit={hit?.liveMatchId === match.id ? hit : null}
                 />
             ) : (
@@ -190,10 +191,12 @@ function LatestMove({ match, flipped }: { match: LiveMatchView; flipped: boolean
 function ScoreBar({
     match,
     flipped,
+    videoFlipped,
     hit,
 }: {
     match: LiveMatchView;
     flipped: boolean;
+    videoFlipped: boolean;
     hit?: VisionHitDto | null;
 }) {
     const left = flipped ? 'red' : 'blue';
@@ -224,6 +227,7 @@ function ScoreBar({
             <div className="flex w-full items-center gap-[2rem]">
                 <CupRack
                     cups={match[left].cups}
+                    cameraMirrored={videoFlipped}
                     highlight={hit?.team === left ? hit.cup : null}
                     team={left}
                     side="left"
@@ -248,6 +252,7 @@ function ScoreBar({
                 <Players team={match[right]} side={right} align="right" />
                 <CupRack
                     cups={match[right].cups}
+                    cameraMirrored={videoFlipped}
                     highlight={hit?.team === right ? hit.cup : null}
                     team={right}
                     side="right"
