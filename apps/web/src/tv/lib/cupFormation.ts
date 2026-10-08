@@ -41,6 +41,7 @@ export function validGrid(value: unknown): value is GridCup[] {
 type Point = { x: number; y: number };
 type Transform = { origin: Point; across: Point; depth: Point };
 type Fit = { grid: GridCup[]; error: number; transform: Transform; template: GridCup[] };
+const MAX_GRID_DISTANCE = 0.6;
 const subtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 const cross = (a: Point, b: Point) => a.x * b.y - a.y * b.x;
 const dot = (a: Point, b: Point) => a.x * b.x + a.y * b.y;
@@ -84,7 +85,7 @@ function project(points: Point[], template: GridCup[], transform: Transform): Fi
         }
         // Less than a third of normal cup spacing. Never merge detections or invent cups.
         if (
-            distance > 0.6 ** 2 ||
+            distance > MAX_GRID_DISTANCE ** 2 ||
             grid.some((slot) => slot.x === closest.x && slot.y === closest.y)
         )
             return null;
@@ -113,7 +114,12 @@ export class FormationFitter {
         const slots = current
             .map((slot) => ({ slot, d: Math.hypot(x - slot.x, y - slot.y) }))
             .sort((a, b) => a.d - b.d);
-        if (!slots.length || slots[0].d > 0.45 || (slots[1] && slots[1].d - slots[0].d < 0.25))
+        // Identification uses the same measured-position tolerance as plane fitting.
+        if (
+            !slots.length ||
+            slots[0].d > MAX_GRID_DISTANCE ||
+            (slots[1] && slots[1].d - slots[0].d < 0.25)
+        )
             return null;
         return slots[0].slot;
     }

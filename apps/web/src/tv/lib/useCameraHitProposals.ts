@@ -51,6 +51,7 @@ export function useCameraHitProposals(
     ]);
     const current = useRef({
         context,
+        historyContext,
         enabled,
         device,
         match,
@@ -63,6 +64,7 @@ export function useCameraHitProposals(
     useEffect(() => {
         current.current = {
             context,
+            historyContext,
             enabled,
             device,
             match,
@@ -72,7 +74,18 @@ export function useCameraHitProposals(
             recording,
             snapshot,
         };
-    }, [context, enabled, device, match, areas, firstTeam, syncTvId, recording, snapshot]);
+    }, [
+        context,
+        historyContext,
+        enabled,
+        device,
+        match,
+        areas,
+        firstTeam,
+        syncTvId,
+        recording,
+        snapshot,
+    ]);
     const [error, setError] = useState<string | null>(null);
     const pending = useRef(false);
     const queryClient = useQueryClient();
@@ -89,6 +102,7 @@ export function useCameraHitProposals(
     });
     const geometry = useRef<{
         context: string;
+        historyContext: string;
         at: number;
         aspect: number;
         frame: CupFrame;
@@ -100,10 +114,16 @@ export function useCameraHitProposals(
         if (!geometry.current || geometry.current.context !== live.context)
             geometry.current = {
                 context: live.context,
+                historyContext: live.historyContext,
                 at: 0,
                 aspect,
                 frame,
-                fitters: [new FormationFitter(), new FormationFitter()],
+                // Scores invalidate proposal writes, but the measured rack plane remains
+                // useful for identifying the remaining cups in this unchanged mapping.
+                fitters:
+                    geometry.current?.historyContext === live.historyContext
+                        ? geometry.current.fitters
+                        : [new FormationFitter(), new FormationFitter()],
             };
         const value = geometry.current;
         value.at = Date.now() - frame.ageMs;

@@ -45,10 +45,17 @@ export function useBallHitLookback(
         null
     );
     const epoch = useRef(0);
+    const epochContext = useRef('');
     const sourceContext = live?.context;
     const historyContext = live?.historyContext ?? sourceContext ?? '';
     useEffect(() => {
-        epoch.current = Date.now();
+        const mapping = JSON.stringify([historyContext, ballColor]);
+        if (epochContext.current !== mapping) {
+            epochContext.current = mapping;
+            epoch.current = Date.now();
+        }
+        // A score clears current ball geometry and pending proposals without hiding
+        // a persisted hit from this same recording and calibrated mapping.
         liveRef.current?.send({
             version: 1,
             enabled: false,
