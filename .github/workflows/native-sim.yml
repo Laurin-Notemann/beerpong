@@ -429,7 +429,7 @@ jobs:
 
       - name: Upload app artifact
         if: inputs.mode == 'build' && inputs.export_app == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: native-sim-app-${{ inputs.session }}
           path: apps/mobile/build/*.app.tar.gz # apps/mobile
