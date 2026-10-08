@@ -33,6 +33,8 @@ export interface DisplayConfig {
     cameraSubject: CameraSubject;
     /** mirror this camera's video horizontally, independently of the scoreboard */
     cameraVideoFlipped: boolean;
+    /** mirror this camera's video vertically after rotation, independently of horizontal mirroring */
+    cameraVideoFlippedVertically: boolean;
 }
 
 export const cameraPositions = [
@@ -67,7 +69,10 @@ export const cameraSubjectLabel: Record<CameraSubject, string> = {
 export type CameraPatch = Partial<
     Pick<
         DisplayConfig,
-        'cameraSubject' | 'cameraVideoFlipped' | 'cameraRotation'
+        | 'cameraSubject'
+        | 'cameraVideoFlipped'
+        | 'cameraVideoFlippedVertically'
+        | 'cameraRotation'
     >
 >;
 
@@ -103,6 +108,7 @@ export const emptyConfig: DisplayConfig = {
     cameraOverlayFlipped: false,
     cameraSubject: 'table',
     cameraVideoFlipped: false,
+    cameraVideoFlippedVertically: false,
 };
 
 /** what a phone may change; the group goes on with the app's Add TV, which joins it */
@@ -121,6 +127,7 @@ export type DisplayPatch = Partial<
         | 'cameraOverlayFlipped'
         | 'cameraSubject'
         | 'cameraVideoFlipped'
+        | 'cameraVideoFlippedVertically'
     >
 >;
 
@@ -181,6 +188,8 @@ export function parsePatch(value: unknown): DisplayPatch {
         patch.cameraSubject = v.cameraSubject as CameraSubject;
     if (typeof v.cameraVideoFlipped === 'boolean')
         patch.cameraVideoFlipped = v.cameraVideoFlipped;
+    if (typeof v.cameraVideoFlippedVertically === 'boolean')
+        patch.cameraVideoFlippedVertically = v.cameraVideoFlippedVertically;
     if (Array.isArray(v.pinnedMatchIds) && v.pinnedMatchIds.every(isString)) {
         patch.pinnedMatchIds = [...new Set(v.pinnedMatchIds)].slice(
             0,

@@ -372,6 +372,7 @@ function Screen({
                     replay={replay.replay}
                     rotation={replayCamera?.cameraRotation}
                     flipped={replayCamera?.cameraVideoFlipped}
+                    verticallyFlipped={replayCamera?.cameraVideoFlippedVertically}
                     onDone={onReplayDone}
                 />
             )}
@@ -405,6 +406,9 @@ function Screen({
                         offline={offline}
                         flipped={config.cameraOverlayFlipped}
                         videoFlipped={cameraConfigs[feeds.main.cameraId ?? '']?.cameraVideoFlipped}
+                        videoFlippedVertically={
+                            cameraConfigs[feeds.main.cameraId ?? '']?.cameraVideoFlippedVertically
+                        }
                         rotation={cameraConfigs[feeds.main.cameraId ?? '']?.cameraRotation}
                         cameraId={feeds.main.cameraId ?? ''}
                         corners={config.cameraCorners.map((corner) => ({

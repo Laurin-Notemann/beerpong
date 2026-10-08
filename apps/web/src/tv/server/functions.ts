@@ -198,6 +198,8 @@ export const setCameraOrientation = createServerFn({ method: 'POST' })
         update(camera, {
             cameraRotation: patch.cameraRotation ?? camera.config.cameraRotation,
             cameraVideoFlipped: patch.cameraVideoFlipped ?? camera.config.cameraVideoFlipped,
+            cameraVideoFlippedVertically:
+                patch.cameraVideoFlippedVertically ?? camera.config.cameraVideoFlippedVertically,
         });
     });
 

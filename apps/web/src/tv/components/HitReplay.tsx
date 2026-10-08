@@ -11,12 +11,14 @@ export function HitReplay({
     replay,
     rotation = 0,
     flipped = false,
+    verticallyFlipped = false,
     onDone,
 }: {
     hit: VisionHitDto;
     replay: VisionHitReplayDto;
     rotation?: CameraRotation;
     flipped?: boolean;
+    verticallyFlipped?: boolean;
     onDone: () => void;
 }) {
     const video = useRef<HTMLVideoElement>(null);
@@ -159,7 +161,12 @@ export function HitReplay({
             <canvas
                 ref={canvas}
                 className="absolute inset-0 h-full w-full object-contain"
-                style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
+                style={{
+                    transform:
+                        flipped || verticallyFlipped
+                            ? `scale(${flipped ? -1 : 1}, ${verticallyFlipped ? -1 : 1})`
+                            : undefined,
+                }}
             />
             <div className="absolute top-0 right-0 left-0 flex items-center justify-between bg-black/80 p-6 text-[1.6rem]">
                 <span>{error ?? `REPLAY · possible hit on ${hit.team} · recognition only`}</span>

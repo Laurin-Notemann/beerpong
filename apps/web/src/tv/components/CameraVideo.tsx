@@ -14,6 +14,7 @@ import { feedEventContext, noteFeed, setFeedVideo } from '~/tv/lib/feedTelemetry
 export function CameraVideo({
     stream,
     flipped = false,
+    verticallyFlipped = false,
     rotation = 0,
     cameraId,
     videoRef,
@@ -22,6 +23,7 @@ export function CameraVideo({
 }: {
     stream: MediaStream;
     flipped?: boolean;
+    verticallyFlipped?: boolean;
     rotation?: CameraRotation;
     cameraId: string;
     /** The sending camera reuses the unrotated decoder for cup detection and calibration. */
@@ -260,7 +262,12 @@ export function CameraVideo({
             <canvas
                 ref={canvas}
                 className="absolute inset-0 h-full w-full object-contain"
-                style={{ transform: flipped ? 'scaleX(-1)' : undefined }}
+                style={{
+                    transform:
+                        flipped || verticallyFlipped
+                            ? `scale(${flipped ? -1 : 1}, ${verticallyFlipped ? -1 : 1})`
+                            : undefined,
+                }}
             />
             {problem && !suspended && (
                 <div

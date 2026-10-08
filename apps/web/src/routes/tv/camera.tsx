@@ -461,6 +461,7 @@ function Camera() {
                     rotation={identity.config.cameraRotation}
                     cameraId={identity.id}
                     flipped={identity.config.cameraVideoFlipped}
+                    verticallyFlipped={identity.config.cameraVideoFlippedVertically}
                 />
             )}
             {selectingAreas && (

@@ -39,6 +39,7 @@ export function VisionDebug({
     const shownWidth = sideways ? height : width;
     const shownHeight = sideways ? width : height;
     const mirror = data?.config.cameraVideoFlipped;
+    const verticalMirror = data?.config.cameraVideoFlippedVertically;
     return (
         <>
             {areasVisible && state?.areas && (
@@ -47,7 +48,13 @@ export function VisionDebug({
                     className="pointer-events-none fixed inset-0 z-40 h-full w-full"
                     viewBox={`0 0 ${shownWidth} ${shownHeight}`}
                 >
-                    <g transform={mirror ? `translate(${shownWidth} 0) scale(-1 1)` : undefined}>
+                    <g
+                        transform={
+                            mirror || verticalMirror
+                                ? `translate(${mirror ? shownWidth : 0} ${verticalMirror ? shownHeight : 0}) scale(${mirror ? -1 : 1} ${verticalMirror ? -1 : 1})`
+                                : undefined
+                        }
+                    >
                         <g
                             transform={`translate(${shownWidth / 2} ${shownHeight / 2}) rotate(${rotation}) translate(${-width / 2} ${-height / 2})`}
                         >
