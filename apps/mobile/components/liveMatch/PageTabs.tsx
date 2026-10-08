@@ -83,7 +83,8 @@ export function PageTabs({
             onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
             style={{
                 alignSelf: 'center',
-                width: 110 * titles.length,
+                width: '100%',
+                maxWidth: 110 * titles.length,
                 height: HEIGHT,
                 padding: INSET,
                 flexDirection: 'row',

@@ -27,6 +27,7 @@ const shade = (to: 'top' | 'bottom') => ({
  */
 export function CameraView({
     stream,
+    status,
     match,
     groupName,
     offline,
@@ -39,6 +40,8 @@ export function CameraView({
     suspended = false,
 }: {
     stream: MediaStream | null;
+    /** shown while there's no video yet; the TV shows it in its header instead */
+    status?: string;
     match: LiveMatchView | undefined;
     groupName: string;
     offline: boolean;
@@ -65,6 +68,14 @@ export function CameraView({
                     hit={hit}
                     suspended={suspended}
                 />
+            )}
+            {!stream && status && (
+                <div
+                    role="status"
+                    className="absolute inset-0 flex items-center justify-center px-[4rem] text-center text-[2rem] text-text-2"
+                >
+                    {status}
+                </div>
             )}
             {corners.map((corner) => (
                 <section

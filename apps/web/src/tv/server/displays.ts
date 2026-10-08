@@ -31,6 +31,11 @@ export interface Display {
     /** the display's own API user (see api.ts `signup`) */
     refreshToken: string | null;
     listeners: Set<(event: DisplayEvent) => void>;
+    /**
+     * a phone watching a match in the app's Camera tab (`/tv?inApp=1`): a TV for the cameras,
+     * but not one the remote lists or controls
+     */
+    viewer: boolean;
     /** what the app's remote calls it, from its browser (`deviceName`) */
     name: string;
     lastSeen: number;
@@ -108,11 +113,19 @@ function codeFor(id: string, wanted: unknown) {
 /**
  * The TVs (or cameras) of this group with their page open, for the app's remote. That includes
  * a page in a background tab; one whose connection died without closing (a TV switched off)
- * counts until a ping to it fails.
+ * counts until a ping to it fails. Phones watching a match (`viewer`) only with `viewers`.
  */
-export function byGroup(groupId: string, kind: Display['kind'] = 'tv'): Display[] {
+export function byGroup(
+    groupId: string,
+    kind: Display['kind'] = 'tv',
+    { viewers = false } = {}
+): Display[] {
     return [...displays.values()].filter(
-        (d) => d.kind === kind && d.config.groupId === groupId && d.listeners.size > 0
+        (d) =>
+            d.kind === kind &&
+            d.config.groupId === groupId &&
+            d.listeners.size > 0 &&
+            (viewers || !d.viewer)
     );
 }
 
@@ -224,6 +237,7 @@ export function register(input: {
     code: unknown;
     config: unknown;
     refreshToken: unknown;
+    viewer?: unknown;
 }): Display {
     const { id, secret } = input;
     if (!isToken(id) || !isToken(secret)) {
@@ -237,6 +251,7 @@ export function register(input: {
             throw new DisplayError('display id taken', 409);
         }
         known.code = codeFor(id, input.code);
+        known.viewer = input.viewer === true;
         known.refreshToken ??= typeof input.refreshToken === 'string' ? input.refreshToken : null;
         return known;
     }
@@ -248,6 +263,7 @@ export function register(input: {
         config: parseConfig(input.config),
         refreshToken: typeof input.refreshToken === 'string' ? input.refreshToken : null,
         listeners: new Set(),
+        viewer: input.viewer === true,
         name: 'TV',
         lastSeen: Date.now(),
     };
@@ -271,7 +287,7 @@ export function update(display: Display, patch: DisplayPatch & Partial<DisplayCo
     display.config = { ...display.config, ...patch };
     emit(display, { type: 'config', config: display.config });
     if (display.kind === 'camera' && display.config.groupId) {
-        for (const tv of byGroup(display.config.groupId)) {
+        for (const tv of byGroup(display.config.groupId, 'tv', { viewers: true })) {
             const corners = tv.config.cameraCorners.map((corner) =>
                 corner.cameraId === display.id
                     ? { ...corner, subject: display.config.cameraSubject }

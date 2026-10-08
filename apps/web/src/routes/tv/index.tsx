@@ -31,7 +31,11 @@ import { useVisionHits } from '~/tv/lib/useVisionHits';
 import type { Board } from '~/tv/server/board';
 import { registerDisplay } from '~/tv/server/functions';
 
-/** The TV: what's on it comes from the app's TV remote, which adds it with the code it shows. */
+/**
+ * The TV: what's on it comes from the app's TV remote, which adds it with the code it shows.
+ * With `?inApp=1` it's the live match screen's Camera tab instead: the app's link
+ * (`#pair=`, server/phoneCamera.ts) puts it on the match, and it always shows the camera view.
+ */
 export const Route = createFileRoute('/tv/')({
     // everything here depends on this browser's identity in localStorage
     ssr: false,
@@ -77,14 +81,20 @@ function loadIdentity(): Identity {
 
 function Tv() {
     const [debug] = useState(() => new URLSearchParams(location.search).get('debug') === 'vision');
+    const [inApp] = useState(() => new URLSearchParams(location.search).get('inApp') === '1');
+    const [pairingToken] = useState(() => new URLSearchParams(location.hash.slice(1)).get('pair'));
+    const [pairingError, setPairingError] = useState<string | null>(null);
     const [identity, setIdentity] = useState(loadIdentity);
     const [registered, setRegistered] = useState(false);
     const [cameraConfigs, setCameraConfigs] = useState<Record<string, DisplayConfig>>({});
 
     useEffect(() => {
         document.documentElement.classList.add('tv');
-        return () => document.documentElement.classList.remove('tv');
-    }, []);
+        if (inApp) document.documentElement.classList.add('in-app');
+        if (pairingToken)
+            history.replaceState(history.state, '', location.pathname + location.search);
+        return () => document.documentElement.classList.remove('tv', 'in-app');
+    }, [inApp, pairingToken]);
 
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(identity));
@@ -93,11 +103,27 @@ function Tv() {
     const register = useCallback(async () => {
         const { id, secret, code, config, refreshToken } = identity;
         const res = await registerDisplay({
-            data: { kind: 'tv', id, secret, code, config, refreshToken },
+            data: {
+                kind: 'tv',
+                id,
+                secret,
+                code,
+                config,
+                refreshToken,
+                viewer: inApp,
+                pairingToken: registered ? undefined : pairingToken,
+            },
         });
-        setIdentity((i) => ({ ...i, code: res.code, config: res.config }));
+        // pairing gets the session before the events stream that usually brings it
+        setIdentity((i) => ({
+            ...i,
+            code: res.code,
+            config: res.config,
+            refreshToken: res.refreshToken ?? i.refreshToken,
+        }));
         setRegistered(true);
-    }, [identity]);
+        setPairingError(null);
+    }, [identity, inApp, pairingToken, registered]);
 
     const registerRef = useRef(register);
     useEffect(() => {
@@ -108,8 +134,10 @@ function Tv() {
     useEffect(() => {
         let stopped = false;
         const attempt = () => {
-            void registerRef.current().catch(() => {
-                if (!stopped) setTimeout(attempt, 3_000);
+            void registerRef.current().catch((error: unknown) => {
+                if (stopped) return;
+                setPairingError(error instanceof Error ? error.message : null);
+                setTimeout(attempt, 3_000);
             });
         };
         attempt();
@@ -136,7 +164,8 @@ function Tv() {
         identity.secret,
         registered &&
             !!identity.config.groupId &&
-            (identity.config.view === 'camera' ||
+            (inApp ||
+                identity.config.view === 'camera' ||
                 (identity.config.view === 'auto' &&
                     !!board.data?.liveMatches.length &&
                     !board.data.liveMatches.some((m) => m.id === identity.config.focusMatchId))),
@@ -200,6 +229,7 @@ function Tv() {
         <>
             {config.groupId ? (
                 <Screen
+                    inApp={inApp}
                     board={board.data ?? null}
                     config={config}
                     offline={!connected || board.isError}
@@ -212,6 +242,10 @@ function Tv() {
                     replay={vision.replay}
                     onReplayDone={vision.close}
                 />
+            ) : inApp ? (
+                <main className="grid h-screen place-items-center p-[4rem] text-center text-[2.4rem] text-text-2">
+                    {pairingError ?? 'Connecting…'}
+                </main>
             ) : (
                 <Pairing code={identity.code} />
             )}
@@ -224,7 +258,7 @@ function Tv() {
                 </div>
             )}
             {/* it sits in the corner a clip from the right plays in */}
-            {!clips.length && <FullscreenButton />}
+            {!clips.length && !inApp && <FullscreenButton />}
             {debug && registered && config.groupId && (
                 <VisionDebug id={identity.id} secret={identity.secret} stream={feeds.main.stream} />
             )}
@@ -255,6 +289,7 @@ function Pairing({ code }: { code: string | null }) {
 }
 
 function Screen({
+    inApp,
     board,
     config,
     offline,
@@ -267,6 +302,8 @@ function Screen({
     replay,
     onReplayDone,
 }: {
+    /** the app's Camera tab: the camera view only, with the status where the video goes */
+    inApp: boolean;
     board: Board | null;
     config: DisplayConfig;
     offline: boolean;
@@ -291,15 +328,16 @@ function Screen({
     const available = Object.values(feeds).some((f) => !!f.stream);
     const wanted = layoutFor(config, liveIds, available, board?.tournament?.status === 'ACTIVE');
     // While connecting, keep a live match or leaderboard visible.
-    const layout =
-        wanted === 'camera' && !available
-            ? layoutFor(
-                  { ...config, view: 'auto' },
-                  liveIds,
-                  false,
-                  board?.tournament?.status === 'ACTIVE'
-              )
-            : wanted;
+    const layout = inApp
+        ? 'camera'
+        : wanted === 'camera' && !available
+          ? layoutFor(
+                { ...config, view: 'auto' },
+                liveIds,
+                false,
+                board?.tournament?.status === 'ACTIVE'
+            )
+          : wanted;
     const focused = live.find((i) => i.id === config.focusMatchId) ?? matches[0];
     const rows = board?.leaderboard.rows ?? [];
     const now = useNow();
@@ -359,6 +397,7 @@ function Screen({
                 <main className="tv-board relative z-10 h-screen bg-bg">
                     <CameraView
                         stream={feed}
+                        status={inApp ? cameraStatus : undefined}
                         hit={shownHighlight}
                         suspended={!!replay || !!activeClip}
                         match={focused ?? matches[0]}
