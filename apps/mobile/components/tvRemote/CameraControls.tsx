@@ -83,11 +83,11 @@ export function CameraControls({
             />
             <Row
                 icon="swap-horizontal"
-                title="Flip camera video"
+                title="Flip camera horizontally"
                 subtitle={
                     config.cameraVideoFlipped
                         ? 'Mirrored horizontally'
-                        : 'Original orientation'
+                        : 'Left and right unchanged'
                 }
                 selected={config.cameraVideoFlipped}
                 onPress={() =>
@@ -96,6 +96,23 @@ export function CameraControls({
                     })
                 }
                 trailing={<Radio on={config.cameraVideoFlipped} />}
+            />
+            <Row
+                icon="swap-vertical"
+                title="Flip camera vertically"
+                subtitle={
+                    config.cameraVideoFlippedVertically
+                        ? 'Mirrored vertically'
+                        : 'Top and bottom unchanged'
+                }
+                selected={config.cameraVideoFlippedVertically}
+                onPress={() =>
+                    update.mutate({
+                        cameraVideoFlippedVertically:
+                            !config.cameraVideoFlippedVertically,
+                    })
+                }
+                trailing={<Radio on={config.cameraVideoFlippedVertically} />}
             />
         </Card>
     );

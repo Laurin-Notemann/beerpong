@@ -32,6 +32,7 @@ export function CameraView({
     offline,
     flipped = false,
     videoFlipped = false,
+    videoFlippedVertically = false,
     rotation = 0,
     cameraId,
     corners,
@@ -44,6 +45,7 @@ export function CameraView({
     offline: boolean;
     flipped?: boolean;
     videoFlipped?: boolean;
+    videoFlippedVertically?: boolean;
     rotation?: CameraRotation;
     cameraId: string;
     hit?: VisionHitDto | null;
@@ -60,6 +62,7 @@ export function CameraView({
                 <CameraVideo
                     stream={stream}
                     flipped={videoFlipped}
+                    verticallyFlipped={videoFlippedVertically}
                     rotation={rotation}
                     cameraId={cameraId}
                     hit={hit}
@@ -83,6 +86,7 @@ export function CameraView({
                         <CameraVideo
                             stream={corner.stream}
                             flipped={corner.config.cameraVideoFlipped}
+                            verticallyFlipped={corner.config.cameraVideoFlippedVertically}
                             rotation={corner.config.cameraRotation}
                             cameraId={corner.cameraId}
                             suspended={suspended}

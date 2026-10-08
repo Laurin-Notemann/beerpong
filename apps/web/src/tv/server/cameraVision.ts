@@ -64,6 +64,7 @@ export function mappedFirstTeam(camera: Display, state: VisionState) {
     const dx = ((a.x + a.width / 2 - b.x - b.width / 2) * state.width) / Math.max(state.height, 1);
     const dy = a.y + a.height / 2 - b.y - b.height / 2;
     const angle = (camera.config.cameraRotation * Math.PI) / 180;
+    // Vertical mirroring is applied after rotation, so it cannot change the left/right team mapping.
     const screenX =
         (dx * Math.cos(angle) - dy * Math.sin(angle)) * (camera.config.cameraVideoFlipped ? -1 : 1);
     if (Math.abs(screenX) < Math.hypot(dx, dy) * 0.2) return null;
