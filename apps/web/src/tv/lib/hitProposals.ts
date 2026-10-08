@@ -7,7 +7,7 @@ import {
 import type { Cup } from '~/tv/lib/cupVision';
 import { hitModel, hitScore } from '~/tv/lib/hitClassifier';
 
-export const HIT_MODEL = 'motion-ball-to-rim-evidence-v1';
+export const HIT_MODEL = 'motion-ball-to-rim-evidence-v2';
 export interface HitEvidence {
     /** Distances use aspect-correct source coordinates in image-height units. */
     approachDistance: number;
@@ -28,7 +28,7 @@ type Point = BallCandidate & { at: number };
 type Track = { points: Point[]; emitted: boolean; pending?: HitProposal };
 
 /** Suggestions arise from motion approaching a fresh rim, independent of recorded score events.
- * A disappearance or observed exit is evidence for review, never proof the ball stayed in a cup. */
+ * Disappearance is evidence for review; a measured departure cancels the suggested cup entry. */
 export class HitProposer {
     private tracks: Track[] = [];
     private cups: { at: number; cups: Cup[] } = { at: 0, cups: [] };
@@ -62,7 +62,7 @@ export class HitProposer {
             Math.hypot((a.x - b.x) * aspect, a.y - b.y);
         const proposals: HitProposal[] = [];
         this.cooldown = this.cooldown.filter((c) => at - c.at < 2500);
-        const emit = (track: Track, exited: boolean) => {
+        const emit = (track: Track) => {
             const p = track.pending;
             if (!p || track.emitted || at - p.at > 750) return;
             track.emitted = true;
@@ -77,18 +77,18 @@ export class HitProposer {
             const evidence = {
                 ...p.evidence,
                 occluded: p.evidence.occluded || obscured,
-                exitObserved: exited,
+                exitObserved: false,
             };
             const score = hitScore(evidence);
             if (score !== null && hitModel && score < hitModel.threshold) return;
             proposals.push({
                 ...p,
                 evidence,
-                confidence: score ?? (exited ? 0.45 : evidence.occluded ? 0.5 : 0.65),
+                confidence: score ?? (evidence.occluded ? 0.5 : 0.65),
             });
         };
         for (const track of this.tracks) {
-            if (at - track.points[track.points.length - 1].at >= 220) emit(track, false);
+            if (at - track.points[track.points.length - 1].at >= 220) emit(track);
         }
         this.tracks = this.tracks.filter((t) => at - t.points[t.points.length - 1].at < 350);
         const used = new Set<Track>();
@@ -116,7 +116,11 @@ export class HitProposer {
                 at - track.pending.at >= 67 &&
                 distance(ball, track.pending.imageCup) > track.pending.imageCup.radius * aspect * 2
             ) {
-                emit(track, true);
+                // A measured departure contradicts this cup-entry suggestion. Player
+                // reviews identified these continuations as misses; keep tracking the
+                // ball for outlines without treating the bounce as a successful hit.
+                track.pending = undefined;
+                track.emitted = true;
                 continue;
             }
             if (
