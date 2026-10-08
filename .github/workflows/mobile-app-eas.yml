@@ -17,7 +17,7 @@ on:
     paths:
       - "apps/mobile/**"
       - "pnpm-lock.yaml"
-      - ".github/workflows/mobile-app-eas.yml"
+      # Workflow-only maintenance is qualified with workflow_dispatch, without resubmitting iOS.
   workflow_dispatch:
     inputs:
       platform:
@@ -140,6 +140,10 @@ jobs:
         id: native_build
         if: ${{ !steps.match.outputs.build_id }}
         run: |
+          if [ "$PLATFORM" = "android" ]; then
+            # R8 exceeded the default 512 MiB metaspace; retain the 2 GiB heap and existing client options.
+            export GRADLE_OPTS="${GRADLE_OPTS:+$GRADLE_OPTS }-Dorg.gradle.jvmargs=\"-Xmx2048m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8\""
+          fi
           eas build --local -p "$PLATFORM" --profile "$PROFILE" --non-interactive \
             --output "$RUNNER_TEMP/$ARTIFACT"
 
