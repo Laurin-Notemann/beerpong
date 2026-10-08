@@ -22,8 +22,21 @@ export type CupRequest =
       };
 export type CupResult =
     | { type: 'progress'; message: string }
-    | { type: 'ready'; model: CupModel; loadMs: number }
-    | { type: 'result'; cups: Cup[]; inferenceMs: number }
+    | {
+          type: 'ready';
+          model: CupModel;
+          loadMs: number;
+          crossOriginIsolated?: boolean;
+          numThreads?: number;
+      }
+    | {
+          type: 'result';
+          cups: Cup[];
+          inferenceMs: number;
+          preprocessMs?: number;
+          modelRunMs?: number;
+          postprocessMs?: number;
+      }
     | { type: 'error'; message: string };
 
 const worker = self as unknown as {
@@ -80,7 +93,13 @@ async function process({ data }: MessageEvent<CupRequest>) {
                 executionProviders: ['wasm'],
                 graphOptimizationLevel: 'all',
             });
-            worker.postMessage({ type: 'ready', model, loadMs: performance.now() - start });
+            worker.postMessage({
+                type: 'ready',
+                model,
+                loadMs: performance.now() - start,
+                crossOriginIsolated: self.crossOriginIsolated === true,
+                numThreads: ort.env.wasm.numThreads,
+            });
         } else if (session && model) {
             const start = performance.now();
             if (!validAreas(data.areas)) throw new Error('Select two separate playing areas');
@@ -97,7 +116,9 @@ async function process({ data }: MessageEvent<CupRequest>) {
                 model.inputSize,
                 model.inputSize,
             ]);
+            const preparedAt = performance.now();
             const outputs = await session.run({ [session.inputNames[0]]: inputTensor });
+            const inferredAt = performance.now();
             const logits = outputs.labels;
             const masks = outputs.masks;
             if (
@@ -153,7 +174,15 @@ async function process({ data }: MessageEvent<CupRequest>) {
                 .filter((cup): cup is Cup => cup !== null);
             inputTensor.dispose();
             for (const tensor of Object.values(outputs)) tensor.dispose();
-            worker.postMessage({ type: 'result', cups, inferenceMs: performance.now() - start });
+            const finishedAt = performance.now();
+            worker.postMessage({
+                type: 'result',
+                cups,
+                inferenceMs: finishedAt - start,
+                preprocessMs: preparedAt - start,
+                modelRunMs: inferredAt - preparedAt,
+                postprocessMs: finishedAt - inferredAt,
+            });
         }
     } catch (error) {
         worker.postMessage({

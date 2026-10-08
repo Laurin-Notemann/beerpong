@@ -76,7 +76,23 @@ export function useCupDetector(
         let model = '';
         let count = 0;
         let dropped = 0;
-        let latencies: number[] = [];
+        const latencies = {
+            inference: [] as number[],
+            preprocessing: [] as number[],
+            modelRun: [] as number[],
+            postprocessing: [] as number[],
+            wallAge: [] as number[],
+            overhead: [] as number[],
+        };
+        const sampleLatency = (name: keyof typeof latencies, value: number | undefined) => {
+            if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return;
+            const samples = latencies[name];
+            samples.push(value);
+            // Background timer throttling must not grow the diagnostic buffer.
+            if (samples.length > 300) samples.shift();
+        };
+        let workerCrossOriginIsolated = -1;
+        let workerNumThreads = -1;
         let lastCupCount = 0;
         let heldCupCount = 0;
         let ignoredCupCount = 0;
@@ -127,11 +143,32 @@ export function useCupDetector(
                 ready = true;
                 model = data.model.id;
                 setStatus('Cup outlines ready');
-                log('loaded', { loadMs: Math.round(data.loadMs), source: data.model.source });
+                workerCrossOriginIsolated =
+                    typeof data.crossOriginIsolated === 'boolean'
+                        ? Number(data.crossOriginIsolated)
+                        : -1;
+                workerNumThreads =
+                    typeof data.numThreads === 'number' && Number.isFinite(data.numThreads)
+                        ? data.numThreads
+                        : -1;
+                log('loaded', {
+                    loadMs: Math.round(data.loadMs),
+                    source: data.model.source,
+                    workerCrossOriginIsolated,
+                    workerNumThreads,
+                });
                 return;
             }
             waiting = false;
             const ageMs = performance.now() - capturedAt;
+            sampleLatency('inference', data.inferenceMs);
+            sampleLatency('preprocessing', data.preprocessMs);
+            sampleLatency('modelRun', data.modelRunMs);
+            sampleLatency('postprocessing', data.postprocessMs);
+            sampleLatency('wallAge', ageMs);
+            // Both durations use their own monotonic clock; this difference covers
+            // dispatch, result transfer and delayed main-thread delivery, not capture.
+            sampleLatency('overhead', Math.max(0, ageMs - data.inferenceMs));
             // Leave headroom for the peer connection; old positions shouldn't outline new frames.
             if (ageMs < MAX_AGE_MS * 0.9) {
                 const selected = rackMembership.observe(
@@ -170,7 +207,6 @@ export function useCupDetector(
             nextAt = performance.now() + 150;
             count++;
             lastCupCount = data.cups.length;
-            latencies.push(data.inferenceMs);
             setStatus(
                 ageMs < MAX_AGE_MS * 0.9
                     ? `Cup outlines: ${playingCupCount} in racks${ignoredCupCount ? ` · ${ignoredCupCount} outside play` : ''}${heldCupCount ? ` · ${heldCupCount} briefly tracked` : ''}`
@@ -216,7 +252,19 @@ export function useCupDetector(
         }, 100);
         timers.heartbeat = setInterval(() => {
             if (!ready || stopped) return;
-            latencies.sort((a, b) => a - b);
+            const timingStats: Record<string, number> = {};
+            for (const [name, samples] of Object.entries(latencies)) {
+                samples.sort((a, b) => a - b);
+                if (samples.length) {
+                    timingStats[`${name}P50Ms`] = Math.round(
+                        samples[Math.floor(samples.length * 0.5)]
+                    );
+                    timingStats[`${name}P95Ms`] = Math.round(
+                        samples[Math.floor(samples.length * 0.95)]
+                    );
+                }
+                samples.length = 0;
+            }
             log('stats', {
                 frames: count,
                 published: count - dropped,
@@ -225,12 +273,12 @@ export function useCupDetector(
                 heldCupCount,
                 ignoredCupCount,
                 playingCupCount,
-                inferenceP50Ms: Math.round(latencies[Math.floor(latencies.length * 0.5)] ?? 0),
-                inferenceP95Ms: Math.round(latencies[Math.floor(latencies.length * 0.95)] ?? 0),
+                ...timingStats,
+                workerCrossOriginIsolated,
+                workerNumThreads,
                 hidden: document.hidden ? 1 : 0,
             });
             count = dropped = 0;
-            latencies = [];
         }, 30_000);
         return () => {
             stopped = true;
