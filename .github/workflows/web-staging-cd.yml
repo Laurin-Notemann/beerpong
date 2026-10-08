@@ -89,7 +89,7 @@ jobs:
             gh run watch -R "$GITHUB_REPOSITORY" "$id" --exit-status > /dev/null || exit 1
           done
 
-      - uses: webfactory/ssh-agent@v0.9.0
+      - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_SECRET }}
 
