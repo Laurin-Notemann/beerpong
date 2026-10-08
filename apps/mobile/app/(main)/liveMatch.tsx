@@ -10,6 +10,7 @@ import ErrorScreen from '@/components/ErrorScreen';
 import { InsetFree } from '@/components/liveMatch/InsetFree';
 import { LiveMatchEnded } from '@/components/liveMatch/LiveMatchEnded';
 import { LiveMatchHeader } from '@/components/liveMatch/LiveMatchHeader';
+import { MatchCamera } from '@/components/liveMatch/MatchCamera';
 import { MovesLog } from '@/components/liveMatch/MovesLog';
 import { PageTabs } from '@/components/liveMatch/PageTabs';
 import { Scoreboard } from '@/components/liveMatch/Scoreboard';
@@ -18,6 +19,7 @@ import CreateMatchAssignPoints from '@/components/screens/CreateMatchAssignPoint
 import NewMatchCups from '@/components/screens/NewMatchCups';
 import { Swiper, SwiperRef } from '@/components/Swiper';
 import { TournamentLabel } from '@/components/tournament/TournamentLabel';
+import { useSwiperPage } from '@/hooks/useSwiperPage';
 import { AppBackground } from '@/lib/Background';
 import { useLiveMatchScreen } from '@/lib/liveMatch/useLiveMatchScreen';
 import { useInsets } from '@/lib/useInsets';
@@ -25,7 +27,8 @@ import { useGroupStore } from '@/zustand/group/stateGroupStore';
 
 /**
  * Entering a live match: the score on top, the cups and points pages (as in the pro mode
- * draft) and the moves so far in the middle, with finishing in the header. Every phone in the group can have it open.
+ * draft), the moves so far and the camera in the middle, with finishing in the header. Every
+ * phone in the group can have it open.
  */
 export default function LiveMatchPage() {
     const { id, groupId } = useLocalSearchParams<{
@@ -49,6 +52,7 @@ export default function LiveMatchPage() {
 
     const pagerRef = useRef<SwiperRef>(null);
     const pagerProgress = useSharedValue(0);
+    const page = useSwiperPage(pagerProgress);
     // a cup's drag picks a player; the pages stay put meanwhile
     const [isDraggingCup, setIsDraggingCup] = useState(false);
 
@@ -87,7 +91,7 @@ export default function LiveMatchPage() {
                         suggestedTarget={isLive ? vision.hit?.team : undefined}
                     />
                     <PageTabs
-                        titles={['Cups', 'Points', 'Moves']}
+                        titles={['Cups', 'Points', 'Moves', 'Camera']}
                         progress={pagerProgress}
                         onSelect={(index) =>
                             pagerRef.current?.scrollTo({ index })
@@ -119,6 +123,11 @@ export default function LiveMatchPage() {
                                 eloChanges={screen.eloChanges}
                             />
                             <MovesLog entries={screen.moveLog} />
+                            <MatchCamera
+                                groupId={currentGroupId}
+                                liveMatchId={id}
+                                active={isLive && page === 3}
+                            />
                         </Swiper>
                     </InsetFree>
                 </View>

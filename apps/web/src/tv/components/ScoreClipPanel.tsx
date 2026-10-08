@@ -25,12 +25,13 @@ const CLIP_WIDTH = `calc((100vh - 5rem) * 9 / 16)`;
 
 /**
  * How far the board shrinks to fit next to the clip's column (the clip and the padding on the
- * screen's edge). 1rem is 1/120 of the screen's width (styles.css).
+ * screen's edge). 1rem is a share of the screen's width (styles.css); on a phone in portrait
+ * the clip takes nearly all of it.
  */
 export function boardScale() {
-    const rem = innerWidth / 120;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const column = ((innerHeight - 5 * rem) * 9) / 16 + 2.5 * rem;
-    return 1 - column / innerWidth;
+    return Math.max(0, 1 - column / innerWidth);
 }
 
 /**

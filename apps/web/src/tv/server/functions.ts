@@ -21,7 +21,7 @@ import {
     update,
     watch,
 } from '~/tv/server/displays';
-import { claimPhoneCamera } from '~/tv/server/phoneCamera';
+import { claimPhoneDisplay } from '~/tv/server/phoneCamera';
 
 // What the TV's and the camera's pages call. Phones change them through the app (appRemote.ts).
 
@@ -40,9 +40,10 @@ export const registerDisplay = createServerFn({ method: 'POST' })
             code: data.code,
             config: data.config,
             refreshToken: data.refreshToken,
+            viewer: data.viewer,
         });
-        if (display.kind === 'camera' && typeof data.pairingToken === 'string')
-            await claimPhoneCamera(data.pairingToken, display);
+        if (typeof data.pairingToken === 'string')
+            await claimPhoneDisplay(data.pairingToken, display);
         return { config: display.config, code: display.code, refreshToken: display.refreshToken };
     });
 

@@ -244,6 +244,26 @@ export function usePhoneCamera(groupId: ApiId | null) {
     });
 }
 
+/**
+ * A short-lived link to Versus TV's camera view of a live match, for the live match screen's
+ * Camera tab: the page pairs itself as a TV the remote doesn't list (server/phoneCamera.ts).
+ */
+export function useMatchCameraUrl(groupId: ApiId | null, matchId: string) {
+    const { api } = useApi();
+    return useMutation({
+        mutationFn: async () => {
+            if (!groupId) throw new Error('no group');
+            const res = await (
+                await api
+            ).post<{ pairingToken: string }>(tvsUrl(groupId), {
+                viewer: true,
+                matchId,
+            });
+            return `${env.tvBaseUrl}/tv?inApp=1#pair=${encodeURIComponent(res.data.pairingToken)}`;
+        },
+    });
+}
+
 /** takes the group off a camera; it shows its code again */
 export function useRemoveCamera(groupId: ApiId | null) {
     const { api } = useApi();
