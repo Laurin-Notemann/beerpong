@@ -79,6 +79,22 @@ export const useStartNewSeasonMutation = () => {
     });
 };
 
+/** ends the active season; the next one starts by hand or before its first match */
+export const useEndSeasonMutation = () => {
+    const { api } = useApi();
+    return useMutation<
+        Paths.EndActiveSeason.Responses.$200 | null,
+        Error,
+        Paths.EndActiveSeason.RequestBody & { groupId: string }
+    >({
+        mutationFn: async ({ groupId, ...body }) => {
+            const res = await (await api).endActiveSeason({ groupId }, body);
+            return res?.data;
+        },
+        onError: captureMutationErr('endSeason'),
+    });
+};
+
 /**
  * returns information about the group we're currently in
  *

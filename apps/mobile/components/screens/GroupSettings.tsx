@@ -75,6 +75,8 @@ export default function GroupSettingsScreen({
 
     const movesQuery = useMoves(groupId, seasonId);
 
+    const seasonEnded = activeSeason?.endDate != null;
+
     const insets = useInsets(true, true);
 
     const allowedMoves = movesQuery.data?.data ?? [];
@@ -172,6 +174,11 @@ export default function GroupSettingsScreen({
                         <MenuItem
                             border={false}
                             title="Start new Season"
+                            subtitle={
+                                seasonEnded
+                                    ? `"${activeSeason?.name}" has ended`
+                                    : undefined
+                            }
                             headIcon="cached"
                             tailIconType="next"
                             onPress={() => nav.navigate('saveSeason')}
@@ -183,6 +190,24 @@ export default function GroupSettingsScreen({
                                 type: 'confirmBlue',
                             }}
                         />
+                        {/* the next season starts later: by hand, or before its first match */}
+                        {activeSeason && !seasonEnded && (
+                            <MenuItem
+                                title="End Season"
+                                headIcon="flag-checkered"
+                                tailIconType="next"
+                                onPress={() =>
+                                    nav.navigate('saveSeason', { mode: 'end' })
+                                }
+                                confirmationPrompt={{
+                                    title: 'End Season',
+                                    description:
+                                        'No matches can be entered until a new season starts. The leaderboard stays as it is until then.',
+                                    buttonText: 'End Season',
+                                    type: 'confirmBlue',
+                                }}
+                            />
+                        )}
                         <MenuItem
                             title="Create new Player"
                             headIcon="account-plus-outline"

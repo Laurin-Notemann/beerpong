@@ -1,9 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useMatchesQuery } from '@/api/calls/matchHooks';
 import { useMoves } from '@/api/calls/ruleHooks';
-import { useGroup, useStartNewSeasonMutation } from '@/api/calls/seasonHooks';
+import {
+    useEndSeasonMutation,
+    useGroup,
+    useStartNewSeasonMutation,
+} from '@/api/calls/seasonHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
 import { SaveSeasonScreen } from '@/components/screens/SaveSeason';
 import { useSingleFlight } from '@/hooks/useSingleFlight';
@@ -17,9 +21,15 @@ export default function Page() {
     const nav = useNavigation();
     const router = useRouter();
 
+    const { mode } = useLocalSearchParams<{ mode?: 'end' }>();
+
     const { groupId, seasonId, activeSeason } = useGroup();
 
+    // ended with "End Season": the next season starts without naming it again
+    const oldSeasonEnded = activeSeason?.endDate != null;
+
     const newSeasonMutation = useStartNewSeasonMutation();
+    const endSeasonMutation = useEndSeasonMutation();
 
     const qc = useQueryClient();
 
@@ -27,10 +37,12 @@ export default function Page() {
 
     const [onStartNewSeason, isCreating] = useSingleFlight(
         async (
-            oldSeasonName: string,
+            draftName: string,
             ruleMoves: Components.Schemas.RuleMoveCreateDto[]
         ) => {
             if (!groupId) return;
+            const oldSeasonName =
+                (oldSeasonEnded && activeSeason?.name) || draftName;
             try {
                 await newSeasonMutation.mutateAsync({
                     groupId,
@@ -45,7 +57,9 @@ export default function Page() {
                 router.replace('/');
                 matchDraft.clear();
                 showSuccessToast(
-                    `Saved current leaderboard as "${oldSeasonName}".`
+                    oldSeasonEnded
+                        ? 'Started a new season.'
+                        : `Saved current leaderboard as "${oldSeasonName}".`
                 );
                 router.dismissAll();
                 router.replace('/');
@@ -55,6 +69,22 @@ export default function Page() {
             }
         }
     );
+
+    const [onEndSeason, isEnding] = useSingleFlight(async (name: string) => {
+        if (!groupId) return;
+        try {
+            await endSeasonMutation.mutateAsync({ groupId, name });
+            void qc.invalidateQueries({
+                queryKey: ['groups', groupId],
+                exact: false,
+            });
+            showSuccessToast(`Ended the season as "${name}".`);
+            nav.goBack();
+        } catch (err) {
+            ConsoleLogger.error('failed to end season:', err);
+            showErrorToast("Couldn't end the season.", err);
+        }
+    });
 
     const movesQuery = useMoves(groupId, seasonId);
 
@@ -79,12 +109,14 @@ export default function Page() {
     return (
         <SaveSeasonScreen
             onStartNewSeason={onStartNewSeason}
+            onEndSeason={mode === 'end' ? onEndSeason : undefined}
+            oldSeasonEnded={oldSeasonEnded}
             numMatches={matches.length}
             players={rankedPlayers}
             oldSeasonMoves={allowedMoves}
             oldSeasonStartDate={activeSeason?.startDate ?? ''}
             onCancel={() => nav.goBack()}
-            isCreating={isCreating}
+            isCreating={isCreating || isEnding}
             rankingAlgorithm={
                 activeSeason?.seasonSettings?.rankingAlgorithm ?? 'AVERAGE'
             }

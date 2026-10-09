@@ -161,12 +161,33 @@ export default function NewMatchScreen() {
 
     const isValidGame = numFinishes === 1;
 
+    /**
+     * An ended season takes no matches: the first match after "End Season" offers to start the
+     * next one. True if it did.
+     */
+    function needsNewSeason() {
+        if (activeSeason?.endDate == null) return false;
+        Alert.alert(
+            'No season running',
+            'Start a new season to enter matches.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Start new Season',
+                    onPress: () => nav.navigate('saveSeason'),
+                },
+            ]
+        );
+        return true;
+    }
+
     // queues the match and moves on: offline, it is sent once the phone is back online
     function createMatch() {
         if (!groupId || !seasonId) {
             ConsoleLogger.warn('no groupId or seasonId');
             return;
         }
+        if (needsNewSeason()) return;
 
         if (!isValidGame) {
             nav.navigate('assignPointsToPlayerModal', {
@@ -244,6 +265,7 @@ export default function NewMatchScreen() {
             return;
         }
         if (isStarting.current) return;
+        if (needsNewSeason()) return;
 
         // the draft as it is now, not as it was when this screen last rendered
         const { redTeam, blueTeam, actions } = useMatchDraftStore.getState();
@@ -266,7 +288,7 @@ export default function NewMatchScreen() {
     }
 
     function onEnterAfterGame() {
-        if (explainTeams()) return;
+        if (needsNewSeason() || explainTeams()) return;
         carouselRef.current?.next();
     }
 
@@ -300,7 +322,7 @@ export default function NewMatchScreen() {
 
     /** Android's in-page Start match button; iOS asks in the toolbar's menu */
     function chooseStart() {
-        if (explainTeams()) return;
+        if (needsNewSeason() || explainTeams()) return;
 
         Alert.alert('Start match', undefined, [
             { text: 'Cancel', style: 'cancel' },
@@ -368,6 +390,7 @@ export default function NewMatchScreen() {
                     carouselRef.current?.prev();
                 }}
                 onNext={() => {
+                    if (needsNewSeason()) return;
                     carouselRef.current?.next();
                 }}
                 onCreate={onCreateMatch}

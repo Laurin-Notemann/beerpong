@@ -29,7 +29,8 @@ export type RootStackParamList = {
     tvCamera: { groupId: string };
     /** `kind: 'camera'` adds a camera instead */
     addTv: { kind?: 'camera' } | undefined;
-    saveSeason: undefined;
+    /** `mode: 'end'` only ends the current season */
+    saveSeason: { mode?: 'end' } | undefined;
     player: { id: string };
     /** `id` is the player's, `index` the clip to start on */
     scoreClips: { id: string; index: number };

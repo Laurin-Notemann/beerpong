@@ -141,6 +141,7 @@ func (s *Server) routes() map[string]route {
 		"/groups/{groupId}/leaderboard":                                     {"GET": s.leaderboard},
 		"/groups/{groupId}/leaderboard/projection":                          {"POST": s.leaderboardProjection},
 		"/groups/{groupId}/active-season":                                   {"PUT": s.startSeason},
+		"/groups/{groupId}/active-season/end":                               {"PUT": s.endSeason},
 		"/groups/{groupId}/seasons":                                         {"GET": s.listSeasons},
 		"/groups/{groupId}/seasons/{id}":                                    {"GET": s.getSeason, "PUT": s.updateSeason},
 		"/groups/{groupId}/profiles":                                        {"GET": s.listProfiles, "POST": s.createProfile},

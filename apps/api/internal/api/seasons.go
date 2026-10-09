@@ -400,11 +400,14 @@ func (s *Server) startSeason(r *request) response {
 		}
 
 		if old != nil {
-			ended := s.now()
-			if err := q.EndSeason(ctx, db.EndSeasonParams{ID: old.ID, Name: oldName, EndDate: &ended}); err != nil {
-				return nil, err
+			// a season ended with endSeason keeps its name and end date
+			if old.EndDate == nil {
+				ended := s.now()
+				if err := q.EndSeason(ctx, db.EndSeasonParams{ID: old.ID, Name: oldName, EndDate: &ended}); err != nil {
+					return nil, err
+				}
+				old.Name, old.EndDate = oldName, &ended
 			}
-			old.Name, old.EndDate = oldName, &ended
 
 			// Carry every active player over with the stats they finished with.
 			board, res := s.leaderboardFor(ctx, q, toGroupDTO(group), "season", true, old.ID, nil)
@@ -446,6 +449,71 @@ func (s *Server) startSeason(r *request) response {
 	})
 	if _, isOK := res.(okResponse); isOK {
 		s.hub.Publish(groupID, realtime.Seasons, "seasonStart", event)
+	}
+	return res
+}
+
+// endSeason ends the group's active season without starting the next one, so
+// the next season starts when it's started (by hand, or before its first
+// match), not when this one ends. The group keeps it as its active season,
+// with its final leaderboard, until then; matches can't be added to it.
+func (s *Server) endSeason(r *request) response {
+	body, res := readJSON(r.Request, true)
+	if res != nil {
+		return res
+	}
+	o, err := asObject(body)
+	if err != nil {
+		return springError(400)
+	}
+	name, err := o.str("name")
+	if err != nil {
+		return springError(400)
+	}
+	if nameInvalid(name) {
+		return fail(errInvalidSeasonName)
+	}
+
+	groupID := r.path("groupId")
+	ctx := r.Context()
+	res = s.tx(ctx, func(q *db.Queries) (response, error) {
+		memberID, err := s.membershipID(r, q, groupID)
+		if err != nil {
+			return nil, err
+		}
+		if memberID == "" {
+			return fail(errAuthUserNotInGroup), nil
+		}
+		group, err := q.LockTournamentGroup(ctx, groupID)
+		if notFound(err) {
+			return fail(errGroupNotFound), nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		activeTournament, err := q.ActiveTournamentExists(ctx, groupID)
+		if err != nil {
+			return nil, err
+		}
+		if activeTournament {
+			return fail(errTournamentPlaying), nil
+		}
+		if group.ActiveSeasonID == nil {
+			return fail(errSeasonNotFound), nil
+		}
+		_, sn, res := s.activeSeason(ctx, q, groupID, *group.ActiveSeasonID)
+		if res != nil {
+			return res, nil
+		}
+		ended := s.now()
+		if err := q.EndSeason(ctx, db.EndSeasonParams{ID: sn.ID, Name: name, EndDate: &ended}); err != nil {
+			return nil, err
+		}
+		sn.Name, sn.EndDate = name, &ended
+		return ok(sn.dto()), nil
+	})
+	if o, isOK := res.(okResponse); isOK {
+		s.hub.Publish(groupID, realtime.Seasons, "seasonEnd", o.data)
 	}
 	return res
 }
