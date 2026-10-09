@@ -1726,6 +1726,42 @@
                 }
             }
         },
+        "/groups/{groupId}/active-season/end": {
+            "put": {
+                "tags": ["season-controller"],
+                "operationId": "endActiveSeason",
+                "parameters": [
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "string" }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeasonEndDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseEnvelopeSeasonDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/groups": {
             "get": {
                 "tags": ["group-controller"],
@@ -4902,6 +4938,11 @@
                         }
                     }
                 }
+            },
+            "SeasonEndDto": {
+                "type": "object",
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
             },
             "ResponseEnvelopeString": {
                 "type": "object",

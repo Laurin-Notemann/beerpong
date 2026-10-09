@@ -116,6 +116,7 @@ A list of all event types with their corresponding dto and all available scopes:
 #### Seasons (body: SeasonStartDto | SeasonDto)
 
 * **seasonStart:** When a new season is started
+* **seasonEnd:** When the active season is ended before the next one starts (body: SeasonDto)
 * **seasonUpdate:** When a season is updated
 
 #### Assets (body: AssetMetadataDto | GroupDto | ProfileDto | TeamDto)

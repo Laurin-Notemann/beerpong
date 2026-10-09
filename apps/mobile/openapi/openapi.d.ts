@@ -923,6 +923,9 @@ declare namespace Components {
             } | null;
             createdById: string | null;
         }
+        export interface SeasonEndDto {
+            name: string;
+        }
         export interface SeasonListDto {
             id: string;
             name: string | null;
@@ -1483,6 +1486,18 @@ declare namespace Paths {
         }
         namespace Responses {
             export type $200 = Components.Schemas.ResponseEnvelopeGroupDto;
+        }
+    }
+    namespace EndActiveSeason {
+        namespace Parameters {
+            export type GroupId = string;
+        }
+        export interface PathParameters {
+            groupId: Parameters.GroupId;
+        }
+        export type RequestBody = Components.Schemas.SeasonEndDto;
+        namespace Responses {
+            export type $200 = Components.Schemas.ResponseEnvelopeSeasonDto;
         }
     }
     namespace FeedbackVisionHit {
@@ -2690,6 +2705,14 @@ export interface OperationMethods {
         config?: AxiosRequestConfig
     ): OperationResponse<Paths.StartNewSeason.Responses.$200>;
     /**
+     * endActiveSeason
+     */
+    endActiveSeason(
+        parameters?: Parameters<Paths.EndActiveSeason.PathParameters> | null,
+        data?: Paths.EndActiveSeason.RequestBody,
+        config?: AxiosRequestConfig
+    ): OperationResponse<Paths.EndActiveSeason.Responses.$200>;
+    /**
      * findGroupByInviteCode
      */
     findGroupByInviteCode(
@@ -3420,6 +3443,16 @@ export interface PathsDictionary {
             config?: AxiosRequestConfig
         ): OperationResponse<Paths.StartNewSeason.Responses.$200>;
     };
+    ['/groups/{groupId}/active-season/end']: {
+        /**
+         * endActiveSeason
+         */
+        put(
+            parameters?: Parameters<Paths.EndActiveSeason.PathParameters> | null,
+            data?: Paths.EndActiveSeason.RequestBody,
+            config?: AxiosRequestConfig
+        ): OperationResponse<Paths.EndActiveSeason.Responses.$200>;
+    };
     ['/groups']: {
         /**
          * findGroupByInviteCode
@@ -3992,6 +4025,7 @@ export type RuleMoveCreateDto = Components.Schemas.RuleMoveCreateDto;
 export type RuleMoveDto = Components.Schemas.RuleMoveDto;
 export type SeasonCreateDto = Components.Schemas.SeasonCreateDto;
 export type SeasonDto = Components.Schemas.SeasonDto;
+export type SeasonEndDto = Components.Schemas.SeasonEndDto;
 export type SeasonListDto = Components.Schemas.SeasonListDto;
 export type SeasonSettingsDto = Components.Schemas.SeasonSettingsDto;
 export type SeasonUpdateDto = Components.Schemas.SeasonUpdateDto;

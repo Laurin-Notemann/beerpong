@@ -19,6 +19,10 @@ export interface SaveSeasonScreenProps {
         oldSeasonName: string,
         newSeasonAllowedMoves: Components.Schemas.RuleMoveCreateDto[]
     ) => void;
+    /** set: the screen only names and ends the current season */
+    onEndSeason?: (oldSeasonName: string) => void;
+    /** the current season was already ended; starting the next one keeps its name */
+    oldSeasonEnded: boolean;
     numMatches: number;
     players: Player[];
     oldSeasonStartDate: string;
@@ -28,6 +32,8 @@ export interface SaveSeasonScreenProps {
 }
 export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     onStartNewSeason,
+    onEndSeason,
+    oldSeasonEnded,
     oldSeasonMoves,
     numMatches,
     players,
@@ -54,6 +60,8 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     }, [newSeasonDraft.actions, oldSeasonMoves]);
 
     const oldSeasonIsEmpty = numMatches < 1;
+    const endOnly = !!onEndSeason;
+    const hasNamePage = endOnly || (!oldSeasonIsEmpty && !oldSeasonEnded);
 
     const {
         ref: swiperRef,
@@ -64,7 +72,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     } = useSwiperWithPageState({ initialPage: 0 });
 
     const hasValidName =
-        oldSeasonIsEmpty || newSeasonDraft.oldSeasonName.length > 0;
+        !hasNamePage || newSeasonDraft.oldSeasonName.length > 0;
 
     const hasValidMoves = newSeasonDraft.newSeasonAllowedMoves.length > 0;
 
@@ -75,9 +83,10 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
     return (
         <>
             <SaveSeasonStack
-                oldSeasonIsEmpty={oldSeasonIsEmpty}
+                hasNamePage={hasNamePage}
+                endOnly={endOnly}
                 isNextDisabled={!hasValidName}
-                isCreateDisabled={!(hasValidName && hasValidMoves)}
+                isCreateDisabled={!(hasValidName && (endOnly || hasValidMoves))}
                 animationProgress={swiperProgress}
                 onClear={onCancel}
                 onBack={() => {
@@ -88,12 +97,14 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                     swiperRef.current?.next();
                 }}
                 onCreate={() =>
-                    onStartNewSeason(
-                        oldSeasonIsEmpty
-                            ? 'Empty Season'
-                            : newSeasonDraft.oldSeasonName,
-                        newSeasonDraft.newSeasonAllowedMoves
-                    )
+                    onEndSeason
+                        ? onEndSeason(newSeasonDraft.oldSeasonName)
+                        : onStartNewSeason(
+                              oldSeasonIsEmpty
+                                  ? 'Empty Season'
+                                  : newSeasonDraft.oldSeasonName,
+                              newSeasonDraft.newSeasonAllowedMoves
+                          )
                 }
                 isCreating={isCreating}
             />
@@ -108,7 +119,7 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                     oldSeasonNameInputRef.current?.blur();
                 }}
             >
-                {!oldSeasonIsEmpty && (
+                {hasNamePage && (
                     <OldSeasonNameInput
                         oldSeasonNameInputRef={oldSeasonNameInputRef}
                         numMatches={numMatches}
@@ -121,36 +132,40 @@ export const SaveSeasonScreen: React.FC<SaveSeasonScreenProps> = ({
                         rankingAlgorithm={rankingAlgorithm}
                     />
                 )}
-                <NewSeasonRulesInput
-                    moves={newSeasonDraft.newSeasonAllowedMoves}
-                    onNewPress={() => {
-                        const newMoveId = Date.now().toString();
+                {!endOnly && (
+                    <NewSeasonRulesInput
+                        moves={newSeasonDraft.newSeasonAllowedMoves}
+                        onNewPress={() => {
+                            const newMoveId = Date.now().toString();
 
-                        newSeasonDraft.actions.setNewSeasonAllowedMoves([
-                            ...newSeasonDraft.newSeasonAllowedMoves,
-                            {
+                            newSeasonDraft.actions.setNewSeasonAllowedMoves([
+                                ...newSeasonDraft.newSeasonAllowedMoves,
+                                {
+                                    id: newMoveId,
+                                    name: 'New Move',
+                                    finishingMove: false,
+                                    pointsForScorer: 1,
+                                    pointsForTeam: 0,
+                                    cups: 1,
+                                    defaultMove: false,
+                                },
+                            ]);
+                            nav.navigate('allowedMove', {
                                 id: newMoveId,
-                                name: 'New Move',
-                                finishingMove: false,
-                                pointsForScorer: 1,
-                                pointsForTeam: 0,
-                                cups: 1,
-                                defaultMove: false,
-                            },
-                        ]);
-                        nav.navigate('allowedMove', {
-                            id: newMoveId,
-                        });
-                    }}
-                    onDelete={(id) =>
-                        newSeasonDraft.actions.setNewSeasonAllowedMoves(
-                            newSeasonDraft.newSeasonAllowedMoves.filter(
-                                (i) => i.id !== id
+                            });
+                        }}
+                        onDelete={(id) =>
+                            newSeasonDraft.actions.setNewSeasonAllowedMoves(
+                                newSeasonDraft.newSeasonAllowedMoves.filter(
+                                    (i) => i.id !== id
+                                )
                             )
-                        )
-                    }
-                    onReorder={newSeasonDraft.actions.setNewSeasonAllowedMoves}
-                />
+                        }
+                        onReorder={
+                            newSeasonDraft.actions.setNewSeasonAllowedMoves
+                        }
+                    />
+                )}
             </Swiper>
         </>
     );

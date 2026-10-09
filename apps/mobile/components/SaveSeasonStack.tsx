@@ -5,7 +5,9 @@ import { useSwiperPage } from '@/hooks/useSwiperPage';
 import { useNavStyles } from '@/lib/navigation/navStyles';
 
 export const SaveSeasonStack: React.FC<{
-    oldSeasonIsEmpty: boolean;
+    hasNamePage: boolean;
+    /** only names and ends the current season, without starting the next */
+    endOnly: boolean;
     isNextDisabled: boolean;
     isCreateDisabled: boolean;
 
@@ -29,21 +31,24 @@ export const SaveSeasonStack: React.FC<{
 
     isNextDisabled,
     isCreateDisabled,
-    oldSeasonIsEmpty,
+    hasNamePage,
+    endOnly,
 }) => {
     const page = useSwiperPage(animationProgress);
 
-    // with an empty old season there is no "Save Old Season" page, only the new season's rules
-    const isOldSeasonPage = !oldSeasonIsEmpty && page === 0;
+    // an empty or already ended old season has no "Save Old Season" page, only the new season's rules
+    const isOldSeasonPage = hasNamePage && page === 0 && !endOnly;
 
     return (
         <>
             <Stack.Screen
                 options={{
                     ...useNavStyles(),
-                    headerTitle: isOldSeasonPage
-                        ? 'Save Old Season'
-                        : 'Start New Season',
+                    headerTitle: endOnly
+                        ? 'End Season'
+                        : isOldSeasonPage
+                          ? 'Save Old Season'
+                          : 'Start New Season',
                 }}
             />
             <Stack.Toolbar placement="left">
@@ -71,7 +76,7 @@ export const SaveSeasonStack: React.FC<{
                         disabled={isCreateDisabled || isCreating}
                         onPress={onCreate}
                     >
-                        Save
+                        {endOnly ? 'End' : 'Save'}
                     </Stack.Toolbar.Button>
                 )}
             </Stack.Toolbar>
