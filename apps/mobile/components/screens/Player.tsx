@@ -237,6 +237,7 @@ export default function PlayerScreen({
                                                 <PlayerPageHeadSection
                                                     {...scopes.get(obj.id)!}
                                                     avatarUrl={avatarUrl}
+                                                    profileId={profileId}
                                                     name={name}
                                                     editable={editable}
                                                     onUploadAvatarPress={
@@ -285,6 +286,7 @@ export default function PlayerScreen({
                                         <PlayerPageHeadSection
                                             {...scopes.get('today')!}
                                             avatarUrl={avatarUrl}
+                                            profileId={profileId}
                                             name={name}
                                             editable={editable}
                                             onUploadAvatarPress={
@@ -324,6 +326,7 @@ export default function PlayerScreen({
                                             {...(scopes.get('season') ??
                                                 emptyScope)}
                                             avatarUrl={avatarUrl}
+                                            profileId={profileId}
                                             name={name}
                                             editable={editable}
                                             onUploadAvatarPress={
@@ -368,6 +371,7 @@ export default function PlayerScreen({
                                             <PlayerPageHeadSection
                                                 {...scopes.get('all-time')!}
                                                 avatarUrl={avatarUrl}
+                                                profileId={profileId}
                                                 name={name}
                                                 editable={editable}
                                                 onUploadAvatarPress={

@@ -9,7 +9,7 @@ import {
     useSeasonMatches,
 } from '@/api/calls/seasonMatchesHooks';
 import { useLeaderboardProps } from '@/api/propHooks/leaderboardPropHooks';
-import { Match } from '@/api/utils/matchDtoToMatch';
+import { Match, wonMatch } from '@/api/utils/matchDtoToMatch';
 import { countCups } from '@/api/utils/ruleMoveCups';
 import { ScopeInfo } from '@/components/screens/Player';
 import { rankPlayers } from '@/constants/rankingAlgorithms';
@@ -117,17 +117,8 @@ export function usePlayerPageScope(playerId: string) {
     };
 }
 
-const getMatchesWon = (profileId: string | undefined, matches: Match[]) => {
-    return matches.filter(
-        (i) =>
-            i.redTeam
-                .concat(i.blueTeam)
-                .find((j) => j.moves.some((k) => k.isFinish && k.count > 0))
-                ?.team ===
-            i.redTeam.concat(i.blueTeam).find((j) => j.profileId === profileId)
-                ?.team
-    ).length;
-};
+const getMatchesWon = (profileId: string | undefined, matches: Match[]) =>
+    matches.filter((i) => wonMatch(profileId, i)).length;
 const getAllTimeCups = (profileId: string | undefined, matches: Match[]) => {
     return matches.reduce((sum, i) => {
         const player = i.blueTeam

@@ -1,8 +1,10 @@
-import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
+import { Match } from '@/api/utils/matchDtoToMatch';
 import { HighestChip, LowestChip } from '@/components/Chip';
 import { useNextTokens } from '@/components/next/tokens';
+import { PlayerStatChart } from '@/components/PlayerStatChart';
 import {
     RankingAlgorithm,
     rankingAlgorithms,
@@ -10,19 +12,20 @@ import {
 } from '@/constants/rankingAlgorithms';
 import { useTheme } from '@/theme';
 import { useNewDesign } from '@/zustand/localSettingsStore';
-import { useScopePicker } from '@/zustand/useScopePicker';
 
 export function Stat({
     value,
     title,
     isHighest = false,
     isLowest = false,
+    isSelected = false,
     onPress,
 }: {
     value: string | number;
     title: string;
     isHighest?: boolean;
     isLowest?: boolean;
+    isSelected?: boolean;
     onPress: () => void;
 }) {
     const theme = useTheme();
@@ -41,7 +44,9 @@ export function Stat({
                         borderRadius: 16,
                         borderCurve: 'continuous',
                         borderWidth: 1,
-                        borderColor: t.hairline,
+                        borderColor: isSelected
+                            ? theme.color.text.branding
+                            : t.hairline,
                         backgroundColor: t.surface,
                     }}
                 >
@@ -75,7 +80,7 @@ export function Stat({
 
     return (
         <TouchableOpacity
-            // three per row; tapping ranks the leaderboard by this stat
+            // three per row; tapping charts this stat
             style={{ alignItems: 'center', width: '33%' }}
             onPress={onPress}
         >
@@ -94,7 +99,9 @@ export function Stat({
             <Text
                 style={{
                     fontSize: 12,
-                    color: theme.color.text.secondary,
+                    color: isSelected
+                        ? theme.color.text.branding
+                        : theme.color.text.secondary,
 
                     fontWeight: 500,
                 }}
@@ -107,16 +114,19 @@ export function Stat({
 
 export interface PlayerStatsProps {
     player: RankingPlayer;
+    profileId: string;
+    /** the matches `player`'s stats are from */
+    matches: Match[];
 }
-/**
- * TODO: in the future, we might want to have some sort of modal or page show up on click,
- * which either explains how these are calculated or shows more detailed stats.
- */
-export default function PlayerStats({ player }: PlayerStatsProps) {
-    const router = useRouter();
-
-    const scopePicker = useScopePicker();
+/** The player's stats; tapping one charts it over their matches below. */
+export default function PlayerStats({
+    player,
+    profileId,
+    matches,
+}: PlayerStatsProps) {
     const newDesign = useNewDesign();
+
+    const [selected, setSelected] = useState<RankingAlgorithm | null>(null);
 
     return (
         <View
@@ -140,15 +150,22 @@ export default function PlayerStats({ player }: PlayerStatsProps) {
                         key={id}
                         title={algo.name}
                         value={algo.getDisplayValue(player, 'stat')}
-                        onPress={() => {
-                            scopePicker.setRankingAlgorithm(
-                                id as RankingAlgorithm
-                            );
-                            router.dismissAll();
-                            router.push({ pathname: '/' });
-                        }}
+                        isSelected={selected === id}
+                        onPress={() =>
+                            setSelected((prev) =>
+                                prev === id ? null : (id as RankingAlgorithm)
+                            )
+                        }
                     />
                 ))}
+            {selected && (
+                <PlayerStatChart
+                    stat={selected}
+                    profileId={profileId}
+                    matches={matches}
+                    elo={player.elo}
+                />
+            )}
         </View>
     );
 }
