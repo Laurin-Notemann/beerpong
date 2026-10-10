@@ -86,6 +86,14 @@ export const matchDtoToMatch =
         return match;
     };
 
+/** whether the player's team finished the match */
+export const wonMatch = (profileId: string | undefined, match: Match) =>
+    match.redTeam
+        .concat(match.blueTeam)
+        .find((j) => j.moves.some((k) => k.isFinish && k.count > 0))?.team ===
+    match.redTeam.concat(match.blueTeam).find((j) => j.profileId === profileId)
+        ?.team;
+
 export type MinimalMatch = Pick<
     Match,
     'id' | 'date' | 'blueCups' | 'redCups' | 'redTeam' | 'blueTeam'

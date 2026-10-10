@@ -12,6 +12,7 @@ import { useTheme } from '@/theme';
 
 export function PlayerPageHeadSection({
     avatarUrl,
+    profileId = '',
     placement,
     name,
     onUploadAvatarPress,
@@ -27,6 +28,8 @@ export function PlayerPageHeadSection({
     rankingAlgorithm,
 }: {
     avatarUrl?: string | null;
+    /** whose stats `matches` are charted for; not needed while editable */
+    profileId?: string;
     placement: Placement;
     name: string;
     onUploadAvatarPress: () => void;
@@ -92,7 +95,13 @@ export function PlayerPageHeadSection({
                 {name}
             </Text>
 
-            {!editable && <PlayerStats player={player} />}
+            {!editable && (
+                <PlayerStats
+                    player={player}
+                    profileId={profileId}
+                    matches={matches}
+                />
+            )}
         </View>
     );
 }

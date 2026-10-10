@@ -59,6 +59,8 @@ interface AlgoObj {
     name: string;
     shortName: string;
     sortFunc: (a: RankingPlayer, b: RankingPlayer) => number;
+    /** the stat as a number, charted on the player page */
+    getValue: (a: RankingPlayer) => number;
     getDisplayValue: (
         a: RankingPlayer | null | undefined,
         role?: 'stat' | 'ranking'
@@ -72,6 +74,7 @@ export const rankingAlgorithms = {
         name: 'Elo',
         shortName: 'Elo',
         sortFunc: byDescendingElo,
+        getValue: (a) => a.elo,
         getDisplayValue: (a) => (a ? formatElo(a.elo) : '--'),
         showInSelect: true,
         showInStats: true,
@@ -80,6 +83,7 @@ export const rankingAlgorithms = {
         name: 'Average points',
         shortName: 'Average',
         sortFunc: byDescendingAveragePoints,
+        getValue: (a) => (a.matches ? a.points / a.matches : 0),
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0
                 ? formatAverage(a!.matches ? a!.points / a!.matches : 0)
@@ -91,6 +95,7 @@ export const rankingAlgorithms = {
         name: 'Matches won',
         shortName: 'Matches won',
         sortFunc: byDescendingMatchesWon,
+        getValue: (a) => (a.matches ? (a.matchesWon / a.matches) * 100 : 0),
         getDisplayValue: (a, role = 'ranking') =>
             role === 'ranking'
                 ? a
@@ -109,6 +114,7 @@ export const rankingAlgorithms = {
         name: 'Total points',
         shortName: 'Points',
         sortFunc: byDescendingTotalPoints,
+        getValue: (a) => a.points,
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0 ? a!.points.toString() : '--',
         showInSelect: true,
@@ -118,6 +124,7 @@ export const rankingAlgorithms = {
         name: 'Total cups',
         shortName: 'Cups',
         sortFunc: byDescendingTotalCups,
+        getValue: (a) => a.cups,
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0 ? a!.cups.toString() : '--',
         showInSelect: true,
@@ -127,6 +134,7 @@ export const rankingAlgorithms = {
         name: 'Average cups',
         shortName: 'Avg. cups',
         sortFunc: byDescendingAverageCups,
+        getValue: averageCups,
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0 ? formatAverage(averageCups(a!)) : '--',
         showInSelect: true,
@@ -136,6 +144,7 @@ export const rankingAlgorithms = {
         name: 'Average cups by team size',
         shortName: 'Cups by team size',
         sortFunc: byDescendingTeamAdjustedCups,
+        getValue: teamAdjustedCups,
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0 ? formatAverage(teamAdjustedCups(a!)) : '--',
         showInSelect: true,
@@ -145,6 +154,7 @@ export const rankingAlgorithms = {
         name: 'Matches played',
         shortName: 'Matches played',
         sortFunc: byDescendingMatchesPlayed,
+        getValue: (a) => a.matches,
         getDisplayValue: (a) =>
             (a?.matches ?? 0) > 0 ? a!.matches.toString() : '--',
         showInSelect: true,
