@@ -71,7 +71,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Setup EAS
-        uses: expo/expo-github-action@v8
+        uses: expo/expo-github-action@v9
         with:
           # pinned: the action caches eas-cli per version, and `latest` is a new, uncached version
           # on most runs. Bump it by hand now and then.
