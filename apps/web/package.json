@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@sentry/browser": "^10.76.0",
-        "@sentry/node": "^10.76.0",
+        "@sentry/node": "^11.4.0",
         "@tanstack/react-query": "^5.104.1",
         "@tanstack/react-router": "^1.170.41",
         "@tanstack/react-start": "^1.168.60",
