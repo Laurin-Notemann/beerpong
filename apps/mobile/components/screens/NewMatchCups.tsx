@@ -10,6 +10,7 @@ import { CupDragMenu, pickedPlayer } from '@/components/CupDragMenu';
 import CupGrid, { CupDragEvent } from '@/components/CupGrid';
 import { rotateFormation, rotatePoint } from '@/components/CupGrid/Formation';
 import { OverlayIconButton } from '@/components/overlay/OverlayIconButton';
+import { OverlayTextButton } from '@/components/overlay/OverlayTextButton';
 import { VisionButton, VisionHitCard } from '@/components/vision/VisionHitCard';
 import { triggerHapticBump } from '@/haptics';
 import {
@@ -20,6 +21,7 @@ import {
     hasFinish,
     quickHit,
 } from '@/lib/cupHits';
+import { canRecordSave } from '@/lib/liveMatch/log';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
@@ -75,6 +77,7 @@ export default function NewMatchCups({
     const topTeam: CupTeam = bottomTeam === 'blue' ? 'red' : 'blue';
 
     const [size, setSize] = useState({ width: 0, height: 0 });
+    const [hintHeight, setHintHeight] = useState(HINT_HEIGHT);
 
     const trackMisses =
         useLocalSettingsStore((s) => s.trackMisses) && !!liveMatchId;
@@ -85,7 +88,7 @@ export default function NewMatchCups({
         Math.min(
             MAX_GRID_WIDTH,
             size.width - 2 * SIDE_BUTTONS_WIDTH,
-            (size.height - HINT_HEIGHT - GRID_GAP) / 2 / 0.9
+            (size.height - hintHeight - GRID_GAP) / 2 / 0.9
         )
     );
 
@@ -136,6 +139,41 @@ export default function NewMatchCups({
                 i.cups > 0 &&
                 moves.find((j) => j.id === i.id)?.defaultMove
         ) ?? normalMove;
+
+    // Saves and other zero-cup moves can be recorded even when the rack is empty.
+    const players = draftPlayers(entry);
+    const extraMoves = cupMoves.filter((i) => !i.isFinish && i.cups === 0);
+    const extraMoveActions = extraMoves.map((move) => ({
+        id: move.id,
+        title: move.name ?? 'Unknown',
+        subactions: players.map((player) => {
+            const disabled =
+                !!liveMatchId &&
+                move.name === 'Save' &&
+                (!player.team || !canRecordSave(entry, player.team, cupMoves));
+            const name = nameOf(player.playerId);
+            return {
+                id: `${player.playerId}:${move.id}`,
+                title: disabled ? `${name} (cups still standing)` : name,
+                attributes: { disabled },
+            };
+        }),
+    }));
+    const extraMoveTitle =
+        extraMoveActions.length === 1
+            ? `Record ${extraMoveActions[0].title}`
+            : 'Record Extra Move';
+
+    function onExtraMove(event: string) {
+        const [playerId, moveId] = event.split(':');
+        const player = players.find((i) => i.playerId === playerId);
+        if (!player || !extraMoves.some((i) => i.id === moveId)) return;
+
+        const count = player.moves.find((i) => i.moveId === moveId)?.count ?? 0;
+        if (entry.actions.setMoveCount(playerId, moveId, count + 1) !== false) {
+            triggerHapticBump('selection');
+        }
+    }
 
     /** the players who can hit the team's cups: the other team */
     const scorersOf = (team: CupTeam) =>
@@ -371,10 +409,13 @@ export default function NewMatchCups({
                 onLayout={(e) => setSize(e.nativeEvent.layout)}
             >
                 <View
+                    onLayout={(e) => setHintHeight(e.nativeEvent.layout.height)}
                     style={{
-                        height: HINT_HEIGHT,
+                        minHeight: HINT_HEIGHT,
                         alignSelf: 'stretch',
                         justifyContent: 'center',
+                        gap: 8,
+                        paddingVertical: 8,
                         paddingLeft: 16,
                         paddingRight: SIDE_BUTTONS_WIDTH,
                     }}
@@ -388,6 +429,28 @@ export default function NewMatchCups({
                         Tap a cup when it&apos;s hit, or drag from it to the
                         scorer. Tap a hit cup to put it back.
                     </Text>
+                    {players.length > 0 && extraMoveActions.length > 0 && (
+                        <View style={{ alignSelf: 'flex-start' }}>
+                            <MenuView
+                                title={extraMoveTitle}
+                                actions={
+                                    extraMoveActions.length === 1
+                                        ? extraMoveActions[0].subactions
+                                        : extraMoveActions
+                                }
+                                onPressAction={({ nativeEvent }) =>
+                                    onExtraMove(nativeEvent.event)
+                                }
+                            >
+                                <View
+                                    pointerEvents="none"
+                                    accessibilityLabel={extraMoveTitle}
+                                >
+                                    <OverlayTextButton title={extraMoveTitle} />
+                                </View>
+                            </MenuView>
+                        </View>
+                    )}
                 </View>
                 <View
                     style={{

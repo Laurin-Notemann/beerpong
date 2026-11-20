@@ -16,7 +16,7 @@ const clamp = (num: number, min: number, max: number) => {
 export interface ScoredMoveInputRowProps {
     moveName: string;
     numScored: number;
-    onNumScoredChange: (value: number) => void;
+    onNumScoredChange: (value: number) => void | false;
 
     /** how quickly the count changes on horizontal drag. defaults to `0.5` */
     dragSensitivity?: number;
@@ -78,6 +78,12 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
     const dragDecreaseDisabled = false;
     const dragIncreaseDisabled = false;
 
+    function commitCount(value: number) {
+        if (onNumScoredChange(value) === false) {
+            setUiCount(numScored);
+        }
+    }
+
     const slideToChangeValue = Gesture.Pan()
         // only activate if horizontal swipe distance exceeds ±5px, so we don't intercept pull-down gestures on the parent modal
         .activeOffsetX([
@@ -85,12 +91,12 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
             dragIncreaseDisabled ? 999 : 5,
         ])
         .onUpdate((e) => runOnJS(onHorizontalDrag)(e.translationX))
-        .onEnd(() => runOnJS(onNumScoredChange)(uiCount));
+        .onEnd(() => runOnJS(commitCount)(uiCount));
 
     const incrementOnTap = Gesture.Tap().onEnd(() => {
         runOnJS(triggerHapticBump)('selection');
         runOnJS(setUiCount)(uiCount + 1);
-        runOnJS(onNumScoredChange)(uiCount + 1);
+        runOnJS(commitCount)(uiCount + 1);
     });
 
     return (
@@ -137,7 +143,7 @@ export const ScoredMoveInputRow: React.FC<ScoredMoveInputRowProps> = ({
             </GestureDetector>
             <Stepper
                 value={uiCount}
-                onChange={onNumScoredChange}
+                onChange={commitCount}
                 min={0}
                 max={maxValue}
             />

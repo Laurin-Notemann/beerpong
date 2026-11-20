@@ -17,7 +17,11 @@ export default function PlayerPage({
     hasSwipeTutorial?: boolean;
     finishMove?: PerformedMove | null;
     player: TeamMember;
-    setMoveCount: (playerId: string, moveId: string, count: number) => void;
+    setMoveCount: (
+        playerId: string,
+        moveId: string,
+        count: number
+    ) => void | false;
 }) {
     const theme = useTheme();
     const nav = useNavigation();

@@ -1,5 +1,5 @@
 import { countCups } from '@/api/utils/ruleMoveCups';
-import { CupTeam } from '@/lib/cupHits';
+import { CUP_FORMATION, CupTeam, DraftTeams } from '@/lib/cupHits';
 import type { LiveMatchState, LiveOp } from '@/lib/liveMatch/types';
 import type { Components } from '@/openapi/openapi';
 
@@ -48,7 +48,7 @@ export function toTeamCreateDtos(
 
 /** the cups a team took off the table; `moves` are the rule's moves with their `cups` per hit */
 export function teamScore(
-    state: LiveMatchState,
+    state: DraftTeams,
     team: CupTeam,
     moves: { id: string; cups: number }[]
 ) {
@@ -64,6 +64,15 @@ export function teamScore(
             }))
         )
     );
+}
+
+export function canRecordSave(
+    state: DraftTeams,
+    team: CupTeam,
+    moves: { id: string; cups: number }[]
+) {
+    const opponent = team === 'red' ? 'blue' : 'red';
+    return teamScore(state, opponent, moves) >= CUP_FORMATION.cups.length;
 }
 
 /** `m:ss`, or `h:mm:ss` past an hour */

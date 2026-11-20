@@ -17,7 +17,11 @@ import { useTutorials } from '@/zustand/tutorialStore';
 export interface AssignPointsToPlayerModalProps {
     onClose?: () => void;
 
-    setMoveCount: (playerId: string, moveId: string, count: number) => void;
+    setMoveCount: (
+        playerId: string,
+        moveId: string,
+        count: number
+    ) => void | false;
 
     match: Pick<MinimalMatch, 'blueTeam' | 'redTeam'>;
 
