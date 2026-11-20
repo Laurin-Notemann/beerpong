@@ -93,7 +93,12 @@ export function useMatchEntry(liveMatchId?: string) {
                             .find((i) => i.playerId === playerId)
                             ?.moves.find((i) => i.moveId === moveId)?.count ??
                         0;
-                    liveActions.setMoveCount(playerId, moveId, count);
+                    if (
+                        liveActions.setMoveCount(playerId, moveId, count) ===
+                        false
+                    ) {
+                        return false;
+                    }
                     if (count > current) playScoreClip(playerId);
                 },
                 recordCupHit: (hit: CupHit) => {

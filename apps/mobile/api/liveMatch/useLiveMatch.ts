@@ -7,6 +7,7 @@ import {
     finishLiveMatch,
     useLiveMatchQuery,
 } from '@/api/calls/liveMatchHooks';
+import { movesQueryOptions } from '@/api/calls/ruleHooks';
 import {
     applyLiveMatchEnd,
     cachedList,
@@ -19,10 +20,12 @@ import { requestLiveMatchSync } from '@/api/liveMatch/useLiveMatchSync';
 import { ApiId } from '@/api/types';
 import { useApi } from '@/api/utils/create-api';
 import { QK, useQueryInvalidation } from '@/api/utils/reactQuery';
+import { cupsPerHit } from '@/api/utils/ruleMoveCups';
 import { CupHit, CupPosition, CupTeam } from '@/lib/cupHits';
 import { isEnded, mergeLiveMatch } from '@/lib/liveMatch/cache';
 import { finishWithRetry, LiveMatchOfflineError } from '@/lib/liveMatch/finish';
 import {
+    canRecordSave,
     composeOps,
     countFinishes,
     mergeOps,
@@ -282,11 +285,38 @@ export function useLiveMatchActions(groupId: ApiId, id: ApiId) {
 
     /** sent as the difference to what this phone shows, so taps on two phones add up */
     function setMoveCount(playerId: string, moveId: string, count: number) {
-        const { state } = readView(qc, groupId, id);
+        const { header, state } = readView(qc, groupId, id);
+        const team = state.redTeam.teamMembers.some(
+            (i) => i.playerId === playerId
+        )
+            ? 'red'
+            : 'blue';
         const current =
-            [...state.redTeam.teamMembers, ...state.blueTeam.teamMembers]
+            (team === 'red' ? state.redTeam : state.blueTeam).teamMembers
                 .find((i) => i.playerId === playerId)
                 ?.moves.find((i) => i.moveId === moveId)?.count ?? 0;
+
+        const moves =
+            qc.getQueryData(
+                movesQueryOptions(api, groupId, header?.seasonId).queryKey
+            )?.data ?? [];
+        const move = moves.find((i) => i.id === moveId);
+        if (
+            count > current &&
+            move?.name === 'Save' &&
+            !move.finishingMove &&
+            cupsPerHit(move) === 0 &&
+            !canRecordSave(
+                state,
+                team,
+                moves.map((i) => ({ id: i.id, cups: cupsPerHit(i) }))
+            )
+        ) {
+            showErrorToast(
+                'All of your team’s cups must be gone to record a Save.'
+            );
+            return false;
+        }
 
         const deltas = splitDelta(Math.max(0, count) - current);
         if (!deltas.length) return;

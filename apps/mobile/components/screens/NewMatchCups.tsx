@@ -21,6 +21,7 @@ import {
     hasFinish,
     quickHit,
 } from '@/lib/cupHits';
+import { canRecordSave } from '@/lib/liveMatch/log';
 import { useNavigation } from '@/lib/navigation/useNavigation';
 import { cupAt, cupLayout } from '@/lib/rerack';
 import { useInsets } from '@/lib/useInsets';
@@ -145,10 +146,18 @@ export default function NewMatchCups({
     const extraMoveActions = extraMoves.map((move) => ({
         id: move.id,
         title: move.name ?? 'Unknown',
-        subactions: players.map((player) => ({
-            id: `${player.playerId}:${move.id}`,
-            title: nameOf(player.playerId),
-        })),
+        subactions: players.map((player) => {
+            const disabled =
+                !!liveMatchId &&
+                move.name === 'Save' &&
+                (!player.team || !canRecordSave(entry, player.team, cupMoves));
+            const name = nameOf(player.playerId);
+            return {
+                id: `${player.playerId}:${move.id}`,
+                title: disabled ? `${name} (cups still standing)` : name,
+                attributes: { disabled },
+            };
+        }),
     }));
     const extraMoveTitle =
         extraMoveActions.length === 1
@@ -161,8 +170,9 @@ export default function NewMatchCups({
         if (!player || !extraMoves.some((i) => i.id === moveId)) return;
 
         const count = player.moves.find((i) => i.moveId === moveId)?.count ?? 0;
-        entry.actions.setMoveCount(playerId, moveId, count + 1);
-        triggerHapticBump('selection');
+        if (entry.actions.setMoveCount(playerId, moveId, count + 1) !== false) {
+            triggerHapticBump('selection');
+        }
     }
 
     /** the players who can hit the team's cups: the other team */
